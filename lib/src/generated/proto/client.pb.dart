@@ -19929,10 +19929,15 @@ class LivePlaybackMetadata extends $pb.GeneratedMessage {
   factory LivePlaybackMetadata({
     $core.String? mediaId,
     $core.String? roomId,
+    LiveStreamAvailability? availability,
+    $core.String? streamGenerationId,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
     if (roomId != null) result.roomId = roomId;
+    if (availability != null) result.availability = availability;
+    if (streamGenerationId != null)
+      result.streamGenerationId = streamGenerationId;
     return result;
   }
 
@@ -19951,6 +19956,9 @@ class LivePlaybackMetadata extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'mediaId')
     ..aOS(2, _omitFieldNames ? '' : 'roomId')
+    ..aE<LiveStreamAvailability>(3, _omitFieldNames ? '' : 'availability',
+        enumValues: LiveStreamAvailability.values)
+    ..aOS(4, _omitFieldNames ? '' : 'streamGenerationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -19989,6 +19997,24 @@ class LivePlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasRoomId() => $_has(1);
   @$pb.TagNumber(2)
   void clearRoomId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  LiveStreamAvailability get availability => $_getN(2);
+  @$pb.TagNumber(3)
+  set availability(LiveStreamAvailability value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAvailability() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAvailability() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get streamGenerationId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set streamGenerationId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasStreamGenerationId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearStreamGenerationId() => $_clearField(4);
 }
 
 class TwitchPlaybackMetadata extends $pb.GeneratedMessage {

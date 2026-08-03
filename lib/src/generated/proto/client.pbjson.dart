@@ -513,6 +513,22 @@ final $typed_data.Uint8List playbackAudioCapabilityDescriptor = $convert.base64D
     'TEFZQkFDS19BVURJT19DQVBBQklMSVRZX1NVUlJPVU5EEAISLworUExBWUJBQ0tfQVVESU9fQ0'
     'FQQUJJTElUWV9MT1NTTEVTU19TVVJST1VORBAD');
 
+@$core.Deprecated('Use liveStreamAvailabilityDescriptor instead')
+const LiveStreamAvailability$json = {
+  '1': 'LiveStreamAvailability',
+  '2': [
+    {'1': 'LIVE_STREAM_AVAILABILITY_UNSPECIFIED', '2': 0},
+    {'1': 'LIVE_STREAM_AVAILABILITY_OFFLINE', '2': 1},
+    {'1': 'LIVE_STREAM_AVAILABILITY_LIVE', '2': 2},
+  ],
+};
+
+/// Descriptor for `LiveStreamAvailability`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List liveStreamAvailabilityDescriptor = $convert.base64Decode(
+    'ChZMaXZlU3RyZWFtQXZhaWxhYmlsaXR5EigKJExJVkVfU1RSRUFNX0FWQUlMQUJJTElUWV9VTl'
+    'NQRUNJRklFRBAAEiQKIExJVkVfU1RSRUFNX0FWQUlMQUJJTElUWV9PRkZMSU5FEAESIQodTElW'
+    'RV9TVFJFQU1fQVZBSUxBQklMSVRZX0xJVkUQAg==');
+
 @$core.Deprecated('Use resourceDeliveryModeDescriptor instead')
 const ResourceDeliveryMode$json = {
   '1': 'ResourceDeliveryMode',
@@ -7892,13 +7908,30 @@ const LivePlaybackMetadata$json = {
   '2': [
     {'1': 'media_id', '3': 1, '4': 1, '5': 9, '10': 'mediaId'},
     {'1': 'room_id', '3': 2, '4': 1, '5': 9, '10': 'roomId'},
+    {
+      '1': 'availability',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.LiveStreamAvailability',
+      '10': 'availability'
+    },
+    {
+      '1': 'stream_generation_id',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '10': 'streamGenerationId'
+    },
   ],
 };
 
 /// Descriptor for `LivePlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List livePlaybackMetadataDescriptor = $convert.base64Decode(
     'ChRMaXZlUGxheWJhY2tNZXRhZGF0YRIZCghtZWRpYV9pZBgBIAEoCVIHbWVkaWFJZBIXCgdyb2'
-    '9tX2lkGAIgASgJUgZyb29tSWQ=');
+    '9tX2lkGAIgASgJUgZyb29tSWQSSQoMYXZhaWxhYmlsaXR5GAMgASgOMiUuc3luY3R2LmNsaWVu'
+    'dC5MaXZlU3RyZWFtQXZhaWxhYmlsaXR5UgxhdmFpbGFiaWxpdHkSMAoUc3RyZWFtX2dlbmVyYX'
+    'Rpb25faWQYBCABKAlSEnN0cmVhbUdlbmVyYXRpb25JZA==');
 
 @$core.Deprecated('Use twitchPlaybackMetadataDescriptor instead')
 const TwitchPlaybackMetadata$json = {

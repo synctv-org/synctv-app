@@ -1,0 +1,202 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/features/room/presentation/models/playback_player_update.dart';
+
+RoomPlaybackEntry liveEntry({
+  required SyncTvLiveStreamAvailability availability,
+  required String generation,
+  String url = 'https://example.test/live.m3u8',
+}) {
+  return RoomPlaybackEntry(
+    id: 'med_live',
+    name: 'Live',
+    url: url,
+    live: true,
+    liveStreamAvailability: availability,
+    liveStreamGenerationId: generation,
+  );
+}
+
+void main() {
+  test('live providers without managed RTMP state remain playable', () {
+    final entry = RoomPlaybackEntry(
+      id: 'med_provider_live',
+      name: 'Provider live',
+      url: 'https://example.test/provider-live.m3u8',
+      live: true,
+    );
+
+    expect(entry.liveStreamAvailability, isNull);
+    expect(entry.isLiveStreamPlayable, isTrue);
+  });
+
+  test(
+    'unspecified managed RTMP state waits for an authoritative snapshot',
+    () {
+      final entry = liveEntry(
+        availability: SyncTvLiveStreamAvailability.unspecified,
+        generation: '',
+      );
+
+      expect(entry.isLiveStreamPlayable, isFalse);
+    },
+  );
+
+  test('offline live snapshots drain a player that has produced media', () {
+    final previous = liveEntry(
+      availability: SyncTvLiveStreamAvailability.live,
+      generation: 'generation-1',
+    );
+
+    expect(
+      playbackPlayerUpdateAction(
+        previous: previous,
+        next: liveEntry(
+          availability: SyncTvLiveStreamAvailability.offline,
+          generation: '',
+        ),
+        hasController: true,
+        controllerHasPlayed: true,
+        isDrainingEndedLiveStream: false,
+        samePlayerSource: true,
+      ),
+      PlaybackPlayerUpdateAction.drain,
+    );
+  });
+
+  test('offline live snapshots dispose a player without playback progress', () {
+    final previous = liveEntry(
+      availability: SyncTvLiveStreamAvailability.live,
+      generation: 'generation-1',
+    );
+
+    expect(
+      playbackPlayerUpdateAction(
+        previous: previous,
+        next: liveEntry(
+          availability: SyncTvLiveStreamAvailability.offline,
+          generation: '',
+        ),
+        hasController: true,
+        controllerHasPlayed: false,
+        isDrainingEndedLiveStream: false,
+        samePlayerSource: true,
+      ),
+      PlaybackPlayerUpdateAction.dispose,
+    );
+  });
+
+  test('repeated offline snapshots keep draining the same live media', () {
+    final offline = liveEntry(
+      availability: SyncTvLiveStreamAvailability.offline,
+      generation: '',
+    );
+
+    expect(
+      playbackPlayerUpdateAction(
+        previous: offline,
+        next: offline,
+        hasController: true,
+        controllerHasPlayed: true,
+        isDrainingEndedLiveStream: true,
+        samePlayerSource: true,
+      ),
+      PlaybackPlayerUpdateAction.drain,
+    );
+  });
+
+  test('new live generation reloads an unchanged URL', () {
+    final previous = liveEntry(
+      availability: SyncTvLiveStreamAvailability.live,
+      generation: 'generation-1',
+    );
+    final next = liveEntry(
+      availability: SyncTvLiveStreamAvailability.live,
+      generation: 'generation-2',
+    );
+
+    expect(
+      playbackPlayerUpdateAction(
+        previous: previous,
+        next: next,
+        hasController: true,
+        controllerHasPlayed: true,
+        isDrainingEndedLiveStream: false,
+        samePlayerSource: true,
+      ),
+      PlaybackPlayerUpdateAction.reload,
+    );
+  });
+
+  test('new live generation interrupts an offline drain', () {
+    final previous = liveEntry(
+      availability: SyncTvLiveStreamAvailability.offline,
+      generation: '',
+    );
+    final next = liveEntry(
+      availability: SyncTvLiveStreamAvailability.live,
+      generation: 'generation-2',
+    );
+
+    expect(
+      playbackPlayerUpdateAction(
+        previous: previous,
+        next: next,
+        hasController: true,
+        controllerHasPlayed: true,
+        isDrainingEndedLiveStream: true,
+        samePlayerSource: true,
+      ),
+      PlaybackPlayerUpdateAction.reload,
+    );
+  });
+
+  test('unchanged live generation keeps the active player', () {
+    final previous = liveEntry(
+      availability: SyncTvLiveStreamAvailability.live,
+      generation: 'generation-1',
+    );
+    final next = liveEntry(
+      availability: SyncTvLiveStreamAvailability.live,
+      generation: 'generation-1',
+    );
+
+    expect(
+      playbackPlayerUpdateAction(
+        previous: previous,
+        next: next,
+        hasController: true,
+        controllerHasPlayed: true,
+        isDrainingEndedLiveStream: false,
+        samePlayerSource: true,
+      ),
+      PlaybackPlayerUpdateAction.keep,
+    );
+  });
+
+  test('an offline snapshot for another media stops the active drain', () {
+    final previous = liveEntry(
+      availability: SyncTvLiveStreamAvailability.offline,
+      generation: '',
+    );
+    final next = RoomPlaybackEntry(
+      id: 'med_other',
+      name: 'Other live',
+      url: 'https://example.test/other-live.m3u8',
+      live: true,
+      liveStreamAvailability: SyncTvLiveStreamAvailability.offline,
+    );
+
+    expect(
+      playbackPlayerUpdateAction(
+        previous: previous,
+        next: next,
+        hasController: true,
+        controllerHasPlayed: true,
+        isDrainingEndedLiveStream: true,
+        samePlayerSource: false,
+      ),
+      PlaybackPlayerUpdateAction.dispose,
+    );
+  });
+}

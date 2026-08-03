@@ -854,6 +854,32 @@ class PlaybackAudioCapability extends $pb.ProtobufEnum {
   const PlaybackAudioCapability._(super.value, super.name);
 }
 
+class LiveStreamAvailability extends $pb.ProtobufEnum {
+  static const LiveStreamAvailability LIVE_STREAM_AVAILABILITY_UNSPECIFIED =
+      LiveStreamAvailability._(
+          0, _omitEnumNames ? '' : 'LIVE_STREAM_AVAILABILITY_UNSPECIFIED');
+  static const LiveStreamAvailability LIVE_STREAM_AVAILABILITY_OFFLINE =
+      LiveStreamAvailability._(
+          1, _omitEnumNames ? '' : 'LIVE_STREAM_AVAILABILITY_OFFLINE');
+  static const LiveStreamAvailability LIVE_STREAM_AVAILABILITY_LIVE =
+      LiveStreamAvailability._(
+          2, _omitEnumNames ? '' : 'LIVE_STREAM_AVAILABILITY_LIVE');
+
+  static const $core.List<LiveStreamAvailability> values =
+      <LiveStreamAvailability>[
+    LIVE_STREAM_AVAILABILITY_UNSPECIFIED,
+    LIVE_STREAM_AVAILABILITY_OFFLINE,
+    LIVE_STREAM_AVAILABILITY_LIVE,
+  ];
+
+  static final $core.List<LiveStreamAvailability?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static LiveStreamAvailability? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const LiveStreamAvailability._(super.value, super.name);
+}
+
 class ResourceDeliveryMode extends $pb.ProtobufEnum {
   static const ResourceDeliveryMode RESOURCE_DELIVERY_MODE_UNSPECIFIED =
       ResourceDeliveryMode._(

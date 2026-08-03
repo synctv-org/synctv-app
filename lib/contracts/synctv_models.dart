@@ -386,6 +386,8 @@ class SyncTvPlaybackModeOption {
       urls.isEmpty ? null : urls[safeDefaultUrlIndex];
 }
 
+enum SyncTvLiveStreamAvailability { unspecified, offline, live }
+
 class RoomMediaEntry {
   final String id;
   final String name;
@@ -421,6 +423,8 @@ class RoomMediaEntry {
   final List<SyncTvPlaybackModeOption> playbackModes;
   final String selectedPlaybackMode;
   final int selectedPlaybackUrlIndex;
+  final SyncTvLiveStreamAvailability? liveStreamAvailability;
+  final String liveStreamGenerationId;
 
   RoomMediaEntry({
     required this.id,
@@ -457,6 +461,8 @@ class RoomMediaEntry {
     this.playbackModes = const [],
     this.selectedPlaybackMode = '',
     this.selectedPlaybackUrlIndex = 0,
+    this.liveStreamAvailability,
+    this.liveStreamGenerationId = '',
   });
 
   static String playbackUrlFromResource({
@@ -525,6 +531,11 @@ class RoomMediaEntry {
   bool get hasPlaybackChoices =>
       playbackModes.length > 1 ||
       playbackModes.any((mode) => mode.urls.length > 1);
+
+  bool get isLiveStreamPlayable =>
+      !live ||
+      liveStreamAvailability == null ||
+      liveStreamAvailability == SyncTvLiveStreamAvailability.live;
 
   SyncTvPlaybackModeOption? get selectedPlaybackModeOption {
     if (playbackModes.isEmpty) return null;
@@ -646,6 +657,8 @@ class RoomMediaEntry {
     List<SyncTvPlaybackModeOption>? playbackModes,
     String? selectedPlaybackMode,
     int? selectedPlaybackUrlIndex,
+    SyncTvLiveStreamAvailability? liveStreamAvailability,
+    String? liveStreamGenerationId,
   }) {
     return RoomMediaEntry(
       id: id ?? this.id,
@@ -685,6 +698,10 @@ class RoomMediaEntry {
       selectedPlaybackMode: selectedPlaybackMode ?? this.selectedPlaybackMode,
       selectedPlaybackUrlIndex:
           selectedPlaybackUrlIndex ?? this.selectedPlaybackUrlIndex,
+      liveStreamAvailability:
+          liveStreamAvailability ?? this.liveStreamAvailability,
+      liveStreamGenerationId:
+          liveStreamGenerationId ?? this.liveStreamGenerationId,
     );
   }
 
@@ -720,6 +737,9 @@ class RoomMediaEntry {
     String? parentId,
     String Function(String url)? resolveUrl,
   }) {
+    final liveMetadata = playback.hasMetadata() && playback.metadata.hasLive()
+        ? playback.metadata.live
+        : null;
     final modes = playbackModeOptionsFromProto(
       playback,
       resolveUrl: resolveUrl,
@@ -763,6 +783,16 @@ class RoomMediaEntry {
       playbackModes: modes,
       selectedPlaybackMode: selectedMode.key,
       selectedPlaybackUrlIndex: selectedMode.safeDefaultUrlIndex,
+      liveStreamAvailability: liveMetadata == null
+          ? null
+          : switch (liveMetadata.availability) {
+              client.LiveStreamAvailability.LIVE_STREAM_AVAILABILITY_OFFLINE =>
+                SyncTvLiveStreamAvailability.offline,
+              client.LiveStreamAvailability.LIVE_STREAM_AVAILABILITY_LIVE =>
+                SyncTvLiveStreamAvailability.live,
+              _ => SyncTvLiveStreamAvailability.unspecified,
+            },
+      liveStreamGenerationId: liveMetadata?.streamGenerationId ?? '',
       metadata: {
         'defaultMode': playback.defaultMode,
         if (playback.hasMetadata())
@@ -1003,6 +1033,8 @@ class RoomPlaybackEntry extends RoomMediaEntry {
     super.playbackModes,
     super.selectedPlaybackMode,
     super.selectedPlaybackUrlIndex,
+    super.liveStreamAvailability,
+    super.liveStreamGenerationId,
     super.metadata,
   });
 }

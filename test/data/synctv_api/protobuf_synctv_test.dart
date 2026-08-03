@@ -4424,6 +4424,15 @@ void main() {
         provider: source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
         providerInstanceName: 'alist_main',
         playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
+        metadata: client.PlaybackMetadata(
+          live: client.LivePlaybackMetadata(
+            mediaId: 'med_1',
+            roomId: 'room_1',
+            availability:
+                client.LiveStreamAvailability.LIVE_STREAM_AVAILABILITY_LIVE,
+            streamGenerationId: 'generation-1',
+          ),
+        ),
         expiresAt: Int64(1700000000),
         durationSeconds: 3661.5,
         playbackInfos: [
@@ -4506,6 +4515,8 @@ void main() {
     expect(entry.roomId, 'room_1');
     expect(entry.position, 3.5);
     expect(entry.live, isTrue);
+    expect(entry.liveStreamAvailability, SyncTvLiveStreamAvailability.live);
+    expect(entry.liveStreamGenerationId, 'generation-1');
     expect(entry.sourceProvider, 'alist');
     expect(entry.providerInstanceName, 'alist_main');
     expect(entry.metadata['expiresAt'], 1700000000);

@@ -154,6 +154,9 @@ void main() {
           mode('proxy', 'http://127.0.0.1/proxy-old.mp4'),
         ],
         selectedPlaybackMode: 'proxy',
+        live: true,
+        liveStreamAvailability: SyncTvLiveStreamAvailability.live,
+        liveStreamGenerationId: 'generation-1',
       );
       final selectedCurrent = current.copyWith(entry: selectedEntry);
       final refreshedEntry = RoomPlaybackEntry(
@@ -165,6 +168,9 @@ void main() {
           mode('proxy', 'http://127.0.0.1/proxy-new.mp4'),
         ],
         selectedPlaybackMode: 'direct',
+        live: true,
+        liveStreamAvailability: SyncTvLiveStreamAvailability.live,
+        liveStreamGenerationId: 'generation-2',
       );
 
       final result = mergePlaybackStatusSnapshot(
@@ -178,6 +184,7 @@ void main() {
 
       expect(result.entry?.selectedPlaybackMode, 'proxy');
       expect(result.entry?.url, 'http://127.0.0.1/proxy-new.mp4');
+      expect(result.entry?.liveStreamGenerationId, 'generation-2');
     });
 
     test('rejects a stale playback resource for another dynamic target', () {

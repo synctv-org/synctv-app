@@ -14,6 +14,7 @@ import 'package:synctv_app/features/room/presentation/models/chat_context_menu_l
 import 'package:synctv_app/features/room/presentation/playback_control_reporter.dart';
 import 'package:synctv_app/features/room/domain/playback_operation_tracker.dart';
 import 'package:synctv_app/features/room/presentation/models/playlist_source_presentation.dart';
+import 'package:synctv_app/features/room/presentation/models/playback_player_update.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_config.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_target.dart';
 import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
@@ -157,6 +158,8 @@ enum _PlaylistViewMode { compact, detailed, grid }
 
 class _RoomScreenState extends State<RoomScreen>
     with SingleTickerProviderStateMixin {
+  static const _endedLiveStreamDrainTimeout = Duration(seconds: 120);
+
   late final RoomChatGateway _chatGateway;
   late final RoomPlaybackGateway _playbackGateway;
   late final PlaybackSyncPreferencesController _playbackSyncPreferences;
@@ -180,6 +183,9 @@ class _RoomScreenState extends State<RoomScreen>
       const AdaptiveVideoTrackSnapshot();
   String? _videoPlayerSourceKey;
   String? _initializingVideoSourceKey;
+  bool _videoPlaybackHasProgress = false;
+  bool _isDrainingEndedLiveStream = false;
+  Timer? _endedLiveStreamDrainTimer;
   int _forcedVideoLoadGeneration = 0;
   Future<void>? _currentPlaybackLoad;
   final LatestAsyncOperationCoordinator _videoInitialization =
@@ -2117,13 +2123,21 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _videoListener() {
-    if (_isSyncing ||
-        _videoPlayerController == null ||
-        !_videoPlayerController!.value.isInitialized) {
+    final controller = _videoPlayerController;
+    if (controller == null || !controller.value.isInitialized) {
       return;
     }
 
-    final value = _videoPlayerController!.value;
+    final value = controller.value;
+    if (!_videoPlaybackHasProgress && value.position > Duration.zero) {
+      _videoPlaybackHasProgress = true;
+    }
+    if (_isDrainingEndedLiveStream && (value.isCompleted || value.hasError)) {
+      _finishEndedLiveStreamDrain(controller);
+      return;
+    }
+    if (_isSyncing) return;
+
     final position = _boundedPlaybackTime(
       value.position.inMilliseconds / 1000.0,
     );
@@ -2333,75 +2347,149 @@ class _RoomScreenState extends State<RoomScreen>
     }
     final oldMovieId = previousStatus?.entry?.id;
     final nextMovieId = status.entry?.id;
+    final previousEntry = previousStatus?.entry;
+    final nextEntry = status.entry;
+    final generationChanged = liveStreamGenerationChanged(
+      previousEntry,
+      nextEntry,
+    );
     final sourceChanged =
-        previousStatus != null && !previousStatus.hasSamePlaybackSource(status);
+        previousStatus != null &&
+        (!previousStatus.hasSamePlaybackSource(status) || generationChanged);
     if (oldMovieId != nextMovieId || sourceChanged) {
       _danmakuController.clear();
       _playbackDanmakuWindow = null;
     }
 
+    final canPlayEntry =
+        nextEntry != null &&
+        nextEntry.url.isNotEmpty &&
+        nextEntry.isLiveStreamPlayable;
+    final newUrl = canPlayEntry
+        ? _resourceUrlResolver.resolve(nextEntry.url)
+        : null;
+    final newSourceKey = newUrl == null
+        ? null
+        : videoPlayerSourceKey(newUrl, nextEntry!.headers);
+    final playerUpdate = playbackPlayerUpdateAction(
+      previous: previousEntry,
+      next: nextEntry,
+      hasController: _videoPlayerController != null,
+      controllerHasPlayed: _videoPlaybackHasProgress,
+      isDrainingEndedLiveStream: _isDrainingEndedLiveStream,
+      samePlayerSource:
+          newSourceKey != null && _videoPlayerSourceKey == newSourceKey,
+      forceReload: forceReloadVideo,
+    );
     setState(() {
       _currentStatus = status;
-      if (status.entry == null || status.entry!.url.isEmpty) {
+      if (!canPlayEntry) {
         _videoInitialization.invalidate();
         _isVideoLoading = false;
         _videoError = null;
       }
     });
 
-    if (skipPlayerSync) return;
+    if (playerUpdate == PlaybackPlayerUpdateAction.drain) {
+      _startEndedLiveStreamDrain();
+      return;
+    }
+    if (playerUpdate == PlaybackPlayerUpdateAction.dispose) {
+      _cancelEndedLiveStreamDrain();
+      final hadController = _videoPlayerController != null;
+      _disposeVideoControllerImmediately();
+      if (mounted && hadController) setState(() {});
+      await _deactivateP2pMedia();
+      return;
+    }
 
-    if (status.entry != null && status.entry!.url.isNotEmpty) {
-      final newUrl = _resourceUrlResolver.resolve(status.entry!.url);
-      final newSourceKey = videoPlayerSourceKey(newUrl, status.entry!.headers);
+    _cancelEndedLiveStreamDrain();
+    if (skipPlayerSync &&
+        canPlayEntry &&
+        !generationChanged &&
+        !forceReloadVideo) {
+      return;
+    }
 
-      if (_videoPlayerController == null ||
-          forceReloadVideo ||
-          _videoPlayerSourceKey != newSourceKey) {
-        await _initVideo(
-          newUrl,
-          headers: status.entry!.headers,
-          forceReload: forceReloadVideo,
-        );
-        if (!mounted || !_isCurrentPlaybackUrl(newUrl)) return;
-        final latestStatus = _currentStatus;
-        if (latestStatus != null &&
-            _videoPlayerController?.value.isInitialized == true) {
-          await _performSync(latestStatus, forceSeek: true);
-        }
-      } else {
-        unawaited(_performSync(status, forceSeek: forceSeek || sourceChanged));
-      }
-
-      final streamUrl = status.entry!.streamDanmu == null
-          ? null
-          : _resourceUrlResolver.resolve(status.entry!.streamDanmu!);
-      final danmuUrl = status.entry!.danmu == null
-          ? null
-          : _resourceUrlResolver.resolve(status.entry!.danmu!);
-
-      _danmakuController.updateConfig(
-        danmakuUrl: danmuUrl,
-        danmakuHeaders: status.entry!.danmuHeaders,
-        streamDanmakuUrl: streamUrl,
-        streamDanmakuHeaders: status.entry!.streamDanmuHeaders,
-        controller: _videoPlayerController,
+    if (playerUpdate == PlaybackPlayerUpdateAction.initialize ||
+        playerUpdate == PlaybackPlayerUpdateAction.reload) {
+      await _initVideo(
+        newUrl!,
+        headers: nextEntry!.headers,
+        forceReload: playerUpdate == PlaybackPlayerUpdateAction.reload,
       );
-      if (!status.entry!.live) {
-        unawaited(_maybeFetchPlaybackDanmaku(status.currentTime));
+      if (!mounted ||
+          !_isCurrentPlaybackSource(newUrl, nextEntry.liveStreamGenerationId)) {
+        return;
+      }
+      final latestStatus = _currentStatus;
+      if (latestStatus != null &&
+          _videoPlayerController?.value.isInitialized == true) {
+        await _performSync(latestStatus, forceSeek: true);
       }
     } else {
-      await _deactivateP2pMedia();
-      if (_videoPlayerController != null) {
-        await _disposeVideoController();
-        if (mounted) setState(() {});
-      }
+      unawaited(_performSync(status, forceSeek: forceSeek || sourceChanged));
+    }
+
+    final streamUrl = nextEntry!.streamDanmu == null
+        ? null
+        : _resourceUrlResolver.resolve(nextEntry.streamDanmu!);
+    final danmuUrl = nextEntry.danmu == null
+        ? null
+        : _resourceUrlResolver.resolve(nextEntry.danmu!);
+
+    _danmakuController.updateConfig(
+      danmakuUrl: danmuUrl,
+      danmakuHeaders: nextEntry.danmuHeaders,
+      streamDanmakuUrl: streamUrl,
+      streamDanmakuHeaders: nextEntry.streamDanmuHeaders,
+      controller: _videoPlayerController,
+    );
+    if (!nextEntry.live) {
+      unawaited(_maybeFetchPlaybackDanmaku(status.currentTime));
     }
   }
 
-  bool _isCurrentPlaybackUrl(String url) {
-    final currentUrl = _currentStatus?.entry?.url;
-    return currentUrl != null &&
+  void _startEndedLiveStreamDrain() {
+    final controller = _videoPlayerController;
+    if (controller == null) return;
+    _cancelSupersededVideoLoad();
+    if (!_isDrainingEndedLiveStream) {
+      _isDrainingEndedLiveStream = true;
+      _endedLiveStreamDrainTimer = Timer(
+        _endedLiveStreamDrainTimeout,
+        () => _finishEndedLiveStreamDrain(controller),
+      );
+    }
+    final value = controller.value;
+    if (value.isCompleted || value.hasError) {
+      _finishEndedLiveStreamDrain(controller);
+    }
+  }
+
+  void _cancelEndedLiveStreamDrain() {
+    _endedLiveStreamDrainTimer?.cancel();
+    _endedLiveStreamDrainTimer = null;
+    _isDrainingEndedLiveStream = false;
+  }
+
+  void _finishEndedLiveStreamDrain(VideoPlayerController controller) {
+    if (!_isDrainingEndedLiveStream ||
+        !identical(_videoPlayerController, controller)) {
+      return;
+    }
+    _cancelEndedLiveStreamDrain();
+    _disposeVideoControllerImmediately();
+    unawaited(_deactivateP2pMedia());
+    if (mounted) setState(() {});
+  }
+
+  bool _isCurrentPlaybackSource(String url, String liveStreamGenerationId) {
+    final currentEntry = _currentStatus?.entry;
+    final currentUrl = currentEntry?.url;
+    return currentEntry != null &&
+        currentEntry.liveStreamGenerationId == liveStreamGenerationId &&
+        currentUrl != null &&
         currentUrl.isNotEmpty &&
         _resourceUrlResolver.resolve(currentUrl) == url;
   }
@@ -2565,6 +2653,7 @@ class _RoomScreenState extends State<RoomScreen>
 
       _videoPlayerController = newController;
       _videoPlayerSourceKey = sourceKey;
+      _videoPlaybackHasProgress = false;
       _videoPlayerController!.addListener(_videoListener);
       _observeAdaptiveVideoTracks(newController);
 
@@ -2763,7 +2852,9 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Widget _buildVideoEmptyState() {
-    final hasPlayback = _currentStatus?.entry?.url.isNotEmpty == true;
+    final entry = _currentStatus?.entry;
+    final hasPlayback =
+        entry?.url.isNotEmpty == true && entry?.isLiveStreamPlayable == true;
     return PlaybackEmptyState(
       error: _roomSessionError ?? _videoError,
       loading: _isVideoLoading,
@@ -2784,6 +2875,7 @@ class _RoomScreenState extends State<RoomScreen>
   void _disposeVideoControllerImmediately({
     bool invalidateInitialization = true,
   }) {
+    _cancelEndedLiveStreamDrain();
     if (invalidateInitialization) _cancelSupersededVideoLoad();
     final controller = _videoPlayerController;
     unawaited(_adaptiveVideoTracksSubscription?.cancel());
@@ -2791,6 +2883,7 @@ class _RoomScreenState extends State<RoomScreen>
     _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
     _videoPlayerController = null;
     _videoPlayerSourceKey = null;
+    _videoPlaybackHasProgress = false;
     _playbackDeviationSnapshot = null;
     if (controller == null) return;
     controller.removeListener(_videoListener);
@@ -2813,6 +2906,7 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _disposeVideoController({
     bool invalidateInitialization = true,
   }) async {
+    _cancelEndedLiveStreamDrain();
     if (invalidateInitialization) {
       _cancelSupersededVideoLoad();
     }
@@ -2822,6 +2916,7 @@ class _RoomScreenState extends State<RoomScreen>
     _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
     _videoPlayerController = null;
     _videoPlayerSourceKey = null;
+    _videoPlaybackHasProgress = false;
     _playbackDeviationSnapshot = null;
     if (controller != null) {
       controller.removeListener(_videoListener);
