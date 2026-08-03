@@ -703,6 +703,16 @@ jobs:
             flutter build ios "${build_args[@]}" --no-codesign
           fi
 
+      - name: Verify iOS private API usage
+        run: |
+          ipa="$(find build/ios/ipa -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+          if [[ -n "$ipa" ]]; then
+            artifact="$ipa"
+          else
+            artifact="build/ios/iphoneos/Runner.app"
+          fi
+          bash tool/ci/verify_apple_private_apis.sh "$artifact"
+
       - name: Verify iOS signature and authentication entitlements
         if: steps.signing.outputs.mode == 'signed'
         run: |
@@ -769,6 +779,7 @@ jobs:
             echo "The App Store IPA was not generated" >&2
             exit 1
           fi
+          bash tool/ci/verify_apple_private_apis.sh "$ipa"
           install -d store-dist
           install -m 0644 "$ipa" \
             "store-dist/SyncTV-${{ needs.metadata.outputs.artifact-version }}-ios-app-store.ipa"

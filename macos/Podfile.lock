@@ -10,7 +10,7 @@ PODS:
   - file_picker (0.0.1):
     - Flutter
     - FlutterMacOS
-  - flutter_webrtc (1.4.0):
+  - flutter_webrtc (1.6.0):
     - FlutterMacOS
     - WebRTC-SDK (= 144.7559.09)
   - FlutterMacOS (1.0.0)
@@ -125,7 +125,7 @@ SPEC CHECKSUMS:
   desktop_webview_window: 07ec5b575166556b3b9c96c5b7c962b2c044b452
   device_info_plus: 4fb280989f669696856f8b129e4a5e3cd6c48f76
   file_picker: 70164d9778c42c47218d6cd79ce435de0856b11a
-  flutter_webrtc: fec3dc9284a1f6d21ec2caa91c90bb4c1824eb04
+  flutter_webrtc: 7dd2a2ad0e9c96dad0ae96c42d9a7786d96d8be6
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   media_kit_libs_macos_video: 85a23e549b5f480e72cae3e5634b5514bc692f65
   media_kit_video: fa6564e3799a0a28bff39442334817088b7ca758

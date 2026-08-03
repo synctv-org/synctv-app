@@ -265,4 +265,6 @@ jobs:
             --no-pub \
             --no-codesign \
             --split-debug-info build/symbols/ios-arm64
+          bash tool/ci/verify_apple_private_apis.sh \
+            build/ios/iphoneos/Runner.app
           bash tool/ci/package_release.sh ios arm64 "0.0.0+0-ci" dist/ios

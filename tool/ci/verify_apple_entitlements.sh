@@ -12,6 +12,20 @@ trap 'rm -f "$entitlements_plist" "$entitlements_json"' EXIT
 codesign -d --entitlements :- "$app_path" > "$entitlements_plist" 2>/dev/null
 plutil -convert json -o "$entitlements_json" "$entitlements_plist"
 
+if jq -e '.["com.apple.security.app-sandbox"] == true' \
+  "$entitlements_json" >/dev/null; then
+  jq -e '.["com.apple.security.network.client"] == true' \
+    "$entitlements_json" >/dev/null
+  jq -e '.["com.apple.security.network.server"] == true' \
+    "$entitlements_json" >/dev/null
+else
+  if jq -e '.["com.apple.security.network.server"] == true' \
+    "$entitlements_json" >/dev/null; then
+    echo "iOS app contains the macOS-only network server entitlement" >&2
+    exit 1
+  fi
+fi
+
 if [[ -n "$rp_ids" ]]; then
   IFS=';' read -r -a configured_rp_ids <<< "$rp_ids"
   for raw_rp_id in "${configured_rp_ids[@]}"; do

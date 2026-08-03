@@ -64,6 +64,7 @@ EOF
     cat <<'EOF'
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<!-- Required by the loopback OAuth callback and P2P media gateway servers. -->
 	<key>com.apple.security.network.server</key>
 	<true/>
 	<key>com.apple.security.network.client</key>
