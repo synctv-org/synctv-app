@@ -4,10 +4,15 @@ import 'dart:io';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_config.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_parser.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+enum OAuth2CallbackTransport { appleAuthenticationSession, loopback, appLink }
 
 class OAuth2DeepLinkService {
   static final AppLinks _appLinks = AppLinks();
@@ -21,10 +26,18 @@ class OAuth2DeepLinkService {
   static Stream<Uri> get callbacks => _callbacks.stream;
   static String get mobileCallbackUrl => OAuth2CallbackConfig.mobileCallbackUrl;
   static bool get canCreateSession =>
-      _usesLoopbackCallback || OAuth2CallbackConfig.hasMobileOrigin;
+      _callbackTransport == OAuth2CallbackTransport.loopback ||
+      OAuth2CallbackConfig.hasMobileOrigin;
 
   static Future<OAuth2CallbackSession> createSession() async {
-    if (_usesLoopbackCallback) {
+    if (_callbackTransport ==
+        OAuth2CallbackTransport.appleAuthenticationSession) {
+      return _AppleOAuth2CallbackSession(
+        redirectUri: Uri.parse(mobileCallbackUrl),
+      );
+    }
+
+    if (_callbackTransport == OAuth2CallbackTransport.loopback) {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       return _NativeOAuth2CallbackSession(
         redirectUrl: 'http://127.0.0.1:${server.port}/oauth2/callback',
@@ -53,7 +66,10 @@ class OAuth2DeepLinkService {
 
   static Future<void> initialize() async {
     if (_initialized) return;
-    if (_usesLoopbackCallback || !OAuth2CallbackConfig.hasMobileOrigin) return;
+    if (_callbackTransport != OAuth2CallbackTransport.appLink ||
+        !OAuth2CallbackConfig.hasMobileOrigin) {
+      return;
+    }
     _initialized = true;
 
     _subscription = _appLinks.uriLinkStream.listen(
@@ -115,9 +131,20 @@ class OAuth2DeepLinkService {
     return OAuth2CallbackConfig.isMobileCallbackUri(uri);
   }
 
-  static bool get _usesLoopbackCallback {
-    return Platform.isWindows || Platform.isMacOS || Platform.isLinux;
-  }
+  static OAuth2CallbackTransport get _callbackTransport =>
+      callbackTransportFor(defaultTargetPlatform);
+
+  @visibleForTesting
+  static OAuth2CallbackTransport callbackTransportFor(
+    TargetPlatform platform,
+  ) => switch (platform) {
+    TargetPlatform.iOS ||
+    TargetPlatform.macOS => OAuth2CallbackTransport.appleAuthenticationSession,
+    TargetPlatform.windows ||
+    TargetPlatform.linux => OAuth2CallbackTransport.loopback,
+    TargetPlatform.android ||
+    TargetPlatform.fuchsia => OAuth2CallbackTransport.appLink,
+  };
 
   static Future<OAuth2CallbackPayload> _waitForLoopbackCallback({
     required HttpServer server,
@@ -225,13 +252,60 @@ final class _NativeOAuth2CallbackSession implements OAuth2CallbackSession {
   final Future<void> Function() _close;
 
   @override
-  Future<OAuth2CallbackPayload> waitForCallback({
+  Future<OAuth2CallbackPayload> authorize({
+    required Uri authorizationUrl,
     required String expectedState,
-    Duration timeout = const Duration(minutes: 5),
-  }) => _waitForCallback(expectedState, timeout);
+  }) async {
+    final opened = await launchUrl(
+      authorizationUrl,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened) {
+      throw StateError('Failed to open the authorization page');
+    }
+    return _waitForCallback(expectedState, const Duration(minutes: 5));
+  }
 
   @override
   Future<void> close() => _close();
+}
+
+final class _AppleOAuth2CallbackSession implements OAuth2CallbackSession {
+  const _AppleOAuth2CallbackSession({required this.redirectUri});
+
+  final Uri redirectUri;
+
+  @override
+  String get redirectUrl => redirectUri.toString();
+
+  @override
+  Future<OAuth2CallbackPayload> authorize({
+    required Uri authorizationUrl,
+    required String expectedState,
+  }) async {
+    try {
+      final callback = await FlutterWebAuth2.authenticate(
+        url: authorizationUrl.toString(),
+        callbackUrlScheme: 'https',
+        options: FlutterWebAuth2Options(
+          httpsHost: redirectUri.host,
+          httpsPath: redirectUri.path,
+        ),
+      );
+      return OAuth2CallbackParser.parse(
+        Uri.parse(callback),
+        expectedState: expectedState,
+      );
+    } on PlatformException catch (error) {
+      if (error.code == 'CANCELED') {
+        throw const OAuth2AuthorizationCanceled();
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> close() async {}
 }
 
 final class NativeOAuth2CallbackClient implements OAuth2CallbackClient {

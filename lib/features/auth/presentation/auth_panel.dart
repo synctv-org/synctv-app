@@ -16,7 +16,6 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/auth/presentation/auth_recovery_code_fallback.dart';
 import 'package:synctv_app/core/presentation/widgets/synctv_brand_mark.dart';
 import 'package:synctv_app/features/auth/presentation/user_agreement_dialog.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class AuthPanel extends StatefulWidget {
   const AuthPanel({
@@ -505,40 +504,42 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _startOAuth2(OAuth2ProviderOption provider) async {
     if (!_ensureTermsAccepted()) return;
-    final authorizationPageOpenFailed =
-        context.l10n.authorizationPageOpenFailed;
     await _withLoading(_AuthAction.oauth2, () async {
-      final callbackSession = await widget.oauth2Callbacks.createSession();
-      final start = await widget.gateway.startOAuth2Login(
-        provider.name,
-        redirectUrl: callbackSession.redirectUrl,
-      );
-      try {
+      await withOAuth2CallbackSession(widget.oauth2Callbacks, (
+        callbackSession,
+      ) async {
+        final start = await widget.gateway.startOAuth2Login(
+          provider.name,
+          redirectUrl: callbackSession.redirectUrl,
+        );
+        if (!mounted) return;
         setState(() {
           _oauthProvider = provider.name;
           _oauthAttempt++;
         });
         final attempt = _oauthAttempt;
         final uri = Uri.parse(start.authorizationUrl);
-        final opened =
-            await canLaunchUrl(uri) &&
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-        if (!opened) {
-          throw StateError(authorizationPageOpenFailed);
+        late final OAuth2CallbackPayload parsed;
+        try {
+          parsed = await callbackSession.authorize(
+            authorizationUrl: uri,
+            expectedState: start.state,
+          );
+        } on OAuth2AuthorizationCanceled {
+          if (mounted && attempt == _oauthAttempt) {
+            setState(() => _oauthProvider = null);
+          }
+          return;
         }
-        final parsed = await callbackSession.waitForCallback(
-          expectedState: start.state,
-        );
         if (!mounted || attempt != _oauthAttempt) return;
         final result = await widget.gateway.finishOAuth2Login(
           code: parsed.code,
           state: parsed.state,
         );
+        if (!mounted || attempt != _oauthAttempt) return;
         setState(() => _oauthProvider = null);
         _finishAuth(result);
-      } finally {
-        await callbackSession.close();
-      }
+      });
     });
   }
 

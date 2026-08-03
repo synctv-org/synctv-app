@@ -11,10 +11,26 @@ abstract interface class OAuth2CallbackClient {
 abstract interface class OAuth2CallbackSession {
   String get redirectUrl;
 
-  Future<OAuth2CallbackPayload> waitForCallback({
+  Future<OAuth2CallbackPayload> authorize({
+    required Uri authorizationUrl,
     required String expectedState,
-    Duration timeout = const Duration(minutes: 5),
   });
 
   Future<void> close();
+}
+
+Future<T> withOAuth2CallbackSession<T>(
+  OAuth2CallbackClient client,
+  Future<T> Function(OAuth2CallbackSession session) operation,
+) async {
+  final session = await client.createSession();
+  try {
+    return await operation(session);
+  } finally {
+    await session.close();
+  }
+}
+
+final class OAuth2AuthorizationCanceled implements Exception {
+  const OAuth2AuthorizationCanceled();
 }

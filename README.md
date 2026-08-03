@@ -85,8 +85,8 @@ Contributor-facing layering and test boundaries are documented in [Application A
 | Platform | Minimum | Release artifacts |
 | :--- | :--- | :--- |
 | Android | Android 7.0 / API 24 | Universal, armv7, arm64, and x64 APKs; universal AAB |
-| iOS | iOS 14 | Signed IPA for configured releases; re-signable archive for unsigned fork builds |
-| macOS | macOS 13.5 | Universal, Apple silicon, and Intel DMG/ZIP packages |
+| iOS | iOS 17.4 | Signed IPA for configured releases; re-signable archive for unsigned fork builds |
+| macOS | macOS 14.4 | Universal, Apple silicon, and Intel DMG/ZIP packages |
 | Windows | Windows 10 1809 | x64 Inno Setup EXE and portable ZIP; supported on Windows ARM64 through x64 emulation |
 | Linux | Current Debian/Ubuntu baseline | x64 and ARM64 DEB packages and portable TAR.GZ archives |
 

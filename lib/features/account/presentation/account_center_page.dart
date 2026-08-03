@@ -28,7 +28,6 @@ import 'package:synctv_app/core/presentation/notifications/app_notifications.dar
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/core/presentation/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/features/auth/presentation/auth_recovery_code_fallback.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 part 'account_dialogs.dart';
 part 'account_widgets.dart';
@@ -1045,13 +1044,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     try {
       final verificationId = await _verifySensitiveOperation();
       if (verificationId == null) return;
-      final callbackSession = await oauth2Callbacks.createSession();
-      final start = await _gateway.startOAuth2Bind(
-        provider.name,
-        redirectUrl: callbackSession.redirectUrl,
-        verificationId: verificationId,
-      );
-      try {
+      await withOAuth2CallbackSession(oauth2Callbacks, (callbackSession) async {
+        final start = await _gateway.startOAuth2Bind(
+          provider.name,
+          redirectUrl: callbackSession.redirectUrl,
+          verificationId: verificationId,
+        );
         if (!mounted) return;
         setState(() {
           _bindProvider = provider.name;
@@ -1059,25 +1057,18 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         });
         final attempt = _bindAttempt;
         final uri = Uri.parse(start.authorizationUrl);
-        final opened = await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-        if (!opened && mounted) {
-          AppNotifications.showError(
-            context,
-            context.l10n.openAuthorizationLinkFailed,
+        late final OAuth2CallbackPayload parsed;
+        try {
+          parsed = await callbackSession.authorize(
+            authorizationUrl: uri,
+            expectedState: start.state,
           );
+        } on OAuth2AuthorizationCanceled {
+          if (mounted && attempt == _bindAttempt) {
+            setState(() => _bindProvider = null);
+          }
           return;
-        } else if (mounted) {
-          AppNotifications.showInfo(
-            context,
-            context.l10n.completeAuthorizationInBrowser,
-          );
         }
-        final parsed = await callbackSession.waitForCallback(
-          expectedState: start.state,
-        );
         if (!mounted || attempt != _bindAttempt) return;
         await _gateway.finishOAuth2Bind(code: parsed.code, state: parsed.state);
         final linked = await _gateway.getLinkedOAuth2Accounts();
@@ -1088,9 +1079,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           _bindProvider = null;
         });
         AppNotifications.showSuccess(context, context.l10n.oauthAccountBound);
-      } finally {
-        await callbackSession.close();
-      }
+      });
     } catch (e) {
       if (mounted) {
         AppNotifications.showError(

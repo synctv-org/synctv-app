@@ -2702,7 +2702,7 @@ void main() {
     expect(OAuth2CallbackConfig.hasMobileOrigin, isFalse);
     expect(
       OAuth2DeepLinkService.canCreateSession,
-      io.Platform.isWindows || io.Platform.isMacOS || io.Platform.isLinux,
+      io.Platform.isWindows || io.Platform.isLinux,
     );
     expect(() => OAuth2DeepLinkService.mobileCallbackUrl, throwsStateError);
     expect(

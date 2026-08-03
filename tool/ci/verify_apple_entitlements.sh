@@ -45,4 +45,7 @@ if [[ -n "$oauth2_origin" ]]; then
   jq -e --arg domain "applinks:$oauth2_host" \
     '.["com.apple.developer.associated-domains"] | index($domain) != null' \
     "$entitlements_json" >/dev/null
+  jq -e --arg domain "webcredentials:$oauth2_host" \
+    '.["com.apple.developer.associated-domains"] | index($domain) != null' \
+    "$entitlements_json" >/dev/null
 fi

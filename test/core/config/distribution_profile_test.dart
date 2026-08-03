@@ -16,7 +16,7 @@ void main() {
       }
     });
 
-    test('store distribution excludes third-party providers and OAuth2', () {
+    test('store distribution excludes media providers and keeps OAuth2', () {
       expect(store.allowsOAuth2, isTrue);
       for (final provider
           in ProviderDistributionPolicy.thirdPartyProviderTypes) {

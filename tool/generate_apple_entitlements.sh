@@ -51,6 +51,30 @@ if [[ -n "$PASSKEY_RP_IDS" && -n "$SIGNING_TEAM" ]]; then
   done
 fi
 
+associated_domains=()
+append_associated_domain() {
+  local candidate="$1"
+  local existing
+  if [[ ${#associated_domains[@]} -gt 0 ]]; then
+    for existing in "${associated_domains[@]}"; do
+      if [[ "$existing" == "$candidate" ]]; then
+        return
+      fi
+    done
+  fi
+  associated_domains+=("$candidate")
+}
+
+if [[ -n "$oauth2_host" ]]; then
+  append_associated_domain "applinks:$oauth2_host"
+  append_associated_domain "webcredentials:$oauth2_host"
+fi
+if [[ ${#passkey_domains[@]} -gt 0 ]]; then
+  for rp_id in "${passkey_domains[@]}"; do
+    append_associated_domain "webcredentials:$rp_id"
+  done
+fi
+
 mkdir -p "$(dirname "$OUTPUT")"
 {
   cat <<'EOF'
@@ -64,7 +88,7 @@ EOF
     cat <<'EOF'
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
-	<!-- Required by the loopback OAuth callback and P2P media gateway servers. -->
+	<!-- Required by the P2P media gateway. -->
 	<key>com.apple.security.network.server</key>
 	<true/>
 	<key>com.apple.security.network.client</key>
@@ -85,13 +109,10 @@ EOF
     exit 1
   fi
 
-  if [[ -n "$oauth2_host" || ${#passkey_domains[@]} -gt 0 ]]; then
+  if [[ ${#associated_domains[@]} -gt 0 ]]; then
     printf '\t<key>com.apple.developer.associated-domains</key>\n\t<array>\n'
-    if [[ -n "$oauth2_host" ]]; then
-      printf '\t\t<string>applinks:%s</string>\n' "$oauth2_host"
-    fi
-    for rp_id in "${passkey_domains[@]}"; do
-      printf '\t\t<string>webcredentials:%s</string>\n' "$rp_id"
+    for domain in "${associated_domains[@]}"; do
+      printf '\t\t<string>%s</string>\n' "$domain"
     done
     printf '\t</array>\n'
   fi
