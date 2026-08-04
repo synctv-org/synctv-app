@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="PiPStyle" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!--设置Dialog的windowFrame框为无-->
+<!--        <item name="android:windowFrame">@null</item>-->
+        <!--设置无标题-->
+        <item name="android:windowNoTitle">true</item>
+        <!--是否浮现在activity之上-->
+        <!--        <item name="android:windowIsFloating">true</item>-->
+        <!--是否半透明-->
+<!--        <item name="android:windowIsTranslucent">true</item>-->
+    </style>
+
+</resources>

@@ -69,7 +69,11 @@ dependencies:
   webview_flutter: ^4.14.1
   desktop_webview_window: ^0.3.0
   media_kit_libs_macos_video: ^1.1.4
-  fl_pip: ^3.2.3
+  # The latest upstream release uses optional FlutterEngine access that fails
+  # with the non-optional Flutter 3.44.8 API. Keep the plugin source local
+  # until upstream publishes a compatible release.
+  fl_pip:
+    path: packages/fl_pip
   window_manager: ^0.5.2
   forui: ^0.25.0
   flex_color_scheme: ^8.4.0

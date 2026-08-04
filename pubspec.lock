@@ -244,10 +244,9 @@ packages:
   fl_pip:
     dependency: "direct main"
     description:
-      name: fl_pip
-      sha256: "564aad008e710cb428c2461463473480ebd36f9e5487f59c4d2c3580a0904b63"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/fl_pip"
+      relative: true
+    source: path
     version: "3.2.3"
   flex_color_scheme:
     dependency: "direct main"
