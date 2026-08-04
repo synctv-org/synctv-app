@@ -132,17 +132,27 @@ EOF
     fi
     ditto -c -k --sequesterRsrc --keepParent "$app_path" \
       "$output_directory/SyncTV-$version-macos-$architecture-$signing_label.zip"
+    create_dmg="tool/ci/macos-dmg/node_modules/.bin/create-dmg"
+    if [[ ! -x "$create_dmg" ]]; then
+      echo "macOS packaging dependencies are missing; run npm ci --prefix tool/ci/macos-dmg" >&2
+      exit 1
+    fi
+    dmg_path="$output_directory/SyncTV-$version-macos-$architecture-$signing_label.dmg"
     dmg_staging="$(mktemp -d)"
     trap 'rm -rf "${dmg_staging:-}"' EXIT
-    ditto "$app_path" "$dmg_staging/SyncTV.app"
-    ln -s /Applications "$dmg_staging/Applications"
-    hdiutil create \
-      -volname "SyncTV" \
-      -srcfolder "$dmg_staging" \
-      -ov \
-      -format UDZO \
-      -imagekey zlib-level=9 \
-      "$output_directory/SyncTV-$version-macos-$architecture-$signing_label.dmg"
+    "$create_dmg" \
+      "$app_path" \
+      "$dmg_staging" \
+      --overwrite \
+      --no-version-in-filename \
+      --no-code-sign \
+      --dmg-title=SyncTV
+    generated_dmg="$dmg_staging/SyncTV.dmg"
+    if [[ ! -f "$generated_dmg" ]]; then
+      echo "macOS disk image was not generated: $generated_dmg" >&2
+      exit 1
+    fi
+    mv "$generated_dmg" "$dmg_path"
     rm -rf "$dmg_staging"
     trap - EXIT
     ;;

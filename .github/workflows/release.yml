@@ -56,6 +56,7 @@ concurrency:
 
 env:
   FLUTTER_VERSION: "3.44.8"
+  NODE_VERSION: "24"
   RUST_VERSION: "1.97.1"
   SYNCTV_BUILT_IN_SERVER_URL: ${{ vars.SYNCTV_BUILT_IN_SERVER_URL }}
   SYNCTV_STORE_BUILT_IN_SERVER_URL: ${{ vars.SYNCTV_STORE_BUILT_IN_SERVER_URL || '' }}
@@ -489,6 +490,14 @@ jobs:
           flutter-architecture: arm64
           rust-version: ${{ env.RUST_VERSION }}
           rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Set up Node.js for macOS packaging
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install macOS packaging dependencies
+        run: npm ci --prefix tool/ci/macos-dmg
 
       - name: Configure macOS release signing
         id: signing

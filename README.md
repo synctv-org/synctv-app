@@ -97,6 +97,7 @@ Every GitHub Release contains a quick-download matrix and `SHA256SUMS.txt`. Nati
 ### Prerequisites
 
 - [FVM](https://fvm.app/) with Flutter `3.44.8` and Dart `3.12.2`.
+- Node.js `24` and npm for macOS DMG packaging.
 - Rust `1.97.1` for the OPAQUE native asset.
 - Protobuf compiler `35.1` and Dart `protoc_plugin 25.0.0` when regenerating API code.
 - The native platform toolchain for the target: Java 17 and Android SDK, Xcode, Visual Studio, or the Linux GTK/WebKit/MPV development packages.
