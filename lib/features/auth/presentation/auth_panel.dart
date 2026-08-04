@@ -505,41 +505,44 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   Future<void> _startOAuth2(OAuth2ProviderOption provider) async {
     if (!_ensureTermsAccepted()) return;
     await _withLoading(_AuthAction.oauth2, () async {
-      await withOAuth2CallbackSession(widget.oauth2Callbacks, (
-        callbackSession,
-      ) async {
-        final start = await widget.gateway.startOAuth2Login(
-          provider.name,
-          redirectUrl: callbackSession.redirectUrl,
-        );
-        if (!mounted) return;
-        setState(() {
-          _oauthProvider = provider.name;
-          _oauthAttempt++;
-        });
-        final attempt = _oauthAttempt;
-        final uri = Uri.parse(start.authorizationUrl);
-        late final OAuth2CallbackPayload parsed;
-        try {
-          parsed = await callbackSession.authorize(
-            authorizationUrl: uri,
-            expectedState: start.state,
+      try {
+        await withOAuth2CallbackSession(widget.oauth2Callbacks, (
+          callbackSession,
+        ) async {
+          final start = await widget.gateway.startOAuth2Login(
+            provider.name,
+            redirectUrl: callbackSession.redirectUrl,
           );
-        } on OAuth2AuthorizationCanceled {
-          if (mounted && attempt == _oauthAttempt) {
-            setState(() => _oauthProvider = null);
+          if (!mounted) return;
+          setState(() {
+            _oauthProvider = provider.name;
+            _oauthAttempt++;
+          });
+          final attempt = _oauthAttempt;
+          final uri = Uri.parse(start.authorizationUrl);
+          late final OAuth2CallbackPayload parsed;
+          try {
+            parsed = await callbackSession.authorize(
+              authorizationUrl: uri,
+              expectedState: start.state,
+            );
+          } on OAuth2AuthorizationCanceled {
+            return;
           }
-          return;
+          if (!mounted || attempt != _oauthAttempt) return;
+          final result = await widget.gateway.finishOAuth2Login(
+            code: parsed.code,
+            state: parsed.state,
+          );
+          if (!mounted || attempt != _oauthAttempt) return;
+          setState(() => _oauthProvider = null);
+          _finishAuth(result);
+        });
+      } finally {
+        if (mounted && _oauthProvider != null) {
+          setState(() => _oauthProvider = null);
         }
-        if (!mounted || attempt != _oauthAttempt) return;
-        final result = await widget.gateway.finishOAuth2Login(
-          code: parsed.code,
-          state: parsed.state,
-        );
-        if (!mounted || attempt != _oauthAttempt) return;
-        setState(() => _oauthProvider = null);
-        _finishAuth(result);
-      });
+      }
     });
   }
 

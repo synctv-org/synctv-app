@@ -1042,46 +1042,76 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _startOAuth2Bind(OAuth2ProviderOption provider) async {
     final oauth2Callbacks = _oauth2Callbacks(context);
     try {
-      final verificationId = await _verifySensitiveOperation();
-      if (verificationId == null) return;
-      await withOAuth2CallbackSession(oauth2Callbacks, (callbackSession) async {
-        final start = await _gateway.startOAuth2Bind(
-          provider.name,
-          redirectUrl: callbackSession.redirectUrl,
-          verificationId: verificationId,
-        );
-        if (!mounted) return;
-        setState(() {
-          _bindProvider = provider.name;
-          _bindAttempt++;
-        });
-        final attempt = _bindAttempt;
-        final uri = Uri.parse(start.authorizationUrl);
-        late final OAuth2CallbackPayload parsed;
-        try {
-          parsed = await callbackSession.authorize(
-            authorizationUrl: uri,
-            expectedState: start.state,
-          );
-        } on OAuth2AuthorizationCanceled {
-          if (mounted && attempt == _bindAttempt) {
+      for (
+        var bindAttempt = 1;
+        bindAttempt <= oauth2CallbackBindMaxAttempts;
+        bindAttempt++
+      ) {
+        final verificationId = await _verifySensitiveOperation();
+        if (verificationId == null) {
+          if (mounted && _bindProvider != null) {
             setState(() => _bindProvider = null);
           }
           return;
         }
-        if (!mounted || attempt != _bindAttempt) return;
-        await _gateway.finishOAuth2Bind(code: parsed.code, state: parsed.state);
-        final linked = await _gateway.getLinkedOAuth2Accounts();
-        if (!mounted) return;
-        setState(() {
-          _linkedOAuth2 = linked;
-          _clearLoadError(_moduleOAuthLinks);
-          _bindProvider = null;
-        });
-        AppNotifications.showSuccess(context, context.l10n.oauthAccountBound);
-      });
+        try {
+          await withOAuth2CallbackSession(oauth2Callbacks, (
+            callbackSession,
+          ) async {
+            final start = await _gateway.startOAuth2Bind(
+              provider.name,
+              redirectUrl: callbackSession.redirectUrl,
+              verificationId: verificationId,
+            );
+            if (!mounted) return;
+            setState(() {
+              _bindProvider = provider.name;
+              _bindAttempt++;
+            });
+            final attempt = _bindAttempt;
+            final uri = Uri.parse(start.authorizationUrl);
+            late final OAuth2CallbackPayload parsed;
+            try {
+              parsed = await callbackSession.authorize(
+                authorizationUrl: uri,
+                expectedState: start.state,
+              );
+            } on OAuth2AuthorizationCanceled {
+              if (mounted && attempt == _bindAttempt) {
+                setState(() => _bindProvider = null);
+              }
+              return;
+            }
+            if (!mounted || attempt != _bindAttempt) return;
+            await _gateway.finishOAuth2Bind(
+              code: parsed.code,
+              state: parsed.state,
+            );
+            final linked = await _gateway.getLinkedOAuth2Accounts();
+            if (!mounted) return;
+            setState(() {
+              _linkedOAuth2 = linked;
+              _clearLoadError(_moduleOAuthLinks);
+              _bindProvider = null;
+            });
+            AppNotifications.showSuccess(
+              context,
+              context.l10n.oauthAccountBound,
+            );
+          }, maxBindAttempts: 1);
+          return;
+        } on OAuth2CallbackBindFailed {
+          if (mounted && _bindProvider != null) {
+            setState(() => _bindProvider = null);
+          }
+          if (bindAttempt >= oauth2CallbackBindMaxAttempts) {
+            rethrow;
+          }
+        }
+      }
     } catch (e) {
       if (mounted) {
+        setState(() => _bindProvider = null);
         AppNotifications.showError(
           context,
           context.l10n.oauthBindingFailed('$e'),

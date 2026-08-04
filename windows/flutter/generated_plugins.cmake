@@ -3,7 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  app_links
   desktop_webview_window
   flutter_webrtc
   media_kit_libs_windows_video

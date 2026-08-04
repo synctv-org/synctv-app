@@ -133,7 +133,7 @@ fvm flutter build apk --release \
   --dart-define SYNCTV_BUILT_IN_SERVER_URL=https://tv.example.com
 ```
 
-The Release workflow reads two independent repository variables. `SYNCTV_BUILT_IN_SERVER_URL` configures downloadable GitHub Release assets. `SYNCTV_STORE_BUILT_IN_SERVER_URL` configures Google Play, iOS App Store, and Mac App Store builds and resolves to an empty value when unset. `SYNCTV_PASSKEY_RP_IDS` accepts semicolon-separated RP IDs for native passkey association. `SYNCTV_OAUTH2_APP_LINK_ORIGIN` configures the HTTPS origin used by native OAuth2 callback links.
+The Release workflow reads two independent repository variables. `SYNCTV_BUILT_IN_SERVER_URL` configures downloadable GitHub Release assets. `SYNCTV_STORE_BUILT_IN_SERVER_URL` configures Google Play, iOS App Store, and Mac App Store builds and resolves to an empty value when unset. `SYNCTV_PASSKEY_RP_IDS` accepts semicolon-separated RP IDs for native passkey association. `SYNCTV_OAUTH2_APP_LINK_ORIGIN` configures the HTTPS origin used by Android Auth Tabs and Apple authentication sessions. Windows and Linux use a temporary loopback callback through the system browser.
 
 ## Native Passkeys and Self-hosting
 

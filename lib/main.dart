@@ -39,7 +39,7 @@ import 'package:synctv_app/features/media_library/data/synctv_media_library_gate
 import 'package:synctv_app/features/providers/data/synctv_provider_gateway.dart';
 import 'package:synctv_app/features/providers/infrastructure/desktop_web_verification_client.dart';
 import 'package:synctv_app/core/localization/app_locale_controller.dart';
-import 'package:synctv_app/features/auth/infrastructure/oauth2_deep_link_service.dart';
+import 'package:synctv_app/features/auth/infrastructure/oauth2_callback_service.dart';
 import 'package:synctv_app/features/room/infrastructure/picture_in_picture_service.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_chat_manager.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
@@ -58,8 +58,7 @@ void main(List<String> args) async {
   if (SyncTvService.activeServer != null) {
     await SyncTvService.syncServerTime();
   }
-  const oauth2Callbacks = NativeOAuth2CallbackClient();
-  await oauth2Callbacks.initialize();
+  const oauth2Callbacks = FlutterWebAuth2CallbackClient();
   final p2pMediaPreferences = P2pMediaPreferencesController(
     store: const SharedPreferencesP2pMediaPreferencesStore(),
   );

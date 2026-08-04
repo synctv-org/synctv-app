@@ -24,7 +24,7 @@ import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/providers/presentation/binding/bilibili_geetest_flow.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_config.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_parser.dart';
-import 'package:synctv_app/features/auth/infrastructure/oauth2_deep_link_service.dart';
+import 'package:synctv_app/features/auth/infrastructure/oauth2_callback_service.dart';
 import 'package:synctv_app/features/room_invite/domain/room_invite.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_auth_service.dart';
@@ -2700,7 +2700,7 @@ void main() {
 
   test('OAuth2 app link origin rejects custom schemes', () {
     expect(OAuth2CallbackConfig.hasMobileOrigin, isFalse);
-    expect(() => OAuth2DeepLinkService.mobileCallbackUrl, throwsStateError);
+    expect(() => OAuth2CallbackService.mobileCallbackUrl, throwsStateError);
     expect(
       OAuth2CallbackConfig.parseMobileOrigin('https://app.synctv.local').host,
       'app.synctv.local',
@@ -2757,7 +2757,7 @@ void main() {
       throwsStateError,
     );
     expect(
-      OAuth2DeepLinkService.isOAuth2Callback(
+      OAuth2CallbackConfig.isMobileCallbackUri(
         Uri.parse(
           'https://app.synctv.local/oauth2/callback?code=abc&state=xyz',
         ),
