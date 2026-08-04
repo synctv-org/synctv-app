@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD013 MD033 MD041 -->
 
 <p align="center">
-  <img src="./assets/icon/robot_3.png" alt="SyncTV" width="148">
+  <img src="./assets/icon/logo.svg" alt="SyncTV" width="148">
 </p>
 
 <h1 align="center">SyncTV App</h1>
@@ -100,6 +100,7 @@ Every GitHub Release contains a quick-download matrix and `SHA256SUMS.txt`. Nati
 - Node.js `24` and npm for macOS DMG packaging.
 - Rust `1.97.1` for the OPAQUE native asset.
 - Protobuf compiler `35.1` and Dart `protoc_plugin 25.0.0` when regenerating API code.
+- librsvg and FFmpeg when regenerating app icons.
 - The native platform toolchain for the target: Java 17 and Android SDK, Xcode, Visual Studio, or the Linux GTK/WebKit/MPV development packages.
 
 ```bash
@@ -123,6 +124,16 @@ The app owns the protobuf snapshot in `proto/`; generation never reads from a si
 dart pub global activate protoc_plugin 25.0.0
 bash tool/generate_proto.sh
 git diff --exit-code -- lib/src/generated
+```
+
+### Regenerate app icons
+
+`assets/icon/logo-notext.png` and `assets/icon/logo-notext.svg` are copies of
+the designer-provided no-text logo. The generator only resizes those sources
+and converts them into the formats required by each platform.
+
+```bash
+bash tool/generate_app_icons.sh
 ```
 
 ### Build-time server configuration

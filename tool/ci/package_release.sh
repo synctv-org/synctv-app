@@ -91,13 +91,13 @@ case "$platform" in
       "$debian_root/usr/bin" \
       "$debian_root/usr/share/applications" \
       "$debian_root/usr/share/doc/synctv" \
-      "$debian_root/usr/share/icons/hicolor/512x512/apps"
+      "$debian_root/usr/share/icons"
     cp -a "$bundle_directory/." "$debian_root/opt/synctv/"
     ln -s /opt/synctv/synctv "$debian_root/usr/bin/synctv"
     install -m 0644 linux/packaging/org.synctv.app.desktop \
       "$debian_root/usr/share/applications/org.synctv.app.desktop"
-    install -m 0644 assets/icon/robot_3.png \
-      "$debian_root/usr/share/icons/hicolor/512x512/apps/org.synctv.app.png"
+    cp -a linux/packaging/icons/hicolor \
+      "$debian_root/usr/share/icons/"
     install -m 0644 LICENSE "$debian_root/usr/share/doc/synctv/copyright"
     installed_size="$(du -sk "$debian_root" | cut -f1)"
     cat > "$debian_root/DEBIAN/control" <<EOF

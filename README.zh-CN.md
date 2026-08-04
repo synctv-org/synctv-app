@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD013 MD033 MD041 -->
 
 <p align="center">
-  <img src="./assets/icon/robot_3.png" alt="SyncTV" width="148">
+  <img src="./assets/icon/logo.svg" alt="SyncTV" width="148">
 </p>
 
 <h1 align="center">SyncTV App</h1>
@@ -97,6 +97,7 @@ flowchart LR
 - 使用 [FVM](https://fvm.app/) 管理 Flutter `3.44.8` 与 Dart `3.12.2`。
 - OPAQUE 原生资产使用 Rust `1.97.1`。
 - 重新生成 API 代码时需要 Protobuf compiler `35.1` 和 Dart `protoc_plugin 25.0.0`。
+- 重新生成应用图标时需要 librsvg 和 FFmpeg。
 - 目标平台对应的原生工具链：Java 17 与 Android SDK、Xcode、Visual Studio，或 Linux GTK/WebKit/MPV 开发包。
 
 ```bash
@@ -120,6 +121,15 @@ App 使用 `proto/` 中的 protobuf 快照，生成过程只读取当前仓库�
 dart pub global activate protoc_plugin 25.0.0
 bash tool/generate_proto.sh
 git diff --exit-code -- lib/src/generated
+```
+
+### 重新生成应用图标
+
+`assets/icon/logo-notext.png` 和 `assets/icon/logo-notext.svg` 是设计源文件中
+无文字 Logo 的副本。生成脚本只调整尺寸并转换为各平台要求的格式。
+
+```bash
+bash tool/generate_app_icons.sh
 ```
 
 ### 构建时服务器配置
