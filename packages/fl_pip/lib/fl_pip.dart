@@ -59,7 +59,10 @@ enum PiPStatus {
 }
 
 class PiPStatusInfo {
-  PiPStatusInfo({required this.status, this.isCreateNewEngine = false, this.isEnabledWhenBackground = false});
+  PiPStatusInfo(
+      {required this.status,
+      this.isCreateNewEngine = false,
+      this.isEnabledWhenBackground = false});
 
   PiPStatusInfo.fromMap(Map<dynamic, dynamic> map)
       : status = PiPStatus.values[map['status'] as int],
@@ -107,10 +110,14 @@ class FlPiP {
       return false;
     }
 
-    if (_isAndroid && !(android.aspectRatio.fitsInAndroidRequirements) && !android.createNewEngine) {
-      throw RationalNotMatchingAndroidRequirementsException(android.aspectRatio);
+    if (_isAndroid &&
+        !(android.aspectRatio.fitsInAndroidRequirements) &&
+        !android.createNewEngine) {
+      throw RationalNotMatchingAndroidRequirementsException(
+          android.aspectRatio);
     }
-    final state = await _channel.invokeMethod<bool>('enable', _isAndroid ? android.toMap() : ios.toMap());
+    final state = await _channel.invokeMethod<bool>(
+        'enable', _isAndroid ? android.toMap() : ios.toMap());
     return state ?? false;
   }
 
@@ -142,7 +149,8 @@ class FlPiP {
   /// Toggle front and back
   /// ios仅支持切换后台
   /// ios supports background switching only
-  Future<void> toggle(AppState state) => _channel.invokeMethod('toggle', state == AppState.foreground);
+  Future<void> toggle(AppState state) =>
+      _channel.invokeMethod('toggle', state == AppState.foreground);
 }
 
 enum AppState {
@@ -154,7 +162,11 @@ enum AppState {
 }
 
 class FlPiPConfig {
-  const FlPiPConfig({this.enabledWhenBackground = false, this.createNewEngine = false, this.packageName, this.rect});
+  const FlPiPConfig(
+      {this.enabledWhenBackground = false,
+      this.createNewEngine = false,
+      this.packageName,
+      this.rect});
 
   ///  ios 画中画弹出前视频的初始大小和位置,默认 [left:width/2,top:height/2,width:0.1,height:0.1]
   ///  ios The initial size and position of the video before the picture-in-picture pops up,default [left:width/2,top:height/2,width:0.1,height:0.1]
@@ -291,9 +303,11 @@ class Rational {
         denominator = 16;
 
   @override
-  String toString() => 'Rational(numerator: $numerator, denominator: $denominator)';
+  String toString() =>
+      'Rational(numerator: $numerator, denominator: $denominator)';
 
-  Map<String, dynamic> toMap() => {'numerator': numerator, 'denominator': denominator};
+  Map<String, dynamic> toMap() =>
+      {'numerator': numerator, 'denominator': denominator};
 }
 
 extension on Rational {
