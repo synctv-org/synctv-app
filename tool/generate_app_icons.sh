@@ -4,26 +4,34 @@ set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$project_root"
 
-for command_name in dart rsvg-convert ffmpeg; do
+for command_name in dart rsvg-convert ffmpeg rg; do
   if ! command -v "$command_name" >/dev/null 2>&1; then
     echo "missing icon generation dependency: $command_name" >&2
     exit 1
   fi
 done
 
-icon_png="assets/icon/logo-notext.png"
 icon_svg="assets/icon/logo-notext.svg"
-for source_file in "$icon_png" "$icon_svg"; do
+for source_file in "$icon_svg" "assets/icon/logo-notext.png"; do
   if [[ ! -f "$source_file" ]]; then
     echo "missing no-text logo source: $source_file" >&2
     exit 1
   fi
 done
 
+if rg --quiet '<switch[ >]' "$icon_svg"; then
+  echo "unsupported <switch> element in Flutter SVG asset: $icon_svg" >&2
+  exit 1
+fi
+
+icon_work_directory="$(mktemp -d)"
+trap 'rm -rf "${icon_work_directory:-}"' EXIT
+
+dart run tool/generate_apple_icon_composer.dart
 dart run flutter_launcher_icons
 
-windows_icon_directory="$(mktemp -d)"
-trap 'rm -rf "${windows_icon_directory:-}"' EXIT
+windows_icon_directory="$icon_work_directory/windows"
+mkdir -p "$windows_icon_directory"
 windows_sizes=(16 24 32 48 64 128 256)
 ffmpeg_inputs=()
 ffmpeg_maps=()

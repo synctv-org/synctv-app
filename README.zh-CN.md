@@ -126,7 +126,8 @@ git diff --exit-code -- lib/src/generated
 ### 重新生成应用图标
 
 `assets/icon/logo-notext.png` 和 `assets/icon/logo-notext.svg` 是设计源文件中
-无文字 Logo 的副本。生成脚本只调整尺寸并转换为各平台要求的格式。
+无文字 Logo 的副本。生成脚本会创建 iOS 与 macOS 共用的 Icon Composer 包，
+以及 Android、Windows、Linux 所需的格式。Apple 构建需要 Xcode 26 或更高版本。
 
 ```bash
 bash tool/generate_app_icons.sh

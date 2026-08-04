@@ -101,17 +101,12 @@ dependency_overrides:
 
 flutter_launcher_icons:
   android: true
-  ios: true
   image_path: "assets/icon/logo-notext.png"
   min_sdk_android: 21
-  remove_alpha_ios: true
   windows:
     generate: true
     image_path: "assets/icon/logo-notext.png"
     icon_size: 256
-  macos:
-    generate: true
-    image_path: "assets/icon/logo-notext.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -120,6 +115,9 @@ flutter_launcher_icons:
 flutter:
 
   generate: true
+
+  config:
+    enable-swift-package-manager: true
 
   uses-material-design: true
 

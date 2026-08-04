@@ -474,7 +474,7 @@ jobs:
   macos:
     name: macOS universal
     needs: metadata
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
 
     steps:
@@ -660,7 +660,7 @@ jobs:
   ios:
     name: iOS
     needs: metadata
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
 
     steps:
@@ -678,7 +678,7 @@ jobs:
           rust-targets: aarch64-apple-ios
 
       - name: Verify iOS App Store icons
-        run: bash tool/ci/verify_ios_app_icons.sh
+        run: bash tool/ci/verify_apple_app_icon.sh
 
       - name: Configure iOS release signing
         id: signing
@@ -857,7 +857,7 @@ jobs:
       vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
       (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store)
     needs: [metadata, ios]
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
     environment: app-store
 
@@ -903,7 +903,7 @@ jobs:
       vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
       (github.event_name == 'workflow_dispatch' && inputs.publish_macos_app_store)
     needs: metadata
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 50
     environment: app-store
 

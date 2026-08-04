@@ -7,21 +7,25 @@ class SyncTvBrandMark extends StatelessWidget {
     super.key,
     required this.semanticLabel,
     this.size = 36,
-    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.borderRadius,
   });
 
   static const assetName = 'assets/icon/logo-notext.svg';
+  static const cornerRadiusRatio = 2 / 9;
 
   final String semanticLabel;
   final double size;
-  final BorderRadiusGeometry borderRadius;
+  final BorderRadiusGeometry? borderRadius;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveBorderRadius =
+        borderRadius ?? BorderRadius.circular(size * cornerRadiusRatio);
+
     return AppPanelSurface(
       width: size,
       height: size,
-      borderRadius: borderRadius,
+      borderRadius: effectiveBorderRadius,
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: SvgPicture.asset(
         assetName,

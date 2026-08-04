@@ -231,7 +231,7 @@ jobs:
       inputs.native-build-mode != 'skip' &&
       (github.event_name != 'push' ||
       github.ref_name == github.event.repository.default_branch)
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 75
 
     steps:
@@ -268,7 +268,7 @@ jobs:
 
       - name: Build and package unsigned iOS release
         run: |
-          bash tool/ci/verify_ios_app_icons.sh
+          bash tool/ci/verify_apple_app_icon.sh
           flutter build ios \
             --release \
             --no-pub \

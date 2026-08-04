@@ -129,8 +129,9 @@ git diff --exit-code -- lib/src/generated
 ### Regenerate app icons
 
 `assets/icon/logo-notext.png` and `assets/icon/logo-notext.svg` are copies of
-the designer-provided no-text logo. The generator only resizes those sources
-and converts them into the formats required by each platform.
+the designer-provided no-text logo. The generator creates the shared iOS and
+macOS Icon Composer package plus the Android, Windows, and Linux formats.
+Apple builds require Xcode 26 or newer.
 
 ```bash
 bash tool/generate_app_icons.sh
