@@ -562,20 +562,21 @@ class PasskeysApi {
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel
-        .send(<Object?>[
-          challenge,
-          relyingParty,
-          user,
-          excludeCredentials,
-          pubKeyCredValues,
-          canBePlatformAuthenticator,
-          canBeSecurityKey,
-          residentKeyPreference,
-          userVerificationPreference,
-          attestationPreference,
-          salt,
-        ]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        challenge,
+        relyingParty,
+        user,
+        excludeCredentials,
+        pubKeyCredValues,
+        canBePlatformAuthenticator,
+        canBeSecurityKey,
+        residentKeyPreference,
+        userVerificationPreference,
+        attestationPreference,
+        salt,
+      ],
+    );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
@@ -602,16 +603,17 @@ class PasskeysApi {
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel
-        .send(<Object?>[
-          relyingPartyId,
-          challenge,
-          conditionalUI,
-          allowedCredentials,
-          preferImmediatelyAvailableCredentials,
-          userVerificationPreference,
-          salt,
-        ]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        relyingPartyId,
+        challenge,
+        conditionalUI,
+        allowedCredentials,
+        preferImmediatelyAvailableCredentials,
+        userVerificationPreference,
+        salt,
+      ],
+    );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
