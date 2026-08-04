@@ -69,10 +69,9 @@ dependencies:
   webview_flutter: ^4.14.1
   desktop_webview_window: ^0.3.0
   media_kit_libs_macos_video: ^1.1.4
-  # 3.2.2+ assumes FlutterEngine is optional and fails against Flutter 3.44 on iOS.
-  fl_pip: 3.2.1
+  fl_pip: ^3.2.3
   window_manager: ^0.5.2
-  forui: ^0.24.3
+  forui: ^0.25.0
   flex_color_scheme: ^8.4.0
   responsive_framework: ^1.5.1
   flutter_layout_grid: ^2.0.8
