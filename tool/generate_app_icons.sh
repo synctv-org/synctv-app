@@ -4,7 +4,7 @@ set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$project_root"
 
-for command_name in dart rsvg-convert ffmpeg rg; do
+for command_name in dart rsvg-convert ffmpeg grep; do
   if ! command -v "$command_name" >/dev/null 2>&1; then
     echo "missing icon generation dependency: $command_name" >&2
     exit 1
@@ -19,7 +19,7 @@ for source_file in "$icon_svg" "assets/icon/logo-notext.png"; do
   fi
 done
 
-if rg --quiet '<switch[ >]' "$icon_svg"; then
+if grep -Eq '<switch([[:space:]>])' "$icon_svg"; then
   echo "unsupported <switch> element in Flutter SVG asset: $icon_svg" >&2
   exit 1
 fi

@@ -4,7 +4,7 @@ set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$project_root"
 
-for command_name in dart jq rg; do
+for command_name in dart jq grep; do
   if ! command -v "$command_name" >/dev/null 2>&1; then
     echo "missing Icon Composer verification dependency: $command_name" >&2
     exit 1
@@ -37,11 +37,11 @@ diff -rq "$icon_directory" "$generated_icon"
 for project in \
   ios/Runner.xcodeproj/project.pbxproj \
   macos/Runner.xcodeproj/project.pbxproj; do
-  if ! rg --quiet 'folder\.iconcomposer\.icon' "$project"; then
+  if ! grep -Eq 'folder\.iconcomposer\.icon' "$project"; then
     echo "Icon Composer file type is missing from $project" >&2
     exit 1
   fi
-  if ! rg --quiet 'AppIcon\.icon in Resources' "$project"; then
+  if ! grep -Eq 'AppIcon\.icon in Resources' "$project"; then
     echo "Icon Composer resource phase is missing from $project" >&2
     exit 1
   fi
