@@ -1,3 +1,4 @@
+// Pigeon Host API parameters stay positional to match the generated codecs.
 // ignore_for_file: avoid_positional_boolean_parameters
 import 'package:pigeon/pigeon.dart';
 

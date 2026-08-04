@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:fl_pip/fl_pip.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:synctv_app/features/room/application/picture_in_picture_controller.dart';
 
-enum PictureInPictureBackend { unavailable, android, ios, desktopWindow }
+enum PictureInPictureBackend { unavailable, android, desktopWindow }
 
 const desktopWindowMinimumSize = Size(600, 400);
 const desktopWindowDefaultSize = Size(1100, 720);
@@ -19,7 +18,7 @@ PictureInPictureBackend pictureInPictureBackendForPlatform(
   if (isWeb) return PictureInPictureBackend.unavailable;
   return switch (platform) {
     TargetPlatform.android => PictureInPictureBackend.android,
-    TargetPlatform.iOS => PictureInPictureBackend.ios,
+    TargetPlatform.iOS => PictureInPictureBackend.unavailable,
     TargetPlatform.macOS ||
     TargetPlatform.windows ||
     TargetPlatform.linux => PictureInPictureBackend.desktopWindow,
@@ -66,11 +65,6 @@ class PictureInPictureService
         case PictureInPictureBackend.android:
           _available =
               await _androidChannel.invokeMethod<bool>('isAvailable') ?? false;
-        case PictureInPictureBackend.ios:
-          FlPiP().status.addListener(_handleIosStatusChanged);
-          _available = await FlPiP().isAvailable;
-          await FlPiP().isActive;
-          _handleIosStatusChanged();
         case PictureInPictureBackend.desktopWindow:
           await windowManager.ensureInitialized();
           windowManager.addListener(this);
@@ -100,12 +94,6 @@ class PictureInPictureService
                 'height': 1000,
               }) ??
               false,
-        PictureInPictureBackend.ios => await FlPiP().enable(
-          ios: const FlPiPiOSConfig(
-            enableControls: false,
-            enablePlayback: false,
-          ),
-        ),
         PictureInPictureBackend.desktopWindow => await _enterDesktopWindow(
           ratio.toDouble(),
         ),
@@ -120,13 +108,11 @@ class PictureInPictureService
 
   @override
   Future<void> exit({bool restoreDesktopBounds = true}) async {
-    if (!active.value && backend != PictureInPictureBackend.ios) return;
+    if (!active.value) return;
     try {
       switch (backend) {
         case PictureInPictureBackend.android:
           await _androidChannel.invokeMethod<void>('exit');
-        case PictureInPictureBackend.ios:
-          await FlPiP().disable();
         case PictureInPictureBackend.desktopWindow:
           await _exitDesktopWindow(restoreBounds: restoreDesktopBounds);
         case PictureInPictureBackend.unavailable:
@@ -207,10 +193,6 @@ class PictureInPictureService
       _desktopOriginalBounds = null;
       _restoringDesktopWindow = false;
     }
-  }
-
-  void _handleIosStatusChanged() {
-    active.value = FlPiP().status.value?.status == PiPStatus.enabled;
   }
 
   Future<void> _handleAndroidMethodCall(MethodCall call) async {

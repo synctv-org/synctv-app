@@ -84,14 +84,14 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
 }
 
 void main() {
-  test('picture-in-picture selects the native or desktop platform backend', () {
+  test('picture-in-picture selects a supported platform backend', () {
     expect(
       pictureInPictureBackendForPlatform(TargetPlatform.android),
       PictureInPictureBackend.android,
     );
     expect(
       pictureInPictureBackendForPlatform(TargetPlatform.iOS),
-      PictureInPictureBackend.ios,
+      PictureInPictureBackend.unavailable,
     );
     for (final platform in [
       TargetPlatform.macOS,

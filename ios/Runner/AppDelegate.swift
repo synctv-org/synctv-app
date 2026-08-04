@@ -1,9 +1,8 @@
-import fl_pip
 import Flutter
 import UIKit
 
 @main
-@objc class AppDelegate: FlFlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -24,10 +23,6 @@ import UIKit
       }
       result(Self.appleIdentity())
     }
-  }
-
-  override func registerPlugin(_ registry: FlutterPluginRegistry) {
-    GeneratedPluginRegistrant.register(with: registry)
   }
 
   private static func appleIdentity() -> [String: Any] {

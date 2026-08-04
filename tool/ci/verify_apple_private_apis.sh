@@ -25,6 +25,8 @@ fi
 
 forbidden_selectors=(
   'buttonPressed:'
+  'controlsStyle'
+  'NSXPCConnection'
 )
 found=0
 

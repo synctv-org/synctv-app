@@ -132,6 +132,9 @@ jobs:
           --target-platform android-arm64
           --split-debug-info build/symbols/ci-android-arm64
 
+      - name: Verify Android manifest and launcher icon
+        run: bash tool/ci/verify_android_artifact.sh build/app/outputs/flutter-apk/app-release.apk
+
   linux-native:
     name: Linux ${{ matrix.architecture }} native release
     if: >-

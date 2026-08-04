@@ -75,7 +75,14 @@ if [[ ${#passkey_domains[@]} -gt 0 ]]; then
   done
 fi
 
-mkdir -p "$(dirname "$OUTPUT")"
+output_directory="$(dirname "$OUTPUT")"
+mkdir -p "$output_directory"
+temporary_output="$(mktemp "$output_directory/.synctv-entitlements.XXXXXX")"
+cleanup() {
+  rm -f "$temporary_output"
+}
+trap cleanup EXIT
+
 {
   cat <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -121,4 +128,9 @@ EOF
 </dict>
 </plist>
 EOF
-} > "$OUTPUT"
+} > "$temporary_output"
+
+if [[ -f "$OUTPUT" ]] && cmp -s "$temporary_output" "$OUTPUT"; then
+  exit 0
+fi
+mv "$temporary_output" "$OUTPUT"

@@ -249,6 +249,11 @@ jobs:
           --build-number "${{ needs.metadata.outputs.build-number }}"
           --split-debug-info build/symbols/android-all
 
+      - name: Verify Android manifest and launcher icon
+        run: >-
+          bash tool/ci/verify_android_artifact.sh
+          build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+
       - name: Package Android artifacts
         run: bash tool/ci/package_release.sh android all "${{ needs.metadata.outputs.artifact-version }}" dist
 

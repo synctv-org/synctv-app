@@ -80,7 +80,75 @@ void main() {
         .map((element) => element.innerText)
         .toList(growable: false);
     expect(keys, isNot(contains('NSBonjourServices')));
+    expect(keys, contains('NSMicrophoneUsageDescription'));
+    expect(keys, contains('NSLocalNetworkUsageDescription'));
+    expect(keys, isNot(contains('NSCameraUsageDescription')));
+    expect(keys, isNot(contains('NSPhotoLibraryUsageDescription')));
     expect(strings, contains('audio'));
     expect(strings, isNot(contains('voip')));
+  });
+
+  test('Android launcher uses adaptive and monochrome icon resources', () {
+    const androidNamespace = 'http://schemas.android.com/apk/res/android';
+    final manifest = XmlDocument.parse(
+      File('android/app/src/main/AndroidManifest.xml').readAsStringSync(),
+    );
+    final application = manifest.findAllElements('application').single;
+    expect(
+      application.getAttribute('icon', namespaceUri: androidNamespace),
+      '@mipmap/ic_launcher',
+    );
+    expect(
+      application.getAttribute('roundIcon', namespaceUri: androidNamespace),
+      '@mipmap/ic_launcher',
+    );
+
+    final adaptiveIcon = XmlDocument.parse(
+      File(
+        'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+      ).readAsStringSync(),
+    );
+    expect(adaptiveIcon.rootElement.name.local, 'adaptive-icon');
+    expect(
+      adaptiveIcon
+          .findAllElements('background')
+          .single
+          .getAttribute('drawable', namespaceUri: androidNamespace),
+      '@color/ic_launcher_background',
+    );
+
+    for (final layer in ['foreground', 'monochrome']) {
+      final inset = adaptiveIcon
+          .findAllElements(layer)
+          .single
+          .findElements('inset')
+          .single;
+      expect(
+        inset.getAttribute('drawable', namespaceUri: androidNamespace),
+        '@drawable/ic_launcher_$layer',
+      );
+      expect(
+        inset.getAttribute('inset', namespaceUri: androidNamespace),
+        '12%',
+      );
+    }
+
+    for (final density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) {
+      for (final layer in ['foreground', 'monochrome']) {
+        expect(
+          File(
+            'android/app/src/main/res/drawable-$density/'
+            'ic_launcher_$layer.png',
+          ).existsSync(),
+          isTrue,
+        );
+      }
+      expect(
+        File(
+          'android/app/src/main/res/mipmap-$density/ic_launcher.png',
+        ).existsSync(),
+        isTrue,
+      );
+    }
   });
 }
