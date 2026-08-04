@@ -25,9 +25,10 @@ class OAuth2DeepLinkService {
 
   static Stream<Uri> get callbacks => _callbacks.stream;
   static String get mobileCallbackUrl => OAuth2CallbackConfig.mobileCallbackUrl;
-  static bool get canCreateSession =>
-      _callbackTransport == OAuth2CallbackTransport.loopback ||
-      OAuth2CallbackConfig.hasMobileOrigin;
+  static bool get canCreateSession => canCreateSessionFor(
+    defaultTargetPlatform,
+    hasMobileOrigin: OAuth2CallbackConfig.hasMobileOrigin,
+  );
 
   static Future<OAuth2CallbackSession> createSession() async {
     if (_callbackTransport ==
@@ -145,6 +146,15 @@ class OAuth2DeepLinkService {
     TargetPlatform.android ||
     TargetPlatform.fuchsia => OAuth2CallbackTransport.appLink,
   };
+
+  @visibleForTesting
+  static bool canCreateSessionFor(
+    TargetPlatform platform, {
+    required bool hasMobileOrigin,
+  }) {
+    return callbackTransportFor(platform) == OAuth2CallbackTransport.loopback ||
+        hasMobileOrigin;
+  }
 
   static Future<OAuth2CallbackPayload> _waitForLoopbackCallback({
     required HttpServer server,

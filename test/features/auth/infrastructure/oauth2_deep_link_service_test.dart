@@ -36,5 +36,56 @@ void main() {
         OAuth2CallbackTransport.appLink,
       );
     });
+
+    test('creates loopback sessions without a configured app link origin', () {
+      expect(
+        OAuth2DeepLinkService.canCreateSessionFor(
+          TargetPlatform.windows,
+          hasMobileOrigin: false,
+        ),
+        isTrue,
+      );
+      expect(
+        OAuth2DeepLinkService.canCreateSessionFor(
+          TargetPlatform.linux,
+          hasMobileOrigin: false,
+        ),
+        isTrue,
+      );
+    });
+
+    test('requires a configured app link origin for Apple sessions', () {
+      expect(
+        OAuth2DeepLinkService.canCreateSessionFor(
+          TargetPlatform.macOS,
+          hasMobileOrigin: false,
+        ),
+        isFalse,
+      );
+      expect(
+        OAuth2DeepLinkService.canCreateSessionFor(
+          TargetPlatform.iOS,
+          hasMobileOrigin: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test('requires a configured app link origin for app-link sessions', () {
+      expect(
+        OAuth2DeepLinkService.canCreateSessionFor(
+          TargetPlatform.android,
+          hasMobileOrigin: false,
+        ),
+        isFalse,
+      );
+      expect(
+        OAuth2DeepLinkService.canCreateSessionFor(
+          TargetPlatform.fuchsia,
+          hasMobileOrigin: true,
+        ),
+        isTrue,
+      );
+    });
   });
 }

@@ -2700,10 +2700,6 @@ void main() {
 
   test('OAuth2 app link origin rejects custom schemes', () {
     expect(OAuth2CallbackConfig.hasMobileOrigin, isFalse);
-    expect(
-      OAuth2DeepLinkService.canCreateSession,
-      io.Platform.isWindows || io.Platform.isLinux,
-    );
     expect(() => OAuth2DeepLinkService.mobileCallbackUrl, throwsStateError);
     expect(
       OAuth2CallbackConfig.parseMobileOrigin('https://app.synctv.local').host,
