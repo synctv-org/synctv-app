@@ -82,10 +82,45 @@ void main() {
     expect(keys, isNot(contains('NSBonjourServices')));
     expect(keys, contains('NSMicrophoneUsageDescription'));
     expect(keys, contains('NSLocalNetworkUsageDescription'));
-    expect(keys, isNot(contains('NSCameraUsageDescription')));
+    expect(keys, contains('NSCameraUsageDescription'));
     expect(keys, isNot(contains('NSPhotoLibraryUsageDescription')));
     expect(strings, contains('audio'));
     expect(strings, isNot(contains('voip')));
+  });
+
+  test('Apple privacy descriptions cover packaged native capabilities', () {
+    const privacyKeys = [
+      'NSCameraUsageDescription',
+      'NSMicrophoneUsageDescription',
+      'NSLocalNetworkUsageDescription',
+    ];
+
+    for (final platform in ['ios', 'macos']) {
+      final infoPlist = XmlDocument.parse(
+        File('$platform/Runner/Info.plist').readAsStringSync(),
+      );
+      final keys = infoPlist
+          .findAllElements('key')
+          .map((element) => element.innerText)
+          .toSet();
+
+      for (final key in privacyKeys) {
+        expect(keys, contains(key), reason: '$platform is missing $key');
+      }
+
+      for (final locale in ['en', 'zh-Hans']) {
+        final localizedDescriptions = File(
+          '$platform/Runner/$locale.lproj/InfoPlist.strings',
+        ).readAsStringSync();
+        for (final key in privacyKeys) {
+          expect(
+            localizedDescriptions,
+            contains('"$key" = '),
+            reason: '$platform/$locale is missing $key',
+          );
+        }
+      }
+    }
   });
 
   test('Android launcher uses adaptive and monochrome icon resources', () {

@@ -1,2 +1,3 @@
 "NSMicrophoneUsageDescription" = "SyncTV 使用麦克风进行房间语音聊天。";
+"NSCameraUsageDescription" = "SyncTV 使用相机提供可选的房间实时视频通话功能。";
 "NSLocalNetworkUsageDescription" = "SyncTV 使用本地网络建立媒体点对点连接。";

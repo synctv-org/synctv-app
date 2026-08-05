@@ -71,6 +71,8 @@
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>SyncTV uses the microphone for room voice chat.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SyncTV uses the camera for optional real-time video communication in rooms.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSLocalNetworkUsageDescription</key>

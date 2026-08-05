@@ -12,6 +12,30 @@ trap 'rm -f "$entitlements_plist" "$entitlements_json"' EXIT
 codesign -d --entitlements :- "$app_path" > "$entitlements_plist" 2>/dev/null
 plutil -convert json -o "$entitlements_json" "$entitlements_plist"
 
+if [[ -f "$app_path/Contents/Info.plist" ]]; then
+  info_plist="$app_path/Contents/Info.plist"
+else
+  info_plist="$app_path/Info.plist"
+fi
+
+if [[ ! -f "$info_plist" ]]; then
+  echo "Apple app Info.plist does not exist: $info_plist" >&2
+  exit 1
+fi
+
+for purpose_key in \
+  NSCameraUsageDescription \
+  NSMicrophoneUsageDescription \
+  NSLocalNetworkUsageDescription; do
+  purpose_value="$(
+    plutil -extract "$purpose_key" raw -o - "$info_plist" 2>/dev/null || true
+  )"
+  if [[ -z "${purpose_value//[[:space:]]/}" ]]; then
+    echo "Apple app contains an empty or missing $purpose_key" >&2
+    exit 1
+  fi
+done
+
 if jq -e '.["com.apple.security.app-sandbox"] == true' \
   "$entitlements_json" >/dev/null; then
   jq -e '.["com.apple.security.network.client"] == true' \
