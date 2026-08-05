@@ -219,6 +219,7 @@
   "thirdPartyLogin": "第三方登录",
   "continueWithProvider": "使用 {provider} 继续",
   "oauthCallbackUnavailable": "当前构建需要配置 App Link 或桌面回跳才能使用 OAuth2。",
+  "oauthAuthorizationTimedOut": "授权等待超时，请重试。",
   "providerReviewRequired": "{provider}（注册需审核）",
   "providerLoginOnly": "{provider}（仅登录）",
   "acceptTermsSemantics": "同意用户协议和隐私政策",

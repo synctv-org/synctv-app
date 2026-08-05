@@ -37,9 +37,14 @@ Future<T> withOAuth2CallbackSession<T>(
 }
 
 const int oauth2CallbackBindMaxAttempts = 3;
+const Duration oauth2AuthorizationTimeout = Duration(minutes: 3);
 
 final class OAuth2AuthorizationCanceled implements Exception {
   const OAuth2AuthorizationCanceled();
+}
+
+final class OAuth2AuthorizationTimedOut implements Exception {
+  const OAuth2AuthorizationTimedOut();
 }
 
 final class OAuth2CallbackBindFailed implements Exception {

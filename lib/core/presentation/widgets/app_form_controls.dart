@@ -1252,6 +1252,7 @@ class AppSearchField extends StatelessWidget {
 class AppActionButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final IconData? icon;
+  final Widget? prefix;
   final String label;
   final bool loading;
   final AppActionButtonStyle style;
@@ -1264,21 +1265,20 @@ class AppActionButton extends StatelessWidget {
     required this.onPressed,
     required this.label,
     this.icon,
+    this.prefix,
     this.loading = false,
     this.style = AppActionButtonStyle.filled,
     this.size = AppActionButtonSize.md,
     this.focusNode,
     this.autofocus = false,
-  });
+  }) : assert(icon == null || prefix == null);
 
   @override
   Widget build(BuildContext context) {
     final effectiveOnPressed = loading ? null : onPressed;
     final buttonIcon = loading
         ? const FCircularProgress(size: FCircularProgressSizeVariant.sm)
-        : icon == null
-        ? null
-        : Icon(icon, size: 18);
+        : prefix ?? (icon == null ? null : Icon(icon, size: 18));
     final child = Text(label, overflow: TextOverflow.ellipsis);
     final variant = switch (style) {
       AppActionButtonStyle.filled => FButtonVariant.primary,

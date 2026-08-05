@@ -4,17 +4,27 @@ import 'package:synctv_app/features/auth/infrastructure/oauth2_callback_service.
 
 void main() {
   group('OAuth2CallbackService callback transport', () {
-    test('uses flutter_web_auth_2 on every supported native platform', () {
+    test('uses flutter_web_auth_2 on Android, Windows, and Linux', () {
       for (final platform in <TargetPlatform>[
         TargetPlatform.android,
-        TargetPlatform.iOS,
         TargetPlatform.linux,
-        TargetPlatform.macOS,
         TargetPlatform.windows,
       ]) {
         expect(
           OAuth2CallbackService.callbackTransportFor(platform),
           OAuth2CallbackTransport.flutterWebAuth2,
+        );
+      }
+    });
+
+    test('uses cancellable AuthenticationServices sessions on Apple', () {
+      for (final platform in <TargetPlatform>[
+        TargetPlatform.iOS,
+        TargetPlatform.macOS,
+      ]) {
+        expect(
+          OAuth2CallbackService.callbackTransportFor(platform),
+          OAuth2CallbackTransport.darwinAuthenticationSession,
         );
       }
     });

@@ -716,6 +716,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oauthCallbackUnavailable => '当前构建需要配置 App Link 或桌面回跳才能使用 OAuth2。';
 
   @override
+  String get oauthAuthorizationTimedOut => '授权等待超时，请重试。';
+
+  @override
   String providerReviewRequired(String provider) {
     return '$provider（注册需审核）';
   }

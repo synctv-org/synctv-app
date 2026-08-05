@@ -8,7 +8,11 @@ import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart
 import 'package:synctv_app/features/auth/domain/oauth2_callback_config.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_parser.dart';
 
-enum OAuth2CallbackTransport { flutterWebAuth2, unsupported }
+enum OAuth2CallbackTransport {
+  flutterWebAuth2,
+  darwinAuthenticationSession,
+  unsupported,
+}
 
 class OAuth2CallbackService {
   static const String _loopbackLandingPage = '''
@@ -35,7 +39,8 @@ class OAuth2CallbackService {
 
   static Future<OAuth2CallbackSession> createSession() async {
     final platform = defaultTargetPlatform;
-    if (callbackTransportFor(platform) == OAuth2CallbackTransport.unsupported) {
+    final transport = callbackTransportFor(platform);
+    if (transport == OAuth2CallbackTransport.unsupported) {
       throw UnsupportedError(
         'OAuth2 authorization is unavailable on $platform',
       );
@@ -58,22 +63,30 @@ class OAuth2CallbackService {
       redirectUri = Uri.parse(mobileCallbackUrl);
     }
 
-    return _FlutterWebAuth2CallbackSession(
-      redirectUri: redirectUri,
-      usesLoopbackCallback: usesLoopbackCallback(platform),
-      callbackUrlScheme: callbackUrlSchemeFor(platform, redirectUri),
-      options: optionsFor(platform, redirectUri),
-    );
+    return switch (transport) {
+      OAuth2CallbackTransport.flutterWebAuth2 =>
+        _FlutterWebAuth2CallbackSession(
+          redirectUri: redirectUri,
+          usesLoopbackCallback: usesLoopbackCallback(platform),
+          callbackUrlScheme: callbackUrlSchemeFor(platform, redirectUri),
+          options: optionsFor(platform, redirectUri),
+        ),
+      OAuth2CallbackTransport.darwinAuthenticationSession =>
+        _DarwinOAuth2CallbackSession(redirectUri),
+      OAuth2CallbackTransport.unsupported => throw StateError(
+        'Unsupported OAuth2 callback transport',
+      ),
+    };
   }
 
   @visibleForTesting
   static OAuth2CallbackTransport callbackTransportFor(TargetPlatform platform) {
     return switch (platform) {
       TargetPlatform.android ||
-      TargetPlatform.iOS ||
       TargetPlatform.linux ||
-      TargetPlatform.macOS ||
       TargetPlatform.windows => OAuth2CallbackTransport.flutterWebAuth2,
+      TargetPlatform.iOS || TargetPlatform.macOS =>
+        OAuth2CallbackTransport.darwinAuthenticationSession,
       TargetPlatform.fuchsia => OAuth2CallbackTransport.unsupported,
     };
   }
@@ -152,11 +165,15 @@ final class _FlutterWebAuth2CallbackSession implements OAuth2CallbackSession {
     required String expectedState,
   }) async {
     try {
-      final callback = await FlutterWebAuth2.authenticate(
-        url: authorizationUrl.toString(),
-        callbackUrlScheme: callbackUrlScheme,
-        options: options,
-      );
+      final callback =
+          await FlutterWebAuth2.authenticate(
+            url: authorizationUrl.toString(),
+            callbackUrlScheme: callbackUrlScheme,
+            options: options,
+          ).timeout(
+            oauth2AuthorizationTimeout,
+            onTimeout: () => throw const OAuth2AuthorizationTimedOut(),
+          );
       return OAuth2CallbackParser.parse(
         Uri.parse(callback),
         expectedState: expectedState,
@@ -171,6 +188,53 @@ final class _FlutterWebAuth2CallbackSession implements OAuth2CallbackSession {
         throw const OAuth2AuthorizationCanceled();
       }
       rethrow;
+    }
+  }
+}
+
+final class _DarwinOAuth2CallbackSession implements OAuth2CallbackSession {
+  const _DarwinOAuth2CallbackSession(this.redirectUri);
+
+  static const MethodChannel _channel = MethodChannel(
+    'org.synctv.app/darwin_oauth2',
+  );
+
+  final Uri redirectUri;
+
+  @override
+  String get redirectUrl => redirectUri.toString();
+
+  @override
+  Future<OAuth2CallbackPayload> authorize({
+    required Uri authorizationUrl,
+    required String expectedState,
+  }) async {
+    try {
+      final callback = await _channel.invokeMethod<String>('authorize', {
+        'url': authorizationUrl.toString(),
+        'callbackHost': redirectUri.host,
+        'callbackPath': redirectUri.path,
+        'timeoutSeconds': oauth2AuthorizationTimeout.inSeconds,
+      });
+      if (callback == null || callback.isEmpty) {
+        throw PlatformException(
+          code: 'EMPTY_CALLBACK',
+          message: 'The OAuth2 callback URL was empty',
+        );
+      }
+      return OAuth2CallbackParser.parse(
+        Uri.parse(callback),
+        expectedState: expectedState,
+      );
+    } on PlatformException catch (error) {
+      switch (error.code) {
+        case 'CANCELED':
+          throw const OAuth2AuthorizationCanceled();
+        case 'TIMED_OUT':
+          throw const OAuth2AuthorizationTimedOut();
+        default:
+          rethrow;
+      }
     }
   }
 }

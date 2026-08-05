@@ -1,7 +1,9 @@
 # OAuth2 callback configuration
 
-All supported native platforms run OAuth2 sessions through
-`flutter_web_auth_2`.
+Android, Windows, and Linux run OAuth2 sessions through `flutter_web_auth_2`.
+iOS and macOS use a small app-owned bridge to AuthenticationServices so the
+app can cancel an `ASWebAuthenticationSession` when its three-minute deadline
+expires.
 
 Windows and Linux open the system browser and use a temporary loopback
 callback URL:
@@ -16,8 +18,8 @@ authorization start when another process claims that port before the listener
 starts.
 
 Android, iOS, and macOS builds use an HTTPS callback. Android opens an AndroidX
-Auth Tab, iOS opens `ASWebAuthenticationSession`, and macOS opens
-`ASWebAuthenticationSession`. Use an HTTPS host without an explicit port:
+Auth Tab. iOS and macOS open `ASWebAuthenticationSession`. Use an HTTPS host
+without an explicit port:
 
 ```text
 https://{verified-domain}/oauth2/callback
@@ -31,9 +33,9 @@ flutter build ios --dart-define=SYNCTV_OAUTH2_APP_LINK_ORIGIN=https://app.exampl
 flutter build macos --dart-define=SYNCTV_OAUTH2_APP_LINK_ORIGIN=https://app.example.com
 ```
 
-`flutter_web_auth_2` passes the HTTPS host and `/oauth2/callback` path directly
-to AndroidX Auth Tabs and Apple authentication sessions. The app's main Android
-activity has no OAuth callback intent filter.
+The Android integration and the app-owned Apple integration pass the HTTPS host
+and `/oauth2/callback` path directly to their system authentication sessions.
+The app's main Android activity has no OAuth callback intent filter.
 
 macOS and iOS generate the signed entitlements from
 `SYNCTV_OAUTH2_APP_LINK_ORIGIN` during the Xcode build. The resulting

@@ -1406,6 +1406,12 @@ abstract class AppLocalizations {
   /// **'OAuth2 requires an App Link or desktop callback in this build.'**
   String get oauthCallbackUnavailable;
 
+  /// No description provided for @oauthAuthorizationTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorization took too long. Please try again.'**
+  String get oauthAuthorizationTimedOut;
+
   /// No description provided for @providerReviewRequired.
   ///
   /// In en, this message translates to:

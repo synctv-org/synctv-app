@@ -28,6 +28,7 @@ import 'package:synctv_app/core/presentation/notifications/app_notifications.dar
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/core/presentation/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/features/auth/presentation/auth_recovery_code_fallback.dart';
+import 'package:synctv_app/features/auth/presentation/oauth_provider_widgets.dart';
 
 part 'account_dialogs.dart';
 part 'account_widgets.dart';
@@ -1079,6 +1080,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             } on OAuth2AuthorizationCanceled {
               if (mounted && attempt == _bindAttempt) {
                 setState(() => _bindProvider = null);
+              }
+              return;
+            } on OAuth2AuthorizationTimedOut {
+              if (mounted && attempt == _bindAttempt) {
+                setState(() => _bindProvider = null);
+                AppNotifications.showError(
+                  context,
+                  context.l10n.oauthAuthorizationTimedOut,
+                );
               }
               return;
             }
@@ -2926,7 +2936,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     for (final account in _linkedOAuth2)
                       AppTile(
                         contentPadding: EdgeInsets.zero,
-                        prefix: const Icon(Icons.link_rounded),
+                        prefix: OAuthProviderIcon(
+                          type: account.providerType,
+                          name: account.providerInstanceName,
+                        ),
                         title: Text(
                           '${account.providerType} / ${account.providerInstanceName}',
                         ),
@@ -2979,8 +2992,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             onPressed: oauth2Available
                                 ? () => _startOAuth2Bind(provider)
                                 : null,
-                            icon: Icons.open_in_new_rounded,
-                            label: '${provider.type} (${provider.name})',
+                            prefix: OAuthProviderIcon(
+                              type: provider.type,
+                              name: provider.name,
+                            ),
+                            label:
+                                '${oauthProviderDisplayName(type: provider.type, name: provider.name)} (${provider.name})',
                             style: AppActionButtonStyle.outlined,
                           ),
                       ],

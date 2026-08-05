@@ -14,6 +14,7 @@ import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/auth/presentation/auth_recovery_code_fallback.dart';
+import 'package:synctv_app/features/auth/presentation/oauth_provider_widgets.dart';
 import 'package:synctv_app/core/presentation/widgets/synctv_brand_mark.dart';
 import 'package:synctv_app/features/auth/presentation/user_agreement_dialog.dart';
 
@@ -99,7 +100,6 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   bool _registerIdentifierConfirmed = false;
   bool _registerIncludeEmail = false;
   bool _mfaRecoveryCodeActive = false;
-  bool _showOAuthProviders = false;
   _LoginMethod _loginMethod = _LoginMethod.password;
   _RegistrationMethod _registrationMethod = _RegistrationMethod.password;
   _MfaMethod _mfaMethod = _MfaMethod.totp;
@@ -527,6 +527,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               expectedState: start.state,
             );
           } on OAuth2AuthorizationCanceled {
+            return;
+          } on OAuth2AuthorizationTimedOut {
+            if (mounted) {
+              AppNotifications.showError(
+                context,
+                context.l10n.oauthAuthorizationTimedOut,
+              );
+            }
             return;
           }
           if (!mounted || attempt != _oauthAttempt) return;
@@ -1796,26 +1804,23 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppActionButton(
-          onPressed: _loading
-              ? null
-              : () =>
-                    setState(() => _showOAuthProviders = !_showOAuthProviders),
-          icon: _showOAuthProviders
-              ? Icons.expand_less_rounded
-              : Icons.expand_more_rounded,
-          label: context.l10n.thirdPartyLogin,
-          style: AppActionButtonStyle.text,
+        Row(
+          children: [
+            Expanded(child: AppDivider(color: theme.dividerColor)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                context.l10n.thirdPartyLogin,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Expanded(child: AppDivider(color: theme.dividerColor)),
+          ],
         ),
-        AnimatedCrossFade(
-          firstChild: const SizedBox.shrink(),
-          secondChild: _buildOAuth2Buttons(theme),
-          crossFadeState: _showOAuthProviders
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          duration: const Duration(milliseconds: 160),
-          sizeCurve: Curves.easeOut,
-        ),
+        const SizedBox(height: 10),
+        _buildOAuth2Buttons(theme),
       ],
     );
   }
@@ -1827,20 +1832,46 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final visibleProviders = providers ?? _oauth2Providers;
     if (visibleProviders.isEmpty) return const SizedBox.shrink();
     final oauth2Available = widget.oauth2Callbacks.canCreateSession;
-    return Column(
+    final orderedProviders = [
+      ...visibleProviders.where(isAppleOAuthProvider),
+      ...visibleProviders.where((provider) => !isAppleOAuthProvider(provider)),
+    ];
+    final useNativeAppleButton =
+        !kIsWeb && supportsNativeAppleSignInButton(defaultTargetPlatform);
+    final buttons = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final provider in visibleProviders) ...[
-          AppActionButton(
-            onPressed: _loading || !oauth2Available
-                ? null
-                : () => _startOAuth2(provider),
-            icon: Icons.open_in_new_rounded,
-            label: context.l10n.continueWithProvider(
-              _oauth2ProviderLabel(provider),
+        for (final provider in orderedProviders) ...[
+          if (useNativeAppleButton && isAppleOAuthProvider(provider)) ...[
+            NativeAppleSignInButton(
+              enabled: !_loading && oauth2Available,
+              semanticLabel: context.l10n.continueWithProvider('Apple'),
+              onPressed: () => _startOAuth2(provider),
             ),
-            style: AppActionButtonStyle.outlined,
-          ),
+            if (_oauth2ProviderLabel(provider) != 'Apple') ...[
+              const SizedBox(height: 4),
+              Text(
+                _oauth2ProviderLabel(provider),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ] else
+            AppActionButton(
+              onPressed: _loading || !oauth2Available
+                  ? null
+                  : () => _startOAuth2(provider),
+              prefix: OAuthProviderIcon(
+                type: provider.type,
+                name: provider.name,
+              ),
+              label: context.l10n.continueWithProvider(
+                _oauth2ProviderLabel(provider),
+              ),
+              style: AppActionButtonStyle.outlined,
+            ),
           const SizedBox(height: 8),
         ],
         if (!oauth2Available)
@@ -1852,15 +1883,20 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           ),
       ],
     );
+    if (!useNativeAppleButton) return buttons;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 375),
+        child: buttons,
+      ),
+    );
   }
 
   String _oauth2ProviderLabel(OAuth2ProviderOption provider) {
-    final providerName = provider.name.trim();
-    final display = providerName.toLowerCase() == 'apple'
-        ? 'Apple'
-        : provider.type.trim().isEmpty
-        ? providerName
-        : provider.type;
+    final display = oauthProviderDisplayName(
+      type: provider.type,
+      name: provider.name,
+    );
     if (provider.signupNeedReview) {
       return context.l10n.providerReviewRequired(display);
     }

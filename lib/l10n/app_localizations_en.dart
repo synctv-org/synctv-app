@@ -761,6 +761,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'OAuth2 requires an App Link or desktop callback in this build.';
 
   @override
+  String get oauthAuthorizationTimedOut =>
+      'Authorization took too long. Please try again.';
+
+  @override
   String providerReviewRequired(String provider) {
     return '$provider (registration requires review)';
   }

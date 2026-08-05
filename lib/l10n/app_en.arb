@@ -268,6 +268,7 @@
   "continueWithProvider": "Continue with {provider}",
   "@continueWithProvider": {"placeholders": {"provider": {"type": "String"}}},
   "oauthCallbackUnavailable": "OAuth2 requires an App Link or desktop callback in this build.",
+  "oauthAuthorizationTimedOut": "Authorization took too long. Please try again.",
   "providerReviewRequired": "{provider} (registration requires review)",
   "@providerReviewRequired": {"placeholders": {"provider": {"type": "String"}}},
   "providerLoginOnly": "{provider} (login only)",

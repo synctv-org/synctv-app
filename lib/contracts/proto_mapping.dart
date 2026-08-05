@@ -705,6 +705,7 @@ String oauth2ProviderTypeToString(oauth2_enum.OAuth2ProviderType provider) {
     oauth2_enum.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_OIDC => 'oidc',
     oauth2_enum.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_FEISHU => 'feishu',
     oauth2_enum.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_GITEE => 'gitee',
+    oauth2_enum.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_APPLE => 'apple',
     _ => '',
   };
 }
@@ -722,6 +723,7 @@ oauth2_enum.OAuth2ProviderType oauth2ProviderTypeFromString(String value) {
     'oidc' => oauth2_enum.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_OIDC,
     'feishu' => oauth2_enum.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_FEISHU,
     'gitee' => oauth2_enum.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_GITEE,
+    'apple' => oauth2_enum.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_APPLE,
     _ => oauth2_enum.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_UNSPECIFIED,
   };
 }
