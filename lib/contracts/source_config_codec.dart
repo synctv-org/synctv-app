@@ -1808,6 +1808,7 @@ class SourceConfigCodec {
               headers: _stringMap(config['headers']).entries,
               name: _string(config['name']),
               format: _string(config['format']),
+              expiresAt: _optionalInt64(config['expiresAt']),
             ),
           ]
         : mediaMaps.map(_directUrlMediaResourceConfig).toList();
@@ -1836,6 +1837,7 @@ class SourceConfigCodec {
       url: _string(config['url']),
       headers: _stringMap(config['headers']).entries,
       format: _string(config['format']),
+      expiresAt: _optionalInt64(config['expiresAt']),
     );
   }
 
@@ -1847,6 +1849,7 @@ class SourceConfigCodec {
       url: _string(config['url']),
       headers: _stringMap(config['headers']).entries,
       format: _string(config['format']),
+      expiresAt: _optionalInt64(config['expiresAt']),
     );
   }
 
@@ -1857,6 +1860,7 @@ class SourceConfigCodec {
       url: _string(config['url']),
       headers: _stringMap(config['headers']).entries,
       format: _optionalString(config['format']),
+      expiresAt: _optionalInt64(config['expiresAt']),
     );
   }
 
@@ -1922,6 +1926,7 @@ class SourceConfigCodec {
       }
       if (media.name.isNotEmpty) map['name'] = media.name;
       if (media.format.isNotEmpty) map['format'] = media.format;
+      if (media.hasExpiresAt()) map['expiresAt'] = media.expiresAt.toInt();
     }
     return map;
   }
@@ -1949,6 +1954,7 @@ class SourceConfigCodec {
       if (media.headers.isNotEmpty)
         'headers': Map<String, String>.from(media.headers),
       if (media.format.isNotEmpty) 'format': media.format,
+      if (media.hasExpiresAt()) 'expiresAt': media.expiresAt.toInt(),
     };
   }
 
@@ -1962,6 +1968,7 @@ class SourceConfigCodec {
       if (subtitle.headers.isNotEmpty)
         'headers': Map<String, String>.from(subtitle.headers),
       if (subtitle.format.isNotEmpty) 'format': subtitle.format,
+      if (subtitle.hasExpiresAt()) 'expiresAt': subtitle.expiresAt.toInt(),
     };
   }
 
@@ -1974,6 +1981,7 @@ class SourceConfigCodec {
       if (danmaku.headers.isNotEmpty)
         'headers': Map<String, String>.from(danmaku.headers),
       if (danmaku.hasFormat()) 'format': danmaku.format,
+      if (danmaku.hasExpiresAt()) 'expiresAt': danmaku.expiresAt.toInt(),
     };
   }
 

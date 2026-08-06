@@ -605,6 +605,7 @@ const List<String> _oauth2ProviderTypes = [
   'logto',
   'oidc',
   'casdoor',
+  'apple',
 ];
 
 const Map<String, String> _oauth2ProviderTypeLabels = {
@@ -613,6 +614,7 @@ const Map<String, String> _oauth2ProviderTypeLabels = {
   'logto': 'Logto',
   'oidc': 'OIDC',
   'casdoor': 'Casdoor',
+  'apple': 'Apple',
 };
 
 const List<String> _knownPermissions = [
@@ -1043,11 +1045,11 @@ String _settingsSectionLabel(AppLocalizations l10n, String section) =>
       'room' => l10n.rooms,
       'user' => l10n.users,
       'oauth2' => 'OAuth2',
-      'proxy' => l10n.proxy,
       'rtmp' => l10n.streaming,
       'email' => l10n.email,
       'webrtc' => 'WebRTC',
       'chat' => l10n.chat,
+      'playbackHistory' => l10n.playbackHistory,
       'cors' => l10n.cors,
       'permissions' => l10n.permissions,
       _ => section,
@@ -2560,6 +2562,8 @@ class _OAuth2ProviderEditorSheetState
   late final TextEditingController _tokenUrl;
   late final TextEditingController _userinfoUrl;
   late final TextEditingController _jwksUrl;
+  late final String _initialType;
+  late final String _initialClientId;
   late String _type;
   late bool _enableSignup;
   late bool _signupNeedReview;
@@ -2570,6 +2574,8 @@ class _OAuth2ProviderEditorSheetState
     final config = _oauth2ProviderConfig(widget.initialValue);
     _type = _oauth2ProviderType(widget.initialValue);
     if (!_oauth2ProviderTypes.contains(_type)) _type = 'oidc';
+    _initialType = _type;
+    _initialClientId = (config['clientId'] ?? '').toString();
     _enableSignup = widget.initialValue['enableSignup'] == true;
     _signupNeedReview = widget.initialValue['signupNeedReview'] == true;
     _name = TextEditingController(text: widget.initialName ?? _type);
@@ -2648,6 +2654,7 @@ class _OAuth2ProviderEditorSheetState
                         helperText: context.l10n.instanceNameFormatHint,
                         prefixIcon: Icons.badge_outlined,
                         validator: _validateProviderName,
+                        onChanged: (_) => setState(() {}),
                         autocorrect: false,
                         smartDashesType: SmartDashesType.disabled,
                         smartQuotesType: SmartQuotesType.disabled,
@@ -2681,15 +2688,20 @@ class _OAuth2ProviderEditorSheetState
                         'Client ID',
                         Icons.key_outlined,
                         required: true,
+                        onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 12),
                       AppTextField(
                         controller: _clientSecret,
                         label: 'Client Secret',
+                        helperText: _canPreserveClientSecret
+                            ? context.l10n.emptyKeepsCurrentValue
+                            : null,
                         prefixIcon: Icons.password_outlined,
                         obscureText: true,
                         validator: (value) =>
-                            (value == null || value.trim().isEmpty)
+                            (value == null || value.trim().isEmpty) &&
+                                !_canPreserveClientSecret
                             ? context.l10n.clientSecretRequired
                             : null,
                         autocorrect: false,
@@ -2799,12 +2811,14 @@ class _OAuth2ProviderEditorSheetState
     IconData icon, {
     bool required = false,
     String? hintText,
+    ValueChanged<String>? onChanged,
     String? Function(String?)? validator,
   }) {
     return AppTextField(
       controller: controller,
       label: label,
       hintText: hintText,
+      onChanged: onChanged,
       prefixIcon: icon,
       validator:
           validator ??
@@ -2851,13 +2865,22 @@ class _OAuth2ProviderEditorSheetState
     return _validateHttpUrl(raw);
   }
 
+  bool get _canPreserveClientSecret =>
+      widget.initialName != null &&
+      _name.text.trim() == widget.initialName &&
+      _type == _initialType &&
+      _clientId.text.trim() == _initialClientId;
+
   void _save() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final config = <String, dynamic>{
       'clientId': _clientId.text.trim(),
-      'clientSecret': _clientSecret.text,
       'redirectUrl': _redirectUrl.text.trim(),
     };
+    final clientSecret = _clientSecret.text;
+    if (clientSecret.trim().isNotEmpty || !_canPreserveClientSecret) {
+      config['clientSecret'] = clientSecret;
+    }
     if (_type == 'logto') {
       config['endpoint'] = _endpoint.text.trim();
     }

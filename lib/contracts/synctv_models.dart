@@ -255,8 +255,8 @@ class SyncTvRoom {
   }
 }
 
-class P2pMediaDelivery {
-  const P2pMediaDelivery({required this.swarmId, required this.swarmTicket});
+class P2pResourceDelivery {
+  const P2pResourceDelivery({required this.swarmId, required this.swarmTicket});
 
   final String swarmId;
   final String swarmTicket;
@@ -273,7 +273,7 @@ class SyncTvPlaybackUrlOption {
   final String codec;
   final int? fps;
   final Map<String, String> metadata;
-  final P2pMediaDelivery? p2pDelivery;
+  final P2pResourceDelivery? p2pDelivery;
 
   const SyncTvPlaybackUrlOption({
     required this.name,
@@ -325,6 +325,7 @@ class SyncTvPlaybackModeOption {
   final Map<String, dynamic>? subtitles;
   final String? danmu;
   final Map<String, String> danmuHeaders;
+  final P2pResourceDelivery? danmuP2pDelivery;
   final String? streamDanmu;
   final Map<String, String> streamDanmuHeaders;
 
@@ -336,6 +337,7 @@ class SyncTvPlaybackModeOption {
     this.subtitles,
     this.danmu,
     this.danmuHeaders = const {},
+    this.danmuP2pDelivery,
     this.streamDanmu,
     this.streamDanmuHeaders = const {},
   });
@@ -411,6 +413,7 @@ class RoomMediaEntry {
   final Map<String, dynamic>? subtitles;
   final String? danmu;
   final Map<String, String> danmuHeaders;
+  final P2pResourceDelivery? danmuP2pDelivery;
   final String? streamDanmu;
   final Map<String, String> streamDanmuHeaders;
   final String sourceProvider;
@@ -425,6 +428,8 @@ class RoomMediaEntry {
   final int selectedPlaybackUrlIndex;
   final SyncTvLiveStreamAvailability? liveStreamAvailability;
   final String liveStreamGenerationId;
+  final int? liveStartedAt;
+  final int? playbackExpireAt;
 
   RoomMediaEntry({
     required this.id,
@@ -449,6 +454,7 @@ class RoomMediaEntry {
     this.subtitles,
     this.danmu,
     this.danmuHeaders = const {},
+    this.danmuP2pDelivery,
     this.streamDanmu,
     this.streamDanmuHeaders = const {},
     this.sourceProvider = '',
@@ -463,6 +469,8 @@ class RoomMediaEntry {
     this.selectedPlaybackUrlIndex = 0,
     this.liveStreamAvailability,
     this.liveStreamGenerationId = '',
+    this.liveStartedAt,
+    this.playbackExpireAt,
   });
 
   static String playbackUrlFromResource({
@@ -556,6 +564,15 @@ class RoomMediaEntry {
     return mode.urls[index];
   }
 
+  String get playbackAttachmentIdentity => [
+    playbackMediaId,
+    playbackPlaylistId,
+    playbackTarget ?? '',
+    selectedPlaybackMode,
+    selectedPlaybackUrlIndex,
+    liveStreamGenerationId,
+  ].join('\u001f');
+
   String get playbackChoiceLabel {
     final mode = selectedPlaybackModeOption;
     if (mode == null) return '';
@@ -593,6 +610,7 @@ class RoomMediaEntry {
       subtitles: mode.subtitles,
       danmu: mode.danmu,
       danmuHeaders: mode.danmuHeaders,
+      danmuP2pDelivery: mode.danmuP2pDelivery,
       streamDanmu: mode.streamDanmu,
       streamDanmuHeaders: mode.streamDanmuHeaders,
       clearSubtitles: mode.subtitles == null,
@@ -642,6 +660,7 @@ class RoomMediaEntry {
     Map<String, dynamic>? subtitles,
     String? danmu,
     Map<String, String>? danmuHeaders,
+    P2pResourceDelivery? danmuP2pDelivery,
     String? streamDanmu,
     Map<String, String>? streamDanmuHeaders,
     bool clearSubtitles = false,
@@ -659,6 +678,8 @@ class RoomMediaEntry {
     int? selectedPlaybackUrlIndex,
     SyncTvLiveStreamAvailability? liveStreamAvailability,
     String? liveStreamGenerationId,
+    int? liveStartedAt,
+    int? playbackExpireAt,
   }) {
     return RoomMediaEntry(
       id: id ?? this.id,
@@ -683,6 +704,9 @@ class RoomMediaEntry {
       subtitles: clearSubtitles ? null : subtitles ?? this.subtitles,
       danmu: clearDanmu ? null : danmu ?? this.danmu,
       danmuHeaders: clearDanmu ? const {} : danmuHeaders ?? this.danmuHeaders,
+      danmuP2pDelivery: clearDanmu
+          ? null
+          : danmuP2pDelivery ?? this.danmuP2pDelivery,
       streamDanmu: clearStreamDanmu ? null : streamDanmu ?? this.streamDanmu,
       streamDanmuHeaders: clearStreamDanmu
           ? const {}
@@ -702,6 +726,8 @@ class RoomMediaEntry {
           liveStreamAvailability ?? this.liveStreamAvailability,
       liveStreamGenerationId:
           liveStreamGenerationId ?? this.liveStreamGenerationId,
+      liveStartedAt: liveStartedAt ?? this.liveStartedAt,
+      playbackExpireAt: playbackExpireAt ?? this.playbackExpireAt,
     );
   }
 
@@ -740,6 +766,10 @@ class RoomMediaEntry {
     final liveMetadata = playback.hasMetadata() && playback.metadata.hasLive()
         ? playback.metadata.live
         : null;
+    final bilibiliMetadata =
+        playback.hasMetadata() && playback.metadata.hasBilibili()
+        ? playback.metadata.bilibili
+        : null;
     final modes = playbackModeOptionsFromProto(
       playback,
       resolveUrl: resolveUrl,
@@ -776,6 +806,7 @@ class RoomMediaEntry {
       subtitles: selectedMode.subtitles,
       danmu: selectedMode.danmu,
       danmuHeaders: selectedMode.danmuHeaders,
+      danmuP2pDelivery: selectedMode.danmuP2pDelivery,
       streamDanmu: selectedMode.streamDanmu,
       streamDanmuHeaders: selectedMode.streamDanmuHeaders,
       sourceProvider: SourceConfigCodec.providerToString(playback.provider),
@@ -793,11 +824,16 @@ class RoomMediaEntry {
               _ => SyncTvLiveStreamAvailability.unspecified,
             },
       liveStreamGenerationId: liveMetadata?.streamGenerationId ?? '',
+      liveStartedAt: bilibiliMetadata?.hasLiveStartedAt() == true
+          ? bilibiliMetadata!.liveStartedAt.toInt()
+          : null,
+      playbackExpireAt: playback.hasExpiresAt()
+          ? playback.expiresAt.toInt()
+          : null,
       metadata: {
         'defaultMode': playback.defaultMode,
         if (playback.hasMetadata())
           'playbackMetadata': protoMessageToJsonMap(playback.metadata),
-        if (playback.hasExpiresAt()) 'expiresAt': playback.expiresAt.toInt(),
         if (playback.hasDurationSeconds())
           'durationSeconds': playback.durationSeconds,
       },
@@ -820,7 +856,7 @@ class RoomMediaEntry {
       final urls = info.medias.map((media) {
         final metadata = media.hasMetadata() ? media.metadata : null;
         final p2pDelivery = media.hasP2pDelivery()
-            ? P2pMediaDelivery(
+            ? P2pResourceDelivery(
                 swarmId: media.p2pDelivery.swarmId,
                 swarmTicket: media.p2pDelivery.swarmTicket,
               )
@@ -855,6 +891,16 @@ class RoomMediaEntry {
       final format = info.medias.isEmpty
           ? ''
           : info.medias[formatMediaIndex].format;
+      final staticDanmaku = _danmakuFromProto(
+        info.danmakus,
+        stream: false,
+        resolveUrl: resolveUrl,
+      );
+      final streamDanmaku = _danmakuFromProto(
+        info.danmakus,
+        stream: true,
+        resolveUrl: resolveUrl,
+      );
 
       return SyncTvPlaybackModeOption(
         key: entry.key,
@@ -865,18 +911,11 @@ class RoomMediaEntry {
           info.subtitles,
           resolveUrl: resolveUrl,
         ),
-        danmu: _danmuUrlFromProto(
-          info.danmakus,
-          stream: false,
-          resolveUrl: resolveUrl,
-        ),
-        danmuHeaders: _danmuHeadersFromProto(info.danmakus, stream: false),
-        streamDanmu: _danmuUrlFromProto(
-          info.danmakus,
-          stream: true,
-          resolveUrl: resolveUrl,
-        ),
-        streamDanmuHeaders: _danmuHeadersFromProto(info.danmakus, stream: true),
+        danmu: staticDanmaku?.url,
+        danmuHeaders: staticDanmaku?.headers ?? const {},
+        danmuP2pDelivery: staticDanmaku?.p2pDelivery,
+        streamDanmu: streamDanmaku?.url,
+        streamDanmuHeaders: streamDanmaku?.headers ?? const {},
       );
     }).toList();
   }
@@ -901,13 +940,24 @@ class RoomMediaEntry {
         'url': resolveUrl == null ? url : resolveUrl(url),
         'format': subtitle.format,
         'headers': Map<String, String>.from(subtitle.headers),
+        if (subtitle.hasExpireAt()) 'expireAt': subtitle.expireAt.toInt(),
+        if (subtitle.hasP2pDelivery())
+          'p2pDelivery': P2pResourceDelivery(
+            swarmId: subtitle.p2pDelivery.swarmId,
+            swarmTicket: subtitle.p2pDelivery.swarmTicket,
+          ),
       };
       index++;
     }
     return result.isEmpty ? null : result;
   }
 
-  static String? _danmuUrlFromProto(
+  static ({
+    String url,
+    Map<String, String> headers,
+    P2pResourceDelivery? p2pDelivery,
+  })?
+  _danmakuFromProto(
     Iterable<client.PlaybackDanmaku> danmakus, {
     required bool stream,
     String Function(String url)? resolveUrl,
@@ -916,22 +966,19 @@ class RoomMediaEntry {
       final url = danmaku.url.trim();
       if (url.isEmpty) continue;
       if (_isStreamDanmu(danmaku) != stream) continue;
-      return resolveUrl == null ? url : resolveUrl(url);
+      final delivery = danmaku.hasP2pDelivery()
+          ? P2pResourceDelivery(
+              swarmId: danmaku.p2pDelivery.swarmId,
+              swarmTicket: danmaku.p2pDelivery.swarmTicket,
+            )
+          : null;
+      return (
+        url: resolveUrl == null ? url : resolveUrl(url),
+        headers: Map<String, String>.from(danmaku.headers),
+        p2pDelivery: delivery,
+      );
     }
     return null;
-  }
-
-  static Map<String, String> _danmuHeadersFromProto(
-    Iterable<client.PlaybackDanmaku> danmakus, {
-    required bool stream,
-  }) {
-    for (final danmaku in danmakus) {
-      final url = danmaku.url.trim();
-      if (url.isEmpty) continue;
-      if (_isStreamDanmu(danmaku) != stream) continue;
-      return Map<String, String>.from(danmaku.headers);
-    }
-    return const {};
   }
 
   static bool _isStreamDanmu(client.PlaybackDanmaku danmaku) {
@@ -1026,6 +1073,7 @@ class RoomPlaybackEntry extends RoomMediaEntry {
     super.subtitles,
     super.danmu,
     super.danmuHeaders,
+    super.danmuP2pDelivery,
     super.streamDanmu,
     super.streamDanmuHeaders,
     super.sourceProvider,
@@ -1035,6 +1083,8 @@ class RoomPlaybackEntry extends RoomMediaEntry {
     super.selectedPlaybackUrlIndex,
     super.liveStreamAvailability,
     super.liveStreamGenerationId,
+    super.liveStartedAt,
+    super.playbackExpireAt,
     super.metadata,
   });
 }

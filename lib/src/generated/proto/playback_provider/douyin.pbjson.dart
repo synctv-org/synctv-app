@@ -17,6 +17,22 @@ import 'dart:typed_data' as $typed_data;
 
 import 'common.pbjson.dart' as $0;
 
+@$core.Deprecated('Use douyinHlsResourceKindDescriptor instead')
+const DouyinHlsResourceKind$json = {
+  '1': 'DouyinHlsResourceKind',
+  '2': [
+    {'1': 'DOUYIN_HLS_RESOURCE_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'DOUYIN_HLS_RESOURCE_KIND_MEDIA', '2': 1},
+    {'1': 'DOUYIN_HLS_RESOURCE_KIND_MANIFEST', '2': 2},
+  ],
+};
+
+/// Descriptor for `DouyinHlsResourceKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List douyinHlsResourceKindDescriptor = $convert.base64Decode(
+    'ChVEb3V5aW5IbHNSZXNvdXJjZUtpbmQSKAokRE9VWUlOX0hMU19SRVNPVVJDRV9LSU5EX1VOU1'
+    'BFQ0lGSUVEEAASIgoeRE9VWUlOX0hMU19SRVNPVVJDRV9LSU5EX01FRElBEAESJQohRE9VWUlO'
+    'X0hMU19SRVNPVVJDRV9LSU5EX01BTklGRVNUEAI=');
+
 @$core.Deprecated('Use getDouyinResourceRequestDescriptor instead')
 const GetDouyinResourceRequest$json = {
   '1': 'GetDouyinResourceRequest',
@@ -66,9 +82,9 @@ final $typed_data.Uint8List douyinResourceResponseDescriptor =
         'ChZEb3V5aW5SZXNvdXJjZVJlc3BvbnNlEkIKBWNodW5rGAEgASgLMiwuc3luY3R2LnBsYXliYW'
         'NrX3Byb3ZpZGVyLmNvbW1vbi5TdHJlYW1DaHVua1IFY2h1bms=');
 
-@$core.Deprecated('Use getDouyinSegmentRequestDescriptor instead')
-const GetDouyinSegmentRequest$json = {
-  '1': 'GetDouyinSegmentRequest',
+@$core.Deprecated('Use getDouyinHlsResourceRequestDescriptor instead')
+const GetDouyinHlsResourceRequest$json = {
+  '1': 'GetDouyinHlsResourceRequest',
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
     {'1': 'target_url', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'targetUrl'},
@@ -78,23 +94,37 @@ const GetDouyinSegmentRequest$json = {
     {'1': 'exp', '3': 6, '4': 1, '5': 3, '10': 'exp'},
     {'1': 'range', '3': 7, '4': 1, '5': 9, '9': 0, '10': 'range', '17': true},
     {'1': 'head', '3': 8, '4': 1, '5': 8, '10': 'head'},
+    {'1': 'mode_name', '3': 9, '4': 1, '5': 9, '8': {}, '10': 'modeName'},
+    {'1': 'media_index', '3': 10, '4': 1, '5': 13, '10': 'mediaIndex'},
+    {
+      '1': 'resource_kind',
+      '3': 11,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.playback_provider.douyin.DouyinHlsResourceKind',
+      '8': {},
+      '10': 'resourceKind'
+    },
   ],
   '8': [
     {'1': '_range'},
   ],
 };
 
-/// Descriptor for `GetDouyinSegmentRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getDouyinSegmentRequestDescriptor = $convert.base64Decode(
-    'ChdHZXREb3V5aW5TZWdtZW50UmVxdWVzdBIhCgd2ZXJzaW9uGAEgASgJQge6SARyAhABUgd2ZX'
-    'JzaW9uEiYKCnRhcmdldF91cmwYAiABKAlCB7pIBHICEAFSCXRhcmdldFVybBIZCgNzaWcYAyAB'
-    'KAlCB7pIBHICEAFSA3NpZxIZCgN1aWQYBCABKAlCB7pIBHICEAFSA3VpZBIZCgNyaWQYBSABKA'
-    'lCB7pIBHICEAFSA3JpZBIQCgNleHAYBiABKANSA2V4cBIZCgVyYW5nZRgHIAEoCUgAUgVyYW5n'
-    'ZYgBARISCgRoZWFkGAggASgIUgRoZWFkQggKBl9yYW5nZQ==');
+/// Descriptor for `GetDouyinHlsResourceRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getDouyinHlsResourceRequestDescriptor = $convert.base64Decode(
+    'ChtHZXREb3V5aW5IbHNSZXNvdXJjZVJlcXVlc3QSIQoHdmVyc2lvbhgBIAEoCUIHukgEcgIQAV'
+    'IHdmVyc2lvbhImCgp0YXJnZXRfdXJsGAIgASgJQge6SARyAhABUgl0YXJnZXRVcmwSGQoDc2ln'
+    'GAMgASgJQge6SARyAhABUgNzaWcSGQoDdWlkGAQgASgJQge6SARyAhABUgN1aWQSGQoDcmlkGA'
+    'UgASgJQge6SARyAhABUgNyaWQSEAoDZXhwGAYgASgDUgNleHASGQoFcmFuZ2UYByABKAlIAFIF'
+    'cmFuZ2WIAQESEgoEaGVhZBgIIAEoCFIEaGVhZBIkCgltb2RlX25hbWUYCSABKAlCB7pIBHICEA'
+    'FSCG1vZGVOYW1lEh8KC21lZGlhX2luZGV4GAogASgNUgptZWRpYUluZGV4EmUKDXJlc291cmNl'
+    'X2tpbmQYCyABKA4yNi5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuZG91eWluLkRvdXlpbkhsc1'
+    'Jlc291cmNlS2luZEIIukgFggECEAFSDHJlc291cmNlS2luZEIICgZfcmFuZ2U=');
 
-@$core.Deprecated('Use douyinSegmentResponseDescriptor instead')
-const DouyinSegmentResponse$json = {
-  '1': 'DouyinSegmentResponse',
+@$core.Deprecated('Use douyinHlsResourceResponseDescriptor instead')
+const DouyinHlsResourceResponse$json = {
+  '1': 'DouyinHlsResourceResponse',
   '2': [
     {
       '1': 'chunk',
@@ -107,10 +137,11 @@ const DouyinSegmentResponse$json = {
   ],
 };
 
-/// Descriptor for `DouyinSegmentResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List douyinSegmentResponseDescriptor = $convert.base64Decode(
-    'ChVEb3V5aW5TZWdtZW50UmVzcG9uc2USQgoFY2h1bmsYASABKAsyLC5zeW5jdHYucGxheWJhY2'
-    'tfcHJvdmlkZXIuY29tbW9uLlN0cmVhbUNodW5rUgVjaHVuaw==');
+/// Descriptor for `DouyinHlsResourceResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List douyinHlsResourceResponseDescriptor =
+    $convert.base64Decode(
+        'ChlEb3V5aW5IbHNSZXNvdXJjZVJlc3BvbnNlEkIKBWNodW5rGAEgASgLMiwuc3luY3R2LnBsYX'
+        'liYWNrX3Byb3ZpZGVyLmNvbW1vbi5TdHJlYW1DaHVua1IFY2h1bms=');
 
 @$core.Deprecated('Use watchDouyinDanmakuRequestDescriptor instead')
 const WatchDouyinDanmakuRequest$json = {
@@ -237,9 +268,9 @@ const $core.Map<$core.String, $core.dynamic>
       '6': true
     },
     {
-      '1': 'GetSegment',
-      '2': '.synctv.playback_provider.douyin.GetDouyinSegmentRequest',
-      '3': '.synctv.playback_provider.douyin.DouyinSegmentResponse',
+      '1': 'GetHlsResource',
+      '2': '.synctv.playback_provider.douyin.GetDouyinHlsResourceRequest',
+      '3': '.synctv.playback_provider.douyin.DouyinHlsResourceResponse',
       '6': true
     },
     {
@@ -259,10 +290,10 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.playback_provider.douyin.DouyinResourceResponse':
       DouyinResourceResponse$json,
   '.synctv.playback_provider.common.StreamChunk': $0.StreamChunk$json,
-  '.synctv.playback_provider.douyin.GetDouyinSegmentRequest':
-      GetDouyinSegmentRequest$json,
-  '.synctv.playback_provider.douyin.DouyinSegmentResponse':
-      DouyinSegmentResponse$json,
+  '.synctv.playback_provider.douyin.GetDouyinHlsResourceRequest':
+      GetDouyinHlsResourceRequest$json,
+  '.synctv.playback_provider.douyin.DouyinHlsResourceResponse':
+      DouyinHlsResourceResponse$json,
   '.synctv.playback_provider.douyin.WatchDouyinDanmakuRequest':
       WatchDouyinDanmakuRequest$json,
   '.synctv.playback_provider.douyin.DouyinDanmakuEvent':
@@ -276,8 +307,8 @@ final $typed_data.Uint8List douyinPlaybackProviderServiceDescriptor = $convert.b
     'Ch1Eb3V5aW5QbGF5YmFja1Byb3ZpZGVyU2VydmljZRKDAQoLR2V0UmVzb3VyY2USOS5zeW5jdH'
     'YucGxheWJhY2tfcHJvdmlkZXIuZG91eWluLkdldERvdXlpblJlc291cmNlUmVxdWVzdBo3LnN5'
     'bmN0di5wbGF5YmFja19wcm92aWRlci5kb3V5aW4uRG91eWluUmVzb3VyY2VSZXNwb25zZTABEo'
-    'ABCgpHZXRTZWdtZW50Ejguc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmRvdXlpbi5HZXREb3V5'
-    'aW5TZWdtZW50UmVxdWVzdBo2LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5kb3V5aW4uRG91eW'
-    'luU2VnbWVudFJlc3BvbnNlMAESgQEKDFdhdGNoRGFubWFrdRI6LnN5bmN0di5wbGF5YmFja19w'
-    'cm92aWRlci5kb3V5aW4uV2F0Y2hEb3V5aW5EYW5tYWt1UmVxdWVzdBozLnN5bmN0di5wbGF5Ym'
-    'Fja19wcm92aWRlci5kb3V5aW4uRG91eWluRGFubWFrdUV2ZW50MAE=');
+    'wBCg5HZXRIbHNSZXNvdXJjZRI8LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5kb3V5aW4uR2V0'
+    'RG91eWluSGxzUmVzb3VyY2VSZXF1ZXN0Gjouc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmRvdX'
+    'lpbi5Eb3V5aW5IbHNSZXNvdXJjZVJlc3BvbnNlMAESgQEKDFdhdGNoRGFubWFrdRI6LnN5bmN0'
+    'di5wbGF5YmFja19wcm92aWRlci5kb3V5aW4uV2F0Y2hEb3V5aW5EYW5tYWt1UmVxdWVzdBozLn'
+    'N5bmN0di5wbGF5YmFja19wcm92aWRlci5kb3V5aW4uRG91eWluRGFubWFrdUV2ZW50MAE=');

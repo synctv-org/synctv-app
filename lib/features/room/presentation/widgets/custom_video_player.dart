@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/core/time/synced_clock.dart';
 import 'package:video_player/video_player.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:volume_controller/volume_controller.dart';
@@ -16,8 +17,10 @@ import 'package:synctv_app/features/room/presentation/widgets/danmaku_overlay.da
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
 import 'package:synctv_app/features/room/presentation/danmaku/acfun_danmaku_codec.dart';
+import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
 import 'package:synctv_app/core/network/resource_url_resolver.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
 
 class DanmakuController extends ChangeNotifier {
   DanmakuController(
@@ -41,8 +44,10 @@ class DanmakuController extends ChangeNotifier {
   bool _disposed = false;
   VideoPlayerController? videoController;
 
-  String? _danmakuUrl;
-  Map<String, String> _danmakuHeaders = const {};
+  String? _loadedDanmakuUrl;
+  Map<String, String> _loadedDanmakuHeaders = const {};
+  bool _documentLoaded = false;
+  bool _documentLoading = false;
   String? _streamDanmakuUrl;
   Map<String, String> _streamDanmakuHeaders = const {};
 
@@ -59,19 +64,37 @@ class DanmakuController extends ChangeNotifier {
   void updateConfig({
     String? danmakuUrl,
     Map<String, String> danmakuHeaders = const {},
+    P2pResourceDelivery? danmakuP2pDelivery,
+    PlaybackResourceLocalizer? localizeStaticResource,
     String? streamDanmakuUrl,
     Map<String, String> streamDanmakuHeaders = const {},
     VideoPlayerController? controller,
+    bool preserveLoadedDocument = false,
   }) {
     if (controller != null) {
       videoController = controller;
     }
 
-    if (danmakuUrl != _danmakuUrl ||
-        !_sameHeaders(danmakuHeaders, _danmakuHeaders)) {
-      _danmakuUrl = danmakuUrl;
-      _danmakuHeaders = Map<String, String>.from(danmakuHeaders);
-      unawaited(_loadDanmaku(++_documentGeneration));
+    final requestedDocumentMatches =
+        danmakuUrl == _loadedDanmakuUrl &&
+        _sameHeaders(danmakuHeaders, _loadedDanmakuHeaders);
+    final shouldLoadDocument =
+        !preserveLoadedDocument ||
+        (!_documentLoaded && (!_documentLoading || !requestedDocumentMatches));
+    if (shouldLoadDocument) {
+      _loadedDanmakuUrl = danmakuUrl;
+      _loadedDanmakuHeaders = Map<String, String>.from(danmakuHeaders);
+      _documentLoaded = false;
+      _documentLoading = danmakuUrl?.isNotEmpty == true;
+      unawaited(
+        _loadDanmaku(
+          ++_documentGeneration,
+          danmakuUrl,
+          _loadedDanmakuHeaders,
+          danmakuP2pDelivery,
+          localizeStaticResource,
+        ),
+      );
     }
 
     if (streamDanmakuUrl != _streamDanmakuUrl ||
@@ -131,23 +154,41 @@ class DanmakuController extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadDanmaku(int generation) async {
+  Future<void> _loadDanmaku(
+    int generation,
+    String? danmakuUrl,
+    Map<String, String> headers,
+    P2pResourceDelivery? p2pDelivery,
+    PlaybackResourceLocalizer? localizeStaticResource,
+  ) async {
     _items.clear();
     notifyListeners();
 
-    if (_danmakuUrl == null || _danmakuUrl!.isEmpty) return;
+    if (danmakuUrl == null || danmakuUrl.isEmpty) {
+      _documentLoading = false;
+      return;
+    }
     try {
-      final url = _resourceUrlResolver.resolve(_danmakuUrl!);
+      final url = _resourceUrlResolver.resolve(danmakuUrl);
+      final resource = p2pDelivery == null || localizeStaticResource == null
+          ? LocalizedPlaybackResource(uri: Uri.parse(url), headers: headers)
+          : await localizeStaticResource(url, headers, p2pDelivery);
+      if (_disposed || generation != _documentGeneration) return;
       final content = await _source.loadDocument(
-        Uri.parse(url),
-        headers: _danmakuHeaders,
+        resource.uri,
+        headers: resource.headers,
       );
       if (_disposed || generation != _documentGeneration || content == null) {
         return;
       }
       _parseDanmaku(content);
+      _documentLoaded = true;
     } catch (e) {
       debugPrint('Failed to load danmaku: $e');
+    } finally {
+      if (generation == _documentGeneration) {
+        _documentLoading = false;
+      }
     }
   }
 
@@ -317,8 +358,9 @@ class CustomVideoPlayer extends StatefulWidget {
   final String title;
   final DanmakuController? danmakuController;
   final Map<String, dynamic>? subtitles;
-  final Future<String> Function(String url, Map<String, String> headers)?
-  resolveSubtitleUrl;
+  final String playbackResourceIdentity;
+  final PlaybackResourceLocalizer? resolveSubtitleResource;
+  final VoidCallback? onSubtitleP2pDeactivated;
   final VoidCallback? onToggleFullScreen;
   final VoidCallback? onSync;
   final VoidCallback? onPrevious;
@@ -332,6 +374,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final bool canControlPlayback;
   final bool isFullScreen;
   final bool isLive;
+  final int? liveStartedAt;
   final Function(String)? onSendDanmaku;
   final IconData? fullScreenIcon;
   final IconData? exitFullScreenIcon;
@@ -350,7 +393,9 @@ class CustomVideoPlayer extends StatefulWidget {
     required this.subtitleSource,
     this.danmakuController,
     this.subtitles,
-    this.resolveSubtitleUrl,
+    this.playbackResourceIdentity = '',
+    this.resolveSubtitleResource,
+    this.onSubtitleP2pDeactivated,
     this.onToggleFullScreen,
     this.onSync,
     this.onPrevious,
@@ -364,6 +409,7 @@ class CustomVideoPlayer extends StatefulWidget {
     this.canControlPlayback = true,
     this.isFullScreen = false,
     this.isLive = false,
+    this.liveStartedAt,
     this.onSendDanmaku,
     this.fullScreenIcon,
     this.exitFullScreenIcon,
@@ -645,6 +691,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
     this.playbackOptionsControl,
     this.diagnostics,
     this.isLive = false,
+    this.liveStartedAt,
     this.canControlPlayback = false,
     this.onPlaybackStateChanged,
     this.onSeek,
@@ -665,6 +712,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
   final Widget? playbackOptionsControl;
   final Widget? diagnostics;
   final bool isLive;
+  final int? liveStartedAt;
   final bool canControlPlayback;
   final ValueChanged<bool>? onPlaybackStateChanged;
   final ValueChanged<Duration>? onSeek;
@@ -762,6 +810,12 @@ class _PictureInPicturePlaybackSurfaceState
   Widget _buildTransportControls(VideoPlayerValue? value) {
     final duration = value?.duration ?? Duration.zero;
     final position = value?.position ?? Duration.zero;
+    final displayPosition = widget.isLive
+        ? livePlaybackPosition(
+            playerPosition: position,
+            liveStartedAt: widget.liveStartedAt,
+          )
+        : position;
     final maxSeconds = duration.inMilliseconds / 1000.0;
     final positionSeconds = position.inMilliseconds / 1000.0;
     final sliderValue = (_pendingSeekSeconds ?? positionSeconds).clamp(
@@ -871,7 +925,7 @@ class _PictureInPicturePlaybackSurfaceState
                   Text(
                     playbackPositionLabel(
                           isLive: widget.isLive,
-                          position: position,
+                          position: displayPosition,
                           liveLabel: context.l10n.live,
                         ) +
                         (widget.isLive
@@ -1234,6 +1288,18 @@ String playbackPositionLabel({
   return isLive ? '$liveLabel · $formattedPosition' : formattedPosition;
 }
 
+Duration livePlaybackPosition({
+  required Duration playerPosition,
+  required int? liveStartedAt,
+  DateTime? now,
+}) {
+  if (liveStartedAt == null || liveStartedAt <= 0) return playerPosition;
+  final currentTime = now ?? SyncedClock.now();
+  final elapsedSeconds =
+      currentTime.millisecondsSinceEpoch ~/ 1000 - liveStartedAt;
+  return Duration(seconds: elapsedSeconds > 0 ? elapsedSeconds : 0);
+}
+
 class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     with SingleTickerProviderStateMixin {
   bool _showControls = true;
@@ -1263,6 +1329,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   final List<_SubtitleItem> _subtitleItems = [];
   String _currentSubtitle = '';
   Timer? _subtitleTimer;
+  String? _selectedSubtitleKey;
+  bool _subtitlesDisabled = false;
+  bool _subtitleLoaded = false;
+  int _subtitleLoadGeneration = 0;
 
   bool get _isDesktopMode =>
       widget.interactionMode == VideoPlayerInteractionMode.desktop;
@@ -1285,7 +1355,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     widget.danmakuController?.addListener(_onDanmakuUpdate);
     _restorePersistedVolume();
     _startHideTimer();
-    _loadSubtitles();
+    unawaited(_loadDefaultSubtitles());
     if (_isDesktopMode) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _insertVolumeOverlay();
@@ -1311,8 +1381,25 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       widget.danmakuController?.addListener(_onDanmakuUpdate);
     }
 
-    if (widget.subtitles != oldWidget.subtitles) {
-      _loadSubtitles();
+    final oldSubtitleDelivery = _subtitleDelivery(
+      oldWidget.subtitles,
+      _selectedSubtitleKey,
+    );
+    final nextSubtitleDelivery = _subtitleDelivery(
+      widget.subtitles,
+      _selectedSubtitleKey,
+    );
+    final subtitleResourceChanged =
+        oldSubtitleDelivery != null &&
+        nextSubtitleDelivery != null &&
+        oldSubtitleDelivery.swarmId != nextSubtitleDelivery.swarmId;
+    if (widget.playbackResourceIdentity != oldWidget.playbackResourceIdentity ||
+        subtitleResourceChanged) {
+      unawaited(_reloadSubtitleForPlaybackSelection());
+    } else if (widget.subtitles != oldWidget.subtitles &&
+        !_subtitlesDisabled &&
+        !_subtitleLoaded) {
+      unawaited(_reloadSubtitleForPlaybackSelection());
     }
 
     if (widget.interactionMode != oldWidget.interactionMode) {
@@ -1345,6 +1432,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _volumeOverlayHideTimer?.cancel();
     _removeVolumeOverlay();
     _subtitleTimer?.cancel();
+    _subtitleLoadGeneration++;
     super.dispose();
   }
 
@@ -1369,81 +1457,104 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     }
   }
 
-  void _loadSubtitles([String? specificUrl]) async {
-    _subtitleItems.clear();
-    _currentSubtitle = '';
+  Future<void> _reloadSubtitleForPlaybackSelection() async {
+    if (_subtitlesDisabled) {
+      _clearSubtitles();
+      return;
+    }
+    final selectedKey = _selectedSubtitleKey;
+    if (selectedKey != null &&
+        widget.subtitles?.containsKey(selectedKey) == true) {
+      await _loadSubtitleByKey(selectedKey);
+      return;
+    }
+    await _loadDefaultSubtitles();
+  }
 
-    // If specific URL provided (or null to clear), use it
-    if (specificUrl != null) {
-      await _fetchAndParseSubtitles(
-        specificUrl,
-        headers: _subtitleHeadersForUrl(specificUrl),
-      );
+  Future<void> _loadDefaultSubtitles() async {
+    final subtitles = widget.subtitles;
+    if (subtitles == null || subtitles.isEmpty) {
+      _selectedSubtitleKey = null;
+      _clearSubtitles();
+      widget.onSubtitleP2pDeactivated?.call();
       return;
     }
 
-    // Otherwise load default
-    if (widget.subtitles == null || widget.subtitles!.isEmpty) return;
-
-    // Prefer 'zh' or 'chi' or 'Chinese', otherwise first
-    Map<String, dynamic>? selected;
-    String? url;
     String? defaultKey;
-
-    // First pass: look for Chinese
-    for (var key in widget.subtitles!.keys) {
+    for (final key in subtitles.keys) {
       if (key.toLowerCase().contains('zh') ||
           key.toLowerCase().contains('chi') ||
           key.toLowerCase().contains('中')) {
-        if (widget.subtitles![key] is Map) {
-          selected = Map<String, dynamic>.from(widget.subtitles![key]);
-          url = selected['url'] as String?;
-          defaultKey = key;
-          break;
-        }
+        defaultKey = key;
+        break;
       }
     }
+    defaultKey ??= subtitles.keys.first;
+    await _loadSubtitleByKey(defaultKey);
+  }
 
-    // Second pass: take first available if no Chinese found
-    if (url == null) {
-      for (var key in widget.subtitles!.keys) {
-        if (widget.subtitles![key] is Map) {
-          selected = Map<String, dynamic>.from(widget.subtitles![key]);
-          url = selected['url'] as String?;
-          defaultKey = key;
-          break;
-        }
-      }
-    }
+  Future<void> _loadSubtitleByKey(String key) async {
+    final value = widget.subtitles?[key];
+    if (value is! Map) return;
+    final subtitle = Map<String, dynamic>.from(value);
+    final url = subtitle['url'] as String?;
+    if (url == null || url.isEmpty) return;
 
-    if (url != null) {
-      debugPrint('Loading default subtitle: $defaultKey');
-      await _fetchAndParseSubtitles(
-        url,
-        headers: _headersFromDynamicMap(selected?['headers']),
-      );
-    }
+    _selectedSubtitleKey = key;
+    _subtitlesDisabled = false;
+    _subtitleLoaded = false;
+    final generation = ++_subtitleLoadGeneration;
+    _subtitleItems.clear();
+    _currentSubtitle = '';
+    if (mounted) setState(() {});
+    debugPrint('Loading subtitle: $key');
+    await _fetchAndParseSubtitles(
+      url,
+      generation: generation,
+      headers: _headersFromDynamicMap(subtitle['headers']),
+      p2pDelivery: subtitle['p2pDelivery'] is P2pResourceDelivery
+          ? subtitle['p2pDelivery'] as P2pResourceDelivery
+          : null,
+    );
+  }
+
+  P2pResourceDelivery? _subtitleDelivery(
+    Map<String, dynamic>? subtitles,
+    String? key,
+  ) {
+    if (subtitles == null || subtitles.isEmpty || key == null) return null;
+    final value = subtitles[key];
+    if (value is! Map) return null;
+    final delivery = value['p2pDelivery'];
+    return delivery is P2pResourceDelivery ? delivery : null;
   }
 
   Future<void> _fetchAndParseSubtitles(
     String url, {
+    required int generation,
     Map<String, String> headers = const {},
+    P2pResourceDelivery? p2pDelivery,
   }) async {
     try {
       final resolvedUrl = widget.resourceUrlResolver.resolve(url);
-      final localizedUrl = await widget.resolveSubtitleUrl?.call(
-        resolvedUrl,
-        headers,
-      );
-      final uri = Uri.parse(localizedUrl ?? resolvedUrl);
+      final delivery = p2pDelivery;
+      final resolver = widget.resolveSubtitleResource;
+      if (delivery == null || resolver == null) {
+        widget.onSubtitleP2pDeactivated?.call();
+      }
+      final resource = delivery == null || resolver == null
+          ? LocalizedPlaybackResource(
+              uri: Uri.parse(resolvedUrl),
+              headers: headers,
+            )
+          : await resolver(resolvedUrl, headers, delivery);
+      if (!mounted || generation != _subtitleLoadGeneration) return;
 
       final bytes = await widget.subtitleSource.load(
-        uri,
-        headers: localizedUrl == null || localizedUrl == resolvedUrl
-            ? headers
-            : const {},
+        resource.uri,
+        headers: resource.headers,
       );
-      if (bytes != null) {
+      if (mounted && generation == _subtitleLoadGeneration && bytes != null) {
         // Robust decoding (handles UTF-16 BOM)
         String content = _decodeSubtitleContent(bytes);
 
@@ -1459,6 +1570,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           _parseSubtitles(content);
         }
 
+        _subtitleLoaded = true;
         if (mounted) setState(() {});
       }
     } catch (e) {
@@ -1466,15 +1578,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     }
   }
 
-  Map<String, String> _subtitleHeadersForUrl(String url) {
-    final subtitles = widget.subtitles;
-    if (subtitles == null || subtitles.isEmpty) return const {};
-    for (final value in subtitles.values) {
-      if (value is! Map) continue;
-      if (value['url'] != url) continue;
-      return _headersFromDynamicMap(value['headers']);
-    }
-    return const {};
+  void _clearSubtitles() {
+    _subtitleLoadGeneration++;
+    _subtitleLoaded = false;
+    _subtitleItems.clear();
+    _currentSubtitle = '';
+    if (mounted) setState(() {});
   }
 
   Map<String, String> _headersFromDynamicMap(dynamic value) {
@@ -2346,52 +2455,60 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     entry?.dispose();
   }
 
-  Widget _buildVolumeOverlay(BuildContext overlayContext) => Positioned(
-    width: 44,
-    height: 132,
-    child: ExcludeSemantics(
-      child: CompositedTransformFollower(
-        link: _volumeControlLink,
-        showWhenUnlinked: false,
-        targetAnchor: Alignment.topCenter,
-        followerAnchor: Alignment.bottomCenter,
-        offset: const Offset(0, -4),
-        child: IgnorePointer(
-          ignoring: !_showVolumeSlider,
-          child: Opacity(
-            opacity: _showVolumeSlider ? 1 : 0,
-            child: MouseRegion(
-              onEnter: (_) => _showVolumeOverlay(),
-              onExit: (_) => _scheduleVolumeOverlayHide(),
-              child: Material(
-                color: const Color(0xF21A1A24),
-                elevation: 8,
-                shadowColor: Colors.black54,
-                borderRadius: BorderRadius.circular(6),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: SliderTheme(
-                    data: SliderTheme.of(overlayContext).copyWith(
-                      trackHeight: 3,
-                      activeTrackColor: const Color(0xFF5D5FEF),
-                      inactiveTrackColor: Colors.white24,
-                      thumbColor: Colors.white,
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 6,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 14,
-                      ),
-                    ),
-                    child: RotatedBox(
-                      quarterTurns: 3,
-                      child: Slider(
-                        value: widget.controller.value.volume
-                            .clamp(0.0, 1.0)
-                            .toDouble(),
-                        min: 0,
-                        max: 1,
-                        onChanged: _setPlayerVolume,
+  Widget _buildVolumeOverlay(BuildContext overlayContext) => Positioned.fill(
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ExcludeSemantics(
+          child: CompositedTransformFollower(
+            link: _volumeControlLink,
+            showWhenUnlinked: false,
+            targetAnchor: Alignment.topCenter,
+            followerAnchor: Alignment.bottomCenter,
+            offset: const Offset(0, -4),
+            child: SizedBox(
+              width: 44,
+              height: 132,
+              child: IgnorePointer(
+                ignoring: !_showVolumeSlider,
+                child: Opacity(
+                  opacity: _showVolumeSlider ? 1 : 0,
+                  child: MouseRegion(
+                    onEnter: (_) => _showVolumeOverlay(),
+                    onExit: (_) => _scheduleVolumeOverlayHide(),
+                    child: Material(
+                      color: const Color(0xF21A1A24),
+                      elevation: 8,
+                      shadowColor: Colors.black54,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: SliderTheme(
+                          data: SliderTheme.of(overlayContext).copyWith(
+                            trackHeight: 3,
+                            activeTrackColor: const Color(0xFF5D5FEF),
+                            inactiveTrackColor: Colors.white24,
+                            thumbColor: Colors.white,
+                            thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 6,
+                            ),
+                            overlayShape: const RoundSliderOverlayShape(
+                              overlayRadius: 14,
+                            ),
+                          ),
+                          child: RotatedBox(
+                            quarterTurns: 3,
+                            child: Slider(
+                              key: const Key('desktop_volume_slider'),
+                              value: widget.controller.value.volume
+                                  .clamp(0.0, 1.0)
+                                  .toDouble(),
+                              min: 0,
+                              max: 1,
+                              onChanged: _setPlayerVolume,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -2400,7 +2517,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             ),
           ),
         ),
-      ),
+      ],
     ),
   );
 
@@ -2415,6 +2532,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         onEnter: (_) => _showVolumeOverlay(),
         onExit: (_) => _scheduleVolumeOverlayHide(),
         child: AppIconButton(
+          key: const Key('desktop_volume_button'),
           tooltip: videoValue.volume <= 0.01
               ? context.l10n.unmute
               : context.l10n.mute,
@@ -2462,10 +2580,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 style: const TextStyle(color: Colors.white),
               ),
               onPressed: () {
-                setState(() {
-                  _subtitleItems.clear();
-                  _currentSubtitle = '';
-                });
+                _subtitlesDisabled = true;
+                _selectedSubtitleKey = null;
+                _clearSubtitles();
+                widget.onSubtitleP2pDeactivated?.call();
                 Navigator.pop(context);
               },
             ),
@@ -2475,14 +2593,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 child: Column(
                   children: widget.subtitles!.entries.map((e) {
                     final label = subtitleDisplayLabel(e.key, e.value);
-                    final url = e.value is Map ? e.value['url'] : null;
                     return AppTile(
                       title: Text(
                         label,
                         style: const TextStyle(color: Colors.white),
                       ),
                       onPressed: () {
-                        if (url != null) _loadSubtitles(url);
+                        unawaited(_loadSubtitleByKey(e.key));
                         Navigator.pop(context);
                       },
                     );
@@ -2913,7 +3030,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                           Text(
                                             playbackPositionLabel(
                                               isLive: widget.isLive,
-                                              position: videoValue.position,
+                                              position: widget.isLive
+                                                  ? livePlaybackPosition(
+                                                      playerPosition:
+                                                          videoValue.position,
+                                                      liveStartedAt:
+                                                          widget.liveStartedAt,
+                                                    )
+                                                  : videoValue.position,
                                               liveLabel: context.l10n.live,
                                             ),
                                             style: const TextStyle(

@@ -17,8 +17,11 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'common.pb.dart' as $0;
+import 'douyin.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+export 'douyin.pbenum.dart';
 
 class GetDouyinResourceRequest extends $pb.GeneratedMessage {
   factory GetDouyinResourceRequest({
@@ -231,8 +234,8 @@ class DouyinResourceResponse extends $pb.GeneratedMessage {
   $0.StreamChunk ensureChunk() => $_ensure(0);
 }
 
-class GetDouyinSegmentRequest extends $pb.GeneratedMessage {
-  factory GetDouyinSegmentRequest({
+class GetDouyinHlsResourceRequest extends $pb.GeneratedMessage {
+  factory GetDouyinHlsResourceRequest({
     $core.String? version,
     $core.String? targetUrl,
     $core.String? sig,
@@ -241,6 +244,9 @@ class GetDouyinSegmentRequest extends $pb.GeneratedMessage {
     $fixnum.Int64? exp,
     $core.String? range,
     $core.bool? head,
+    $core.String? modeName,
+    $core.int? mediaIndex,
+    DouyinHlsResourceKind? resourceKind,
   }) {
     final result = create();
     if (version != null) result.version = version;
@@ -251,20 +257,23 @@ class GetDouyinSegmentRequest extends $pb.GeneratedMessage {
     if (exp != null) result.exp = exp;
     if (range != null) result.range = range;
     if (head != null) result.head = head;
+    if (modeName != null) result.modeName = modeName;
+    if (mediaIndex != null) result.mediaIndex = mediaIndex;
+    if (resourceKind != null) result.resourceKind = resourceKind;
     return result;
   }
 
-  GetDouyinSegmentRequest._();
+  GetDouyinHlsResourceRequest._();
 
-  factory GetDouyinSegmentRequest.fromBuffer($core.List<$core.int> data,
+  factory GetDouyinHlsResourceRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetDouyinSegmentRequest.fromJson($core.String json,
+  factory GetDouyinHlsResourceRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetDouyinSegmentRequest',
+      _omitMessageNames ? '' : 'GetDouyinHlsResourceRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.douyin'),
       createEmptyInstance: create)
@@ -276,27 +285,34 @@ class GetDouyinSegmentRequest extends $pb.GeneratedMessage {
     ..aInt64(6, _omitFieldNames ? '' : 'exp')
     ..aOS(7, _omitFieldNames ? '' : 'range')
     ..aOB(8, _omitFieldNames ? '' : 'head')
+    ..aOS(9, _omitFieldNames ? '' : 'modeName')
+    ..aI(10, _omitFieldNames ? '' : 'mediaIndex',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<DouyinHlsResourceKind>(11, _omitFieldNames ? '' : 'resourceKind',
+        enumValues: DouyinHlsResourceKind.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetDouyinSegmentRequest clone() => deepCopy();
+  GetDouyinHlsResourceRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetDouyinSegmentRequest copyWith(
-          void Function(GetDouyinSegmentRequest) updates) =>
-      super.copyWith((message) => updates(message as GetDouyinSegmentRequest))
-          as GetDouyinSegmentRequest;
+  GetDouyinHlsResourceRequest copyWith(
+          void Function(GetDouyinHlsResourceRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as GetDouyinHlsResourceRequest))
+          as GetDouyinHlsResourceRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetDouyinSegmentRequest create() => GetDouyinSegmentRequest._();
+  static GetDouyinHlsResourceRequest create() =>
+      GetDouyinHlsResourceRequest._();
   @$core.override
-  GetDouyinSegmentRequest createEmptyInstance() => create();
+  GetDouyinHlsResourceRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetDouyinSegmentRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetDouyinSegmentRequest>(create);
-  static GetDouyinSegmentRequest? _defaultInstance;
+  static GetDouyinHlsResourceRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetDouyinHlsResourceRequest>(create);
+  static GetDouyinHlsResourceRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get version => $_getSZ(0);
@@ -369,10 +385,37 @@ class GetDouyinSegmentRequest extends $pb.GeneratedMessage {
   $core.bool hasHead() => $_has(7);
   @$pb.TagNumber(8)
   void clearHead() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get modeName => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set modeName($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasModeName() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearModeName() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.int get mediaIndex => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set mediaIndex($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMediaIndex() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMediaIndex() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  DouyinHlsResourceKind get resourceKind => $_getN(10);
+  @$pb.TagNumber(11)
+  set resourceKind(DouyinHlsResourceKind value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasResourceKind() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearResourceKind() => $_clearField(11);
 }
 
-class DouyinSegmentResponse extends $pb.GeneratedMessage {
-  factory DouyinSegmentResponse({
+class DouyinHlsResourceResponse extends $pb.GeneratedMessage {
+  factory DouyinHlsResourceResponse({
     $0.StreamChunk? chunk,
   }) {
     final result = create();
@@ -380,17 +423,17 @@ class DouyinSegmentResponse extends $pb.GeneratedMessage {
     return result;
   }
 
-  DouyinSegmentResponse._();
+  DouyinHlsResourceResponse._();
 
-  factory DouyinSegmentResponse.fromBuffer($core.List<$core.int> data,
+  factory DouyinHlsResourceResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory DouyinSegmentResponse.fromJson($core.String json,
+  factory DouyinHlsResourceResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'DouyinSegmentResponse',
+      _omitMessageNames ? '' : 'DouyinHlsResourceResponse',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.douyin'),
       createEmptyInstance: create)
@@ -399,24 +442,24 @@ class DouyinSegmentResponse extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DouyinSegmentResponse clone() => deepCopy();
+  DouyinHlsResourceResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DouyinSegmentResponse copyWith(
-          void Function(DouyinSegmentResponse) updates) =>
-      super.copyWith((message) => updates(message as DouyinSegmentResponse))
-          as DouyinSegmentResponse;
+  DouyinHlsResourceResponse copyWith(
+          void Function(DouyinHlsResourceResponse) updates) =>
+      super.copyWith((message) => updates(message as DouyinHlsResourceResponse))
+          as DouyinHlsResourceResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static DouyinSegmentResponse create() => DouyinSegmentResponse._();
+  static DouyinHlsResourceResponse create() => DouyinHlsResourceResponse._();
   @$core.override
-  DouyinSegmentResponse createEmptyInstance() => create();
+  DouyinHlsResourceResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static DouyinSegmentResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DouyinSegmentResponse>(create);
-  static DouyinSegmentResponse? _defaultInstance;
+  static DouyinHlsResourceResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DouyinHlsResourceResponse>(create);
+  static DouyinHlsResourceResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $0.StreamChunk get chunk => $_getN(0);
@@ -845,14 +888,14 @@ class DouyinPlaybackProviderServiceApi {
           'GetResource',
           request,
           DouyinResourceResponse());
-  $async.Future<DouyinSegmentResponse> getSegment(
-          $pb.ClientContext? ctx, GetDouyinSegmentRequest request) =>
-      _client.invoke<DouyinSegmentResponse>(
+  $async.Future<DouyinHlsResourceResponse> getHlsResource(
+          $pb.ClientContext? ctx, GetDouyinHlsResourceRequest request) =>
+      _client.invoke<DouyinHlsResourceResponse>(
           ctx,
           'DouyinPlaybackProviderService',
-          'GetSegment',
+          'GetHlsResource',
           request,
-          DouyinSegmentResponse());
+          DouyinHlsResourceResponse());
   $async.Future<DouyinDanmakuEvent> watchDanmaku(
           $pb.ClientContext? ctx, WatchDouyinDanmakuRequest request) =>
       _client.invoke<DouyinDanmakuEvent>(ctx, 'DouyinPlaybackProviderService',

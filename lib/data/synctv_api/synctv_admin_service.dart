@@ -498,10 +498,10 @@ class SyncTvAdminDomainService {
     final updated =
         updatedModel.section(section) ??
         RuntimeSettingsSection(name: section, settings: const {});
-    if (section == 'user' ||
+    if (section == 'server' ||
+        section == 'user' ||
         section == 'roomDefaults' ||
         section == 'roomCreation' ||
-        section == 'proxy' ||
         section == 'rtmp' ||
         section == 'email') {
       _cache.invalidate('public:settings');
@@ -1368,6 +1368,9 @@ class SyncTvAdminDomainService {
     }
 
     switch (sectionName) {
+      case 'server':
+        settings.server = optionalPatchSection(admin.ServerSettingsPatch());
+        break;
       case 'roomDefaults':
         settings.roomDefaults = optionalPatchSection(
           admin.RoomDefaultsSettingsPatch(),
@@ -1440,16 +1443,17 @@ class SyncTvAdminDomainService {
 
   RuntimeSettingsModel _settingsModelFromProto(admin.RuntimeSettings settings) {
     const names = [
+      'server',
       'roomDefaults',
       'permissions',
       'roomCreation',
       'user',
       'oauth2',
-      'proxy',
       'rtmp',
       'email',
       'webrtc',
       'chat',
+      'playbackHistory',
       'cors',
     ];
     return RuntimeSettingsModel(

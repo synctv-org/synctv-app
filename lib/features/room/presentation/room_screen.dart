@@ -17,6 +17,8 @@ import 'package:synctv_app/features/room/presentation/models/playlist_source_pre
 import 'package:synctv_app/features/room/presentation/models/playback_player_update.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_config.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_target.dart';
+import 'package:synctv_app/features/room/domain/playback_resource_refresh.dart';
+import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
 import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
@@ -182,12 +184,17 @@ class _RoomScreenState extends State<RoomScreen>
   AdaptiveVideoTrackSnapshot _adaptiveVideoTracks =
       const AdaptiveVideoTrackSnapshot();
   String? _videoPlayerSourceKey;
+  int? _videoPlayerSourceExpireAt;
   String? _initializingVideoSourceKey;
   bool _videoPlaybackHasProgress = false;
+  VideoPlayerController? _recoveringErroredVideoController;
   bool _isDrainingEndedLiveStream = false;
   Timer? _endedLiveStreamDrainTimer;
+  Timer? _playbackResourceRefreshTimer;
+  String _playbackResourceRefreshKey = '';
+  int _playbackResourceRefreshAttempts = 0;
   int _forcedVideoLoadGeneration = 0;
-  Future<void>? _currentPlaybackLoad;
+  Future<bool>? _currentPlaybackLoad;
   final LatestAsyncOperationCoordinator _videoInitialization =
       LatestAsyncOperationCoordinator();
   final SerialAsyncOperationCoordinator _p2pEngineOperations =
@@ -295,7 +302,12 @@ class _RoomScreenState extends State<RoomScreen>
   VoiceChatSession? _voiceChatManager;
   P2pMediaSession? _p2pMediaManager;
   P2pMediaPlaybackEngine? _p2pMediaEngine;
-  String _activeP2pSwarmId = '';
+  static const _p2pMediaRole = 'media';
+  static const _p2pSubtitleRole = 'subtitle';
+  static const _p2pDanmakuRole = 'danmaku';
+  final Map<String, P2pResourceDelivery> _activeP2pResources = {};
+  String get _activeP2pSwarmId =>
+      _activeP2pResources[_p2pMediaRole]?.swarmId ?? '';
   _P2pMetricsSnapshot _p2pMetrics = const _P2pMetricsSnapshot();
   DateTime _p2pMetricsSampledAt = DateTime.now();
   int _lastP2pHttpBytes = 0;
@@ -577,21 +589,22 @@ class _RoomScreenState extends State<RoomScreen>
           currentEngine != null &&
           currentEngine.maxCacheBytes !=
               widget.p2pMediaPreferences.cacheSizeMiB * 1024 * 1024;
-      final delivery =
-          _currentStatus?.entry?.selectedPlaybackUrlOption?.p2pDelivery;
-      final currentSwarmActive =
-          delivery != null &&
-          delivery.swarmId == _activeP2pSwarmId &&
-          _p2pMediaManager?.activeSwarms.contains(delivery.swarmId) == true;
+      final activeSwarmIds = _activeP2pResources.values
+          .map((delivery) => delivery.swarmId)
+          .where((swarmId) => swarmId.isNotEmpty)
+          .toSet();
+      final currentSwarmsActive =
+          activeSwarmIds.isNotEmpty &&
+          _p2pMediaManager?.activeSwarms.containsAll(activeSwarmIds) == true;
       if (widget.p2pMediaPreferences.enabled &&
           _canUseP2pMedia &&
           currentEngine != null &&
           !modeChanged &&
           !cacheSizeChanged &&
-          currentSwarmActive) {
+          currentSwarmsActive) {
         return;
       }
-      await _deactivateP2pMedia();
+      await _deactivateP2pResources();
       if (identical(_p2pMediaEngine, currentEngine)) {
         _p2pMediaEngine = null;
       }
@@ -612,9 +625,152 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _deactivateP2pMedia() async {
-    if (_activeP2pSwarmId.isEmpty) return;
-    _activeP2pSwarmId = '';
+    await _setActiveP2pResource(_p2pMediaRole, null);
+  }
+
+  Future<void> _deactivateP2pResources() async {
+    if (_activeP2pResources.isEmpty &&
+        _p2pMediaManager?.activeSwarms.isEmpty == true) {
+      return;
+    }
+    _activeP2pResources.clear();
     await _p2pMediaManager?.setActiveSwarms(const {});
+  }
+
+  Future<void> _setActiveP2pResource(
+    String role,
+    P2pResourceDelivery? delivery,
+  ) async {
+    if (delivery == null ||
+        delivery.swarmId.isEmpty ||
+        delivery.swarmTicket.isEmpty) {
+      _activeP2pResources.remove(role);
+    } else {
+      _activeP2pResources[role] = delivery;
+    }
+    final swarms = <String, String>{};
+    for (final active in _activeP2pResources.values) {
+      swarms[active.swarmId] = active.swarmTicket;
+    }
+    await _p2pMediaManager?.setActiveSwarms(swarms);
+  }
+
+  Future<P2pMediaPlaybackEngine?> _ensureP2pPlaybackEngine() async {
+    final existing = _p2pMediaEngine;
+    if (existing != null) return existing;
+    final session = _p2pMediaManager;
+    if (session == null) return null;
+    final engine = await _p2pRuntimeFactory.createPlaybackEngine(
+      session: session,
+      serverBaseUrl: _sessionGateway.serverBaseUrl,
+      maxCacheBytes: widget.p2pMediaPreferences.cacheSizeMiB * 1024 * 1024,
+      securityMode: widget.p2pMediaPreferences.securityMode,
+    );
+    _p2pMediaEngine = engine;
+    return engine;
+  }
+
+  Future<LocalizedPlaybackResource> _localizeStaticPlaybackResource(
+    String role,
+    String url,
+    Map<String, String> headers,
+    P2pResourceDelivery delivery,
+  ) => _p2pEngineOperations.run(() async {
+    final origin = LocalizedPlaybackResource(
+      uri: Uri.parse(url),
+      headers: headers,
+    );
+    await widget.p2pMediaPreferences.load();
+    final scheme = origin.uri.scheme.toLowerCase();
+    final canUseP2p =
+        widget.p2pMediaPreferences.enabled &&
+        _canUseP2pMedia &&
+        delivery.swarmId.isNotEmpty &&
+        delivery.swarmTicket.isNotEmpty &&
+        (scheme == 'http' || scheme == 'https');
+    if (!canUseP2p) {
+      await _setActiveP2pResource(role, null);
+      return origin;
+    }
+    try {
+      final engine = await _ensureP2pPlaybackEngine();
+      if (engine == null) {
+        await _setActiveP2pResource(role, null);
+        return origin;
+      }
+      await _setActiveP2pResource(role, delivery);
+      final localized = await engine.localizeStatic(
+        upstream: origin.uri,
+        headers: headers,
+        swarmId: delivery.swarmId,
+        logicalKey: 'root',
+      );
+      return LocalizedPlaybackResource(uri: localized);
+    } catch (error) {
+      debugPrint('P2P $role gateway setup failed, using HTTP: $error');
+      await _setActiveP2pResource(role, null);
+      return origin;
+    }
+  });
+
+  Future<LocalizedPlaybackResource> _resolveSubtitlePlaybackResource(
+    String url,
+    Map<String, String> headers,
+    P2pResourceDelivery delivery,
+  ) =>
+      _localizeStaticPlaybackResource(_p2pSubtitleRole, url, headers, delivery);
+
+  Future<LocalizedPlaybackResource> _resolveDanmakuPlaybackResource(
+    String url,
+    Map<String, String> headers,
+    P2pResourceDelivery delivery,
+  ) => _localizeStaticPlaybackResource(_p2pDanmakuRole, url, headers, delivery);
+
+  void _reconcileActiveP2pTickets(RoomMediaEntry? entry) {
+    if (_activeP2pResources.isEmpty) return;
+    unawaited(
+      _p2pEngineOperations.run(() async {
+        P2pResourceDelivery? matchingSubtitle;
+        final activeSubtitle = _activeP2pResources[_p2pSubtitleRole];
+        if (activeSubtitle != null) {
+          for (final value in entry?.subtitles?.values ?? const []) {
+            if (value is! Map) continue;
+            final candidate = value['p2pDelivery'];
+            if (candidate is P2pResourceDelivery &&
+                candidate.swarmId == activeSubtitle.swarmId) {
+              matchingSubtitle = candidate;
+              break;
+            }
+          }
+        }
+        final candidates = <String, P2pResourceDelivery?>{
+          _p2pMediaRole: entry?.selectedPlaybackUrlOption?.p2pDelivery,
+          _p2pSubtitleRole: matchingSubtitle,
+          _p2pDanmakuRole: entry?.danmuP2pDelivery,
+        };
+        var changed = false;
+        for (final role in _activeP2pResources.keys.toList()) {
+          final active = _activeP2pResources[role]!;
+          final candidate = candidates[role];
+          if (candidate?.swarmId == active.swarmId) {
+            if (candidate!.swarmTicket != active.swarmTicket) {
+              _activeP2pResources[role] = candidate;
+              changed = true;
+            }
+          } else {
+            _activeP2pResources.remove(role);
+            changed = true;
+          }
+        }
+        if (changed) {
+          final swarms = <String, String>{};
+          for (final active in _activeP2pResources.values) {
+            swarms[active.swarmId] = active.swarmTicket;
+          }
+          await _p2pMediaManager?.setActiveSwarms(swarms);
+        }
+      }),
+    );
   }
 
   void _retainP2pEngineStats(P2pMediaStats stats) {
@@ -626,42 +782,6 @@ class _RoomScreenState extends State<RoomScreen>
     _retainedP2pIntegrityMismatches += stats.integrityMismatches;
     _retainedP2pIntegrityUnavailable += stats.integrityUnavailable;
   }
-
-  Future<String> _resolveSubtitlePlaybackUrl(
-    String url,
-    Map<String, String> headers,
-  ) => _p2pEngineOperations.run(() async {
-    final delivery =
-        _currentStatus?.entry?.selectedPlaybackUrlOption?.p2pDelivery;
-    final engine = _p2pMediaEngine;
-    if (delivery == null ||
-        engine == null ||
-        delivery.swarmId != _activeP2pSwarmId) {
-      return url;
-    }
-    final subtitles = _currentStatus?.entry?.subtitles;
-    var subtitleIndex = 0;
-    if (subtitles != null) {
-      final entries = subtitles.entries.toList(growable: false);
-      final found = entries.indexWhere((entry) {
-        final value = entry.value;
-        return value is Map &&
-            _resourceUrlResolver.resolve('${value['url'] ?? ''}') == url;
-      });
-      if (found >= 0) subtitleIndex = found;
-    }
-    try {
-      return (await engine.localizeStatic(
-        upstream: Uri.parse(url),
-        headers: headers,
-        swarmId: delivery.swarmId,
-        logicalKey: 'subtitle:$subtitleIndex',
-      )).toString();
-    } catch (error) {
-      debugPrint('P2P subtitle gateway setup failed: $error');
-      return url;
-    }
-  });
 
   Future<void> _enterPictureInPicture() async {
     final controller = _videoPlayerController;
@@ -816,13 +936,14 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _handleRoomSessionClosed(String message) async {
     _reconnectTimer?.cancel();
+    _cancelPlaybackResourceRefresh();
     await _disposeVideoController();
     await _realtimeSubscription?.cancel();
     _realtimeSubscription = null;
     await _channel?.close();
     _channel = null;
     _voiceChatManager?.leave();
-    await _p2pMediaManager?.setActiveSwarms(const {});
+    await _deactivateP2pResources();
     if (!mounted) return;
     setState(() {
       _roomSessionError = message;
@@ -900,11 +1021,15 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Future<void> _loadCurrentPlayback() {
+  Future<void> _loadCurrentPlayback() async {
+    await _loadCurrentPlaybackTracked();
+  }
+
+  Future<bool> _loadCurrentPlaybackTracked() {
     final activeLoad = _currentPlaybackLoad;
     if (activeLoad != null) return activeLoad;
 
-    late final Future<void> trackedLoad;
+    late final Future<bool> trackedLoad;
     trackedLoad = _loadCurrentPlaybackOnce().whenComplete(() {
       if (identical(_currentPlaybackLoad, trackedLoad)) {
         _currentPlaybackLoad = null;
@@ -914,19 +1039,108 @@ class _RoomScreenState extends State<RoomScreen>
     return trackedLoad;
   }
 
-  Future<void> _loadCurrentPlaybackOnce() async {
+  Future<bool> _loadCurrentPlaybackOnce() async {
     try {
       final status = await _playbackGateway.getStatus(widget.room.roomId);
-      if (!mounted) return;
+      if (!mounted) return false;
       await _applyPlaybackStatus(
         _mergePlaybackStatus(
           status,
           incomingHasTiming: status.entry?.url.isEmpty != true,
         ),
       );
+      return true;
     } catch (e) {
       debugPrint('Load current playback error: $e');
+      return false;
     }
+  }
+
+  void _cancelPlaybackResourceRefresh() {
+    _playbackResourceRefreshTimer?.cancel();
+    _playbackResourceRefreshTimer = null;
+    _playbackResourceRefreshKey = '';
+    _playbackResourceRefreshAttempts = 0;
+  }
+
+  String? _refreshablePlaybackResourceKey(RoomMediaEntry? entry) {
+    final option = entry?.selectedPlaybackUrlOption;
+    final selectedMediaExpireAt = _videoPlayerController == null
+        ? option?.expireAt
+        : _videoPlayerSourceExpireAt;
+    final expireAt = earliestPlaybackResourceExpiration(
+      selectedMediaExpireAt: selectedMediaExpireAt,
+      playbackExpireAt: entry?.playbackExpireAt,
+    );
+    if (entry == null ||
+        !entry.isLiveStreamPlayable ||
+        expireAt == null ||
+        expireAt <= 0) {
+      return null;
+    }
+    return [
+      entry.id,
+      entry.playbackMediaId,
+      entry.playbackPlaylistId,
+      entry.playbackTarget ?? '',
+      entry.selectedPlaybackMode,
+      entry.selectedPlaybackUrlIndex,
+      _videoPlayerSourceKey ?? option?.url ?? entry.url,
+      expireAt,
+    ].join('\u001f');
+  }
+
+  void _schedulePlaybackResourceRefresh(RoomMediaEntry? entry) {
+    final key = _refreshablePlaybackResourceKey(entry);
+    if (key == null) {
+      _cancelPlaybackResourceRefresh();
+      return;
+    }
+    if (key == _playbackResourceRefreshKey &&
+        _playbackResourceRefreshTimer?.isActive == true) {
+      return;
+    }
+    if (key != _playbackResourceRefreshKey) {
+      _playbackResourceRefreshTimer?.cancel();
+      _playbackResourceRefreshTimer = null;
+      _playbackResourceRefreshKey = key;
+      _playbackResourceRefreshAttempts = 0;
+    }
+    final currentEntry = entry!;
+    final selectedMediaExpireAt = _videoPlayerController == null
+        ? currentEntry.selectedPlaybackUrlOption?.expireAt
+        : _videoPlayerSourceExpireAt;
+    final expireAt = earliestPlaybackResourceExpiration(
+      selectedMediaExpireAt: selectedMediaExpireAt,
+      playbackExpireAt: currentEntry.playbackExpireAt,
+    );
+    if (expireAt == null) return;
+    final expiryDelay = playbackResourceRefreshDelay(
+      expireAt: expireAt,
+      now: SyncedClock.now(),
+    );
+    if (expiryDelay == null) return;
+    final retryDelay = _playbackResourceRefreshAttempts == 0
+        ? Duration.zero
+        : playbackResourceRefreshRetryDelay(
+            attempt: _playbackResourceRefreshAttempts,
+            expireAt: expireAt,
+            now: SyncedClock.now(),
+          );
+    final delay = expiryDelay > retryDelay ? expiryDelay : retryDelay;
+    _playbackResourceRefreshTimer = Timer(
+      delay,
+      () => unawaited(_refreshPlaybackResource(key)),
+    );
+  }
+
+  Future<void> _refreshPlaybackResource(String expectedKey) async {
+    if (!mounted || expectedKey != _playbackResourceRefreshKey) return;
+    _playbackResourceRefreshTimer = null;
+    _playbackResourceRefreshAttempts++;
+    await _loadCurrentPlaybackTracked();
+    if (!mounted) return;
+    _schedulePlaybackResourceRefresh(_currentStatus?.entry);
   }
 
   void _sortMembers(List<SyncTvUser> members) {
@@ -1282,7 +1496,7 @@ class _RoomScreenState extends State<RoomScreen>
       final voiceWasEnabled = _roomSettings.voiceChatEnabled;
       final p2pWasEnabled = _roomSettings.p2pMediaEnabled;
       final voiceWasActive = _voiceChatManager?.isConnected == true;
-      final p2pWasActive = _activeP2pSwarmId.isNotEmpty;
+      final p2pWasActive = _activeP2pResources.isNotEmpty;
       if (mounted) setState(() => _roomSettings = settings);
       if (voiceWasEnabled && !settings.voiceChatEnabled) {
         unawaited(_voiceChatManager?.leave());
@@ -1671,6 +1885,14 @@ class _RoomScreenState extends State<RoomScreen>
     incomingHasTiming: incomingHasTiming,
   );
 
+  void _deactivateP2pSubtitle() {
+    unawaited(
+      _p2pEngineOperations.run(
+        () => _setActiveP2pResource(_p2pSubtitleRole, null),
+      ),
+    );
+  }
+
   bool _needsPlaybackResourceSnapshot(SyncTvPlaybackStatus incoming) {
     if (incoming.entry != null && incoming.entry!.url.isNotEmpty) {
       return false;
@@ -1938,7 +2160,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Widget? _buildP2pMediaBadge({bool videoStyle = false}) {
     if (!_canUseP2pMedia ||
-        _activeP2pSwarmId.isEmpty ||
+        _activeP2pResources.isEmpty ||
         !widget.p2pMediaPreferences.enabled) {
       return null;
     }
@@ -2124,17 +2346,20 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _videoListener() {
     final controller = _videoPlayerController;
-    if (controller == null || !controller.value.isInitialized) {
-      return;
-    }
+    if (controller == null) return;
 
     final value = controller.value;
-    if (!_videoPlaybackHasProgress && value.position > Duration.zero) {
-      _videoPlaybackHasProgress = true;
-    }
     if (_isDrainingEndedLiveStream && (value.isCompleted || value.hasError)) {
       _finishEndedLiveStreamDrain(controller);
       return;
+    }
+    if (value.hasError) {
+      unawaited(_recoverErroredVideoPlayback(controller));
+      return;
+    }
+    if (!value.isInitialized) return;
+    if (!_videoPlaybackHasProgress && value.position > Duration.zero) {
+      _videoPlaybackHasProgress = true;
     }
     if (_isSyncing) return;
 
@@ -2143,6 +2368,37 @@ class _RoomScreenState extends State<RoomScreen>
     );
     if (value.isPlaying && !_isCurrentPlaybackLive) {
       unawaited(_maybeFetchPlaybackDanmaku(position));
+    }
+  }
+
+  Future<void> _recoverErroredVideoPlayback(
+    VideoPlayerController controller,
+  ) async {
+    if (!mounted ||
+        !identical(_videoPlayerController, controller) ||
+        identical(_recoveringErroredVideoController, controller)) {
+      return;
+    }
+    _recoveringErroredVideoController = controller;
+    try {
+      final refreshed = await _loadCurrentPlaybackTracked();
+      if (!mounted ||
+          !refreshed ||
+          !identical(_videoPlayerController, controller) ||
+          !controller.value.hasError) {
+        return;
+      }
+      final latestStatus = _currentStatus;
+      if (latestStatus == null) return;
+      await _applyPlaybackStatus(
+        latestStatus,
+        forceReloadVideo: true,
+        forceSeek: true,
+      );
+    } finally {
+      if (identical(_recoveringErroredVideoController, controller)) {
+        _recoveringErroredVideoController = null;
+      }
     }
   }
 
@@ -2371,6 +2627,13 @@ class _RoomScreenState extends State<RoomScreen>
     final newSourceKey = newUrl == null
         ? null
         : videoPlayerSourceKey(newUrl, nextEntry!.headers);
+    final activeP2pMediaSwarm = _activeP2pSwarmId;
+    final nextP2pMediaSwarm =
+        nextEntry?.selectedPlaybackUrlOption?.p2pDelivery?.swarmId ?? '';
+    final p2pMediaRouteChanged =
+        _videoPlayerController != null &&
+        activeP2pMediaSwarm != nextP2pMediaSwarm &&
+        (activeP2pMediaSwarm.isNotEmpty || nextP2pMediaSwarm.isNotEmpty);
     final playerUpdate = playbackPlayerUpdateAction(
       previous: previousEntry,
       next: nextEntry,
@@ -2378,9 +2641,25 @@ class _RoomScreenState extends State<RoomScreen>
       controllerHasPlayed: _videoPlaybackHasProgress,
       isDrainingEndedLiveStream: _isDrainingEndedLiveStream,
       samePlayerSource:
-          newSourceKey != null && _videoPlayerSourceKey == newSourceKey,
+          !p2pMediaRouteChanged &&
+          ((newSourceKey != null && _videoPlayerSourceKey == newSourceKey) ||
+              shouldRetainActivePlaybackSource(
+                previous: previousEntry,
+                next: nextEntry,
+                authoritativeSourceChanged: sourceChanged,
+                activeSourceCanContinue: activePlaybackSourceCanContinue(
+                  expireAt: _videoPlayerSourceExpireAt,
+                  now: SyncedClock.now(),
+                ),
+              )),
       forceReload: forceReloadVideo,
     );
+    if (_videoPlayerController != null &&
+        newSourceKey != null &&
+        _videoPlayerSourceKey == newSourceKey) {
+      _videoPlayerSourceExpireAt =
+          nextEntry?.selectedPlaybackUrlOption?.expireAt;
+    }
     setState(() {
       _currentStatus = status;
       if (!canPlayEntry) {
@@ -2389,6 +2668,8 @@ class _RoomScreenState extends State<RoomScreen>
         _videoError = null;
       }
     });
+    _schedulePlaybackResourceRefresh(status.entry);
+    _reconcileActiveP2pTickets(status.entry);
 
     if (playerUpdate == PlaybackPlayerUpdateAction.drain) {
       _startEndedLiveStreamDrain();
@@ -2399,7 +2680,7 @@ class _RoomScreenState extends State<RoomScreen>
       final hadController = _videoPlayerController != null;
       _disposeVideoControllerImmediately();
       if (mounted && hadController) setState(() {});
-      await _deactivateP2pMedia();
+      await _deactivateP2pResources();
       return;
     }
 
@@ -2408,6 +2689,10 @@ class _RoomScreenState extends State<RoomScreen>
         canPlayEntry &&
         !generationChanged &&
         !forceReloadVideo) {
+      _updateDanmakuResources(
+        previousEntry: previousEntry,
+        nextEntry: nextEntry,
+      );
       return;
     }
 
@@ -2416,8 +2701,10 @@ class _RoomScreenState extends State<RoomScreen>
       await _initVideo(
         newUrl!,
         headers: nextEntry!.headers,
+        sourceExpireAt: nextEntry.selectedPlaybackUrlOption?.expireAt,
         forceReload: playerUpdate == PlaybackPlayerUpdateAction.reload,
       );
+      _schedulePlaybackResourceRefresh(_currentStatus?.entry);
       if (!mounted ||
           !_isCurrentPlaybackSource(newUrl, nextEntry.liveStreamGenerationId)) {
         return;
@@ -2431,7 +2718,20 @@ class _RoomScreenState extends State<RoomScreen>
       unawaited(_performSync(status, forceSeek: forceSeek || sourceChanged));
     }
 
-    final streamUrl = nextEntry!.streamDanmu == null
+    _updateDanmakuResources(
+      previousEntry: previousEntry,
+      nextEntry: nextEntry!,
+    );
+    if (!nextEntry.live) {
+      unawaited(_maybeFetchPlaybackDanmaku(status.currentTime));
+    }
+  }
+
+  void _updateDanmakuResources({
+    required RoomMediaEntry? previousEntry,
+    required RoomMediaEntry nextEntry,
+  }) {
+    final streamUrl = nextEntry.streamDanmu == null
         ? null
         : _resourceUrlResolver.resolve(nextEntry.streamDanmu!);
     final danmuUrl = nextEntry.danmu == null
@@ -2441,13 +2741,19 @@ class _RoomScreenState extends State<RoomScreen>
     _danmakuController.updateConfig(
       danmakuUrl: danmuUrl,
       danmakuHeaders: nextEntry.danmuHeaders,
+      danmakuP2pDelivery: nextEntry.danmuP2pDelivery,
+      localizeStaticResource: _resolveDanmakuPlaybackResource,
       streamDanmakuUrl: streamUrl,
       streamDanmakuHeaders: nextEntry.streamDanmuHeaders,
       controller: _videoPlayerController,
+      preserveLoadedDocument:
+          previousEntry?.playbackAttachmentIdentity ==
+              nextEntry.playbackAttachmentIdentity &&
+          !(previousEntry?.danmuP2pDelivery != null &&
+              nextEntry.danmuP2pDelivery != null &&
+              previousEntry!.danmuP2pDelivery!.swarmId !=
+                  nextEntry.danmuP2pDelivery!.swarmId),
     );
-    if (!nextEntry.live) {
-      unawaited(_maybeFetchPlaybackDanmaku(status.currentTime));
-    }
   }
 
   void _startEndedLiveStreamDrain() {
@@ -2480,7 +2786,7 @@ class _RoomScreenState extends State<RoomScreen>
     }
     _cancelEndedLiveStreamDrain();
     _disposeVideoControllerImmediately();
-    unawaited(_deactivateP2pMedia());
+    unawaited(_deactivateP2pResources());
     if (mounted) setState(() {});
   }
 
@@ -2513,6 +2819,7 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _initVideo(
     String url, {
     Map<String, String>? headers,
+    int? sourceExpireAt,
     bool forceReload = false,
   }) async {
     if (url.isEmpty) return;
@@ -2521,6 +2828,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (!forceReload && _videoPlayerSourceKey == sourceKey) {
       final controller = _videoPlayerController;
       if (controller != null && controller.value.isInitialized) {
+        _videoPlayerSourceExpireAt = sourceExpireAt;
         if (mounted) {
           setState(() {
             _isVideoLoading = false;
@@ -2551,6 +2859,7 @@ class _RoomScreenState extends State<RoomScreen>
       (isLatest) => _initVideoOnce(
         url,
         sourceKey: sourceKey,
+        sourceExpireAt: sourceExpireAt,
         headers: sourceHeaders,
         isLatest: isLatest,
       ),
@@ -2560,6 +2869,7 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _initVideoOnce(
     String url, {
     required String sourceKey,
+    required int? sourceExpireAt,
     required Map<String, String> headers,
     required IsLatestOperation isLatest,
   }) async {
@@ -2583,24 +2893,9 @@ class _RoomScreenState extends State<RoomScreen>
         if (delivery != null && delivery.swarmId.isNotEmpty) {
           final swarmId = delivery.swarmId;
           try {
-            var engine = _p2pMediaEngine;
-            if (engine == null) {
-              final cacheSizeBytes =
-                  widget.p2pMediaPreferences.cacheSizeMiB * 1024 * 1024;
-              final session = _p2pMediaManager;
-              if (session == null) return;
-              engine = await _p2pRuntimeFactory.createPlaybackEngine(
-                session: session,
-                serverBaseUrl: _sessionGateway.serverBaseUrl,
-                maxCacheBytes: cacheSizeBytes,
-                securityMode: widget.p2pMediaPreferences.securityMode,
-              );
-              if (!isLatest()) {
-                await engine.dispose();
-                return;
-              }
-              _p2pMediaEngine = engine;
-            }
+            final engine = await _ensureP2pPlaybackEngine();
+            if (engine == null) return;
+            if (!isLatest()) return;
             playbackUrl = (await engine.localize(
               upstream: Uri.parse(url),
               headers: headers,
@@ -2611,10 +2906,7 @@ class _RoomScreenState extends State<RoomScreen>
                   '',
             )).toString();
             if (!isLatest()) return;
-            _activeP2pSwarmId = swarmId;
-            await _p2pMediaManager?.setActiveSwarms({
-              swarmId: delivery.swarmTicket,
-            });
+            await _setActiveP2pResource(_p2pMediaRole, delivery);
             if (!isLatest()) return;
             playbackHeaders = const {};
           } catch (error) {
@@ -2653,6 +2945,7 @@ class _RoomScreenState extends State<RoomScreen>
 
       _videoPlayerController = newController;
       _videoPlayerSourceKey = sourceKey;
+      _videoPlayerSourceExpireAt = sourceExpireAt;
       _videoPlaybackHasProgress = false;
       _videoPlayerController!.addListener(_videoListener);
       _observeAdaptiveVideoTracks(newController);
@@ -2720,20 +3013,18 @@ class _RoomScreenState extends State<RoomScreen>
         : _videoPlayerController == null
         ? status.derivedCurrentTime(now: SyncedClock.now())
         : _videoPlayerController!.value.position.inMilliseconds / 1000.0;
-    setState(() {
-      _currentStatus = SyncTvPlaybackStatus(
-        entry: selected,
-        isPlaying: wasPlaying || status.isPlaying,
-        currentTime: position,
-        playbackRate: status.playbackRate,
-        generatedAtMillis: SyncedClock.nowMillis(),
-        version: status.version,
-        playingMediaId: status.playingMediaId,
-        playingPlaylistId: status.playingPlaylistId,
-        targetHash: status.targetHash,
-      );
-    });
-    await _applyPlaybackStatus(_currentStatus!);
+    final selectedStatus = SyncTvPlaybackStatus(
+      entry: selected,
+      isPlaying: wasPlaying || status.isPlaying,
+      currentTime: position,
+      playbackRate: status.playbackRate,
+      generatedAtMillis: SyncedClock.nowMillis(),
+      version: status.version,
+      playingMediaId: status.playingMediaId,
+      playingPlaylistId: status.playingPlaylistId,
+      targetHash: status.targetHash,
+    );
+    await _applyPlaybackStatus(selectedStatus);
     if (mounted) {
       AppNotifications.showInfo(
         context,
@@ -2883,6 +3174,7 @@ class _RoomScreenState extends State<RoomScreen>
     _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
     _videoPlayerController = null;
     _videoPlayerSourceKey = null;
+    _videoPlayerSourceExpireAt = null;
     _videoPlaybackHasProgress = false;
     _playbackDeviationSnapshot = null;
     if (controller == null) return;
@@ -2916,6 +3208,7 @@ class _RoomScreenState extends State<RoomScreen>
     _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
     _videoPlayerController = null;
     _videoPlayerSourceKey = null;
+    _videoPlayerSourceExpireAt = null;
     _videoPlaybackHasProgress = false;
     _playbackDeviationSnapshot = null;
     if (controller != null) {
@@ -2943,6 +3236,7 @@ class _RoomScreenState extends State<RoomScreen>
     _diagnosticsTimer?.cancel();
     _chatHighlightTimer?.cancel();
     _reconnectTimer?.cancel();
+    _cancelPlaybackResourceRefresh();
     unawaited(_channel?.close());
     _messageController.dispose();
     _chatScrollController.dispose();
@@ -3050,6 +3344,7 @@ class _RoomScreenState extends State<RoomScreen>
         videoStyle: true,
       ),
       isLive: _isCurrentPlaybackLive,
+      liveStartedAt: _currentStatus?.entry?.liveStartedAt,
       canControlPlayback: _canControlPlaybackState,
       isPlaybackExpectedToBePlaying: () => _currentStatus?.isPlaying == true,
       onPlaybackStateChanged: _canControlPlaybackState
@@ -3114,8 +3409,14 @@ class _RoomScreenState extends State<RoomScreen>
                             context.l10n.unknownVideo,
                         danmakuController: _danmakuController,
                         subtitles: _currentStatus?.entry?.subtitles,
-                        resolveSubtitleUrl: _resolveSubtitlePlaybackUrl,
+                        playbackResourceIdentity:
+                            _currentStatus?.entry?.playbackAttachmentIdentity ??
+                            '',
+                        resolveSubtitleResource:
+                            _resolveSubtitlePlaybackResource,
+                        onSubtitleP2pDeactivated: _deactivateP2pSubtitle,
                         isLive: _currentStatus?.entry?.live == true,
+                        liveStartedAt: _currentStatus?.entry?.liveStartedAt,
                         onToggleFullScreen: _toggleFullScreen,
                         onSync: _handleSync,
                         onPrevious: _canNavigatePlayback
@@ -3502,8 +3803,12 @@ class _RoomScreenState extends State<RoomScreen>
           title: _currentStatus?.entry?.name ?? context.l10n.unknownVideo,
           danmakuController: _danmakuController,
           subtitles: _currentStatus?.entry?.subtitles,
-          resolveSubtitleUrl: _resolveSubtitlePlaybackUrl,
+          playbackResourceIdentity:
+              _currentStatus?.entry?.playbackAttachmentIdentity ?? '',
+          resolveSubtitleResource: _resolveSubtitlePlaybackResource,
+          onSubtitleP2pDeactivated: _deactivateP2pSubtitle,
           isLive: _currentStatus?.entry?.live == true,
+          liveStartedAt: _currentStatus?.entry?.liveStartedAt,
           onToggleFullScreen: () => Navigator.of(context).pop(),
           onSync: _handleSync,
           onPrevious: _canNavigatePlayback
@@ -6659,6 +6964,7 @@ class _RoomScreenState extends State<RoomScreen>
       if (mounted) {
         AppNotifications.showSuccess(context, context.l10n.playbackStopped);
         await _disposeVideoController();
+        _cancelPlaybackResourceRefresh();
         setState(() {
           _currentStatus = null;
         });

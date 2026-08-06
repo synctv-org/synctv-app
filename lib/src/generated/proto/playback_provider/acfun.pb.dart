@@ -16,9 +16,12 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'acfun.pbenum.dart';
 import 'common.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+export 'acfun.pbenum.dart';
 
 class GetAcFunResourceRequest extends $pb.GeneratedMessage {
   factory GetAcFunResourceRequest({
@@ -231,8 +234,8 @@ class AcFunResourceResponse extends $pb.GeneratedMessage {
   $0.StreamChunk ensureChunk() => $_ensure(0);
 }
 
-class GetAcFunSegmentRequest extends $pb.GeneratedMessage {
-  factory GetAcFunSegmentRequest({
+class GetAcFunHlsResourceRequest extends $pb.GeneratedMessage {
+  factory GetAcFunHlsResourceRequest({
     $core.String? version,
     $core.String? targetUrl,
     $core.String? sig,
@@ -241,6 +244,9 @@ class GetAcFunSegmentRequest extends $pb.GeneratedMessage {
     $fixnum.Int64? exp,
     $core.String? range,
     $core.bool? head,
+    $core.String? modeName,
+    $core.int? mediaIndex,
+    AcFunHlsResourceKind? resourceKind,
   }) {
     final result = create();
     if (version != null) result.version = version;
@@ -251,20 +257,23 @@ class GetAcFunSegmentRequest extends $pb.GeneratedMessage {
     if (exp != null) result.exp = exp;
     if (range != null) result.range = range;
     if (head != null) result.head = head;
+    if (modeName != null) result.modeName = modeName;
+    if (mediaIndex != null) result.mediaIndex = mediaIndex;
+    if (resourceKind != null) result.resourceKind = resourceKind;
     return result;
   }
 
-  GetAcFunSegmentRequest._();
+  GetAcFunHlsResourceRequest._();
 
-  factory GetAcFunSegmentRequest.fromBuffer($core.List<$core.int> data,
+  factory GetAcFunHlsResourceRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetAcFunSegmentRequest.fromJson($core.String json,
+  factory GetAcFunHlsResourceRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetAcFunSegmentRequest',
+      _omitMessageNames ? '' : 'GetAcFunHlsResourceRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.acfun'),
       createEmptyInstance: create)
@@ -276,27 +285,33 @@ class GetAcFunSegmentRequest extends $pb.GeneratedMessage {
     ..aInt64(6, _omitFieldNames ? '' : 'exp')
     ..aOS(7, _omitFieldNames ? '' : 'range')
     ..aOB(8, _omitFieldNames ? '' : 'head')
+    ..aOS(9, _omitFieldNames ? '' : 'modeName')
+    ..aI(10, _omitFieldNames ? '' : 'mediaIndex',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<AcFunHlsResourceKind>(11, _omitFieldNames ? '' : 'resourceKind',
+        enumValues: AcFunHlsResourceKind.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAcFunSegmentRequest clone() => deepCopy();
+  GetAcFunHlsResourceRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAcFunSegmentRequest copyWith(
-          void Function(GetAcFunSegmentRequest) updates) =>
-      super.copyWith((message) => updates(message as GetAcFunSegmentRequest))
-          as GetAcFunSegmentRequest;
+  GetAcFunHlsResourceRequest copyWith(
+          void Function(GetAcFunHlsResourceRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as GetAcFunHlsResourceRequest))
+          as GetAcFunHlsResourceRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetAcFunSegmentRequest create() => GetAcFunSegmentRequest._();
+  static GetAcFunHlsResourceRequest create() => GetAcFunHlsResourceRequest._();
   @$core.override
-  GetAcFunSegmentRequest createEmptyInstance() => create();
+  GetAcFunHlsResourceRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetAcFunSegmentRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetAcFunSegmentRequest>(create);
-  static GetAcFunSegmentRequest? _defaultInstance;
+  static GetAcFunHlsResourceRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetAcFunHlsResourceRequest>(create);
+  static GetAcFunHlsResourceRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get version => $_getSZ(0);
@@ -369,10 +384,37 @@ class GetAcFunSegmentRequest extends $pb.GeneratedMessage {
   $core.bool hasHead() => $_has(7);
   @$pb.TagNumber(8)
   void clearHead() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get modeName => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set modeName($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasModeName() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearModeName() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.int get mediaIndex => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set mediaIndex($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMediaIndex() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMediaIndex() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  AcFunHlsResourceKind get resourceKind => $_getN(10);
+  @$pb.TagNumber(11)
+  set resourceKind(AcFunHlsResourceKind value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasResourceKind() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearResourceKind() => $_clearField(11);
 }
 
-class AcFunSegmentResponse extends $pb.GeneratedMessage {
-  factory AcFunSegmentResponse({
+class AcFunHlsResourceResponse extends $pb.GeneratedMessage {
+  factory AcFunHlsResourceResponse({
     $0.StreamChunk? chunk,
   }) {
     final result = create();
@@ -380,17 +422,17 @@ class AcFunSegmentResponse extends $pb.GeneratedMessage {
     return result;
   }
 
-  AcFunSegmentResponse._();
+  AcFunHlsResourceResponse._();
 
-  factory AcFunSegmentResponse.fromBuffer($core.List<$core.int> data,
+  factory AcFunHlsResourceResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory AcFunSegmentResponse.fromJson($core.String json,
+  factory AcFunHlsResourceResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'AcFunSegmentResponse',
+      _omitMessageNames ? '' : 'AcFunHlsResourceResponse',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.acfun'),
       createEmptyInstance: create)
@@ -399,23 +441,24 @@ class AcFunSegmentResponse extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AcFunSegmentResponse clone() => deepCopy();
+  AcFunHlsResourceResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AcFunSegmentResponse copyWith(void Function(AcFunSegmentResponse) updates) =>
-      super.copyWith((message) => updates(message as AcFunSegmentResponse))
-          as AcFunSegmentResponse;
+  AcFunHlsResourceResponse copyWith(
+          void Function(AcFunHlsResourceResponse) updates) =>
+      super.copyWith((message) => updates(message as AcFunHlsResourceResponse))
+          as AcFunHlsResourceResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static AcFunSegmentResponse create() => AcFunSegmentResponse._();
+  static AcFunHlsResourceResponse create() => AcFunHlsResourceResponse._();
   @$core.override
-  AcFunSegmentResponse createEmptyInstance() => create();
+  AcFunHlsResourceResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static AcFunSegmentResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<AcFunSegmentResponse>(create);
-  static AcFunSegmentResponse? _defaultInstance;
+  static AcFunHlsResourceResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AcFunHlsResourceResponse>(create);
+  static AcFunHlsResourceResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $0.StreamChunk get chunk => $_getN(0);
@@ -919,10 +962,14 @@ class AcFunPlaybackProviderServiceApi {
           $pb.ClientContext? ctx, GetAcFunResourceRequest request) =>
       _client.invoke<AcFunResourceResponse>(ctx, 'AcFunPlaybackProviderService',
           'GetResource', request, AcFunResourceResponse());
-  $async.Future<AcFunSegmentResponse> getSegment(
-          $pb.ClientContext? ctx, GetAcFunSegmentRequest request) =>
-      _client.invoke<AcFunSegmentResponse>(ctx, 'AcFunPlaybackProviderService',
-          'GetSegment', request, AcFunSegmentResponse());
+  $async.Future<AcFunHlsResourceResponse> getHlsResource(
+          $pb.ClientContext? ctx, GetAcFunHlsResourceRequest request) =>
+      _client.invoke<AcFunHlsResourceResponse>(
+          ctx,
+          'AcFunPlaybackProviderService',
+          'GetHlsResource',
+          request,
+          AcFunHlsResourceResponse());
   $async.Future<AcFunDanmakuFileResponse> getDanmakuFile(
           $pb.ClientContext? ctx, GetAcFunDanmakuFileRequest request) =>
       _client.invoke<AcFunDanmakuFileResponse>(

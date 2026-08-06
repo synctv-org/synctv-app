@@ -4458,6 +4458,11 @@ void main() {
                   url: 'http://origin.test/video.srt',
                   headers: const {'Referer': 'https://subtitle.test/'}.entries,
                   format: 'srt',
+                  expireAt: Int64(1785923000),
+                  p2pDelivery: client.P2pResourceDelivery(
+                    swarmId: 'sm3_subtitle',
+                    swarmTicket: 'subtitle-ticket',
+                  ),
                 ),
               ],
               danmakus: [
@@ -4466,6 +4471,20 @@ void main() {
                   url: 'http://origin.test/danmaku.xml',
                   headers: const {'User-Agent': 'danmaku-client'}.entries,
                   format: 'xml',
+                  expireAt: Int64(1785923100),
+                  p2pDelivery: client.P2pResourceDelivery(
+                    swarmId: 'sm3_danmaku',
+                    swarmTicket: 'danmaku-ticket',
+                  ),
+                ),
+                client.PlaybackDanmaku(
+                  name: '实时弹幕',
+                  url: '/live-danmaku/stream',
+                  format: 'synctv-bilibili-live',
+                  p2pDelivery: client.P2pResourceDelivery(
+                    swarmId: 'sm3_invalid_live',
+                    swarmTicket: 'invalid-live-ticket',
+                  ),
                 ),
               ],
             ),
@@ -4486,12 +4505,13 @@ void main() {
                 client.PlaybackMedia(
                   name: 'Proxy 1080P',
                   url: '/proxy/video-1080.m3u8',
+                  expireAt: Int64(1785923199),
                   metadata: client.PlaybackMediaMetadata(
                     resolution: '1920x1080',
                     codec: 'hevc',
                   ),
                   format: 'hls',
-                  p2pDelivery: client.P2pMediaDelivery(
+                  p2pDelivery: client.P2pResourceDelivery(
                     swarmId: 'sm2_server_approved',
                     swarmTicket: 'ticket',
                   ),
@@ -4515,7 +4535,8 @@ void main() {
     expect(entry.liveStreamGenerationId, 'generation-1');
     expect(entry.sourceProvider, 'alist');
     expect(entry.providerInstanceName, 'alist_main');
-    expect(entry.metadata['expiresAt'], 1700000000);
+    expect(entry.playbackExpireAt, 1700000000);
+    expect(entry.metadata.containsKey('expiresAt'), isFalse);
     expect(entry.metadata['durationSeconds'], 3661.5);
     expect(entry.playbackModes, hasLength(2));
     expect(entry.hasPlaybackChoices, isTrue);
@@ -4527,6 +4548,7 @@ void main() {
       'sm2_server_approved',
     );
     expect(entry.selectedPlaybackUrlOption?.format, 'hls');
+    expect(entry.selectedPlaybackUrlOption?.expireAt, 1785923199);
     final switched = entry.selectPlayback(
       modeKey: 'direct',
       urlIndex: 0,
@@ -4539,8 +4561,12 @@ void main() {
     expect(switched.subtitles?['sub_0']['headers'], {
       'Referer': 'https://subtitle.test/',
     });
+    expect(switched.subtitles?['sub_0']['expireAt'], 1785923000);
+    expect(switched.subtitles?['sub_0']['p2pDelivery'].swarmId, 'sm3_subtitle');
     expect(switched.danmu, 'http://origin.test/danmaku.xml');
     expect(switched.danmuHeaders, {'User-Agent': 'danmaku-client'});
+    expect(switched.danmuP2pDelivery?.swarmId, 'sm3_danmaku');
+    expect(switched.streamDanmu, 'https://example.test/live-danmaku/stream');
     expect(switched.playbackChoiceLabel, contains('原始'));
 
     final selectedAlternateFormat = entry.selectPlayback(
@@ -4549,6 +4575,108 @@ void main() {
       resolveUrl: (url) => url,
     );
     expect(selectedAlternateFormat.type, 'dash');
+  });
+
+  test(
+    'playback mapping keeps static danmaku delivery bound to the selected resource',
+    () {
+      final entry = RoomMediaEntry.fromPlaybackProto(
+        client.Playback(
+          mediaId: 'med_danmaku',
+          name: 'Danmaku source',
+          playbackInfos: [
+            MapEntry(
+              'direct',
+              client.PlaybackInfo(
+                medias: [
+                  client.PlaybackMedia(
+                    name: 'Video',
+                    url: 'https://origin.test/video.mp4',
+                    format: 'mp4',
+                  ),
+                ],
+                danmakus: [
+                  client.PlaybackDanmaku(
+                    name: 'Preferred static danmaku',
+                    url: 'https://origin.test/preferred.xml',
+                    headers: const {'X-Danmaku': 'preferred'}.entries,
+                    format: 'xml',
+                  ),
+                  client.PlaybackDanmaku(
+                    name: 'Alternate static danmaku',
+                    url: 'https://origin.test/alternate.xml',
+                    headers: const {'X-Danmaku': 'alternate'}.entries,
+                    format: 'xml',
+                    p2pDelivery: client.P2pResourceDelivery(
+                      swarmId: 'sm3_alternate',
+                      swarmTicket: 'alternate-ticket',
+                    ),
+                  ),
+                  client.PlaybackDanmaku(
+                    name: 'Live danmaku',
+                    url: '/live-danmaku/med_danmaku',
+                    headers: const {'X-Danmaku': 'live'}.entries,
+                    format: 'synctv-bilibili-live',
+                    p2pDelivery: client.P2pResourceDelivery(
+                      swarmId: 'sm3_live',
+                      swarmTicket: 'live-ticket',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          defaultMode: 'direct',
+        ),
+        resolveUrl: (url) =>
+            url.startsWith('/') ? 'https://example.test$url' : url,
+      );
+
+      expect(entry.danmu, 'https://origin.test/preferred.xml');
+      expect(entry.danmuHeaders, {'X-Danmaku': 'preferred'});
+      expect(entry.danmuP2pDelivery, isNull);
+      expect(
+        entry.streamDanmu,
+        'https://example.test/live-danmaku/med_danmaku',
+      );
+      expect(entry.streamDanmuHeaders, {'X-Danmaku': 'live'});
+    },
+  );
+
+  test('playback mapping preserves Bilibili live start time', () {
+    final entry = RoomMediaEntry.fromPlaybackProto(
+      client.Playback(
+        mediaId: 'med_bilibili_live',
+        name: 'Bilibili Live',
+        playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
+        metadata: client.PlaybackMetadata(
+          bilibili: client.BilibiliPlaybackMetadata(
+            roomId: Int64(21292831),
+            liveStartedAt: Int64(1785919599),
+          ),
+        ),
+        playbackInfos: [
+          MapEntry(
+            'direct',
+            client.PlaybackInfo(
+              medias: [
+                client.PlaybackMedia(
+                  name: 'HLS',
+                  url: 'https://live.example.test/index.m3u8',
+                  format: 'hls',
+                  expireAt: Int64(1785923199),
+                ),
+              ],
+            ),
+          ),
+        ],
+        defaultMode: 'direct',
+      ),
+    );
+
+    expect(entry.live, isTrue);
+    expect(entry.liveStartedAt, 1785919599);
+    expect(entry.selectedPlaybackUrlOption?.expireAt, 1785923199);
   });
 
   test('playback mapping routes live danmaku to stream channel', () {
@@ -5059,6 +5187,7 @@ void main() {
       headers: parsed,
       preferProxy: true,
       proxyOnly: true,
+      expiresAt: 1900000000,
     );
     expect(config.toJson(), {
       'url': 'https://media.example.test/feature.mp4',
@@ -5071,6 +5200,7 @@ void main() {
       'playbackKind': 'live',
       'preferProxy': true,
       'proxyOnly': true,
+      'expiresAt': 1900000000,
     });
     expect(
       DirectUrlSourceConfig.validateUrl('http//media.example.test/file.mp4'),
@@ -6828,12 +6958,12 @@ void main() {
         ..headers.contentType = io.ContentType.json
         ..write(
           jsonEncode({
+            'server': {'name': 'SyncTV Test'},
             'roomDefaults': {},
             'permissions': {},
             'roomCreation': {},
             'user': {},
             'oauth2': {},
-            'proxy': {},
             'rtmp': {},
             'email': {
               'enabled': true,
@@ -6846,6 +6976,10 @@ void main() {
             },
             'webrtc': {},
             'chat': {},
+            'playbackHistory': {
+              'retentionDays': '30',
+              'maxEntriesPerRoom': '100',
+            },
             'cors': {},
           }),
         );
@@ -6860,9 +6994,12 @@ void main() {
       );
 
       final settings = await SyncTvService.runtimeGetSettings();
+      final serverSection = settings.section('server');
       final section = settings.section('email');
       final rtmpSection = settings.section('rtmp');
+      final playbackHistorySection = settings.section('playbackHistory');
 
+      expect(serverSection?.settings['name'], 'SyncTV Test');
       expect(section, isNotNull);
       expect(section!.name, 'email');
       expect(section.settings['enabled'], isTrue);
@@ -6874,6 +7011,11 @@ void main() {
       });
       expect(rtmpSection, isNotNull);
       expect(rtmpSection!.settings['customPublishHost'], isNull);
+      expect(playbackHistorySection?.settings, {
+        'retentionDays': 30,
+        'maxEntriesPerRoom': '100',
+      });
+      expect(settings.section('proxy'), isNull);
     } finally {
       await requests.cancel();
       await server.close(force: true);
@@ -6899,16 +7041,20 @@ void main() {
         ..headers.contentType = io.ContentType.json
         ..write(
           jsonEncode({
+            'server': {'name': 'Updated SyncTV'},
             'roomDefaults': {'defaultMaxMembers': '100'},
             'roomCreation': {'maxRoomsPerUser': '42', 'enabled': true},
             'permissions': {},
             'user': {},
             'oauth2': {},
-            'proxy': {},
             'rtmp': {},
             'email': {},
             'webrtc': {},
             'chat': {},
+            'playbackHistory': {
+              'retentionDays': '60',
+              'maxEntriesPerRoom': '100',
+            },
             'cors': {
               'allowedOrigins': ['https://app.example.test'],
             },
@@ -6924,6 +7070,11 @@ void main() {
         'http://${server.address.host}:${server.port}',
       );
 
+      await SyncTvService.runtimeUpdateSettingInSection(
+        'server',
+        'name',
+        'Updated SyncTV',
+      );
       await SyncTvService.runtimeUpdateSettingInSection(
         'roomCreation',
         'maxRoomsPerUser',
@@ -6963,6 +7114,11 @@ void main() {
         'customPublishHost',
         null,
       );
+      await SyncTvService.runtimeUpdateSettingInSection(
+        'playbackHistory',
+        'retentionDays',
+        60,
+      );
     } finally {
       await requests.cancel();
       await server.close(force: true);
@@ -6973,6 +7129,12 @@ void main() {
       everyElement('/api/admin/settings'),
     );
     expect(requestedBodies, [
+      {
+        'settings': {
+          'server': {'name': 'Updated SyncTV'},
+        },
+        'updateMask': 'server.name',
+      },
       {
         'settings': {
           'roomCreation': {'maxRoomsPerUser': '42'},
@@ -7027,9 +7189,67 @@ void main() {
         'settings': {'rtmp': <String, dynamic>{}},
         'updateMask': 'rtmp.customPublishHost',
       },
+      {
+        'settings': {
+          'playbackHistory': {'retentionDays': 60},
+        },
+        'updateMask': 'playbackHistory.retentionDays',
+      },
     ]);
     expect(requestedBodies, everyElement(contains('settings')));
   });
+
+  test(
+    'admin runtime settings backup facades use export and import routes',
+    () async {
+      final requests = <http.Request>[];
+      final api = SyncTvApiClient(
+        baseUrl: 'https://example.test',
+        session: SyncTvSession()..accessToken = 'admin-token',
+        httpClient: MockClient((request) async {
+          requests.add(request);
+          final body = switch (request.url.path) {
+            '/api/admin/settings/export' => {
+              'formatVersion': 1,
+              'settings': <String, dynamic>{},
+            },
+            '/api/admin/settings/import' => {
+              'applied': false,
+              'changedSections': ['email'],
+            },
+            _ => throw StateError(
+              'Unexpected settings path ${request.url.path}',
+            ),
+          };
+          return http.Response(
+            jsonEncode(body),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+      );
+
+      final snapshot = await api.adminService.exportSettings(
+        admin.ExportSettingsRequest(),
+      );
+      final result = await api.adminService.importSettings(
+        admin.ImportSettingsRequest(snapshot: snapshot, dryRun: true),
+      );
+
+      expect(requests.map((request) => request.method), ['POST', 'POST']);
+      expect(requests.map((request) => request.url.path), [
+        '/api/admin/settings/export',
+        '/api/admin/settings/import',
+      ]);
+      expect(requests.first.body, isEmpty);
+      expect(jsonDecode(requests.last.body), {
+        'snapshot': {'formatVersion': 1, 'settings': <String, dynamic>{}},
+        'dryRun': true,
+      });
+      expect(result.applied, isFalse);
+      expect(result.changedSections, ['email']);
+    },
+  );
 
   test('room member service preserves pagination filters and version', () async {
     Uri? requestedUri;

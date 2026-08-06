@@ -19544,6 +19544,7 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
     $core.String? fallbackFormat,
     $fixnum.Int64? quality,
     $fixnum.Int64? roomId,
+    $fixnum.Int64? liveStartedAt,
   }) {
     final result = create();
     if (contentType != null) result.contentType = contentType;
@@ -19555,6 +19556,7 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
     if (fallbackFormat != null) result.fallbackFormat = fallbackFormat;
     if (quality != null) result.quality = quality;
     if (roomId != null) result.roomId = roomId;
+    if (liveStartedAt != null) result.liveStartedAt = liveStartedAt;
     return result;
   }
 
@@ -19585,6 +19587,7 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(9, _omitFieldNames ? '' : 'roomId', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aInt64(10, _omitFieldNames ? '' : 'liveStartedAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -19687,6 +19690,15 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasRoomId() => $_has(8);
   @$pb.TagNumber(9)
   void clearRoomId() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get liveStartedAt => $_getI64(9);
+  @$pb.TagNumber(10)
+  set liveStartedAt($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasLiveStartedAt() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearLiveStartedAt() => $_clearField(10);
 }
 
 class EmbyPlaybackMetadata extends $pb.GeneratedMessage {
@@ -24231,7 +24243,7 @@ class PlaybackMedia extends $pb.GeneratedMessage {
     $fixnum.Int64? expireAt,
     PlaybackMediaMetadata? metadata,
     $core.String? format,
-    P2pMediaDelivery? p2pDelivery,
+    P2pResourceDelivery? p2pDelivery,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -24268,8 +24280,8 @@ class PlaybackMedia extends $pb.GeneratedMessage {
     ..aOM<PlaybackMediaMetadata>(5, _omitFieldNames ? '' : 'metadata',
         subBuilder: PlaybackMediaMetadata.create)
     ..aOS(6, _omitFieldNames ? '' : 'format')
-    ..aOM<P2pMediaDelivery>(7, _omitFieldNames ? '' : 'p2pDelivery',
-        subBuilder: P2pMediaDelivery.create)
+    ..aOM<P2pResourceDelivery>(7, _omitFieldNames ? '' : 'p2pDelivery',
+        subBuilder: P2pResourceDelivery.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -24350,19 +24362,20 @@ class PlaybackMedia extends $pb.GeneratedMessage {
   /// Server-approved room-scoped P2P delivery identity and resource strategy.
   /// Omitted when this representation must use its origin directly.
   @$pb.TagNumber(7)
-  P2pMediaDelivery get p2pDelivery => $_getN(6);
+  P2pResourceDelivery get p2pDelivery => $_getN(6);
   @$pb.TagNumber(7)
-  set p2pDelivery(P2pMediaDelivery value) => $_setField(7, value);
+  set p2pDelivery(P2pResourceDelivery value) => $_setField(7, value);
   @$pb.TagNumber(7)
   $core.bool hasP2pDelivery() => $_has(6);
   @$pb.TagNumber(7)
   void clearP2pDelivery() => $_clearField(7);
   @$pb.TagNumber(7)
-  P2pMediaDelivery ensureP2pDelivery() => $_ensure(6);
+  P2pResourceDelivery ensureP2pDelivery() => $_ensure(6);
 }
 
-class P2pMediaDelivery extends $pb.GeneratedMessage {
-  factory P2pMediaDelivery({
+/// Server-approved room-scoped P2P identity for a byte-stable resource.
+class P2pResourceDelivery extends $pb.GeneratedMessage {
+  factory P2pResourceDelivery({
     $core.String? swarmId,
     $core.String? swarmTicket,
   }) {
@@ -24372,17 +24385,17 @@ class P2pMediaDelivery extends $pb.GeneratedMessage {
     return result;
   }
 
-  P2pMediaDelivery._();
+  P2pResourceDelivery._();
 
-  factory P2pMediaDelivery.fromBuffer($core.List<$core.int> data,
+  factory P2pResourceDelivery.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory P2pMediaDelivery.fromJson($core.String json,
+  factory P2pResourceDelivery.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'P2pMediaDelivery',
+      _omitMessageNames ? '' : 'P2pResourceDelivery',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'swarmId')
@@ -24390,23 +24403,23 @@ class P2pMediaDelivery extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  P2pMediaDelivery clone() => deepCopy();
+  P2pResourceDelivery clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  P2pMediaDelivery copyWith(void Function(P2pMediaDelivery) updates) =>
-      super.copyWith((message) => updates(message as P2pMediaDelivery))
-          as P2pMediaDelivery;
+  P2pResourceDelivery copyWith(void Function(P2pResourceDelivery) updates) =>
+      super.copyWith((message) => updates(message as P2pResourceDelivery))
+          as P2pResourceDelivery;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static P2pMediaDelivery create() => P2pMediaDelivery._();
+  static P2pResourceDelivery create() => P2pResourceDelivery._();
   @$core.override
-  P2pMediaDelivery createEmptyInstance() => create();
+  P2pResourceDelivery createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static P2pMediaDelivery getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<P2pMediaDelivery>(create);
-  static P2pMediaDelivery? _defaultInstance;
+  static P2pResourceDelivery getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<P2pResourceDelivery>(create);
+  static P2pResourceDelivery? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get swarmId => $_getSZ(0);
@@ -24531,6 +24544,8 @@ class PlaybackSubtitle extends $pb.GeneratedMessage {
     $core.String? url,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? headers,
     $core.String? format,
+    $fixnum.Int64? expireAt,
+    P2pResourceDelivery? p2pDelivery,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -24538,6 +24553,8 @@ class PlaybackSubtitle extends $pb.GeneratedMessage {
     if (url != null) result.url = url;
     if (headers != null) result.headers.addEntries(headers);
     if (format != null) result.format = format;
+    if (expireAt != null) result.expireAt = expireAt;
+    if (p2pDelivery != null) result.p2pDelivery = p2pDelivery;
     return result;
   }
 
@@ -24563,6 +24580,9 @@ class PlaybackSubtitle extends $pb.GeneratedMessage {
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('synctv.client'))
     ..aOS(5, _omitFieldNames ? '' : 'format')
+    ..aInt64(6, _omitFieldNames ? '' : 'expireAt')
+    ..aOM<P2pResourceDelivery>(7, _omitFieldNames ? '' : 'p2pDelivery',
+        subBuilder: P2pResourceDelivery.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -24627,6 +24647,28 @@ class PlaybackSubtitle extends $pb.GeneratedMessage {
   $core.bool hasFormat() => $_has(4);
   @$pb.TagNumber(5)
   void clearFormat() => $_clearField(5);
+
+  /// Hard Unix timestamp deadline for the current subtitle URL.
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get expireAt => $_getI64(5);
+  @$pb.TagNumber(6)
+  set expireAt($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasExpireAt() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearExpireAt() => $_clearField(6);
+
+  /// Omitted when the subtitle cannot be shared as one immutable document.
+  @$pb.TagNumber(7)
+  P2pResourceDelivery get p2pDelivery => $_getN(6);
+  @$pb.TagNumber(7)
+  set p2pDelivery(P2pResourceDelivery value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasP2pDelivery() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearP2pDelivery() => $_clearField(7);
+  @$pb.TagNumber(7)
+  P2pResourceDelivery ensureP2pDelivery() => $_ensure(6);
 }
 
 /// Danmaku (bullet comments) information.
@@ -24636,12 +24678,16 @@ class PlaybackDanmaku extends $pb.GeneratedMessage {
     $core.String? url,
     $core.String? format,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? headers,
+    $fixnum.Int64? expireAt,
+    P2pResourceDelivery? p2pDelivery,
   }) {
     final result = create();
     if (name != null) result.name = name;
     if (url != null) result.url = url;
     if (format != null) result.format = format;
     if (headers != null) result.headers.addEntries(headers);
+    if (expireAt != null) result.expireAt = expireAt;
+    if (p2pDelivery != null) result.p2pDelivery = p2pDelivery;
     return result;
   }
 
@@ -24666,6 +24712,9 @@ class PlaybackDanmaku extends $pb.GeneratedMessage {
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('synctv.client'))
+    ..aInt64(5, _omitFieldNames ? '' : 'expireAt')
+    ..aOM<P2pResourceDelivery>(6, _omitFieldNames ? '' : 'p2pDelivery',
+        subBuilder: P2pResourceDelivery.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -24720,6 +24769,28 @@ class PlaybackDanmaku extends $pb.GeneratedMessage {
   /// Request headers (if needed)
   @$pb.TagNumber(4)
   $pb.PbMap<$core.String, $core.String> get headers => $_getMap(3);
+
+  /// Hard Unix timestamp deadline for the current danmaku URL.
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get expireAt => $_getI64(4);
+  @$pb.TagNumber(5)
+  set expireAt($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasExpireAt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearExpireAt() => $_clearField(5);
+
+  /// Omitted for real-time danmaku streams and mutable resources.
+  @$pb.TagNumber(6)
+  P2pResourceDelivery get p2pDelivery => $_getN(5);
+  @$pb.TagNumber(6)
+  set p2pDelivery(P2pResourceDelivery value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasP2pDelivery() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearP2pDelivery() => $_clearField(6);
+  @$pb.TagNumber(6)
+  P2pResourceDelivery ensureP2pDelivery() => $_ensure(5);
 }
 
 enum ClientMessage_Message {

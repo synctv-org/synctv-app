@@ -717,6 +717,249 @@ class RuntimeSettings extends $pb.GeneratedMessage {
   PlaybackHistorySettings ensurePlaybackHistory() => $_ensure(11);
 }
 
+/// Portable, versioned backup document for all database-backed runtime settings.
+/// The document contains credentials and must be handled as a secret.
+class RuntimeSettingsSnapshot extends $pb.GeneratedMessage {
+  factory RuntimeSettingsSnapshot({
+    $core.int? formatVersion,
+    RuntimeSettings? settings,
+  }) {
+    final result = create();
+    if (formatVersion != null) result.formatVersion = formatVersion;
+    if (settings != null) result.settings = settings;
+    return result;
+  }
+
+  RuntimeSettingsSnapshot._();
+
+  factory RuntimeSettingsSnapshot.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RuntimeSettingsSnapshot.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RuntimeSettingsSnapshot',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'formatVersion',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOM<RuntimeSettings>(2, _omitFieldNames ? '' : 'settings',
+        subBuilder: RuntimeSettings.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RuntimeSettingsSnapshot clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RuntimeSettingsSnapshot copyWith(
+          void Function(RuntimeSettingsSnapshot) updates) =>
+      super.copyWith((message) => updates(message as RuntimeSettingsSnapshot))
+          as RuntimeSettingsSnapshot;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RuntimeSettingsSnapshot create() => RuntimeSettingsSnapshot._();
+  @$core.override
+  RuntimeSettingsSnapshot createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RuntimeSettingsSnapshot getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RuntimeSettingsSnapshot>(create);
+  static RuntimeSettingsSnapshot? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get formatVersion => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set formatVersion($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFormatVersion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFormatVersion() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  RuntimeSettings get settings => $_getN(1);
+  @$pb.TagNumber(2)
+  set settings(RuntimeSettings value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSettings() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSettings() => $_clearField(2);
+  @$pb.TagNumber(2)
+  RuntimeSettings ensureSettings() => $_ensure(1);
+}
+
+class ExportSettingsRequest extends $pb.GeneratedMessage {
+  factory ExportSettingsRequest() => create();
+
+  ExportSettingsRequest._();
+
+  factory ExportSettingsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ExportSettingsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ExportSettingsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ExportSettingsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ExportSettingsRequest copyWith(
+          void Function(ExportSettingsRequest) updates) =>
+      super.copyWith((message) => updates(message as ExportSettingsRequest))
+          as ExportSettingsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ExportSettingsRequest create() => ExportSettingsRequest._();
+  @$core.override
+  ExportSettingsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ExportSettingsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ExportSettingsRequest>(create);
+  static ExportSettingsRequest? _defaultInstance;
+}
+
+class ImportSettingsRequest extends $pb.GeneratedMessage {
+  factory ImportSettingsRequest({
+    RuntimeSettingsSnapshot? snapshot,
+    $core.bool? dryRun,
+  }) {
+    final result = create();
+    if (snapshot != null) result.snapshot = snapshot;
+    if (dryRun != null) result.dryRun = dryRun;
+    return result;
+  }
+
+  ImportSettingsRequest._();
+
+  factory ImportSettingsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ImportSettingsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ImportSettingsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<RuntimeSettingsSnapshot>(1, _omitFieldNames ? '' : 'snapshot',
+        subBuilder: RuntimeSettingsSnapshot.create)
+    ..aOB(2, _omitFieldNames ? '' : 'dryRun')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportSettingsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportSettingsRequest copyWith(
+          void Function(ImportSettingsRequest) updates) =>
+      super.copyWith((message) => updates(message as ImportSettingsRequest))
+          as ImportSettingsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ImportSettingsRequest create() => ImportSettingsRequest._();
+  @$core.override
+  ImportSettingsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ImportSettingsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ImportSettingsRequest>(create);
+  static ImportSettingsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  RuntimeSettingsSnapshot get snapshot => $_getN(0);
+  @$pb.TagNumber(1)
+  set snapshot(RuntimeSettingsSnapshot value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSnapshot() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSnapshot() => $_clearField(1);
+  @$pb.TagNumber(1)
+  RuntimeSettingsSnapshot ensureSnapshot() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.bool get dryRun => $_getBF(1);
+  @$pb.TagNumber(2)
+  set dryRun($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDryRun() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDryRun() => $_clearField(2);
+}
+
+class ImportSettingsResponse extends $pb.GeneratedMessage {
+  factory ImportSettingsResponse({
+    $core.bool? applied,
+    $core.Iterable<$core.String>? changedSections,
+  }) {
+    final result = create();
+    if (applied != null) result.applied = applied;
+    if (changedSections != null) result.changedSections.addAll(changedSections);
+    return result;
+  }
+
+  ImportSettingsResponse._();
+
+  factory ImportSettingsResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ImportSettingsResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ImportSettingsResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'applied')
+    ..pPS(2, _omitFieldNames ? '' : 'changedSections')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportSettingsResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportSettingsResponse copyWith(
+          void Function(ImportSettingsResponse) updates) =>
+      super.copyWith((message) => updates(message as ImportSettingsResponse))
+          as ImportSettingsResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ImportSettingsResponse create() => ImportSettingsResponse._();
+  @$core.override
+  ImportSettingsResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ImportSettingsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ImportSettingsResponse>(create);
+  static ImportSettingsResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get applied => $_getBF(0);
+  @$pb.TagNumber(1)
+  set applied($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasApplied() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearApplied() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<$core.String> get changedSections => $_getList(1);
+}
+
 class ServerSettings extends $pb.GeneratedMessage {
   factory ServerSettings({
     $core.String? name,
@@ -13710,6 +13953,18 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, UpdateSettingsRequest request) =>
       _client.invoke<RuntimeSettings>(
           ctx, 'AdminService', 'UpdateSettings', request, RuntimeSettings());
+
+  /// Root-only because the snapshot contains OAuth and SMTP credentials.
+  $async.Future<RuntimeSettingsSnapshot> exportSettings(
+          $pb.ClientContext? ctx, ExportSettingsRequest request) =>
+      _client.invoke<RuntimeSettingsSnapshot>(ctx, 'AdminService',
+          'ExportSettings', request, RuntimeSettingsSnapshot());
+
+  /// Root-only because the import replaces all runtime settings.
+  $async.Future<ImportSettingsResponse> importSettings(
+          $pb.ClientContext? ctx, ImportSettingsRequest request) =>
+      _client.invoke<ImportSettingsResponse>(ctx, 'AdminService',
+          'ImportSettings', request, ImportSettingsResponse());
   $async.Future<SendTestEmailResponse> sendTestEmail(
           $pb.ClientContext? ctx, SendTestEmailRequest request) =>
       _client.invoke<SendTestEmailResponse>(ctx, 'AdminService',

@@ -28,6 +28,7 @@ class DirectUrlSourceConfig {
   final source_enum.PlaybackKind playbackKind;
   final bool preferProxy;
   final bool proxyOnly;
+  final int? expiresAt;
 
   const DirectUrlSourceConfig({
     required this.url,
@@ -35,6 +36,7 @@ class DirectUrlSourceConfig {
     this.headers = const {},
     this.preferProxy = false,
     this.proxyOnly = false,
+    this.expiresAt,
   });
 
   factory DirectUrlSourceConfig.fromUserInput({
@@ -43,16 +45,21 @@ class DirectUrlSourceConfig {
     Map<String, String> headers = const {},
     bool preferProxy = false,
     bool proxyOnly = false,
+    int? expiresAt,
   }) {
     final normalizedUrl = validateUrl(url);
     validatePlaybackKind(playbackKind);
     validateHeaders(headers);
+    if (expiresAt != null && expiresAt <= 0) {
+      throw const DirectUrlSourceConfigException('资源过期时间必须是有效的 Unix 时间戳');
+    }
     return DirectUrlSourceConfig(
       url: normalizedUrl,
       playbackKind: playbackKind,
       headers: headers,
       preferProxy: preferProxy,
       proxyOnly: proxyOnly,
+      expiresAt: expiresAt,
     );
   }
 
@@ -71,6 +78,7 @@ class DirectUrlSourceConfig {
       },
       if (preferProxy) 'preferProxy': true,
       if (proxyOnly) 'proxyOnly': true,
+      'expiresAt': ?expiresAt,
     };
   }
 

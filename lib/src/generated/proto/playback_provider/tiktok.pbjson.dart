@@ -17,6 +17,22 @@ import 'dart:typed_data' as $typed_data;
 
 import 'common.pbjson.dart' as $0;
 
+@$core.Deprecated('Use tikTokHlsResourceKindDescriptor instead')
+const TikTokHlsResourceKind$json = {
+  '1': 'TikTokHlsResourceKind',
+  '2': [
+    {'1': 'TIK_TOK_HLS_RESOURCE_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'TIK_TOK_HLS_RESOURCE_KIND_MEDIA', '2': 1},
+    {'1': 'TIK_TOK_HLS_RESOURCE_KIND_MANIFEST', '2': 2},
+  ],
+};
+
+/// Descriptor for `TikTokHlsResourceKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List tikTokHlsResourceKindDescriptor = $convert.base64Decode(
+    'ChVUaWtUb2tIbHNSZXNvdXJjZUtpbmQSKQolVElLX1RPS19ITFNfUkVTT1VSQ0VfS0lORF9VTl'
+    'NQRUNJRklFRBAAEiMKH1RJS19UT0tfSExTX1JFU09VUkNFX0tJTkRfTUVESUEQARImCiJUSUtf'
+    'VE9LX0hMU19SRVNPVVJDRV9LSU5EX01BTklGRVNUEAI=');
+
 @$core.Deprecated('Use getTikTokResourceRequestDescriptor instead')
 const GetTikTokResourceRequest$json = {
   '1': 'GetTikTokResourceRequest',
@@ -66,9 +82,9 @@ final $typed_data.Uint8List tikTokResourceResponseDescriptor =
         'ChZUaWtUb2tSZXNvdXJjZVJlc3BvbnNlEkIKBWNodW5rGAEgASgLMiwuc3luY3R2LnBsYXliYW'
         'NrX3Byb3ZpZGVyLmNvbW1vbi5TdHJlYW1DaHVua1IFY2h1bms=');
 
-@$core.Deprecated('Use getTikTokSegmentRequestDescriptor instead')
-const GetTikTokSegmentRequest$json = {
-  '1': 'GetTikTokSegmentRequest',
+@$core.Deprecated('Use getTikTokHlsResourceRequestDescriptor instead')
+const GetTikTokHlsResourceRequest$json = {
+  '1': 'GetTikTokHlsResourceRequest',
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
     {'1': 'target_url', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'targetUrl'},
@@ -78,23 +94,37 @@ const GetTikTokSegmentRequest$json = {
     {'1': 'exp', '3': 6, '4': 1, '5': 3, '10': 'exp'},
     {'1': 'range', '3': 7, '4': 1, '5': 9, '9': 0, '10': 'range', '17': true},
     {'1': 'head', '3': 8, '4': 1, '5': 8, '10': 'head'},
+    {'1': 'mode_name', '3': 9, '4': 1, '5': 9, '8': {}, '10': 'modeName'},
+    {'1': 'media_index', '3': 10, '4': 1, '5': 13, '10': 'mediaIndex'},
+    {
+      '1': 'resource_kind',
+      '3': 11,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.playback_provider.tiktok.TikTokHlsResourceKind',
+      '8': {},
+      '10': 'resourceKind'
+    },
   ],
   '8': [
     {'1': '_range'},
   ],
 };
 
-/// Descriptor for `GetTikTokSegmentRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getTikTokSegmentRequestDescriptor = $convert.base64Decode(
-    'ChdHZXRUaWtUb2tTZWdtZW50UmVxdWVzdBIhCgd2ZXJzaW9uGAEgASgJQge6SARyAhABUgd2ZX'
-    'JzaW9uEiYKCnRhcmdldF91cmwYAiABKAlCB7pIBHICEAFSCXRhcmdldFVybBIZCgNzaWcYAyAB'
-    'KAlCB7pIBHICEAFSA3NpZxIZCgN1aWQYBCABKAlCB7pIBHICEAFSA3VpZBIZCgNyaWQYBSABKA'
-    'lCB7pIBHICEAFSA3JpZBIQCgNleHAYBiABKANSA2V4cBIZCgVyYW5nZRgHIAEoCUgAUgVyYW5n'
-    'ZYgBARISCgRoZWFkGAggASgIUgRoZWFkQggKBl9yYW5nZQ==');
+/// Descriptor for `GetTikTokHlsResourceRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getTikTokHlsResourceRequestDescriptor = $convert.base64Decode(
+    'ChtHZXRUaWtUb2tIbHNSZXNvdXJjZVJlcXVlc3QSIQoHdmVyc2lvbhgBIAEoCUIHukgEcgIQAV'
+    'IHdmVyc2lvbhImCgp0YXJnZXRfdXJsGAIgASgJQge6SARyAhABUgl0YXJnZXRVcmwSGQoDc2ln'
+    'GAMgASgJQge6SARyAhABUgNzaWcSGQoDdWlkGAQgASgJQge6SARyAhABUgN1aWQSGQoDcmlkGA'
+    'UgASgJQge6SARyAhABUgNyaWQSEAoDZXhwGAYgASgDUgNleHASGQoFcmFuZ2UYByABKAlIAFIF'
+    'cmFuZ2WIAQESEgoEaGVhZBgIIAEoCFIEaGVhZBIkCgltb2RlX25hbWUYCSABKAlCB7pIBHICEA'
+    'FSCG1vZGVOYW1lEh8KC21lZGlhX2luZGV4GAogASgNUgptZWRpYUluZGV4EmUKDXJlc291cmNl'
+    'X2tpbmQYCyABKA4yNi5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIudGlrdG9rLlRpa1Rva0hsc1'
+    'Jlc291cmNlS2luZEIIukgFggECEAFSDHJlc291cmNlS2luZEIICgZfcmFuZ2U=');
 
-@$core.Deprecated('Use tikTokSegmentResponseDescriptor instead')
-const TikTokSegmentResponse$json = {
-  '1': 'TikTokSegmentResponse',
+@$core.Deprecated('Use tikTokHlsResourceResponseDescriptor instead')
+const TikTokHlsResourceResponse$json = {
+  '1': 'TikTokHlsResourceResponse',
   '2': [
     {
       '1': 'chunk',
@@ -107,10 +137,11 @@ const TikTokSegmentResponse$json = {
   ],
 };
 
-/// Descriptor for `TikTokSegmentResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List tikTokSegmentResponseDescriptor = $convert.base64Decode(
-    'ChVUaWtUb2tTZWdtZW50UmVzcG9uc2USQgoFY2h1bmsYASABKAsyLC5zeW5jdHYucGxheWJhY2'
-    'tfcHJvdmlkZXIuY29tbW9uLlN0cmVhbUNodW5rUgVjaHVuaw==');
+/// Descriptor for `TikTokHlsResourceResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List tikTokHlsResourceResponseDescriptor =
+    $convert.base64Decode(
+        'ChlUaWtUb2tIbHNSZXNvdXJjZVJlc3BvbnNlEkIKBWNodW5rGAEgASgLMiwuc3luY3R2LnBsYX'
+        'liYWNrX3Byb3ZpZGVyLmNvbW1vbi5TdHJlYW1DaHVua1IFY2h1bms=');
 
 @$core.Deprecated('Use getTikTokSubtitleRequestDescriptor instead')
 const GetTikTokSubtitleRequest$json = {
@@ -172,9 +203,9 @@ const $core.Map<$core.String, $core.dynamic>
       '6': true
     },
     {
-      '1': 'GetSegment',
-      '2': '.synctv.playback_provider.tiktok.GetTikTokSegmentRequest',
-      '3': '.synctv.playback_provider.tiktok.TikTokSegmentResponse',
+      '1': 'GetHlsResource',
+      '2': '.synctv.playback_provider.tiktok.GetTikTokHlsResourceRequest',
+      '3': '.synctv.playback_provider.tiktok.TikTokHlsResourceResponse',
       '6': true
     },
     {
@@ -194,10 +225,10 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.playback_provider.tiktok.TikTokResourceResponse':
       TikTokResourceResponse$json,
   '.synctv.playback_provider.common.StreamChunk': $0.StreamChunk$json,
-  '.synctv.playback_provider.tiktok.GetTikTokSegmentRequest':
-      GetTikTokSegmentRequest$json,
-  '.synctv.playback_provider.tiktok.TikTokSegmentResponse':
-      TikTokSegmentResponse$json,
+  '.synctv.playback_provider.tiktok.GetTikTokHlsResourceRequest':
+      GetTikTokHlsResourceRequest$json,
+  '.synctv.playback_provider.tiktok.TikTokHlsResourceResponse':
+      TikTokHlsResourceResponse$json,
   '.synctv.playback_provider.tiktok.GetTikTokSubtitleRequest':
       GetTikTokSubtitleRequest$json,
   '.synctv.playback_provider.tiktok.TikTokSubtitleResponse':
@@ -209,8 +240,8 @@ final $typed_data.Uint8List tikTokPlaybackProviderServiceDescriptor = $convert.b
     'Ch1UaWtUb2tQbGF5YmFja1Byb3ZpZGVyU2VydmljZRKDAQoLR2V0UmVzb3VyY2USOS5zeW5jdH'
     'YucGxheWJhY2tfcHJvdmlkZXIudGlrdG9rLkdldFRpa1Rva1Jlc291cmNlUmVxdWVzdBo3LnN5'
     'bmN0di5wbGF5YmFja19wcm92aWRlci50aWt0b2suVGlrVG9rUmVzb3VyY2VSZXNwb25zZTABEo'
-    'ABCgpHZXRTZWdtZW50Ejguc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLnRpa3Rvay5HZXRUaWtU'
-    'b2tTZWdtZW50UmVxdWVzdBo2LnN5bmN0di5wbGF5YmFja19wcm92aWRlci50aWt0b2suVGlrVG'
-    '9rU2VnbWVudFJlc3BvbnNlMAESgwEKC0dldFN1YnRpdGxlEjkuc3luY3R2LnBsYXliYWNrX3By'
-    'b3ZpZGVyLnRpa3Rvay5HZXRUaWtUb2tTdWJ0aXRsZVJlcXVlc3QaNy5zeW5jdHYucGxheWJhY2'
-    'tfcHJvdmlkZXIudGlrdG9rLlRpa1Rva1N1YnRpdGxlUmVzcG9uc2UwAQ==');
+    'wBCg5HZXRIbHNSZXNvdXJjZRI8LnN5bmN0di5wbGF5YmFja19wcm92aWRlci50aWt0b2suR2V0'
+    'VGlrVG9rSGxzUmVzb3VyY2VSZXF1ZXN0Gjouc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLnRpa3'
+    'Rvay5UaWtUb2tIbHNSZXNvdXJjZVJlc3BvbnNlMAESgwEKC0dldFN1YnRpdGxlEjkuc3luY3R2'
+    'LnBsYXliYWNrX3Byb3ZpZGVyLnRpa3Rvay5HZXRUaWtUb2tTdWJ0aXRsZVJlcXVlc3QaNy5zeW'
+    '5jdHYucGxheWJhY2tfcHJvdmlkZXIudGlrdG9rLlRpa1Rva1N1YnRpdGxlUmVzcG9uc2UwAQ==');

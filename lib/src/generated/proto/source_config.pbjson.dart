@@ -212,8 +212,20 @@ const DirectUrlMediaResourceConfig$json = {
       '10': 'headers'
     },
     {'1': 'format', '3': 4, '4': 1, '5': 9, '10': 'format'},
+    {
+      '1': 'expires_at',
+      '3': 5,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'expiresAt',
+      '17': true
+    },
   ],
   '3': [DirectUrlMediaResourceConfig_HeadersEntry$json],
+  '8': [
+    {'1': '_expires_at'},
+  ],
 };
 
 @$core.Deprecated('Use directUrlMediaResourceConfigDescriptor instead')
@@ -231,8 +243,9 @@ final $typed_data.Uint8List directUrlMediaResourceConfigDescriptor = $convert.ba
     'ChxEaXJlY3RVcmxNZWRpYVJlc291cmNlQ29uZmlnEhIKBG5hbWUYASABKAlSBG5hbWUSEAoDdX'
     'JsGAIgASgJUgN1cmwSWQoHaGVhZGVycxgDIAMoCzI/LnN5bmN0di5zb3VyY2VfY29uZmlnLkRp'
     'cmVjdFVybE1lZGlhUmVzb3VyY2VDb25maWcuSGVhZGVyc0VudHJ5UgdoZWFkZXJzEhYKBmZvcm'
-    '1hdBgEIAEoCVIGZm9ybWF0GjoKDEhlYWRlcnNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2'
-    'YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+    '1hdBgEIAEoCVIGZm9ybWF0EiIKCmV4cGlyZXNfYXQYBSABKANIAFIJZXhwaXJlc0F0iAEBGjoK'
+    'DEhlYWRlcnNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6Aj'
+    'gBQg0KC19leHBpcmVzX2F0');
 
 @$core.Deprecated('Use directUrlSubtitleSourceConfigDescriptor instead')
 const DirectUrlSubtitleSourceConfig$json = {
@@ -250,8 +263,20 @@ const DirectUrlSubtitleSourceConfig$json = {
       '10': 'headers'
     },
     {'1': 'format', '3': 5, '4': 1, '5': 9, '10': 'format'},
+    {
+      '1': 'expires_at',
+      '3': 6,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'expiresAt',
+      '17': true
+    },
   ],
   '3': [DirectUrlSubtitleSourceConfig_HeadersEntry$json],
+  '8': [
+    {'1': '_expires_at'},
+  ],
 };
 
 @$core.Deprecated('Use directUrlSubtitleSourceConfigDescriptor instead')
@@ -269,8 +294,9 @@ final $typed_data.Uint8List directUrlSubtitleSourceConfigDescriptor = $convert.b
     'Ch1EaXJlY3RVcmxTdWJ0aXRsZVNvdXJjZUNvbmZpZxISCgRuYW1lGAEgASgJUgRuYW1lEhoKCG'
     'xhbmd1YWdlGAIgASgJUghsYW5ndWFnZRIQCgN1cmwYAyABKAlSA3VybBJaCgdoZWFkZXJzGAQg'
     'AygLMkAuc3luY3R2LnNvdXJjZV9jb25maWcuRGlyZWN0VXJsU3VidGl0bGVTb3VyY2VDb25maW'
-    'cuSGVhZGVyc0VudHJ5UgdoZWFkZXJzEhYKBmZvcm1hdBgFIAEoCVIGZm9ybWF0GjoKDEhlYWRl'
-    'cnNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+    'cuSGVhZGVyc0VudHJ5UgdoZWFkZXJzEhYKBmZvcm1hdBgFIAEoCVIGZm9ybWF0EiIKCmV4cGly'
+    'ZXNfYXQYBiABKANIAFIJZXhwaXJlc0F0iAEBGjoKDEhlYWRlcnNFbnRyeRIQCgNrZXkYASABKA'
+    'lSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgBQg0KC19leHBpcmVzX2F0');
 
 @$core.Deprecated('Use directUrlDanmakuSourceConfigDescriptor instead')
 const DirectUrlDanmakuSourceConfig$json = {
@@ -287,10 +313,20 @@ const DirectUrlDanmakuSourceConfig$json = {
       '10': 'headers'
     },
     {'1': 'format', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'format', '17': true},
+    {
+      '1': 'expires_at',
+      '3': 5,
+      '4': 1,
+      '5': 3,
+      '9': 1,
+      '10': 'expiresAt',
+      '17': true
+    },
   ],
   '3': [DirectUrlDanmakuSourceConfig_HeadersEntry$json],
   '8': [
     {'1': '_format'},
+    {'1': '_expires_at'},
   ],
 };
 
@@ -309,8 +345,9 @@ final $typed_data.Uint8List directUrlDanmakuSourceConfigDescriptor = $convert.ba
     'ChxEaXJlY3RVcmxEYW5tYWt1U291cmNlQ29uZmlnEhIKBG5hbWUYASABKAlSBG5hbWUSEAoDdX'
     'JsGAIgASgJUgN1cmwSWQoHaGVhZGVycxgDIAMoCzI/LnN5bmN0di5zb3VyY2VfY29uZmlnLkRp'
     'cmVjdFVybERhbm1ha3VTb3VyY2VDb25maWcuSGVhZGVyc0VudHJ5UgdoZWFkZXJzEhsKBmZvcm'
-    '1hdBgEIAEoCUgAUgZmb3JtYXSIAQEaOgoMSGVhZGVyc0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5'
-    'EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAFCCQoHX2Zvcm1hdA==');
+    '1hdBgEIAEoCUgAUgZmb3JtYXSIAQESIgoKZXhwaXJlc19hdBgFIAEoA0gBUglleHBpcmVzQXSI'
+    'AQEaOgoMSGVhZGVyc0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YW'
+    'x1ZToCOAFCCQoHX2Zvcm1hdEINCgtfZXhwaXJlc19hdA==');
 
 @$core.Deprecated('Use directUrlMediaSourceConfigDescriptor instead')
 const DirectUrlMediaSourceConfig$json = {

@@ -298,7 +298,7 @@ void main() {
           name: 'MP4 Faststart',
           url: 'https://origin/video.mp4',
           format: 'mp4',
-          p2pDelivery: P2pMediaDelivery(
+          p2pDelivery: P2pResourceDelivery(
             swarmId: 'mp4-swarm',
             swarmTicket: 'direct-mp4',
           ),
@@ -307,7 +307,7 @@ void main() {
           name: 'HLS VOD',
           url: 'https://origin/master.m3u8',
           format: 'hls',
-          p2pDelivery: P2pMediaDelivery(
+          p2pDelivery: P2pResourceDelivery(
             swarmId: 'hls-swarm',
             swarmTicket: 'direct-hls',
           ),
@@ -316,7 +316,7 @@ void main() {
           name: 'DASH VOD',
           url: 'https://origin/manifest.mpd',
           format: 'dash',
-          p2pDelivery: P2pMediaDelivery(
+          p2pDelivery: P2pResourceDelivery(
             swarmId: 'dash-swarm',
             swarmTicket: 'direct-dash',
           ),
@@ -330,7 +330,7 @@ void main() {
           name: 'MP4 Faststart',
           url: 'https://proxy/video.mp4',
           format: 'mp4',
-          p2pDelivery: P2pMediaDelivery(
+          p2pDelivery: P2pResourceDelivery(
             swarmId: 'mp4-swarm',
             swarmTicket: 'proxy-mp4',
           ),
@@ -339,7 +339,7 @@ void main() {
           name: 'HLS VOD',
           url: 'https://proxy/master.m3u8',
           format: 'hls',
-          p2pDelivery: P2pMediaDelivery(
+          p2pDelivery: P2pResourceDelivery(
             swarmId: 'hls-swarm',
             swarmTicket: 'proxy-hls',
           ),
@@ -348,7 +348,7 @@ void main() {
           name: 'DASH VOD',
           url: 'https://proxy/manifest.mpd',
           format: 'dash',
-          p2pDelivery: P2pMediaDelivery(
+          p2pDelivery: P2pResourceDelivery(
             swarmId: 'dash-swarm',
             swarmTicket: 'proxy-dash',
           ),

@@ -22,6 +22,19 @@ bool managedLiveStreamEnded(RoomMediaEntry? previous, RoomMediaEntry? next) {
       next.liveStreamAvailability == SyncTvLiveStreamAvailability.offline;
 }
 
+bool shouldRetainActivePlaybackSource({
+  required RoomMediaEntry? previous,
+  required RoomMediaEntry? next,
+  required bool authoritativeSourceChanged,
+  required bool activeSourceCanContinue,
+}) {
+  return !authoritativeSourceChanged &&
+      activeSourceCanContinue &&
+      previous != null &&
+      next != null &&
+      previous.playbackAttachmentIdentity == next.playbackAttachmentIdentity;
+}
+
 PlaybackPlayerUpdateAction playbackPlayerUpdateAction({
   required RoomMediaEntry? previous,
   required RoomMediaEntry? next,

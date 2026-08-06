@@ -57,6 +57,54 @@ void main() {
     expect(signals.single.data['media_swarm_ticket'], 'ticket-2');
   });
 
+  test(
+    'media, subtitle, and danmaku swarms stay active independently',
+    () async {
+      final signals = <({String type, Map<String, dynamic> data})>[];
+      final manager = P2pMediaManager(
+        onSignalingMessage: (type, data) {
+          signals.add((type: type, data: data));
+        },
+        loadIceServers: () async => const [],
+        loadCachedPiece: (swarmId, pieceKey) async => null,
+        onStateChange: () {},
+      );
+      addTearDown(manager.dispose);
+
+      await manager.setActiveSwarms({
+        'sm3_media': 'media-ticket',
+        'sm3_subtitle': 'subtitle-ticket-1',
+        'sm3_danmaku': 'danmaku-ticket',
+      });
+      expect(manager.activeSwarms, {
+        'sm3_media',
+        'sm3_subtitle',
+        'sm3_danmaku',
+      });
+
+      signals.clear();
+      await manager.setActiveSwarms({
+        'sm3_media': 'media-ticket',
+        'sm3_subtitle': 'subtitle-ticket-2',
+        'sm3_danmaku': 'danmaku-ticket',
+      });
+      expect(signals, hasLength(1));
+      expect(signals.single.type, 'media_swarm_join');
+      expect(signals.single.data['media_swarm_id'], 'sm3_subtitle');
+      expect(signals.single.data['media_swarm_ticket'], 'subtitle-ticket-2');
+
+      signals.clear();
+      await manager.setActiveSwarms({
+        'sm3_media': 'media-ticket',
+        'sm3_danmaku': 'danmaku-ticket',
+      });
+      expect(signals, hasLength(1));
+      expect(signals.single.type, 'media_swarm_leave');
+      expect(signals.single.data['media_swarm_id'], 'sm3_subtitle');
+      expect(manager.activeSwarms, {'sm3_media', 'sm3_danmaku'});
+    },
+  );
+
   test('server peer discovery renews a ticket without a sender id', () {
     fakeAsync((async) {
       final signals = <({String type, Map<String, dynamic> data})>[];

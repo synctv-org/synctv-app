@@ -631,6 +631,10 @@ Map<String, dynamic> runtimeSettingsSectionToJson(
   String section,
 ) {
   return switch (section) {
+    'server' =>
+      settings.hasServer()
+          ? protoMessageToJsonMap(settings.server)
+          : <String, dynamic>{},
     'roomDefaults' =>
       settings.hasRoomDefaults()
           ? protoMessageToJsonMap(settings.roomDefaults)
@@ -660,6 +664,10 @@ Map<String, dynamic> runtimeSettingsSectionToJson(
     'chat' =>
       settings.hasChat()
           ? protoMessageToJsonMap(settings.chat)
+          : <String, dynamic>{},
+    'playbackHistory' =>
+      settings.hasPlaybackHistory()
+          ? protoMessageToJsonMap(settings.playbackHistory)
           : <String, dynamic>{},
     'cors' =>
       settings.hasCors()

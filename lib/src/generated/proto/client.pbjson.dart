@@ -7766,6 +7766,15 @@ const BilibiliPlaybackMetadata$json = {
       '10': 'roomId',
       '17': true
     },
+    {
+      '1': 'live_started_at',
+      '3': 10,
+      '4': 1,
+      '5': 3,
+      '9': 9,
+      '10': 'liveStartedAt',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_content_type'},
@@ -7777,6 +7786,7 @@ const BilibiliPlaybackMetadata$json = {
     {'1': '_fallback_format'},
     {'1': '_quality'},
     {'1': '_room_id'},
+    {'1': '_live_started_at'},
   ],
 };
 
@@ -7787,9 +7797,10 @@ final $typed_data.Uint8List bilibiliPlaybackMetadataDescriptor = $convert.base64
     'iAEBEhcKBGVwaWQYBCABKARIA1IEZXBpZIgBARIVCgNjaWQYBSABKARIBFIDY2lkiAEBEisKD2'
     '1pbl9idWZmZXJfdGltZRgGIAEoAUgFUg1taW5CdWZmZXJUaW1liAEBEiwKD2ZhbGxiYWNrX2Zv'
     'cm1hdBgHIAEoCUgGUg5mYWxsYmFja0Zvcm1hdIgBARIdCgdxdWFsaXR5GAggASgESAdSB3F1YW'
-    'xpdHmIAQESHAoHcm9vbV9pZBgJIAEoBEgIUgZyb29tSWSIAQFCDwoNX2NvbnRlbnRfdHlwZUIH'
-    'CgVfYnZpZEIGCgRfYWlkQgcKBV9lcGlkQgYKBF9jaWRCEgoQX21pbl9idWZmZXJfdGltZUISCh'
-    'BfZmFsbGJhY2tfZm9ybWF0QgoKCF9xdWFsaXR5QgoKCF9yb29tX2lk');
+    'xpdHmIAQESHAoHcm9vbV9pZBgJIAEoBEgIUgZyb29tSWSIAQESKwoPbGl2ZV9zdGFydGVkX2F0'
+    'GAogASgDSAlSDWxpdmVTdGFydGVkQXSIAQFCDwoNX2NvbnRlbnRfdHlwZUIHCgVfYnZpZEIGCg'
+    'RfYWlkQgcKBV9lcGlkQgYKBF9jaWRCEgoQX21pbl9idWZmZXJfdGltZUISChBfZmFsbGJhY2tf'
+    'Zm9ybWF0QgoKCF9xdWFsaXR5QgoKCF9yb29tX2lkQhIKEF9saXZlX3N0YXJ0ZWRfYXQ=');
 
 @$core.Deprecated('Use embyPlaybackMetadataDescriptor instead')
 const EmbyPlaybackMetadata$json = {
@@ -9682,7 +9693,7 @@ const PlaybackMedia$json = {
       '3': 7,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.P2pMediaDelivery',
+      '6': '.synctv.client.P2pResourceDelivery',
       '9': 2,
       '10': 'p2pDelivery',
       '17': true
@@ -9712,24 +9723,24 @@ final $typed_data.Uint8List playbackMediaDescriptor = $convert.base64Decode(
     'oHaGVhZGVycxgDIAMoCzIpLnN5bmN0di5jbGllbnQuUGxheWJhY2tNZWRpYS5IZWFkZXJzRW50'
     'cnlSB2hlYWRlcnMSFgoGZm9ybWF0GAYgASgJUgZmb3JtYXQSIAoJZXhwaXJlX2F0GAQgASgDSA'
     'BSCGV4cGlyZUF0iAEBEkUKCG1ldGFkYXRhGAUgASgLMiQuc3luY3R2LmNsaWVudC5QbGF5YmFj'
-    'a01lZGlhTWV0YWRhdGFIAVIIbWV0YWRhdGGIAQESRwoMcDJwX2RlbGl2ZXJ5GAcgASgLMh8uc3'
-    'luY3R2LmNsaWVudC5QMnBNZWRpYURlbGl2ZXJ5SAJSC3AycERlbGl2ZXJ5iAEBGjoKDEhlYWRl'
-    'cnNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgBQgwKCl'
-    '9leHBpcmVfYXRCCwoJX21ldGFkYXRhQg8KDV9wMnBfZGVsaXZlcnk=');
+    'a01lZGlhTWV0YWRhdGFIAVIIbWV0YWRhdGGIAQESSgoMcDJwX2RlbGl2ZXJ5GAcgASgLMiIuc3'
+    'luY3R2LmNsaWVudC5QMnBSZXNvdXJjZURlbGl2ZXJ5SAJSC3AycERlbGl2ZXJ5iAEBGjoKDEhl'
+    'YWRlcnNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgBQg'
+    'wKCl9leHBpcmVfYXRCCwoJX21ldGFkYXRhQg8KDV9wMnBfZGVsaXZlcnk=');
 
-@$core.Deprecated('Use p2pMediaDeliveryDescriptor instead')
-const P2pMediaDelivery$json = {
-  '1': 'P2pMediaDelivery',
+@$core.Deprecated('Use p2pResourceDeliveryDescriptor instead')
+const P2pResourceDelivery$json = {
+  '1': 'P2pResourceDelivery',
   '2': [
     {'1': 'swarm_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'swarmId'},
     {'1': 'swarm_ticket', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'swarmTicket'},
   ],
 };
 
-/// Descriptor for `P2pMediaDelivery`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List p2pMediaDeliveryDescriptor = $convert.base64Decode(
-    'ChBQMnBNZWRpYURlbGl2ZXJ5EiUKCHN3YXJtX2lkGAEgASgJQgq6SAdyBRABGIABUgdzd2FybU'
-    'lkEi0KDHN3YXJtX3RpY2tldBgCIAEoCUIKukgHcgUQARiAAlILc3dhcm1UaWNrZXQ=');
+/// Descriptor for `P2pResourceDelivery`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List p2pResourceDeliveryDescriptor = $convert.base64Decode(
+    'ChNQMnBSZXNvdXJjZURlbGl2ZXJ5EiUKCHN3YXJtX2lkGAEgASgJQgq6SAdyBRABGIABUgdzd2'
+    'FybUlkEi0KDHN3YXJtX3RpY2tldBgCIAEoCUIKukgHcgUQARiAAlILc3dhcm1UaWNrZXQ=');
 
 @$core.Deprecated('Use playbackMediaMetadataDescriptor instead')
 const PlaybackMediaMetadata$json = {
@@ -9787,8 +9798,31 @@ const PlaybackSubtitle$json = {
       '10': 'headers'
     },
     {'1': 'format', '3': 5, '4': 1, '5': 9, '10': 'format'},
+    {
+      '1': 'expire_at',
+      '3': 6,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'expireAt',
+      '17': true
+    },
+    {
+      '1': 'p2p_delivery',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.P2pResourceDelivery',
+      '9': 1,
+      '10': 'p2pDelivery',
+      '17': true
+    },
   ],
   '3': [PlaybackSubtitle_HeadersEntry$json],
+  '8': [
+    {'1': '_expire_at'},
+    {'1': '_p2p_delivery'},
+  ],
 };
 
 @$core.Deprecated('Use playbackSubtitleDescriptor instead')
@@ -9806,8 +9840,10 @@ final $typed_data.Uint8List playbackSubtitleDescriptor = $convert.base64Decode(
     'ChBQbGF5YmFja1N1YnRpdGxlEhIKBG5hbWUYASABKAlSBG5hbWUSGgoIbGFuZ3VhZ2UYAiABKA'
     'lSCGxhbmd1YWdlEhAKA3VybBgDIAEoCVIDdXJsEkYKB2hlYWRlcnMYBCADKAsyLC5zeW5jdHYu'
     'Y2xpZW50LlBsYXliYWNrU3VidGl0bGUuSGVhZGVyc0VudHJ5UgdoZWFkZXJzEhYKBmZvcm1hdB'
-    'gFIAEoCVIGZm9ybWF0GjoKDEhlYWRlcnNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1'
-    'ZRgCIAEoCVIFdmFsdWU6AjgB');
+    'gFIAEoCVIGZm9ybWF0EiAKCWV4cGlyZV9hdBgGIAEoA0gAUghleHBpcmVBdIgBARJKCgxwMnBf'
+    'ZGVsaXZlcnkYByABKAsyIi5zeW5jdHYuY2xpZW50LlAycFJlc291cmNlRGVsaXZlcnlIAVILcD'
+    'JwRGVsaXZlcnmIAQEaOgoMSGVhZGVyc0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVl'
+    'GAIgASgJUgV2YWx1ZToCOAFCDAoKX2V4cGlyZV9hdEIPCg1fcDJwX2RlbGl2ZXJ5');
 
 @$core.Deprecated('Use playbackDanmakuDescriptor instead')
 const PlaybackDanmaku$json = {
@@ -9824,10 +9860,31 @@ const PlaybackDanmaku$json = {
       '6': '.synctv.client.PlaybackDanmaku.HeadersEntry',
       '10': 'headers'
     },
+    {
+      '1': 'expire_at',
+      '3': 5,
+      '4': 1,
+      '5': 3,
+      '9': 1,
+      '10': 'expireAt',
+      '17': true
+    },
+    {
+      '1': 'p2p_delivery',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.P2pResourceDelivery',
+      '9': 2,
+      '10': 'p2pDelivery',
+      '17': true
+    },
   ],
   '3': [PlaybackDanmaku_HeadersEntry$json],
   '8': [
     {'1': '_format'},
+    {'1': '_expire_at'},
+    {'1': '_p2p_delivery'},
   ],
 };
 
@@ -9845,9 +9902,11 @@ const PlaybackDanmaku_HeadersEntry$json = {
 final $typed_data.Uint8List playbackDanmakuDescriptor = $convert.base64Decode(
     'Cg9QbGF5YmFja0Rhbm1ha3USEgoEbmFtZRgBIAEoCVIEbmFtZRIQCgN1cmwYAiABKAlSA3VybB'
     'IbCgZmb3JtYXQYAyABKAlIAFIGZm9ybWF0iAEBEkUKB2hlYWRlcnMYBCADKAsyKy5zeW5jdHYu'
-    'Y2xpZW50LlBsYXliYWNrRGFubWFrdS5IZWFkZXJzRW50cnlSB2hlYWRlcnMaOgoMSGVhZGVyc0'
-    'VudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAFCCQoHX2Zv'
-    'cm1hdA==');
+    'Y2xpZW50LlBsYXliYWNrRGFubWFrdS5IZWFkZXJzRW50cnlSB2hlYWRlcnMSIAoJZXhwaXJlX2'
+    'F0GAUgASgDSAFSCGV4cGlyZUF0iAEBEkoKDHAycF9kZWxpdmVyeRgGIAEoCzIiLnN5bmN0di5j'
+    'bGllbnQuUDJwUmVzb3VyY2VEZWxpdmVyeUgCUgtwMnBEZWxpdmVyeYgBARo6CgxIZWFkZXJzRW'
+    '50cnkSEAoDa2V5GAEgASgJUgNrZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4AUIJCgdfZm9y'
+    'bWF0QgwKCl9leHBpcmVfYXRCDwoNX3AycF9kZWxpdmVyeQ==');
 
 @$core.Deprecated('Use clientMessageDescriptor instead')
 const ClientMessage$json = {
@@ -20126,7 +20185,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.PlaybackMedia': PlaybackMedia$json,
   '.synctv.client.PlaybackMedia.HeadersEntry': PlaybackMedia_HeadersEntry$json,
   '.synctv.client.PlaybackMediaMetadata': PlaybackMediaMetadata$json,
-  '.synctv.client.P2pMediaDelivery': P2pMediaDelivery$json,
+  '.synctv.client.P2pResourceDelivery': P2pResourceDelivery$json,
   '.synctv.client.PlaybackSubtitle': PlaybackSubtitle$json,
   '.synctv.client.PlaybackSubtitle.HeadersEntry':
       PlaybackSubtitle_HeadersEntry$json,

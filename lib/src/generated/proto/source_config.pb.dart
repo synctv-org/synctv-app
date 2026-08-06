@@ -27,12 +27,14 @@ class DirectUrlMediaResourceConfig extends $pb.GeneratedMessage {
     $core.String? url,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? headers,
     $core.String? format,
+    $fixnum.Int64? expiresAt,
   }) {
     final result = create();
     if (name != null) result.name = name;
     if (url != null) result.url = url;
     if (headers != null) result.headers.addEntries(headers);
     if (format != null) result.format = format;
+    if (expiresAt != null) result.expiresAt = expiresAt;
     return result;
   }
 
@@ -58,6 +60,7 @@ class DirectUrlMediaResourceConfig extends $pb.GeneratedMessage {
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('synctv.source_config'))
     ..aOS(4, _omitFieldNames ? '' : 'format')
+    ..aInt64(5, _omitFieldNames ? '' : 'expiresAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -111,6 +114,15 @@ class DirectUrlMediaResourceConfig extends $pb.GeneratedMessage {
   $core.bool hasFormat() => $_has(3);
   @$pb.TagNumber(4)
   void clearFormat() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get expiresAt => $_getI64(4);
+  @$pb.TagNumber(5)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasExpiresAt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearExpiresAt() => $_clearField(5);
 }
 
 class DirectUrlSubtitleSourceConfig extends $pb.GeneratedMessage {
@@ -120,6 +132,7 @@ class DirectUrlSubtitleSourceConfig extends $pb.GeneratedMessage {
     $core.String? url,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? headers,
     $core.String? format,
+    $fixnum.Int64? expiresAt,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -127,6 +140,7 @@ class DirectUrlSubtitleSourceConfig extends $pb.GeneratedMessage {
     if (url != null) result.url = url;
     if (headers != null) result.headers.addEntries(headers);
     if (format != null) result.format = format;
+    if (expiresAt != null) result.expiresAt = expiresAt;
     return result;
   }
 
@@ -153,6 +167,7 @@ class DirectUrlSubtitleSourceConfig extends $pb.GeneratedMessage {
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('synctv.source_config'))
     ..aOS(5, _omitFieldNames ? '' : 'format')
+    ..aInt64(6, _omitFieldNames ? '' : 'expiresAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -215,6 +230,15 @@ class DirectUrlSubtitleSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasFormat() => $_has(4);
   @$pb.TagNumber(5)
   void clearFormat() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get expiresAt => $_getI64(5);
+  @$pb.TagNumber(6)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasExpiresAt() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearExpiresAt() => $_clearField(6);
 }
 
 class DirectUrlDanmakuSourceConfig extends $pb.GeneratedMessage {
@@ -223,12 +247,14 @@ class DirectUrlDanmakuSourceConfig extends $pb.GeneratedMessage {
     $core.String? url,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? headers,
     $core.String? format,
+    $fixnum.Int64? expiresAt,
   }) {
     final result = create();
     if (name != null) result.name = name;
     if (url != null) result.url = url;
     if (headers != null) result.headers.addEntries(headers);
     if (format != null) result.format = format;
+    if (expiresAt != null) result.expiresAt = expiresAt;
     return result;
   }
 
@@ -254,6 +280,7 @@ class DirectUrlDanmakuSourceConfig extends $pb.GeneratedMessage {
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('synctv.source_config'))
     ..aOS(4, _omitFieldNames ? '' : 'format')
+    ..aInt64(5, _omitFieldNames ? '' : 'expiresAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -307,6 +334,15 @@ class DirectUrlDanmakuSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasFormat() => $_has(3);
   @$pb.TagNumber(4)
   void clearFormat() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get expiresAt => $_getI64(4);
+  @$pb.TagNumber(5)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasExpiresAt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearExpiresAt() => $_clearField(5);
 }
 
 class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {

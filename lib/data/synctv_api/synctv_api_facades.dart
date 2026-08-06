@@ -2385,6 +2385,27 @@ class SyncTvAdminApi {
     );
   }
 
+  Future<admin.RuntimeSettingsSnapshot> exportSettings(
+    admin.ExportSettingsRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/admin/settings/export',
+      admin.RuntimeSettingsSnapshot.create,
+    );
+  }
+
+  Future<admin.ImportSettingsResponse> importSettings(
+    admin.ImportSettingsRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/admin/settings/import',
+      admin.ImportSettingsResponse.create,
+      body: request,
+    );
+  }
+
   Future<admin.SendTestEmailResponse> sendTestEmail(
     admin.SendTestEmailRequest request,
   ) {

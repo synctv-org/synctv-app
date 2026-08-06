@@ -174,6 +174,69 @@ void main() {
     );
   });
 
+  test('a refreshed URL keeps a still-valid active source', () {
+    final previous = RoomPlaybackEntry(
+      id: 'med_vod',
+      name: 'Video',
+      url: 'https://example.test/old.m3u8',
+      selectedPlaybackMode: 'direct',
+    );
+    final refreshed = previous.copyWith(
+      url: 'https://example.test/refreshed.m3u8',
+    );
+
+    expect(
+      shouldRetainActivePlaybackSource(
+        previous: previous,
+        next: refreshed,
+        authoritativeSourceChanged: false,
+        activeSourceCanContinue: true,
+      ),
+      isTrue,
+    );
+    expect(
+      shouldRetainActivePlaybackSource(
+        previous: previous,
+        next: refreshed,
+        authoritativeSourceChanged: true,
+        activeSourceCanContinue: true,
+      ),
+      isFalse,
+    );
+    expect(
+      shouldRetainActivePlaybackSource(
+        previous: previous,
+        next: refreshed,
+        authoritativeSourceChanged: false,
+        activeSourceCanContinue: false,
+      ),
+      isFalse,
+    );
+  });
+
+  test('a playback route change activates the selected source', () {
+    final direct = RoomPlaybackEntry(
+      id: 'med_vod',
+      name: 'Video',
+      url: 'https://example.test/direct.m3u8',
+      selectedPlaybackMode: 'direct',
+    );
+    final proxy = direct.copyWith(
+      url: 'https://example.test/proxy.m3u8',
+      selectedPlaybackMode: 'proxy',
+    );
+
+    expect(
+      shouldRetainActivePlaybackSource(
+        previous: direct,
+        next: proxy,
+        authoritativeSourceChanged: false,
+        activeSourceCanContinue: true,
+      ),
+      isFalse,
+    );
+  });
+
   test('an offline snapshot for another media stops the active drain', () {
     final previous = liveEntry(
       availability: SyncTvLiveStreamAvailability.offline,

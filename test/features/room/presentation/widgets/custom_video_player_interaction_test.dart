@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import 'package:synctv_app/features/room/presentation/widgets/custom_video_playe
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/application/subtitle_source.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
 import 'package:synctv_app/features/room/infrastructure/picture_in_picture_service.dart';
 import 'package:video_player/video_player.dart';
 
@@ -39,6 +42,34 @@ final class _EmptySubtitleSource implements SubtitleSource {
   }) async => null;
 }
 
+final class _RecordingSubtitleSource implements SubtitleSource {
+  final List<Uri> requests = [];
+  final List<Map<String, String>> requestHeaders = [];
+
+  @override
+  Future<Uint8List?> load(
+    Uri uri, {
+    Map<String, String> headers = const {},
+  }) async {
+    requests.add(uri);
+    requestHeaders.add(Map<String, String>.from(headers));
+    return Uint8List.fromList(
+      'WEBVTT\n\n00:00:00.000 --> 00:00:10.000\nSubtitle'.codeUnits,
+    );
+  }
+}
+
+final class _ControlledSubtitleSource implements SubtitleSource {
+  final requests = <Uri>[];
+  final documents = <Uri, Completer<Uint8List?>>{};
+
+  @override
+  Future<Uint8List?> load(Uri uri, {Map<String, String> headers = const {}}) {
+    requests.add(uri);
+    return documents.putIfAbsent(uri, Completer<Uint8List?>.new).future;
+  }
+}
+
 final class _MemoryPlayerVolumeStore implements PlayerVolumePreferencesStore {
   PlayerVolumePreferenceValues values = const PlayerVolumePreferenceValues();
 
@@ -63,6 +94,7 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
   final List<Duration> seekPositions = [];
   var playCalls = 0;
   var pauseCalls = 0;
+  final List<double> volumes = [];
 
   @override
   Future<void> seekTo(Duration position) async {
@@ -80,6 +112,12 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
   Future<void> pause() async {
     pauseCalls++;
     value = value.copyWith(isPlaying: false);
+  }
+
+  @override
+  Future<void> setVolume(double volume) async {
+    volumes.add(volume);
+    value = value.copyWith(volume: volume);
   }
 }
 
@@ -215,6 +253,25 @@ void main() {
       ),
       'Live · 01:02:03',
     );
+    expect(
+      livePlaybackPosition(
+        playerPosition: const Duration(seconds: 12),
+        liveStartedAt: 1785919599,
+        now: DateTime.fromMillisecondsSinceEpoch(
+          1785937599 * 1000,
+          isUtc: true,
+        ),
+      ),
+      const Duration(hours: 5),
+    );
+    expect(
+      livePlaybackPosition(
+        playerPosition: const Duration(seconds: 12),
+        liveStartedAt: null,
+        now: DateTime.fromMillisecondsSinceEpoch(1785937599 * 1000),
+      ),
+      const Duration(seconds: 12),
+    );
   });
 
   test('completed VOD playback restarts within the EOF tolerance', () {
@@ -318,6 +375,348 @@ void main() {
 
     expect(byAppTooltip('Playback speed'), findsNothing);
   });
+
+  testWidgets('desktop volume slider stays interactive across overlay', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        volume: 0.5,
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 500,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer();
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const Key('desktop_volume_button'))),
+    );
+    await tester.pump();
+
+    final slider = find.byKey(const Key('desktop_volume_slider'));
+    expect(slider, findsOneWidget);
+    await mouse.moveTo(tester.getCenter(slider));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(slider, findsOneWidget);
+
+    await tester.tapAt(tester.getCenter(slider) - const Offset(0, 30));
+    await tester.pump();
+
+    expect(controller.volumes, isNotEmpty);
+    expect(controller.value.volume, greaterThan(0.5));
+  });
+
+  testWidgets(
+    'playback refresh keeps downloaded subtitles and source changes use the latest URL',
+    (tester) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          isInitialized: true,
+        ),
+      );
+      final source = _RecordingSubtitleSource();
+      addTearDown(controller.dispose);
+
+      Widget player(
+        String subtitleUrl, {
+        String identity = 'media-1|direct|0',
+      }) => MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 500,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: source,
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              playbackResourceIdentity: identity,
+              subtitles: {
+                'sub_0': {'name': 'English', 'url': subtitleUrl},
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(player('https://example.com/old.vtt'));
+      await tester.pump();
+      expect(source.requests, [Uri.parse('https://example.com/old.vtt')]);
+
+      await tester.pumpWidget(player('https://example.com/refreshed.vtt'));
+      await tester.pump();
+      expect(source.requests, [Uri.parse('https://example.com/old.vtt')]);
+
+      await tester.pumpWidget(
+        player(
+          'https://example.com/refreshed.vtt',
+          identity: 'media-1|proxy|0',
+        ),
+      );
+      await tester.pump();
+
+      expect(source.requests, [
+        Uri.parse('https://example.com/old.vtt'),
+        Uri.parse('https://example.com/refreshed.vtt'),
+      ]);
+    },
+  );
+
+  testWidgets(
+    'subtitle localization uses its own delivery and only reloads for a new swarm',
+    (tester) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          isInitialized: true,
+        ),
+      );
+      final source = _RecordingSubtitleSource();
+      addTearDown(controller.dispose);
+      final localized = Uri.parse('http://127.0.0.1:43123/root');
+      final deliveries = <P2pResourceDelivery>[];
+
+      Widget player({required String url, required String swarmId}) =>
+          MaterialApp(
+            builder: buildThemedTestApp,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: CustomVideoPlayer(
+                volumePreferences: _volumePreferences(),
+                subtitleSource: source,
+                controller: controller,
+                title: 'Video',
+                playbackResourceIdentity: 'media-1|direct|0',
+                subtitles: {
+                  'sub_0': {
+                    'name': 'English',
+                    'url': url,
+                    'headers': {'Authorization': 'Bearer origin'},
+                    'p2pDelivery': P2pResourceDelivery(
+                      swarmId: swarmId,
+                      swarmTicket: 'ticket-$url',
+                    ),
+                  },
+                },
+                resolveSubtitleResource: (url, headers, delivery) async {
+                  deliveries.add(delivery);
+                  return LocalizedPlaybackResource(uri: localized);
+                },
+              ),
+            ),
+          );
+
+      await tester.pumpWidget(
+        player(url: 'https://origin.example/first.vtt', swarmId: 'sm3_first'),
+      );
+      await tester.pump();
+      expect(source.requests, [localized]);
+      expect(source.requestHeaders.single, isEmpty);
+      expect(deliveries.single.swarmId, 'sm3_first');
+
+      await tester.pumpWidget(
+        player(
+          url: 'https://origin.example/refreshed.vtt',
+          swarmId: 'sm3_first',
+        ),
+      );
+      await tester.pump();
+      expect(source.requests, [localized]);
+
+      await tester.pumpWidget(
+        player(
+          url: 'https://origin.example/replaced.vtt',
+          swarmId: 'sm3_second',
+        ),
+      );
+      await tester.pump();
+      expect(source.requests, [localized, localized]);
+      expect(deliveries.last.swarmId, 'sm3_second');
+    },
+  );
+
+  testWidgets('subtitle without P2P delivery loads its origin directly', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+      ),
+    );
+    final source = _RecordingSubtitleSource();
+    addTearDown(controller.dispose);
+    var localizedCalls = 0;
+    var p2pDeactivations = 0;
+    final origin = Uri.parse('https://origin.example/subtitle.vtt');
+    const originHeaders = {'Authorization': 'Bearer origin'};
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CustomVideoPlayer(
+            volumePreferences: _volumePreferences(),
+            subtitleSource: source,
+            controller: controller,
+            title: 'Video',
+            playbackResourceIdentity: 'media-1|direct|0',
+            subtitles: {
+              'sub_0': {
+                'name': 'English',
+                'url': origin.toString(),
+                'headers': originHeaders,
+              },
+            },
+            resolveSubtitleResource: (url, headers, delivery) async {
+              localizedCalls++;
+              return LocalizedPlaybackResource(uri: Uri.parse(url));
+            },
+            onSubtitleP2pDeactivated: () => p2pDeactivations++,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(localizedCalls, 0);
+    expect(p2pDeactivations, 1);
+    expect(source.requests, [origin]);
+    expect(source.requestHeaders, [originHeaders]);
+  });
+
+  testWidgets(
+    'playback refresh replaces an in-flight subtitle request with the latest URL',
+    (tester) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          isInitialized: true,
+        ),
+      );
+      final source = _ControlledSubtitleSource();
+      addTearDown(controller.dispose);
+
+      Widget player(String subtitleUrl) => MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CustomVideoPlayer(
+            volumePreferences: _volumePreferences(),
+            subtitleSource: source,
+            controller: controller,
+            title: 'Video',
+            playbackResourceIdentity: 'media-1|direct|0',
+            subtitles: {
+              'sub_0': {'name': 'English', 'url': subtitleUrl},
+            },
+          ),
+        ),
+      );
+
+      final oldUrl = Uri.parse('https://example.com/old.vtt');
+      final latestUrl = Uri.parse('https://example.com/latest.vtt');
+      await tester.pumpWidget(player(oldUrl.toString()));
+      await tester.pump();
+      await tester.pumpWidget(player(latestUrl.toString()));
+      await tester.pump();
+
+      expect(source.requests, [oldUrl, latestUrl]);
+      source.documents[latestUrl]!.complete(
+        Uint8List.fromList(
+          'WEBVTT\n\n00:00:00.000 --> 00:00:10.000\nLatest'.codeUnits,
+        ),
+      );
+      await tester.pump();
+      source.documents[oldUrl]!.complete(
+        Uint8List.fromList(
+          'WEBVTT\n\n00:00:00.000 --> 00:00:10.000\nOld'.codeUnits,
+        ),
+      );
+      await tester.pump();
+
+      await tester.pumpWidget(player('https://example.com/newer-snapshot.vtt'));
+      await tester.pump();
+      expect(source.requests, [oldUrl, latestUrl]);
+    },
+  );
+
+  testWidgets(
+    'playback refresh retries a failed subtitle with the latest URL',
+    (tester) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          isInitialized: true,
+        ),
+      );
+      final source = _ControlledSubtitleSource();
+      addTearDown(controller.dispose);
+
+      Widget player(String subtitleUrl) => MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CustomVideoPlayer(
+            volumePreferences: _volumePreferences(),
+            subtitleSource: source,
+            controller: controller,
+            title: 'Video',
+            playbackResourceIdentity: 'media-1|direct|0',
+            subtitles: {
+              'sub_0': {'name': 'English', 'url': subtitleUrl},
+            },
+          ),
+        ),
+      );
+
+      final failedUrl = Uri.parse('https://example.com/failed.vtt');
+      final latestUrl = Uri.parse('https://example.com/latest.vtt');
+      await tester.pumpWidget(player(failedUrl.toString()));
+      await tester.pump();
+      source.documents[failedUrl]!.complete(null);
+      await tester.pump();
+
+      await tester.pumpWidget(player(latestUrl.toString()));
+      await tester.pump();
+      expect(source.requests, [failedUrl, latestUrl]);
+    },
+  );
 
   testWidgets('picture-in-picture control invokes its callback', (
     tester,
