@@ -35,7 +35,7 @@ RoomDynamicMediaEntry _item(String id) => RoomDynamicMediaEntry(
   name: id,
   parentId: '',
   subPath: id,
-  isFolder: false,
+  isPlaylist: false,
   mediaSourceConfig: source.MediaSourceConfig(
     youtube: source.YoutubeMediaSourceConfig(videoId: 'abcdefghijk'),
   ),

@@ -1718,7 +1718,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       _mediaTarget.isEmpty && !_isInsideDynamicMediaPlaylist;
 
   bool _canOpenMediaEntry(RoomMediaEntry entry) {
-    if (!entry.isFolder) return false;
+    if (!entry.isPlaylist) return false;
     final isPersistedPlaylist = entry.id.startsWith('pl_');
     if (isPersistedPlaylist && entry.isDynamicPlaylist) {
       return entry.creator.isNotEmpty && entry.creator == _currentUserId;
@@ -2437,7 +2437,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       return;
     }
     final input = await _showEntryEditDialog(
-      title: entry.isFolder
+      title: entry.isPlaylist
           ? context.l10n.editPlaylist
           : context.l10n.editMedia,
       initialName: entry.name,
@@ -2481,7 +2481,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     final confirmed = await _confirm(
       title: context.l10n.deleteEntries,
-      content: entry.isFolder
+      content: entry.isPlaylist
           ? context.l10n.confirmDeletePlaylist(entry.name)
           : context.l10n.confirmDeleteMedia(entry.name),
       action: context.l10n.delete,
@@ -2587,8 +2587,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           ? detail.metadata['isDynamic'] == true
                                 ? context.l10n.dynamicPlaylist
                                 : context.l10n.playlist
-                          : detail.isFolder
-                          ? context.l10n.dynamicDirectory
+                          : detail.isPlaylist
+                          ? context.l10n.dynamicPlaylist
                           : detail.live
                           ? context.l10n.liveMedia
                           : context.l10n.media,
@@ -2624,7 +2624,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     if (playlistDetail != null) ...[
                       _buildDetailLine(
                         context.l10n.childPlaylists,
-                        playlistDetail.childFolderCount.toString(),
+                        playlistDetail.childPlaylistCount.toString(),
                       ),
                       _buildDetailLine(
                         context.l10n.mediaCount,
@@ -3186,13 +3186,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     const SizedBox(height: 12),
                     AppTile(
                       prefix: const Icon(Icons.home_outlined),
-                      title: Text(context.l10n.rootDirectory),
+                      title: Text(context.l10n.mediaLibraryRoot),
                       enabled: _currentPlaylistId.isNotEmpty,
                       onPressed: _currentPlaylistId.isEmpty
                           ? null
                           : () => Navigator.pop(
                               context,
-                              _MediaMoveTarget('', context.l10n.rootDirectory),
+                              _MediaMoveTarget(
+                                '',
+                                context.l10n.mediaLibraryRoot,
+                              ),
                             ),
                     ),
                     if (loading)
@@ -4303,7 +4306,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppIconButton(
-                  tooltip: context.l10n.parentDirectory,
+                  tooltip: context.l10n.parentPlaylist,
                   onPressed:
                       _mediaTarget.isNotEmpty || _mediaPlaylistStack.isNotEmpty
                       ? _handleMediaBack
@@ -4323,7 +4326,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     icon: Icons.create_new_folder,
                   ),
                   AppIconButton(
-                    tooltip: context.l10n.clearCurrentDirectory,
+                    tooltip: context.l10n.clearCurrentLevel,
                     onPressed: _mediaLoading ? null : _clearCurrentMediaScope,
                     icon: Icons.delete_sweep_rounded,
                     style: AppIconButtonStyle.destructive,
@@ -4344,7 +4347,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               children: [
                 _buildSearchField(
                   controller: _mediaSearchController,
-                  label: context.l10n.searchMediaOrDirectory,
+                  label: context.l10n.searchMediaOrPlaylist,
                   onSearch: _reloadMediaLibrary,
                 ),
                 const SizedBox(height: 8),
@@ -4490,7 +4493,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ),
           if (entries.isEmpty)
-            _buildEmptyState(context.l10n.noMediaEntriesInDirectory, theme)
+            _buildEmptyState(context.l10n.noMediaEntriesAtCurrentLevel, theme)
           else
             ...entries.map((entry) => _buildMediaTile(entry, theme, isDark)),
         ],
@@ -4692,15 +4695,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         localCount: mediaEntries,
         summary: mediaPage == null
             ? context.l10n.waitingForMediaSnapshot
-            : context.l10n.folderMediaSummary(
-                mediaPage.effectiveFolderCount,
+            : context.l10n.playlistMediaSummary(
+                mediaPage.effectivePlaylistCount,
                 mediaPage.effectiveFileCount,
               ),
         stats: _mediaWatchStats,
         details: {
           'entries': mediaEntries,
           'total': mediaPage?.total ?? 0,
-          'folderCount': mediaPage?.folderCount ?? 0,
+          'playlistCount': mediaPage?.playlistCount ?? 0,
           'fileCount': mediaPage?.fileCount ?? 0,
           'playlistId': _currentPlaylistId,
           'target': _mediaTarget,
@@ -4936,7 +4939,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildDebugLine(theme, context.l10n.roomId, widget.roomId),
             _buildDebugLine(
               theme,
-              context.l10n.currentDirectory,
+              context.l10n.currentMediaLocation,
               _mediaScopeLabel(_mediaPage),
             ),
             _buildDebugLine(
@@ -5232,8 +5235,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           if (page != null)
             Text(
-              context.l10n.folderMediaSummary(
-                page.effectiveFolderCount,
+              context.l10n.playlistMediaSummary(
+                page.effectivePlaylistCount,
                 page.effectiveFileCount,
               ),
               style: TextStyle(color: theme.hintColor, fontSize: 12),
@@ -5671,7 +5674,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         children: [
           _buildCoverPreview(
             url: entry.coverUrl,
-            fallbackIcon: entry.isFolder
+            fallbackIcon: entry.isPlaylist
                 ? Icons.folder_rounded
                 : entry.live
                 ? Icons.live_tv
@@ -6418,8 +6421,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       return '${entry.sourceProvider} · ${entry.providerInstanceName.isEmpty ? 'default' : entry.providerInstanceName}';
     }
     final size = entry.metadata['size'];
-    return entry.isFolder
-        ? context.l10n.dynamicDirectory
+    return entry.isPlaylist
+        ? context.l10n.dynamicPlaylist
         : context.l10n.dynamicMediaSize(size is int && size > 0 ? size : 0);
   }
 
@@ -6438,9 +6441,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   String _mediaScopeLabel(RoomMediaLibraryPage? page) {
     if (_mediaTarget.isNotEmpty) {
       final path = page?.currentPath.map((node) => node.name).join(' / ') ?? '';
-      return path.isEmpty ? context.l10n.dynamicDirectory : path;
+      return path.isEmpty ? context.l10n.dynamicPlaylist : path;
     }
-    if (_mediaPlaylistStack.isEmpty) return context.l10n.rootDirectory;
+    if (_mediaPlaylistStack.isEmpty) return context.l10n.mediaLibraryRoot;
     final path = page?.currentPath.map((node) => node.name).join(' / ') ?? '';
     if (path.isNotEmpty) return path;
     final entryName = _mediaPlaylistEntryStack.lastOrNull?.name.trim() ?? '';

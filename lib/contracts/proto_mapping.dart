@@ -594,7 +594,85 @@ Int64? _optionalTargetInt64(Object? value) {
 }
 
 Map<String, dynamic> resourceMetadataToJson(client.ResourceMetadata metadata) {
-  return {if (metadata.hasSource()) 'source': metadata.source};
+  final result = <String, dynamic>{
+    if (metadata.hasSource()) 'source': metadata.source,
+  };
+  if (metadata.hasProvider()) {
+    result['provider'] = protoMessageToJsonMap(metadata.provider);
+  }
+  return result;
+}
+
+typedef ResourceLiveState = ({bool isLive, bool? isCurrentlyLive});
+
+/// Reads provider-owned live semantics directly from the protobuf oneof.
+ResourceLiveState resourceMetadataLiveState(client.ResourceMetadata? metadata) {
+  if (metadata == null || !metadata.hasProvider()) {
+    return (isLive: false, isCurrentlyLive: null);
+  }
+
+  final provider = metadata.provider;
+  return switch (provider.whichMetadata()) {
+    client.PlaybackMetadata_Metadata.bilibili => (
+      isLive: provider.bilibili.isLive,
+      isCurrentlyLive: provider.bilibili.hasIsCurrentlyLive()
+          ? provider.bilibili.isCurrentlyLive
+          : null,
+    ),
+    client.PlaybackMetadata_Metadata.twitch => (
+      isLive: provider.twitch.isLive,
+      isCurrentlyLive: provider.twitch.hasIsCurrentlyLive()
+          ? provider.twitch.isCurrentlyLive
+          : null,
+    ),
+    client.PlaybackMetadata_Metadata.youtube => (
+      isLive: provider.youtube.isLive,
+      isCurrentlyLive: provider.youtube.hasIsCurrentlyLive()
+          ? provider.youtube.isCurrentlyLive
+          : null,
+    ),
+    client.PlaybackMetadata_Metadata.douyin => (
+      isLive: provider.douyin.isLive,
+      isCurrentlyLive: provider.douyin.hasIsCurrentlyLive()
+          ? provider.douyin.isCurrentlyLive
+          : null,
+    ),
+    client.PlaybackMetadata_Metadata.tiktok => (
+      isLive: provider.tiktok.isLive,
+      isCurrentlyLive: provider.tiktok.hasIsCurrentlyLive()
+          ? provider.tiktok.isCurrentlyLive
+          : null,
+    ),
+    client.PlaybackMetadata_Metadata.huya => (
+      isLive: provider.huya.isLive,
+      isCurrentlyLive: provider.huya.hasIsCurrentlyLive()
+          ? provider.huya.isCurrentlyLive
+          : null,
+    ),
+    client.PlaybackMetadata_Metadata.douyu => (
+      isLive: provider.douyu.isLive,
+      isCurrentlyLive: provider.douyu.hasIsCurrentlyLive()
+          ? provider.douyu.isCurrentlyLive
+          : null,
+    ),
+    client.PlaybackMetadata_Metadata.acFun => (
+      isLive: provider.acFun.isLive,
+      isCurrentlyLive: provider.acFun.hasIsCurrentlyLive()
+          ? provider.acFun.isCurrentlyLive
+          : null,
+    ),
+    client.PlaybackMetadata_Metadata.live => (
+      isLive: true,
+      isCurrentlyLive: switch (provider.live.availability) {
+        client_enum.LiveStreamAvailability.LIVE_STREAM_AVAILABILITY_LIVE =>
+          true,
+        client_enum.LiveStreamAvailability.LIVE_STREAM_AVAILABILITY_OFFLINE =>
+          false,
+        _ => null,
+      },
+    ),
+    _ => (isLive: false, isCurrentlyLive: null),
+  };
 }
 
 Map<String, dynamic> fileMetadataToJson(client.FileMetadata metadata) {

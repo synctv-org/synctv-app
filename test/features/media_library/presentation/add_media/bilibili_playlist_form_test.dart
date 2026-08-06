@@ -493,7 +493,7 @@ const _emptyPreview = RoomMediaLibraryPage(
   dynamicItems: [],
   currentPath: [],
   total: 0,
-  folderCount: 0,
+  playlistCount: 0,
   fileCount: 0,
   version: '',
   usesCursor: false,

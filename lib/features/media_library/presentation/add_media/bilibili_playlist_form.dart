@@ -902,7 +902,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 4),
       leading: item.coverUrl.isEmpty
           ? Icon(
-              item.isFolder
+              item.isPlaylist
                   ? Icons.video_library_outlined
                   : Icons.play_circle_outline,
             )
@@ -913,7 +913,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
               borderRadius: BorderRadius.circular(4),
             ),
       title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-      trailing: item.isFolder
+      trailing: item.isPlaylist
           ? const Icon(Icons.chevron_right)
           : const Icon(Icons.play_arrow),
     );

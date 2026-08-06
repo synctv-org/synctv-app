@@ -11,23 +11,23 @@ void main() {
       media: const [],
       dynamicItems: [
         RoomDynamicMediaEntry(
-          id: 'folder',
-          name: 'Folder',
+          id: 'playlist',
+          name: 'Playlist',
           parentId: 'playlist',
-          subPath: 'folder',
-          isFolder: true,
+          subPath: 'playlist',
+          isPlaylist: true,
         ),
         RoomDynamicMediaEntry(
           id: 'media',
           name: 'Media',
           parentId: 'playlist',
           subPath: 'media',
-          isFolder: false,
+          isPlaylist: false,
         ),
       ],
       currentPath: const [],
       total: 5,
-      folderCount: 1,
+      playlistCount: 1,
       fileCount: 2,
       version: 'v1',
       usesCursor: false,
@@ -35,7 +35,7 @@ void main() {
       page: 1,
     );
 
-    expect(page.effectiveFolderCount, 2);
+    expect(page.effectivePlaylistCount, 2);
     expect(page.effectiveFileCount, 3);
   });
 

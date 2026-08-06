@@ -135,7 +135,7 @@ class _BilibiliPlaylistPreviewState extends State<BilibiliPlaylistPreview> {
                   },
             secondary: item.coverUrl.isEmpty
                 ? Icon(
-                    item.isFolder
+                    item.isPlaylist
                         ? Icons.video_library_outlined
                         : Icons.play_circle_outline,
                   )

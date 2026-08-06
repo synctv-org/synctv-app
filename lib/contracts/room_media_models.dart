@@ -22,7 +22,7 @@ class RoomMediaLibraryPage {
   final List<RoomDynamicMediaEntry> dynamicItems;
   final List<PlaylistBrowsePathInfo> currentPath;
   final int? total;
-  final int folderCount;
+  final int playlistCount;
   final int fileCount;
   final String version;
   final bool usesCursor;
@@ -35,7 +35,7 @@ class RoomMediaLibraryPage {
     required this.dynamicItems,
     required this.currentPath,
     required this.total,
-    required this.folderCount,
+    required this.playlistCount,
     required this.fileCount,
     required this.version,
     required this.usesCursor,
@@ -45,11 +45,11 @@ class RoomMediaLibraryPage {
 
   List<RoomMediaEntry> get entries => [...playlists, ...media, ...dynamicItems];
 
-  int get effectiveFolderCount =>
-      folderCount + dynamicItems.where((item) => item.isFolder).length;
+  int get effectivePlaylistCount =>
+      playlistCount + dynamicItems.where((item) => item.isPlaylist).length;
 
   int get effectiveFileCount =>
-      fileCount + dynamicItems.where((item) => !item.isFolder).length;
+      fileCount + dynamicItems.where((item) => !item.isPlaylist).length;
 }
 
 class RoomPlaylistsPage {
@@ -80,12 +80,12 @@ class PlaylistBrowsePathInfo {
 
 class PlaylistDetailInfo {
   final RoomPlaylistItem playlist;
-  final int childFolderCount;
+  final int childPlaylistCount;
   final int mediaCount;
 
   const PlaylistDetailInfo({
     required this.playlist,
-    required this.childFolderCount,
+    required this.childPlaylistCount,
     required this.mediaCount,
   });
 }

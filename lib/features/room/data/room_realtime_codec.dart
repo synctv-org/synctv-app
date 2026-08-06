@@ -1206,7 +1206,7 @@ class RoomRealtimeCodec {
           .toList(),
       currentPath: response.currentPath.map(_browsePathFromProto).toList(),
       total: response.hasTotal() ? response.total.toInt() : null,
-      folderCount: response.folderCount.toInt(),
+      playlistCount: response.playlistCount.toInt(),
       fileCount: response.fileCount.toInt(),
       version: response.version,
       usesCursor:
@@ -1237,6 +1237,9 @@ class RoomRealtimeCodec {
     final sourceProvider = media.hasSourceProvider()
         ? SourceConfigCodec.providerToString(media.sourceProvider)
         : SourceConfigCodec.providerForMediaSourceConfig(media.sourceConfig);
+    final liveState = resourceMetadataLiveState(
+      media.hasMetadata() ? media.metadata : null,
+    );
     return RoomMediaItem(
       id: media.id,
       name: media.name,
@@ -1254,9 +1257,14 @@ class RoomRealtimeCodec {
       headers: _stringMap(metadata['headers']),
       proxy: metadata['proxy'] == true,
       live:
-          metadata['isLive'] == true ||
+          liveState.isLive ||
           (media.hasSourceConfig() &&
               SourceConfigCodec.isLiveMediaSourceConfig(media.sourceConfig)),
+      liveStreamAvailability: liveState.isCurrentlyLive == null
+          ? null
+          : liveState.isCurrentlyLive!
+          ? SyncTvLiveStreamAvailability.live
+          : SyncTvLiveStreamAvailability.offline,
       sourceProvider: sourceProvider,
       providerInstanceName: media.providerInstanceName,
       sourceConfig: sourceConfig,
@@ -1276,6 +1284,12 @@ class RoomRealtimeCodec {
     final sourceConfig = playlist.hasSourceConfig()
         ? SourceConfigCodec.playlistSourceConfigToMap(playlist.sourceConfig)
         : <String, dynamic>{};
+    final metadata = <String, dynamic>{'isDynamic': playlist.isDynamic}
+      ..addAll(
+        playlist.hasMetadata()
+            ? resourceMetadataToJson(playlist.metadata)
+            : const <String, dynamic>{},
+      );
     return RoomPlaylistItem(
       id: playlist.id,
       name: playlist.name,
@@ -1294,7 +1308,7 @@ class RoomRealtimeCodec {
       sourceProvider: sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
       sourceConfig: sourceConfig,
-      metadata: {'isDynamic': playlist.isDynamic},
+      metadata: metadata,
     );
   }
 
@@ -1305,19 +1319,34 @@ class RoomRealtimeCodec {
     final target = item.target;
     final encodedTarget = providerTargetToBase64(target);
     final thumbnailUrl = item.hasThumbnail() ? item.thumbnail : '';
+    final metadata =
+        <String, dynamic>{
+          'target': target,
+          'target_json': providerTargetToJson(target),
+          'thumbnail': thumbnailUrl,
+          'size': item.hasSize() ? item.size.toInt() : null,
+        }..addAll(
+          item.hasMetadata()
+              ? resourceMetadataToJson(item.metadata)
+              : const <String, dynamic>{},
+        );
+    final liveState = resourceMetadataLiveState(
+      item.hasMetadata() ? item.metadata : null,
+    );
     return RoomDynamicMediaEntry(
       id: encodedTarget,
       name: item.name,
-      isFolder: item.itemType == client_enum.ItemType.ITEM_TYPE_PLAYLIST,
+      live: liveState.isLive,
+      liveStreamAvailability: liveState.isCurrentlyLive == null
+          ? null
+          : liveState.isCurrentlyLive!
+          ? SyncTvLiveStreamAvailability.live
+          : SyncTvLiveStreamAvailability.offline,
+      isPlaylist: item.itemType == client_enum.ItemType.ITEM_TYPE_PLAYLIST,
       parentId: playlistId,
       subPath: encodedTarget,
       coverUrl: thumbnailUrl,
-      metadata: {
-        'target': target,
-        'target_json': providerTargetToJson(target),
-        'thumbnail': thumbnailUrl,
-        'size': item.hasSize() ? item.size.toInt() : null,
-      },
+      metadata: metadata,
     );
   }
 

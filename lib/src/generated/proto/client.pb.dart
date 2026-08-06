@@ -2966,9 +2966,11 @@ class FileMetadata extends $pb.GeneratedMessage {
 class ResourceMetadata extends $pb.GeneratedMessage {
   factory ResourceMetadata({
     $core.String? source,
+    PlaybackMetadata? provider,
   }) {
     final result = create();
     if (source != null) result.source = source;
+    if (provider != null) result.provider = provider;
     return result;
   }
 
@@ -2986,6 +2988,8 @@ class ResourceMetadata extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'source')
+    ..aOM<PlaybackMetadata>(2, _omitFieldNames ? '' : 'provider',
+        subBuilder: PlaybackMetadata.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3015,6 +3019,18 @@ class ResourceMetadata extends $pb.GeneratedMessage {
   $core.bool hasSource() => $_has(0);
   @$pb.TagNumber(1)
   void clearSource() => $_clearField(1);
+
+  /// Provider-owned metadata. The oneof keeps each provider's fields typed.
+  @$pb.TagNumber(2)
+  PlaybackMetadata get provider => $_getN(1);
+  @$pb.TagNumber(2)
+  set provider(PlaybackMetadata value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasProvider() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearProvider() => $_clearField(2);
+  @$pb.TagNumber(2)
+  PlaybackMetadata ensureProvider() => $_ensure(1);
 }
 
 class ChatPresentationMetadata extends $pb.GeneratedMessage {
@@ -4518,6 +4534,7 @@ class Playlist extends $pb.GeneratedMessage {
     $core.String? description,
     ResourceCover? cover,
     $core.String? creatorId,
+    ResourceMetadata? metadata,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -4538,6 +4555,7 @@ class Playlist extends $pb.GeneratedMessage {
     if (description != null) result.description = description;
     if (cover != null) result.cover = cover;
     if (creatorId != null) result.creatorId = creatorId;
+    if (metadata != null) result.metadata = metadata;
     return result;
   }
 
@@ -4575,6 +4593,8 @@ class Playlist extends $pb.GeneratedMessage {
     ..aOM<ResourceCover>(16, _omitFieldNames ? '' : 'cover',
         subBuilder: ResourceCover.create)
     ..aOS(17, _omitFieldNames ? '' : 'creatorId')
+    ..aOM<ResourceMetadata>(18, _omitFieldNames ? '' : 'metadata',
+        subBuilder: ResourceMetadata.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4751,6 +4771,17 @@ class Playlist extends $pb.GeneratedMessage {
   $core.bool hasCreatorId() => $_has(16);
   @$pb.TagNumber(17)
   void clearCreatorId() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  ResourceMetadata get metadata => $_getN(17);
+  @$pb.TagNumber(18)
+  set metadata(ResourceMetadata value) => $_setField(18, value);
+  @$pb.TagNumber(18)
+  $core.bool hasMetadata() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearMetadata() => $_clearField(18);
+  @$pb.TagNumber(18)
+  ResourceMetadata ensureMetadata() => $_ensure(17);
 }
 
 class ResourceCover extends $pb.GeneratedMessage {
@@ -15232,12 +15263,13 @@ class GetPlaylistRequest extends $pb.GeneratedMessage {
 class GetPlaylistResponse extends $pb.GeneratedMessage {
   factory GetPlaylistResponse({
     Playlist? playlist,
-    $core.int? childFolderCount,
+    $core.int? childPlaylistCount,
     $core.int? mediaCount,
   }) {
     final result = create();
     if (playlist != null) result.playlist = playlist;
-    if (childFolderCount != null) result.childFolderCount = childFolderCount;
+    if (childPlaylistCount != null)
+      result.childPlaylistCount = childPlaylistCount;
     if (mediaCount != null) result.mediaCount = mediaCount;
     return result;
   }
@@ -15257,7 +15289,7 @@ class GetPlaylistResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<Playlist>(1, _omitFieldNames ? '' : 'playlist',
         subBuilder: Playlist.create)
-    ..aI(2, _omitFieldNames ? '' : 'childFolderCount')
+    ..aI(2, _omitFieldNames ? '' : 'childPlaylistCount')
     ..aI(3, _omitFieldNames ? '' : 'mediaCount')
     ..hasRequiredFields = false;
 
@@ -15292,13 +15324,13 @@ class GetPlaylistResponse extends $pb.GeneratedMessage {
   Playlist ensurePlaylist() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $core.int get childFolderCount => $_getIZ(1);
+  $core.int get childPlaylistCount => $_getIZ(1);
   @$pb.TagNumber(2)
-  set childFolderCount($core.int value) => $_setSignedInt32(1, value);
+  set childPlaylistCount($core.int value) => $_setSignedInt32(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasChildFolderCount() => $_has(1);
+  $core.bool hasChildPlaylistCount() => $_has(1);
   @$pb.TagNumber(2)
-  void clearChildFolderCount() => $_clearField(2);
+  void clearChildPlaylistCount() => $_clearField(2);
 
   @$pb.TagNumber(3)
   $core.int get mediaCount => $_getIZ(2);
@@ -15310,7 +15342,7 @@ class GetPlaylistResponse extends $pb.GeneratedMessage {
   void clearMediaCount() => $_clearField(3);
 }
 
-/// List playlists (folders) in a room or under a parent
+/// List playlists in a room or under a parent.
 class ListPlaylistsRequest extends $pb.GeneratedMessage {
   factory ListPlaylistsRequest({
     $core.String? parentId,
@@ -17115,7 +17147,7 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
     $core.Iterable<Playlist>? playlists,
     $core.Iterable<Media>? media,
     $fixnum.Int64? total,
-    $fixnum.Int64? folderCount,
+    $fixnum.Int64? playlistCount,
     $fixnum.Int64? fileCount,
     $core.Iterable<PlaylistItem>? dynamicItems,
     $core.Iterable<PlaylistBrowsePathNode>? currentPath,
@@ -17127,7 +17159,7 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
     if (playlists != null) result.playlists.addAll(playlists);
     if (media != null) result.media.addAll(media);
     if (total != null) result.total = total;
-    if (folderCount != null) result.folderCount = folderCount;
+    if (playlistCount != null) result.playlistCount = playlistCount;
     if (fileCount != null) result.fileCount = fileCount;
     if (dynamicItems != null) result.dynamicItems.addAll(dynamicItems);
     if (currentPath != null) result.currentPath.addAll(currentPath);
@@ -17163,7 +17195,7 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'total', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(
-        4, _omitFieldNames ? '' : 'folderCount', $pb.PbFieldType.OU6,
+        4, _omitFieldNames ? '' : 'playlistCount', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(
         5, _omitFieldNames ? '' : 'fileCount', $pb.PbFieldType.OU6,
@@ -17223,13 +17255,13 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
   void clearTotal() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $fixnum.Int64 get folderCount => $_getI64(3);
+  $fixnum.Int64 get playlistCount => $_getI64(3);
   @$pb.TagNumber(4)
-  set folderCount($fixnum.Int64 value) => $_setInt64(3, value);
+  set playlistCount($fixnum.Int64 value) => $_setInt64(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasFolderCount() => $_has(3);
+  $core.bool hasPlaylistCount() => $_has(3);
   @$pb.TagNumber(4)
-  void clearFolderCount() => $_clearField(4);
+  void clearPlaylistCount() => $_clearField(4);
 
   @$pb.TagNumber(5)
   $fixnum.Int64 get fileCount => $_getI64(4);
@@ -17296,6 +17328,7 @@ class PlaylistItem extends $pb.GeneratedMessage {
     $core.String? description,
     $1.MediaSourceConfig? mediaSourceConfig,
     $1.PlaylistSourceConfig? playlistSourceConfig,
+    ResourceMetadata? metadata,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -17308,6 +17341,7 @@ class PlaylistItem extends $pb.GeneratedMessage {
     if (mediaSourceConfig != null) result.mediaSourceConfig = mediaSourceConfig;
     if (playlistSourceConfig != null)
       result.playlistSourceConfig = playlistSourceConfig;
+    if (metadata != null) result.metadata = metadata;
     return result;
   }
 
@@ -17346,6 +17380,8 @@ class PlaylistItem extends $pb.GeneratedMessage {
     ..aOM<$1.PlaylistSourceConfig>(
         9, _omitFieldNames ? '' : 'playlistSourceConfig',
         subBuilder: $1.PlaylistSourceConfig.create)
+    ..aOM<ResourceMetadata>(10, _omitFieldNames ? '' : 'metadata',
+        subBuilder: ResourceMetadata.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -17462,6 +17498,17 @@ class PlaylistItem extends $pb.GeneratedMessage {
   void clearPlaylistSourceConfig() => $_clearField(9);
   @$pb.TagNumber(9)
   $1.PlaylistSourceConfig ensurePlaylistSourceConfig() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  ResourceMetadata get metadata => $_getN(9);
+  @$pb.TagNumber(10)
+  set metadata(ResourceMetadata value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMetadata() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMetadata() => $_clearField(10);
+  @$pb.TagNumber(10)
+  ResourceMetadata ensureMetadata() => $_ensure(9);
 }
 
 class PlaylistBrowsePathNode extends $pb.GeneratedMessage {
@@ -19535,7 +19582,7 @@ class AlistVideoPreviewMetadata extends $pb.GeneratedMessage {
 
 class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
   factory BilibiliPlaybackMetadata({
-    $core.String? contentType,
+    BilibiliPlaybackKind? kind,
     $core.String? bvid,
     $fixnum.Int64? aid,
     $fixnum.Int64? epid,
@@ -19545,9 +19592,11 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
     $fixnum.Int64? quality,
     $fixnum.Int64? roomId,
     $fixnum.Int64? liveStartedAt,
+    $core.bool? isLive,
+    $core.bool? isCurrentlyLive,
   }) {
     final result = create();
-    if (contentType != null) result.contentType = contentType;
+    if (kind != null) result.kind = kind;
     if (bvid != null) result.bvid = bvid;
     if (aid != null) result.aid = aid;
     if (epid != null) result.epid = epid;
@@ -19557,6 +19606,8 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
     if (quality != null) result.quality = quality;
     if (roomId != null) result.roomId = roomId;
     if (liveStartedAt != null) result.liveStartedAt = liveStartedAt;
+    if (isLive != null) result.isLive = isLive;
+    if (isCurrentlyLive != null) result.isCurrentlyLive = isCurrentlyLive;
     return result;
   }
 
@@ -19573,7 +19624,8 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'BilibiliPlaybackMetadata',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'contentType')
+    ..aE<BilibiliPlaybackKind>(1, _omitFieldNames ? '' : 'kind',
+        enumValues: BilibiliPlaybackKind.values)
     ..aOS(2, _omitFieldNames ? '' : 'bvid')
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'aid', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
@@ -19588,6 +19640,8 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(9, _omitFieldNames ? '' : 'roomId', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aInt64(10, _omitFieldNames ? '' : 'liveStartedAt')
+    ..aOB(11, _omitFieldNames ? '' : 'isLive')
+    ..aOB(12, _omitFieldNames ? '' : 'isCurrentlyLive')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -19611,13 +19665,13 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
   static BilibiliPlaybackMetadata? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get contentType => $_getSZ(0);
+  BilibiliPlaybackKind get kind => $_getN(0);
   @$pb.TagNumber(1)
-  set contentType($core.String value) => $_setString(0, value);
+  set kind(BilibiliPlaybackKind value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasContentType() => $_has(0);
+  $core.bool hasKind() => $_has(0);
   @$pb.TagNumber(1)
-  void clearContentType() => $_clearField(1);
+  void clearKind() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get bvid => $_getSZ(1);
@@ -19699,17 +19753,35 @@ class BilibiliPlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasLiveStartedAt() => $_has(9);
   @$pb.TagNumber(10)
   void clearLiveStartedAt() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.bool get isLive => $_getBF(10);
+  @$pb.TagNumber(11)
+  set isLive($core.bool value) => $_setBool(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasIsLive() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearIsLive() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.bool get isCurrentlyLive => $_getBF(11);
+  @$pb.TagNumber(12)
+  set isCurrentlyLive($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasIsCurrentlyLive() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearIsCurrentlyLive() => $_clearField(12);
 }
 
 class EmbyPlaybackMetadata extends $pb.GeneratedMessage {
   factory EmbyPlaybackMetadata({
-    $core.String? itemType,
+    EmbyPlaybackKind? kind,
     $core.String? seriesName,
     $core.String? seasonName,
     $core.String? playSessionId,
   }) {
     final result = create();
-    if (itemType != null) result.itemType = itemType;
+    if (kind != null) result.kind = kind;
     if (seriesName != null) result.seriesName = seriesName;
     if (seasonName != null) result.seasonName = seasonName;
     if (playSessionId != null) result.playSessionId = playSessionId;
@@ -19729,7 +19801,8 @@ class EmbyPlaybackMetadata extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'EmbyPlaybackMetadata',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'itemType')
+    ..aE<EmbyPlaybackKind>(1, _omitFieldNames ? '' : 'kind',
+        enumValues: EmbyPlaybackKind.values)
     ..aOS(2, _omitFieldNames ? '' : 'seriesName')
     ..aOS(3, _omitFieldNames ? '' : 'seasonName')
     ..aOS(4, _omitFieldNames ? '' : 'playSessionId')
@@ -19755,13 +19828,13 @@ class EmbyPlaybackMetadata extends $pb.GeneratedMessage {
   static EmbyPlaybackMetadata? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get itemType => $_getSZ(0);
+  EmbyPlaybackKind get kind => $_getN(0);
   @$pb.TagNumber(1)
-  set itemType($core.String value) => $_setString(0, value);
+  set kind(EmbyPlaybackKind value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasItemType() => $_has(0);
+  $core.bool hasKind() => $_has(0);
   @$pb.TagNumber(1)
-  void clearItemType() => $_clearField(1);
+  void clearKind() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get seriesName => $_getSZ(1);
@@ -20041,6 +20114,8 @@ class TwitchPlaybackMetadata extends $pb.GeneratedMessage {
     $core.String? publishedAt,
     $core.Iterable<TwitchChapterMetadata>? chapters,
     $core.String? storyboardUrl,
+    $core.bool? isLive,
+    $core.bool? isCurrentlyLive,
   }) {
     final result = create();
     if (resourceId != null) result.resourceId = resourceId;
@@ -20053,6 +20128,8 @@ class TwitchPlaybackMetadata extends $pb.GeneratedMessage {
     if (publishedAt != null) result.publishedAt = publishedAt;
     if (chapters != null) result.chapters.addAll(chapters);
     if (storyboardUrl != null) result.storyboardUrl = storyboardUrl;
+    if (isLive != null) result.isLive = isLive;
+    if (isCurrentlyLive != null) result.isCurrentlyLive = isCurrentlyLive;
     return result;
   }
 
@@ -20082,6 +20159,8 @@ class TwitchPlaybackMetadata extends $pb.GeneratedMessage {
     ..pPM<TwitchChapterMetadata>(9, _omitFieldNames ? '' : 'chapters',
         subBuilder: TwitchChapterMetadata.create)
     ..aOS(10, _omitFieldNames ? '' : 'storyboardUrl')
+    ..aOB(11, _omitFieldNames ? '' : 'isLive')
+    ..aOB(12, _omitFieldNames ? '' : 'isCurrentlyLive')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -20187,6 +20266,24 @@ class TwitchPlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasStoryboardUrl() => $_has(9);
   @$pb.TagNumber(10)
   void clearStoryboardUrl() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.bool get isLive => $_getBF(10);
+  @$pb.TagNumber(11)
+  set isLive($core.bool value) => $_setBool(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasIsLive() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearIsLive() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.bool get isCurrentlyLive => $_getBF(11);
+  @$pb.TagNumber(12)
+  set isCurrentlyLive($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasIsCurrentlyLive() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearIsCurrentlyLive() => $_clearField(12);
 }
 
 class TwitchChapterMetadata extends $pb.GeneratedMessage {
@@ -20289,6 +20386,7 @@ class YoutubePlaybackMetadata extends $pb.GeneratedMessage {
     $core.int? automaticCaptionCount,
     $core.int? manualCaptionCount,
     $core.Iterable<$core.String>? translationLanguages,
+    $core.bool? isCurrentlyLive,
   }) {
     final result = create();
     if (videoId != null) result.videoId = videoId;
@@ -20309,6 +20407,7 @@ class YoutubePlaybackMetadata extends $pb.GeneratedMessage {
       result.manualCaptionCount = manualCaptionCount;
     if (translationLanguages != null)
       result.translationLanguages.addAll(translationLanguages);
+    if (isCurrentlyLive != null) result.isCurrentlyLive = isCurrentlyLive;
     return result;
   }
 
@@ -20344,6 +20443,7 @@ class YoutubePlaybackMetadata extends $pb.GeneratedMessage {
     ..aI(14, _omitFieldNames ? '' : 'manualCaptionCount',
         fieldType: $pb.PbFieldType.OU3)
     ..pPS(15, _omitFieldNames ? '' : 'translationLanguages')
+    ..aOB(16, _omitFieldNames ? '' : 'isCurrentlyLive')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -20494,12 +20594,21 @@ class YoutubePlaybackMetadata extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(15)
   $pb.PbList<$core.String> get translationLanguages => $_getList(14);
+
+  @$pb.TagNumber(16)
+  $core.bool get isCurrentlyLive => $_getBF(15);
+  @$pb.TagNumber(16)
+  set isCurrentlyLive($core.bool value) => $_setBool(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasIsCurrentlyLive() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearIsCurrentlyLive() => $_clearField(16);
 }
 
 class DouyinPlaybackMetadata extends $pb.GeneratedMessage {
   factory DouyinPlaybackMetadata({
     $core.String? id,
-    $core.String? kind,
+    DouyinPlaybackKind? kind,
     $core.String? authorId,
     $core.String? authorSecUid,
     $core.String? authorName,
@@ -20514,6 +20623,7 @@ class DouyinPlaybackMetadata extends $pb.GeneratedMessage {
     $core.String? musicAuthor,
     $core.bool? isLive,
     $core.String? roomId,
+    $core.bool? isCurrentlyLive,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -20532,6 +20642,7 @@ class DouyinPlaybackMetadata extends $pb.GeneratedMessage {
     if (musicAuthor != null) result.musicAuthor = musicAuthor;
     if (isLive != null) result.isLive = isLive;
     if (roomId != null) result.roomId = roomId;
+    if (isCurrentlyLive != null) result.isCurrentlyLive = isCurrentlyLive;
     return result;
   }
 
@@ -20549,7 +20660,8 @@ class DouyinPlaybackMetadata extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'id')
-    ..aOS(2, _omitFieldNames ? '' : 'kind')
+    ..aE<DouyinPlaybackKind>(2, _omitFieldNames ? '' : 'kind',
+        enumValues: DouyinPlaybackKind.values)
     ..aOS(3, _omitFieldNames ? '' : 'authorId')
     ..aOS(4, _omitFieldNames ? '' : 'authorSecUid')
     ..aOS(5, _omitFieldNames ? '' : 'authorName')
@@ -20574,6 +20686,7 @@ class DouyinPlaybackMetadata extends $pb.GeneratedMessage {
     ..aOS(14, _omitFieldNames ? '' : 'musicAuthor')
     ..aOB(15, _omitFieldNames ? '' : 'isLive')
     ..aOS(16, _omitFieldNames ? '' : 'roomId')
+    ..aOB(17, _omitFieldNames ? '' : 'isCurrentlyLive')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -20606,9 +20719,9 @@ class DouyinPlaybackMetadata extends $pb.GeneratedMessage {
   void clearId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get kind => $_getSZ(1);
+  DouyinPlaybackKind get kind => $_getN(1);
   @$pb.TagNumber(2)
-  set kind($core.String value) => $_setString(1, value);
+  set kind(DouyinPlaybackKind value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasKind() => $_has(1);
   @$pb.TagNumber(2)
@@ -20739,12 +20852,21 @@ class DouyinPlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasRoomId() => $_has(15);
   @$pb.TagNumber(16)
   void clearRoomId() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $core.bool get isCurrentlyLive => $_getBF(16);
+  @$pb.TagNumber(17)
+  set isCurrentlyLive($core.bool value) => $_setBool(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasIsCurrentlyLive() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearIsCurrentlyLive() => $_clearField(17);
 }
 
 class TikTokPlaybackMetadata extends $pb.GeneratedMessage {
   factory TikTokPlaybackMetadata({
     $core.String? id,
-    $core.String? kind,
+    TikTokPlaybackKind? kind,
     $core.String? authorId,
     $core.String? authorSecUid,
     $core.String? authorUniqueId,
@@ -20762,6 +20884,7 @@ class TikTokPlaybackMetadata extends $pb.GeneratedMessage {
     $core.int? subtitleCount,
     $core.bool? isLive,
     $core.String? roomId,
+    $core.bool? isCurrentlyLive,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -20783,6 +20906,7 @@ class TikTokPlaybackMetadata extends $pb.GeneratedMessage {
     if (subtitleCount != null) result.subtitleCount = subtitleCount;
     if (isLive != null) result.isLive = isLive;
     if (roomId != null) result.roomId = roomId;
+    if (isCurrentlyLive != null) result.isCurrentlyLive = isCurrentlyLive;
     return result;
   }
 
@@ -20800,7 +20924,8 @@ class TikTokPlaybackMetadata extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'id')
-    ..aOS(2, _omitFieldNames ? '' : 'kind')
+    ..aE<TikTokPlaybackKind>(2, _omitFieldNames ? '' : 'kind',
+        enumValues: TikTokPlaybackKind.values)
     ..aOS(3, _omitFieldNames ? '' : 'authorId')
     ..aOS(4, _omitFieldNames ? '' : 'authorSecUid')
     ..aOS(5, _omitFieldNames ? '' : 'authorUniqueId')
@@ -20831,6 +20956,7 @@ class TikTokPlaybackMetadata extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OU3)
     ..aOB(18, _omitFieldNames ? '' : 'isLive')
     ..aOS(19, _omitFieldNames ? '' : 'roomId')
+    ..aOB(20, _omitFieldNames ? '' : 'isCurrentlyLive')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -20863,9 +20989,9 @@ class TikTokPlaybackMetadata extends $pb.GeneratedMessage {
   void clearId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get kind => $_getSZ(1);
+  TikTokPlaybackKind get kind => $_getN(1);
   @$pb.TagNumber(2)
-  set kind($core.String value) => $_setString(1, value);
+  set kind(TikTokPlaybackKind value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasKind() => $_has(1);
   @$pb.TagNumber(2)
@@ -21023,6 +21149,15 @@ class TikTokPlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasRoomId() => $_has(18);
   @$pb.TagNumber(19)
   void clearRoomId() => $_clearField(19);
+
+  @$pb.TagNumber(20)
+  $core.bool get isCurrentlyLive => $_getBF(19);
+  @$pb.TagNumber(20)
+  set isCurrentlyLive($core.bool value) => $_setBool(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasIsCurrentlyLive() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearIsCurrentlyLive() => $_clearField(20);
 }
 
 class HuyaPlaybackMetadata extends $pb.GeneratedMessage {
@@ -21039,6 +21174,8 @@ class HuyaPlaybackMetadata extends $pb.GeneratedMessage {
     $fixnum.Int64? commentCount,
     $fixnum.Int64? likeCount,
     $fixnum.Int64? publishedAt,
+    $core.bool? isLive,
+    $core.bool? isCurrentlyLive,
   }) {
     final result = create();
     if (resourceId != null) result.resourceId = resourceId;
@@ -21053,6 +21190,8 @@ class HuyaPlaybackMetadata extends $pb.GeneratedMessage {
     if (commentCount != null) result.commentCount = commentCount;
     if (likeCount != null) result.likeCount = likeCount;
     if (publishedAt != null) result.publishedAt = publishedAt;
+    if (isLive != null) result.isLive = isLive;
+    if (isCurrentlyLive != null) result.isCurrentlyLive = isCurrentlyLive;
     return result;
   }
 
@@ -21087,6 +21226,8 @@ class HuyaPlaybackMetadata extends $pb.GeneratedMessage {
         11, _omitFieldNames ? '' : 'likeCount', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aInt64(12, _omitFieldNames ? '' : 'publishedAt')
+    ..aOB(13, _omitFieldNames ? '' : 'isLive')
+    ..aOB(14, _omitFieldNames ? '' : 'isCurrentlyLive')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -21215,6 +21356,24 @@ class HuyaPlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasPublishedAt() => $_has(11);
   @$pb.TagNumber(12)
   void clearPublishedAt() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.bool get isLive => $_getBF(12);
+  @$pb.TagNumber(13)
+  set isLive($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasIsLive() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearIsLive() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.bool get isCurrentlyLive => $_getBF(13);
+  @$pb.TagNumber(14)
+  set isCurrentlyLive($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasIsCurrentlyLive() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearIsCurrentlyLive() => $_clearField(14);
 }
 
 class DouyuPlaybackMetadata extends $pb.GeneratedMessage {
@@ -21229,6 +21388,8 @@ class DouyuPlaybackMetadata extends $pb.GeneratedMessage {
     $core.bool? isVip,
     $fixnum.Int64? viewerCount,
     $core.String? startedAt,
+    $core.bool? isLive,
+    $core.bool? isCurrentlyLive,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
@@ -21241,6 +21402,8 @@ class DouyuPlaybackMetadata extends $pb.GeneratedMessage {
     if (isVip != null) result.isVip = isVip;
     if (viewerCount != null) result.viewerCount = viewerCount;
     if (startedAt != null) result.startedAt = startedAt;
+    if (isLive != null) result.isLive = isLive;
+    if (isCurrentlyLive != null) result.isCurrentlyLive = isCurrentlyLive;
     return result;
   }
 
@@ -21269,6 +21432,8 @@ class DouyuPlaybackMetadata extends $pb.GeneratedMessage {
         9, _omitFieldNames ? '' : 'viewerCount', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(10, _omitFieldNames ? '' : 'startedAt')
+    ..aOB(11, _omitFieldNames ? '' : 'isLive')
+    ..aOB(12, _omitFieldNames ? '' : 'isCurrentlyLive')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -21380,6 +21545,24 @@ class DouyuPlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasStartedAt() => $_has(9);
   @$pb.TagNumber(10)
   void clearStartedAt() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.bool get isLive => $_getBF(10);
+  @$pb.TagNumber(11)
+  set isLive($core.bool value) => $_setBool(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasIsLive() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearIsLive() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.bool get isCurrentlyLive => $_getBF(11);
+  @$pb.TagNumber(12)
+  set isCurrentlyLive($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasIsCurrentlyLive() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearIsCurrentlyLive() => $_clearField(12);
 }
 
 class AcFunPlaybackMetadata extends $pb.GeneratedMessage {
@@ -21398,6 +21581,8 @@ class AcFunPlaybackMetadata extends $pb.GeneratedMessage {
     $fixnum.Int64? commentCount,
     $fixnum.Int64? publishedAt,
     $fixnum.Int64? startedAt,
+    $core.bool? isLive,
+    $core.bool? isCurrentlyLive,
   }) {
     final result = create();
     if (resourceId != null) result.resourceId = resourceId;
@@ -21414,6 +21599,8 @@ class AcFunPlaybackMetadata extends $pb.GeneratedMessage {
     if (commentCount != null) result.commentCount = commentCount;
     if (publishedAt != null) result.publishedAt = publishedAt;
     if (startedAt != null) result.startedAt = startedAt;
+    if (isLive != null) result.isLive = isLive;
+    if (isCurrentlyLive != null) result.isCurrentlyLive = isCurrentlyLive;
     return result;
   }
 
@@ -21450,6 +21637,8 @@ class AcFunPlaybackMetadata extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aInt64(13, _omitFieldNames ? '' : 'publishedAt')
     ..aInt64(14, _omitFieldNames ? '' : 'startedAt')
+    ..aOB(15, _omitFieldNames ? '' : 'isLive')
+    ..aOB(16, _omitFieldNames ? '' : 'isCurrentlyLive')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -21591,6 +21780,24 @@ class AcFunPlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasStartedAt() => $_has(13);
   @$pb.TagNumber(14)
   void clearStartedAt() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $core.bool get isLive => $_getBF(14);
+  @$pb.TagNumber(15)
+  set isLive($core.bool value) => $_setBool(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasIsLive() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearIsLive() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $core.bool get isCurrentlyLive => $_getBF(15);
+  @$pb.TagNumber(16)
+  set isCurrentlyLive($core.bool value) => $_setBool(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasIsCurrentlyLive() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearIsCurrentlyLive() => $_clearField(16);
 }
 
 class CctvChapterMetadata extends $pb.GeneratedMessage {
@@ -22343,7 +22550,7 @@ class SynologyPlaybackMetadata extends $pb.GeneratedMessage {
     $core.Iterable<$core.String>? genres,
     $fixnum.Int64? itemId,
     $fixnum.Int64? fileId,
-    $core.String? kind,
+    $1.SynologyLibraryItemKind? kind,
     $core.String? path,
     $fixnum.Int64? size,
     $fixnum.Int64? durationSeconds,
@@ -22436,7 +22643,8 @@ class SynologyPlaybackMetadata extends $pb.GeneratedMessage {
     ..pPS(9, _omitFieldNames ? '' : 'genres')
     ..aInt64(10, _omitFieldNames ? '' : 'itemId')
     ..aInt64(11, _omitFieldNames ? '' : 'fileId')
-    ..aOS(12, _omitFieldNames ? '' : 'kind')
+    ..aE<$1.SynologyLibraryItemKind>(12, _omitFieldNames ? '' : 'kind',
+        enumValues: $1.SynologyLibraryItemKind.values)
     ..aOS(13, _omitFieldNames ? '' : 'path')
     ..a<$fixnum.Int64>(14, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
@@ -22576,9 +22784,9 @@ class SynologyPlaybackMetadata extends $pb.GeneratedMessage {
   void clearFileId() => $_clearField(11);
 
   @$pb.TagNumber(12)
-  $core.String get kind => $_getSZ(11);
+  $1.SynologyLibraryItemKind get kind => $_getN(11);
   @$pb.TagNumber(12)
-  set kind($core.String value) => $_setString(11, value);
+  set kind($1.SynologyLibraryItemKind value) => $_setField(12, value);
   @$pb.TagNumber(12)
   $core.bool hasKind() => $_has(11);
   @$pb.TagNumber(12)
@@ -24359,7 +24567,7 @@ class PlaybackMedia extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearFormat() => $_clearField(6);
 
-  /// Server-approved room-scoped P2P delivery identity and resource strategy.
+  /// Provider-approved byte-stable identity with a room/user-bound capability.
   /// Omitted when this representation must use its origin directly.
   @$pb.TagNumber(7)
   P2pResourceDelivery get p2pDelivery => $_getN(6);
@@ -24373,7 +24581,7 @@ class PlaybackMedia extends $pb.GeneratedMessage {
   P2pResourceDelivery ensureP2pDelivery() => $_ensure(6);
 }
 
-/// Server-approved room-scoped P2P identity for a byte-stable resource.
+/// Provider-approved identity and API-issued capability for a byte-stable resource.
 class P2pResourceDelivery extends $pb.GeneratedMessage {
   factory P2pResourceDelivery({
     $core.String? swarmId,

@@ -116,7 +116,27 @@ void main() {
           ),
         ),
       ],
-      folderCount: Int64.ONE,
+      dynamicItems: [
+        client.PlaylistItem(
+          name: 'Live dynamic item',
+          itemType: client_enum.ItemType.ITEM_TYPE_MEDIA,
+          target: client.ProviderTarget(
+            alist: client.AlistTarget(relativePath: '/live/item'),
+          ),
+          metadata: client.ResourceMetadata(
+            provider: client.PlaybackMetadata(
+              youtube: client.YoutubePlaybackMetadata(
+                videoId: 'video-1',
+                channelId: 'channel-1',
+                channelName: 'Channel',
+                description: '',
+                isLive: true,
+              ),
+            ),
+          ),
+        ),
+      ],
+      playlistCount: Int64.ONE,
       fileCount: Int64.ONE,
       version: 'v1',
     );
@@ -135,6 +155,11 @@ void main() {
     expect(decoded.mediaLibrary?.media.first.sourceProvider, 'directUrl');
     expect(decoded.mediaLibrary?.media.last.sourceProvider, 'tiktok');
     expect(decoded.mediaLibrary?.media.last.live, isTrue);
+    expect(decoded.mediaLibrary?.dynamicItems.single.live, isTrue);
+    expect(
+      decoded.mediaLibrary?.dynamicItems.single.metadata['provider'],
+      isA<Map>(),
+    );
   });
 
   test('playback resource snapshot preserves dynamic target identity', () {
@@ -202,7 +227,7 @@ void main() {
                 "sourceProvider": "SOURCE_PROVIDER_DIRECT_URL"
               }
             ],
-            "folderCount": "1",
+            "playlistCount": "1",
             "fileCount": "1",
             "version": "v1"
           }

@@ -90,7 +90,7 @@ RoomDynamicMediaEntry _entry(String id, String name, {bool media = true}) {
     name: name,
     parentId: '',
     subPath: id,
-    isFolder: !media,
+    isPlaylist: !media,
     mediaSourceConfig: media
         ? source.MediaSourceConfig(
             bilibili: source.BilibiliMediaSourceConfig(

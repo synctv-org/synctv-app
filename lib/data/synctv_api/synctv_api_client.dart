@@ -1492,8 +1492,11 @@ extension SyncTvModelMapping on SyncTvApiClient {
         sourceConfig: sourceConfig,
       ),
     );
+    final liveState = resourceMetadataLiveState(
+      media.hasMetadata() ? media.metadata : null,
+    );
     final isLive =
-        metadata['isLive'] == true ||
+        liveState.isLive ||
         (media.hasSourceConfig() &&
             SourceConfigCodec.isLiveMediaSourceConfig(media.sourceConfig));
     return RoomMediaItem(
@@ -1510,6 +1513,11 @@ extension SyncTvModelMapping on SyncTvApiClient {
       headers: _stringMap(metadata['headers']),
       proxy: metadata['proxy'] == true,
       live: isLive,
+      liveStreamAvailability: liveState.isCurrentlyLive == null
+          ? null
+          : liveState.isCurrentlyLive!
+          ? SyncTvLiveStreamAvailability.live
+          : SyncTvLiveStreamAvailability.offline,
       sourceProvider: sourceProvider,
       providerInstanceName: media.providerInstanceName,
       sourceConfig: sourceConfig,
@@ -1531,6 +1539,12 @@ extension SyncTvModelMapping on SyncTvApiClient {
     final sourceConfig = playlist.hasSourceConfig()
         ? SourceConfigCodec.playlistSourceConfigToMap(playlist.sourceConfig)
         : <String, dynamic>{};
+    final metadata = <String, dynamic>{'isDynamic': playlist.isDynamic}
+      ..addAll(
+        playlist.hasMetadata()
+            ? resourceMetadataToJson(playlist.metadata)
+            : const <String, dynamic>{},
+      );
     return RoomPlaylistItem(
       id: playlist.id,
       name: playlist.name,
@@ -1551,7 +1565,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       sourceProvider: sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
       sourceConfig: sourceConfig,
-      metadata: {'isDynamic': playlist.isDynamic},
+      metadata: metadata,
     );
   }
 
@@ -1564,10 +1578,30 @@ extension SyncTvModelMapping on SyncTvApiClient {
     final thumbnailUrl = item.hasThumbnail()
         ? resolveResourceUrl(item.thumbnail)
         : '';
+    final metadata =
+        <String, dynamic>{
+          'target': target,
+          'target_json': providerTargetToJson(target),
+          'thumbnail': thumbnailUrl,
+          'size': item.hasSize() ? item.size.toInt() : null,
+        }..addAll(
+          item.hasMetadata()
+              ? resourceMetadataToJson(item.metadata)
+              : const <String, dynamic>{},
+        );
+    final liveState = resourceMetadataLiveState(
+      item.hasMetadata() ? item.metadata : null,
+    );
     return RoomDynamicMediaEntry(
       id: encodedTarget,
       name: item.name,
-      isFolder: item.itemType == client_enum.ItemType.ITEM_TYPE_PLAYLIST,
+      live: liveState.isLive,
+      liveStreamAvailability: liveState.isCurrentlyLive == null
+          ? null
+          : liveState.isCurrentlyLive!
+          ? SyncTvLiveStreamAvailability.live
+          : SyncTvLiveStreamAvailability.offline,
+      isPlaylist: item.itemType == client_enum.ItemType.ITEM_TYPE_PLAYLIST,
       parentId: playlistId,
       subPath: encodedTarget,
       coverUrl: thumbnailUrl,
@@ -1577,12 +1611,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       playlistSourceConfig: item.hasPlaylistSourceConfig()
           ? item.playlistSourceConfig.deepCopy()
           : null,
-      metadata: {
-        'target': target,
-        'target_json': providerTargetToJson(target),
-        'thumbnail': thumbnailUrl,
-        'size': item.hasSize() ? item.size.toInt() : null,
-      },
+      metadata: metadata,
     );
   }
 

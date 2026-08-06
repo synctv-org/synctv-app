@@ -854,6 +854,68 @@ class PlaybackAudioCapability extends $pb.ProtobufEnum {
   const PlaybackAudioCapability._(super.value, super.name);
 }
 
+class BilibiliPlaybackKind extends $pb.ProtobufEnum {
+  static const BilibiliPlaybackKind BILIBILI_PLAYBACK_KIND_UNSPECIFIED =
+      BilibiliPlaybackKind._(
+          0, _omitEnumNames ? '' : 'BILIBILI_PLAYBACK_KIND_UNSPECIFIED');
+  static const BilibiliPlaybackKind BILIBILI_PLAYBACK_KIND_VIDEO =
+      BilibiliPlaybackKind._(
+          1, _omitEnumNames ? '' : 'BILIBILI_PLAYBACK_KIND_VIDEO');
+  static const BilibiliPlaybackKind BILIBILI_PLAYBACK_KIND_PGC =
+      BilibiliPlaybackKind._(
+          2, _omitEnumNames ? '' : 'BILIBILI_PLAYBACK_KIND_PGC');
+  static const BilibiliPlaybackKind BILIBILI_PLAYBACK_KIND_LIVE =
+      BilibiliPlaybackKind._(
+          3, _omitEnumNames ? '' : 'BILIBILI_PLAYBACK_KIND_LIVE');
+
+  static const $core.List<BilibiliPlaybackKind> values = <BilibiliPlaybackKind>[
+    BILIBILI_PLAYBACK_KIND_UNSPECIFIED,
+    BILIBILI_PLAYBACK_KIND_VIDEO,
+    BILIBILI_PLAYBACK_KIND_PGC,
+    BILIBILI_PLAYBACK_KIND_LIVE,
+  ];
+
+  static final $core.List<BilibiliPlaybackKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static BilibiliPlaybackKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const BilibiliPlaybackKind._(super.value, super.name);
+}
+
+class EmbyPlaybackKind extends $pb.ProtobufEnum {
+  static const EmbyPlaybackKind EMBY_PLAYBACK_KIND_UNSPECIFIED =
+      EmbyPlaybackKind._(
+          0, _omitEnumNames ? '' : 'EMBY_PLAYBACK_KIND_UNSPECIFIED');
+  static const EmbyPlaybackKind EMBY_PLAYBACK_KIND_MOVIE =
+      EmbyPlaybackKind._(1, _omitEnumNames ? '' : 'EMBY_PLAYBACK_KIND_MOVIE');
+  static const EmbyPlaybackKind EMBY_PLAYBACK_KIND_EPISODE =
+      EmbyPlaybackKind._(2, _omitEnumNames ? '' : 'EMBY_PLAYBACK_KIND_EPISODE');
+  static const EmbyPlaybackKind EMBY_PLAYBACK_KIND_VIDEO =
+      EmbyPlaybackKind._(3, _omitEnumNames ? '' : 'EMBY_PLAYBACK_KIND_VIDEO');
+  static const EmbyPlaybackKind EMBY_PLAYBACK_KIND_AUDIO =
+      EmbyPlaybackKind._(4, _omitEnumNames ? '' : 'EMBY_PLAYBACK_KIND_AUDIO');
+  static const EmbyPlaybackKind EMBY_PLAYBACK_KIND_MUSIC_ALBUM =
+      EmbyPlaybackKind._(
+          5, _omitEnumNames ? '' : 'EMBY_PLAYBACK_KIND_MUSIC_ALBUM');
+
+  static const $core.List<EmbyPlaybackKind> values = <EmbyPlaybackKind>[
+    EMBY_PLAYBACK_KIND_UNSPECIFIED,
+    EMBY_PLAYBACK_KIND_MOVIE,
+    EMBY_PLAYBACK_KIND_EPISODE,
+    EMBY_PLAYBACK_KIND_VIDEO,
+    EMBY_PLAYBACK_KIND_AUDIO,
+    EMBY_PLAYBACK_KIND_MUSIC_ALBUM,
+  ];
+
+  static final $core.List<EmbyPlaybackKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
+  static EmbyPlaybackKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const EmbyPlaybackKind._(super.value, super.name);
+}
+
 class LiveStreamAvailability extends $pb.ProtobufEnum {
   static const LiveStreamAvailability LIVE_STREAM_AVAILABILITY_UNSPECIFIED =
       LiveStreamAvailability._(
@@ -878,6 +940,56 @@ class LiveStreamAvailability extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const LiveStreamAvailability._(super.value, super.name);
+}
+
+class DouyinPlaybackKind extends $pb.ProtobufEnum {
+  static const DouyinPlaybackKind DOUYIN_PLAYBACK_KIND_UNSPECIFIED =
+      DouyinPlaybackKind._(
+          0, _omitEnumNames ? '' : 'DOUYIN_PLAYBACK_KIND_UNSPECIFIED');
+  static const DouyinPlaybackKind DOUYIN_PLAYBACK_KIND_VIDEO =
+      DouyinPlaybackKind._(
+          1, _omitEnumNames ? '' : 'DOUYIN_PLAYBACK_KIND_VIDEO');
+  static const DouyinPlaybackKind DOUYIN_PLAYBACK_KIND_LIVE =
+      DouyinPlaybackKind._(
+          2, _omitEnumNames ? '' : 'DOUYIN_PLAYBACK_KIND_LIVE');
+
+  static const $core.List<DouyinPlaybackKind> values = <DouyinPlaybackKind>[
+    DOUYIN_PLAYBACK_KIND_UNSPECIFIED,
+    DOUYIN_PLAYBACK_KIND_VIDEO,
+    DOUYIN_PLAYBACK_KIND_LIVE,
+  ];
+
+  static final $core.List<DouyinPlaybackKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static DouyinPlaybackKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const DouyinPlaybackKind._(super.value, super.name);
+}
+
+class TikTokPlaybackKind extends $pb.ProtobufEnum {
+  static const TikTokPlaybackKind TIK_TOK_PLAYBACK_KIND_UNSPECIFIED =
+      TikTokPlaybackKind._(
+          0, _omitEnumNames ? '' : 'TIK_TOK_PLAYBACK_KIND_UNSPECIFIED');
+  static const TikTokPlaybackKind TIK_TOK_PLAYBACK_KIND_VIDEO =
+      TikTokPlaybackKind._(
+          1, _omitEnumNames ? '' : 'TIK_TOK_PLAYBACK_KIND_VIDEO');
+  static const TikTokPlaybackKind TIK_TOK_PLAYBACK_KIND_LIVE =
+      TikTokPlaybackKind._(
+          2, _omitEnumNames ? '' : 'TIK_TOK_PLAYBACK_KIND_LIVE');
+
+  static const $core.List<TikTokPlaybackKind> values = <TikTokPlaybackKind>[
+    TIK_TOK_PLAYBACK_KIND_UNSPECIFIED,
+    TIK_TOK_PLAYBACK_KIND_VIDEO,
+    TIK_TOK_PLAYBACK_KIND_LIVE,
+  ];
+
+  static final $core.List<TikTokPlaybackKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static TikTokPlaybackKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const TikTokPlaybackKind._(super.value, super.name);
 }
 
 class ResourceDeliveryMode extends $pb.ProtobufEnum {

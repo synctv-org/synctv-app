@@ -408,7 +408,7 @@ class RoomMediaEntry {
   final int availability;
   final int version;
   final Map<String, String> headers;
-  final bool isFolder;
+  final bool isPlaylist;
   final String? parentId;
   final Map<String, dynamic>? subtitles;
   final String? danmu;
@@ -449,7 +449,7 @@ class RoomMediaEntry {
     this.availability = 0,
     this.version = 0,
     this.headers = const {},
-    this.isFolder = false,
+    this.isPlaylist = false,
     this.parentId,
     this.subtitles,
     this.danmu,
@@ -516,8 +516,6 @@ class RoomMediaEntry {
   }
 
   bool get isStaticMedia => this is RoomMediaItem || id.startsWith('med_');
-
-  bool get isPlaylist => this is RoomPlaylistItem || id.startsWith('pl_');
 
   bool get isDynamicPlaylist =>
       this is RoomPlaylistItem && metadata['isDynamic'] == true;
@@ -655,7 +653,7 @@ class RoomMediaEntry {
     int? availability,
     int? version,
     Map<String, String>? headers,
-    bool? isFolder,
+    bool? isPlaylist,
     String? parentId,
     Map<String, dynamic>? subtitles,
     String? danmu,
@@ -699,7 +697,7 @@ class RoomMediaEntry {
       availability: availability ?? this.availability,
       version: version ?? this.version,
       headers: headers ?? this.headers,
-      isFolder: isFolder ?? this.isFolder,
+      isPlaylist: isPlaylist ?? this.isPlaylist,
       parentId: parentId ?? this.parentId,
       subtitles: clearSubtitles ? null : subtitles ?? this.subtitles,
       danmu: clearDanmu ? null : danmu ?? this.danmu,
@@ -1015,6 +1013,7 @@ class RoomMediaItem extends RoomMediaEntry {
     super.description,
     super.coverUrl,
     super.thumbnailUrl,
+    super.liveStreamAvailability,
   });
 }
 
@@ -1038,7 +1037,7 @@ class RoomPlaylistItem extends RoomMediaEntry {
     super.providerInstanceName,
     super.sourceConfig,
     super.metadata,
-  }) : super(url: '', isFolder: true);
+  }) : super(url: '', isPlaylist: true);
 }
 
 class RoomDynamicMediaEntry extends RoomMediaEntry {
@@ -1047,7 +1046,9 @@ class RoomDynamicMediaEntry extends RoomMediaEntry {
     required super.name,
     required super.parentId,
     required super.subPath,
-    required super.isFolder,
+    required super.isPlaylist,
+    super.live,
+    super.liveStreamAvailability,
     super.coverUrl,
     super.metadata,
     this.mediaSourceConfig,

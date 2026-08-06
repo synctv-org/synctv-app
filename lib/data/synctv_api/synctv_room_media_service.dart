@@ -270,7 +270,7 @@ class SyncTvRoomMediaDomainService {
     );
     return PlaylistDetailInfo(
       playlist: _api.mapPlaylist(response.playlist),
-      childFolderCount: response.childFolderCount,
+      childPlaylistCount: response.childPlaylistCount,
       mediaCount: response.mediaCount,
     );
   }
@@ -1672,7 +1672,7 @@ class SyncTvRoomMediaDomainService {
           .toList(),
       currentPath: response.currentPath.map(_browsePathFromProto).toList(),
       total: response.hasTotal() ? response.total.toInt() : null,
-      folderCount: response.folderCount.toInt(),
+      playlistCount: response.playlistCount.toInt(),
       fileCount: response.fileCount.toInt(),
       version: response.version,
       usesCursor:

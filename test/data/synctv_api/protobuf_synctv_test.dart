@@ -3551,7 +3551,7 @@ void main() {
                   'alist': {'path': '/shows/season-1'},
                 },
               },
-              'childFolderCount': 2,
+              'childPlaylistCount': 2,
               'mediaCount': 8,
             }),
           );
@@ -3594,13 +3594,13 @@ void main() {
 
         expect(playlist.playlist.id, 'pl_1');
         expect(playlist.playlist.name, 'Season 1');
-        expect(playlist.playlist.isFolder, isTrue);
+        expect(playlist.playlist.isPlaylist, isTrue);
         expect(playlist.playlist.playbackPlaylistId, 'pl_1');
         expect(playlist.playlist.metadata['isDynamic'], isTrue);
         expect(playlist.playlist.sourceProvider, 'alist');
         expect(playlist.playlist.providerInstanceName, 'alist_main');
         expect(playlist.playlist.sourceConfig['path'], '/shows/season-1');
-        expect(playlist.childFolderCount, 2);
+        expect(playlist.childPlaylistCount, 2);
         expect(playlist.mediaCount, 8);
         expect(media.id, 'med_1');
         expect(media.creator, 'usr_creator');

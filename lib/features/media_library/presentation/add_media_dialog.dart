@@ -3337,7 +3337,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   ],
                   currentPath: preview.currentPath,
                   total: preview.total,
-                  folderCount: preview.folderCount,
+                  playlistCount: preview.playlistCount,
                   fileCount: preview.fileCount,
                   version: preview.version,
                   usesCursor: preview.usesCursor,

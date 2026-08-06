@@ -285,13 +285,13 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 4),
       onTap:
-          item.isFolder &&
+          item.isPlaylist &&
               (_mode == EmbyCollectionMode.favoritePeople ||
                   _mode == EmbyCollectionMode.genres)
           ? () => _openFolder(item)
           : null,
       leading: item.coverUrl.isEmpty
-          ? Icon(item.isFolder ? Icons.person_outline : Icons.movie_outlined)
+          ? Icon(item.isPlaylist ? Icons.person_outline : Icons.movie_outlined)
           : AppImageThumbnail(
               url: item.coverUrl,
               width: 56,
@@ -299,7 +299,7 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
               borderRadius: BorderRadius.circular(4),
             ),
       title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-      trailing: item.isFolder ? const Icon(Icons.chevron_right) : null,
+      trailing: item.isPlaylist ? const Icon(Icons.chevron_right) : null,
     );
   }
 

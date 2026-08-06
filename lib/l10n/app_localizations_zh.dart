@@ -1310,6 +1310,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get parentDirectory => '上级目录';
 
   @override
+  String get parentPlaylist => '上级播放列表';
+
+  @override
   String get mediaSourceAccount => '媒体源账号';
 
   @override
@@ -1554,6 +1557,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rootDirectory => '根目录';
+
+  @override
+  String get mediaLibraryRoot => '媒体库根级';
 
   @override
   String get userId => '用户 ID';
@@ -2306,9 +2312,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dynamicPlaylist => '动态播放列表';
 
   @override
-  String get dynamicDirectory => '动态目录';
-
-  @override
   String get dynamicMedia => '动态媒体';
 
   @override
@@ -2364,7 +2367,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get dynamicDirectoryCannotDelete => '动态目录内容不能在房间内删除';
+  String get dynamicPlaylistCannotDelete => '动态播放列表内容不能在房间内删除';
 
   @override
   String get deleted => '已删除';
@@ -3595,7 +3598,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get clearPlaylist => '清空播放列表';
 
   @override
-  String get confirmClearMediaLibrary => '确认清空根目录下的媒体和播放列表？';
+  String get confirmClearMediaLibrary => '确认清空媒体库根层级的媒体和播放列表？';
 
   @override
   String get confirmClearPlaylist => '确认清空当前播放列表下的媒体和子播放列表？播放列表本身会保留。';
@@ -3902,13 +3905,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mediaLibrary => '媒体库';
 
   @override
-  String get clearCurrentDirectory => '清空当前目录';
+  String get clearCurrentLevel => '清空当前层级';
 
   @override
   String get refreshDynamicList => '刷新动态列表';
 
   @override
-  String get searchMediaOrDirectory => '搜索媒体或目录';
+  String get searchMediaOrPlaylist => '搜索媒体或播放列表';
 
   @override
   String get availability => '可用性';
@@ -3929,7 +3932,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addedAt => '添加时间';
 
   @override
-  String get noMediaEntriesInDirectory => '当前目录没有媒体条目';
+  String get noMediaEntriesAtCurrentLevel => '当前层级没有媒体条目';
 
   @override
   String get realtimeDiagnostics => '实时诊断';
@@ -3976,8 +3979,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get waitingForMediaSnapshot => '等待媒体快照';
 
   @override
-  String folderMediaSummary(int folders, int media) {
-    return '$folders 目录 / $media 媒体';
+  String playlistMediaSummary(int playlists, int media) {
+    return '$playlists 播放列表 / $media 媒体';
   }
 
   @override
@@ -4007,7 +4010,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get room => '房间';
 
   @override
-  String get currentDirectory => '当前目录';
+  String get currentMediaLocation => '当前媒体位置';
 
   @override
   String get watchStatus => '监听状态';

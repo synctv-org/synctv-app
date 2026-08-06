@@ -2498,6 +2498,12 @@ abstract class AppLocalizations {
   /// **'Parent directory'**
   String get parentDirectory;
 
+  /// No description provided for @parentPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent playlist'**
+  String get parentPlaylist;
+
   /// No description provided for @mediaSourceAccount.
   ///
   /// In en, this message translates to:
@@ -2917,6 +2923,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Root directory'**
   String get rootDirectory;
+
+  /// No description provided for @mediaLibraryRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Media library root'**
+  String get mediaLibraryRoot;
 
   /// No description provided for @userId.
   ///
@@ -4262,12 +4274,6 @@ abstract class AppLocalizations {
   /// **'Dynamic playlist'**
   String get dynamicPlaylist;
 
-  /// No description provided for @dynamicDirectory.
-  ///
-  /// In en, this message translates to:
-  /// **'Dynamic directory'**
-  String get dynamicDirectory;
-
   /// No description provided for @dynamicMedia.
   ///
   /// In en, this message translates to:
@@ -4358,11 +4364,11 @@ abstract class AppLocalizations {
   /// **'Delete {count, plural, =1{the selected media entry} other{the {count} selected media entries}}?'**
   String confirmDeleteMediaEntries(int count);
 
-  /// No description provided for @dynamicDirectoryCannotDelete.
+  /// No description provided for @dynamicPlaylistCannotDelete.
   ///
   /// In en, this message translates to:
-  /// **'Dynamic directory contents cannot be deleted from the room'**
-  String get dynamicDirectoryCannotDelete;
+  /// **'Dynamic playlist contents cannot be deleted from the room'**
+  String get dynamicPlaylistCannotDelete;
 
   /// No description provided for @deleted.
   ///
@@ -6485,7 +6491,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmClearMediaLibrary.
   ///
   /// In en, this message translates to:
-  /// **'Clear media and playlists from the root directory?'**
+  /// **'Clear media and playlists from the media library root?'**
   String get confirmClearMediaLibrary;
 
   /// No description provided for @confirmClearPlaylist.
@@ -7028,11 +7034,11 @@ abstract class AppLocalizations {
   /// **'Media library'**
   String get mediaLibrary;
 
-  /// No description provided for @clearCurrentDirectory.
+  /// No description provided for @clearCurrentLevel.
   ///
   /// In en, this message translates to:
-  /// **'Clear current directory'**
-  String get clearCurrentDirectory;
+  /// **'Clear current level'**
+  String get clearCurrentLevel;
 
   /// No description provided for @refreshDynamicList.
   ///
@@ -7040,11 +7046,11 @@ abstract class AppLocalizations {
   /// **'Refresh dynamic list'**
   String get refreshDynamicList;
 
-  /// No description provided for @searchMediaOrDirectory.
+  /// No description provided for @searchMediaOrPlaylist.
   ///
   /// In en, this message translates to:
-  /// **'Search media or directory'**
-  String get searchMediaOrDirectory;
+  /// **'Search media or playlist'**
+  String get searchMediaOrPlaylist;
 
   /// No description provided for @availability.
   ///
@@ -7082,11 +7088,11 @@ abstract class AppLocalizations {
   /// **'Added at'**
   String get addedAt;
 
-  /// No description provided for @noMediaEntriesInDirectory.
+  /// No description provided for @noMediaEntriesAtCurrentLevel.
   ///
   /// In en, this message translates to:
-  /// **'No media entries in this directory'**
-  String get noMediaEntriesInDirectory;
+  /// **'No media entries at this level'**
+  String get noMediaEntriesAtCurrentLevel;
 
   /// No description provided for @realtimeDiagnostics.
   ///
@@ -7172,11 +7178,11 @@ abstract class AppLocalizations {
   /// **'Waiting for media snapshot'**
   String get waitingForMediaSnapshot;
 
-  /// No description provided for @folderMediaSummary.
+  /// No description provided for @playlistMediaSummary.
   ///
   /// In en, this message translates to:
-  /// **'{folders, plural, =1{1 folder} other{{folders} folders}} / {media, plural, =1{1 media item} other{{media} media items}}'**
-  String folderMediaSummary(int folders, int media);
+  /// **'{playlists, plural, =1{1 playlist} other{{playlists} playlists}} / {media, plural, =1{1 media item} other{{media} media items}}'**
+  String playlistMediaSummary(int playlists, int media);
 
   /// No description provided for @chatEvents.
   ///
@@ -7226,11 +7232,11 @@ abstract class AppLocalizations {
   /// **'Room'**
   String get room;
 
-  /// No description provided for @currentDirectory.
+  /// No description provided for @currentMediaLocation.
   ///
   /// In en, this message translates to:
-  /// **'Current directory'**
-  String get currentDirectory;
+  /// **'Current media location'**
+  String get currentMediaLocation;
 
   /// No description provided for @watchStatus.
   ///

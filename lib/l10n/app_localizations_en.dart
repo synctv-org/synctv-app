@@ -1429,6 +1429,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDirectory => 'Parent directory';
 
   @override
+  String get parentPlaylist => 'Parent playlist';
+
+  @override
   String get mediaSourceAccount => 'Media source account';
 
   @override
@@ -1688,6 +1691,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rootDirectory => 'Root directory';
+
+  @override
+  String get mediaLibraryRoot => 'Media library root';
 
   @override
   String get userId => 'User ID';
@@ -2497,9 +2503,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dynamicPlaylist => 'Dynamic playlist';
 
   @override
-  String get dynamicDirectory => 'Dynamic directory';
-
-  @override
   String get dynamicMedia => 'Dynamic media';
 
   @override
@@ -2567,8 +2570,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get dynamicDirectoryCannotDelete =>
-      'Dynamic directory contents cannot be deleted from the room';
+  String get dynamicPlaylistCannotDelete =>
+      'Dynamic playlist contents cannot be deleted from the room';
 
   @override
   String get deleted => 'Deleted';
@@ -3868,7 +3871,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmClearMediaLibrary =>
-      'Clear media and playlists from the root directory?';
+      'Clear media and playlists from the media library root?';
 
   @override
   String get confirmClearPlaylist =>
@@ -4188,13 +4191,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaLibrary => 'Media library';
 
   @override
-  String get clearCurrentDirectory => 'Clear current directory';
+  String get clearCurrentLevel => 'Clear current level';
 
   @override
   String get refreshDynamicList => 'Refresh dynamic list';
 
   @override
-  String get searchMediaOrDirectory => 'Search media or directory';
+  String get searchMediaOrPlaylist => 'Search media or playlist';
 
   @override
   String get availability => 'Availability';
@@ -4215,7 +4218,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addedAt => 'Added at';
 
   @override
-  String get noMediaEntriesInDirectory => 'No media entries in this directory';
+  String get noMediaEntriesAtCurrentLevel => 'No media entries at this level';
 
   @override
   String get realtimeDiagnostics => 'Realtime diagnostics';
@@ -4263,12 +4266,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waitingForMediaSnapshot => 'Waiting for media snapshot';
 
   @override
-  String folderMediaSummary(int folders, int media) {
+  String playlistMediaSummary(int playlists, int media) {
     String _temp0 = intl.Intl.pluralLogic(
-      folders,
+      playlists,
       locale: localeName,
-      other: '$folders folders',
-      one: '1 folder',
+      other: '$playlists playlists',
+      one: '1 playlist',
     );
     String _temp1 = intl.Intl.pluralLogic(
       media,
@@ -4312,7 +4315,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get room => 'Room';
 
   @override
-  String get currentDirectory => 'Current directory';
+  String get currentMediaLocation => 'Current media location';
 
   @override
   String get watchStatus => 'Watch status';

@@ -513,6 +513,43 @@ final $typed_data.Uint8List playbackAudioCapabilityDescriptor = $convert.base64D
     'TEFZQkFDS19BVURJT19DQVBBQklMSVRZX1NVUlJPVU5EEAISLworUExBWUJBQ0tfQVVESU9fQ0'
     'FQQUJJTElUWV9MT1NTTEVTU19TVVJST1VORBAD');
 
+@$core.Deprecated('Use bilibiliPlaybackKindDescriptor instead')
+const BilibiliPlaybackKind$json = {
+  '1': 'BilibiliPlaybackKind',
+  '2': [
+    {'1': 'BILIBILI_PLAYBACK_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'BILIBILI_PLAYBACK_KIND_VIDEO', '2': 1},
+    {'1': 'BILIBILI_PLAYBACK_KIND_PGC', '2': 2},
+    {'1': 'BILIBILI_PLAYBACK_KIND_LIVE', '2': 3},
+  ],
+};
+
+/// Descriptor for `BilibiliPlaybackKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List bilibiliPlaybackKindDescriptor = $convert.base64Decode(
+    'ChRCaWxpYmlsaVBsYXliYWNrS2luZBImCiJCSUxJQklMSV9QTEFZQkFDS19LSU5EX1VOU1BFQ0'
+    'lGSUVEEAASIAocQklMSUJJTElfUExBWUJBQ0tfS0lORF9WSURFTxABEh4KGkJJTElCSUxJX1BM'
+    'QVlCQUNLX0tJTkRfUEdDEAISHwobQklMSUJJTElfUExBWUJBQ0tfS0lORF9MSVZFEAM=');
+
+@$core.Deprecated('Use embyPlaybackKindDescriptor instead')
+const EmbyPlaybackKind$json = {
+  '1': 'EmbyPlaybackKind',
+  '2': [
+    {'1': 'EMBY_PLAYBACK_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'EMBY_PLAYBACK_KIND_MOVIE', '2': 1},
+    {'1': 'EMBY_PLAYBACK_KIND_EPISODE', '2': 2},
+    {'1': 'EMBY_PLAYBACK_KIND_VIDEO', '2': 3},
+    {'1': 'EMBY_PLAYBACK_KIND_AUDIO', '2': 4},
+    {'1': 'EMBY_PLAYBACK_KIND_MUSIC_ALBUM', '2': 5},
+  ],
+};
+
+/// Descriptor for `EmbyPlaybackKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List embyPlaybackKindDescriptor = $convert.base64Decode(
+    'ChBFbWJ5UGxheWJhY2tLaW5kEiIKHkVNQllfUExBWUJBQ0tfS0lORF9VTlNQRUNJRklFRBAAEh'
+    'wKGEVNQllfUExBWUJBQ0tfS0lORF9NT1ZJRRABEh4KGkVNQllfUExBWUJBQ0tfS0lORF9FUElT'
+    'T0RFEAISHAoYRU1CWV9QTEFZQkFDS19LSU5EX1ZJREVPEAMSHAoYRU1CWV9QTEFZQkFDS19LSU'
+    '5EX0FVRElPEAQSIgoeRU1CWV9QTEFZQkFDS19LSU5EX01VU0lDX0FMQlVNEAU=');
+
 @$core.Deprecated('Use liveStreamAvailabilityDescriptor instead')
 const LiveStreamAvailability$json = {
   '1': 'LiveStreamAvailability',
@@ -528,6 +565,38 @@ final $typed_data.Uint8List liveStreamAvailabilityDescriptor = $convert.base64De
     'ChZMaXZlU3RyZWFtQXZhaWxhYmlsaXR5EigKJExJVkVfU1RSRUFNX0FWQUlMQUJJTElUWV9VTl'
     'NQRUNJRklFRBAAEiQKIExJVkVfU1RSRUFNX0FWQUlMQUJJTElUWV9PRkZMSU5FEAESIQodTElW'
     'RV9TVFJFQU1fQVZBSUxBQklMSVRZX0xJVkUQAg==');
+
+@$core.Deprecated('Use douyinPlaybackKindDescriptor instead')
+const DouyinPlaybackKind$json = {
+  '1': 'DouyinPlaybackKind',
+  '2': [
+    {'1': 'DOUYIN_PLAYBACK_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'DOUYIN_PLAYBACK_KIND_VIDEO', '2': 1},
+    {'1': 'DOUYIN_PLAYBACK_KIND_LIVE', '2': 2},
+  ],
+};
+
+/// Descriptor for `DouyinPlaybackKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List douyinPlaybackKindDescriptor = $convert.base64Decode(
+    'ChJEb3V5aW5QbGF5YmFja0tpbmQSJAogRE9VWUlOX1BMQVlCQUNLX0tJTkRfVU5TUEVDSUZJRU'
+    'QQABIeChpET1VZSU5fUExBWUJBQ0tfS0lORF9WSURFTxABEh0KGURPVVlJTl9QTEFZQkFDS19L'
+    'SU5EX0xJVkUQAg==');
+
+@$core.Deprecated('Use tikTokPlaybackKindDescriptor instead')
+const TikTokPlaybackKind$json = {
+  '1': 'TikTokPlaybackKind',
+  '2': [
+    {'1': 'TIK_TOK_PLAYBACK_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'TIK_TOK_PLAYBACK_KIND_VIDEO', '2': 1},
+    {'1': 'TIK_TOK_PLAYBACK_KIND_LIVE', '2': 2},
+  ],
+};
+
+/// Descriptor for `TikTokPlaybackKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List tikTokPlaybackKindDescriptor = $convert.base64Decode(
+    'ChJUaWtUb2tQbGF5YmFja0tpbmQSJQohVElLX1RPS19QTEFZQkFDS19LSU5EX1VOU1BFQ0lGSU'
+    'VEEAASHwobVElLX1RPS19QTEFZQkFDS19LSU5EX1ZJREVPEAESHgoaVElLX1RPS19QTEFZQkFD'
+    'S19LSU5EX0xJVkUQAg==');
 
 @$core.Deprecated('Use resourceDeliveryModeDescriptor instead')
 const ResourceDeliveryMode$json = {
@@ -1745,16 +1814,28 @@ const ResourceMetadata$json = {
   '1': 'ResourceMetadata',
   '2': [
     {'1': 'source', '3': 1, '4': 1, '5': 9, '9': 0, '10': 'source', '17': true},
+    {
+      '1': 'provider',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.PlaybackMetadata',
+      '9': 1,
+      '10': 'provider',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_source'},
+    {'1': '_provider'},
   ],
 };
 
 /// Descriptor for `ResourceMetadata`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List resourceMetadataDescriptor = $convert.base64Decode(
-    'ChBSZXNvdXJjZU1ldGFkYXRhEhsKBnNvdXJjZRgBIAEoCUgAUgZzb3VyY2WIAQFCCQoHX3NvdX'
-    'JjZQ==');
+    'ChBSZXNvdXJjZU1ldGFkYXRhEhsKBnNvdXJjZRgBIAEoCUgAUgZzb3VyY2WIAQESQAoIcHJvdm'
+    'lkZXIYAiABKAsyHy5zeW5jdHYuY2xpZW50LlBsYXliYWNrTWV0YWRhdGFIAVIIcHJvdmlkZXKI'
+    'AQFCCQoHX3NvdXJjZUILCglfcHJvdmlkZXI=');
 
 @$core.Deprecated('Use chatPresentationMetadataDescriptor instead')
 const ChatPresentationMetadata$json = {
@@ -2351,6 +2432,14 @@ const Playlist$json = {
       '10': 'cover'
     },
     {'1': 'creator_id', '3': 17, '4': 1, '5': 9, '10': 'creatorId'},
+    {
+      '1': 'metadata',
+      '3': 18,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ResourceMetadata',
+      '10': 'metadata'
+    },
   ],
 };
 
@@ -2368,7 +2457,8 @@ final $typed_data.Uint8List playlistDescriptor = $convert.base64Decode(
     'VyY2VQcm92aWRlchI0ChZwcm92aWRlcl9pbnN0YW5jZV9uYW1lGA4gASgJUhRwcm92aWRlcklu'
     'c3RhbmNlTmFtZRIgCgtkZXNjcmlwdGlvbhgPIAEoCVILZGVzY3JpcHRpb24SMgoFY292ZXIYEC'
     'ABKAsyHC5zeW5jdHYuY2xpZW50LlJlc291cmNlQ292ZXJSBWNvdmVyEh0KCmNyZWF0b3JfaWQY'
-    'ESABKAlSCWNyZWF0b3JJZA==');
+    'ESABKAlSCWNyZWF0b3JJZBI7CghtZXRhZGF0YRgSIAEoCzIfLnN5bmN0di5jbGllbnQuUmVzb3'
+    'VyY2VNZXRhZGF0YVIIbWV0YWRhdGE=');
 
 @$core.Deprecated('Use resourceCoverDescriptor instead')
 const ResourceCover$json = {
@@ -5841,11 +5931,11 @@ const GetPlaylistResponse$json = {
       '10': 'playlist'
     },
     {
-      '1': 'child_folder_count',
+      '1': 'child_playlist_count',
       '3': 2,
       '4': 1,
       '5': 5,
-      '10': 'childFolderCount'
+      '10': 'childPlaylistCount'
     },
     {'1': 'media_count', '3': 3, '4': 1, '5': 5, '10': 'mediaCount'},
   ],
@@ -5854,8 +5944,8 @@ const GetPlaylistResponse$json = {
 /// Descriptor for `GetPlaylistResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getPlaylistResponseDescriptor = $convert.base64Decode(
     'ChNHZXRQbGF5bGlzdFJlc3BvbnNlEjMKCHBsYXlsaXN0GAEgASgLMhcuc3luY3R2LmNsaWVudC'
-    '5QbGF5bGlzdFIIcGxheWxpc3QSLAoSY2hpbGRfZm9sZGVyX2NvdW50GAIgASgFUhBjaGlsZEZv'
-    'bGRlckNvdW50Eh8KC21lZGlhX2NvdW50GAMgASgFUgptZWRpYUNvdW50');
+    '5QbGF5bGlzdFIIcGxheWxpc3QSMAoUY2hpbGRfcGxheWxpc3RfY291bnQYAiABKAVSEmNoaWxk'
+    'UGxheWxpc3RDb3VudBIfCgttZWRpYV9jb3VudBgDIAEoBVIKbWVkaWFDb3VudA==');
 
 @$core.Deprecated('Use listPlaylistsRequestDescriptor instead')
 const ListPlaylistsRequest$json = {
@@ -6583,7 +6673,7 @@ const ListPlaylistItemsResponse$json = {
       '10': 'media'
     },
     {'1': 'total', '3': 3, '4': 1, '5': 4, '9': 1, '10': 'total', '17': true},
-    {'1': 'folder_count', '3': 4, '4': 1, '5': 4, '10': 'folderCount'},
+    {'1': 'playlist_count', '3': 4, '4': 1, '5': 4, '10': 'playlistCount'},
     {'1': 'file_count', '3': 5, '4': 1, '5': 4, '10': 'fileCount'},
     {
       '1': 'dynamic_items',
@@ -6631,14 +6721,14 @@ const ListPlaylistItemsResponse$json = {
 final $typed_data.Uint8List listPlaylistItemsResponseDescriptor = $convert.base64Decode(
     'ChlMaXN0UGxheWxpc3RJdGVtc1Jlc3BvbnNlEjUKCXBsYXlsaXN0cxgBIAMoCzIXLnN5bmN0di'
     '5jbGllbnQuUGxheWxpc3RSCXBsYXlsaXN0cxIqCgVtZWRpYRgCIAMoCzIULnN5bmN0di5jbGll'
-    'bnQuTWVkaWFSBW1lZGlhEhkKBXRvdGFsGAMgASgESAFSBXRvdGFsiAEBEiEKDGZvbGRlcl9jb3'
-    'VudBgEIAEoBFILZm9sZGVyQ291bnQSHQoKZmlsZV9jb3VudBgFIAEoBFIJZmlsZUNvdW50EkAK'
-    'DWR5bmFtaWNfaXRlbXMYBiADKAsyGy5zeW5jdHYuY2xpZW50LlBsYXlsaXN0SXRlbVIMZHluYW'
-    '1pY0l0ZW1zEkgKDGN1cnJlbnRfcGF0aBgHIAMoCzIlLnN5bmN0di5jbGllbnQuUGxheWxpc3RC'
-    'cm93c2VQYXRoTm9kZVILY3VycmVudFBhdGgSGAoHdmVyc2lvbhgIIAEoCVIHdmVyc2lvbhIzCg'
-    'RwYWdlGAkgASgLMh0uc3luY3R2LmNsaWVudC5QYWdlUGFnaW5hdGlvbkgAUgRwYWdlEjkKBmN1'
-    'cnNvchgKIAEoCzIfLnN5bmN0di5jbGllbnQuQ3Vyc29yUGFnaW5hdGlvbkgAUgZjdXJzb3JCDA'
-    'oKcGFnaW5hdGlvbkIICgZfdG90YWw=');
+    'bnQuTWVkaWFSBW1lZGlhEhkKBXRvdGFsGAMgASgESAFSBXRvdGFsiAEBEiUKDnBsYXlsaXN0X2'
+    'NvdW50GAQgASgEUg1wbGF5bGlzdENvdW50Eh0KCmZpbGVfY291bnQYBSABKARSCWZpbGVDb3Vu'
+    'dBJACg1keW5hbWljX2l0ZW1zGAYgAygLMhsuc3luY3R2LmNsaWVudC5QbGF5bGlzdEl0ZW1SDG'
+    'R5bmFtaWNJdGVtcxJICgxjdXJyZW50X3BhdGgYByADKAsyJS5zeW5jdHYuY2xpZW50LlBsYXls'
+    'aXN0QnJvd3NlUGF0aE5vZGVSC2N1cnJlbnRQYXRoEhgKB3ZlcnNpb24YCCABKAlSB3ZlcnNpb2'
+    '4SMwoEcGFnZRgJIAEoCzIdLnN5bmN0di5jbGllbnQuUGFnZVBhZ2luYXRpb25IAFIEcGFnZRI5'
+    'CgZjdXJzb3IYCiABKAsyHy5zeW5jdHYuY2xpZW50LkN1cnNvclBhZ2luYXRpb25IAFIGY3Vyc2'
+    '9yQgwKCnBhZ2luYXRpb25CCAoGX3RvdGFs');
 
 @$core.Deprecated('Use playlistItemDescriptor instead')
 const PlaylistItem$json = {
@@ -6699,6 +6789,14 @@ const PlaylistItem$json = {
       '9': 0,
       '10': 'playlistSourceConfig'
     },
+    {
+      '1': 'metadata',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ResourceMetadata',
+      '10': 'metadata'
+    },
   ],
   '8': [
     {'1': 'source_config'},
@@ -6718,8 +6816,9 @@ final $typed_data.Uint8List playlistItemDescriptor = $convert.base64Decode(
     'oTbWVkaWFfc291cmNlX2NvbmZpZxgIIAEoCzInLnN5bmN0di5zb3VyY2VfY29uZmlnLk1lZGlh'
     'U291cmNlQ29uZmlnSABSEW1lZGlhU291cmNlQ29uZmlnEmIKFnBsYXlsaXN0X3NvdXJjZV9jb2'
     '5maWcYCSABKAsyKi5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5bGlzdFNvdXJjZUNvbmZpZ0gA'
-    'UhRwbGF5bGlzdFNvdXJjZUNvbmZpZ0IPCg1zb3VyY2VfY29uZmlnQgcKBV9zaXplQgwKCl90aH'
-    'VtYm5haWxCDgoMX21vZGlmaWVkX2F0');
+    'UhRwbGF5bGlzdFNvdXJjZUNvbmZpZxI7CghtZXRhZGF0YRgKIAEoCzIfLnN5bmN0di5jbGllbn'
+    'QuUmVzb3VyY2VNZXRhZGF0YVIIbWV0YWRhdGFCDwoNc291cmNlX2NvbmZpZ0IHCgVfc2l6ZUIM'
+    'CgpfdGh1bWJuYWlsQg4KDF9tb2RpZmllZF9hdA==');
 
 @$core.Deprecated('Use playlistBrowsePathNodeDescriptor instead')
 const PlaylistBrowsePathNode$json = {
@@ -7718,24 +7817,23 @@ const BilibiliPlaybackMetadata$json = {
   '1': 'BilibiliPlaybackMetadata',
   '2': [
     {
-      '1': 'content_type',
+      '1': 'kind',
       '3': 1,
       '4': 1,
-      '5': 9,
-      '9': 0,
-      '10': 'contentType',
-      '17': true
+      '5': 14,
+      '6': '.synctv.client.BilibiliPlaybackKind',
+      '10': 'kind'
     },
-    {'1': 'bvid', '3': 2, '4': 1, '5': 9, '9': 1, '10': 'bvid', '17': true},
-    {'1': 'aid', '3': 3, '4': 1, '5': 4, '9': 2, '10': 'aid', '17': true},
-    {'1': 'epid', '3': 4, '4': 1, '5': 4, '9': 3, '10': 'epid', '17': true},
-    {'1': 'cid', '3': 5, '4': 1, '5': 4, '9': 4, '10': 'cid', '17': true},
+    {'1': 'bvid', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'bvid', '17': true},
+    {'1': 'aid', '3': 3, '4': 1, '5': 4, '9': 1, '10': 'aid', '17': true},
+    {'1': 'epid', '3': 4, '4': 1, '5': 4, '9': 2, '10': 'epid', '17': true},
+    {'1': 'cid', '3': 5, '4': 1, '5': 4, '9': 3, '10': 'cid', '17': true},
     {
       '1': 'min_buffer_time',
       '3': 6,
       '4': 1,
       '5': 1,
-      '9': 5,
+      '9': 4,
       '10': 'minBufferTime',
       '17': true
     },
@@ -7744,7 +7842,7 @@ const BilibiliPlaybackMetadata$json = {
       '3': 7,
       '4': 1,
       '5': 9,
-      '9': 6,
+      '9': 5,
       '10': 'fallbackFormat',
       '17': true
     },
@@ -7753,7 +7851,7 @@ const BilibiliPlaybackMetadata$json = {
       '3': 8,
       '4': 1,
       '5': 4,
-      '9': 7,
+      '9': 6,
       '10': 'quality',
       '17': true
     },
@@ -7762,7 +7860,7 @@ const BilibiliPlaybackMetadata$json = {
       '3': 9,
       '4': 1,
       '5': 4,
-      '9': 8,
+      '9': 7,
       '10': 'roomId',
       '17': true
     },
@@ -7771,13 +7869,22 @@ const BilibiliPlaybackMetadata$json = {
       '3': 10,
       '4': 1,
       '5': 3,
-      '9': 9,
+      '9': 8,
       '10': 'liveStartedAt',
+      '17': true
+    },
+    {'1': 'is_live', '3': 11, '4': 1, '5': 8, '10': 'isLive'},
+    {
+      '1': 'is_currently_live',
+      '3': 12,
+      '4': 1,
+      '5': 8,
+      '9': 9,
+      '10': 'isCurrentlyLive',
       '17': true
     },
   ],
   '8': [
-    {'1': '_content_type'},
     {'1': '_bvid'},
     {'1': '_aid'},
     {'1': '_epid'},
@@ -7787,40 +7894,42 @@ const BilibiliPlaybackMetadata$json = {
     {'1': '_quality'},
     {'1': '_room_id'},
     {'1': '_live_started_at'},
+    {'1': '_is_currently_live'},
   ],
 };
 
 /// Descriptor for `BilibiliPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List bilibiliPlaybackMetadataDescriptor = $convert.base64Decode(
-    'ChhCaWxpYmlsaVBsYXliYWNrTWV0YWRhdGESJgoMY29udGVudF90eXBlGAEgASgJSABSC2Nvbn'
-    'RlbnRUeXBliAEBEhcKBGJ2aWQYAiABKAlIAVIEYnZpZIgBARIVCgNhaWQYAyABKARIAlIDYWlk'
-    'iAEBEhcKBGVwaWQYBCABKARIA1IEZXBpZIgBARIVCgNjaWQYBSABKARIBFIDY2lkiAEBEisKD2'
-    '1pbl9idWZmZXJfdGltZRgGIAEoAUgFUg1taW5CdWZmZXJUaW1liAEBEiwKD2ZhbGxiYWNrX2Zv'
-    'cm1hdBgHIAEoCUgGUg5mYWxsYmFja0Zvcm1hdIgBARIdCgdxdWFsaXR5GAggASgESAdSB3F1YW'
-    'xpdHmIAQESHAoHcm9vbV9pZBgJIAEoBEgIUgZyb29tSWSIAQESKwoPbGl2ZV9zdGFydGVkX2F0'
-    'GAogASgDSAlSDWxpdmVTdGFydGVkQXSIAQFCDwoNX2NvbnRlbnRfdHlwZUIHCgVfYnZpZEIGCg'
-    'RfYWlkQgcKBV9lcGlkQgYKBF9jaWRCEgoQX21pbl9idWZmZXJfdGltZUISChBfZmFsbGJhY2tf'
-    'Zm9ybWF0QgoKCF9xdWFsaXR5QgoKCF9yb29tX2lkQhIKEF9saXZlX3N0YXJ0ZWRfYXQ=');
+    'ChhCaWxpYmlsaVBsYXliYWNrTWV0YWRhdGESNwoEa2luZBgBIAEoDjIjLnN5bmN0di5jbGllbn'
+    'QuQmlsaWJpbGlQbGF5YmFja0tpbmRSBGtpbmQSFwoEYnZpZBgCIAEoCUgAUgRidmlkiAEBEhUK'
+    'A2FpZBgDIAEoBEgBUgNhaWSIAQESFwoEZXBpZBgEIAEoBEgCUgRlcGlkiAEBEhUKA2NpZBgFIA'
+    'EoBEgDUgNjaWSIAQESKwoPbWluX2J1ZmZlcl90aW1lGAYgASgBSARSDW1pbkJ1ZmZlclRpbWWI'
+    'AQESLAoPZmFsbGJhY2tfZm9ybWF0GAcgASgJSAVSDmZhbGxiYWNrRm9ybWF0iAEBEh0KB3F1YW'
+    'xpdHkYCCABKARIBlIHcXVhbGl0eYgBARIcCgdyb29tX2lkGAkgASgESAdSBnJvb21JZIgBARIr'
+    'Cg9saXZlX3N0YXJ0ZWRfYXQYCiABKANICFINbGl2ZVN0YXJ0ZWRBdIgBARIXCgdpc19saXZlGA'
+    'sgASgIUgZpc0xpdmUSLwoRaXNfY3VycmVudGx5X2xpdmUYDCABKAhICVIPaXNDdXJyZW50bHlM'
+    'aXZliAEBQgcKBV9idmlkQgYKBF9haWRCBwoFX2VwaWRCBgoEX2NpZEISChBfbWluX2J1ZmZlcl'
+    '90aW1lQhIKEF9mYWxsYmFja19mb3JtYXRCCgoIX3F1YWxpdHlCCgoIX3Jvb21faWRCEgoQX2xp'
+    'dmVfc3RhcnRlZF9hdEIUChJfaXNfY3VycmVudGx5X2xpdmU=');
 
 @$core.Deprecated('Use embyPlaybackMetadataDescriptor instead')
 const EmbyPlaybackMetadata$json = {
   '1': 'EmbyPlaybackMetadata',
   '2': [
     {
-      '1': 'item_type',
+      '1': 'kind',
       '3': 1,
       '4': 1,
-      '5': 9,
-      '9': 0,
-      '10': 'itemType',
-      '17': true
+      '5': 14,
+      '6': '.synctv.client.EmbyPlaybackKind',
+      '10': 'kind'
     },
     {
       '1': 'series_name',
       '3': 2,
       '4': 1,
       '5': 9,
-      '9': 1,
+      '9': 0,
       '10': 'seriesName',
       '17': true
     },
@@ -7829,7 +7938,7 @@ const EmbyPlaybackMetadata$json = {
       '3': 3,
       '4': 1,
       '5': 9,
-      '9': 2,
+      '9': 1,
       '10': 'seasonName',
       '17': true
     },
@@ -7838,13 +7947,12 @@ const EmbyPlaybackMetadata$json = {
       '3': 4,
       '4': 1,
       '5': 9,
-      '9': 3,
+      '9': 2,
       '10': 'playSessionId',
       '17': true
     },
   ],
   '8': [
-    {'1': '_item_type'},
     {'1': '_series_name'},
     {'1': '_season_name'},
     {'1': '_play_session_id'},
@@ -7853,11 +7961,11 @@ const EmbyPlaybackMetadata$json = {
 
 /// Descriptor for `EmbyPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List embyPlaybackMetadataDescriptor = $convert.base64Decode(
-    'ChRFbWJ5UGxheWJhY2tNZXRhZGF0YRIgCglpdGVtX3R5cGUYASABKAlIAFIIaXRlbVR5cGWIAQ'
-    'ESJAoLc2VyaWVzX25hbWUYAiABKAlIAVIKc2VyaWVzTmFtZYgBARIkCgtzZWFzb25fbmFtZRgD'
-    'IAEoCUgCUgpzZWFzb25OYW1liAEBEisKD3BsYXlfc2Vzc2lvbl9pZBgEIAEoCUgDUg1wbGF5U2'
-    'Vzc2lvbklkiAEBQgwKCl9pdGVtX3R5cGVCDgoMX3Nlcmllc19uYW1lQg4KDF9zZWFzb25fbmFt'
-    'ZUISChBfcGxheV9zZXNzaW9uX2lk');
+    'ChRFbWJ5UGxheWJhY2tNZXRhZGF0YRIzCgRraW5kGAEgASgOMh8uc3luY3R2LmNsaWVudC5FbW'
+    'J5UGxheWJhY2tLaW5kUgRraW5kEiQKC3Nlcmllc19uYW1lGAIgASgJSABSCnNlcmllc05hbWWI'
+    'AQESJAoLc2Vhc29uX25hbWUYAyABKAlIAVIKc2Vhc29uTmFtZYgBARIrCg9wbGF5X3Nlc3Npb2'
+    '5faWQYBCABKAlIAlINcGxheVNlc3Npb25JZIgBAUIOCgxfc2VyaWVzX25hbWVCDgoMX3NlYXNv'
+    'bl9uYW1lQhIKEF9wbGF5X3Nlc3Npb25faWQ=');
 
 @$core.Deprecated('Use directUrlPlaybackMetadataDescriptor instead')
 const DirectUrlPlaybackMetadata$json = {
@@ -8013,6 +8121,16 @@ const TwitchPlaybackMetadata$json = {
       '10': 'storyboardUrl',
       '17': true
     },
+    {'1': 'is_live', '3': 11, '4': 1, '5': 8, '10': 'isLive'},
+    {
+      '1': 'is_currently_live',
+      '3': 12,
+      '4': 1,
+      '5': 8,
+      '9': 6,
+      '10': 'isCurrentlyLive',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_category'},
@@ -8021,6 +8139,7 @@ const TwitchPlaybackMetadata$json = {
     {'1': '_view_count'},
     {'1': '_published_at'},
     {'1': '_storyboard_url'},
+    {'1': '_is_currently_live'},
   ],
 };
 
@@ -8033,9 +8152,10 @@ final $typed_data.Uint8List twitchPlaybackMetadataDescriptor = $convert.base64De
     'aWV3X2NvdW50GAcgASgESANSCXZpZXdDb3VudIgBARImCgxwdWJsaXNoZWRfYXQYCCABKAlIBF'
     'ILcHVibGlzaGVkQXSIAQESQAoIY2hhcHRlcnMYCSADKAsyJC5zeW5jdHYuY2xpZW50LlR3aXRj'
     'aENoYXB0ZXJNZXRhZGF0YVIIY2hhcHRlcnMSKgoOc3Rvcnlib2FyZF91cmwYCiABKAlIBVINc3'
-    'Rvcnlib2FyZFVybIgBAUILCglfY2F0ZWdvcnlCEAoOX3RodW1ibmFpbF91cmxCDgoMX2Rlc2Ny'
-    'aXB0aW9uQg0KC192aWV3X2NvdW50Qg8KDV9wdWJsaXNoZWRfYXRCEQoPX3N0b3J5Ym9hcmRfdX'
-    'Js');
+    'Rvcnlib2FyZFVybIgBARIXCgdpc19saXZlGAsgASgIUgZpc0xpdmUSLwoRaXNfY3VycmVudGx5'
+    'X2xpdmUYDCABKAhIBlIPaXNDdXJyZW50bHlMaXZliAEBQgsKCV9jYXRlZ29yeUIQCg5fdGh1bW'
+    'JuYWlsX3VybEIOCgxfZGVzY3JpcHRpb25CDQoLX3ZpZXdfY291bnRCDwoNX3B1Ymxpc2hlZF9h'
+    'dEIRCg9fc3Rvcnlib2FyZF91cmxCFAoSX2lzX2N1cnJlbnRseV9saXZl');
 
 @$core.Deprecated('Use twitchChapterMetadataDescriptor instead')
 const TwitchChapterMetadata$json = {
@@ -8146,6 +8266,15 @@ const YoutubePlaybackMetadata$json = {
       '5': 9,
       '10': 'translationLanguages'
     },
+    {
+      '1': 'is_currently_live',
+      '3': 16,
+      '4': 1,
+      '5': 8,
+      '9': 7,
+      '10': 'isCurrentlyLive',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_view_count'},
@@ -8155,6 +8284,7 @@ const YoutubePlaybackMetadata$json = {
     {'1': '_live_start'},
     {'1': '_live_end'},
     {'1': '_storyboard_spec'},
+    {'1': '_is_currently_live'},
   ],
 };
 
@@ -8170,16 +8300,24 @@ final $typed_data.Uint8List youtubePlaybackMetadataDescriptor = $convert.base64D
     'SIAQESLAoPc3Rvcnlib2FyZF9zcGVjGAwgASgJSAZSDnN0b3J5Ym9hcmRTcGVjiAEBEjYKF2F1'
     'dG9tYXRpY19jYXB0aW9uX2NvdW50GA0gASgNUhVhdXRvbWF0aWNDYXB0aW9uQ291bnQSMAoUbW'
     'FudWFsX2NhcHRpb25fY291bnQYDiABKA1SEm1hbnVhbENhcHRpb25Db3VudBIzChV0cmFuc2xh'
-    'dGlvbl9sYW5ndWFnZXMYDyADKAlSFHRyYW5zbGF0aW9uTGFuZ3VhZ2VzQg0KC192aWV3X2NvdW'
-    '50Qg8KDV9wdWJsaXNoX2RhdGVCDgoMX3VwbG9hZF9kYXRlQgsKCV9jYXRlZ29yeUINCgtfbGl2'
-    'ZV9zdGFydEILCglfbGl2ZV9lbmRCEgoQX3N0b3J5Ym9hcmRfc3BlYw==');
+    'dGlvbl9sYW5ndWFnZXMYDyADKAlSFHRyYW5zbGF0aW9uTGFuZ3VhZ2VzEi8KEWlzX2N1cnJlbn'
+    'RseV9saXZlGBAgASgISAdSD2lzQ3VycmVudGx5TGl2ZYgBAUINCgtfdmlld19jb3VudEIPCg1f'
+    'cHVibGlzaF9kYXRlQg4KDF91cGxvYWRfZGF0ZUILCglfY2F0ZWdvcnlCDQoLX2xpdmVfc3Rhcn'
+    'RCCwoJX2xpdmVfZW5kQhIKEF9zdG9yeWJvYXJkX3NwZWNCFAoSX2lzX2N1cnJlbnRseV9saXZl');
 
 @$core.Deprecated('Use douyinPlaybackMetadataDescriptor instead')
 const DouyinPlaybackMetadata$json = {
   '1': 'DouyinPlaybackMetadata',
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
-    {'1': 'kind', '3': 2, '4': 1, '5': 9, '10': 'kind'},
+    {
+      '1': 'kind',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.DouyinPlaybackKind',
+      '10': 'kind'
+    },
     {'1': 'author_id', '3': 3, '4': 1, '5': 9, '10': 'authorId'},
     {'1': 'author_sec_uid', '3': 4, '4': 1, '5': 9, '10': 'authorSecUid'},
     {'1': 'author_name', '3': 5, '4': 1, '5': 9, '10': 'authorName'},
@@ -8266,6 +8404,15 @@ const DouyinPlaybackMetadata$json = {
       '10': 'roomId',
       '17': true
     },
+    {
+      '1': 'is_currently_live',
+      '3': 17,
+      '4': 1,
+      '5': 8,
+      '9': 9,
+      '10': 'isCurrentlyLive',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_view_count'},
@@ -8277,31 +8424,41 @@ const DouyinPlaybackMetadata$json = {
     {'1': '_music_title'},
     {'1': '_music_author'},
     {'1': '_room_id'},
+    {'1': '_is_currently_live'},
   ],
 };
 
 /// Descriptor for `DouyinPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List douyinPlaybackMetadataDescriptor = $convert.base64Decode(
-    'ChZEb3V5aW5QbGF5YmFja01ldGFkYXRhEg4KAmlkGAEgASgJUgJpZBISCgRraW5kGAIgASgJUg'
-    'RraW5kEhsKCWF1dGhvcl9pZBgDIAEoCVIIYXV0aG9ySWQSJAoOYXV0aG9yX3NlY191aWQYBCAB'
-    'KAlSDGF1dGhvclNlY1VpZBIfCgthdXRob3JfbmFtZRgFIAEoCVIKYXV0aG9yTmFtZRIgCgtkZX'
-    'NjcmlwdGlvbhgGIAEoCVILZGVzY3JpcHRpb24SIgoKdmlld19jb3VudBgHIAEoBEgAUgl2aWV3'
-    'Q291bnSIAQESIgoKbGlrZV9jb3VudBgIIAEoBEgBUglsaWtlQ291bnSIAQESKAoNY29tbWVudF'
-    '9jb3VudBgJIAEoBEgCUgxjb21tZW50Q291bnSIAQESJAoLc2hhcmVfY291bnQYCiABKARIA1IK'
-    'c2hhcmVDb3VudIgBARIoCg1jb2xsZWN0X2NvdW50GAsgASgESARSDGNvbGxlY3RDb3VudIgBAR'
-    'IiCgpjcmVhdGVkX2F0GAwgASgDSAVSCWNyZWF0ZWRBdIgBARIkCgttdXNpY190aXRsZRgNIAEo'
-    'CUgGUgptdXNpY1RpdGxliAEBEiYKDG11c2ljX2F1dGhvchgOIAEoCUgHUgttdXNpY0F1dGhvco'
-    'gBARIXCgdpc19saXZlGA8gASgIUgZpc0xpdmUSHAoHcm9vbV9pZBgQIAEoCUgIUgZyb29tSWSI'
-    'AQFCDQoLX3ZpZXdfY291bnRCDQoLX2xpa2VfY291bnRCEAoOX2NvbW1lbnRfY291bnRCDgoMX3'
-    'NoYXJlX2NvdW50QhAKDl9jb2xsZWN0X2NvdW50Qg0KC19jcmVhdGVkX2F0Qg4KDF9tdXNpY190'
-    'aXRsZUIPCg1fbXVzaWNfYXV0aG9yQgoKCF9yb29tX2lk');
+    'ChZEb3V5aW5QbGF5YmFja01ldGFkYXRhEg4KAmlkGAEgASgJUgJpZBI1CgRraW5kGAIgASgOMi'
+    'Euc3luY3R2LmNsaWVudC5Eb3V5aW5QbGF5YmFja0tpbmRSBGtpbmQSGwoJYXV0aG9yX2lkGAMg'
+    'ASgJUghhdXRob3JJZBIkCg5hdXRob3Jfc2VjX3VpZBgEIAEoCVIMYXV0aG9yU2VjVWlkEh8KC2'
+    'F1dGhvcl9uYW1lGAUgASgJUgphdXRob3JOYW1lEiAKC2Rlc2NyaXB0aW9uGAYgASgJUgtkZXNj'
+    'cmlwdGlvbhIiCgp2aWV3X2NvdW50GAcgASgESABSCXZpZXdDb3VudIgBARIiCgpsaWtlX2NvdW'
+    '50GAggASgESAFSCWxpa2VDb3VudIgBARIoCg1jb21tZW50X2NvdW50GAkgASgESAJSDGNvbW1l'
+    'bnRDb3VudIgBARIkCgtzaGFyZV9jb3VudBgKIAEoBEgDUgpzaGFyZUNvdW50iAEBEigKDWNvbG'
+    'xlY3RfY291bnQYCyABKARIBFIMY29sbGVjdENvdW50iAEBEiIKCmNyZWF0ZWRfYXQYDCABKANI'
+    'BVIJY3JlYXRlZEF0iAEBEiQKC211c2ljX3RpdGxlGA0gASgJSAZSCm11c2ljVGl0bGWIAQESJg'
+    'oMbXVzaWNfYXV0aG9yGA4gASgJSAdSC211c2ljQXV0aG9yiAEBEhcKB2lzX2xpdmUYDyABKAhS'
+    'BmlzTGl2ZRIcCgdyb29tX2lkGBAgASgJSAhSBnJvb21JZIgBARIvChFpc19jdXJyZW50bHlfbG'
+    'l2ZRgRIAEoCEgJUg9pc0N1cnJlbnRseUxpdmWIAQFCDQoLX3ZpZXdfY291bnRCDQoLX2xpa2Vf'
+    'Y291bnRCEAoOX2NvbW1lbnRfY291bnRCDgoMX3NoYXJlX2NvdW50QhAKDl9jb2xsZWN0X2NvdW'
+    '50Qg0KC19jcmVhdGVkX2F0Qg4KDF9tdXNpY190aXRsZUIPCg1fbXVzaWNfYXV0aG9yQgoKCF9y'
+    'b29tX2lkQhQKEl9pc19jdXJyZW50bHlfbGl2ZQ==');
 
 @$core.Deprecated('Use tikTokPlaybackMetadataDescriptor instead')
 const TikTokPlaybackMetadata$json = {
   '1': 'TikTokPlaybackMetadata',
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
-    {'1': 'kind', '3': 2, '4': 1, '5': 9, '10': 'kind'},
+    {
+      '1': 'kind',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.TikTokPlaybackKind',
+      '10': 'kind'
+    },
     {'1': 'author_id', '3': 3, '4': 1, '5': 9, '10': 'authorId'},
     {'1': 'author_sec_uid', '3': 4, '4': 1, '5': 9, '10': 'authorSecUid'},
     {'1': 'author_unique_id', '3': 5, '4': 1, '5': 9, '10': 'authorUniqueId'},
@@ -8399,6 +8556,15 @@ const TikTokPlaybackMetadata$json = {
       '10': 'roomId',
       '17': true
     },
+    {
+      '1': 'is_currently_live',
+      '3': 20,
+      '4': 1,
+      '5': 8,
+      '9': 10,
+      '10': 'isCurrentlyLive',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_view_count'},
@@ -8411,27 +8577,30 @@ const TikTokPlaybackMetadata$json = {
     {'1': '_music_title'},
     {'1': '_music_author'},
     {'1': '_room_id'},
+    {'1': '_is_currently_live'},
   ],
 };
 
 /// Descriptor for `TikTokPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List tikTokPlaybackMetadataDescriptor = $convert.base64Decode(
-    'ChZUaWtUb2tQbGF5YmFja01ldGFkYXRhEg4KAmlkGAEgASgJUgJpZBISCgRraW5kGAIgASgJUg'
-    'RraW5kEhsKCWF1dGhvcl9pZBgDIAEoCVIIYXV0aG9ySWQSJAoOYXV0aG9yX3NlY191aWQYBCAB'
-    'KAlSDGF1dGhvclNlY1VpZBIoChBhdXRob3JfdW5pcXVlX2lkGAUgASgJUg5hdXRob3JVbmlxdW'
-    'VJZBIfCgthdXRob3JfbmFtZRgGIAEoCVIKYXV0aG9yTmFtZRIgCgtkZXNjcmlwdGlvbhgHIAEo'
-    'CVILZGVzY3JpcHRpb24SIgoKdmlld19jb3VudBgIIAEoBEgAUgl2aWV3Q291bnSIAQESIgoKbG'
-    'lrZV9jb3VudBgJIAEoBEgBUglsaWtlQ291bnSIAQESKAoNY29tbWVudF9jb3VudBgKIAEoBEgC'
-    'Ugxjb21tZW50Q291bnSIAQESJAoLc2hhcmVfY291bnQYCyABKARIA1IKc2hhcmVDb3VudIgBAR'
-    'IoCg1jb2xsZWN0X2NvdW50GAwgASgESARSDGNvbGxlY3RDb3VudIgBARIyChJjb25jdXJyZW50'
-    'X3ZpZXdlcnMYDSABKARIBVIRY29uY3VycmVudFZpZXdlcnOIAQESIgoKY3JlYXRlZF9hdBgOIA'
-    'EoA0gGUgljcmVhdGVkQXSIAQESJAoLbXVzaWNfdGl0bGUYDyABKAlIB1IKbXVzaWNUaXRsZYgB'
-    'ARImCgxtdXNpY19hdXRob3IYECABKAlICFILbXVzaWNBdXRob3KIAQESJQoOc3VidGl0bGVfY2'
-    '91bnQYESABKA1SDXN1YnRpdGxlQ291bnQSFwoHaXNfbGl2ZRgSIAEoCFIGaXNMaXZlEhwKB3Jv'
-    'b21faWQYEyABKAlICVIGcm9vbUlkiAEBQg0KC192aWV3X2NvdW50Qg0KC19saWtlX2NvdW50Qh'
-    'AKDl9jb21tZW50X2NvdW50Qg4KDF9zaGFyZV9jb3VudEIQCg5fY29sbGVjdF9jb3VudEIVChNf'
-    'Y29uY3VycmVudF92aWV3ZXJzQg0KC19jcmVhdGVkX2F0Qg4KDF9tdXNpY190aXRsZUIPCg1fbX'
-    'VzaWNfYXV0aG9yQgoKCF9yb29tX2lk');
+    'ChZUaWtUb2tQbGF5YmFja01ldGFkYXRhEg4KAmlkGAEgASgJUgJpZBI1CgRraW5kGAIgASgOMi'
+    'Euc3luY3R2LmNsaWVudC5UaWtUb2tQbGF5YmFja0tpbmRSBGtpbmQSGwoJYXV0aG9yX2lkGAMg'
+    'ASgJUghhdXRob3JJZBIkCg5hdXRob3Jfc2VjX3VpZBgEIAEoCVIMYXV0aG9yU2VjVWlkEigKEG'
+    'F1dGhvcl91bmlxdWVfaWQYBSABKAlSDmF1dGhvclVuaXF1ZUlkEh8KC2F1dGhvcl9uYW1lGAYg'
+    'ASgJUgphdXRob3JOYW1lEiAKC2Rlc2NyaXB0aW9uGAcgASgJUgtkZXNjcmlwdGlvbhIiCgp2aW'
+    'V3X2NvdW50GAggASgESABSCXZpZXdDb3VudIgBARIiCgpsaWtlX2NvdW50GAkgASgESAFSCWxp'
+    'a2VDb3VudIgBARIoCg1jb21tZW50X2NvdW50GAogASgESAJSDGNvbW1lbnRDb3VudIgBARIkCg'
+    'tzaGFyZV9jb3VudBgLIAEoBEgDUgpzaGFyZUNvdW50iAEBEigKDWNvbGxlY3RfY291bnQYDCAB'
+    'KARIBFIMY29sbGVjdENvdW50iAEBEjIKEmNvbmN1cnJlbnRfdmlld2VycxgNIAEoBEgFUhFjb2'
+    '5jdXJyZW50Vmlld2Vyc4gBARIiCgpjcmVhdGVkX2F0GA4gASgDSAZSCWNyZWF0ZWRBdIgBARIk'
+    'CgttdXNpY190aXRsZRgPIAEoCUgHUgptdXNpY1RpdGxliAEBEiYKDG11c2ljX2F1dGhvchgQIA'
+    'EoCUgIUgttdXNpY0F1dGhvcogBARIlCg5zdWJ0aXRsZV9jb3VudBgRIAEoDVINc3VidGl0bGVD'
+    'b3VudBIXCgdpc19saXZlGBIgASgIUgZpc0xpdmUSHAoHcm9vbV9pZBgTIAEoCUgJUgZyb29tSW'
+    'SIAQESLwoRaXNfY3VycmVudGx5X2xpdmUYFCABKAhIClIPaXNDdXJyZW50bHlMaXZliAEBQg0K'
+    'C192aWV3X2NvdW50Qg0KC19saWtlX2NvdW50QhAKDl9jb21tZW50X2NvdW50Qg4KDF9zaGFyZV'
+    '9jb3VudEIQCg5fY29sbGVjdF9jb3VudEIVChNfY29uY3VycmVudF92aWV3ZXJzQg0KC19jcmVh'
+    'dGVkX2F0Qg4KDF9tdXNpY190aXRsZUIPCg1fbXVzaWNfYXV0aG9yQgoKCF9yb29tX2lkQhQKEl'
+    '9pc19jdXJyZW50bHlfbGl2ZQ==');
 
 @$core.Deprecated('Use huyaPlaybackMetadataDescriptor instead')
 const HuyaPlaybackMetadata$json = {
@@ -8521,6 +8690,16 @@ const HuyaPlaybackMetadata$json = {
       '10': 'publishedAt',
       '17': true
     },
+    {'1': 'is_live', '3': 13, '4': 1, '5': 8, '10': 'isLive'},
+    {
+      '1': 'is_currently_live',
+      '3': 14,
+      '4': 1,
+      '5': 8,
+      '9': 9,
+      '10': 'isCurrentlyLive',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_author_id'},
@@ -8532,6 +8711,7 @@ const HuyaPlaybackMetadata$json = {
     {'1': '_comment_count'},
     {'1': '_like_count'},
     {'1': '_published_at'},
+    {'1': '_is_currently_live'},
   ],
 };
 
@@ -8544,10 +8724,12 @@ final $typed_data.Uint8List huyaPlaybackMetadataDescriptor = $convert.base64Deco
     'cmwYByABKAlIA1IJYXZhdGFyVXJsiAEBEiUKC2Rlc2NyaXB0aW9uGAggASgJSARSC2Rlc2NyaX'
     'B0aW9uiAEBEiIKCnZpZXdfY291bnQYCSABKARIBVIJdmlld0NvdW50iAEBEigKDWNvbW1lbnRf'
     'Y291bnQYCiABKARIBlIMY29tbWVudENvdW50iAEBEiIKCmxpa2VfY291bnQYCyABKARIB1IJbG'
-    'lrZUNvdW50iAEBEiYKDHB1Ymxpc2hlZF9hdBgMIAEoA0gIUgtwdWJsaXNoZWRBdIgBAUIMCgpf'
-    'YXV0aG9yX2lkQgsKCV9jYXRlZ29yeUIQCg5fdGh1bWJuYWlsX3VybEINCgtfYXZhdGFyX3VybE'
-    'IOCgxfZGVzY3JpcHRpb25CDQoLX3ZpZXdfY291bnRCEAoOX2NvbW1lbnRfY291bnRCDQoLX2xp'
-    'a2VfY291bnRCDwoNX3B1Ymxpc2hlZF9hdA==');
+    'lrZUNvdW50iAEBEiYKDHB1Ymxpc2hlZF9hdBgMIAEoA0gIUgtwdWJsaXNoZWRBdIgBARIXCgdp'
+    'c19saXZlGA0gASgIUgZpc0xpdmUSLwoRaXNfY3VycmVudGx5X2xpdmUYDiABKAhICVIPaXNDdX'
+    'JyZW50bHlMaXZliAEBQgwKCl9hdXRob3JfaWRCCwoJX2NhdGVnb3J5QhAKDl90aHVtYm5haWxf'
+    'dXJsQg0KC19hdmF0YXJfdXJsQg4KDF9kZXNjcmlwdGlvbkINCgtfdmlld19jb3VudEIQCg5fY2'
+    '9tbWVudF9jb3VudEINCgtfbGlrZV9jb3VudEIPCg1fcHVibGlzaGVkX2F0QhQKEl9pc19jdXJy'
+    'ZW50bHlfbGl2ZQ==');
 
 @$core.Deprecated('Use douyuPlaybackMetadataDescriptor instead')
 const DouyuPlaybackMetadata$json = {
@@ -8603,6 +8785,16 @@ const DouyuPlaybackMetadata$json = {
       '10': 'startedAt',
       '17': true
     },
+    {'1': 'is_live', '3': 11, '4': 1, '5': 8, '10': 'isLive'},
+    {
+      '1': 'is_currently_live',
+      '3': 12,
+      '4': 1,
+      '5': 8,
+      '9': 5,
+      '10': 'isCurrentlyLive',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_category'},
@@ -8610,6 +8802,7 @@ const DouyuPlaybackMetadata$json = {
     {'1': '_avatar_url'},
     {'1': '_viewer_count'},
     {'1': '_started_at'},
+    {'1': '_is_currently_live'},
   ],
 };
 
@@ -8621,8 +8814,10 @@ final $typed_data.Uint8List douyuPlaybackMetadataDescriptor = $convert.base64Dec
     'gBARIiCgphdmF0YXJfdXJsGAYgASgJSAJSCWF2YXRhclVybIgBARIbCglpc19yZXBsYXkYByAB'
     'KAhSCGlzUmVwbGF5EhUKBmlzX3ZpcBgIIAEoCFIFaXNWaXASJgoMdmlld2VyX2NvdW50GAkgAS'
     'gESANSC3ZpZXdlckNvdW50iAEBEiIKCnN0YXJ0ZWRfYXQYCiABKAlIBFIJc3RhcnRlZEF0iAEB'
-    'QgsKCV9jYXRlZ29yeUIQCg5fdGh1bWJuYWlsX3VybEINCgtfYXZhdGFyX3VybEIPCg1fdmlld2'
-    'VyX2NvdW50Qg0KC19zdGFydGVkX2F0');
+    'EhcKB2lzX2xpdmUYCyABKAhSBmlzTGl2ZRIvChFpc19jdXJyZW50bHlfbGl2ZRgMIAEoCEgFUg'
+    '9pc0N1cnJlbnRseUxpdmWIAQFCCwoJX2NhdGVnb3J5QhAKDl90aHVtYm5haWxfdXJsQg0KC19h'
+    'dmF0YXJfdXJsQg8KDV92aWV3ZXJfY291bnRCDQoLX3N0YXJ0ZWRfYXRCFAoSX2lzX2N1cnJlbn'
+    'RseV9saXZl');
 
 @$core.Deprecated('Use acFunPlaybackMetadataDescriptor instead')
 const AcFunPlaybackMetadata$json = {
@@ -8722,6 +8917,16 @@ const AcFunPlaybackMetadata$json = {
       '10': 'startedAt',
       '17': true
     },
+    {'1': 'is_live', '3': 15, '4': 1, '5': 8, '10': 'isLive'},
+    {
+      '1': 'is_currently_live',
+      '3': 16,
+      '4': 1,
+      '5': 8,
+      '9': 10,
+      '10': 'isCurrentlyLive',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_author_id'},
@@ -8734,6 +8939,7 @@ const AcFunPlaybackMetadata$json = {
     {'1': '_comment_count'},
     {'1': '_published_at'},
     {'1': '_started_at'},
+    {'1': '_is_currently_live'},
   ],
 };
 
@@ -8747,10 +8953,12 @@ final $typed_data.Uint8List acFunPlaybackMetadataDescriptor = $convert.base64Dec
     'lwdGlvbogBARISCgR0YWdzGAkgAygJUgR0YWdzEiIKCnZpZXdfY291bnQYCiABKARIBVIJdmll'
     'd0NvdW50iAEBEiIKCmxpa2VfY291bnQYCyABKARIBlIJbGlrZUNvdW50iAEBEigKDWNvbW1lbn'
     'RfY291bnQYDCABKARIB1IMY29tbWVudENvdW50iAEBEiYKDHB1Ymxpc2hlZF9hdBgNIAEoA0gI'
-    'UgtwdWJsaXNoZWRBdIgBARIiCgpzdGFydGVkX2F0GA4gASgDSAlSCXN0YXJ0ZWRBdIgBAUIMCg'
-    'pfYXV0aG9yX2lkQgsKCV9jYXRlZ29yeUIQCg5fdGh1bWJuYWlsX3VybEINCgtfYXZhdGFyX3Vy'
-    'bEIOCgxfZGVzY3JpcHRpb25CDQoLX3ZpZXdfY291bnRCDQoLX2xpa2VfY291bnRCEAoOX2NvbW'
-    '1lbnRfY291bnRCDwoNX3B1Ymxpc2hlZF9hdEINCgtfc3RhcnRlZF9hdA==');
+    'UgtwdWJsaXNoZWRBdIgBARIiCgpzdGFydGVkX2F0GA4gASgDSAlSCXN0YXJ0ZWRBdIgBARIXCg'
+    'dpc19saXZlGA8gASgIUgZpc0xpdmUSLwoRaXNfY3VycmVudGx5X2xpdmUYECABKAhIClIPaXND'
+    'dXJyZW50bHlMaXZliAEBQgwKCl9hdXRob3JfaWRCCwoJX2NhdGVnb3J5QhAKDl90aHVtYm5haW'
+    'xfdXJsQg0KC19hdmF0YXJfdXJsQg4KDF9kZXNjcmlwdGlvbkINCgtfdmlld19jb3VudEINCgtf'
+    'bGlrZV9jb3VudEIQCg5fY29tbWVudF9jb3VudEIPCg1fcHVibGlzaGVkX2F0Qg0KC19zdGFydG'
+    'VkX2F0QhQKEl9pc19jdXJyZW50bHlfbGl2ZQ==');
 
 @$core.Deprecated('Use cctvChapterMetadataDescriptor instead')
 const CctvChapterMetadata$json = {
@@ -8997,7 +9205,14 @@ const SynologyPlaybackMetadata$json = {
     {'1': 'genres', '3': 9, '4': 3, '5': 9, '10': 'genres'},
     {'1': 'item_id', '3': 10, '4': 1, '5': 3, '10': 'itemId'},
     {'1': 'file_id', '3': 11, '4': 1, '5': 3, '10': 'fileId'},
-    {'1': 'kind', '3': 12, '4': 1, '5': 9, '10': 'kind'},
+    {
+      '1': 'kind',
+      '3': 12,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.SynologyLibraryItemKind',
+      '10': 'kind'
+    },
     {'1': 'path', '3': 13, '4': 1, '5': 9, '10': 'path'},
     {'1': 'size', '3': 14, '4': 1, '5': 4, '10': 'size'},
     {'1': 'duration_seconds', '3': 15, '4': 1, '5': 4, '10': 'durationSeconds'},
@@ -9090,25 +9305,26 @@ final $typed_data.Uint8List synologyPlaybackMetadataDescriptor = $convert.base64
     'Y2F0ZRgEIAEoCVILY2VydGlmaWNhdGUSFgoGcmF0aW5nGAUgASgFUgZyYXRpbmcSFgoGYWN0b3'
     'JzGAYgAygJUgZhY3RvcnMSHAoJZGlyZWN0b3JzGAcgAygJUglkaXJlY3RvcnMSGAoHd3JpdGVy'
     'cxgIIAMoCVIHd3JpdGVycxIWCgZnZW5yZXMYCSADKAlSBmdlbnJlcxIXCgdpdGVtX2lkGAogAS'
-    'gDUgZpdGVtSWQSFwoHZmlsZV9pZBgLIAEoA1IGZmlsZUlkEhIKBGtpbmQYDCABKAlSBGtpbmQS'
-    'EgoEcGF0aBgNIAEoCVIEcGF0aBISCgRzaXplGA4gASgEUgRzaXplEikKEGR1cmF0aW9uX3NlY2'
-    '9uZHMYDyABKARSD2R1cmF0aW9uU2Vjb25kcxIpChBwcm9ncmVzc19zZWNvbmRzGBAgASgEUg9w'
-    'cm9ncmVzc1NlY29uZHMSFAoFd2lkdGgYESABKA1SBXdpZHRoEhYKBmhlaWdodBgSIAEoDVIGaG'
-    'VpZ2h0Eh8KC3ZpZGVvX2NvZGVjGBMgASgJUgp2aWRlb0NvZGVjEh8KC2F1ZGlvX2NvZGVjGBQg'
-    'ASgJUgphdWRpb0NvZGVjEhwKCWNvbnRhaW5lchgVIAEoCVIJY29udGFpbmVyEiMKDXZpZGVvX2'
-    'JpdHJhdGUYFiABKARSDHZpZGVvQml0cmF0ZRIjCg1hdWRpb19iaXRyYXRlGBcgASgEUgxhdWRp'
-    'b0JpdHJhdGUSMAoUZnJhbWVfcmF0ZV9udW1lcmF0b3IYGCABKARSEmZyYW1lUmF0ZU51bWVyYX'
-    'RvchI0ChZmcmFtZV9yYXRlX2Rlbm9taW5hdG9yGBkgASgEUhRmcmFtZVJhdGVEZW5vbWluYXRv'
-    'chIlCg5hdWRpb19jaGFubmVscxgaIAEoDVINYXVkaW9DaGFubmVscxIsChJhdWRpb19mcmVxdW'
-    'VuY3lfaHoYGyABKA1SEGF1ZGlvRnJlcXVlbmN5SHoSIgoKcG9zdGVyX3VybBgcIAEoCUgAUglw'
-    'b3N0ZXJVcmyIAQESJgoMYmFja2Ryb3BfdXJsGB0gASgJSAFSC2JhY2tkcm9wVXJsiAEBEhgKB3'
-    'dhdGNoZWQYHiABKAhSB3dhdGNoZWQSIwoNd2F0Y2hlZF9yYXRpbxgfIAEoAVIMd2F0Y2hlZFJh'
-    'dGlvEi8KE3BhcmVudGFsX2NvbnRyb2xsZWQYICABKAhSEnBhcmVudGFsQ29udHJvbGxlZBIfCg'
-    'tjcmVhdGVfdGltZRghIAEoA1IKY3JlYXRlVGltZRIhCgxsYXN0X3dhdGNoZWQYIiABKANSC2xh'
-    'c3RXYXRjaGVkEkwKDGF1ZGlvX3RyYWNrcxgjIAMoCzIpLnN5bmN0di5jbGllbnQuU3lub2xvZ3'
-    'lBdWRpb1RyYWNrTWV0YWRhdGFSC2F1ZGlvVHJhY2tzEkUKCXN1YnRpdGxlcxgkIAMoCzInLnN5'
-    'bmN0di5jbGllbnQuU3lub2xvZ3lTdWJ0aXRsZU1ldGFkYXRhUglzdWJ0aXRsZXNCDQoLX3Bvc3'
-    'Rlcl91cmxCDwoNX2JhY2tkcm9wX3VybA==');
+    'gDUgZpdGVtSWQSFwoHZmlsZV9pZBgLIAEoA1IGZmlsZUlkEkEKBGtpbmQYDCABKA4yLS5zeW5j'
+    'dHYuc291cmNlX2NvbmZpZy5TeW5vbG9neUxpYnJhcnlJdGVtS2luZFIEa2luZBISCgRwYXRoGA'
+    '0gASgJUgRwYXRoEhIKBHNpemUYDiABKARSBHNpemUSKQoQZHVyYXRpb25fc2Vjb25kcxgPIAEo'
+    'BFIPZHVyYXRpb25TZWNvbmRzEikKEHByb2dyZXNzX3NlY29uZHMYECABKARSD3Byb2dyZXNzU2'
+    'Vjb25kcxIUCgV3aWR0aBgRIAEoDVIFd2lkdGgSFgoGaGVpZ2h0GBIgASgNUgZoZWlnaHQSHwoL'
+    'dmlkZW9fY29kZWMYEyABKAlSCnZpZGVvQ29kZWMSHwoLYXVkaW9fY29kZWMYFCABKAlSCmF1ZG'
+    'lvQ29kZWMSHAoJY29udGFpbmVyGBUgASgJUgljb250YWluZXISIwoNdmlkZW9fYml0cmF0ZRgW'
+    'IAEoBFIMdmlkZW9CaXRyYXRlEiMKDWF1ZGlvX2JpdHJhdGUYFyABKARSDGF1ZGlvQml0cmF0ZR'
+    'IwChRmcmFtZV9yYXRlX251bWVyYXRvchgYIAEoBFISZnJhbWVSYXRlTnVtZXJhdG9yEjQKFmZy'
+    'YW1lX3JhdGVfZGVub21pbmF0b3IYGSABKARSFGZyYW1lUmF0ZURlbm9taW5hdG9yEiUKDmF1ZG'
+    'lvX2NoYW5uZWxzGBogASgNUg1hdWRpb0NoYW5uZWxzEiwKEmF1ZGlvX2ZyZXF1ZW5jeV9oehgb'
+    'IAEoDVIQYXVkaW9GcmVxdWVuY3lIehIiCgpwb3N0ZXJfdXJsGBwgASgJSABSCXBvc3RlclVybI'
+    'gBARImCgxiYWNrZHJvcF91cmwYHSABKAlIAVILYmFja2Ryb3BVcmyIAQESGAoHd2F0Y2hlZBge'
+    'IAEoCFIHd2F0Y2hlZBIjCg13YXRjaGVkX3JhdGlvGB8gASgBUgx3YXRjaGVkUmF0aW8SLwoTcG'
+    'FyZW50YWxfY29udHJvbGxlZBggIAEoCFIScGFyZW50YWxDb250cm9sbGVkEh8KC2NyZWF0ZV90'
+    'aW1lGCEgASgDUgpjcmVhdGVUaW1lEiEKDGxhc3Rfd2F0Y2hlZBgiIAEoA1ILbGFzdFdhdGNoZW'
+    'QSTAoMYXVkaW9fdHJhY2tzGCMgAygLMikuc3luY3R2LmNsaWVudC5TeW5vbG9neUF1ZGlvVHJh'
+    'Y2tNZXRhZGF0YVILYXVkaW9UcmFja3MSRQoJc3VidGl0bGVzGCQgAygLMicuc3luY3R2LmNsaW'
+    'VudC5TeW5vbG9neVN1YnRpdGxlTWV0YWRhdGFSCXN1YnRpdGxlc0INCgtfcG9zdGVyX3VybEIP'
+    'Cg1fYmFja2Ryb3BfdXJs');
 
 @$core.Deprecated('Use nextcloudPlaybackMetadataDescriptor instead')
 const NextcloudPlaybackMetadata$json = {
@@ -20226,8 +20442,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.TrueNasPlaybackMetadata': TrueNasPlaybackMetadata$json,
   '.synctv.client.ListPlaylistItemsResponse': ListPlaylistItemsResponse$json,
   '.synctv.client.Playlist': Playlist$json,
-  '.synctv.client.Media': Media$json,
   '.synctv.client.ResourceMetadata': ResourceMetadata$json,
+  '.synctv.client.Media': Media$json,
   '.synctv.source_config.MediaSourceConfig': $1.MediaSourceConfig$json,
   '.synctv.source_config.DirectUrlMediaSourceConfig':
       $1.DirectUrlMediaSourceConfig$json,

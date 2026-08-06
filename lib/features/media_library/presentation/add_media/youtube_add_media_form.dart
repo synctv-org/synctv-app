@@ -392,7 +392,7 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
                 dynamicItems: [...current.dynamicItems, ...page.dynamicItems],
                 currentPath: page.currentPath,
                 total: page.total,
-                folderCount: page.folderCount,
+                playlistCount: page.playlistCount,
                 fileCount: page.fileCount,
                 version: page.version,
                 usesCursor: page.usesCursor,

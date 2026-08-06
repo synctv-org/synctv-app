@@ -275,9 +275,9 @@ class _RoomScreenState extends State<RoomScreen>
   bool _isRefreshingMediaEntries = false;
   final ScrollController _mediaEntryScrollController = ScrollController();
 
-  // Folder navigation
-  final List<RoomMediaEntry> _folderStack = [];
-  final List<String> _folderNameStack = [''];
+  // Playlist navigation
+  final List<RoomMediaEntry> _playlistStack = [];
+  final List<String> _playlistNameStack = [''];
 
   SyncTvUser? _currentUser;
   bool _showChatScrollToBottom = false;
@@ -1178,11 +1178,13 @@ class _RoomScreenState extends State<RoomScreen>
     });
 
     try {
-      final parentFolder = _folderStack.isNotEmpty ? _folderStack.last : null;
+      final parentPlaylist = _playlistStack.isNotEmpty
+          ? _playlistStack.last
+          : null;
       final result = await _mediaLibraryGateway.listMediaLibrary(
         widget.room.roomId,
-        playlistId: parentFolder?.playbackPlaylistId ?? '',
-        target: parentFolder?.playbackTarget,
+        playlistId: parentPlaylist?.playbackPlaylistId ?? '',
+        target: parentPlaylist?.playbackTarget,
         page: _currentPage + 1,
         cursor: _usesCursorPagination ? _nextCursor : null,
         pageSize: _pageSize,
@@ -5649,18 +5651,18 @@ class _RoomScreenState extends State<RoomScreen>
                   AppIconButton(
                     key: const Key('playlist-parent-button'),
                     icon: Icons.arrow_back_rounded,
-                    onPressed: _folderStack.isEmpty ? null : _exitFolder,
-                    tooltip: context.l10n.parentDirectory,
-                    style: _folderStack.isEmpty
+                    onPressed: _playlistStack.isEmpty ? null : _exitPlaylist,
+                    tooltip: context.l10n.parentPlaylist,
+                    style: _playlistStack.isEmpty
                         ? AppIconButtonStyle.ghost
                         : AppIconButtonStyle.tonal,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      _folderStack.isEmpty
+                      _playlistStack.isEmpty
                           ? context.l10n.playlist
-                          : _folderNameStack.last,
+                          : _playlistNameStack.last,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -5862,15 +5864,15 @@ class _RoomScreenState extends State<RoomScreen>
     final theme = Theme.of(context);
     final crumbs = <(String, int)>[
       (context.l10n.playlist, 0),
-      for (var index = 0; index < _folderStack.length; index++)
-        (_folderNameStack[index + 1], index + 1),
+      for (var index = 0; index < _playlistStack.length; index++)
+        (_playlistNameStack[index + 1], index + 1),
     ];
     return SizedBox(
       height: 28,
       child: AppSingleChildScrollView(
         key: const Key('playlist-breadcrumbs'),
         scrollDirection: Axis.horizontal,
-        reverse: _folderStack.isNotEmpty,
+        reverse: _playlistStack.isNotEmpty,
         child: Row(
           children: [
             for (var index = 0; index < crumbs.length; index++) ...[
@@ -5884,7 +5886,7 @@ class _RoomScreenState extends State<RoomScreen>
                 borderRadius: BorderRadius.circular(5),
                 onTap: index == crumbs.length - 1
                     ? null
-                    : () => _navigateToFolderDepth(crumbs[index].$2),
+                    : () => _navigateToPlaylistDepth(crumbs[index].$2),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 5,
@@ -6257,13 +6259,13 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   bool _canActivatePlaylistEntry(RoomMediaEntry entry, bool selectionMode) =>
-      selectionMode || entry.isFolder || _canControlPlaybackState;
+      selectionMode || entry.isPlaylist || _canControlPlaybackState;
 
   void _handlePlaylistEntryPressed(RoomMediaEntry entry, bool selectionMode) {
     if (selectionMode) {
       _toggleSelection(entry);
-    } else if (entry.isFolder) {
-      _enterFolder(entry);
+    } else if (entry.isPlaylist) {
+      _enterPlaylist(entry);
     } else {
       _switchMedia(entry);
     }
@@ -6285,7 +6287,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (providerIcon != null && entry.isProviderDynamicEntry) {
       return providerIcon;
     }
-    if (entry.isFolder) {
+    if (entry.isPlaylist) {
       return entry.isDynamicPlaylist || entry.isProviderDynamicItem
           ? Icons.folder_special_rounded
           : Icons.folder_rounded;
@@ -6338,7 +6340,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (providerColor != null && entry.isProviderDynamicEntry) {
       return providerColor;
     }
-    if (entry.isFolder) return Colors.amber;
+    if (entry.isPlaylist) return Colors.amber;
     if (entry.live) return Colors.redAccent;
     return Theme.of(context).colorScheme.onSurfaceVariant;
   }
@@ -6351,13 +6353,13 @@ class _RoomScreenState extends State<RoomScreen>
 
   String _playlistEntryShortMeta(RoomMediaEntry entry) {
     final parts = <String>[_playlistEntryTypeLabel(entry)];
-    if (entry.isFolder && entry.itemCount > 0) {
+    if (entry.isPlaylist && entry.itemCount > 0) {
       parts.add(context.l10n.itemCount(entry.itemCount));
     }
     final provider = _playlistProviderLabel(entry);
     if (provider.isNotEmpty) parts.add(provider);
     parts.addAll(_playlistSourceDetails(entry).take(2));
-    if (!entry.isFolder && entry.hasPlaybackChoices) {
+    if (!entry.isPlaylist && entry.hasPlaybackChoices) {
       parts.add(context.l10n.multipleRoutes);
     }
     if (entry.proxy) parts.add(context.l10n.proxy);
@@ -6366,7 +6368,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   List<String> _playlistEntryChips(RoomMediaEntry entry) {
     final chips = <String>[_playlistEntryTypeLabel(entry)];
-    if (entry.isFolder) {
+    if (entry.isPlaylist) {
       chips.add(
         entry.itemCount > 0
             ? context.l10n.itemCount(entry.itemCount)
@@ -6378,7 +6380,7 @@ class _RoomScreenState extends State<RoomScreen>
     chips.addAll(_playlistSourceDetails(entry));
     if (entry.live) chips.add(context.l10n.live);
     if (entry.proxy) chips.add(context.l10n.proxy);
-    if (!entry.isFolder && entry.hasPlaybackChoices) {
+    if (!entry.isPlaylist && entry.hasPlaybackChoices) {
       chips.add(context.l10n.multipleRoutes);
     }
     if (entry.version > 0) chips.add('v${entry.version}');
@@ -6409,8 +6411,8 @@ class _RoomScreenState extends State<RoomScreen>
 
   String _playlistEntryTypeLabel(RoomMediaEntry entry) {
     if (entry.isDynamicPlaylist) return context.l10n.dynamicPlaylist;
-    if (entry.isProviderDynamicItem && entry.isFolder) {
-      return context.l10n.dynamicDirectory;
+    if (entry.isProviderDynamicItem && entry.isPlaylist) {
+      return context.l10n.dynamicPlaylist;
     }
     if (entry.isProviderDynamicItem) return context.l10n.dynamicMedia;
     if (entry.isPlaylist) return context.l10n.playlist;
@@ -6714,32 +6716,32 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  void _enterFolder(RoomMediaEntry folder) {
+  void _enterPlaylist(RoomMediaEntry playlist) {
     setState(() {
-      _folderStack.add(folder);
-      _folderNameStack.add(folder.name);
+      _playlistStack.add(playlist);
+      _playlistNameStack.add(playlist.name);
       _isLoadingMediaEntries = true;
     });
     _observeCurrentPlaylist();
   }
 
-  void _exitFolder() {
-    if (_folderStack.isEmpty) return;
+  void _exitPlaylist() {
+    if (_playlistStack.isEmpty) return;
     setState(() {
-      _folderStack.removeLast();
-      _folderNameStack.removeLast();
+      _playlistStack.removeLast();
+      _playlistNameStack.removeLast();
       _isLoadingMediaEntries = true;
     });
     _observeCurrentPlaylist();
   }
 
-  void _navigateToFolderDepth(int depth) {
-    if (depth < 0 || depth >= _folderStack.length) {
-      if (depth != 0 || _folderStack.isEmpty) return;
+  void _navigateToPlaylistDepth(int depth) {
+    if (depth < 0 || depth >= _playlistStack.length) {
+      if (depth != 0 || _playlistStack.isEmpty) return;
     }
     setState(() {
-      _folderStack.removeRange(depth, _folderStack.length);
-      _folderNameStack.removeRange(depth + 1, _folderNameStack.length);
+      _playlistStack.removeRange(depth, _playlistStack.length);
+      _playlistNameStack.removeRange(depth + 1, _playlistNameStack.length);
       _isLoadingMediaEntries = true;
       _selectedMediaEntryIds.clear();
       _isSelectionMode = false;
@@ -6748,12 +6750,14 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _observeCurrentPlaylist() {
-    final parentFolder = _folderStack.isNotEmpty ? _folderStack.last : null;
+    final parentPlaylist = _playlistStack.isNotEmpty
+        ? _playlistStack.last
+        : null;
     try {
       _sendRealtimeMessage(
         _realtimeProtocol.encodePlaylistObservation(
-          playlistId: parentFolder?.playbackPlaylistId ?? '',
-          target: parentFolder?.playbackTarget,
+          playlistId: parentPlaylist?.playbackPlaylistId ?? '',
+          target: parentPlaylist?.playbackTarget,
           page: 1,
           pageSize: _pageSize,
         ),
@@ -6771,13 +6775,13 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _refreshCurrentPlaylist() async {
     if (_isRefreshingMediaEntries) return;
-    final folder = _folderStack.isEmpty ? null : _folderStack.last;
+    final playlist = _playlistStack.isEmpty ? null : _playlistStack.last;
     setState(() => _isRefreshingMediaEntries = true);
     try {
       final mediaLibrary = await _mediaLibraryGateway.listMediaLibrary(
         widget.room.roomId,
-        playlistId: folder?.playbackPlaylistId ?? '',
-        target: folder?.playbackTarget,
+        playlistId: playlist?.playbackPlaylistId ?? '',
+        target: playlist?.playbackTarget,
         pageSize: _pageSize,
         refresh: _isInsideProviderTargetScope,
       );
@@ -6797,10 +6801,12 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _switchMedia(RoomMediaEntry entry) async {
     if (!_canControlPlaybackState) return;
     try {
-      final currentFolder = _folderStack.isEmpty ? null : _folderStack.last;
+      final currentPlaylist = _playlistStack.isEmpty
+          ? null
+          : _playlistStack.last;
       final playlistId = switch (entry.parentId) {
         final parentId? when parentId.isNotEmpty => parentId,
-        _ => currentFolder?.playbackPlaylistId ?? '',
+        _ => currentPlaylist?.playbackPlaylistId ?? '',
       };
       final playback = await _playbackGateway.switchMedia(
         widget.room.roomId,
@@ -6866,16 +6872,17 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   bool get _isInsideProviderTargetScope {
-    return _folderStack.any(
-      (folder) =>
-          folder.isDynamicPlaylist || (folder.playbackTarget ?? '').isNotEmpty,
+    return _playlistStack.any(
+      (playlist) =>
+          playlist.isDynamicPlaylist ||
+          (playlist.playbackTarget ?? '').isNotEmpty,
     );
   }
 
   String get _currentPersistedPlaylistId {
-    if (_folderStack.isEmpty || _isInsideProviderTargetScope) return '';
-    final folder = _folderStack.last;
-    return folder.id.startsWith('pl_') ? folder.id : '';
+    if (_playlistStack.isEmpty || _isInsideProviderTargetScope) return '';
+    final playlist = _playlistStack.last;
+    return playlist.id.startsWith('pl_') ? playlist.id : '';
   }
 
   bool get _canMutateCurrentPlaylist => !_isInsideProviderTargetScope;
@@ -6920,7 +6927,7 @@ class _RoomScreenState extends State<RoomScreen>
           if (mounted) {
             AppNotifications.showInfo(
               context,
-              context.l10n.dynamicDirectoryCannotDelete,
+              context.l10n.dynamicPlaylistCannotDelete,
             );
           }
           return;

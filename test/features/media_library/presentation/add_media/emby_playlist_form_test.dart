@@ -97,7 +97,7 @@ const _emptyPreview = RoomMediaLibraryPage(
   dynamicItems: [],
   currentPath: [],
   total: 0,
-  folderCount: 0,
+  playlistCount: 0,
   fileCount: 0,
   version: '',
   usesCursor: false,
@@ -111,7 +111,7 @@ final _genrePreview = _previewWith([
     name: 'Drama',
     parentId: '',
     subPath: 'Drama',
-    isFolder: true,
+    isPlaylist: true,
     metadata: const {
       'target_json': {'itemId': 'genre-1'},
     },
@@ -133,7 +133,7 @@ final _genreItemsPreview = _previewWith([
     name: 'Drama Movie',
     parentId: '',
     subPath: 'Drama Movie',
-    isFolder: false,
+    isPlaylist: false,
   ),
 ]);
 
@@ -144,8 +144,8 @@ RoomMediaLibraryPage _previewWith(List<RoomDynamicMediaEntry> items) {
     dynamicItems: items,
     currentPath: const [],
     total: items.length,
-    folderCount: items.where((item) => item.isFolder).length,
-    fileCount: items.where((item) => !item.isFolder).length,
+    playlistCount: items.where((item) => item.isPlaylist).length,
+    fileCount: items.where((item) => !item.isPlaylist).length,
     version: '',
     usesCursor: false,
     nextCursor: '',
