@@ -23,6 +23,7 @@ Widget _app(Widget child) {
 
 CinemaRoomCard _card({
   int access = 0,
+  bool isOwner = false,
   bool joined = false,
   bool canJoin = false,
   bool favoriteLoading = false,
@@ -36,6 +37,7 @@ CinemaRoomCard _card({
     viewerCount: 4,
     memberCount: 12,
     discoveryAccess: access,
+    isOwner: isOwner,
     joined: joined,
     canJoin: canJoin,
     favoriteLoading: favoriteLoading,
@@ -81,6 +83,15 @@ void main() {
     );
 
     expect(find.text('Unavailable'), findsOneWidget);
+    expect(find.text('Joined'), findsNothing);
+  });
+
+  testWidgets('owned room is identified as created by the current user', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(_card(isOwner: true, joined: true)));
+
+    expect(find.text('Created by me'), findsOneWidget);
     expect(find.text('Joined'), findsNothing);
   });
 

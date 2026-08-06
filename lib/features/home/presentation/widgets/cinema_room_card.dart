@@ -19,6 +19,7 @@ class CinemaRoomCard extends StatelessWidget {
   final VoidCallback? onLongPress;
   final bool isFavorite;
   final bool favoriteLoading;
+  final bool isOwner;
   final bool joined;
   final bool canJoin;
   final int discoveryAccess;
@@ -40,6 +41,7 @@ class CinemaRoomCard extends StatelessWidget {
     this.onLongPress,
     this.isFavorite = false,
     this.favoriteLoading = false,
+    this.isOwner = false,
     this.joined = false,
     this.canJoin = false,
     this.discoveryAccess = 0,
@@ -242,6 +244,7 @@ class CinemaRoomCard extends StatelessWidget {
                 .value) {
       return l10n.roomUnavailableShort;
     }
+    if (isOwner) return l10n.createdByMe;
     if (joined) return l10n.roomJoined;
     if (discoveryAccess ==
         client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST.value) {

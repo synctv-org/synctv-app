@@ -796,6 +796,10 @@ class _RoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isOwner =
+        room.myRelation ==
+            client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED.value ||
+        state.currentUser?.id == room.creatorId;
     final unavailable =
         room.isBanned ||
         room.availability == 2 ||
@@ -823,6 +827,7 @@ class _RoomCard extends StatelessWidget {
       creatorAvatarUrl: room.creatorAvatarUrl,
       availability: room.availability,
       isBanned: room.isBanned,
+      isOwner: isOwner,
       joined: room.joined,
       canJoin: room.canJoin,
       discoveryAccess: room.discoveryAccess,
@@ -832,9 +837,7 @@ class _RoomCard extends StatelessWidget {
           : null,
       isFavorite: room.isFavorite,
       favoriteLoading: state.favoriteRoomIdsInFlight.contains(room.roomId),
-      onLongPress: state.currentUser?.id == room.creatorId
-          ? () => callbacks.deleteRoom(room)
-          : null,
+      onLongPress: isOwner ? () => callbacks.deleteRoom(room) : null,
     );
   }
 }

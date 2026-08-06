@@ -86,4 +86,21 @@ void main() {
     expect(find.text('Popular rooms'), findsNothing);
     expect(find.text('No rooms match the current filters'), findsNothing);
   });
+
+  testWidgets('room created by the current user has an ownership badge', (
+    tester,
+  ) async {
+    await setViewport(tester, const Size(1440, 1000));
+    final ownedRoom = homeShowcaseRooms.first.copyWith(
+      roomId: 'owned-room',
+      creatorId: 'showcase-user',
+      joined: true,
+    );
+    await tester.pumpWidget(
+      HomeShowcaseApp(state: homeShowcaseState(rooms: [ownedRoom])),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Created by me'), findsOneWidget);
+  });
 }
