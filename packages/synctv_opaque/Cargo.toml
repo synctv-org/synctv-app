@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 opaque-ke = { version = "4.0.1", features = ["argon2", "ristretto255"] }
 rand = { version = "0.8", features = ["getrandom"] }
-sha2 = "0.10"
+sha2 = "0.11"
 
 [dev-dependencies]
 rand_chacha = "0.3"
