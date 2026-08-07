@@ -2009,7 +2009,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get back => '返回';
 
   @override
-  String get syncSettings => '同步设置';
+  String get freeModeSettings => '自由模式设置';
 
   @override
   String get stop => '停止';
@@ -2049,23 +2049,22 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get automaticProgressCorrection => '自动进度纠偏';
+  String get freeMode => '自由模式';
 
   @override
-  String get automaticProgressCorrectionDescription =>
-      '实时状态事件到达后，客户端按本地时钟计算目标进度并自动跳转';
+  String get freeModeDescription => '保持本地播放进度独立于房间实时纠偏，仍可使用手动同步';
 
   @override
-  String get automaticCorrectionThreshold => '自动纠偏阈值';
+  String get syncCorrectionThreshold => '房间同步纠偏阈值';
 
   @override
-  String get manualSyncMinimumError => '手动同步最小误差';
+  String get manualSyncDriftThreshold => '手动同步触发误差';
 
   @override
   String get restoreDefaults => '恢复默认';
 
   @override
-  String get syncSettingsSaved => '同步设置已保存';
+  String get freeModeSettingsSaved => '自由模式设置已保存';
 
   @override
   String get loadMemberListFailed => '成员列表加载失败';

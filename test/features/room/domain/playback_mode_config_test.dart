@@ -2,9 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 import 'package:synctv_app/features/room/presentation/playback_control_reporter.dart';
-import 'package:synctv_app/features/room/domain/playback_sync_config.dart';
-import 'package:synctv_app/features/room/application/playback_sync_preferences_controller.dart';
-import 'package:synctv_app/features/room/data/shared_preferences_playback_sync_store.dart';
+import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
+import 'package:synctv_app/features/room/application/playback_mode_preferences_controller.dart';
+import 'package:synctv_app/features/room/data/shared_preferences_playback_mode_store.dart';
 import 'package:synctv_app/features/room/data/protobuf_room_realtime_protocol.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_target.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
@@ -47,35 +47,40 @@ void main() {
     );
   });
 
-  test('client playback sync config is normalized and persisted', () async {
+  test('client playback mode config is normalized and persisted', () async {
     SharedPreferences.setMockInitialValues({});
 
-    final controller = PlaybackSyncPreferencesController(
-      store: const SharedPreferencesPlaybackSyncStore(),
+    final controller = PlaybackModePreferencesController(
+      store: const SharedPreferencesPlaybackModeStore(),
     );
     await controller.update(
-      const PlaybackSyncConfig(
+      const PlaybackModeConfig(
         autoSeekDriftThresholdSeconds: 0,
         manualSeekDriftThresholdSeconds: 0,
-        autoSyncEnabled: false,
+        freeModeEnabled: true,
       ),
     );
-    final restored = PlaybackSyncPreferencesController(
-      store: const SharedPreferencesPlaybackSyncStore(),
+    final restored = PlaybackModePreferencesController(
+      store: const SharedPreferencesPlaybackModeStore(),
     );
     await restored.load();
 
     expect(restored.value.autoSeekDriftThresholdSeconds, 0.05);
     expect(restored.value.manualSeekDriftThresholdSeconds, 0.1);
-    expect(restored.value.autoSyncEnabled, isFalse);
+    expect(restored.value.freeModeEnabled, isTrue);
+    expect(restored.value.toJson()['freeModeEnabled'], isTrue);
+  });
+
+  test('free mode is disabled by default', () {
+    expect(PlaybackModeConfig.defaults.freeModeEnabled, isFalse);
   });
 
   test('manual sync uses 0.2 second minimum seek drift by default', () {
-    expect(PlaybackSyncConfig.defaults.manualSeekDriftThresholdSeconds, 0.2);
+    expect(PlaybackModeConfig.defaults.manualSeekDriftThresholdSeconds, 0.2);
   });
 
   test('manual sync minimum seek drift is capped at 5 seconds', () {
-    const config = PlaybackSyncConfig(manualSeekDriftThresholdSeconds: 10);
+    const config = PlaybackModeConfig(manualSeekDriftThresholdSeconds: 10);
 
     expect(config.normalized().manualSeekDriftThresholdSeconds, 5);
   });

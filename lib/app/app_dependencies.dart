@@ -25,7 +25,7 @@ import 'package:synctv_app/features/room/application/room_realtime_channel.dart'
 import 'package:synctv_app/features/room/application/room_realtime_protocol.dart';
 import 'package:synctv_app/features/room/application/room_chat_gateway.dart';
 import 'package:synctv_app/features/room/application/room_playback_gateway.dart';
-import 'package:synctv_app/features/room/application/playback_sync_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/playback_mode_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/room_session_gateway.dart';
 import 'package:synctv_app/features/room/application/room_management_gateway.dart';
 import 'package:synctv_app/features/server_settings/application/server_connection_gateway.dart';
@@ -57,7 +57,7 @@ final class AppDependencies {
     required this.roomRealtimeProtocol,
     required this.roomChatGateway,
     required this.roomPlaybackGateway,
-    required this.playbackSyncPreferences,
+    required this.playbackModePreferences,
     required this.roomSessionGateway,
     required this.roomManagementGateway,
     required this.serverConnectionGateway,
@@ -88,7 +88,7 @@ final class AppDependencies {
   final RoomRealtimeProtocol roomRealtimeProtocol;
   final RoomChatGateway roomChatGateway;
   final RoomPlaybackGateway roomPlaybackGateway;
-  final PlaybackSyncPreferencesController playbackSyncPreferences;
+  final PlaybackModePreferencesController playbackModePreferences;
   final RoomSessionGateway roomSessionGateway;
   final RoomManagementGateway roomManagementGateway;
   final ServerConnectionGateway serverConnectionGateway;
@@ -115,7 +115,7 @@ final class AppDependencies {
         OAuth2CallbackClient: oauth2Callbacks,
         PasskeyClient: passkeyClient,
         P2pMediaRuntimeFactory: p2pMediaRuntimeFactory,
-        PlaybackSyncPreferencesController: playbackSyncPreferences,
+        PlaybackModePreferencesController: playbackModePreferences,
         ProviderGateway: providerGateway,
         DesktopWebVerificationClient: desktopWebVerificationClient,
         ResourceUrlResolver: resourceUrlResolver,

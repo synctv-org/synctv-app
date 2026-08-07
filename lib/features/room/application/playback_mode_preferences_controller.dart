@@ -1,21 +1,21 @@
 import 'package:flutter/foundation.dart';
-import 'package:synctv_app/features/room/domain/playback_sync_config.dart';
+import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 
-abstract interface class PlaybackSyncPreferencesStore {
-  Future<PlaybackSyncConfig> load();
+abstract interface class PlaybackModePreferencesStore {
+  Future<PlaybackModeConfig> load();
 
-  Future<void> save(PlaybackSyncConfig config);
+  Future<void> save(PlaybackModeConfig config);
 }
 
-final class PlaybackSyncPreferencesController extends ChangeNotifier {
-  PlaybackSyncPreferencesController({required this._store});
+final class PlaybackModePreferencesController extends ChangeNotifier {
+  PlaybackModePreferencesController({required this._store});
 
-  final PlaybackSyncPreferencesStore _store;
-  PlaybackSyncConfig _value = PlaybackSyncConfig.defaults;
+  final PlaybackModePreferencesStore _store;
+  PlaybackModeConfig _value = PlaybackModeConfig.defaults;
   Future<void>? _loading;
   bool _loaded = false;
 
-  PlaybackSyncConfig get value => _value;
+  PlaybackModeConfig get value => _value;
 
   Future<void> load() {
     if (_loaded) return Future.value();
@@ -29,7 +29,7 @@ final class PlaybackSyncPreferencesController extends ChangeNotifier {
         .whenComplete(() => _loading = null);
   }
 
-  Future<void> update(PlaybackSyncConfig config) async {
+  Future<void> update(PlaybackModeConfig config) async {
     final previous = _value;
     _value = config.normalized();
     _loaded = true;

@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/l10n/l10n.dart';
-import 'package:synctv_app/features/room/domain/playback_sync_config.dart';
+import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
 import 'package:synctv_app/features/room/application/room_realtime_protocol.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
@@ -20,7 +20,7 @@ import 'package:synctv_app/core/network/resource_url_resolver.dart';
 import 'package:synctv_app/features/room/application/room_chat_gateway.dart';
 import 'package:synctv_app/features/room/application/room_playback_gateway.dart';
 import 'package:synctv_app/features/room/application/playback_history_controller.dart';
-import 'package:synctv_app/features/room/application/playback_sync_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/playback_mode_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/room_management_gateway.dart';
 import 'package:synctv_app/features/media_library/application/media_library_gateway.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -36,7 +36,7 @@ import 'package:synctv_app/core/presentation/widgets/app_responsive_layout.dart'
 import 'package:synctv_app/features/media_library/presentation/add_media_dialog.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_reaction_users_dialog.dart';
-import 'package:synctv_app/features/room/presentation/widgets/playback_sync_settings_fields.dart';
+import 'package:synctv_app/features/room/presentation/widgets/free_mode_settings_fields.dart';
 import 'package:synctv_app/features/media_p2p/presentation/p2p_media_settings_fields.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_history_list.dart';
 import 'package:synctv_app/features/room/presentation/widgets/realtime_event_log_view.dart';
@@ -185,7 +185,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     with SingleTickerProviderStateMixin {
   late final RoomChatGateway _chatGateway;
   late final RoomPlaybackGateway _playbackGateway;
-  late final PlaybackSyncPreferencesController _playbackSyncPreferences;
+  late final PlaybackModePreferencesController _playbackModePreferences;
   late final ResourceUrlResolver _resourceUrlResolver;
   late final RoomManagementGateway _roomGateway;
   late final MediaLibraryGateway _mediaLibraryGateway;
@@ -205,7 +205,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   late final TextEditingController _mediaSearchController;
   late final TextEditingController _chatSearchController;
   late SyncTvRoomSettings _settings;
-  late PlaybackSyncConfig _playbackSyncConfig;
+  late PlaybackModeConfig _playbackModeConfig;
 
   final List<RoomStreamEntryInfo> _streams = [];
   final List<RoomJoinReviewInfo> _reviews = [];
@@ -288,7 +288,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _iceLoading = false;
   bool _coverUpdating = false;
   bool _passwordUpdating = false;
-  bool _playbackSyncSaving = false;
+  bool _freeModeSaving = false;
   bool _isDisposing = false;
   ChatReadStateInfo? _chatReadState;
   late String _currentUserId;
@@ -309,8 +309,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       gateway: _playbackGateway,
       roomId: widget.roomId,
     );
-    _playbackSyncPreferences =
-        DependencyScope.read<PlaybackSyncPreferencesController>(context);
+    _playbackModePreferences =
+        DependencyScope.read<PlaybackModePreferencesController>(context);
     _resourceUrlResolver = DependencyScope.read<ResourceUrlResolver>(context);
     _roomGateway = DependencyScope.read<RoomManagementGateway>(context);
     _mediaLibraryGateway = DependencyScope.read<MediaLibraryGateway>(context);
@@ -320,7 +320,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _tabController = TabController(length: _sectionCount, vsync: this);
     _tabController.addListener(_handleTabChanged);
     _settings = widget.currentSettings;
-    _playbackSyncConfig = _playbackSyncPreferences.value;
+    _playbackModeConfig = _playbackModePreferences.value;
     _currentUserId = widget.currentUserId;
     _passwordController = TextEditingController();
     _maxMembersController = TextEditingController();
@@ -1596,9 +1596,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       builder: _buildSettingsTab,
     ),
     _RoomSettingsSection(
-      label: context.l10n.syncSettings,
-      icon: Icons.sync_alt_rounded,
-      builder: _buildPlaybackSyncTab,
+      label: context.l10n.freeModeSettings,
+      icon: Icons.explore_rounded,
+      builder: _buildFreeModeTab,
     ),
     _RoomSettingsSection(
       label: context.l10n.members,
@@ -3776,18 +3776,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
-  Future<void> _savePlaybackSyncSettings({PlaybackSyncConfig? config}) async {
-    if (_playbackSyncSaving) return;
-    setState(() => _playbackSyncSaving = true);
+  Future<void> _saveFreeModeSettings({PlaybackModeConfig? config}) async {
+    if (_freeModeSaving) return;
+    setState(() => _freeModeSaving = true);
     try {
-      await _playbackSyncPreferences.update(
-        (config ?? _playbackSyncConfig).normalized(),
+      await _playbackModePreferences.update(
+        (config ?? _playbackModeConfig).normalized(),
       );
       if (!mounted) return;
       setState(() {
-        _playbackSyncConfig = _playbackSyncPreferences.value;
+        _playbackModeConfig = _playbackModePreferences.value;
       });
-      AppNotifications.showSuccess(context, context.l10n.syncSettingsSaved);
+      AppNotifications.showSuccess(context, context.l10n.freeModeSettingsSaved);
     } catch (error) {
       if (mounted) {
         AppNotifications.showError(
@@ -3796,21 +3796,21 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         );
       }
     } finally {
-      if (mounted) setState(() => _playbackSyncSaving = false);
+      if (mounted) setState(() => _freeModeSaving = false);
     }
   }
 
-  Widget _buildPlaybackSyncTab(ThemeData theme, bool isDark) {
+  Widget _buildFreeModeTab(ThemeData theme, bool isDark) {
     return AppListView(
       padding: const EdgeInsets.only(bottom: 32, top: 8),
       children: [
-        _buildSectionHeader(context.l10n.syncSettings, theme),
+        _buildSectionHeader(context.l10n.freeModeSettings, theme),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: PlaybackSyncSettingsFields(
-            config: _playbackSyncConfig,
+          child: FreeModeSettingsFields(
+            config: _playbackModeConfig,
             onChanged: (value) {
-              setState(() => _playbackSyncConfig = value);
+              setState(() => _playbackModeConfig = value);
             },
           ),
         ),
@@ -3827,19 +3827,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   runSpacing: 8,
                   children: [
                     AppActionButton(
-                      onPressed: _playbackSyncSaving
+                      onPressed: _freeModeSaving
                           ? null
-                          : () => _savePlaybackSyncSettings(
-                              config: PlaybackSyncConfig.defaults,
+                          : () => _saveFreeModeSettings(
+                              config: PlaybackModeConfig.defaults,
                             ),
                       label: context.l10n.restoreDefaults,
                       style: AppActionButtonStyle.tonal,
                     ),
                     AppActionButton(
-                      onPressed: _playbackSyncSaving
-                          ? null
-                          : _savePlaybackSyncSettings,
-                      loading: _playbackSyncSaving,
+                      onPressed: _freeModeSaving ? null : _saveFreeModeSettings,
+                      loading: _freeModeSaving,
                       icon: Icons.save_outlined,
                       label: context.l10n.save,
                       style: AppActionButtonStyle.filled,

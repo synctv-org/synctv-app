@@ -15,7 +15,7 @@ import 'package:synctv_app/features/room/presentation/playback_control_reporter.
 import 'package:synctv_app/features/room/domain/playback_operation_tracker.dart';
 import 'package:synctv_app/features/room/presentation/models/playlist_source_presentation.dart';
 import 'package:synctv_app/features/room/presentation/models/playback_player_update.dart';
-import 'package:synctv_app/features/room/domain/playback_sync_config.dart';
+import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_target.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_refresh.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
@@ -33,7 +33,7 @@ import 'package:synctv_app/core/presentation/dependency_scope.dart';
 import 'package:synctv_app/features/room/application/room_chat_gateway.dart';
 import 'package:synctv_app/features/room/application/room_playback_gateway.dart';
 import 'package:synctv_app/features/room/application/room_playback_controller.dart';
-import 'package:synctv_app/features/room/application/playback_sync_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/playback_mode_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/room_session_gateway.dart';
 import 'package:synctv_app/features/room/application/room_management_gateway.dart';
 import 'package:synctv_app/features/media_library/application/media_library_gateway.dart';
@@ -57,7 +57,7 @@ import 'package:synctv_app/features/room/presentation/widgets/playback_diagnosti
 import 'package:synctv_app/features/room/presentation/widgets/playback_empty_state.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_options_control.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playlist_empty_state.dart';
-import 'package:synctv_app/features/room/presentation/widgets/playback_sync_settings_fields.dart';
+import 'package:synctv_app/features/room/presentation/widgets/free_mode_settings_fields.dart';
 import 'package:synctv_app/features/media_p2p/presentation/p2p_media_settings_fields.dart';
 import 'package:synctv_app/features/room_invite/presentation/room_invite_actions.dart';
 import 'package:synctv_app/features/room/presentation/widgets/realtime_event_log_view.dart';
@@ -165,7 +165,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   late final RoomChatGateway _chatGateway;
   late final RoomPlaybackGateway _playbackGateway;
-  late final PlaybackSyncPreferencesController _playbackSyncPreferences;
+  late final PlaybackModePreferencesController _playbackModePreferences;
   late final RoomSessionGateway _sessionGateway;
   late final RoomManagementGateway _roomGateway;
   late final MediaLibraryGateway _mediaLibraryGateway;
@@ -177,7 +177,7 @@ class _RoomScreenState extends State<RoomScreen>
   late final PlayerVolumePreferencesController _playerVolumePreferences;
 
   late TabController _tabController;
-  late PlaybackSyncConfig _playbackSyncConfig;
+  late PlaybackModeConfig _playbackModeConfig;
   VideoPlayerController? _videoPlayerController;
   VideoPlayerController? _initializingVideoPlayerController;
   StreamSubscription<AdaptiveVideoTrackSnapshot>?
@@ -465,8 +465,8 @@ class _RoomScreenState extends State<RoomScreen>
     _chatGateway = DependencyScope.read<RoomChatGateway>(context);
     _playbackGateway = DependencyScope.read<RoomPlaybackGateway>(context);
     _playbackController = RoomPlaybackController();
-    _playbackSyncPreferences =
-        DependencyScope.read<PlaybackSyncPreferencesController>(context);
+    _playbackModePreferences =
+        DependencyScope.read<PlaybackModePreferencesController>(context);
     _sessionGateway = DependencyScope.read<RoomSessionGateway>(context);
     _roomGateway = DependencyScope.read<RoomManagementGateway>(context);
     _mediaLibraryGateway = DependencyScope.read<MediaLibraryGateway>(context);
@@ -490,7 +490,7 @@ class _RoomScreenState extends State<RoomScreen>
       DependencyScope.read<DanmakuSource>(context),
       resourceUrlResolver: _resourceUrlResolver,
     );
-    _playbackSyncConfig = _playbackSyncPreferences.value;
+    _playbackModeConfig = _playbackModePreferences.value;
     _chatScrollController.addListener(_handleChatScroll);
     _authErrorSubscription = _sessionGateway.authErrors.listen((_) {
       if (mounted) {
@@ -1997,12 +1997,12 @@ class _RoomScreenState extends State<RoomScreen>
         final currentPos = controller.value.position.inMilliseconds / 1000.0;
         final positionDrift = (currentPos - target.positionSeconds).abs();
         final shouldAutoSeek =
-            _playbackSyncConfig.autoSyncEnabled &&
-            positionDrift > _playbackSyncConfig.autoSeekDriftThresholdSeconds;
+            !_playbackModeConfig.freeModeEnabled &&
+            positionDrift > _playbackModeConfig.autoSeekDriftThresholdSeconds;
         final shouldManualSeek =
             forceSeek &&
             positionDrift >=
-                _playbackSyncConfig.manualSeekDriftThresholdSeconds;
+                _playbackModeConfig.manualSeekDriftThresholdSeconds;
         if (target.isAtEnd || shouldManualSeek || shouldAutoSeek) {
           await controller.seekTo(
             Duration(milliseconds: (target.positionSeconds * 1000).toInt()),
@@ -2100,7 +2100,7 @@ class _RoomScreenState extends State<RoomScreen>
     final absolute = deviation.abs();
     final warningThreshold = math.max(
       0.5,
-      _playbackSyncConfig.autoSeekDriftThresholdSeconds,
+      _playbackModeConfig.autoSeekDriftThresholdSeconds,
     );
     if (absolute <= 0.5) {
       return videoStyle ? const Color(0xFF7CFFB2) : Colors.green;
@@ -3518,8 +3518,8 @@ class _RoomScreenState extends State<RoomScreen>
                         onEnterPictureInPicture: _pictureInPictureAvailable
                             ? () => unawaited(_enterPictureInPicture())
                             : null,
-                        onOpenSettings: () =>
-                            unawaited(_openPlaybackSyncSettings()),
+                        onOpenFreeModeSettings: () =>
+                            unawaited(_openFreeModeSettings()),
                         canControlPlayback: _canControlPlaybackState,
                         isPlaybackExpectedToBePlaying: () =>
                             _currentStatus?.isPlaying == true,
@@ -3759,23 +3759,23 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Future<void> _openPlaybackSyncSettings() async {
-    final nextConfig = await showAppDialog<PlaybackSyncConfig>(
+  Future<void> _openFreeModeSettings() async {
+    final nextConfig = await showAppDialog<PlaybackModeConfig>(
       context: context,
       builder: (dialogContext) {
-        var draft = _playbackSyncConfig;
+        var draft = _playbackModeConfig;
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AppDialog(
-              title: Text(context.l10n.syncSettings),
-              icon: const Icon(Icons.sync_alt_rounded),
+              title: Text(context.l10n.freeModeSettings),
+              icon: const Icon(Icons.explore_rounded),
               body: SizedBox(
                 width: 520,
                 child: AppSingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      PlaybackSyncSettingsFields(
+                      FreeModeSettingsFields(
                         config: draft,
                         onChanged: (value) {
                           setDialogState(() => draft = value);
@@ -3799,7 +3799,7 @@ class _RoomScreenState extends State<RoomScreen>
                 ),
                 AppActionButton(
                   onPressed: () {
-                    Navigator.pop(dialogContext, PlaybackSyncConfig.defaults);
+                    Navigator.pop(dialogContext, PlaybackModeConfig.defaults);
                   },
                   label: context.l10n.restoreDefaults,
                   style: AppActionButtonStyle.tonal,
@@ -3820,12 +3820,12 @@ class _RoomScreenState extends State<RoomScreen>
     );
 
     if (nextConfig == null) return;
-    await _playbackSyncPreferences.update(nextConfig);
+    await _playbackModePreferences.update(nextConfig);
     if (!mounted) return;
     setState(() {
-      _playbackSyncConfig = _playbackSyncPreferences.value;
+      _playbackModeConfig = _playbackModePreferences.value;
     });
-    AppNotifications.showSuccess(context, context.l10n.syncSettingsSaved);
+    AppNotifications.showSuccess(context, context.l10n.freeModeSettingsSaved);
   }
 
   Future<void> _observeRoomMembers() async {
@@ -3975,7 +3975,7 @@ class _RoomScreenState extends State<RoomScreen>
           onEnterPictureInPicture: _pictureInPictureAvailable
               ? () => unawaited(_enterPictureInPicture())
               : null,
-          onOpenSettings: () => unawaited(_openPlaybackSyncSettings()),
+          onOpenFreeModeSettings: () => unawaited(_openFreeModeSettings()),
           canControlPlayback: _canControlPlaybackState,
           isPlaybackExpectedToBePlaying: () =>
               _currentStatus?.isPlaying == true,
@@ -7162,7 +7162,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _openRoomSettings() async {
     if (!_canManageRoom) {
-      await _openPlaybackSyncSettings();
+      await _openFreeModeSettings();
       return;
     }
     showAppDialog<void>(
@@ -7201,7 +7201,7 @@ class _RoomScreenState extends State<RoomScreen>
         );
         if (!mounted) return;
         setState(() {
-          _playbackSyncConfig = _playbackSyncPreferences.value;
+          _playbackModeConfig = _playbackModePreferences.value;
         });
         if (deleted == true) {
           Navigator.pop(context, true);

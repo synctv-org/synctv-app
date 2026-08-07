@@ -2159,7 +2159,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back => 'Back';
 
   @override
-  String get syncSettings => 'Sync settings';
+  String get freeModeSettings => 'Free mode settings';
 
   @override
   String get stop => 'Stop';
@@ -2207,23 +2207,23 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get automaticProgressCorrection => 'Automatic progress correction';
+  String get freeMode => 'Free mode';
 
   @override
-  String get automaticProgressCorrectionDescription =>
-      'When a realtime state event arrives, calculate the target position from the local clock and seek automatically';
+  String get freeModeDescription =>
+      'Keep your local playback position independent from realtime room corrections. Manual sync remains available.';
 
   @override
-  String get automaticCorrectionThreshold => 'Automatic correction threshold';
+  String get syncCorrectionThreshold => 'Room sync correction threshold';
 
   @override
-  String get manualSyncMinimumError => 'Minimum drift for manual sync';
+  String get manualSyncDriftThreshold => 'Minimum drift for manual sync';
 
   @override
   String get restoreDefaults => 'Restore defaults';
 
   @override
-  String get syncSettingsSaved => 'Sync settings saved';
+  String get freeModeSettingsSaved => 'Free mode settings saved';
 
   @override
   String get loadMemberListFailed => 'Could not load the member list';

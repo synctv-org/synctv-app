@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
-import 'package:synctv_app/features/room/domain/playback_sync_config.dart';
+import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 
-class PlaybackSyncSettingsFields extends StatelessWidget {
-  final PlaybackSyncConfig config;
-  final ValueChanged<PlaybackSyncConfig> onChanged;
+class FreeModeSettingsFields extends StatelessWidget {
+  final PlaybackModeConfig config;
+  final ValueChanged<PlaybackModeConfig> onChanged;
 
-  const PlaybackSyncSettingsFields({
+  const FreeModeSettingsFields({
     super.key,
     required this.config,
     required this.onChanged,
@@ -27,32 +27,32 @@ class PlaybackSyncSettingsFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppSwitchTile(
-          value: config.autoSyncEnabled,
+          value: config.freeModeEnabled,
           onChanged: (value) {
-            onChanged(config.copyWith(autoSyncEnabled: value));
+            onChanged(config.copyWith(freeModeEnabled: value));
           },
-          prefix: const Icon(Icons.auto_mode_rounded),
-          title: Text(context.l10n.automaticProgressCorrection),
-          subtitle: Text(context.l10n.automaticProgressCorrectionDescription),
+          prefix: const Icon(Icons.explore_rounded),
+          title: Text(context.l10n.freeMode),
+          subtitle: Text(context.l10n.freeModeDescription),
         ),
         const SizedBox(height: 18),
-        _PlaybackSyncSlider(
+        _PlaybackModeSlider(
           icon: Icons.linear_scale_rounded,
-          title: context.l10n.automaticCorrectionThreshold,
+          title: context.l10n.syncCorrectionThreshold,
           valueLabel: autoThresholdLabel,
           value: config.autoSeekDriftThresholdSeconds,
           min: 0.1,
           max: 10.0,
           divisions: 99,
-          enabled: config.autoSyncEnabled,
+          enabled: !config.freeModeEnabled,
           onChanged: (value) {
             onChanged(config.copyWith(autoSeekDriftThresholdSeconds: value));
           },
         ),
         const SizedBox(height: 18),
-        _PlaybackSyncSlider(
+        _PlaybackModeSlider(
           icon: Icons.touch_app_rounded,
-          title: context.l10n.manualSyncMinimumError,
+          title: context.l10n.manualSyncDriftThreshold,
           valueLabel: manualThresholdLabel,
           value: config.manualSeekDriftThresholdSeconds,
           min: 0.1,
@@ -68,7 +68,7 @@ class PlaybackSyncSettingsFields extends StatelessWidget {
   }
 }
 
-class _PlaybackSyncSlider extends StatelessWidget {
+class _PlaybackModeSlider extends StatelessWidget {
   final IconData icon;
   final String title;
   final String valueLabel;
@@ -79,7 +79,7 @@ class _PlaybackSyncSlider extends StatelessWidget {
   final bool enabled;
   final ValueChanged<double> onChanged;
 
-  const _PlaybackSyncSlider({
+  const _PlaybackModeSlider({
     required this.icon,
     required this.title,
     required this.valueLabel,

@@ -20,13 +20,13 @@ import 'package:synctv_app/features/room/data/http_danmaku_source.dart';
 import 'package:synctv_app/features/room/data/http_subtitle_source.dart';
 import 'package:synctv_app/features/room/data/synctv_room_chat_gateway.dart';
 import 'package:synctv_app/features/room/data/synctv_room_playback_gateway.dart';
-import 'package:synctv_app/features/room/application/playback_sync_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/playback_mode_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/realtime_event_log_preferences_controller.dart';
 import 'package:synctv_app/features/room/data/shared_preferences_realtime_event_log_store.dart';
 import 'package:synctv_app/features/room/data/protobuf_room_realtime_protocol.dart';
 import 'package:synctv_app/features/room/data/room_realtime_connection.dart';
-import 'package:synctv_app/features/room/data/shared_preferences_playback_sync_store.dart';
+import 'package:synctv_app/features/room/data/shared_preferences_playback_mode_store.dart';
 import 'package:synctv_app/features/room/data/shared_preferences_player_volume_store.dart';
 import 'package:synctv_app/features/room/data/synctv_room_session_gateway.dart';
 import 'package:synctv_app/features/room/data/synctv_room_management_gateway.dart';
@@ -63,10 +63,10 @@ void main(List<String> args) async {
     store: const SharedPreferencesP2pMediaPreferencesStore(),
   );
   await p2pMediaPreferences.load();
-  final playbackSyncPreferences = PlaybackSyncPreferencesController(
-    store: const SharedPreferencesPlaybackSyncStore(),
+  final playbackModePreferences = PlaybackModePreferencesController(
+    store: const SharedPreferencesPlaybackModeStore(),
   );
-  await playbackSyncPreferences.load();
+  await playbackModePreferences.load();
   final playerVolumePreferences = PlayerVolumePreferencesController(
     store: const SharedPreferencesPlayerVolumeStore(),
   );
@@ -138,7 +138,7 @@ void main(List<String> args) async {
     roomRealtimeProtocol: const ProtobufRoomRealtimeProtocol(),
     roomChatGateway: const SyncTvRoomChatGateway(),
     roomPlaybackGateway: const SyncTvRoomPlaybackGateway(),
-    playbackSyncPreferences: playbackSyncPreferences,
+    playbackModePreferences: playbackModePreferences,
     roomSessionGateway: roomSessionGateway,
     roomManagementGateway: const SyncTvRoomManagementGateway(),
     serverConnectionGateway: const SyncTvServerConnectionGateway(),

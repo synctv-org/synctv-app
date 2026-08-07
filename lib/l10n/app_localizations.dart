@@ -3728,11 +3728,11 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get back;
 
-  /// No description provided for @syncSettings.
+  /// No description provided for @freeModeSettings.
   ///
   /// In en, this message translates to:
-  /// **'Sync settings'**
-  String get syncSettings;
+  /// **'Free mode settings'**
+  String get freeModeSettings;
 
   /// No description provided for @stop.
   ///
@@ -3800,29 +3800,29 @@ abstract class AppLocalizations {
   /// **'{value} seconds'**
   String secondsValue(String value);
 
-  /// No description provided for @automaticProgressCorrection.
+  /// No description provided for @freeMode.
   ///
   /// In en, this message translates to:
-  /// **'Automatic progress correction'**
-  String get automaticProgressCorrection;
+  /// **'Free mode'**
+  String get freeMode;
 
-  /// No description provided for @automaticProgressCorrectionDescription.
+  /// No description provided for @freeModeDescription.
   ///
   /// In en, this message translates to:
-  /// **'When a realtime state event arrives, calculate the target position from the local clock and seek automatically'**
-  String get automaticProgressCorrectionDescription;
+  /// **'Keep your local playback position independent from realtime room corrections. Manual sync remains available.'**
+  String get freeModeDescription;
 
-  /// No description provided for @automaticCorrectionThreshold.
+  /// No description provided for @syncCorrectionThreshold.
   ///
   /// In en, this message translates to:
-  /// **'Automatic correction threshold'**
-  String get automaticCorrectionThreshold;
+  /// **'Room sync correction threshold'**
+  String get syncCorrectionThreshold;
 
-  /// No description provided for @manualSyncMinimumError.
+  /// No description provided for @manualSyncDriftThreshold.
   ///
   /// In en, this message translates to:
   /// **'Minimum drift for manual sync'**
-  String get manualSyncMinimumError;
+  String get manualSyncDriftThreshold;
 
   /// No description provided for @restoreDefaults.
   ///
@@ -3830,11 +3830,11 @@ abstract class AppLocalizations {
   /// **'Restore defaults'**
   String get restoreDefaults;
 
-  /// No description provided for @syncSettingsSaved.
+  /// No description provided for @freeModeSettingsSaved.
   ///
   /// In en, this message translates to:
-  /// **'Sync settings saved'**
-  String get syncSettingsSaved;
+  /// **'Free mode settings saved'**
+  String get freeModeSettingsSaved;
 
   /// No description provided for @loadMemberListFailed.
   ///

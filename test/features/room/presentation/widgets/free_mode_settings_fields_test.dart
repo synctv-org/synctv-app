@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/l10n.dart';
-import 'package:synctv_app/features/room/domain/playback_sync_config.dart';
-import 'package:synctv_app/features/room/presentation/widgets/playback_sync_settings_fields.dart';
+import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
+import 'package:synctv_app/features/room/presentation/widgets/free_mode_settings_fields.dart';
 
 import '../../../../test_app.dart';
 
 void main() {
-  testWidgets('updates the playback sync draft from room settings', (
+  testWidgets('free mode disables room correction and keeps manual sync', (
     tester,
   ) async {
-    var config = const PlaybackSyncConfig(
+    var config = const PlaybackModeConfig(
       autoSeekDriftThresholdSeconds: 1.5,
       manualSeekDriftThresholdSeconds: 0.4,
     );
@@ -23,7 +23,7 @@ void main() {
         home: Scaffold(
           body: StatefulBuilder(
             builder: (context, setState) {
-              return PlaybackSyncSettingsFields(
+              return FreeModeSettingsFields(
                 config: config,
                 onChanged: (value) {
                   setState(() => config = value);
@@ -36,14 +36,20 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Automatic progress correction'), findsOneWidget);
+    expect(find.text('Free mode'), findsOneWidget);
     expect(find.text('1.5 seconds'), findsOneWidget);
     expect(find.text('0.4 seconds'), findsOneWidget);
+    var sliders = tester.widgetList<Slider>(find.byType(Slider)).toList();
+    expect(sliders.first.onChanged, isNotNull);
+    expect(sliders.last.onChanged, isNotNull);
 
-    await tester.tap(find.text('Automatic progress correction'));
+    await tester.tap(find.text('Free mode'));
     await tester.pump();
 
-    expect(config.autoSyncEnabled, isFalse);
+    expect(config.freeModeEnabled, isTrue);
+    sliders = tester.widgetList<Slider>(find.byType(Slider)).toList();
+    expect(sliders.first.onChanged, isNull);
+    expect(sliders.last.onChanged, isNotNull);
     expect(tester.takeException(), isNull);
 
     await tester.pump(const Duration(milliseconds: 100));

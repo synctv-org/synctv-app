@@ -369,7 +369,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
   final VoidCallback? onEnterPictureInPicture;
-  final VoidCallback? onOpenSettings;
+  final VoidCallback? onOpenFreeModeSettings;
   final ValueChanged<bool>? onUserPlaybackStateChanged;
   final ValueChanged<Duration>? onUserSeek;
   final ValueChanged<double>? onUserPlaybackSpeedChanged;
@@ -412,7 +412,7 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onPrevious,
     this.onNext,
     this.onEnterPictureInPicture,
-    this.onOpenSettings,
+    this.onOpenFreeModeSettings,
     this.onUserPlaybackStateChanged,
     this.onUserSeek,
     this.onUserPlaybackSpeedChanged,
@@ -2118,12 +2118,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     );
   }
 
-  Widget _buildSettingsControl(double iconSize) {
+  Widget _buildFreeModeSettingsControl(double iconSize) {
     return AppIconButton(
-      key: const Key('playback_settings_button'),
+      key: const Key('free_mode_settings_button'),
       icon: Icons.settings_rounded,
-      tooltip: context.l10n.syncSettings,
-      onPressed: widget.onOpenSettings,
+      tooltip: context.l10n.freeModeSettings,
+      onPressed: widget.onOpenFreeModeSettings,
       padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
       constraints: widget.isFullScreen ? null : const BoxConstraints(),
       iconSize: widget.isFullScreen ? 24 : iconSize,
@@ -3152,11 +3152,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                           visible:
                                               visibility.showPictureInPicture,
                                         ),
-                                      if (widget.onOpenSettings != null)
+                                      if (widget.onOpenFreeModeSettings != null)
                                         (
-                                          control: _buildSettingsControl(
-                                            iconSize,
-                                          ),
+                                          control:
+                                              _buildFreeModeSettingsControl(
+                                                iconSize,
+                                              ),
                                           visible: visibility.showSettings,
                                         ),
                                       if (widget.onToggleFullScreen != null)
