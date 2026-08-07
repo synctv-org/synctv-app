@@ -1101,6 +1101,111 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exitPictureInPicture => '返回房间';
 
   @override
+  String get loopPlayback => '循环播放';
+
+  @override
+  String get shufflePlayback => '随机播放';
+
+  @override
+  String get sequentialPlayback => '顺序播放';
+
+  @override
+  String get syncPlayback => '同步到房间进度';
+
+  @override
+  String get reloadLivePlayback => '重新加载直播';
+
+  @override
+  String get reloadPlaybackSource => '重新加载播放源';
+
+  @override
+  String get copyPlaybackDebugInfo => '复制调试信息';
+
+  @override
+  String get playbackDebugInfoCopied => '已复制播放器调试信息';
+
+  @override
+  String get detailedPlaybackStatistics => '详细播放统计';
+
+  @override
+  String playbackModeUpdated(String mode) {
+    return '播放顺序：$mode';
+  }
+
+  @override
+  String updatePlaybackModeFailed(String error) {
+    return '更新播放顺序失败：$error';
+  }
+
+  @override
+  String get playerResource => '资源';
+
+  @override
+  String get playerProvider => '提供方';
+
+  @override
+  String get playerPlaybackRoute => '播放线路';
+
+  @override
+  String get playerFormat => '格式';
+
+  @override
+  String get playerViewportVideo => '视口 / 视频';
+
+  @override
+  String get playerPlaybackState => '播放状态';
+
+  @override
+  String get playerBufferHealth => '缓冲余量';
+
+  @override
+  String get playerSpeedVolume => '速度 / 音量';
+
+  @override
+  String get playerSynchronization => '同步状态';
+
+  @override
+  String get playerThroughput => '吞吐 / 总量';
+
+  @override
+  String get playerP2pDelivery => 'P2P 分发';
+
+  @override
+  String get playerCache => '缓存 / 命中率';
+
+  @override
+  String get playerError => '播放器错误';
+
+  @override
+  String get playerStatePlaying => '播放中';
+
+  @override
+  String get playerStatePaused => '已暂停';
+
+  @override
+  String get playerStateBuffering => '缓冲中';
+
+  @override
+  String playerLatencyMilliseconds(int value) {
+    return '延迟 $value 毫秒';
+  }
+
+  @override
+  String playerDeviationMilliseconds(int value) {
+    return '偏差 $value 毫秒';
+  }
+
+  @override
+  String playerBufferRangeCount(int count) {
+    return '$count 段';
+  }
+
+  @override
+  String playerConnectedPeerCount(int count) {
+    return '$count 个节点';
+  }
+
+  @override
   String get unknown => '未知';
 
   @override

@@ -2096,6 +2096,192 @@ abstract class AppLocalizations {
   /// **'Return to room'**
   String get exitPictureInPicture;
 
+  /// No description provided for @loopPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Loop video'**
+  String get loopPlayback;
+
+  /// No description provided for @shufflePlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle playlist'**
+  String get shufflePlayback;
+
+  /// No description provided for @sequentialPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Sequential playback'**
+  String get sequentialPlayback;
+
+  /// No description provided for @syncPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync with room'**
+  String get syncPlayback;
+
+  /// No description provided for @reloadLivePlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload live stream'**
+  String get reloadLivePlayback;
+
+  /// No description provided for @reloadPlaybackSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload playback source'**
+  String get reloadPlaybackSource;
+
+  /// No description provided for @copyPlaybackDebugInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy debug information'**
+  String get copyPlaybackDebugInfo;
+
+  /// No description provided for @playbackDebugInfoCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback debug information copied'**
+  String get playbackDebugInfoCopied;
+
+  /// No description provided for @detailedPlaybackStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed playback statistics'**
+  String get detailedPlaybackStatistics;
+
+  /// No description provided for @playbackModeUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback order: {mode}'**
+  String playbackModeUpdated(String mode);
+
+  /// No description provided for @updatePlaybackModeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update playback order: {error}'**
+  String updatePlaybackModeFailed(String error);
+
+  /// No description provided for @playerResource.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource'**
+  String get playerResource;
+
+  /// No description provided for @playerProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get playerProvider;
+
+  /// No description provided for @playerPlaybackRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback route'**
+  String get playerPlaybackRoute;
+
+  /// No description provided for @playerFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get playerFormat;
+
+  /// No description provided for @playerViewportVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewport / video'**
+  String get playerViewportVideo;
+
+  /// No description provided for @playerPlaybackState.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get playerPlaybackState;
+
+  /// No description provided for @playerBufferHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Buffer health'**
+  String get playerBufferHealth;
+
+  /// No description provided for @playerSpeedVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed / volume'**
+  String get playerSpeedVolume;
+
+  /// No description provided for @playerSynchronization.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization'**
+  String get playerSynchronization;
+
+  /// No description provided for @playerThroughput.
+  ///
+  /// In en, this message translates to:
+  /// **'Throughput / total'**
+  String get playerThroughput;
+
+  /// No description provided for @playerP2pDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'P2P delivery'**
+  String get playerP2pDelivery;
+
+  /// No description provided for @playerCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache / hit rate'**
+  String get playerCache;
+
+  /// No description provided for @playerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Player error'**
+  String get playerError;
+
+  /// No description provided for @playerStatePlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing'**
+  String get playerStatePlaying;
+
+  /// No description provided for @playerStatePaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get playerStatePaused;
+
+  /// No description provided for @playerStateBuffering.
+  ///
+  /// In en, this message translates to:
+  /// **'Buffering'**
+  String get playerStateBuffering;
+
+  /// No description provided for @playerLatencyMilliseconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} ms latency'**
+  String playerLatencyMilliseconds(int value);
+
+  /// No description provided for @playerDeviationMilliseconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} ms drift'**
+  String playerDeviationMilliseconds(int value);
+
+  /// No description provided for @playerBufferRangeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} ranges'**
+  String playerBufferRangeCount(int count);
+
+  /// No description provided for @playerConnectedPeerCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} peers'**
+  String playerConnectedPeerCount(int count);
+
   /// No description provided for @unknown.
   ///
   /// In en, this message translates to:

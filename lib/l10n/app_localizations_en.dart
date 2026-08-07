@@ -1195,6 +1195,111 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exitPictureInPicture => 'Return to room';
 
   @override
+  String get loopPlayback => 'Loop video';
+
+  @override
+  String get shufflePlayback => 'Shuffle playlist';
+
+  @override
+  String get sequentialPlayback => 'Sequential playback';
+
+  @override
+  String get syncPlayback => 'Sync with room';
+
+  @override
+  String get reloadLivePlayback => 'Reload live stream';
+
+  @override
+  String get reloadPlaybackSource => 'Reload playback source';
+
+  @override
+  String get copyPlaybackDebugInfo => 'Copy debug information';
+
+  @override
+  String get playbackDebugInfoCopied => 'Playback debug information copied';
+
+  @override
+  String get detailedPlaybackStatistics => 'Detailed playback statistics';
+
+  @override
+  String playbackModeUpdated(String mode) {
+    return 'Playback order: $mode';
+  }
+
+  @override
+  String updatePlaybackModeFailed(String error) {
+    return 'Could not update playback order: $error';
+  }
+
+  @override
+  String get playerResource => 'Resource';
+
+  @override
+  String get playerProvider => 'Provider';
+
+  @override
+  String get playerPlaybackRoute => 'Playback route';
+
+  @override
+  String get playerFormat => 'Format';
+
+  @override
+  String get playerViewportVideo => 'Viewport / video';
+
+  @override
+  String get playerPlaybackState => 'Playback';
+
+  @override
+  String get playerBufferHealth => 'Buffer health';
+
+  @override
+  String get playerSpeedVolume => 'Speed / volume';
+
+  @override
+  String get playerSynchronization => 'Synchronization';
+
+  @override
+  String get playerThroughput => 'Throughput / total';
+
+  @override
+  String get playerP2pDelivery => 'P2P delivery';
+
+  @override
+  String get playerCache => 'Cache / hit rate';
+
+  @override
+  String get playerError => 'Player error';
+
+  @override
+  String get playerStatePlaying => 'Playing';
+
+  @override
+  String get playerStatePaused => 'Paused';
+
+  @override
+  String get playerStateBuffering => 'Buffering';
+
+  @override
+  String playerLatencyMilliseconds(int value) {
+    return '$value ms latency';
+  }
+
+  @override
+  String playerDeviationMilliseconds(int value) {
+    return '$value ms drift';
+  }
+
+  @override
+  String playerBufferRangeCount(int count) {
+    return '$count ranges';
+  }
+
+  @override
+  String playerConnectedPeerCount(int count) {
+    return '$count peers';
+  }
+
+  @override
   String get unknown => 'Unknown';
 
   @override

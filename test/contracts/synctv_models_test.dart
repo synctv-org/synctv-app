@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart' as client;
 
 void main() {
   group('RoomMediaEntry playback URL fallback', () {
@@ -56,5 +57,24 @@ void main() {
 
     expect(first.hasSamePlaybackSource(duplicate), isFalse);
     expect(first.hasSamePlaybackSource(refreshed), isTrue);
+  });
+
+  test('room settings preserve typed auto-play configuration', () {
+    final settings = SyncTvRoomSettings.fromJson({
+      'autoPlay': {
+        'enabled': true,
+        'mode': client.PlayMode.PLAY_MODE_SHUFFLE.value,
+        'delay': 7,
+      },
+    });
+
+    expect(settings.autoPlayEnabled, isTrue);
+    expect(settings.autoPlayMode, client.PlayMode.PLAY_MODE_SHUFFLE);
+    expect(settings.autoPlayDelay, 7);
+    expect(settings.toJson()['autoPlay'], {
+      'enabled': true,
+      'mode': client.PlayMode.PLAY_MODE_SHUFFLE.value,
+      'delay': 7,
+    });
   });
 }

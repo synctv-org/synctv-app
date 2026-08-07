@@ -2982,6 +2982,18 @@ class SyncTvService {
     await _domains.roomManagement.updateRoomSettings(roomId, settings);
   }
 
+  static Future<void> updateRoomAutoPlay(
+    String roomId, {
+    required bool enabled,
+    required client_enum.PlayMode mode,
+  }) {
+    return _domains.roomManagement.updateRoomAutoPlay(
+      roomId,
+      enabled: enabled,
+      mode: mode,
+    );
+  }
+
   static Future<void> kickMember(
     String roomId,
     String userId, {

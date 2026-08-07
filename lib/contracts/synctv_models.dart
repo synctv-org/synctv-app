@@ -1327,6 +1327,9 @@ class SyncTvRoomSettings {
   int maxMembers;
   bool chatEnabled;
   bool danmakuEnabled;
+  bool autoPlayEnabled;
+  client.PlayMode autoPlayMode;
+  int autoPlayDelay;
   bool voiceChatEnabled;
   bool p2pMediaEnabled;
   int adminAddedPermissions;
@@ -1344,6 +1347,9 @@ class SyncTvRoomSettings {
     this.maxMembers = 100,
     this.chatEnabled = true,
     this.danmakuEnabled = true,
+    this.autoPlayEnabled = true,
+    this.autoPlayMode = client.PlayMode.PLAY_MODE_SEQUENTIAL,
+    this.autoPlayDelay = 3,
     this.voiceChatEnabled = true,
     this.p2pMediaEnabled = true,
     this.adminAddedPermissions = 0,
@@ -1355,6 +1361,13 @@ class SyncTvRoomSettings {
   });
 
   factory SyncTvRoomSettings.fromJson(Map<String, dynamic> json) {
+    final autoPlayValue = json['autoPlay'];
+    final autoPlay = autoPlayValue is Map
+        ? Map<String, dynamic>.from(autoPlayValue)
+        : const <String, dynamic>{};
+    final parsedMode = client.PlayMode.valueOf(
+      _readInt(autoPlay, 'mode', client.PlayMode.PLAY_MODE_SEQUENTIAL.value),
+    );
     return SyncTvRoomSettings(
       requirePassword: _readBool(json, 'requirePassword', false),
       allowGuestJoin: _readBool(json, 'allowGuestJoin', false),
@@ -1363,6 +1376,13 @@ class SyncTvRoomSettings {
       maxMembers: _readInt(json, 'maxMembers', 100),
       chatEnabled: _readBool(json, 'chatEnabled', true),
       danmakuEnabled: _readBool(json, 'danmakuEnabled', true),
+      autoPlayEnabled: _readBool(autoPlay, 'enabled', true),
+      autoPlayMode:
+          parsedMode == null ||
+              parsedMode == client.PlayMode.PLAY_MODE_UNSPECIFIED
+          ? client.PlayMode.PLAY_MODE_SEQUENTIAL
+          : parsedMode,
+      autoPlayDelay: _readInt(autoPlay, 'delay', 3),
       voiceChatEnabled: _readBool(json, 'voiceChatEnabled', true),
       p2pMediaEnabled: _readBool(json, 'p2pMediaEnabled', true),
       adminAddedPermissions: _readInt(json, 'adminAddedPermissions', 0),
@@ -1392,6 +1412,11 @@ class SyncTvRoomSettings {
       'maxMembers': maxMembers,
       'chatEnabled': chatEnabled,
       'danmakuEnabled': danmakuEnabled,
+      'autoPlay': {
+        'enabled': autoPlayEnabled,
+        'mode': autoPlayMode.value,
+        'delay': autoPlayDelay,
+      },
       'voiceChatEnabled': voiceChatEnabled,
       'p2pMediaEnabled': p2pMediaEnabled,
       'adminAddedPermissions': adminAddedPermissions,

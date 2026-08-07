@@ -53,6 +53,7 @@ import 'package:synctv_app/features/room/presentation/room_settings_page.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media_dialog.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/room/presentation/widgets/custom_video_player.dart';
+import 'package:synctv_app/features/room/presentation/widgets/playback_diagnostics.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_empty_state.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_options_control.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playlist_empty_state.dart';
@@ -240,6 +241,7 @@ class _RoomScreenState extends State<RoomScreen>
   List<ChatMentionInfo> _pendingChatMentions = [];
   AdminRoomMember? _selfMember;
   SyncTvRoomSettings _roomSettings = SyncTvRoomSettings();
+  bool _playModeUpdateInFlight = false;
   int _roomOnlineCount = 0;
   bool _membersLoading = false;
   bool _pinnedMessagesLoading = false;
@@ -344,6 +346,16 @@ class _RoomScreenState extends State<RoomScreen>
     return selfRole ==
             common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value ||
         selfRole == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
+  }
+
+  bool get _canManagePlaybackMode {
+    final member = _selfMember;
+    if (member != null &&
+        (member.permissions & RoomEffectivePermissions.manageRoomSettings) !=
+            0) {
+      return true;
+    }
+    return _canManageRoom;
   }
 
   bool get _isCurrentPlaybackLive => _currentStatus?.entry?.live == true;
@@ -2300,6 +2312,81 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
+  String _playModeDiagnosticsLabel(client_enum.PlayMode mode) {
+    return switch (mode) {
+      client_enum.PlayMode.PLAY_MODE_REPEAT_ONE => 'repeat_one',
+      client_enum.PlayMode.PLAY_MODE_REPEAT_ALL => 'repeat_all',
+      client_enum.PlayMode.PLAY_MODE_SHUFFLE => 'shuffle',
+      _ => 'sequential',
+    };
+  }
+
+  AdaptiveVideoTrackInfo? _selectedAdaptiveVideoTrack() {
+    final selectedId = _adaptiveVideoTracks.selectedTrackId;
+    if (selectedId == 'auto') return null;
+    for (final track in _adaptiveVideoTracks.tracks) {
+      if (track.id == selectedId) return track;
+    }
+    return null;
+  }
+
+  String _adaptiveTrackDiagnosticsLabel() {
+    final selectedId = _adaptiveVideoTracks.selectedTrackId;
+    if (_adaptiveVideoTracks.tracks.isEmpty) return '';
+    if (selectedId == 'auto') return context.l10n.automatic;
+    final selected = _selectedAdaptiveVideoTrack();
+    if (selected == null) return selectedId;
+    return [
+      selected.title ?? '',
+      selected.resolution,
+      if (selected.fps != null && selected.fps! > 0)
+        '${selected.fps!.toStringAsFixed(2)} fps',
+    ].where((value) => value.isNotEmpty).join(' · ');
+  }
+
+  PlaybackDiagnosticsContext _playbackDiagnosticsContext() {
+    final status = _currentStatus;
+    final entry = status?.entry;
+    final selectedUrl = entry?.selectedPlaybackUrlOption;
+    final selectedTrack = _selectedAdaptiveVideoTrack();
+    return PlaybackDiagnosticsContext(
+      roomId: widget.room.roomId,
+      mediaId: status?.playingMediaId.isNotEmpty == true
+          ? status!.playingMediaId
+          : entry?.playbackMediaId ?? '',
+      playlistId: status?.playingPlaylistId.isNotEmpty == true
+          ? status!.playingPlaylistId
+          : entry?.playbackPlaylistId ?? '',
+      targetHash: status?.targetHash ?? '',
+      provider: entry?.sourceProvider ?? '',
+      providerInstance: entry?.providerInstanceName ?? '',
+      resourceType: selectedUrl?.format.isNotEmpty == true
+          ? selectedUrl!.format
+          : entry?.type ?? '',
+      playbackRoute: entry?.playbackChoiceLabel ?? '',
+      adaptiveTrack: _adaptiveTrackDiagnosticsLabel(),
+      codec: selectedTrack?.codec ?? selectedUrl?.codec ?? '',
+      bitrate: selectedTrack?.bitrate ?? selectedUrl?.bitrate,
+      roomPlaybackVersion: status?.version,
+      playMode: _playModeDiagnosticsLabel(_roomSettings.autoPlayMode),
+      serverLatency: _serverLatencySnapshot,
+      playbackDeviationSeconds: _playbackDeviationSnapshot,
+      httpBytes: _p2pMetrics.httpBytes,
+      p2pDownloadBytes: _p2pMetrics.p2pDownloadBytes,
+      p2pUploadBytes: _p2pMetrics.p2pUploadBytes,
+      httpDownloadRate: _p2pMetrics.httpDownloadRate,
+      p2pDownloadRate: _p2pMetrics.p2pDownloadRate,
+      p2pUploadRate: _p2pMetrics.p2pUploadRate,
+      connectedPeers: _p2pMediaManager?.connectedPeerCount ?? 0,
+      cacheBytes: _p2pMetrics.cacheBytes,
+      cacheHits: _p2pMetrics.cacheHits,
+      cacheMisses: _p2pMetrics.cacheMisses,
+      integrityChecks: _p2pMetrics.integrityChecks,
+      integrityMismatches: _p2pMetrics.integrityMismatches,
+      integrityUnavailable: _p2pMetrics.integrityUnavailable,
+    );
+  }
+
   Widget? _buildPlaybackDiagnosticsBadges({
     bool compact = false,
     bool includeLatency = false,
@@ -3445,6 +3532,31 @@ class _RoomScreenState extends State<RoomScreen>
                         onUserPlaybackSpeedChanged: _canControlPlaybackState
                             ? _handleUserPlaybackSpeedChanged
                             : null,
+                        diagnosticsProvider: _playbackDiagnosticsContext,
+                        loopPlayback:
+                            _roomSettings.autoPlayEnabled &&
+                            _roomSettings.autoPlayMode ==
+                                client_enum.PlayMode.PLAY_MODE_REPEAT_ONE,
+                        shufflePlayback:
+                            _roomSettings.autoPlayEnabled &&
+                            _roomSettings.autoPlayMode ==
+                                client_enum.PlayMode.PLAY_MODE_SHUFFLE,
+                        canChangePlayMode:
+                            _canManagePlaybackMode && !_playModeUpdateInFlight,
+                        onLoopPlaybackChanged: (enabled) =>
+                            _updateRoomPlaybackMode(
+                              enabled
+                                  ? client_enum.PlayMode.PLAY_MODE_REPEAT_ONE
+                                  : client_enum.PlayMode.PLAY_MODE_SEQUENTIAL,
+                            ),
+                        onShufflePlaybackChanged: (enabled) =>
+                            _updateRoomPlaybackMode(
+                              enabled
+                                  ? client_enum.PlayMode.PLAY_MODE_SHUFFLE
+                                  : client_enum.PlayMode.PLAY_MODE_SEQUENTIAL,
+                            ),
+                        onReloadPlayback: () =>
+                            unawaited(_reloadCurrentPlaybackUrl()),
                         onSendDanmaku: _sendDanmaku,
                         interactionMode: videoPlayerInteractionModeForPlatform(
                           defaultTargetPlatform,
@@ -3574,6 +3686,47 @@ class _RoomScreenState extends State<RoomScreen>
         context.l10n.syncedToLatestProgress,
         duration: const Duration(seconds: 1),
       );
+    }
+  }
+
+  Future<bool> _updateRoomPlaybackMode(client_enum.PlayMode mode) async {
+    if (_isCurrentPlaybackLive ||
+        !_canManagePlaybackMode ||
+        _playModeUpdateInFlight) {
+      return false;
+    }
+    setState(() => _playModeUpdateInFlight = true);
+    try {
+      await _roomGateway.updateRoomAutoPlay(
+        widget.room.roomId,
+        enabled: true,
+        mode: mode,
+      );
+      if (!mounted) return true;
+      setState(() {
+        _roomSettings.autoPlayEnabled = true;
+        _roomSettings.autoPlayMode = mode;
+      });
+      final label = switch (mode) {
+        client_enum.PlayMode.PLAY_MODE_REPEAT_ONE => context.l10n.loopPlayback,
+        client_enum.PlayMode.PLAY_MODE_SHUFFLE => context.l10n.shufflePlayback,
+        _ => context.l10n.sequentialPlayback,
+      };
+      AppNotifications.showSuccess(
+        context,
+        context.l10n.playbackModeUpdated(label),
+      );
+      return true;
+    } catch (error) {
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.updatePlaybackModeFailed('$error'),
+        );
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _playModeUpdateInFlight = false);
     }
   }
 
@@ -3833,6 +3986,27 @@ class _RoomScreenState extends State<RoomScreen>
           onUserPlaybackSpeedChanged: _canControlPlaybackState
               ? _handleUserPlaybackSpeedChanged
               : null,
+          diagnosticsProvider: _playbackDiagnosticsContext,
+          loopPlayback:
+              _roomSettings.autoPlayEnabled &&
+              _roomSettings.autoPlayMode ==
+                  client_enum.PlayMode.PLAY_MODE_REPEAT_ONE,
+          shufflePlayback:
+              _roomSettings.autoPlayEnabled &&
+              _roomSettings.autoPlayMode ==
+                  client_enum.PlayMode.PLAY_MODE_SHUFFLE,
+          canChangePlayMode: _canManagePlaybackMode && !_playModeUpdateInFlight,
+          onLoopPlaybackChanged: (enabled) => _updateRoomPlaybackMode(
+            enabled
+                ? client_enum.PlayMode.PLAY_MODE_REPEAT_ONE
+                : client_enum.PlayMode.PLAY_MODE_SEQUENTIAL,
+          ),
+          onShufflePlaybackChanged: (enabled) => _updateRoomPlaybackMode(
+            enabled
+                ? client_enum.PlayMode.PLAY_MODE_SHUFFLE
+                : client_enum.PlayMode.PLAY_MODE_SEQUENTIAL,
+          ),
+          onReloadPlayback: () => unawaited(_reloadCurrentPlaybackUrl()),
           onSendDanmaku: _sendDanmaku,
           isFullScreen: true,
           interactionMode: videoPlayerInteractionModeForPlatform(

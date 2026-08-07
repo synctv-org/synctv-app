@@ -259,6 +259,20 @@ class SyncTvRoomManagementDomainService {
     );
   }
 
+  Future<void> updateRoomAutoPlay(
+    String roomId, {
+    required bool enabled,
+    required client_enum.PlayMode mode,
+  }) async {
+    await _api.room.updateRoomSettings(
+      roomId,
+      roomSettingsUpdateRequestFromJson({
+        'autoPlay': {'enabled': enabled, 'mode': mode.value},
+      }),
+    );
+    _cache.invalidate('room:$roomId:settings');
+  }
+
   Future<void> kickMember(
     String roomId,
     String userId, {

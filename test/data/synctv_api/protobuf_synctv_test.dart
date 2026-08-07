@@ -6933,6 +6933,11 @@ void main() {
       expect(settings['chatEnabled'], isFalse);
       expect(settings['voiceChatEnabled'], isFalse);
       expect(settings['p2pMediaEnabled'], isFalse);
+      expect(settings['autoPlay'], {
+        'enabled': true,
+        'mode': client.PlayMode.PLAY_MODE_SEQUENTIAL.value,
+        'delay': 3,
+      });
       expect(
         settings['guestAddedPermissions'],
         RoomGuestPermissions.viewMembers.toString(),
@@ -6940,13 +6945,57 @@ void main() {
       expect(
         body['updateMask'],
         'allowGuestJoin,maxMembers,requireApproval,allowAutoJoin,chatEnabled,'
-        'voiceChatEnabled,p2pMediaEnabled,'
+        'voiceChatEnabled,p2pMediaEnabled,autoPlay.enabled,autoPlay.mode,'
+        'autoPlay.delay,'
         'adminAddedPermissions,adminRemovedPermissions,memberAddedPermissions,'
         'memberRemovedPermissions,guestAddedPermissions,guestRemovedPermissions',
       );
       expect(body.containsKey('roomId'), isFalse);
     },
   );
+
+  test('room playback mode update uses a narrow protobuf field mask', () async {
+    String? requestBody;
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final origin = 'http://${server.address.host}:${server.port}';
+    final requests = server.listen((request) async {
+      requestBody = await utf8.decoder.bind(request).join();
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType.json
+        ..write(
+          jsonEncode({
+            'roomId': 'room_1',
+            'roomName': 'Room 1',
+            'creatorId': 'user_1',
+          }),
+        );
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(origin);
+      await SyncTvService.updateRoomAutoPlay(
+        'room_1',
+        enabled: true,
+        mode: client.PlayMode.PLAY_MODE_SHUFFLE,
+      );
+    } finally {
+      await requests.cancel();
+      await server.close(force: true);
+    }
+
+    final body = jsonDecode(requestBody!) as Map<String, dynamic>;
+    expect(body['updateMask'], 'autoPlay.enabled,autoPlay.mode');
+    expect(body['settings'], {
+      'autoPlay': {
+        'enabled': true,
+        'mode': client.PlayMode.PLAY_MODE_SHUFFLE.value,
+      },
+    });
+  });
 
   test('admin settings reads typed protobuf endpoint', () async {
     Uri? requestedUri;

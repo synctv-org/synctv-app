@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' show PointerDeviceKind;
 
+import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -375,6 +376,208 @@ void main() {
 
     expect(byAppTooltip('Playback speed'), findsNothing);
   });
+
+  testWidgets('desktop secondary click opens playback context menu', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 12),
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+    var loopEnabled = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 500,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              canChangePlayMode: true,
+              onLoopPlaybackChanged: (enabled) async {
+                loopEnabled = enabled;
+                return true;
+              },
+              onShufflePlaybackChanged: (_) async => true,
+              onReloadPlayback: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    Future<void> openMenu() async {
+      final center = tester.getCenter(find.byType(CustomVideoPlayer));
+      final mouse = await tester.createGesture(
+        kind: PointerDeviceKind.mouse,
+        buttons: kSecondaryMouseButton,
+      );
+      await mouse.addPointer(location: center);
+      await mouse.down(center);
+      await mouse.up();
+      await mouse.removePointer();
+      await tester.pumpAndSettle();
+    }
+
+    await openMenu();
+    expect(find.text('Loop video'), findsOneWidget);
+    expect(find.text('Shuffle playlist'), findsOneWidget);
+    expect(find.text('Reload playback source'), findsOneWidget);
+    expect(find.text('Copy debug information'), findsOneWidget);
+    expect(find.text('Detailed playback statistics'), findsOneWidget);
+
+    await tester.tap(find.text('Loop video'));
+    await tester.pumpAndSettle();
+    expect(loopEnabled, isTrue);
+
+    await openMenu();
+    await tester.tap(find.text('Detailed playback statistics'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('playback_detailed_statistics')),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .getRect(find.byKey(const Key('playback_detailed_statistics')))
+          .bottom,
+      lessThanOrEqualTo(
+        tester.getRect(find.byKey(const Key('playback_progress_slider'))).top,
+      ),
+    );
+
+    await tester.tap(
+      find.byKey(const Key('close_playback_detailed_statistics')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('playback_detailed_statistics')), findsNothing);
+  });
+
+  testWidgets('live playback context menu omits queue ordering actions', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration.zero,
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 500,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Live',
+              isLive: true,
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              canChangePlayMode: true,
+              onLoopPlaybackChanged: (_) async => true,
+              onShufflePlaybackChanged: (_) async => true,
+              onSync: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final center = tester.getCenter(find.byType(CustomVideoPlayer));
+    final mouse = await tester.createGesture(
+      kind: PointerDeviceKind.mouse,
+      buttons: kSecondaryMouseButton,
+    );
+    await mouse.addPointer(location: center);
+    await mouse.down(center);
+    await mouse.up();
+    await mouse.removePointer();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Loop video'), findsNothing);
+    expect(find.text('Shuffle playlist'), findsNothing);
+    expect(find.text('Reload live stream'), findsOneWidget);
+    expect(find.text('Copy debug information'), findsOneWidget);
+  });
+
+  testWidgets(
+    'playback context menu hides play mode actions without permission',
+    (tester) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 12),
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: buildThemedTestApp,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: 900,
+              height: 500,
+              child: CustomVideoPlayer(
+                volumePreferences: _volumePreferences(),
+                subtitleSource: const _EmptySubtitleSource(),
+                controller: controller,
+                title: 'Video',
+                interactionMode: VideoPlayerInteractionMode.desktop,
+                canChangePlayMode: false,
+                onLoopPlaybackChanged: (_) async => true,
+                onShufflePlaybackChanged: (_) async => true,
+                onReloadPlayback: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final center = tester.getCenter(find.byType(CustomVideoPlayer));
+      final mouse = await tester.createGesture(
+        kind: PointerDeviceKind.mouse,
+        buttons: kSecondaryMouseButton,
+      );
+      await mouse.addPointer(location: center);
+      await mouse.down(center);
+      await mouse.up();
+      await mouse.removePointer();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Loop video'), findsNothing);
+      expect(find.text('Shuffle playlist'), findsNothing);
+      expect(find.text('Reload playback source'), findsOneWidget);
+      expect(find.text('Copy debug information'), findsOneWidget);
+      expect(find.text('Detailed playback statistics'), findsOneWidget);
+    },
+  );
 
   testWidgets('desktop volume slider stays interactive across overlay', (
     tester,

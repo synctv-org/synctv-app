@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/time/synced_clock.dart';
 import 'package:video_player/video_player.dart';
 import 'package:screen_brightness/screen_brightness.dart';
@@ -21,6 +22,8 @@ import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart
 import 'package:synctv_app/core/network/resource_url_resolver.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/features/room/presentation/widgets/playback_context_menu.dart';
+import 'package:synctv_app/features/room/presentation/widgets/playback_diagnostics.dart';
 
 class DanmakuController extends ChangeNotifier {
   DanmakuController(
@@ -380,6 +383,14 @@ class CustomVideoPlayer extends StatefulWidget {
   final IconData? exitFullScreenIcon;
   final Widget? extraBottomWidget;
   final Widget? Function(BuildContext context)? diagnosticsBuilder;
+  final PlaybackDiagnosticsContext diagnostics;
+  final ValueGetter<PlaybackDiagnosticsContext>? diagnosticsProvider;
+  final bool loopPlayback;
+  final bool shufflePlayback;
+  final bool canChangePlayMode;
+  final Future<bool> Function(bool enabled)? onLoopPlaybackChanged;
+  final Future<bool> Function(bool enabled)? onShufflePlaybackChanged;
+  final VoidCallback? onReloadPlayback;
   final VideoPlayerInteractionMode interactionMode;
   final ResourceUrlResolver resourceUrlResolver;
   final PlayerVolumePreferencesController volumePreferences;
@@ -415,6 +426,14 @@ class CustomVideoPlayer extends StatefulWidget {
     this.exitFullScreenIcon,
     this.extraBottomWidget,
     this.diagnosticsBuilder,
+    this.diagnostics = const PlaybackDiagnosticsContext(),
+    this.diagnosticsProvider,
+    this.loopPlayback = false,
+    this.shufflePlayback = false,
+    this.canChangePlayMode = false,
+    this.onLoopPlaybackChanged,
+    this.onShufflePlaybackChanged,
+    this.onReloadPlayback,
     this.interactionMode = VideoPlayerInteractionMode.mobile,
     this.resourceUrlResolver = const IdentityResourceUrlResolver(),
   });
@@ -1304,6 +1323,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     with SingleTickerProviderStateMixin {
   bool _showControls = true;
   bool _showOverflowControls = false;
+  bool _showDetailedStatistics = false;
+  Size _viewportSize = Size.zero;
+  bool? _loopPlaybackOverride;
+  bool? _shufflePlaybackOverride;
+  bool _playModeChangePending = false;
   Timer? _hideTimer;
   bool _isDragging = false;
   bool _isVerticalDragging = false;
@@ -1336,6 +1360,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   bool get _isDesktopMode =>
       widget.interactionMode == VideoPlayerInteractionMode.desktop;
+
+  bool get _loopPlayback => _loopPlaybackOverride ?? widget.loopPlayback;
+
+  bool get _shufflePlayback =>
+      _shufflePlaybackOverride ?? widget.shufflePlayback;
 
   @override
   void initState() {
@@ -1410,6 +1439,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       } else {
         _removeVolumeOverlay();
       }
+    }
+
+    if (widget.loopPlayback != oldWidget.loopPlayback ||
+        widget.shufflePlayback != oldWidget.shufflePlayback) {
+      _loopPlaybackOverride = null;
+      _shufflePlaybackOverride = null;
     }
   }
 
@@ -2613,6 +2648,130 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     );
   }
 
+  PlaybackDiagnosticsSnapshot _playbackDiagnosticsSnapshot() {
+    final value = widget.controller.value;
+    return PlaybackDiagnosticsSnapshot(
+      capturedAt: DateTime.now(),
+      title: widget.title,
+      isLive: widget.isLive,
+      isInitialized: value.isInitialized,
+      isPlaying: value.isPlaying,
+      isBuffering: value.isBuffering,
+      isCompleted: value.isCompleted,
+      isLooping: value.isLooping,
+      position: value.position,
+      duration: value.duration,
+      buffered: [
+        for (final range in value.buffered)
+          PlaybackBufferRange(start: range.start, end: range.end),
+      ],
+      viewportSize: _viewportSize,
+      videoSize: value.size,
+      volume: value.volume,
+      playbackSpeed: value.playbackSpeed,
+      errorDescription: value.errorDescription,
+      context: widget.diagnosticsProvider?.call() ?? widget.diagnostics,
+    );
+  }
+
+  Future<void> _copyPlaybackDebugInfo() async {
+    await Clipboard.setData(
+      ClipboardData(text: _playbackDiagnosticsSnapshot().toPrettyJson()),
+    );
+    if (!mounted) return;
+    AppNotifications.showInfo(
+      context,
+      context.l10n.playbackDebugInfoCopied,
+      duration: const Duration(seconds: 1),
+    );
+  }
+
+  Future<void> _changeContextMenuPlayMode({
+    required bool loop,
+    required bool shuffle,
+    required Future<bool> Function(bool enabled)? callback,
+  }) async {
+    if (_playModeChangePending || callback == null) return;
+    setState(() => _playModeChangePending = true);
+    var changed = false;
+    try {
+      changed = await callback(loop || shuffle);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _playModeChangePending = false;
+          if (changed) {
+            _loopPlaybackOverride = loop;
+            _shufflePlaybackOverride = shuffle;
+          }
+        });
+      }
+    }
+  }
+
+  Future<void> _showPlaybackContextMenu(Offset globalPosition) async {
+    _hideTimer?.cancel();
+    if (mounted && !_showControls) {
+      setState(() => _showControls = true);
+    }
+    final action = await showPlaybackContextMenu(
+      context: context,
+      globalPosition: globalPosition,
+      state: PlaybackContextMenuState(
+        isLive: widget.isLive,
+        loopEnabled: _loopPlayback,
+        shuffleEnabled: _shufflePlayback,
+        canChangePlayMode:
+            widget.canChangePlayMode &&
+            !_playModeChangePending &&
+            widget.onLoopPlaybackChanged != null &&
+            widget.onShufflePlaybackChanged != null,
+        detailedStatisticsVisible: _showDetailedStatistics,
+        canSync: widget.onSync != null,
+        canReloadSource: widget.onReloadPlayback != null,
+        canEnterPictureInPicture: widget.onEnterPictureInPicture != null,
+      ),
+    );
+    if (!mounted || action == null) {
+      _startHideTimer();
+      return;
+    }
+    switch (action) {
+      case PlaybackContextMenuAction.toggleLoop:
+        await _changeContextMenuPlayMode(
+          loop: !_loopPlayback,
+          shuffle: false,
+          callback: widget.onLoopPlaybackChanged,
+        );
+        break;
+      case PlaybackContextMenuAction.toggleShuffle:
+        await _changeContextMenuPlayMode(
+          loop: false,
+          shuffle: !_shufflePlayback,
+          callback: widget.onShufflePlaybackChanged,
+        );
+        break;
+      case PlaybackContextMenuAction.sync:
+        widget.onSync?.call();
+        break;
+      case PlaybackContextMenuAction.reloadSource:
+        widget.onReloadPlayback?.call();
+        break;
+      case PlaybackContextMenuAction.pictureInPicture:
+        widget.onEnterPictureInPicture?.call();
+        break;
+      case PlaybackContextMenuAction.copyDebugInfo:
+        await _copyPlaybackDebugInfo();
+        break;
+      case PlaybackContextMenuAction.toggleDetailedStatistics:
+        setState(() {
+          _showDetailedStatistics = !_showDetailedStatistics;
+        });
+        break;
+    }
+    _startHideTimer();
+  }
+
   void _showDanmakuInput() {
     final textController = TextEditingController();
     showAppBottomSheet<void>(
@@ -2697,6 +2856,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             excludeFromSemantics: true,
+            onSecondaryTapDown: (details) =>
+                unawaited(_showPlaybackContextMenu(details.globalPosition)),
+            onLongPressStart: _isDesktopMode
+                ? null
+                : (details) => unawaited(
+                    _showPlaybackContextMenu(details.globalPosition),
+                  ),
             onTap: _isDesktopMode
                 ? (!widget.canControlPlayback || widget.isLive
                       ? null
@@ -3266,6 +3432,39 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         ),
                       ),
                     ],
+                  ),
+                ),
+                Positioned.fill(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      _viewportSize = constraints.biggest;
+                      if (!_showDetailedStatistics) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          12,
+                          widget.isFullScreen ? 62 : 8,
+                          12,
+                          widget.isFullScreen ? 88 : 64,
+                        ),
+                        child: Align(
+                          alignment: Alignment.topLeft,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 460,
+                              maxHeight: 410,
+                            ),
+                            child: PlaybackStatisticsPanel(
+                              snapshot: _playbackDiagnosticsSnapshot(),
+                              onClose: () => setState(
+                                () => _showDetailedStatistics = false,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],

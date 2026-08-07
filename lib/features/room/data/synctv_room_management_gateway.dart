@@ -52,6 +52,12 @@ final class SyncTvRoomManagementGateway implements RoomManagementGateway {
   Future<void> updateRoomSettings(String roomId, SyncTvRoomSettings settings) =>
       SyncTvService.updateRoomSettings(roomId, settings);
   @override
+  Future<void> updateRoomAutoPlay(
+    String roomId, {
+    required bool enabled,
+    required client.PlayMode mode,
+  }) => SyncTvService.updateRoomAutoPlay(roomId, enabled: enabled, mode: mode);
+  @override
   Future<void> kickMember(
     String roomId,
     String userId, {

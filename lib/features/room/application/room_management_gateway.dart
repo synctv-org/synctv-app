@@ -26,6 +26,11 @@ abstract interface class RoomManagementGateway {
   });
   Future<void> updateRoomPassword(String roomId, String? password);
   Future<void> updateRoomSettings(String roomId, SyncTvRoomSettings settings);
+  Future<void> updateRoomAutoPlay(
+    String roomId, {
+    required bool enabled,
+    required client.PlayMode mode,
+  });
   Future<void> kickMember(
     String roomId,
     String userId, {
