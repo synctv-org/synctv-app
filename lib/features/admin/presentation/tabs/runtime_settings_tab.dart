@@ -2259,14 +2259,12 @@ Map<String, dynamic> _oauth2ProviderConfig(Map<String, dynamic> value) {
   return <String, dynamic>{};
 }
 
-bool _oauth2ProviderHasClientId(
-  String type,
-  Map<String, dynamic> config,
-) {
+bool _oauth2ProviderHasClientId(String type, Map<String, dynamic> config) {
   if (type == 'apple') {
-    return [config['webClientId'], config['nativeClientId']].any(
-      (value) => value?.toString().trim().isNotEmpty ?? false,
-    );
+    return [
+      config['webClientId'],
+      config['nativeClientId'],
+    ].any((value) => value?.toString().trim().isNotEmpty ?? false);
   }
   return config['clientId']?.toString().trim().isNotEmpty ?? false;
 }
