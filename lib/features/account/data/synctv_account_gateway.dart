@@ -129,12 +129,14 @@ final class SyncTvAccountGateway implements AccountGateway {
   @override
   Future<OAuth2AuthorizationStart> startOAuth2Bind(
     String provider, {
-    required String redirectUrl,
+    String? redirectUrl,
     required String verificationId,
+    bool native = false,
   }) => SyncTvService.startOAuth2Bind(
     provider,
     redirectUrl: redirectUrl,
     verificationId: verificationId,
+    native: native,
   );
 
   @override

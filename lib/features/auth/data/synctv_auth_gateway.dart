@@ -90,8 +90,13 @@ final class SyncTvAuthGateway implements AuthGateway {
   @override
   Future<OAuth2AuthorizationStart> startOAuth2Login(
     String provider, {
-    required String redirectUrl,
-  }) => SyncTvService.startOAuth2Login(provider, redirectUrl: redirectUrl);
+    String? redirectUrl,
+    bool native = false,
+  }) => SyncTvService.startOAuth2Login(
+    provider,
+    redirectUrl: redirectUrl,
+    native: native,
+  );
 
   @override
   Future<AuthResult> finishOAuth2Login({

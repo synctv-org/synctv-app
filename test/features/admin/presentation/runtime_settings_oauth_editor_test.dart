@@ -35,7 +35,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final secretField = find.descendant(
-        of: find.widgetWithText(AppTextField, 'Client Secret'),
+        of: find.widgetWithText(AppTextField, 'Apple Services ID Secret'),
         matching: find.byType(TextFormField),
       );
       expect(secretField, findsOneWidget);
@@ -54,9 +54,10 @@ void main() {
       expect(provider, contains('apple'));
       expect(provider, isNot(contains('oidc')));
       final apple = Map<String, dynamic>.from(provider['apple'] as Map);
-      expect(apple['clientId'], 'com.example.synctv');
-      expect(apple['redirectUrl'], 'https://example.com/oauth2/callback');
-      expect(apple, isNot(contains('clientSecret')));
+      expect(apple['webClientId'], 'com.example.synctv.web');
+      expect(apple['nativeClientId'], 'com.example.synctv');
+      expect(apple, isNot(contains('webClientSecret')));
+      expect(apple, isNot(contains('nativeClientSecret')));
       await tester.pump(const Duration(seconds: 4));
       expect(tester.takeException(), isNull);
     },
@@ -83,8 +84,8 @@ final class _RuntimeSettingsAdminGateway implements AdminGateway {
                 'enableSignup': true,
                 'signupNeedReview': false,
                 'apple': {
-                  'clientId': 'com.example.synctv',
-                  'redirectUrl': 'https://example.com/oauth2/callback',
+                  'webClientId': 'com.example.synctv.web',
+                  'nativeClientId': 'com.example.synctv',
                 },
               },
             ],

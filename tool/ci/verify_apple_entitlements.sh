@@ -36,18 +36,16 @@ for purpose_key in \
   fi
 done
 
+if jq -e '.["com.apple.security.network.server"] == true' \
+  "$entitlements_json" >/dev/null; then
+  echo "Apple app contains the unnecessary network server entitlement" >&2
+  exit 1
+fi
+
 if jq -e '.["com.apple.security.app-sandbox"] == true' \
   "$entitlements_json" >/dev/null; then
   jq -e '.["com.apple.security.network.client"] == true' \
     "$entitlements_json" >/dev/null
-  jq -e '.["com.apple.security.network.server"] == true' \
-    "$entitlements_json" >/dev/null
-else
-  if jq -e '.["com.apple.security.network.server"] == true' \
-    "$entitlements_json" >/dev/null; then
-    echo "iOS app contains the macOS-only network server entitlement" >&2
-    exit 1
-  fi
 fi
 
 if [[ -n "$rp_ids" ]]; then

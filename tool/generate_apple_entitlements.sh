@@ -95,9 +95,6 @@ EOF
     cat <<'EOF'
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
-	<!-- Required by the P2P media gateway. -->
-	<key>com.apple.security.network.server</key>
-	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
 	<key>com.apple.security.device.audio-input</key>
@@ -114,6 +111,15 @@ EOF
   elif [[ "$PLATFORM" != "ios" ]]; then
     echo "unsupported Apple platform: $PLATFORM" >&2
     exit 1
+  fi
+
+  if [[ -n "$SIGNING_TEAM" ]]; then
+    cat <<'EOF'
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+EOF
   fi
 
   if [[ ${#associated_domains[@]} -gt 0 ]]; then

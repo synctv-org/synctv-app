@@ -600,20 +600,30 @@ List<_SettingChoice> _roomPasswordChoices(AppLocalizations l10n) => [
 ];
 
 const List<String> _oauth2ProviderTypes = [
+  'qq',
   'github',
   'google',
+  'microsoft',
+  'discord',
+  'casdoor',
   'logto',
   'oidc',
-  'casdoor',
+  'feishu',
+  'gitee',
   'apple',
 ];
 
 const Map<String, String> _oauth2ProviderTypeLabels = {
+  'qq': 'QQ',
   'github': 'GitHub',
   'google': 'Google',
+  'microsoft': 'Microsoft',
+  'discord': 'Discord',
+  'casdoor': 'Casdoor',
   'logto': 'Logto',
   'oidc': 'OIDC',
-  'casdoor': 'Casdoor',
+  'feishu': 'Feishu',
+  'gitee': 'Gitee',
   'apple': 'Apple',
 };
 
@@ -2425,7 +2435,11 @@ class _OAuth2ProviderCard extends StatelessWidget {
     final theme = Theme.of(context);
     final providerType = _oauth2ProviderType(value);
     final config = _oauth2ProviderConfig(value);
-    final hasClientId = (config['clientId'] ?? '').toString().isNotEmpty;
+    final hasClientId = providerType == 'apple'
+        ? (config['webClientId'] ?? config['nativeClientId'] ?? '')
+              .toString()
+              .isNotEmpty
+        : (config['clientId'] ?? '').toString().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: AppCard(
@@ -2555,7 +2569,11 @@ class _OAuth2ProviderEditorSheetState
   late final TextEditingController _name;
   late final TextEditingController _clientId;
   late final TextEditingController _clientSecret;
-  late final TextEditingController _redirectUrl;
+  late final TextEditingController _appleWebClientId;
+  late final TextEditingController _appleWebClientSecret;
+  late final TextEditingController _appleNativeClientId;
+  late final TextEditingController _appleNativeClientSecret;
+  late final TextEditingController _tenant;
   late final TextEditingController _endpoint;
   late final TextEditingController _issuer;
   late final TextEditingController _authUrl;
@@ -2564,6 +2582,8 @@ class _OAuth2ProviderEditorSheetState
   late final TextEditingController _jwksUrl;
   late final String _initialType;
   late final String _initialClientId;
+  late final String _initialAppleWebClientId;
+  late final String _initialAppleNativeClientId;
   late String _type;
   late bool _enableSignup;
   late bool _signupNeedReview;
@@ -2576,6 +2596,8 @@ class _OAuth2ProviderEditorSheetState
     if (!_oauth2ProviderTypes.contains(_type)) _type = 'oidc';
     _initialType = _type;
     _initialClientId = (config['clientId'] ?? '').toString();
+    _initialAppleWebClientId = (config['webClientId'] ?? '').toString();
+    _initialAppleNativeClientId = (config['nativeClientId'] ?? '').toString();
     _enableSignup = widget.initialValue['enableSignup'] == true;
     _signupNeedReview = widget.initialValue['signupNeedReview'] == true;
     _name = TextEditingController(text: widget.initialName ?? _type);
@@ -2585,8 +2607,20 @@ class _OAuth2ProviderEditorSheetState
     _clientSecret = TextEditingController(
       text: (config['clientSecret'] ?? '').toString(),
     );
-    _redirectUrl = TextEditingController(
-      text: (config['redirectUrl'] ?? '').toString(),
+    _appleWebClientId = TextEditingController(
+      text: (config['webClientId'] ?? '').toString(),
+    );
+    _appleWebClientSecret = TextEditingController(
+      text: (config['webClientSecret'] ?? '').toString(),
+    );
+    _appleNativeClientId = TextEditingController(
+      text: (config['nativeClientId'] ?? '').toString(),
+    );
+    _appleNativeClientSecret = TextEditingController(
+      text: (config['nativeClientSecret'] ?? '').toString(),
+    );
+    _tenant = TextEditingController(
+      text: (config['tenant'] ?? 'common').toString(),
     );
     _endpoint = TextEditingController(
       text: (config['endpoint'] ?? '').toString(),
@@ -2611,7 +2645,11 @@ class _OAuth2ProviderEditorSheetState
     _name.dispose();
     _clientId.dispose();
     _clientSecret.dispose();
-    _redirectUrl.dispose();
+    _appleWebClientId.dispose();
+    _appleWebClientSecret.dispose();
+    _appleNativeClientId.dispose();
+    _appleNativeClientSecret.dispose();
+    _tenant.dispose();
     _endpoint.dispose();
     _issuer.dispose();
     _authUrl.dispose();
@@ -2683,40 +2721,62 @@ class _OAuth2ProviderEditorSheetState
                         },
                       ),
                       const SizedBox(height: 12),
-                      _oauthTextField(
-                        _clientId,
-                        'Client ID',
-                        Icons.key_outlined,
-                        required: true,
-                        onChanged: (_) => setState(() {}),
-                      ),
+                      if (_type == 'apple') ...[
+                        _oauthTextField(
+                          _appleWebClientId,
+                          'Apple Services ID',
+                          Icons.language_outlined,
+                          onChanged: (_) => setState(() {}),
+                          hintText: 'org.example.app.web',
+                        ),
+                        const SizedBox(height: 12),
+                        _oauthSecretField(
+                          _appleWebClientSecret,
+                          'Apple Services ID Secret',
+                          _canPreserveAppleClientSecrets,
+                          required: false,
+                        ),
+                        const SizedBox(height: 12),
+                        _oauthTextField(
+                          _appleNativeClientId,
+                          'Apple App ID (Bundle ID)',
+                          Icons.phone_iphone_outlined,
+                          onChanged: (_) => setState(() {}),
+                          hintText: 'org.example.app',
+                        ),
+                        const SizedBox(height: 12),
+                        _oauthSecretField(
+                          _appleNativeClientSecret,
+                          'Apple App ID Secret',
+                          _canPreserveAppleClientSecrets,
+                          required: false,
+                        ),
+                      ] else ...[
+                        _oauthTextField(
+                          _clientId,
+                          'Client ID',
+                          Icons.key_outlined,
+                          required: true,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 12),
+                        _oauthSecretField(
+                          _clientSecret,
+                          'Client Secret',
+                          _canPreserveClientSecret,
+                        ),
+                      ],
+                      if (_type == 'microsoft') ...[
+                        const SizedBox(height: 12),
+                        _oauthTextField(
+                          _tenant,
+                          'Microsoft Tenant',
+                          Icons.domain_outlined,
+                          required: true,
+                          hintText: 'common',
+                        ),
+                      ],
                       const SizedBox(height: 12),
-                      AppTextField(
-                        controller: _clientSecret,
-                        label: 'Client Secret',
-                        helperText: _canPreserveClientSecret
-                            ? context.l10n.emptyKeepsCurrentValue
-                            : null,
-                        prefixIcon: Icons.password_outlined,
-                        obscureText: true,
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty) &&
-                                !_canPreserveClientSecret
-                            ? context.l10n.clientSecretRequired
-                            : null,
-                        autocorrect: false,
-                        smartDashesType: SmartDashesType.disabled,
-                        smartQuotesType: SmartQuotesType.disabled,
-                      ),
-                      const SizedBox(height: 12),
-                      _oauthTextField(
-                        _redirectUrl,
-                        context.l10n.callbackUrl,
-                        Icons.link_rounded,
-                        required: true,
-                        hintText: 'https://example.com/api/oauth2/callback',
-                        validator: _validateHttpUrl,
-                      ),
                       if (_type == 'logto') ...[
                         const SizedBox(height: 12),
                         _oauthTextField(
@@ -2726,6 +2786,16 @@ class _OAuth2ProviderEditorSheetState
                           required: true,
                           hintText: 'https://auth.example.com',
                           validator: _validateHttpUrl,
+                        ),
+                      ],
+                      if (_type == 'feishu') ...[
+                        const SizedBox(height: 12),
+                        _oauthTextField(
+                          _endpoint,
+                          'Feishu Endpoint',
+                          Icons.hub_outlined,
+                          hintText: 'https://open.feishu.cn',
+                          validator: _validateOptionalHttpUrl,
                         ),
                       ],
                       if (_type == 'oidc' || _type == 'casdoor') ...[
@@ -2833,6 +2903,28 @@ class _OAuth2ProviderEditorSheetState
     );
   }
 
+  Widget _oauthSecretField(
+    TextEditingController controller,
+    String label,
+    bool canPreserve, {
+    bool required = true,
+  }) {
+    return AppTextField(
+      controller: controller,
+      label: label,
+      helperText: canPreserve ? context.l10n.emptyKeepsCurrentValue : null,
+      prefixIcon: Icons.password_outlined,
+      obscureText: true,
+      validator: (value) =>
+          required && (value == null || value.trim().isEmpty) && !canPreserve
+          ? context.l10n.clientSecretRequired
+          : null,
+      autocorrect: false,
+      smartDashesType: SmartDashesType.disabled,
+      smartQuotesType: SmartQuotesType.disabled,
+    );
+  }
+
   String? _validateProviderName(String? value) {
     final name = value?.trim() ?? '';
     if (name.isEmpty) return context.l10n.instanceNameRequired;
@@ -2871,17 +2963,43 @@ class _OAuth2ProviderEditorSheetState
       _type == _initialType &&
       _clientId.text.trim() == _initialClientId;
 
+  bool get _canPreserveAppleClientSecrets =>
+      widget.initialName != null &&
+      _name.text.trim() == widget.initialName &&
+      _type == _initialType &&
+      _appleWebClientId.text.trim() == _initialAppleWebClientId &&
+      _appleNativeClientId.text.trim() == _initialAppleNativeClientId;
+
   void _save() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    final config = <String, dynamic>{
-      'clientId': _clientId.text.trim(),
-      'redirectUrl': _redirectUrl.text.trim(),
-    };
-    final clientSecret = _clientSecret.text;
-    if (clientSecret.trim().isNotEmpty || !_canPreserveClientSecret) {
-      config['clientSecret'] = clientSecret;
+    final config = <String, dynamic>{};
+    if (_type == 'apple') {
+      config['webClientId'] = _appleWebClientId.text.trim();
+      config['nativeClientId'] = _appleNativeClientId.text.trim();
+      final webClientSecret = _appleWebClientSecret.text;
+      if (webClientSecret.trim().isNotEmpty ||
+          !_canPreserveAppleClientSecrets) {
+        config['webClientSecret'] = webClientSecret;
+      }
+      final nativeClientSecret = _appleNativeClientSecret.text;
+      if (nativeClientSecret.trim().isNotEmpty ||
+          !_canPreserveAppleClientSecrets) {
+        config['nativeClientSecret'] = nativeClientSecret;
+      }
+    } else {
+      config['clientId'] = _clientId.text.trim();
+      final clientSecret = _clientSecret.text;
+      if (clientSecret.trim().isNotEmpty || !_canPreserveClientSecret) {
+        config['clientSecret'] = clientSecret;
+      }
+    }
+    if (_type == 'microsoft') {
+      config['tenant'] = _tenant.text.trim();
     }
     if (_type == 'logto') {
+      config['endpoint'] = _endpoint.text.trim();
+    }
+    if (_type == 'feishu' && _endpoint.text.trim().isNotEmpty) {
       config['endpoint'] = _endpoint.text.trim();
     }
     if (_type == 'oidc' || _type == 'casdoor') {

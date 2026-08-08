@@ -16,6 +16,67 @@ bool isAppleOAuthProvider(OAuth2ProviderOption provider) {
   return oauthProviderKind(type: provider.type, name: provider.name) == 'apple';
 }
 
+bool isNativeAppleOAuthProvider(OAuth2ProviderOption provider) {
+  return isAppleOAuthProvider(provider) && provider.supportsNative;
+}
+
+bool isBrowserAppleOAuthProvider(OAuth2ProviderOption provider) {
+  return isAppleOAuthProvider(provider) && provider.supportsBrowser;
+}
+
+bool shouldUseNativeAppleOAuth(
+  OAuth2ProviderOption provider,
+  TargetPlatform platform,
+) {
+  return isNativeAppleOAuthProvider(provider) &&
+      supportsNativeAppleSignInButton(platform);
+}
+
+bool shouldUseAppleSignInButton(
+  OAuth2ProviderOption provider,
+  TargetPlatform platform,
+) {
+  return !kIsWeb &&
+      isAppleOAuthProvider(provider) &&
+      supportsNativeAppleSignInButton(platform);
+}
+
+enum OAuth2ClientAuthorizationMode { browser, native }
+
+/// Selects the strongest flow available on this client for a provider.
+///
+/// Native Apple authorization is preferred on Apple platforms when the
+/// server advertises it. A browser flow remains a valid fallback whenever
+/// the server advertises browser authorization.
+OAuth2ClientAuthorizationMode? selectOAuth2AuthorizationMode(
+  OAuth2ProviderOption provider, {
+  required TargetPlatform platform,
+  required bool browserAvailable,
+  required bool nativeAvailable,
+}) {
+  if (shouldUseNativeAppleOAuth(provider, platform) && nativeAvailable) {
+    return OAuth2ClientAuthorizationMode.native;
+  }
+  if (provider.supportsBrowser && browserAvailable) {
+    return OAuth2ClientAuthorizationMode.browser;
+  }
+  return null;
+}
+
+bool isOAuthProviderAvailable(
+  OAuth2ProviderOption provider, {
+  required bool browserAvailable,
+  required bool nativeAvailable,
+}) {
+  return selectOAuth2AuthorizationMode(
+        provider,
+        platform: defaultTargetPlatform,
+        browserAvailable: browserAvailable,
+        nativeAvailable: nativeAvailable,
+      ) !=
+      null;
+}
+
 String oauthProviderDisplayName({required String type, required String name}) {
   return switch (oauthProviderKind(type: type, name: name)) {
     'qq' => 'QQ',
@@ -75,8 +136,8 @@ bool supportsNativeAppleSignInButton(TargetPlatform platform) {
   return platform == TargetPlatform.iOS || platform == TargetPlatform.macOS;
 }
 
-class NativeAppleSignInButton extends StatefulWidget {
-  const NativeAppleSignInButton({
+class AppleSignInButton extends StatefulWidget {
+  const AppleSignInButton({
     super.key,
     required this.onPressed,
     required this.semanticLabel,
@@ -88,11 +149,10 @@ class NativeAppleSignInButton extends StatefulWidget {
   final bool enabled;
 
   @override
-  State<NativeAppleSignInButton> createState() =>
-      _NativeAppleSignInButtonState();
+  State<AppleSignInButton> createState() => _AppleSignInButtonState();
 }
 
-class _NativeAppleSignInButtonState extends State<NativeAppleSignInButton> {
+class _AppleSignInButtonState extends State<AppleSignInButton> {
   MethodChannel? _channel;
 
   @override

@@ -60,6 +60,22 @@ final $typed_data.Uint8List oAuth2OperationDescriptor = $convert.base64Decode(
     'Cg9PQXV0aDJPcGVyYXRpb24SIAocT0FVVEgyX09QRVJBVElPTl9VTlNQRUNJRklFRBAAEhoKFk'
     '9BVVRIMl9PUEVSQVRJT05fTE9HSU4QARIZChVPQVVUSDJfT1BFUkFUSU9OX0JJTkQQAg==');
 
+@$core.Deprecated('Use oAuth2ProviderModeDescriptor instead')
+const OAuth2ProviderMode$json = {
+  '1': 'OAuth2ProviderMode',
+  '2': [
+    {'1': 'OAUTH2_PROVIDER_MODE_UNSPECIFIED', '2': 0},
+    {'1': 'OAUTH2_PROVIDER_MODE_BROWSER', '2': 1},
+    {'1': 'OAUTH2_PROVIDER_MODE_NATIVE', '2': 2},
+  ],
+};
+
+/// Descriptor for `OAuth2ProviderMode`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List oAuth2ProviderModeDescriptor = $convert.base64Decode(
+    'ChJPQXV0aDJQcm92aWRlck1vZGUSJAogT0FVVEgyX1BST1ZJREVSX01PREVfVU5TUEVDSUZJRU'
+    'QQABIgChxPQVVUSDJfUFJPVklERVJfTU9ERV9CUk9XU0VSEAESHwobT0FVVEgyX1BST1ZJREVS'
+    'X01PREVfTkFUSVZFEAI=');
+
 @$core.Deprecated('Use oAuth2ProviderInstancePathRequestDescriptor instead')
 const OAuth2ProviderInstancePathRequest$json = {
   '1': 'OAuth2ProviderInstancePathRequest',
@@ -85,29 +101,44 @@ const OAuth2ProviderTypePathRequest$json = {
 /// Descriptor for `OAuth2ProviderTypePathRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2ProviderTypePathRequestDescriptor =
     $convert.base64Decode(
-        'Ch1PQXV0aDJQcm92aWRlclR5cGVQYXRoUmVxdWVzdBJtCghwcm92aWRlchgBIAEoCUJRukhOck'
-        'wQARggMkZeKHFxfGdpdGh1Ynxnb29nbGV8bWljcm9zb2Z0fGRpc2NvcmR8Y2FzZG9vcnxsb2d0'
-        'b3xvaWRjfGZlaXNodXxnaXRlZSkkUghwcm92aWRlcg==');
+        'Ch1PQXV0aDJQcm92aWRlclR5cGVQYXRoUmVxdWVzdBJzCghwcm92aWRlchgBIAEoCUJXukhUcl'
+        'IQARggMkxeKHFxfGdpdGh1Ynxnb29nbGV8bWljcm9zb2Z0fGRpc2NvcmR8Y2FzZG9vcnxsb2d0'
+        'b3xvaWRjfGZlaXNodXxnaXRlZXxhcHBsZSkkUghwcm92aWRlcg==');
 
 @$core.Deprecated('Use getAuthorizationUrlRequestDescriptor instead')
 const GetAuthorizationUrlRequest$json = {
   '1': 'GetAuthorizationUrlRequest',
   '2': [
     {'1': 'provider', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'provider'},
-    {'1': 'redirect_url', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'redirectUrl'},
+    {
+      '1': 'redirect_url',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 0,
+      '10': 'redirectUrl',
+      '17': true
+    },
+    {'1': 'native', '3': 3, '4': 1, '5': 8, '9': 1, '10': 'native', '17': true},
+  ],
+  '8': [
+    {'1': '_redirect_url'},
+    {'1': '_native'},
   ],
 };
 
 /// Descriptor for `GetAuthorizationUrlRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getAuthorizationUrlRequestDescriptor = $convert.base64Decode(
     'ChpHZXRBdXRob3JpemF0aW9uVXJsUmVxdWVzdBI3Cghwcm92aWRlchgBIAEoCUIbukgYchYQAR'
-    'hAMhBeW0EtWmEtejAtOV8tXSskUghwcm92aWRlchK5AgoMcmVkaXJlY3RfdXJsGAIgASgJQpUC'
+    'hAMhBeW0EtWmEtejAtOV8tXSskUghwcm92aWRlchK+AgoMcmVkaXJlY3RfdXJsGAIgASgJQpUC'
     'ukiRAroBjQIKKW9hdXRoMi5nZXRfYXV0aG9yaXphdGlvbl91cmwucmVkaXJlY3RfdXJsEkByZW'
     'RpcmVjdF91cmwgbXVzdCBiZSBlbXB0eSwgYW4gaHR0cHMgVVJMLCBvciBhIGxvb3BiYWNrIGh0'
     'dHAgVVJMGp0BdGhpcyA9PSAnJyB8fCAoc2l6ZSh0aGlzKSA8PSAyMDQ4ICYmICh0aGlzLm1hdG'
     'NoZXMoJ15odHRwczovL1teXFxzXSskJykgfHwgdGhpcy5tYXRjaGVzKCdeaHR0cDovLygxMjdc'
-    'XC4wXFwuMFxcLjF8bG9jYWxob3N0fFxcWzo6MVxcXSkoOlswLTldKyk/L1teXFxzXSokJykpKV'
-    'ILcmVkaXJlY3RVcmw=');
+    'XC4wXFwuMFxcLjF8bG9jYWxob3N0fFxcWzo6MVxcXSkoOlswLTldKyk/L1teXFxzXSokJykpKU'
+    'gAUgtyZWRpcmVjdFVybIgBARIbCgZuYXRpdmUYAyABKAhIAVIGbmF0aXZliAEBQg8KDV9yZWRp'
+    'cmVjdF91cmxCCQoHX25hdGl2ZQ==');
 
 @$core.Deprecated('Use getAuthorizationUrlResponseDescriptor instead')
 const GetAuthorizationUrlResponse$json = {
@@ -118,7 +149,9 @@ const GetAuthorizationUrlResponse$json = {
       '3': 1,
       '4': 1,
       '5': 9,
-      '10': 'authorizationUrl'
+      '9': 0,
+      '10': 'authorizationUrl',
+      '17': true
     },
     {'1': 'state', '3': 2, '4': 1, '5': 9, '10': 'state'},
     {
@@ -130,22 +163,38 @@ const GetAuthorizationUrlResponse$json = {
       '8': {},
       '10': 'operation'
     },
+    {'1': 'nonce', '3': 4, '4': 1, '5': 9, '9': 1, '10': 'nonce', '17': true},
+  ],
+  '8': [
+    {'1': '_authorization_url'},
+    {'1': '_nonce'},
   ],
 };
 
 /// Descriptor for `GetAuthorizationUrlResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getAuthorizationUrlResponseDescriptor = $convert.base64Decode(
-    'ChtHZXRBdXRob3JpemF0aW9uVXJsUmVzcG9uc2USKwoRYXV0aG9yaXphdGlvbl91cmwYASABKA'
-    'lSEGF1dGhvcml6YXRpb25VcmwSFAoFc3RhdGUYAiABKAlSBXN0YXRlEkgKCW9wZXJhdGlvbhgD'
-    'IAEoDjIeLnN5bmN0di5jbGllbnQuT0F1dGgyT3BlcmF0aW9uQgq6SAeCAQQQASAAUglvcGVyYX'
-    'Rpb24=');
+    'ChtHZXRBdXRob3JpemF0aW9uVXJsUmVzcG9uc2USMAoRYXV0aG9yaXphdGlvbl91cmwYASABKA'
+    'lIAFIQYXV0aG9yaXphdGlvblVybIgBARIUCgVzdGF0ZRgCIAEoCVIFc3RhdGUSSAoJb3BlcmF0'
+    'aW9uGAMgASgOMh4uc3luY3R2LmNsaWVudC5PQXV0aDJPcGVyYXRpb25CCrpIB4IBBBABIABSCW'
+    '9wZXJhdGlvbhIZCgVub25jZRgEIAEoCUgBUgVub25jZYgBAUIUChJfYXV0aG9yaXphdGlvbl91'
+    'cmxCCAoGX25vbmNl');
 
 @$core.Deprecated('Use getAuthorizationUrlForBindRequestDescriptor instead')
 const GetAuthorizationUrlForBindRequest$json = {
   '1': 'GetAuthorizationUrlForBindRequest',
   '2': [
     {'1': 'provider', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'provider'},
-    {'1': 'redirect_url', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'redirectUrl'},
+    {
+      '1': 'redirect_url',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 0,
+      '10': 'redirectUrl',
+      '17': true
+    },
+    {'1': 'native', '3': 4, '4': 1, '5': 8, '9': 1, '10': 'native', '17': true},
     {
       '1': 'verification_id',
       '3': 3,
@@ -155,19 +204,24 @@ const GetAuthorizationUrlForBindRequest$json = {
       '10': 'verificationId'
     },
   ],
+  '8': [
+    {'1': '_redirect_url'},
+    {'1': '_native'},
+  ],
 };
 
 /// Descriptor for `GetAuthorizationUrlForBindRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getAuthorizationUrlForBindRequestDescriptor = $convert.base64Decode(
     'CiFHZXRBdXRob3JpemF0aW9uVXJsRm9yQmluZFJlcXVlc3QSNwoIcHJvdmlkZXIYASABKAlCG7'
-    'pIGHIWEAEYQDIQXltBLVphLXowLTlfLV0rJFIIcHJvdmlkZXISwgIKDHJlZGlyZWN0X3VybBgC'
+    'pIGHIWEAEYQDIQXltBLVphLXowLTlfLV0rJFIIcHJvdmlkZXISxwIKDHJlZGlyZWN0X3VybBgC'
     'IAEoCUKeArpImgK6AZYCCjJvYXV0aDIuZ2V0X2F1dGhvcml6YXRpb25fdXJsX2Zvcl9iaW5kLn'
     'JlZGlyZWN0X3VybBJAcmVkaXJlY3RfdXJsIG11c3QgYmUgZW1wdHksIGFuIGh0dHBzIFVSTCwg'
     'b3IgYSBsb29wYmFjayBodHRwIFVSTBqdAXRoaXMgPT0gJycgfHwgKHNpemUodGhpcykgPD0gMj'
     'A0OCAmJiAodGhpcy5tYXRjaGVzKCdeaHR0cHM6Ly9bXlxcc10rJCcpIHx8IHRoaXMubWF0Y2hl'
     'cygnXmh0dHA6Ly8oMTI3XFwuMFxcLjBcXC4xfGxvY2FsaG9zdHxcXFs6OjFcXF0pKDpbMC05XS'
-    'spPy9bXlxcc10qJCcpKSlSC3JlZGlyZWN0VXJsEjMKD3ZlcmlmaWNhdGlvbl9pZBgDIAEoCUIK'
-    'ukgHcgUQARiAAVIOdmVyaWZpY2F0aW9uSWQ=');
+    'spPy9bXlxcc10qJCcpKSlIAFILcmVkaXJlY3RVcmyIAQESGwoGbmF0aXZlGAQgASgISAFSBm5h'
+    'dGl2ZYgBARIzCg92ZXJpZmljYXRpb25faWQYAyABKAlCCrpIB3IFEAEYgAFSDnZlcmlmaWNhdG'
+    'lvbklkQg8KDV9yZWRpcmVjdF91cmxCCQoHX25hdGl2ZQ==');
 
 @$core.Deprecated('Use getAuthorizationUrlForBindResponseDescriptor instead')
 const GetAuthorizationUrlForBindResponse$json = {
@@ -178,7 +232,9 @@ const GetAuthorizationUrlForBindResponse$json = {
       '3': 1,
       '4': 1,
       '5': 9,
-      '10': 'authorizationUrl'
+      '9': 0,
+      '10': 'authorizationUrl',
+      '17': true
     },
     {'1': 'state', '3': 2, '4': 1, '5': 9, '10': 'state'},
     {
@@ -190,16 +246,22 @@ const GetAuthorizationUrlForBindResponse$json = {
       '8': {},
       '10': 'operation'
     },
+    {'1': 'nonce', '3': 4, '4': 1, '5': 9, '9': 1, '10': 'nonce', '17': true},
+  ],
+  '8': [
+    {'1': '_authorization_url'},
+    {'1': '_nonce'},
   ],
 };
 
 /// Descriptor for `GetAuthorizationUrlForBindResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getAuthorizationUrlForBindResponseDescriptor =
     $convert.base64Decode(
-        'CiJHZXRBdXRob3JpemF0aW9uVXJsRm9yQmluZFJlc3BvbnNlEisKEWF1dGhvcml6YXRpb25fdX'
-        'JsGAEgASgJUhBhdXRob3JpemF0aW9uVXJsEhQKBXN0YXRlGAIgASgJUgVzdGF0ZRJICglvcGVy'
-        'YXRpb24YAyABKA4yHi5zeW5jdHYuY2xpZW50Lk9BdXRoMk9wZXJhdGlvbkIKukgHggEEEAEgAF'
-        'IJb3BlcmF0aW9u');
+        'CiJHZXRBdXRob3JpemF0aW9uVXJsRm9yQmluZFJlc3BvbnNlEjAKEWF1dGhvcml6YXRpb25fdX'
+        'JsGAEgASgJSABSEGF1dGhvcml6YXRpb25VcmyIAQESFAoFc3RhdGUYAiABKAlSBXN0YXRlEkgK'
+        'CW9wZXJhdGlvbhgDIAEoDjIeLnN5bmN0di5jbGllbnQuT0F1dGgyT3BlcmF0aW9uQgq6SAeCAQ'
+        'QQASAAUglvcGVyYXRpb24SGQoFbm9uY2UYBCABKAlIAVIFbm9uY2WIAQFCFAoSX2F1dGhvcml6'
+        'YXRpb25fdXJsQggKBl9ub25jZQ==');
 
 @$core.Deprecated('Use exchangeAuthorizationCodeRequestDescriptor instead')
 const ExchangeAuthorizationCodeRequest$json = {
@@ -356,6 +418,15 @@ const OAuth2ProviderInstance$json = {
       '5': 8,
       '10': 'signupNeedReview'
     },
+    {
+      '1': 'supported_modes',
+      '3': 5,
+      '4': 3,
+      '5': 14,
+      '6': '.synctv.client.OAuth2ProviderMode',
+      '8': {},
+      '10': 'supportedModes'
+    },
   ],
 };
 
@@ -364,7 +435,9 @@ final $typed_data.Uint8List oAuth2ProviderInstanceDescriptor = $convert.base64De
     'ChZPQXV0aDJQcm92aWRlckluc3RhbmNlEhIKBG5hbWUYASABKAlSBG5hbWUSQQoEdHlwZRgCIA'
     'EoDjIhLnN5bmN0di5jbGllbnQuT0F1dGgyUHJvdmlkZXJUeXBlQgq6SAeCAQQQASAAUgR0eXBl'
     'EiUKDnNpZ251cF9lbmFibGVkGAMgASgIUg1zaWdudXBFbmFibGVkEiwKEnNpZ251cF9uZWVkX3'
-    'JldmlldxgEIAEoCFIQc2lnbnVwTmVlZFJldmlldw==');
+    'JldmlldxgEIAEoCFIQc2lnbnVwTmVlZFJldmlldxJbCg9zdXBwb3J0ZWRfbW9kZXMYBSADKA4y'
+    'IS5zeW5jdHYuY2xpZW50Lk9BdXRoMlByb3ZpZGVyTW9kZUIPukgMkgEJIgeCAQQQASAAUg5zdX'
+    'Bwb3J0ZWRNb2Rlcw==');
 
 @$core.Deprecated('Use unlinkProviderRequestDescriptor instead')
 const UnlinkProviderRequest$json = {

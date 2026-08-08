@@ -421,9 +421,14 @@ class SyncTvService {
 
   static Future<OAuth2AuthorizationStart> startOAuth2Login(
     String provider, {
-    String redirectUrl = '',
+    String? redirectUrl,
+    bool native = false,
   }) async {
-    return _domains.auth.startOAuth2Login(provider, redirectUrl: redirectUrl);
+    return _domains.auth.startOAuth2Login(
+      provider,
+      redirectUrl: redirectUrl,
+      native: native,
+    );
   }
 
   static OAuth2CallbackPayload parseOAuth2Callback(
@@ -674,13 +679,15 @@ class SyncTvService {
 
   static Future<OAuth2AuthorizationStart> startOAuth2Bind(
     String provider, {
-    String redirectUrl = '',
+    String? redirectUrl,
     required String verificationId,
+    bool native = false,
   }) async {
     return _domains.auth.startOAuth2Bind(
       provider,
       redirectUrl: redirectUrl,
       verificationId: verificationId,
+      native: native,
     );
   }
 

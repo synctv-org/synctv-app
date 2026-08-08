@@ -143,10 +143,12 @@ class GetAuthorizationUrlRequest extends $pb.GeneratedMessage {
   factory GetAuthorizationUrlRequest({
     $core.String? provider,
     $core.String? redirectUrl,
+    $core.bool? native,
   }) {
     final result = create();
     if (provider != null) result.provider = provider;
     if (redirectUrl != null) result.redirectUrl = redirectUrl;
+    if (native != null) result.native = native;
     return result;
   }
 
@@ -165,6 +167,7 @@ class GetAuthorizationUrlRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'provider')
     ..aOS(2, _omitFieldNames ? '' : 'redirectUrl')
+    ..aOB(3, _omitFieldNames ? '' : 'native')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -209,6 +212,16 @@ class GetAuthorizationUrlRequest extends $pb.GeneratedMessage {
   $core.bool hasRedirectUrl() => $_has(1);
   @$pb.TagNumber(2)
   void clearRedirectUrl() => $_clearField(2);
+
+  /// Ask the selected provider to use its native platform authorization flow.
+  @$pb.TagNumber(3)
+  $core.bool get native => $_getBF(2);
+  @$pb.TagNumber(3)
+  set native($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasNative() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearNative() => $_clearField(3);
 }
 
 class GetAuthorizationUrlResponse extends $pb.GeneratedMessage {
@@ -216,11 +229,13 @@ class GetAuthorizationUrlResponse extends $pb.GeneratedMessage {
     $core.String? authorizationUrl,
     $core.String? state,
     OAuth2Operation? operation,
+    $core.String? nonce,
   }) {
     final result = create();
     if (authorizationUrl != null) result.authorizationUrl = authorizationUrl;
     if (state != null) result.state = state;
     if (operation != null) result.operation = operation;
+    if (nonce != null) result.nonce = nonce;
     return result;
   }
 
@@ -241,6 +256,7 @@ class GetAuthorizationUrlResponse extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'state')
     ..aE<OAuth2Operation>(3, _omitFieldNames ? '' : 'operation',
         enumValues: OAuth2Operation.values)
+    ..aOS(4, _omitFieldNames ? '' : 'nonce')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -266,7 +282,7 @@ class GetAuthorizationUrlResponse extends $pb.GeneratedMessage {
   static GetAuthorizationUrlResponse? _defaultInstance;
 
   /// Authorization URL to redirect user to
-  /// Frontend should redirect the browser to this URL
+  /// Present for browser authorization and omitted for native authorization.
   @$pb.TagNumber(1)
   $core.String get authorizationUrl => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -296,6 +312,16 @@ class GetAuthorizationUrlResponse extends $pb.GeneratedMessage {
   $core.bool hasOperation() => $_has(2);
   @$pb.TagNumber(3)
   void clearOperation() => $_clearField(3);
+
+  /// Provider-generated OIDC nonce when the authorization flow requires one.
+  @$pb.TagNumber(4)
+  $core.String get nonce => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set nonce($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasNonce() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearNonce() => $_clearField(4);
 }
 
 class GetAuthorizationUrlForBindRequest extends $pb.GeneratedMessage {
@@ -303,11 +329,13 @@ class GetAuthorizationUrlForBindRequest extends $pb.GeneratedMessage {
     $core.String? provider,
     $core.String? redirectUrl,
     $core.String? verificationId,
+    $core.bool? native,
   }) {
     final result = create();
     if (provider != null) result.provider = provider;
     if (redirectUrl != null) result.redirectUrl = redirectUrl;
     if (verificationId != null) result.verificationId = verificationId;
+    if (native != null) result.native = native;
     return result;
   }
 
@@ -328,6 +356,7 @@ class GetAuthorizationUrlForBindRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'provider')
     ..aOS(2, _omitFieldNames ? '' : 'redirectUrl')
     ..aOS(3, _omitFieldNames ? '' : 'verificationId')
+    ..aOB(4, _omitFieldNames ? '' : 'native')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -383,6 +412,16 @@ class GetAuthorizationUrlForBindRequest extends $pb.GeneratedMessage {
   $core.bool hasVerificationId() => $_has(2);
   @$pb.TagNumber(3)
   void clearVerificationId() => $_clearField(3);
+
+  /// Ask the selected provider to use its native platform authorization flow.
+  @$pb.TagNumber(4)
+  $core.bool get native => $_getBF(3);
+  @$pb.TagNumber(4)
+  set native($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasNative() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearNative() => $_clearField(4);
 }
 
 class GetAuthorizationUrlForBindResponse extends $pb.GeneratedMessage {
@@ -390,11 +429,13 @@ class GetAuthorizationUrlForBindResponse extends $pb.GeneratedMessage {
     $core.String? authorizationUrl,
     $core.String? state,
     OAuth2Operation? operation,
+    $core.String? nonce,
   }) {
     final result = create();
     if (authorizationUrl != null) result.authorizationUrl = authorizationUrl;
     if (state != null) result.state = state;
     if (operation != null) result.operation = operation;
+    if (nonce != null) result.nonce = nonce;
     return result;
   }
 
@@ -416,6 +457,7 @@ class GetAuthorizationUrlForBindResponse extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'state')
     ..aE<OAuth2Operation>(3, _omitFieldNames ? '' : 'operation',
         enumValues: OAuth2Operation.values)
+    ..aOS(4, _omitFieldNames ? '' : 'nonce')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -442,6 +484,7 @@ class GetAuthorizationUrlForBindResponse extends $pb.GeneratedMessage {
   static GetAuthorizationUrlForBindResponse? _defaultInstance;
 
   /// Authorization URL to redirect user to
+  /// Present for browser authorization and omitted for native authorization.
   @$pb.TagNumber(1)
   $core.String get authorizationUrl => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -469,6 +512,16 @@ class GetAuthorizationUrlForBindResponse extends $pb.GeneratedMessage {
   $core.bool hasOperation() => $_has(2);
   @$pb.TagNumber(3)
   void clearOperation() => $_clearField(3);
+
+  /// Provider-generated OIDC nonce when the authorization flow requires one.
+  @$pb.TagNumber(4)
+  $core.String get nonce => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set nonce($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasNonce() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearNonce() => $_clearField(4);
 }
 
 class ExchangeAuthorizationCodeRequest extends $pb.GeneratedMessage {
@@ -805,12 +858,14 @@ class OAuth2ProviderInstance extends $pb.GeneratedMessage {
     OAuth2ProviderType? type,
     $core.bool? signupEnabled,
     $core.bool? signupNeedReview,
+    $core.Iterable<OAuth2ProviderMode>? supportedModes,
   }) {
     final result = create();
     if (name != null) result.name = name;
     if (type != null) result.type = type;
     if (signupEnabled != null) result.signupEnabled = signupEnabled;
     if (signupNeedReview != null) result.signupNeedReview = signupNeedReview;
+    if (supportedModes != null) result.supportedModes.addAll(supportedModes);
     return result;
   }
 
@@ -832,6 +887,11 @@ class OAuth2ProviderInstance extends $pb.GeneratedMessage {
         enumValues: OAuth2ProviderType.values)
     ..aOB(3, _omitFieldNames ? '' : 'signupEnabled')
     ..aOB(4, _omitFieldNames ? '' : 'signupNeedReview')
+    ..pc<OAuth2ProviderMode>(
+        5, _omitFieldNames ? '' : 'supportedModes', $pb.PbFieldType.KE,
+        valueOf: OAuth2ProviderMode.valueOf,
+        enumValues: OAuth2ProviderMode.values,
+        defaultEnumValue: OAuth2ProviderMode.OAUTH2_PROVIDER_MODE_UNSPECIFIED)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -892,6 +952,10 @@ class OAuth2ProviderInstance extends $pb.GeneratedMessage {
   $core.bool hasSignupNeedReview() => $_has(3);
   @$pb.TagNumber(4)
   void clearSignupNeedReview() => $_clearField(4);
+
+  /// Authorization modes implemented by this provider instance.
+  @$pb.TagNumber(5)
+  $pb.PbList<OAuth2ProviderMode> get supportedModes => $_getList(4);
 }
 
 class UnlinkProviderRequest extends $pb.GeneratedMessage {

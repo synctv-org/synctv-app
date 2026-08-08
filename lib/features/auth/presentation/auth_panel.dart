@@ -9,6 +9,7 @@ import 'package:synctv_app/core/platform/device_display_name_service.dart';
 import 'package:synctv_app/features/auth/application/auth_gateway.dart';
 import 'package:synctv_app/features/auth/application/passkey_client.dart';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
+import 'package:synctv_app/features/auth/application/native_apple_sign_in_client.dart';
 import 'package:synctv_app/core/config/distribution_profile.dart';
 import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
@@ -25,6 +26,7 @@ class AuthPanel extends StatefulWidget {
     required this.passkeyClient,
     required this.opaqueAuthenticator,
     required this.oauth2Callbacks,
+    required this.nativeAppleSignIn,
     this.initialGuestRoomId,
     this.startWithGuest = false,
   });
@@ -35,6 +37,7 @@ class AuthPanel extends StatefulWidget {
   final PasskeyClient passkeyClient;
   final OpaqueAuthenticatorService opaqueAuthenticator;
   final OAuth2CallbackClient oauth2Callbacks;
+  final NativeAppleSignInClient nativeAppleSignIn;
 
   @override
   State<AuthPanel> createState() => _AuthPanelState();
@@ -504,6 +507,17 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _startOAuth2(OAuth2ProviderOption provider) async {
     if (!_ensureTermsAccepted()) return;
+    final authorizationMode = selectOAuth2AuthorizationMode(
+      provider,
+      platform: defaultTargetPlatform,
+      browserAvailable: widget.oauth2Callbacks.canCreateSession,
+      nativeAvailable: widget.nativeAppleSignIn.isSupported,
+    );
+    if (authorizationMode == OAuth2ClientAuthorizationMode.native) {
+      await _startNativeAppleOAuth2(provider);
+      return;
+    }
+    if (authorizationMode != OAuth2ClientAuthorizationMode.browser) return;
     await _withLoading(_AuthAction.oauth2, () async {
       try {
         await withOAuth2CallbackSession(widget.oauth2Callbacks, (
@@ -519,7 +533,11 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             _oauthAttempt++;
           });
           final attempt = _oauthAttempt;
-          final uri = Uri.parse(start.authorizationUrl);
+          final authorizationUrl = start.authorizationUrl;
+          if (authorizationUrl == null || authorizationUrl.isEmpty) {
+            throw StateError('Browser authorization URL is missing');
+          }
+          final uri = Uri.parse(authorizationUrl);
           late final OAuth2CallbackPayload parsed;
           try {
             parsed = await callbackSession.authorize(
@@ -546,6 +564,52 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           setState(() => _oauthProvider = null);
           _finishAuth(result);
         });
+      } finally {
+        if (mounted && _oauthProvider != null) {
+          setState(() => _oauthProvider = null);
+        }
+      }
+    });
+  }
+
+  Future<void> _startNativeAppleOAuth2(OAuth2ProviderOption provider) async {
+    await _withLoading(_AuthAction.oauth2, () async {
+      try {
+        final start = await widget.gateway.startOAuth2Login(
+          provider.name,
+          native: true,
+        );
+        final nonce = start.nonce;
+        if (nonce == null || nonce.isEmpty) {
+          throw StateError('Apple authorization nonce is missing');
+        }
+        if (!mounted) return;
+        setState(() {
+          _oauthProvider = provider.name;
+          _oauthAttempt++;
+        });
+        final attempt = _oauthAttempt;
+        final parsed = await widget.nativeAppleSignIn.authorize(
+          expectedState: start.state,
+          nonce: nonce,
+        );
+        if (!mounted || attempt != _oauthAttempt) return;
+        final result = await widget.gateway.finishOAuth2Login(
+          code: parsed.code,
+          state: parsed.state,
+        );
+        if (!mounted || attempt != _oauthAttempt) return;
+        setState(() => _oauthProvider = null);
+        _finishAuth(result);
+      } on OAuth2AuthorizationCanceled {
+        return;
+      } on OAuth2AuthorizationTimedOut {
+        if (mounted) {
+          AppNotifications.showError(
+            context,
+            context.l10n.oauthAuthorizationTimedOut,
+          );
+        }
       } finally {
         if (mounted && _oauthProvider != null) {
           setState(() => _oauthProvider = null);
@@ -1829,22 +1893,37 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     ThemeData theme, {
     List<OAuth2ProviderOption>? providers,
   }) {
-    final visibleProviders = providers ?? _oauth2Providers;
+    final browserAvailable = widget.oauth2Callbacks.canCreateSession;
+    final nativeAvailable =
+        widget.nativeAppleSignIn.isSupported;
+    final visibleProviders = (providers ?? _oauth2Providers)
+        .where(
+          (provider) => isOAuthProviderAvailable(
+            provider,
+            browserAvailable: browserAvailable,
+            nativeAvailable: nativeAvailable,
+          ),
+        )
+        .toList(growable: false);
     if (visibleProviders.isEmpty) return const SizedBox.shrink();
-    final oauth2Available = widget.oauth2Callbacks.canCreateSession;
     final orderedProviders = [
       ...visibleProviders.where(isAppleOAuthProvider),
       ...visibleProviders.where((provider) => !isAppleOAuthProvider(provider)),
     ];
-    final useNativeAppleButton =
-        !kIsWeb && supportsNativeAppleSignInButton(defaultTargetPlatform);
     final buttons = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final provider in orderedProviders) ...[
-          if (useNativeAppleButton && isAppleOAuthProvider(provider)) ...[
-            NativeAppleSignInButton(
-              enabled: !_loading && oauth2Available,
+          if (selectOAuth2AuthorizationMode(
+                    provider,
+                    platform: defaultTargetPlatform,
+                    browserAvailable: browserAvailable,
+                    nativeAvailable: nativeAvailable,
+                  ) !=
+                  null &&
+              shouldUseAppleSignInButton(provider, defaultTargetPlatform)) ...[
+            AppleSignInButton(
+              enabled: !_loading,
               semanticLabel: context.l10n.continueWithProvider('Apple'),
               onPressed: () => _startOAuth2(provider),
             ),
@@ -1860,7 +1939,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             ],
           ] else
             AppActionButton(
-              onPressed: _loading || !oauth2Available
+              onPressed: _loading || !browserAvailable
                   ? null
                   : () => _startOAuth2(provider),
               prefix: OAuthProviderIcon(
@@ -1874,7 +1953,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             ),
           const SizedBox(height: 8),
         ],
-        if (!oauth2Available)
+        if (!browserAvailable && !nativeAvailable)
           Text(
             context.l10n.oauthCallbackUnavailable,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -1883,7 +1962,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           ),
       ],
     );
-    if (!useNativeAppleButton) return buttons;
+    if (!supportsNativeAppleSignInButton(defaultTargetPlatform)) return buttons;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 375),

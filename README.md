@@ -146,7 +146,7 @@ fvm flutter build apk --release \
   --dart-define SYNCTV_BUILT_IN_SERVER_URL=https://tv.example.com
 ```
 
-The Release workflow reads two independent repository variables. `SYNCTV_BUILT_IN_SERVER_URL` configures downloadable GitHub Release assets. `SYNCTV_STORE_BUILT_IN_SERVER_URL` configures Google Play, iOS App Store, and Mac App Store builds and resolves to an empty value when unset. `SYNCTV_PASSKEY_RP_IDS` accepts semicolon-separated RP IDs for native passkey association. `SYNCTV_OAUTH2_APP_LINK_ORIGIN` configures the HTTPS origin used by Android Auth Tabs and Apple authentication sessions. Windows and Linux use a temporary loopback callback through the system browser.
+The Release workflow reads two independent repository variables. `SYNCTV_BUILT_IN_SERVER_URL` configures downloadable GitHub Release assets. `SYNCTV_STORE_BUILT_IN_SERVER_URL` configures Google Play, iOS App Store, and Mac App Store builds and resolves to an empty value when unset. `SYNCTV_PASSKEY_RP_IDS` accepts semicolon-separated RP IDs for native passkey association. `SYNCTV_OAUTH2_APP_LINK_ORIGIN` configures the HTTPS origin used by Android Auth Tabs and Apple browser OAuth sessions. Native Sign in with Apple on iOS and macOS uses the signed app Bundle ID and the server's Apple native client secret; it does not use this origin. Windows and Linux use a temporary loopback callback through the system browser.
 
 ## Native Passkeys and Self-hosting
 
@@ -154,6 +154,7 @@ Native passkeys rely on an authenticated association between the app identity an
 
 - **Android** can connect the official app to any self-hosted domain dynamically. Configure the server with package `org.synctv.app` and the release certificate fingerprints from the `android-passkey-server-config.yaml` attached to official signed releases.
 - **Apple platforms** embed allowed RP IDs in the signed app's Associated Domains entitlement. A self-hosted Apple build must include its RP ID in `SYNCTV_PASSKEY_RP_IDS`, use an Apple Developer Team signature, and register `<TeamID>.org.synctv.app` in the server's `webauthn.apple_app_ids`.
+- **Sign in with Apple** is one provider with browser and native modes advertised by `supportedModes`. The server must configure `nativeClientId` to match the signed app Bundle ID and keep both Apple client secrets server-side. iOS/macOS choose native authorization; other platforms choose browser authorization. The official build uses `org.synctv.app`; a self-hosted Apple distribution normally needs its own Apple Developer Team, Bundle ID, signing, and client secrets. See [Email and OAuth2](https://docs.syncs.tv/en/configuration/email-oauth2/).
 - **Availability is server-directed**. The app exposes native passkeys only when the platform and the selected server association are valid.
 
 The complete server configuration and security model are documented in [WebAuthn and Passkeys](https://docs.syncs.tv/en/configuration/webauthn/).

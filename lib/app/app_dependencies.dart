@@ -6,6 +6,7 @@ import 'package:synctv_app/features/admin/application/admin_gateway.dart';
 import 'package:synctv_app/features/auth/application/auth_gateway.dart';
 import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
+import 'package:synctv_app/features/auth/application/native_apple_sign_in_client.dart';
 import 'package:synctv_app/features/auth/application/passkey_client.dart';
 import 'package:synctv_app/features/content_reports/application/content_reports_gateway.dart';
 import 'package:synctv_app/features/app_shell/presentation/app_shell_dependencies.dart';
@@ -40,6 +41,7 @@ final class AppDependencies {
     required this.homeGateway,
     required this.opaqueAuthenticator,
     required this.oauth2Callbacks,
+    required this.nativeAppleSignIn,
     required this.passkeyClient,
     required this.p2pMediaPreferences,
     required this.p2pMediaRuntimeFactory,
@@ -71,6 +73,7 @@ final class AppDependencies {
   final HomeGateway homeGateway;
   final OpaqueAuthenticatorService opaqueAuthenticator;
   final OAuth2CallbackClient oauth2Callbacks;
+  final NativeAppleSignInClient nativeAppleSignIn;
   final PasskeyClient passkeyClient;
   final P2pMediaPreferencesController p2pMediaPreferences;
   final P2pMediaRuntimeFactory p2pMediaRuntimeFactory;
@@ -99,6 +102,7 @@ final class AppDependencies {
     homeGateway: homeGateway,
     opaqueAuthenticator: opaqueAuthenticator,
     oauth2Callbacks: oauth2Callbacks,
+    nativeAppleSignIn: nativeAppleSignIn,
     passkeyClient: passkeyClient,
     p2pMediaPreferences: p2pMediaPreferences,
     roomManagementGateway: roomManagementGateway,
@@ -113,6 +117,7 @@ final class AppDependencies {
         MediaLibraryGateway: mediaLibraryGateway,
         OpaqueAuthenticatorService: opaqueAuthenticator,
         OAuth2CallbackClient: oauth2Callbacks,
+        NativeAppleSignInClient: nativeAppleSignIn,
         PasskeyClient: passkeyClient,
         P2pMediaRuntimeFactory: p2pMediaRuntimeFactory,
         PlaybackModePreferencesController: playbackModePreferences,

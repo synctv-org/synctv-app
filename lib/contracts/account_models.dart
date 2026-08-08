@@ -10,26 +10,42 @@ class OAuth2ProviderOption {
   final String type;
   final bool signupEnabled;
   final bool signupNeedReview;
+  final List<oauth2_enum.OAuth2ProviderMode> supportedModes;
 
   const OAuth2ProviderOption({
     required this.name,
     required this.type,
     required this.signupEnabled,
     required this.signupNeedReview,
+    this.supportedModes = const [],
   });
+
+  bool get supportsBrowser => supportedModes.contains(
+    oauth2_enum.OAuth2ProviderMode.OAUTH2_PROVIDER_MODE_BROWSER,
+  );
+
+  bool get supportsNative => supportedModes.contains(
+    oauth2_enum.OAuth2ProviderMode.OAUTH2_PROVIDER_MODE_NATIVE,
+  );
 }
 
 class OAuth2AuthorizationStart {
   final String provider;
-  final String authorizationUrl;
+
+  /// Browser authorization URL. Native authorization omits this value.
+  final String? authorizationUrl;
   final String state;
   final oauth2_enum.OAuth2Operation operation;
+
+  /// OIDC nonce used by native authorization when the provider supplies one.
+  final String? nonce;
 
   const OAuth2AuthorizationStart({
     required this.provider,
     required this.authorizationUrl,
     required this.state,
     required this.operation,
+    this.nonce,
   });
 }
 
@@ -69,7 +85,7 @@ class AuthResult {
   final MfaChallengeInfo? mfa;
   final bool registrationReviewRequired;
   final String registrationReviewId;
-  final String redirectUrl;
+  final String? redirectUrl;
   final int expiresIn;
   final oauth2_enum.OAuth2Operation oauth2Operation;
 
@@ -78,7 +94,7 @@ class AuthResult {
     this.mfa,
     this.registrationReviewRequired = false,
     this.registrationReviewId = '',
-    this.redirectUrl = '',
+    this.redirectUrl,
     this.expiresIn = 0,
     this.oauth2Operation =
         oauth2_enum.OAuth2Operation.OAUTH2_OPERATION_UNSPECIFIED,

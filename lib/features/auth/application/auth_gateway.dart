@@ -50,7 +50,8 @@ abstract interface class AuthGateway {
 
   Future<OAuth2AuthorizationStart> startOAuth2Login(
     String provider, {
-    required String redirectUrl,
+    String? redirectUrl,
+    bool native = false,
   });
 
   Future<AuthResult> finishOAuth2Login({

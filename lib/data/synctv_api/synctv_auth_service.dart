@@ -424,6 +424,7 @@ class SyncTvAuthDomainService {
             type: oauth2ProviderTypeToString(provider.type),
             signupEnabled: provider.signupEnabled,
             signupNeedReview: provider.signupNeedReview,
+            supportedModes: provider.supportedModes,
           ),
         )
         .toList(growable: false);
@@ -431,19 +432,24 @@ class SyncTvAuthDomainService {
 
   Future<OAuth2AuthorizationStart> startOAuth2Login(
     String provider, {
-    String redirectUrl = '',
+    String? redirectUrl,
+    bool native = false,
   }) async {
     final response = await _api.oauth2Service.getAuthorizationUrl(
       oauth2.GetAuthorizationUrlRequest(
         provider: provider,
         redirectUrl: redirectUrl,
+        native: native ? true : null,
       ),
     );
     return OAuth2AuthorizationStart(
       provider: provider,
-      authorizationUrl: response.authorizationUrl,
+      authorizationUrl: response.hasAuthorizationUrl()
+          ? response.authorizationUrl
+          : null,
       state: response.state,
       operation: response.operation,
+      nonce: response.hasNonce() ? response.nonce : null,
     );
   }
 
@@ -462,7 +468,7 @@ class SyncTvAuthDomainService {
       return AuthResult(
         registrationReviewRequired: true,
         registrationReviewId: response.registrationReviewId,
-        redirectUrl: response.redirectUrl,
+        redirectUrl: response.hasRedirectUrl() ? response.redirectUrl : null,
         expiresIn: response.expiresIn.toInt(),
         oauth2Operation: response.operation,
       );
@@ -476,7 +482,7 @@ class SyncTvAuthDomainService {
         createdAt: response.userInfo.createdAt.toInt(),
         status: response.userInfo.status.value,
       ),
-      redirectUrl: response.redirectUrl,
+      redirectUrl: response.hasRedirectUrl() ? response.redirectUrl : null,
       expiresIn: response.expiresIn.toInt(),
       oauth2Operation: response.operation,
     );
@@ -502,21 +508,26 @@ class SyncTvAuthDomainService {
 
   Future<OAuth2AuthorizationStart> startOAuth2Bind(
     String provider, {
-    String redirectUrl = '',
+    String? redirectUrl,
     required String verificationId,
+    bool native = false,
   }) async {
     final response = await _api.oauth2Service.getAuthorizationUrlForBind(
       oauth2.GetAuthorizationUrlForBindRequest(
         provider: provider,
         redirectUrl: redirectUrl,
         verificationId: verificationId,
+        native: native ? true : null,
       ),
     );
     return OAuth2AuthorizationStart(
       provider: provider,
-      authorizationUrl: response.authorizationUrl,
+      authorizationUrl: response.hasAuthorizationUrl()
+          ? response.authorizationUrl
+          : null,
       state: response.state,
       operation: response.operation,
+      nonce: response.hasNonce() ? response.nonce : null,
     );
   }
 

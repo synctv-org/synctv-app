@@ -142,7 +142,7 @@ fvm flutter build apk --release \
   --dart-define SYNCTV_BUILT_IN_SERVER_URL=https://tv.example.com
 ```
 
-Release workflow 读取两个独立的 repository variable。`SYNCTV_BUILT_IN_SERVER_URL` 配置 GitHub Release 下载包；`SYNCTV_STORE_BUILT_IN_SERVER_URL` 配置 Google Play、iOS App Store 和 Mac App Store 构建，未设置时使用空值。`SYNCTV_PASSKEY_RP_IDS` 使用分号分隔多个 RP ID，供原生 Passkey 关联使用。`SYNCTV_OAUTH2_APP_LINK_ORIGIN` 配置原生 OAuth2 Callback 使用的 HTTPS Origin。
+Release workflow 读取两个独立的 repository variable。`SYNCTV_BUILT_IN_SERVER_URL` 配置 GitHub Release 下载包；`SYNCTV_STORE_BUILT_IN_SERVER_URL` 配置 Google Play、iOS App Store 和 Mac App Store 构建，未设置时使用空值。`SYNCTV_PASSKEY_RP_IDS` 使用分号分隔多个 RP ID，供原生 Passkey 关联使用。`SYNCTV_OAUTH2_APP_LINK_ORIGIN` 配置 Android Auth Tab 和 Apple 浏览器 OAuth 会话使用的 HTTPS Origin。iOS/macOS 原生 Sign in with Apple 使用签名 App 的 Bundle ID 和服务端 Apple 原生 client secret，不使用这个 Origin。
 
 ## 原生 Passkey 与自托管
 
@@ -150,6 +150,7 @@ Release workflow 读取两个独立的 repository variable。`SYNCTV_BUILT_IN_SE
 
 - **Android** 支持官方 App 动态连接任意自托管域名。服务端需要配置包名 `org.synctv.app`，并使用官方签名 Release 附带的 `android-passkey-server-config.yaml` 获取发布证书指纹。
 - **Apple 平台**会把允许的 RP ID 写入签名 App 的 Associated Domains entitlement。自托管 Apple 构建需要在 `SYNCTV_PASSKEY_RP_IDS` 中加入自身 RP ID，使用 Apple Developer Team 签名，并在服务端 `webauthn.apple_app_ids` 中配置 `<TeamID>.org.synctv.app`。
+- **Sign in with Apple** 是同一个 provider 的浏览器和原生模式，服务端通过 `supportedModes` 返回能力。`nativeClientId` 必须匹配签名 App 的 Bundle ID，两组 Apple client secret 只保存在服务端。iOS/macOS 选择原生模式，其他平台选择浏览器模式。官方构建使用 `org.synctv.app`；自托管 Apple 发行通常需要自有 Apple Developer Team、Bundle ID、签名和 client secrets。详见 [邮件与 OAuth2](https://docs.syncs.tv/configuration/email-oauth2/)。
 - **可用状态由服务端驱动**。平台能力和当前服务器关联关系都有效时，App 才展示原生 Passkey。
 
 完整服务端配置和安全模型见 [WebAuthn 与 Passkey](https://docs.syncs.tv/configuration/webauthn/)。

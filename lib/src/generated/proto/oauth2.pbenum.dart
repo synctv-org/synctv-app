@@ -96,5 +96,31 @@ class OAuth2Operation extends $pb.ProtobufEnum {
   const OAuth2Operation._(super.value, super.name);
 }
 
+/// Authorization modes supported by a provider instance.
+class OAuth2ProviderMode extends $pb.ProtobufEnum {
+  static const OAuth2ProviderMode OAUTH2_PROVIDER_MODE_UNSPECIFIED =
+      OAuth2ProviderMode._(
+          0, _omitEnumNames ? '' : 'OAUTH2_PROVIDER_MODE_UNSPECIFIED');
+  static const OAuth2ProviderMode OAUTH2_PROVIDER_MODE_BROWSER =
+      OAuth2ProviderMode._(
+          1, _omitEnumNames ? '' : 'OAUTH2_PROVIDER_MODE_BROWSER');
+  static const OAuth2ProviderMode OAUTH2_PROVIDER_MODE_NATIVE =
+      OAuth2ProviderMode._(
+          2, _omitEnumNames ? '' : 'OAUTH2_PROVIDER_MODE_NATIVE');
+
+  static const $core.List<OAuth2ProviderMode> values = <OAuth2ProviderMode>[
+    OAUTH2_PROVIDER_MODE_UNSPECIFIED,
+    OAUTH2_PROVIDER_MODE_BROWSER,
+    OAUTH2_PROVIDER_MODE_NATIVE,
+  ];
+
+  static final $core.List<OAuth2ProviderMode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static OAuth2ProviderMode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const OAuth2ProviderMode._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');

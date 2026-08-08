@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
+import 'package:synctv_app/features/auth/application/native_apple_sign_in_client.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_config.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_parser.dart';
 
@@ -226,6 +227,52 @@ final class _DarwinOAuth2CallbackSession implements OAuth2CallbackSession {
         Uri.parse(callback),
         expectedState: expectedState,
       );
+    } on PlatformException catch (error) {
+      switch (error.code) {
+        case 'CANCELED':
+          throw const OAuth2AuthorizationCanceled();
+        case 'TIMED_OUT':
+          throw const OAuth2AuthorizationTimedOut();
+        default:
+          rethrow;
+      }
+    }
+  }
+}
+
+/// Starts Apple's first-party Authentication Services flow. The native
+/// controller returns the authorization code directly, so no browser callback
+/// URL is involved.
+final class PlatformNativeAppleSignInClient
+    implements NativeAppleSignInClient {
+  const PlatformNativeAppleSignInClient();
+
+  static const MethodChannel _channel = MethodChannel(
+    'org.synctv.app/apple_sign_in',
+  );
+
+  @override
+  bool get isSupported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+
+  @override
+  Future<OAuth2CallbackPayload> authorize({
+    required String expectedState,
+    required String nonce,
+  }) async {
+    try {
+      final response = await _channel.invokeMethod<Map<Object?, Object?>>(
+        'authorize',
+        {'state': expectedState, 'nonce': nonce},
+      );
+      final code = response?['code']?.toString().trim() ?? '';
+      final state = response?['state']?.toString().trim() ?? '';
+      if (code.isEmpty || state.isEmpty || state != expectedState) {
+        throw ArgumentError('Apple authorization state is invalid');
+      }
+      return OAuth2CallbackPayload(code: code, state: state);
     } on PlatformException catch (error) {
       switch (error.code) {
         case 'CANCELED':

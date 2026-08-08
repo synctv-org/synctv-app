@@ -119,6 +119,7 @@ void main(List<String> args) async {
     homeGateway: const SyncTvHomeGateway(),
     opaqueAuthenticator: opaqueAuthenticator,
     oauth2Callbacks: oauth2Callbacks,
+    nativeAppleSignIn: const PlatformNativeAppleSignInClient(),
     passkeyClient: const NativePasskeyClient(),
     p2pMediaPreferences: p2pMediaPreferences,
     p2pMediaRuntimeFactory: const NativeP2pMediaRuntimeFactory(),

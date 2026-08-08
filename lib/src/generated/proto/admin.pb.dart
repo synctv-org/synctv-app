@@ -1449,11 +1449,16 @@ class OAuth2Settings extends $pb.GeneratedMessage {
 }
 
 enum OAuth2ProviderSettings_Config {
+  qq,
   github,
   google,
+  microsoft,
+  discord,
+  casdoor,
   logto,
   oidc,
-  casdoor,
+  feishu,
+  gitee,
   apple,
   notSet
 }
@@ -1463,22 +1468,32 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
     $core.String? name,
     $core.bool? enableSignup,
     $core.bool? signupNeedReview,
+    OAuth2QqProviderConfig? qq,
     OAuth2GithubProviderConfig? github,
     OAuth2GoogleProviderConfig? google,
+    OAuth2MicrosoftProviderConfig? microsoft,
+    OAuth2DiscordProviderConfig? discord,
+    OAuth2CasdoorProviderConfig? casdoor,
     OAuth2LogtoProviderConfig? logto,
     OAuth2OidcProviderConfig? oidc,
-    OAuth2CasdoorProviderConfig? casdoor,
+    OAuth2FeishuProviderConfig? feishu,
+    OAuth2GiteeProviderConfig? gitee,
     OAuth2AppleProviderConfig? apple,
   }) {
     final result = create();
     if (name != null) result.name = name;
     if (enableSignup != null) result.enableSignup = enableSignup;
     if (signupNeedReview != null) result.signupNeedReview = signupNeedReview;
+    if (qq != null) result.qq = qq;
     if (github != null) result.github = github;
     if (google != null) result.google = google;
+    if (microsoft != null) result.microsoft = microsoft;
+    if (discord != null) result.discord = discord;
+    if (casdoor != null) result.casdoor = casdoor;
     if (logto != null) result.logto = logto;
     if (oidc != null) result.oidc = oidc;
-    if (casdoor != null) result.casdoor = casdoor;
+    if (feishu != null) result.feishu = feishu;
+    if (gitee != null) result.gitee = gitee;
     if (apple != null) result.apple = apple;
     return result;
   }
@@ -1494,33 +1509,48 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
 
   static const $core.Map<$core.int, OAuth2ProviderSettings_Config>
       _OAuth2ProviderSettings_ConfigByTag = {
-    4: OAuth2ProviderSettings_Config.github,
-    5: OAuth2ProviderSettings_Config.google,
-    6: OAuth2ProviderSettings_Config.logto,
-    7: OAuth2ProviderSettings_Config.oidc,
-    8: OAuth2ProviderSettings_Config.casdoor,
-    9: OAuth2ProviderSettings_Config.apple,
+    4: OAuth2ProviderSettings_Config.qq,
+    5: OAuth2ProviderSettings_Config.github,
+    6: OAuth2ProviderSettings_Config.google,
+    7: OAuth2ProviderSettings_Config.microsoft,
+    8: OAuth2ProviderSettings_Config.discord,
+    9: OAuth2ProviderSettings_Config.casdoor,
+    10: OAuth2ProviderSettings_Config.logto,
+    11: OAuth2ProviderSettings_Config.oidc,
+    12: OAuth2ProviderSettings_Config.feishu,
+    13: OAuth2ProviderSettings_Config.gitee,
+    14: OAuth2ProviderSettings_Config.apple,
     0: OAuth2ProviderSettings_Config.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'OAuth2ProviderSettings',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..oo(0, [4, 5, 6, 7, 8, 9])
+    ..oo(0, [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..aOB(2, _omitFieldNames ? '' : 'enableSignup')
     ..aOB(3, _omitFieldNames ? '' : 'signupNeedReview')
-    ..aOM<OAuth2GithubProviderConfig>(4, _omitFieldNames ? '' : 'github',
+    ..aOM<OAuth2QqProviderConfig>(4, _omitFieldNames ? '' : 'qq',
+        subBuilder: OAuth2QqProviderConfig.create)
+    ..aOM<OAuth2GithubProviderConfig>(5, _omitFieldNames ? '' : 'github',
         subBuilder: OAuth2GithubProviderConfig.create)
-    ..aOM<OAuth2GoogleProviderConfig>(5, _omitFieldNames ? '' : 'google',
+    ..aOM<OAuth2GoogleProviderConfig>(6, _omitFieldNames ? '' : 'google',
         subBuilder: OAuth2GoogleProviderConfig.create)
-    ..aOM<OAuth2LogtoProviderConfig>(6, _omitFieldNames ? '' : 'logto',
-        subBuilder: OAuth2LogtoProviderConfig.create)
-    ..aOM<OAuth2OidcProviderConfig>(7, _omitFieldNames ? '' : 'oidc',
-        subBuilder: OAuth2OidcProviderConfig.create)
-    ..aOM<OAuth2CasdoorProviderConfig>(8, _omitFieldNames ? '' : 'casdoor',
+    ..aOM<OAuth2MicrosoftProviderConfig>(7, _omitFieldNames ? '' : 'microsoft',
+        subBuilder: OAuth2MicrosoftProviderConfig.create)
+    ..aOM<OAuth2DiscordProviderConfig>(8, _omitFieldNames ? '' : 'discord',
+        subBuilder: OAuth2DiscordProviderConfig.create)
+    ..aOM<OAuth2CasdoorProviderConfig>(9, _omitFieldNames ? '' : 'casdoor',
         subBuilder: OAuth2CasdoorProviderConfig.create)
-    ..aOM<OAuth2AppleProviderConfig>(9, _omitFieldNames ? '' : 'apple',
+    ..aOM<OAuth2LogtoProviderConfig>(10, _omitFieldNames ? '' : 'logto',
+        subBuilder: OAuth2LogtoProviderConfig.create)
+    ..aOM<OAuth2OidcProviderConfig>(11, _omitFieldNames ? '' : 'oidc',
+        subBuilder: OAuth2OidcProviderConfig.create)
+    ..aOM<OAuth2FeishuProviderConfig>(12, _omitFieldNames ? '' : 'feishu',
+        subBuilder: OAuth2FeishuProviderConfig.create)
+    ..aOM<OAuth2GiteeProviderConfig>(13, _omitFieldNames ? '' : 'gitee',
+        subBuilder: OAuth2GiteeProviderConfig.create)
+    ..aOM<OAuth2AppleProviderConfig>(14, _omitFieldNames ? '' : 'apple',
         subBuilder: OAuth2AppleProviderConfig.create)
     ..hasRequiredFields = false;
 
@@ -1550,6 +1580,11 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
   OAuth2ProviderSettings_Config whichConfig() =>
       _OAuth2ProviderSettings_ConfigByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(4)
@@ -1558,6 +1593,11 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
   void clearConfig() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -1588,82 +1628,135 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   void clearSignupNeedReview() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  OAuth2GithubProviderConfig get github => $_getN(3);
+  OAuth2QqProviderConfig get qq => $_getN(3);
   @$pb.TagNumber(4)
-  set github(OAuth2GithubProviderConfig value) => $_setField(4, value);
+  set qq(OAuth2QqProviderConfig value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasGithub() => $_has(3);
+  $core.bool hasQq() => $_has(3);
   @$pb.TagNumber(4)
-  void clearGithub() => $_clearField(4);
+  void clearQq() => $_clearField(4);
   @$pb.TagNumber(4)
-  OAuth2GithubProviderConfig ensureGithub() => $_ensure(3);
+  OAuth2QqProviderConfig ensureQq() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  OAuth2GoogleProviderConfig get google => $_getN(4);
+  OAuth2GithubProviderConfig get github => $_getN(4);
   @$pb.TagNumber(5)
-  set google(OAuth2GoogleProviderConfig value) => $_setField(5, value);
+  set github(OAuth2GithubProviderConfig value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasGoogle() => $_has(4);
+  $core.bool hasGithub() => $_has(4);
   @$pb.TagNumber(5)
-  void clearGoogle() => $_clearField(5);
+  void clearGithub() => $_clearField(5);
   @$pb.TagNumber(5)
-  OAuth2GoogleProviderConfig ensureGoogle() => $_ensure(4);
+  OAuth2GithubProviderConfig ensureGithub() => $_ensure(4);
 
   @$pb.TagNumber(6)
-  OAuth2LogtoProviderConfig get logto => $_getN(5);
+  OAuth2GoogleProviderConfig get google => $_getN(5);
   @$pb.TagNumber(6)
-  set logto(OAuth2LogtoProviderConfig value) => $_setField(6, value);
+  set google(OAuth2GoogleProviderConfig value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasLogto() => $_has(5);
+  $core.bool hasGoogle() => $_has(5);
   @$pb.TagNumber(6)
-  void clearLogto() => $_clearField(6);
+  void clearGoogle() => $_clearField(6);
   @$pb.TagNumber(6)
-  OAuth2LogtoProviderConfig ensureLogto() => $_ensure(5);
+  OAuth2GoogleProviderConfig ensureGoogle() => $_ensure(5);
 
   @$pb.TagNumber(7)
-  OAuth2OidcProviderConfig get oidc => $_getN(6);
+  OAuth2MicrosoftProviderConfig get microsoft => $_getN(6);
   @$pb.TagNumber(7)
-  set oidc(OAuth2OidcProviderConfig value) => $_setField(7, value);
+  set microsoft(OAuth2MicrosoftProviderConfig value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasOidc() => $_has(6);
+  $core.bool hasMicrosoft() => $_has(6);
   @$pb.TagNumber(7)
-  void clearOidc() => $_clearField(7);
+  void clearMicrosoft() => $_clearField(7);
   @$pb.TagNumber(7)
-  OAuth2OidcProviderConfig ensureOidc() => $_ensure(6);
+  OAuth2MicrosoftProviderConfig ensureMicrosoft() => $_ensure(6);
 
   @$pb.TagNumber(8)
-  OAuth2CasdoorProviderConfig get casdoor => $_getN(7);
+  OAuth2DiscordProviderConfig get discord => $_getN(7);
   @$pb.TagNumber(8)
-  set casdoor(OAuth2CasdoorProviderConfig value) => $_setField(8, value);
+  set discord(OAuth2DiscordProviderConfig value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasCasdoor() => $_has(7);
+  $core.bool hasDiscord() => $_has(7);
   @$pb.TagNumber(8)
-  void clearCasdoor() => $_clearField(8);
+  void clearDiscord() => $_clearField(8);
   @$pb.TagNumber(8)
-  OAuth2CasdoorProviderConfig ensureCasdoor() => $_ensure(7);
+  OAuth2DiscordProviderConfig ensureDiscord() => $_ensure(7);
 
   @$pb.TagNumber(9)
-  OAuth2AppleProviderConfig get apple => $_getN(8);
+  OAuth2CasdoorProviderConfig get casdoor => $_getN(8);
   @$pb.TagNumber(9)
-  set apple(OAuth2AppleProviderConfig value) => $_setField(9, value);
+  set casdoor(OAuth2CasdoorProviderConfig value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasApple() => $_has(8);
+  $core.bool hasCasdoor() => $_has(8);
   @$pb.TagNumber(9)
-  void clearApple() => $_clearField(9);
+  void clearCasdoor() => $_clearField(9);
   @$pb.TagNumber(9)
-  OAuth2AppleProviderConfig ensureApple() => $_ensure(8);
+  OAuth2CasdoorProviderConfig ensureCasdoor() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  OAuth2LogtoProviderConfig get logto => $_getN(9);
+  @$pb.TagNumber(10)
+  set logto(OAuth2LogtoProviderConfig value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasLogto() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearLogto() => $_clearField(10);
+  @$pb.TagNumber(10)
+  OAuth2LogtoProviderConfig ensureLogto() => $_ensure(9);
+
+  @$pb.TagNumber(11)
+  OAuth2OidcProviderConfig get oidc => $_getN(10);
+  @$pb.TagNumber(11)
+  set oidc(OAuth2OidcProviderConfig value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasOidc() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearOidc() => $_clearField(11);
+  @$pb.TagNumber(11)
+  OAuth2OidcProviderConfig ensureOidc() => $_ensure(10);
+
+  @$pb.TagNumber(12)
+  OAuth2FeishuProviderConfig get feishu => $_getN(11);
+  @$pb.TagNumber(12)
+  set feishu(OAuth2FeishuProviderConfig value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasFeishu() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearFeishu() => $_clearField(12);
+  @$pb.TagNumber(12)
+  OAuth2FeishuProviderConfig ensureFeishu() => $_ensure(11);
+
+  @$pb.TagNumber(13)
+  OAuth2GiteeProviderConfig get gitee => $_getN(12);
+  @$pb.TagNumber(13)
+  set gitee(OAuth2GiteeProviderConfig value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasGitee() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearGitee() => $_clearField(13);
+  @$pb.TagNumber(13)
+  OAuth2GiteeProviderConfig ensureGitee() => $_ensure(12);
+
+  @$pb.TagNumber(14)
+  OAuth2AppleProviderConfig get apple => $_getN(13);
+  @$pb.TagNumber(14)
+  set apple(OAuth2AppleProviderConfig value) => $_setField(14, value);
+  @$pb.TagNumber(14)
+  $core.bool hasApple() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearApple() => $_clearField(14);
+  @$pb.TagNumber(14)
+  OAuth2AppleProviderConfig ensureApple() => $_ensure(13);
 }
 
 class OAuth2GithubProviderConfig extends $pb.GeneratedMessage {
   factory OAuth2GithubProviderConfig({
     $core.String? clientId,
     $core.String? clientSecret,
-    $core.String? redirectUrl,
   }) {
     final result = create();
     if (clientId != null) result.clientId = clientId;
     if (clientSecret != null) result.clientSecret = clientSecret;
-    if (redirectUrl != null) result.redirectUrl = redirectUrl;
     return result;
   }
 
@@ -1682,7 +1775,6 @@ class OAuth2GithubProviderConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'clientId')
     ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
-    ..aOS(3, _omitFieldNames ? '' : 'redirectUrl')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1723,27 +1815,16 @@ class OAuth2GithubProviderConfig extends $pb.GeneratedMessage {
   $core.bool hasClientSecret() => $_has(1);
   @$pb.TagNumber(2)
   void clearClientSecret() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get redirectUrl => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set redirectUrl($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasRedirectUrl() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearRedirectUrl() => $_clearField(3);
 }
 
 class OAuth2GoogleProviderConfig extends $pb.GeneratedMessage {
   factory OAuth2GoogleProviderConfig({
     $core.String? clientId,
     $core.String? clientSecret,
-    $core.String? redirectUrl,
   }) {
     final result = create();
     if (clientId != null) result.clientId = clientId;
     if (clientSecret != null) result.clientSecret = clientSecret;
-    if (redirectUrl != null) result.redirectUrl = redirectUrl;
     return result;
   }
 
@@ -1762,7 +1843,6 @@ class OAuth2GoogleProviderConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'clientId')
     ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
-    ..aOS(3, _omitFieldNames ? '' : 'redirectUrl')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1803,28 +1883,17 @@ class OAuth2GoogleProviderConfig extends $pb.GeneratedMessage {
   $core.bool hasClientSecret() => $_has(1);
   @$pb.TagNumber(2)
   void clearClientSecret() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get redirectUrl => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set redirectUrl($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasRedirectUrl() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearRedirectUrl() => $_clearField(3);
 }
 
 class OAuth2LogtoProviderConfig extends $pb.GeneratedMessage {
   factory OAuth2LogtoProviderConfig({
     $core.String? clientId,
     $core.String? clientSecret,
-    $core.String? redirectUrl,
     $core.String? endpoint,
   }) {
     final result = create();
     if (clientId != null) result.clientId = clientId;
     if (clientSecret != null) result.clientSecret = clientSecret;
-    if (redirectUrl != null) result.redirectUrl = redirectUrl;
     if (endpoint != null) result.endpoint = endpoint;
     return result;
   }
@@ -1844,8 +1913,7 @@ class OAuth2LogtoProviderConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'clientId')
     ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
-    ..aOS(3, _omitFieldNames ? '' : 'redirectUrl')
-    ..aOS(4, _omitFieldNames ? '' : 'endpoint')
+    ..aOS(3, _omitFieldNames ? '' : 'endpoint')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1887,29 +1955,19 @@ class OAuth2LogtoProviderConfig extends $pb.GeneratedMessage {
   void clearClientSecret() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get redirectUrl => $_getSZ(2);
+  $core.String get endpoint => $_getSZ(2);
   @$pb.TagNumber(3)
-  set redirectUrl($core.String value) => $_setString(2, value);
+  set endpoint($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasRedirectUrl() => $_has(2);
+  $core.bool hasEndpoint() => $_has(2);
   @$pb.TagNumber(3)
-  void clearRedirectUrl() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.String get endpoint => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set endpoint($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasEndpoint() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearEndpoint() => $_clearField(4);
+  void clearEndpoint() => $_clearField(3);
 }
 
 class OAuth2OidcProviderConfig extends $pb.GeneratedMessage {
   factory OAuth2OidcProviderConfig({
     $core.String? clientId,
     $core.String? clientSecret,
-    $core.String? redirectUrl,
     $core.String? issuer,
     $core.String? authUrl,
     $core.String? tokenUrl,
@@ -1920,7 +1978,6 @@ class OAuth2OidcProviderConfig extends $pb.GeneratedMessage {
     final result = create();
     if (clientId != null) result.clientId = clientId;
     if (clientSecret != null) result.clientSecret = clientSecret;
-    if (redirectUrl != null) result.redirectUrl = redirectUrl;
     if (issuer != null) result.issuer = issuer;
     if (authUrl != null) result.authUrl = authUrl;
     if (tokenUrl != null) result.tokenUrl = tokenUrl;
@@ -1945,13 +2002,12 @@ class OAuth2OidcProviderConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'clientId')
     ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
-    ..aOS(3, _omitFieldNames ? '' : 'redirectUrl')
-    ..aOS(4, _omitFieldNames ? '' : 'issuer')
-    ..aOS(5, _omitFieldNames ? '' : 'authUrl')
-    ..aOS(6, _omitFieldNames ? '' : 'tokenUrl')
-    ..aOS(7, _omitFieldNames ? '' : 'userinfoUrl')
-    ..aOS(8, _omitFieldNames ? '' : 'jwksUrl')
-    ..pPS(9, _omitFieldNames ? '' : 'scopes')
+    ..aOS(3, _omitFieldNames ? '' : 'issuer')
+    ..aOS(4, _omitFieldNames ? '' : 'authUrl')
+    ..aOS(5, _omitFieldNames ? '' : 'tokenUrl')
+    ..aOS(6, _omitFieldNames ? '' : 'userinfoUrl')
+    ..aOS(7, _omitFieldNames ? '' : 'jwksUrl')
+    ..pPS(8, _omitFieldNames ? '' : 'scopes')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1993,147 +2049,58 @@ class OAuth2OidcProviderConfig extends $pb.GeneratedMessage {
   void clearClientSecret() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get redirectUrl => $_getSZ(2);
+  $core.String get issuer => $_getSZ(2);
   @$pb.TagNumber(3)
-  set redirectUrl($core.String value) => $_setString(2, value);
+  set issuer($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasRedirectUrl() => $_has(2);
+  $core.bool hasIssuer() => $_has(2);
   @$pb.TagNumber(3)
-  void clearRedirectUrl() => $_clearField(3);
+  void clearIssuer() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get issuer => $_getSZ(3);
+  $core.String get authUrl => $_getSZ(3);
   @$pb.TagNumber(4)
-  set issuer($core.String value) => $_setString(3, value);
+  set authUrl($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasIssuer() => $_has(3);
+  $core.bool hasAuthUrl() => $_has(3);
   @$pb.TagNumber(4)
-  void clearIssuer() => $_clearField(4);
+  void clearAuthUrl() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get authUrl => $_getSZ(4);
+  $core.String get tokenUrl => $_getSZ(4);
   @$pb.TagNumber(5)
-  set authUrl($core.String value) => $_setString(4, value);
+  set tokenUrl($core.String value) => $_setString(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasAuthUrl() => $_has(4);
+  $core.bool hasTokenUrl() => $_has(4);
   @$pb.TagNumber(5)
-  void clearAuthUrl() => $_clearField(5);
+  void clearTokenUrl() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.String get tokenUrl => $_getSZ(5);
+  $core.String get userinfoUrl => $_getSZ(5);
   @$pb.TagNumber(6)
-  set tokenUrl($core.String value) => $_setString(5, value);
+  set userinfoUrl($core.String value) => $_setString(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasTokenUrl() => $_has(5);
+  $core.bool hasUserinfoUrl() => $_has(5);
   @$pb.TagNumber(6)
-  void clearTokenUrl() => $_clearField(6);
+  void clearUserinfoUrl() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $core.String get userinfoUrl => $_getSZ(6);
+  $core.String get jwksUrl => $_getSZ(6);
   @$pb.TagNumber(7)
-  set userinfoUrl($core.String value) => $_setString(6, value);
+  set jwksUrl($core.String value) => $_setString(6, value);
   @$pb.TagNumber(7)
-  $core.bool hasUserinfoUrl() => $_has(6);
+  $core.bool hasJwksUrl() => $_has(6);
   @$pb.TagNumber(7)
-  void clearUserinfoUrl() => $_clearField(7);
+  void clearJwksUrl() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $core.String get jwksUrl => $_getSZ(7);
-  @$pb.TagNumber(8)
-  set jwksUrl($core.String value) => $_setString(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasJwksUrl() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearJwksUrl() => $_clearField(8);
-
-  @$pb.TagNumber(9)
-  $pb.PbList<$core.String> get scopes => $_getList(8);
-}
-
-class OAuth2AppleProviderConfig extends $pb.GeneratedMessage {
-  factory OAuth2AppleProviderConfig({
-    $core.String? clientId,
-    $core.String? clientSecret,
-    $core.String? redirectUrl,
-  }) {
-    final result = create();
-    if (clientId != null) result.clientId = clientId;
-    if (clientSecret != null) result.clientSecret = clientSecret;
-    if (redirectUrl != null) result.redirectUrl = redirectUrl;
-    return result;
-  }
-
-  OAuth2AppleProviderConfig._();
-
-  factory OAuth2AppleProviderConfig.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory OAuth2AppleProviderConfig.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'OAuth2AppleProviderConfig',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'clientId')
-    ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
-    ..aOS(3, _omitFieldNames ? '' : 'redirectUrl')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  OAuth2AppleProviderConfig clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  OAuth2AppleProviderConfig copyWith(
-          void Function(OAuth2AppleProviderConfig) updates) =>
-      super.copyWith((message) => updates(message as OAuth2AppleProviderConfig))
-          as OAuth2AppleProviderConfig;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static OAuth2AppleProviderConfig create() => OAuth2AppleProviderConfig._();
-  @$core.override
-  OAuth2AppleProviderConfig createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static OAuth2AppleProviderConfig getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<OAuth2AppleProviderConfig>(create);
-  static OAuth2AppleProviderConfig? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get clientId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set clientId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasClientId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearClientId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get clientSecret => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set clientSecret($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasClientSecret() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearClientSecret() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get redirectUrl => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set redirectUrl($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasRedirectUrl() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearRedirectUrl() => $_clearField(3);
+  $pb.PbList<$core.String> get scopes => $_getList(7);
 }
 
 class OAuth2CasdoorProviderConfig extends $pb.GeneratedMessage {
   factory OAuth2CasdoorProviderConfig({
     $core.String? clientId,
     $core.String? clientSecret,
-    $core.String? redirectUrl,
     $core.String? issuer,
     $core.String? authUrl,
     $core.String? tokenUrl,
@@ -2143,7 +2110,6 @@ class OAuth2CasdoorProviderConfig extends $pb.GeneratedMessage {
     final result = create();
     if (clientId != null) result.clientId = clientId;
     if (clientSecret != null) result.clientSecret = clientSecret;
-    if (redirectUrl != null) result.redirectUrl = redirectUrl;
     if (issuer != null) result.issuer = issuer;
     if (authUrl != null) result.authUrl = authUrl;
     if (tokenUrl != null) result.tokenUrl = tokenUrl;
@@ -2167,12 +2133,11 @@ class OAuth2CasdoorProviderConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'clientId')
     ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
-    ..aOS(3, _omitFieldNames ? '' : 'redirectUrl')
-    ..aOS(4, _omitFieldNames ? '' : 'issuer')
-    ..aOS(5, _omitFieldNames ? '' : 'authUrl')
-    ..aOS(6, _omitFieldNames ? '' : 'tokenUrl')
-    ..aOS(7, _omitFieldNames ? '' : 'userinfoUrl')
-    ..aOS(8, _omitFieldNames ? '' : 'jwksUrl')
+    ..aOS(3, _omitFieldNames ? '' : 'issuer')
+    ..aOS(4, _omitFieldNames ? '' : 'authUrl')
+    ..aOS(5, _omitFieldNames ? '' : 'tokenUrl')
+    ..aOS(6, _omitFieldNames ? '' : 'userinfoUrl')
+    ..aOS(7, _omitFieldNames ? '' : 'jwksUrl')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2216,58 +2181,505 @@ class OAuth2CasdoorProviderConfig extends $pb.GeneratedMessage {
   void clearClientSecret() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get redirectUrl => $_getSZ(2);
+  $core.String get issuer => $_getSZ(2);
   @$pb.TagNumber(3)
-  set redirectUrl($core.String value) => $_setString(2, value);
+  set issuer($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasRedirectUrl() => $_has(2);
+  $core.bool hasIssuer() => $_has(2);
   @$pb.TagNumber(3)
-  void clearRedirectUrl() => $_clearField(3);
+  void clearIssuer() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get issuer => $_getSZ(3);
+  $core.String get authUrl => $_getSZ(3);
   @$pb.TagNumber(4)
-  set issuer($core.String value) => $_setString(3, value);
+  set authUrl($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasIssuer() => $_has(3);
+  $core.bool hasAuthUrl() => $_has(3);
   @$pb.TagNumber(4)
-  void clearIssuer() => $_clearField(4);
+  void clearAuthUrl() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get authUrl => $_getSZ(4);
+  $core.String get tokenUrl => $_getSZ(4);
   @$pb.TagNumber(5)
-  set authUrl($core.String value) => $_setString(4, value);
+  set tokenUrl($core.String value) => $_setString(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasAuthUrl() => $_has(4);
+  $core.bool hasTokenUrl() => $_has(4);
   @$pb.TagNumber(5)
-  void clearAuthUrl() => $_clearField(5);
+  void clearTokenUrl() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.String get tokenUrl => $_getSZ(5);
+  $core.String get userinfoUrl => $_getSZ(5);
   @$pb.TagNumber(6)
-  set tokenUrl($core.String value) => $_setString(5, value);
+  set userinfoUrl($core.String value) => $_setString(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasTokenUrl() => $_has(5);
+  $core.bool hasUserinfoUrl() => $_has(5);
   @$pb.TagNumber(6)
-  void clearTokenUrl() => $_clearField(6);
+  void clearUserinfoUrl() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $core.String get userinfoUrl => $_getSZ(6);
+  $core.String get jwksUrl => $_getSZ(6);
   @$pb.TagNumber(7)
-  set userinfoUrl($core.String value) => $_setString(6, value);
+  set jwksUrl($core.String value) => $_setString(6, value);
   @$pb.TagNumber(7)
-  $core.bool hasUserinfoUrl() => $_has(6);
+  $core.bool hasJwksUrl() => $_has(6);
   @$pb.TagNumber(7)
-  void clearUserinfoUrl() => $_clearField(7);
+  void clearJwksUrl() => $_clearField(7);
+}
 
-  @$pb.TagNumber(8)
-  $core.String get jwksUrl => $_getSZ(7);
-  @$pb.TagNumber(8)
-  set jwksUrl($core.String value) => $_setString(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasJwksUrl() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearJwksUrl() => $_clearField(8);
+class OAuth2AppleProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2AppleProviderConfig({
+    $core.String? webClientId,
+    $core.String? webClientSecret,
+    $core.String? nativeClientId,
+    $core.String? nativeClientSecret,
+  }) {
+    final result = create();
+    if (webClientId != null) result.webClientId = webClientId;
+    if (webClientSecret != null) result.webClientSecret = webClientSecret;
+    if (nativeClientId != null) result.nativeClientId = nativeClientId;
+    if (nativeClientSecret != null)
+      result.nativeClientSecret = nativeClientSecret;
+    return result;
+  }
+
+  OAuth2AppleProviderConfig._();
+
+  factory OAuth2AppleProviderConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2AppleProviderConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2AppleProviderConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'webClientId')
+    ..aOS(2, _omitFieldNames ? '' : 'webClientSecret')
+    ..aOS(3, _omitFieldNames ? '' : 'nativeClientId')
+    ..aOS(4, _omitFieldNames ? '' : 'nativeClientSecret')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2AppleProviderConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2AppleProviderConfig copyWith(
+          void Function(OAuth2AppleProviderConfig) updates) =>
+      super.copyWith((message) => updates(message as OAuth2AppleProviderConfig))
+          as OAuth2AppleProviderConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2AppleProviderConfig create() => OAuth2AppleProviderConfig._();
+  @$core.override
+  OAuth2AppleProviderConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2AppleProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2AppleProviderConfig>(create);
+  static OAuth2AppleProviderConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get webClientId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set webClientId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasWebClientId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearWebClientId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get webClientSecret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set webClientSecret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasWebClientSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearWebClientSecret() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get nativeClientId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set nativeClientId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasNativeClientId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearNativeClientId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get nativeClientSecret => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set nativeClientSecret($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasNativeClientSecret() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearNativeClientSecret() => $_clearField(4);
+}
+
+class OAuth2QqProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2QqProviderConfig({
+    $core.String? clientId,
+    $core.String? clientSecret,
+  }) {
+    final result = create();
+    if (clientId != null) result.clientId = clientId;
+    if (clientSecret != null) result.clientSecret = clientSecret;
+    return result;
+  }
+
+  OAuth2QqProviderConfig._();
+
+  factory OAuth2QqProviderConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2QqProviderConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2QqProviderConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientId')
+    ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2QqProviderConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2QqProviderConfig copyWith(
+          void Function(OAuth2QqProviderConfig) updates) =>
+      super.copyWith((message) => updates(message as OAuth2QqProviderConfig))
+          as OAuth2QqProviderConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2QqProviderConfig create() => OAuth2QqProviderConfig._();
+  @$core.override
+  OAuth2QqProviderConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2QqProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2QqProviderConfig>(create);
+  static OAuth2QqProviderConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get clientSecret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set clientSecret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasClientSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearClientSecret() => $_clearField(2);
+}
+
+class OAuth2MicrosoftProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2MicrosoftProviderConfig({
+    $core.String? clientId,
+    $core.String? clientSecret,
+    $core.String? tenant,
+  }) {
+    final result = create();
+    if (clientId != null) result.clientId = clientId;
+    if (clientSecret != null) result.clientSecret = clientSecret;
+    if (tenant != null) result.tenant = tenant;
+    return result;
+  }
+
+  OAuth2MicrosoftProviderConfig._();
+
+  factory OAuth2MicrosoftProviderConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2MicrosoftProviderConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2MicrosoftProviderConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientId')
+    ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
+    ..aOS(3, _omitFieldNames ? '' : 'tenant')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2MicrosoftProviderConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2MicrosoftProviderConfig copyWith(
+          void Function(OAuth2MicrosoftProviderConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as OAuth2MicrosoftProviderConfig))
+          as OAuth2MicrosoftProviderConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2MicrosoftProviderConfig create() =>
+      OAuth2MicrosoftProviderConfig._();
+  @$core.override
+  OAuth2MicrosoftProviderConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2MicrosoftProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2MicrosoftProviderConfig>(create);
+  static OAuth2MicrosoftProviderConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get clientSecret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set clientSecret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasClientSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearClientSecret() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get tenant => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set tenant($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTenant() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTenant() => $_clearField(3);
+}
+
+class OAuth2DiscordProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2DiscordProviderConfig({
+    $core.String? clientId,
+    $core.String? clientSecret,
+  }) {
+    final result = create();
+    if (clientId != null) result.clientId = clientId;
+    if (clientSecret != null) result.clientSecret = clientSecret;
+    return result;
+  }
+
+  OAuth2DiscordProviderConfig._();
+
+  factory OAuth2DiscordProviderConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2DiscordProviderConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2DiscordProviderConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientId')
+    ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2DiscordProviderConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2DiscordProviderConfig copyWith(
+          void Function(OAuth2DiscordProviderConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as OAuth2DiscordProviderConfig))
+          as OAuth2DiscordProviderConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2DiscordProviderConfig create() =>
+      OAuth2DiscordProviderConfig._();
+  @$core.override
+  OAuth2DiscordProviderConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2DiscordProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2DiscordProviderConfig>(create);
+  static OAuth2DiscordProviderConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get clientSecret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set clientSecret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasClientSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearClientSecret() => $_clearField(2);
+}
+
+class OAuth2FeishuProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2FeishuProviderConfig({
+    $core.String? clientId,
+    $core.String? clientSecret,
+    $core.String? endpoint,
+  }) {
+    final result = create();
+    if (clientId != null) result.clientId = clientId;
+    if (clientSecret != null) result.clientSecret = clientSecret;
+    if (endpoint != null) result.endpoint = endpoint;
+    return result;
+  }
+
+  OAuth2FeishuProviderConfig._();
+
+  factory OAuth2FeishuProviderConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2FeishuProviderConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2FeishuProviderConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientId')
+    ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
+    ..aOS(3, _omitFieldNames ? '' : 'endpoint')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2FeishuProviderConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2FeishuProviderConfig copyWith(
+          void Function(OAuth2FeishuProviderConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as OAuth2FeishuProviderConfig))
+          as OAuth2FeishuProviderConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2FeishuProviderConfig create() => OAuth2FeishuProviderConfig._();
+  @$core.override
+  OAuth2FeishuProviderConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2FeishuProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2FeishuProviderConfig>(create);
+  static OAuth2FeishuProviderConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get clientSecret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set clientSecret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasClientSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearClientSecret() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get endpoint => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set endpoint($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEndpoint() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEndpoint() => $_clearField(3);
+}
+
+class OAuth2GiteeProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2GiteeProviderConfig({
+    $core.String? clientId,
+    $core.String? clientSecret,
+  }) {
+    final result = create();
+    if (clientId != null) result.clientId = clientId;
+    if (clientSecret != null) result.clientSecret = clientSecret;
+    return result;
+  }
+
+  OAuth2GiteeProviderConfig._();
+
+  factory OAuth2GiteeProviderConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2GiteeProviderConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2GiteeProviderConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientId')
+    ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2GiteeProviderConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2GiteeProviderConfig copyWith(
+          void Function(OAuth2GiteeProviderConfig) updates) =>
+      super.copyWith((message) => updates(message as OAuth2GiteeProviderConfig))
+          as OAuth2GiteeProviderConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2GiteeProviderConfig create() => OAuth2GiteeProviderConfig._();
+  @$core.override
+  OAuth2GiteeProviderConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2GiteeProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2GiteeProviderConfig>(create);
+  static OAuth2GiteeProviderConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get clientSecret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set clientSecret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasClientSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearClientSecret() => $_clearField(2);
 }
 
 class RtmpSettings extends $pb.GeneratedMessage {

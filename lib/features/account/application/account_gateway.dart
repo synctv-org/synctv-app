@@ -71,8 +71,9 @@ abstract interface class AccountGateway {
 
   Future<OAuth2AuthorizationStart> startOAuth2Bind(
     String provider, {
-    required String redirectUrl,
+    String? redirectUrl,
     required String verificationId,
+    bool native = false,
   });
 
   Future<void> finishOAuth2Bind({required String code, required String state});

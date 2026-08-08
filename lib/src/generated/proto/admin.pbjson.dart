@@ -786,8 +786,17 @@ const OAuth2ProviderSettings$json = {
       '10': 'signupNeedReview'
     },
     {
-      '1': 'github',
+      '1': 'qq',
       '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.OAuth2QqProviderConfig',
+      '9': 0,
+      '10': 'qq'
+    },
+    {
+      '1': 'github',
+      '3': 5,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.OAuth2GithubProviderConfig',
@@ -796,7 +805,7 @@ const OAuth2ProviderSettings$json = {
     },
     {
       '1': 'google',
-      '3': 5,
+      '3': 6,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.OAuth2GoogleProviderConfig',
@@ -804,8 +813,35 @@ const OAuth2ProviderSettings$json = {
       '10': 'google'
     },
     {
+      '1': 'microsoft',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.OAuth2MicrosoftProviderConfig',
+      '9': 0,
+      '10': 'microsoft'
+    },
+    {
+      '1': 'discord',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.OAuth2DiscordProviderConfig',
+      '9': 0,
+      '10': 'discord'
+    },
+    {
+      '1': 'casdoor',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.OAuth2CasdoorProviderConfig',
+      '9': 0,
+      '10': 'casdoor'
+    },
+    {
       '1': 'logto',
-      '3': 6,
+      '3': 10,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.OAuth2LogtoProviderConfig',
@@ -814,7 +850,7 @@ const OAuth2ProviderSettings$json = {
     },
     {
       '1': 'oidc',
-      '3': 7,
+      '3': 11,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.OAuth2OidcProviderConfig',
@@ -822,17 +858,26 @@ const OAuth2ProviderSettings$json = {
       '10': 'oidc'
     },
     {
-      '1': 'casdoor',
-      '3': 8,
+      '1': 'feishu',
+      '3': 12,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.OAuth2CasdoorProviderConfig',
+      '6': '.synctv.admin.OAuth2FeishuProviderConfig',
       '9': 0,
-      '10': 'casdoor'
+      '10': 'feishu'
+    },
+    {
+      '1': 'gitee',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.OAuth2GiteeProviderConfig',
+      '9': 0,
+      '10': 'gitee'
     },
     {
       '1': 'apple',
-      '3': 9,
+      '3': 14,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.OAuth2AppleProviderConfig',
@@ -849,15 +894,21 @@ const OAuth2ProviderSettings$json = {
 final $typed_data.Uint8List oAuth2ProviderSettingsDescriptor = $convert.base64Decode(
     'ChZPQXV0aDJQcm92aWRlclNldHRpbmdzEi8KBG5hbWUYASABKAlCG7pIGHIWEAEYQDIQXltBLV'
     'phLXowLTlfLV0rJFIEbmFtZRIjCg1lbmFibGVfc2lnbnVwGAIgASgIUgxlbmFibGVTaWdudXAS'
-    'LAoSc2lnbnVwX25lZWRfcmV2aWV3GAMgASgIUhBzaWdudXBOZWVkUmV2aWV3EkIKBmdpdGh1Yh'
-    'gEIAEoCzIoLnN5bmN0di5hZG1pbi5PQXV0aDJHaXRodWJQcm92aWRlckNvbmZpZ0gAUgZnaXRo'
-    'dWISQgoGZ29vZ2xlGAUgASgLMiguc3luY3R2LmFkbWluLk9BdXRoMkdvb2dsZVByb3ZpZGVyQ2'
-    '9uZmlnSABSBmdvb2dsZRI/CgVsb2d0bxgGIAEoCzInLnN5bmN0di5hZG1pbi5PQXV0aDJMb2d0'
-    'b1Byb3ZpZGVyQ29uZmlnSABSBWxvZ3RvEjwKBG9pZGMYByABKAsyJi5zeW5jdHYuYWRtaW4uT0'
-    'F1dGgyT2lkY1Byb3ZpZGVyQ29uZmlnSABSBG9pZGMSRQoHY2FzZG9vchgIIAEoCzIpLnN5bmN0'
-    'di5hZG1pbi5PQXV0aDJDYXNkb29yUHJvdmlkZXJDb25maWdIAFIHY2FzZG9vchI/CgVhcHBsZR'
-    'gJIAEoCzInLnN5bmN0di5hZG1pbi5PQXV0aDJBcHBsZVByb3ZpZGVyQ29uZmlnSABSBWFwcGxl'
-    'Qg8KBmNvbmZpZxIFukgCCAE=');
+    'LAoSc2lnbnVwX25lZWRfcmV2aWV3GAMgASgIUhBzaWdudXBOZWVkUmV2aWV3EjYKAnFxGAQgAS'
+    'gLMiQuc3luY3R2LmFkbWluLk9BdXRoMlFxUHJvdmlkZXJDb25maWdIAFICcXESQgoGZ2l0aHVi'
+    'GAUgASgLMiguc3luY3R2LmFkbWluLk9BdXRoMkdpdGh1YlByb3ZpZGVyQ29uZmlnSABSBmdpdG'
+    'h1YhJCCgZnb29nbGUYBiABKAsyKC5zeW5jdHYuYWRtaW4uT0F1dGgyR29vZ2xlUHJvdmlkZXJD'
+    'b25maWdIAFIGZ29vZ2xlEksKCW1pY3Jvc29mdBgHIAEoCzIrLnN5bmN0di5hZG1pbi5PQXV0aD'
+    'JNaWNyb3NvZnRQcm92aWRlckNvbmZpZ0gAUgltaWNyb3NvZnQSRQoHZGlzY29yZBgIIAEoCzIp'
+    'LnN5bmN0di5hZG1pbi5PQXV0aDJEaXNjb3JkUHJvdmlkZXJDb25maWdIAFIHZGlzY29yZBJFCg'
+    'djYXNkb29yGAkgASgLMikuc3luY3R2LmFkbWluLk9BdXRoMkNhc2Rvb3JQcm92aWRlckNvbmZp'
+    'Z0gAUgdjYXNkb29yEj8KBWxvZ3RvGAogASgLMicuc3luY3R2LmFkbWluLk9BdXRoMkxvZ3RvUH'
+    'JvdmlkZXJDb25maWdIAFIFbG9ndG8SPAoEb2lkYxgLIAEoCzImLnN5bmN0di5hZG1pbi5PQXV0'
+    'aDJPaWRjUHJvdmlkZXJDb25maWdIAFIEb2lkYxJCCgZmZWlzaHUYDCABKAsyKC5zeW5jdHYuYW'
+    'RtaW4uT0F1dGgyRmVpc2h1UHJvdmlkZXJDb25maWdIAFIGZmVpc2h1Ej8KBWdpdGVlGA0gASgL'
+    'Micuc3luY3R2LmFkbWluLk9BdXRoMkdpdGVlUHJvdmlkZXJDb25maWdIAFIFZ2l0ZWUSPwoFYX'
+    'BwbGUYDiABKAsyJy5zeW5jdHYuYWRtaW4uT0F1dGgyQXBwbGVQcm92aWRlckNvbmZpZ0gAUgVh'
+    'cHBsZUIPCgZjb25maWcSBbpIAggB');
 
 @$core.Deprecated('Use oAuth2GithubProviderConfigDescriptor instead')
 const OAuth2GithubProviderConfig$json = {
@@ -873,7 +924,6 @@ const OAuth2GithubProviderConfig$json = {
       '10': 'clientSecret',
       '17': true
     },
-    {'1': 'redirect_url', '3': 3, '4': 1, '5': 9, '10': 'redirectUrl'},
   ],
   '8': [
     {'1': '_client_secret'},
@@ -884,8 +934,8 @@ const OAuth2GithubProviderConfig$json = {
 final $typed_data.Uint8List oAuth2GithubProviderConfigDescriptor =
     $convert.base64Decode(
         'ChpPQXV0aDJHaXRodWJQcm92aWRlckNvbmZpZxIbCgljbGllbnRfaWQYASABKAlSCGNsaWVudE'
-        'lkEigKDWNsaWVudF9zZWNyZXQYAiABKAlIAFIMY2xpZW50U2VjcmV0iAEBEiEKDHJlZGlyZWN0'
-        'X3VybBgDIAEoCVILcmVkaXJlY3RVcmxCEAoOX2NsaWVudF9zZWNyZXQ=');
+        'lkEigKDWNsaWVudF9zZWNyZXQYAiABKAlIAFIMY2xpZW50U2VjcmV0iAEBQhAKDl9jbGllbnRf'
+        'c2VjcmV0');
 
 @$core.Deprecated('Use oAuth2GoogleProviderConfigDescriptor instead')
 const OAuth2GoogleProviderConfig$json = {
@@ -901,7 +951,6 @@ const OAuth2GoogleProviderConfig$json = {
       '10': 'clientSecret',
       '17': true
     },
-    {'1': 'redirect_url', '3': 3, '4': 1, '5': 9, '10': 'redirectUrl'},
   ],
   '8': [
     {'1': '_client_secret'},
@@ -912,8 +961,8 @@ const OAuth2GoogleProviderConfig$json = {
 final $typed_data.Uint8List oAuth2GoogleProviderConfigDescriptor =
     $convert.base64Decode(
         'ChpPQXV0aDJHb29nbGVQcm92aWRlckNvbmZpZxIbCgljbGllbnRfaWQYASABKAlSCGNsaWVudE'
-        'lkEigKDWNsaWVudF9zZWNyZXQYAiABKAlIAFIMY2xpZW50U2VjcmV0iAEBEiEKDHJlZGlyZWN0'
-        'X3VybBgDIAEoCVILcmVkaXJlY3RVcmxCEAoOX2NsaWVudF9zZWNyZXQ=');
+        'lkEigKDWNsaWVudF9zZWNyZXQYAiABKAlIAFIMY2xpZW50U2VjcmV0iAEBQhAKDl9jbGllbnRf'
+        'c2VjcmV0');
 
 @$core.Deprecated('Use oAuth2LogtoProviderConfigDescriptor instead')
 const OAuth2LogtoProviderConfig$json = {
@@ -929,8 +978,7 @@ const OAuth2LogtoProviderConfig$json = {
       '10': 'clientSecret',
       '17': true
     },
-    {'1': 'redirect_url', '3': 3, '4': 1, '5': 9, '10': 'redirectUrl'},
-    {'1': 'endpoint', '3': 4, '4': 1, '5': 9, '10': 'endpoint'},
+    {'1': 'endpoint', '3': 3, '4': 1, '5': 9, '10': 'endpoint'},
   ],
   '8': [
     {'1': '_client_secret'},
@@ -940,9 +988,8 @@ const OAuth2LogtoProviderConfig$json = {
 /// Descriptor for `OAuth2LogtoProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2LogtoProviderConfigDescriptor = $convert.base64Decode(
     'ChlPQXV0aDJMb2d0b1Byb3ZpZGVyQ29uZmlnEhsKCWNsaWVudF9pZBgBIAEoCVIIY2xpZW50SW'
-    'QSKAoNY2xpZW50X3NlY3JldBgCIAEoCUgAUgxjbGllbnRTZWNyZXSIAQESIQoMcmVkaXJlY3Rf'
-    'dXJsGAMgASgJUgtyZWRpcmVjdFVybBIaCghlbmRwb2ludBgEIAEoCVIIZW5kcG9pbnRCEAoOX2'
-    'NsaWVudF9zZWNyZXQ=');
+    'QSKAoNY2xpZW50X3NlY3JldBgCIAEoCUgAUgxjbGllbnRTZWNyZXSIAQESGgoIZW5kcG9pbnQY'
+    'AyABKAlSCGVuZHBvaW50QhAKDl9jbGllbnRfc2VjcmV0');
 
 @$core.Deprecated('Use oAuth2OidcProviderConfigDescriptor instead')
 const OAuth2OidcProviderConfig$json = {
@@ -958,11 +1005,10 @@ const OAuth2OidcProviderConfig$json = {
       '10': 'clientSecret',
       '17': true
     },
-    {'1': 'redirect_url', '3': 3, '4': 1, '5': 9, '10': 'redirectUrl'},
-    {'1': 'issuer', '3': 4, '4': 1, '5': 9, '10': 'issuer'},
+    {'1': 'issuer', '3': 3, '4': 1, '5': 9, '10': 'issuer'},
     {
       '1': 'auth_url',
-      '3': 5,
+      '3': 4,
       '4': 1,
       '5': 9,
       '9': 1,
@@ -971,7 +1017,7 @@ const OAuth2OidcProviderConfig$json = {
     },
     {
       '1': 'token_url',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 9,
       '9': 2,
@@ -980,7 +1026,7 @@ const OAuth2OidcProviderConfig$json = {
     },
     {
       '1': 'userinfo_url',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 9,
       '9': 3,
@@ -989,14 +1035,14 @@ const OAuth2OidcProviderConfig$json = {
     },
     {
       '1': 'jwks_url',
-      '3': 8,
+      '3': 7,
       '4': 1,
       '5': 9,
       '9': 4,
       '10': 'jwksUrl',
       '17': true
     },
-    {'1': 'scopes', '3': 9, '4': 3, '5': 9, '10': 'scopes'},
+    {'1': 'scopes', '3': 8, '4': 3, '5': 9, '10': 'scopes'},
   ],
   '8': [
     {'1': '_client_secret'},
@@ -1010,40 +1056,12 @@ const OAuth2OidcProviderConfig$json = {
 /// Descriptor for `OAuth2OidcProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2OidcProviderConfigDescriptor = $convert.base64Decode(
     'ChhPQXV0aDJPaWRjUHJvdmlkZXJDb25maWcSGwoJY2xpZW50X2lkGAEgASgJUghjbGllbnRJZB'
-    'IoCg1jbGllbnRfc2VjcmV0GAIgASgJSABSDGNsaWVudFNlY3JldIgBARIhCgxyZWRpcmVjdF91'
-    'cmwYAyABKAlSC3JlZGlyZWN0VXJsEhYKBmlzc3VlchgEIAEoCVIGaXNzdWVyEh4KCGF1dGhfdX'
-    'JsGAUgASgJSAFSB2F1dGhVcmyIAQESIAoJdG9rZW5fdXJsGAYgASgJSAJSCHRva2VuVXJsiAEB'
-    'EiYKDHVzZXJpbmZvX3VybBgHIAEoCUgDUgt1c2VyaW5mb1VybIgBARIeCghqd2tzX3VybBgIIA'
-    'EoCUgEUgdqd2tzVXJsiAEBEhYKBnNjb3BlcxgJIAMoCVIGc2NvcGVzQhAKDl9jbGllbnRfc2Vj'
-    'cmV0QgsKCV9hdXRoX3VybEIMCgpfdG9rZW5fdXJsQg8KDV91c2VyaW5mb191cmxCCwoJX2p3a3'
-    'NfdXJs');
-
-@$core.Deprecated('Use oAuth2AppleProviderConfigDescriptor instead')
-const OAuth2AppleProviderConfig$json = {
-  '1': 'OAuth2AppleProviderConfig',
-  '2': [
-    {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
-    {
-      '1': 'client_secret',
-      '3': 2,
-      '4': 1,
-      '5': 9,
-      '9': 0,
-      '10': 'clientSecret',
-      '17': true
-    },
-    {'1': 'redirect_url', '3': 3, '4': 1, '5': 9, '10': 'redirectUrl'},
-  ],
-  '8': [
-    {'1': '_client_secret'},
-  ],
-};
-
-/// Descriptor for `OAuth2AppleProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List oAuth2AppleProviderConfigDescriptor = $convert.base64Decode(
-    'ChlPQXV0aDJBcHBsZVByb3ZpZGVyQ29uZmlnEhsKCWNsaWVudF9pZBgBIAEoCVIIY2xpZW50SW'
-    'QSKAoNY2xpZW50X3NlY3JldBgCIAEoCUgAUgxjbGllbnRTZWNyZXSIAQESIQoMcmVkaXJlY3Rf'
-    'dXJsGAMgASgJUgtyZWRpcmVjdFVybEIQCg5fY2xpZW50X3NlY3JldA==');
+    'IoCg1jbGllbnRfc2VjcmV0GAIgASgJSABSDGNsaWVudFNlY3JldIgBARIWCgZpc3N1ZXIYAyAB'
+    'KAlSBmlzc3VlchIeCghhdXRoX3VybBgEIAEoCUgBUgdhdXRoVXJsiAEBEiAKCXRva2VuX3VybB'
+    'gFIAEoCUgCUgh0b2tlblVybIgBARImCgx1c2VyaW5mb191cmwYBiABKAlIA1ILdXNlcmluZm9V'
+    'cmyIAQESHgoIandrc191cmwYByABKAlIBFIHandrc1VybIgBARIWCgZzY29wZXMYCCADKAlSBn'
+    'Njb3Blc0IQCg5fY2xpZW50X3NlY3JldEILCglfYXV0aF91cmxCDAoKX3Rva2VuX3VybEIPCg1f'
+    'dXNlcmluZm9fdXJsQgsKCV9qd2tzX3VybA==');
 
 @$core.Deprecated('Use oAuth2CasdoorProviderConfigDescriptor instead')
 const OAuth2CasdoorProviderConfig$json = {
@@ -1059,11 +1077,10 @@ const OAuth2CasdoorProviderConfig$json = {
       '10': 'clientSecret',
       '17': true
     },
-    {'1': 'redirect_url', '3': 3, '4': 1, '5': 9, '10': 'redirectUrl'},
-    {'1': 'issuer', '3': 4, '4': 1, '5': 9, '10': 'issuer'},
+    {'1': 'issuer', '3': 3, '4': 1, '5': 9, '10': 'issuer'},
     {
       '1': 'auth_url',
-      '3': 5,
+      '3': 4,
       '4': 1,
       '5': 9,
       '9': 1,
@@ -1072,7 +1089,7 @@ const OAuth2CasdoorProviderConfig$json = {
     },
     {
       '1': 'token_url',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 9,
       '9': 2,
@@ -1081,7 +1098,7 @@ const OAuth2CasdoorProviderConfig$json = {
     },
     {
       '1': 'userinfo_url',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 9,
       '9': 3,
@@ -1090,7 +1107,7 @@ const OAuth2CasdoorProviderConfig$json = {
     },
     {
       '1': 'jwks_url',
-      '3': 8,
+      '3': 7,
       '4': 1,
       '5': 9,
       '9': 4,
@@ -1110,12 +1127,186 @@ const OAuth2CasdoorProviderConfig$json = {
 /// Descriptor for `OAuth2CasdoorProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2CasdoorProviderConfigDescriptor = $convert.base64Decode(
     'ChtPQXV0aDJDYXNkb29yUHJvdmlkZXJDb25maWcSGwoJY2xpZW50X2lkGAEgASgJUghjbGllbn'
-    'RJZBIoCg1jbGllbnRfc2VjcmV0GAIgASgJSABSDGNsaWVudFNlY3JldIgBARIhCgxyZWRpcmVj'
-    'dF91cmwYAyABKAlSC3JlZGlyZWN0VXJsEhYKBmlzc3VlchgEIAEoCVIGaXNzdWVyEh4KCGF1dG'
-    'hfdXJsGAUgASgJSAFSB2F1dGhVcmyIAQESIAoJdG9rZW5fdXJsGAYgASgJSAJSCHRva2VuVXJs'
-    'iAEBEiYKDHVzZXJpbmZvX3VybBgHIAEoCUgDUgt1c2VyaW5mb1VybIgBARIeCghqd2tzX3VybB'
-    'gIIAEoCUgEUgdqd2tzVXJsiAEBQhAKDl9jbGllbnRfc2VjcmV0QgsKCV9hdXRoX3VybEIMCgpf'
-    'dG9rZW5fdXJsQg8KDV91c2VyaW5mb191cmxCCwoJX2p3a3NfdXJs');
+    'RJZBIoCg1jbGllbnRfc2VjcmV0GAIgASgJSABSDGNsaWVudFNlY3JldIgBARIWCgZpc3N1ZXIY'
+    'AyABKAlSBmlzc3VlchIeCghhdXRoX3VybBgEIAEoCUgBUgdhdXRoVXJsiAEBEiAKCXRva2VuX3'
+    'VybBgFIAEoCUgCUgh0b2tlblVybIgBARImCgx1c2VyaW5mb191cmwYBiABKAlIA1ILdXNlcmlu'
+    'Zm9VcmyIAQESHgoIandrc191cmwYByABKAlIBFIHandrc1VybIgBAUIQCg5fY2xpZW50X3NlY3'
+    'JldEILCglfYXV0aF91cmxCDAoKX3Rva2VuX3VybEIPCg1fdXNlcmluZm9fdXJsQgsKCV9qd2tz'
+    'X3VybA==');
+
+@$core.Deprecated('Use oAuth2AppleProviderConfigDescriptor instead')
+const OAuth2AppleProviderConfig$json = {
+  '1': 'OAuth2AppleProviderConfig',
+  '2': [
+    {'1': 'web_client_id', '3': 1, '4': 1, '5': 9, '10': 'webClientId'},
+    {
+      '1': 'web_client_secret',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'webClientSecret',
+      '17': true
+    },
+    {'1': 'native_client_id', '3': 3, '4': 1, '5': 9, '10': 'nativeClientId'},
+    {
+      '1': 'native_client_secret',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'nativeClientSecret',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_web_client_secret'},
+    {'1': '_native_client_secret'},
+  ],
+};
+
+/// Descriptor for `OAuth2AppleProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2AppleProviderConfigDescriptor = $convert.base64Decode(
+    'ChlPQXV0aDJBcHBsZVByb3ZpZGVyQ29uZmlnEiIKDXdlYl9jbGllbnRfaWQYASABKAlSC3dlYk'
+    'NsaWVudElkEi8KEXdlYl9jbGllbnRfc2VjcmV0GAIgASgJSABSD3dlYkNsaWVudFNlY3JldIgB'
+    'ARIoChBuYXRpdmVfY2xpZW50X2lkGAMgASgJUg5uYXRpdmVDbGllbnRJZBI1ChRuYXRpdmVfY2'
+    'xpZW50X3NlY3JldBgEIAEoCUgBUhJuYXRpdmVDbGllbnRTZWNyZXSIAQFCFAoSX3dlYl9jbGll'
+    'bnRfc2VjcmV0QhcKFV9uYXRpdmVfY2xpZW50X3NlY3JldA==');
+
+@$core.Deprecated('Use oAuth2QqProviderConfigDescriptor instead')
+const OAuth2QqProviderConfig$json = {
+  '1': 'OAuth2QqProviderConfig',
+  '2': [
+    {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
+    {
+      '1': 'client_secret',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'clientSecret',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_client_secret'},
+  ],
+};
+
+/// Descriptor for `OAuth2QqProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2QqProviderConfigDescriptor = $convert.base64Decode(
+    'ChZPQXV0aDJRcVByb3ZpZGVyQ29uZmlnEhsKCWNsaWVudF9pZBgBIAEoCVIIY2xpZW50SWQSKA'
+    'oNY2xpZW50X3NlY3JldBgCIAEoCUgAUgxjbGllbnRTZWNyZXSIAQFCEAoOX2NsaWVudF9zZWNy'
+    'ZXQ=');
+
+@$core.Deprecated('Use oAuth2MicrosoftProviderConfigDescriptor instead')
+const OAuth2MicrosoftProviderConfig$json = {
+  '1': 'OAuth2MicrosoftProviderConfig',
+  '2': [
+    {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
+    {
+      '1': 'client_secret',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'clientSecret',
+      '17': true
+    },
+    {'1': 'tenant', '3': 3, '4': 1, '5': 9, '10': 'tenant'},
+  ],
+  '8': [
+    {'1': '_client_secret'},
+  ],
+};
+
+/// Descriptor for `OAuth2MicrosoftProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2MicrosoftProviderConfigDescriptor =
+    $convert.base64Decode(
+        'Ch1PQXV0aDJNaWNyb3NvZnRQcm92aWRlckNvbmZpZxIbCgljbGllbnRfaWQYASABKAlSCGNsaW'
+        'VudElkEigKDWNsaWVudF9zZWNyZXQYAiABKAlIAFIMY2xpZW50U2VjcmV0iAEBEhYKBnRlbmFu'
+        'dBgDIAEoCVIGdGVuYW50QhAKDl9jbGllbnRfc2VjcmV0');
+
+@$core.Deprecated('Use oAuth2DiscordProviderConfigDescriptor instead')
+const OAuth2DiscordProviderConfig$json = {
+  '1': 'OAuth2DiscordProviderConfig',
+  '2': [
+    {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
+    {
+      '1': 'client_secret',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'clientSecret',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_client_secret'},
+  ],
+};
+
+/// Descriptor for `OAuth2DiscordProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2DiscordProviderConfigDescriptor =
+    $convert.base64Decode(
+        'ChtPQXV0aDJEaXNjb3JkUHJvdmlkZXJDb25maWcSGwoJY2xpZW50X2lkGAEgASgJUghjbGllbn'
+        'RJZBIoCg1jbGllbnRfc2VjcmV0GAIgASgJSABSDGNsaWVudFNlY3JldIgBAUIQCg5fY2xpZW50'
+        'X3NlY3JldA==');
+
+@$core.Deprecated('Use oAuth2FeishuProviderConfigDescriptor instead')
+const OAuth2FeishuProviderConfig$json = {
+  '1': 'OAuth2FeishuProviderConfig',
+  '2': [
+    {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
+    {
+      '1': 'client_secret',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'clientSecret',
+      '17': true
+    },
+    {'1': 'endpoint', '3': 3, '4': 1, '5': 9, '10': 'endpoint'},
+  ],
+  '8': [
+    {'1': '_client_secret'},
+  ],
+};
+
+/// Descriptor for `OAuth2FeishuProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2FeishuProviderConfigDescriptor =
+    $convert.base64Decode(
+        'ChpPQXV0aDJGZWlzaHVQcm92aWRlckNvbmZpZxIbCgljbGllbnRfaWQYASABKAlSCGNsaWVudE'
+        'lkEigKDWNsaWVudF9zZWNyZXQYAiABKAlIAFIMY2xpZW50U2VjcmV0iAEBEhoKCGVuZHBvaW50'
+        'GAMgASgJUghlbmRwb2ludEIQCg5fY2xpZW50X3NlY3JldA==');
+
+@$core.Deprecated('Use oAuth2GiteeProviderConfigDescriptor instead')
+const OAuth2GiteeProviderConfig$json = {
+  '1': 'OAuth2GiteeProviderConfig',
+  '2': [
+    {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
+    {
+      '1': 'client_secret',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'clientSecret',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_client_secret'},
+  ],
+};
+
+/// Descriptor for `OAuth2GiteeProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2GiteeProviderConfigDescriptor = $convert.base64Decode(
+    'ChlPQXV0aDJHaXRlZVByb3ZpZGVyQ29uZmlnEhsKCWNsaWVudF9pZBgBIAEoCVIIY2xpZW50SW'
+    'QSKAoNY2xpZW50X3NlY3JldBgCIAEoCUgAUgxjbGllbnRTZWNyZXSIAQFCEAoOX2NsaWVudF9z'
+    'ZWNyZXQ=');
 
 @$core.Deprecated('Use rtmpSettingsDescriptor instead')
 const RtmpSettings$json = {
@@ -5583,11 +5774,17 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.UserSettings': UserSettings$json,
   '.synctv.admin.OAuth2Settings': OAuth2Settings$json,
   '.synctv.admin.OAuth2ProviderSettings': OAuth2ProviderSettings$json,
+  '.synctv.admin.OAuth2QqProviderConfig': OAuth2QqProviderConfig$json,
   '.synctv.admin.OAuth2GithubProviderConfig': OAuth2GithubProviderConfig$json,
   '.synctv.admin.OAuth2GoogleProviderConfig': OAuth2GoogleProviderConfig$json,
+  '.synctv.admin.OAuth2MicrosoftProviderConfig':
+      OAuth2MicrosoftProviderConfig$json,
+  '.synctv.admin.OAuth2DiscordProviderConfig': OAuth2DiscordProviderConfig$json,
+  '.synctv.admin.OAuth2CasdoorProviderConfig': OAuth2CasdoorProviderConfig$json,
   '.synctv.admin.OAuth2LogtoProviderConfig': OAuth2LogtoProviderConfig$json,
   '.synctv.admin.OAuth2OidcProviderConfig': OAuth2OidcProviderConfig$json,
-  '.synctv.admin.OAuth2CasdoorProviderConfig': OAuth2CasdoorProviderConfig$json,
+  '.synctv.admin.OAuth2FeishuProviderConfig': OAuth2FeishuProviderConfig$json,
+  '.synctv.admin.OAuth2GiteeProviderConfig': OAuth2GiteeProviderConfig$json,
   '.synctv.admin.OAuth2AppleProviderConfig': OAuth2AppleProviderConfig$json,
   '.synctv.admin.RtmpSettings': RtmpSettings$json,
   '.synctv.admin.EmailSettings': EmailSettings$json,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/core/platform/device_display_name_service.dart';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
+import 'package:synctv_app/features/auth/application/native_apple_sign_in_client.dart';
 import 'package:synctv_app/core/config/distribution_profile.dart';
 import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
 import 'package:synctv_app/features/auth/application/passkey_client.dart';
@@ -41,6 +43,9 @@ PasskeyClient _passkeyClient(BuildContext context) =>
 
 OAuth2CallbackClient _oauth2Callbacks(BuildContext context) =>
     DependencyScope.read<OAuth2CallbackClient>(context);
+
+NativeAppleSignInClient _nativeAppleSignIn(BuildContext context) =>
+    DependencyScope.read<NativeAppleSignInClient>(context);
 
 class _AccountSection {
   final String label;
@@ -1041,6 +1046,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _startOAuth2Bind(OAuth2ProviderOption provider) async {
+    final authorizationMode = selectOAuth2AuthorizationMode(
+      provider,
+      platform: defaultTargetPlatform,
+      browserAvailable: _oauth2Callbacks(context).canCreateSession,
+      nativeAvailable: _nativeAppleSignIn(context).isSupported,
+    );
+    if (authorizationMode == OAuth2ClientAuthorizationMode.native) {
+      await _startNativeAppleOAuth2Bind(provider);
+      return;
+    }
+    if (authorizationMode != OAuth2ClientAuthorizationMode.browser) return;
     final oauth2Callbacks = _oauth2Callbacks(context);
     try {
       for (
@@ -1070,7 +1086,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               _bindAttempt++;
             });
             final attempt = _bindAttempt;
-            final uri = Uri.parse(start.authorizationUrl);
+            final authorizationUrl = start.authorizationUrl;
+            if (authorizationUrl == null || authorizationUrl.isEmpty) {
+              throw StateError('Browser authorization URL is missing');
+            }
+            final uri = Uri.parse(authorizationUrl);
             late final OAuth2CallbackPayload parsed;
             try {
               parsed = await callbackSession.authorize(
@@ -1118,6 +1138,62 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             rethrow;
           }
         }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _bindProvider = null);
+        AppNotifications.showError(
+          context,
+          context.l10n.oauthBindingFailed('$e'),
+        );
+      }
+    }
+  }
+
+  Future<void> _startNativeAppleOAuth2Bind(
+    OAuth2ProviderOption provider,
+  ) async {
+    try {
+      final verificationId = await _verifySensitiveOperation();
+      if (verificationId == null) return;
+      final start = await _gateway.startOAuth2Bind(
+        provider.name,
+        verificationId: verificationId,
+        native: true,
+      );
+      final nonce = start.nonce;
+      if (nonce == null || nonce.isEmpty) {
+        throw StateError('Apple authorization nonce is missing');
+      }
+      if (!mounted) return;
+      setState(() {
+        _bindProvider = provider.name;
+        _bindAttempt++;
+      });
+      final attempt = _bindAttempt;
+      final parsed = await _nativeAppleSignIn(context).authorize(
+        expectedState: start.state,
+        nonce: nonce,
+      );
+      if (!mounted || attempt != _bindAttempt) return;
+      await _gateway.finishOAuth2Bind(code: parsed.code, state: parsed.state);
+      final linked = await _gateway.getLinkedOAuth2Accounts();
+      if (!mounted) return;
+      setState(() {
+        _linkedOAuth2 = linked;
+        _clearLoadError(_moduleOAuthLinks);
+        _bindProvider = null;
+      });
+      AppNotifications.showSuccess(context, context.l10n.oauthAccountBound);
+    } on OAuth2AuthorizationCanceled {
+      if (mounted) setState(() => _bindProvider = null);
+    } on OAuth2AuthorizationTimedOut {
+      if (mounted) {
+        setState(() => _bindProvider = null);
+        AppNotifications.showError(
+          context,
+          context.l10n.oauthAuthorizationTimedOut,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -2765,8 +2841,18 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Widget _buildBindingsTab(ThemeData theme) {
-    final bindableProviders = oauth2BindableProviders(_availableOAuth2);
-    final oauth2Available = _oauth2Callbacks(context).canCreateSession;
+    final browserAvailable = _oauth2Callbacks(context).canCreateSession;
+    final nativeAvailable = _nativeAppleSignIn(context).isSupported;
+    final bindableProviders = oauth2BindableProviders(_availableOAuth2)
+        .where(
+          (provider) => isOAuthProviderAvailable(
+            provider,
+            browserAvailable: browserAvailable,
+            nativeAvailable: nativeAvailable,
+          ),
+        )
+        .toList(growable: false);
+    final oauth2Available = browserAvailable || nativeAvailable;
     final linkedError = _loadError(_moduleOAuthLinks);
     final providersError = _loadError('OAuth2 Provider');
     final showLinkedOAuth2 = linkedError != null || _linkedOAuth2.isNotEmpty;
@@ -2987,19 +3073,47 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        for (final provider in bindableProviders)
-                          AppActionButton(
-                            onPressed: oauth2Available
-                                ? () => _startOAuth2Bind(provider)
-                                : null,
-                            prefix: OAuthProviderIcon(
-                              type: provider.type,
-                              name: provider.name,
+                        for (final provider in bindableProviders) ...[
+                          if (selectOAuth2AuthorizationMode(
+                                    provider,
+                                    platform: defaultTargetPlatform,
+                                    browserAvailable: browserAvailable,
+                                    nativeAvailable: nativeAvailable,
+                                  ) !=
+                                  null &&
+                              shouldUseAppleSignInButton(
+                                provider,
+                                defaultTargetPlatform,
+                              ))
+                            SizedBox(
+                              width: 240,
+                              child: AppleSignInButton(
+                                semanticLabel: context.l10n
+                                    .continueWithProvider('Apple'),
+                                onPressed: () => _startOAuth2Bind(provider),
+                              ),
+                            )
+                          else
+                            AppActionButton(
+                              onPressed:
+                                  selectOAuth2AuthorizationMode(
+                                        provider,
+                                        platform: defaultTargetPlatform,
+                                        browserAvailable: browserAvailable,
+                                        nativeAvailable: nativeAvailable,
+                                      ) !=
+                                      null
+                                  ? () => _startOAuth2Bind(provider)
+                                  : null,
+                              prefix: OAuthProviderIcon(
+                                type: provider.type,
+                                name: provider.name,
+                              ),
+                              label:
+                                  '${oauthProviderDisplayName(type: provider.type, name: provider.name)} (${provider.name})',
+                              style: AppActionButtonStyle.outlined,
                             ),
-                            label:
-                                '${oauthProviderDisplayName(type: provider.type, name: provider.name)} (${provider.name})',
-                            style: AppActionButtonStyle.outlined,
-                          ),
+                        ],
                       ],
                     ),
                   if (!oauth2Available) ...[

@@ -1,10 +1,12 @@
 import AuthenticationServices
+import CryptoKit
 import Flutter
 import UIKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var oauth2SessionController: DarwinOAuth2SessionController?
+  private var appleAuthorizationController: NativeAppleAuthorizationController?
 
   override func application(
     _ application: UIApplication,
@@ -23,6 +25,9 @@ import UIKit
         withId: "org.synctv.app/apple_sign_in_button"
       )
       oauth2SessionController = DarwinOAuth2SessionController(
+        messenger: registrar.messenger()
+      )
+      appleAuthorizationController = NativeAppleAuthorizationController(
         messenger: registrar.messenger()
       )
     }
@@ -47,6 +52,102 @@ import UIKit
     return [
       "applicationIdentifier": applicationIdentifier
     ]
+  }
+}
+
+private final class NativeAppleAuthorizationController: NSObject,
+  ASAuthorizationControllerDelegate,
+  ASAuthorizationControllerPresentationContextProviding
+{
+  private let channel: FlutterMethodChannel
+  private var controller: ASAuthorizationController?
+  private var pendingResult: FlutterResult?
+
+  init(messenger: FlutterBinaryMessenger) {
+    channel = FlutterMethodChannel(
+      name: "org.synctv.app/apple_sign_in",
+      binaryMessenger: messenger
+    )
+    super.init()
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "authorize" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      self?.authorize(call.arguments, result: result)
+    }
+  }
+
+  private func authorize(_ rawArguments: Any?, result: @escaping FlutterResult) {
+    guard controller == nil else {
+      result(FlutterError(code: "IN_PROGRESS", message: "Apple authorization is already active", details: nil))
+      return
+    }
+    guard
+      let arguments = rawArguments as? [String: Any],
+      let state = arguments["state"] as? String, !state.isEmpty,
+      let nonce = arguments["nonce"] as? String, !nonce.isEmpty
+    else {
+      result(FlutterError(code: "INVALID_ARGUMENTS", message: "Apple authorization arguments are invalid", details: nil))
+      return
+    }
+
+    let request = ASAuthorizationAppleIDProvider().createRequest()
+    request.requestedScopes = [.fullName, .email]
+    request.state = state
+    request.nonce = Self.sha256Hex(nonce)
+    let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+    authorizationController.delegate = self
+    authorizationController.presentationContextProvider = self
+    pendingResult = result
+    controller = authorizationController
+    authorizationController.performRequests()
+  }
+
+  func authorizationController(
+    controller: ASAuthorizationController,
+    didCompleteWithAuthorization authorization: ASAuthorization
+  ) {
+    guard
+      let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+      let authorizationCode = credential.authorizationCode,
+      let code = String(data: authorizationCode, encoding: .utf8),
+      let state = credential.state
+    else {
+      finish(FlutterError(code: "INVALID_RESPONSE", message: "Apple authorization did not return a valid code", details: nil))
+      return
+    }
+    finish(["code": code, "state": state])
+  }
+
+  func authorizationController(
+    controller: ASAuthorizationController,
+    didCompleteWithError error: Error
+  ) {
+    let code = (error as? ASAuthorizationError)?.code == .canceled
+      ? "CANCELED"
+      : "AUTHENTICATION_FAILED"
+    finish(FlutterError(code: code, message: error.localizedDescription, details: nil))
+  }
+
+  private func finish(_ value: Any?) {
+    let result = pendingResult
+    pendingResult = nil
+    controller = nil
+    result?(value)
+  }
+
+  private static func sha256Hex(_ value: String) -> String {
+    SHA256.hash(data: Data(value.utf8))
+      .map { String(format: "%02x", $0) }
+      .joined()
+  }
+
+  func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+    let windows = UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .flatMap(\.windows)
+    return windows.first(where: \.isKeyWindow) ?? windows.first ?? UIWindow()
   }
 }
 

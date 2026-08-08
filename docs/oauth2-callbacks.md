@@ -17,9 +17,9 @@ passes the resulting redirect URL to the backend, and retries the complete
 authorization start when another process claims that port before the listener
 starts.
 
-Android, iOS, and macOS builds use an HTTPS callback. Android opens an AndroidX
-Auth Tab. iOS and macOS open `ASWebAuthenticationSession`. Use an HTTPS host
-without an explicit port:
+Browser-based OAuth authorization on Android, iOS, and macOS uses an HTTPS
+callback. Android opens an AndroidX Auth Tab. iOS and macOS open
+`ASWebAuthenticationSession`. Use an HTTPS host without an explicit port:
 
 ```text
 https://{verified-domain}/oauth2/callback
@@ -33,8 +33,9 @@ flutter build ios --dart-define=SYNCTV_OAUTH2_APP_LINK_ORIGIN=https://app.exampl
 flutter build macos --dart-define=SYNCTV_OAUTH2_APP_LINK_ORIGIN=https://app.example.com
 ```
 
-The Android integration and the app-owned Apple integration pass the HTTPS host
-and `/oauth2/callback` path directly to their system authentication sessions.
+The Android integration and the app-owned Apple browser integration pass the
+HTTPS host and `/oauth2/callback` path directly to their system authentication
+sessions.
 The app's main Android activity has no OAuth callback intent filter.
 
 macOS and iOS generate the signed entitlements from
@@ -50,3 +51,26 @@ The domain hosts the platform association files used by native credentials and
 Apple Universal Links. Apple requires the `webcredentials` service for HTTPS
 callbacks through `ASWebAuthenticationSession`, available on iOS 17.4 and
 macOS 14.4 or newer.
+
+## Native Sign in with Apple
+
+iOS and macOS use `ASAuthorizationAppleIDProvider` for native Sign in with
+Apple. This flow omits `redirectUrl` and does not use
+`SYNCTV_OAUTH2_APP_LINK_ORIGIN` or `/.well-known/apple-app-site-association`.
+The client sends `native=true` when starting authorization; the server uses
+the configured `nativeClientId` and `nativeClientSecret` to exchange Apple's
+authorization code.
+
+The server advertises provider capabilities in `GET /api/oauth2/providers`.
+When the Apple instance includes both `browser` and `native` in
+`supportedModes`, iOS and macOS choose native authorization. When only
+`browser` is configured, the same Apple button automatically starts the
+browser session through `ASWebAuthenticationSession`. Android, Windows, Linux,
+and web choose browser authorization. The client hides a provider when its
+supported modes cannot run on the current platform.
+
+The official app Bundle ID is `org.synctv.app`. A self-hosted operator normally
+cannot obtain the official Apple Developer Team credentials, so a self-hosted
+Apple distribution should use its own Apple Developer Team, Bundle ID, signing
+profile, and server-side native client secret. The Bundle ID in the signed app
+must equal the server's `nativeClientId`.

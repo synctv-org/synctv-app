@@ -467,6 +467,7 @@ class _AppShellState extends State<AppShell> {
           passkeyClient: widget.dependencies.passkeyClient,
           opaqueAuthenticator: widget.dependencies.opaqueAuthenticator,
           oauth2Callbacks: widget.dependencies.oauth2Callbacks,
+          nativeAppleSignIn: widget.dependencies.nativeAppleSignIn,
           initialGuestRoomId: guestRoomId,
           startWithGuest: startWithGuest,
         ),
