@@ -1171,10 +1171,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _bindAttempt++;
       });
       final attempt = _bindAttempt;
-      final parsed = await _nativeAppleSignIn(context).authorize(
-        expectedState: start.state,
-        nonce: nonce,
-      );
+      final parsed = await _nativeAppleSignIn(
+        context,
+      ).authorize(expectedState: start.state, nonce: nonce);
       if (!mounted || attempt != _bindAttempt) return;
       await _gateway.finishOAuth2Bind(code: parsed.code, state: parsed.state);
       final linked = await _gateway.getLinkedOAuth2Accounts();

@@ -1894,8 +1894,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     List<OAuth2ProviderOption>? providers,
   }) {
     final browserAvailable = widget.oauth2Callbacks.canCreateSession;
-    final nativeAvailable =
-        widget.nativeAppleSignIn.isSupported;
+    final nativeAvailable = widget.nativeAppleSignIn.isSupported;
     final visibleProviders = (providers ?? _oauth2Providers)
         .where(
           (provider) => isOAuthProviderAvailable(

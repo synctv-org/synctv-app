@@ -243,8 +243,7 @@ final class _DarwinOAuth2CallbackSession implements OAuth2CallbackSession {
 /// Starts Apple's first-party Authentication Services flow. The native
 /// controller returns the authorization code directly, so no browser callback
 /// URL is involved.
-final class PlatformNativeAppleSignInClient
-    implements NativeAppleSignInClient {
+final class PlatformNativeAppleSignInClient implements NativeAppleSignInClient {
   const PlatformNativeAppleSignInClient();
 
   static const MethodChannel _channel = MethodChannel(
