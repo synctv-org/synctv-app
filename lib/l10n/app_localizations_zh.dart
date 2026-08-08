@@ -2843,10 +2843,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get closeAccount => '关闭账户';
+  String get closeAccount => '注销账户';
 
   @override
-  String get closeAccountDescription => '此操作会永久关闭当前账户及相关个人数据。';
+  String get closeAccountDescription => '此操作会注销当前账户，并从服务器移除相关个人数据。';
 
   @override
   String enterCloseAccountToConfirm(String text) {
@@ -2857,11 +2857,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get confirmationTextMismatch => '确认文本不匹配';
 
   @override
-  String get accountClosed => '账户已关闭';
+  String get accountClosed => '账户已注销';
 
   @override
   String closeAccountFailed(String error) {
-    return '关闭账户失败：$error';
+    return '注销账户失败：$error';
   }
 
   @override
@@ -3043,7 +3043,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dangerousActionsDescription => '这些操作会影响账号可用性或永久删除数据';
 
   @override
-  String get closeAccountTileDescription => '永久关闭当前账户，并清除本机登录状态';
+  String get closeAccountTileDescription => '注销当前账户，并清除本机登录状态';
 
   @override
   String unreadTotalSummary(int unread, int total) {
