@@ -97,6 +97,8 @@ EOF
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<key>com.apple.security.network.server</key>
+	<true/>
 	<key>com.apple.security.device.audio-input</key>
 	<true/>
 	<key>com.apple.security.files.user-selected.read-only</key>

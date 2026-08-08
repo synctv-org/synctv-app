@@ -1099,8 +1099,12 @@ String _settingSummary(
       if (map.isEmpty) return l10n.noExternalLoginConfigured;
       final enabled = map.values.where((entry) {
         if (entry is! Map) return false;
-        final config = _oauth2ProviderConfig(Map<String, dynamic>.from(entry));
-        return (config['clientId'] ?? '').toString().isNotEmpty;
+        final provider = Map<String, dynamic>.from(entry);
+        final type = _oauth2ProviderType(provider);
+        return _oauth2ProviderHasClientId(
+          type,
+          _oauth2ProviderConfig(provider),
+        );
       }).length;
       return l10n.oauthProviderSummary(map.length, enabled);
     case _SettingEditorKind.iceServers:
@@ -2255,6 +2259,18 @@ Map<String, dynamic> _oauth2ProviderConfig(Map<String, dynamic> value) {
   return <String, dynamic>{};
 }
 
+bool _oauth2ProviderHasClientId(
+  String type,
+  Map<String, dynamic> config,
+) {
+  if (type == 'apple') {
+    return [config['webClientId'], config['nativeClientId']].any(
+      (value) => value?.toString().trim().isNotEmpty ?? false,
+    );
+  }
+  return config['clientId']?.toString().trim().isNotEmpty ?? false;
+}
+
 String _oauth2ProviderType(Map<String, dynamic> value) {
   for (final type in _oauth2ProviderTypes) {
     if (value[type] is Map) return type;
@@ -2435,11 +2451,7 @@ class _OAuth2ProviderCard extends StatelessWidget {
     final theme = Theme.of(context);
     final providerType = _oauth2ProviderType(value);
     final config = _oauth2ProviderConfig(value);
-    final hasClientId = providerType == 'apple'
-        ? (config['webClientId'] ?? config['nativeClientId'] ?? '')
-              .toString()
-              .isNotEmpty
-        : (config['clientId'] ?? '').toString().isNotEmpty;
+    final hasClientId = _oauth2ProviderHasClientId(providerType, config);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: AppCard(
@@ -2733,7 +2745,7 @@ class _OAuth2ProviderEditorSheetState
                         _oauthSecretField(
                           _appleWebClientSecret,
                           'Apple Services ID Secret',
-                          _canPreserveAppleClientSecrets,
+                          _canPreserveAppleWebClientSecret,
                           required: false,
                         ),
                         const SizedBox(height: 12),
@@ -2748,7 +2760,7 @@ class _OAuth2ProviderEditorSheetState
                         _oauthSecretField(
                           _appleNativeClientSecret,
                           'Apple App ID Secret',
-                          _canPreserveAppleClientSecrets,
+                          _canPreserveAppleNativeClientSecret,
                           required: false,
                         ),
                       ] else ...[
@@ -2963,11 +2975,17 @@ class _OAuth2ProviderEditorSheetState
       _type == _initialType &&
       _clientId.text.trim() == _initialClientId;
 
-  bool get _canPreserveAppleClientSecrets =>
+  bool get _canPreserveAppleProviderIdentity =>
       widget.initialName != null &&
       _name.text.trim() == widget.initialName &&
-      _type == _initialType &&
-      _appleWebClientId.text.trim() == _initialAppleWebClientId &&
+      _type == _initialType;
+
+  bool get _canPreserveAppleWebClientSecret =>
+      _canPreserveAppleProviderIdentity &&
+      _appleWebClientId.text.trim() == _initialAppleWebClientId;
+
+  bool get _canPreserveAppleNativeClientSecret =>
+      _canPreserveAppleProviderIdentity &&
       _appleNativeClientId.text.trim() == _initialAppleNativeClientId;
 
   void _save() {
@@ -2978,12 +2996,12 @@ class _OAuth2ProviderEditorSheetState
       config['nativeClientId'] = _appleNativeClientId.text.trim();
       final webClientSecret = _appleWebClientSecret.text;
       if (webClientSecret.trim().isNotEmpty ||
-          !_canPreserveAppleClientSecrets) {
+          !_canPreserveAppleWebClientSecret) {
         config['webClientSecret'] = webClientSecret;
       }
       final nativeClientSecret = _appleNativeClientSecret.text;
       if (nativeClientSecret.trim().isNotEmpty ||
-          !_canPreserveAppleClientSecrets) {
+          !_canPreserveAppleNativeClientSecret) {
         config['nativeClientSecret'] = nativeClientSecret;
       }
     } else {

@@ -36,9 +36,15 @@ for purpose_key in \
   fi
 done
 
-if jq -e '.["com.apple.security.network.server"] == true' \
+if [[ -f "$app_path/Contents/Info.plist" ]]; then
+  jq -e '.["com.apple.security.network.server"] == true' \
+    "$entitlements_json" >/dev/null || {
+    echo "Sandboxed macOS app is missing the network server entitlement for its loopback P2P gateway" >&2
+    exit 1
+  }
+elif jq -e '.["com.apple.security.network.server"] == true' \
   "$entitlements_json" >/dev/null; then
-  echo "Apple app contains the unnecessary network server entitlement" >&2
+  echo "iOS app must not contain the network server entitlement" >&2
   exit 1
 fi
 
