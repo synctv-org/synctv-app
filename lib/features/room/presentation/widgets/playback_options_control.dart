@@ -43,63 +43,71 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
   @override
   Widget build(BuildContext context) {
     return Builder(
-      builder: (anchorContext) => Semantics(
-        button: true,
-        label: widget.tooltip,
-        child: AppTooltip(
-          message: widget.tooltip,
-          child: InkWell(
-            key: Key(
-              widget.compact
-                  ? 'playback_route_button_compact'
-                  : 'playback_route_button',
-            ),
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => _openMenu(anchorContext),
-            child: Container(
-              constraints: BoxConstraints(
-                minWidth: widget.compact ? 32 : 0,
-                minHeight: widget.compact ? 32 : 30,
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.compact ? 7 : 10,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white24),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.route_rounded,
-                    size: 18,
-                    color: Colors.white,
+      builder: (anchorContext) {
+        final button = widget.compact
+            ? InkWell(
+                key: const Key('playback_route_button_compact'),
+                borderRadius: BorderRadius.circular(20),
+                hoverColor: Colors.white12,
+                focusColor: Colors.white12,
+                highlightColor: Colors.white24,
+                onTap: () => _openMenu(anchorContext),
+                child: const SizedBox.square(
+                  dimension: 40,
+                  child: Center(
+                    child: Icon(
+                      Icons.route_rounded,
+                      size: 20,
+                      color: Colors.white,
+                    ),
                   ),
-                  if (!widget.compact) ...[
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        _modeLabel(
-                          _selectedMode,
-                          mediaIndex: widget.selectedMediaIndex,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
+                ),
+              )
+            : InkWell(
+                key: const Key('playback_route_button'),
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => _openMenu(anchorContext),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 30),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.route_rounded,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          _modeLabel(
+                            _selectedMode,
+                            mediaIndex: widget.selectedMediaIndex,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+                    ],
+                  ),
+                ),
+              );
+        return Semantics(
+          button: true,
+          label: widget.tooltip,
+          child: AppTooltip(message: widget.tooltip, child: button),
+        );
+      },
     );
   }
 

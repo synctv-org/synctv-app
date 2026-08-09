@@ -967,6 +967,52 @@ void main() {
     }
   });
 
+  testWidgets('playback route and more actions use shared control spacing', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 680,
+            height: 400,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              extraBottomWidget: const SizedBox.square(
+                key: Key('playback_route_stub'),
+                dimension: 40,
+                child: Icon(Icons.route_rounded),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final route = tester.getRect(find.byKey(const Key('playback_route_stub')));
+    final moreActions = tester.getRect(
+      find.byKey(const Key('playback_overflow_button')),
+    );
+    expect(moreActions.left - route.right, closeTo(4, 0.01));
+  });
+
   testWidgets('playback speed menu opens upward on desktop hover', (
     tester,
   ) async {

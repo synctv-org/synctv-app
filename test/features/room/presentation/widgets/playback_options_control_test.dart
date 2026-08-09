@@ -42,6 +42,11 @@ void main() {
     );
 
     final button = find.byKey(const Key('playback_route_button_compact'));
+    expect(tester.getSize(button), const Size.square(40));
+    expect(
+      find.descendant(of: button, matching: find.byType(DecoratedBox)),
+      findsNothing,
+    );
     await tester.tap(button);
     await tester.pumpAndSettle();
 

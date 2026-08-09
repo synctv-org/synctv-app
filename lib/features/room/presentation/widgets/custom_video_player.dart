@@ -3559,6 +3559,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                 final horizontalGap = controlsWidth < 360
                                     ? 4.0
                                     : 8.0;
+                                final controlGap = widget.isFullScreen
+                                    ? 0.0
+                                    : 4.0;
                                 final playPauseControl = _PlayerIconButton(
                                   onPressed: widget.canControlPlayback
                                       ? _togglePlayPause
@@ -3958,15 +3961,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                         ],
                                         for (final entry in controls)
                                           if (entry.visible) ...[
-                                            SizedBox(
-                                              width: widget.isFullScreen
-                                                  ? 0
-                                                  : 4,
-                                            ),
+                                            SizedBox(width: controlGap),
                                             entry.build(() {}),
                                           ],
                                         if (showOverflow) ...[
-                                          SizedBox(width: horizontalGap),
+                                          SizedBox(width: controlGap),
                                           Builder(
                                             builder: (anchorContext) =>
                                                 _buildOverflowButton(
@@ -3978,9 +3977,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                         ],
                                         if (fullscreenControl != null &&
                                             visibility.showFullscreen) ...[
-                                          SizedBox(
-                                            width: widget.isFullScreen ? 0 : 4,
-                                          ),
+                                          SizedBox(width: controlGap),
                                           fullscreenControl,
                                         ],
                                       ],
