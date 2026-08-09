@@ -764,8 +764,17 @@ void main() {
 
     final slider = find.byKey(const Key('desktop_volume_slider'));
     expect(slider, findsOneWidget);
+    final volumeButtonRect = tester.getRect(
+      find.byKey(const Key('desktop_volume_button')),
+    );
+    await mouse.moveTo(
+      Offset(volumeButtonRect.center.dx, volumeButtonRect.top - 2),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(slider, findsOneWidget);
+
     await mouse.moveTo(tester.getCenter(slider));
-    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pump(const Duration(seconds: 2));
     expect(slider, findsOneWidget);
 
     await tester.tapAt(tester.getCenter(slider) - const Offset(0, 30));

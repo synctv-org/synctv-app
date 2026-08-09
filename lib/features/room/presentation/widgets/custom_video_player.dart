@@ -1347,6 +1347,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   OverlayEntry? _volumeOverlayEntry;
   Timer? _volumeOverlayHideTimer;
   bool _showVolumeSlider = false;
+  bool _isVolumeControlHovered = false;
+  bool _isVolumeSliderDragging = false;
+  bool _isDesktopPointerInside = false;
 
   // Gesture State
   double? _dragStartVolume;
@@ -2002,24 +2005,44 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _showDesktopControls() {
     if (!_isDesktopMode) return;
+    _isDesktopPointerInside = true;
     _hideTimer?.cancel();
     if (mounted && !_showControls) {
       setState(() => _showControls = true);
     }
   }
 
+  void _hideDesktopControlsIfIdle() {
+    if (!mounted ||
+        !widget.controller.value.isPlaying ||
+        _isDragging ||
+        _isSliderDragging ||
+        _isVolumeControlHovered ||
+        _isVolumeSliderDragging ||
+        _isDesktopPointerInside) {
+      return;
+    }
+    setState(() {
+      _showControls = false;
+      _showOverflowControls = false;
+      _showVolumeSlider = false;
+    });
+    _volumeOverlayEntry?.markNeedsBuild();
+  }
+
+  void _scheduleDesktopControlsHide() {
+    _hideTimer?.cancel();
+    _hideTimer = Timer(
+      const Duration(milliseconds: 900),
+      _hideDesktopControlsIfIdle,
+    );
+  }
+
   void _handleDesktopPointerExit(PointerExitEvent event) {
     if (!_isDesktopMode) return;
+    _isDesktopPointerInside = false;
     if (!widget.controller.value.isPlaying) return;
-    _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(milliseconds: 900), () {
-      if (mounted && widget.controller.value.isPlaying && !_isSliderDragging) {
-        setState(() {
-          _showControls = false;
-          _showOverflowControls = false;
-        });
-      }
-    });
+    _scheduleDesktopControlsHide();
   }
 
   void _toggleControls() {
@@ -2472,6 +2495,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   void _showVolumeOverlay() {
+    _isVolumeControlHovered = true;
     _volumeOverlayHideTimer?.cancel();
     _hideTimer?.cancel();
     if (mounted && !_showVolumeSlider) {
@@ -2481,13 +2505,19 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   void _scheduleVolumeOverlayHide() {
+    _isVolumeControlHovered = false;
     _volumeOverlayHideTimer?.cancel();
     _volumeOverlayHideTimer = Timer(const Duration(milliseconds: 500), () {
+      if (_isVolumeControlHovered || _isVolumeSliderDragging) return;
       if (mounted && _showVolumeSlider) {
         _showVolumeSlider = false;
         _volumeOverlayEntry?.markNeedsBuild();
       }
-      _startHideTimer();
+      if (_isDesktopMode && !_isDesktopPointerInside) {
+        _scheduleDesktopControlsHide();
+      } else {
+        _startHideTimer();
+      }
     });
   }
 
@@ -2515,7 +2545,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             showWhenUnlinked: false,
             targetAnchor: Alignment.topCenter,
             followerAnchor: Alignment.bottomCenter,
-            offset: const Offset(0, -4),
+            offset: Offset.zero,
             child: SizedBox(
               width: 44,
               height: 132,
@@ -2555,9 +2585,17 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   .toDouble(),
                               min: 0,
                               max: 1,
-                              onChangeStart: (_) => _showVolumeOverlay(),
+                              onChangeStart: (_) {
+                                _isVolumeSliderDragging = true;
+                                _showVolumeOverlay();
+                              },
                               onChanged: _setPlayerVolume,
-                              onChangeEnd: (_) => _scheduleVolumeOverlayHide(),
+                              onChangeEnd: (_) {
+                                _isVolumeSliderDragging = false;
+                                if (!_isVolumeControlHovered) {
+                                  _scheduleVolumeOverlayHide();
+                                }
+                              },
                             ),
                           ),
                         ),
