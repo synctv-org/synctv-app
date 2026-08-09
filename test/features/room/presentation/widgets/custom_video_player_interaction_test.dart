@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:ui' show PointerDeviceKind;
 
-import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
+import 'package:flutter/gestures.dart'
+    show PointerScrollEvent, kSecondaryMouseButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -96,6 +97,7 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
   var playCalls = 0;
   var pauseCalls = 0;
   final List<double> volumes = [];
+  final List<double> playbackSpeeds = [];
 
   @override
   Future<void> seekTo(Duration position) async {
@@ -119,6 +121,12 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
   Future<void> setVolume(double volume) async {
     volumes.add(volume);
     value = value.copyWith(volume: volume);
+  }
+
+  @override
+  Future<void> setPlaybackSpeed(double speed) async {
+    playbackSpeeds.add(speed);
+    value = value.copyWith(playbackSpeed: speed);
   }
 }
 
@@ -867,38 +875,36 @@ void main() {
         progressTop,
       );
 
-      final danmaku = find.byKey(const Key('playback_danmaku_button'));
-      final pictureInPicture = find.byKey(
-        const Key('picture_in_picture_button'),
+      final danmakuRow = find.byKey(
+        const ValueKey('playback_overflow_control_slot_2'),
       );
-      expect(danmaku, findsOneWidget);
-      expect(pictureInPicture, findsOneWidget);
-      expect(tester.getSize(danmaku), const Size.square(40));
-      expect(tester.getSize(pictureInPicture), const Size.square(40));
-
-      IconButton danmakuButton() => tester.widget<IconButton>(
-        find.descendant(of: danmaku, matching: find.byType(IconButton)),
+      final pictureInPictureRow = find.byKey(
+        const ValueKey('playback_overflow_control_slot_3'),
       );
-      expect(
-        danmakuButton().style?.backgroundColor?.resolve({}),
-        Colors.white24,
-      );
-      await tester.tap(danmaku);
-      await tester.pump();
-      expect(menu, findsOneWidget);
-      expect(
-        danmakuButton().style?.backgroundColor?.resolve({}),
-        Colors.transparent,
+      Switch danmakuSwitch() => tester.widget<Switch>(
+        find.descendant(of: danmakuRow, matching: find.byType(Switch)),
       );
 
-      await tester.tap(pictureInPicture);
-      await tester.pump();
-      expect(pictureInPictureCalls, 1);
-      expect(menu, findsOneWidget);
+      expect(find.text('Danmaku'), findsOneWidget);
+      expect(danmakuSwitch().value, isTrue);
+      expect(
+        find.descendant(of: pictureInPictureRow, matching: find.byType(Switch)),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byKey(const Key('free_mode_toggle')));
       await tester.pump();
       expect(freeModeEnabled, isTrue);
+
+      await tester.tap(find.text('Danmaku'));
+      await tester.pump();
+      expect(menu, findsOneWidget);
+      expect(danmakuSwitch().value, isFalse);
+
+      await tester.tap(find.text('Picture in picture'));
+      await tester.pumpAndSettle();
+      expect(pictureInPictureCalls, 1);
+      expect(menu, findsNothing);
     },
   );
 
@@ -944,7 +950,7 @@ void main() {
 
     expect(find.text('Mute'), findsOneWidget);
     expect(find.text('Playback speed'), findsOneWidget);
-    expect(find.text('Turn off danmaku'), findsOneWidget);
+    expect(find.text('Danmaku'), findsOneWidget);
     expect(find.text('Picture in picture'), findsOneWidget);
 
     final rows = [
@@ -954,6 +960,8 @@ void main() {
         ),
     ];
     expect(rows.map((row) => row.left).toSet(), hasLength(1));
+    expect(rows[2].height, 52);
+    expect(rows[3].height, 52);
     for (var index = 1; index < rows.length; index++) {
       expect(rows[index].top, greaterThan(rows[index - 1].bottom));
     }
@@ -1523,6 +1531,109 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(selected, 'direct|1');
+  });
+
+  testWidgets('picture-in-picture exposes volume and playback speed controls', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 202));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        size: Size(1920, 1080),
+        volume: 0.25,
+      ),
+    );
+    final danmakuController = DanmakuController(const _EmptyDanmakuSource());
+    double? selectedSpeed;
+    addTearDown(controller.dispose);
+    addTearDown(danmakuController.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: PictureInPicturePlaybackSurface(
+          controller: controller,
+          danmakuController: danmakuController,
+          emptyState: const SizedBox.shrink(),
+          canControlPlayback: true,
+          onPlaybackSpeedChanged: (speed) => selectedSpeed = speed,
+        ),
+      ),
+    );
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const Key('picture_in_picture_surface'))),
+    );
+    await tester.pump();
+
+    final volumeButton = find.byKey(
+      const Key('picture_in_picture_volume_button'),
+    );
+    final speedButton = find.byKey(
+      const Key('picture_in_picture_playback_speed_button'),
+    );
+    expect(volumeButton, findsOneWidget);
+    expect(speedButton, findsOneWidget);
+
+    await tester.tap(volumeButton);
+    await tester.pumpAndSettle();
+    final volumeSlider = find.byKey(
+      const Key('picture_in_picture_volume_slider'),
+    );
+    expect(volumeSlider, findsOneWidget);
+    await tester.tap(volumeSlider);
+    await tester.pump();
+    expect(controller.volumes, isNotEmpty);
+
+    await tester.tapAt(const Offset(2, 2));
+    await tester.pumpAndSettle();
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const Key('picture_in_picture_surface'))),
+    );
+    await tester.pump();
+    await tester.tap(speedButton);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('picture_in_picture_speed_options_list')),
+      findsOneWidget,
+    );
+    expect(find.byType(Scrollbar), findsNothing);
+    await tester.tap(
+      find.byKey(const ValueKey('picture_in_picture_speed_option_1.5')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(controller.playbackSpeeds, [1.5]);
+    expect(selectedSpeed, 1.5);
+
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const Key('picture_in_picture_surface'))),
+    );
+    await tester.pump();
+    await tester.tap(speedButton);
+    await tester.pumpAndSettle();
+    final speedList = find.byKey(
+      const Key('picture_in_picture_speed_options_list'),
+    );
+    final speedListCenter = tester.getCenter(speedList);
+    await tester.sendEventToBinding(
+      PointerScrollEvent(
+        position: speedListCenter,
+        scrollDelta: const Offset(0, 100),
+      ),
+    );
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('picture_in_picture_speed_option_0.5')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('picture-in-picture keeps an empty playback surface mounted', (
