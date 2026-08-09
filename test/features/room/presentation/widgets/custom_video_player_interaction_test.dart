@@ -1073,6 +1073,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1200));
     expect(option, findsOneWidget);
 
+    for (var second = 1; second <= 3; second++) {
+      controller.value = controller.value.copyWith(
+        position: Duration(seconds: second),
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(option, findsOneWidget);
+    }
+
     await mouse.moveTo(const Offset(10, 10));
     await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();

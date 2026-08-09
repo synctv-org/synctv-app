@@ -1547,6 +1547,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   double _lastAudibleVolume = 1.0;
   Timer? _volumeOverlayHideTimer;
   final GlobalKey _volumeAnchorKey = GlobalKey();
+  final GlobalKey<_PlaybackSpeedMenuButtonState> _speedMenuKey = GlobalKey();
   OverlayEntry? _volumeOverlayEntry;
   bool _isVolumeButtonHovered = false;
   bool _isVolumeMenuHovered = false;
@@ -3578,8 +3579,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                       : Icons.play_arrow_rounded,
                                   iconSize: playIconSize,
                                 );
-                                final speedMenuKey =
-                                    GlobalKey<_PlaybackSpeedMenuButtonState>();
                                 final controls =
                                     <
                                       ({
@@ -3639,9 +3638,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                 widget.controller.value,
                                                 iconSize,
                                                 onChanged: onChanged,
-                                                key: speedMenuKey,
+                                                key: _speedMenuKey,
                                               ),
-                                          onPressed: () => speedMenuKey
+                                          onPressed: () => _speedMenuKey
                                               .currentState
                                               ?.openMenuFromOverflow(),
                                           switchValue: null,
@@ -4210,7 +4209,31 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
   @override
   void didUpdateWidget(_PlaybackSpeedMenuButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _menuOverlayEntry?.markNeedsBuild();
+    final entry = _menuOverlayEntry;
+    if (entry == null ||
+        (oldWidget.currentSpeed == widget.currentSpeed &&
+            _samePlaybackSpeedOptions(oldWidget.options, widget.options))) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && identical(_menuOverlayEntry, entry)) {
+        entry.markNeedsBuild();
+      }
+    });
+  }
+
+  bool _samePlaybackSpeedOptions(
+    List<_PlaybackSpeedOption> previous,
+    List<_PlaybackSpeedOption> next,
+  ) {
+    if (previous.length != next.length) return false;
+    for (var index = 0; index < previous.length; index++) {
+      if (previous[index].speed != next[index].speed ||
+          previous[index].label != next[index].label) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @override
