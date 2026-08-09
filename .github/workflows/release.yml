@@ -165,6 +165,10 @@ jobs:
           rust-version: ${{ env.RUST_VERSION }}
           rust-targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
 
+      - name: Configure Android release plugins
+        # Work around flutter/flutter#169336 for --no-pub release builds.
+        run: flutter build apk --config-only
+
       - name: Configure Android release signing
         id: signing
         shell: bash
