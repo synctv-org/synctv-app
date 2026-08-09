@@ -7538,10 +7538,10 @@ void main() {
       );
       expect(capturedRequest?.method, 'PATCH');
       expect(capturedRequest?.url.path, '/api/rooms/room_1/members/usr_1');
-    expect(jsonDecode(capturedRequest!.body), {
-      'userId': 'usr_1',
-      'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
-    });
+      expect(jsonDecode(capturedRequest!.body), {
+        'userId': 'usr_1',
+        'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+      });
     },
   );
 
