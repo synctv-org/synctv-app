@@ -186,17 +186,23 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                       ),
                     ),
                   ),
-                  AppActionButton(
-                    onPressed: _busy ? null : _openAddServerDialog,
-                    icon: Icons.add_link_rounded,
-                    label: l10n.addServer,
+                  SizedBox(
+                    height: 40,
+                    child: AppActionButton(
+                      onPressed: _busy ? null : _openAddServerDialog,
+                      icon: Icons.add_link_rounded,
+                      label: l10n.addServer,
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  AppActionButton(
-                    onPressed: widget.requireServer && activeServer == null
-                        ? null
-                        : () => Navigator.pop(context, _changed),
-                    label: l10n.done,
+                  SizedBox(
+                    height: 40,
+                    child: AppActionButton(
+                      onPressed: widget.requireServer && activeServer == null
+                          ? null
+                          : () => Navigator.pop(context, _changed),
+                      label: l10n.done,
+                    ),
                   ),
                 ],
               ),

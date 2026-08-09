@@ -42,6 +42,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('stale server info'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
+    expect(
+      tester.getSize(find.widgetWithText(AppActionButton, 'Add server')).height,
+      tester.getSize(find.widgetWithText(AppActionButton, 'Done')).height,
+    );
     await tester.tap(find.widgetWithText(AppActionButton, 'Add server'));
     await tester.pumpAndSettle();
     expect(find.byType(TextField), findsOneWidget);

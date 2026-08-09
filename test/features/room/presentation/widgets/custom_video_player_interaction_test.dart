@@ -720,7 +720,7 @@ void main() {
     },
   );
 
-  testWidgets('desktop volume slider stays interactive across overlay', (
+  testWidgets('desktop volume slider stays interactive while hovered', (
     tester,
   ) async {
     final controller = _RecordingVideoPlayerController(
@@ -764,18 +764,11 @@ void main() {
 
     final slider = find.byKey(const Key('desktop_volume_slider'));
     expect(slider, findsOneWidget);
-    final volumeButtonRect = tester.getRect(
-      find.byKey(const Key('desktop_volume_button')),
-    );
-    await mouse.moveTo(
-      Offset(volumeButtonRect.center.dx, volumeButtonRect.top - 2),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-    expect(slider, findsOneWidget);
-
+    expect(find.byType(Scrollbar), findsNothing);
     await mouse.moveTo(tester.getCenter(slider));
     await tester.pump(const Duration(seconds: 2));
     expect(slider, findsOneWidget);
+    expect(find.byType(Scrollbar), findsNothing);
 
     await tester.tapAt(tester.getCenter(slider) - const Offset(0, 30));
     await tester.pump();
@@ -783,6 +776,10 @@ void main() {
     expect(controller.volumes, isNotEmpty);
     expect(controller.value.volume, greaterThan(0.5));
     expect(controller.seekPositions, isEmpty);
+
+    await tester.tapAt(const Offset(20, 20));
+    await tester.pumpAndSettle();
+    expect(slider, findsNothing);
   });
 
   testWidgets(

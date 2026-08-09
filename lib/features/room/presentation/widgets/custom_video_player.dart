@@ -1343,13 +1343,17 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   bool _isVerticalDragging = false;
   bool _showDanmaku = true;
   double _lastAudibleVolume = 1.0;
-  final LayerLink _volumeControlLink = LayerLink();
-  OverlayEntry? _volumeOverlayEntry;
   Timer? _volumeOverlayHideTimer;
   bool _showVolumeSlider = false;
-  bool _isVolumeControlHovered = false;
+  final GlobalKey _volumeAnchorKey = GlobalKey();
+  Future<void>? _volumeMenuFuture;
+  bool _isVolumeButtonHovered = false;
+  bool _isVolumeMenuHovered = false;
   bool _isVolumeSliderDragging = false;
   bool _isDesktopPointerInside = false;
+
+  bool get _isVolumeControlHovered =>
+      _isVolumeButtonHovered || _isVolumeMenuHovered;
 
   // Gesture State
   double? _dragStartVolume;
@@ -1388,11 +1392,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _restorePersistedVolume();
     _startHideTimer();
     unawaited(_loadDefaultSubtitles());
-    if (_isDesktopMode) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _insertVolumeOverlay();
-      });
-    }
   }
 
   void _onDanmakuUpdate() {
@@ -1437,16 +1436,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       unawaited(_reloadSubtitleForPlaybackSelection());
     }
 
-    if (widget.interactionMode != oldWidget.interactionMode) {
-      if (_isDesktopMode) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _insertVolumeOverlay();
-        });
-      } else {
-        _removeVolumeOverlay();
-      }
-    }
-
     if (widget.loopPlayback != oldWidget.loopPlayback ||
         widget.shufflePlayback != oldWidget.shufflePlayback) {
       _loopPlaybackOverride = null;
@@ -1463,7 +1452,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     widget.danmakuController?.removeListener(_onDanmakuUpdate);
     _hideTimer?.cancel();
     _volumeOverlayHideTimer?.cancel();
-    _removeVolumeOverlay();
     _subtitleTimer?.cancel();
     _subtitleLoadGeneration++;
     super.dispose();
@@ -2012,6 +2000,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     }
   }
 
+  void _handleDesktopPointerHover(PointerHoverEvent event) {
+    _showDesktopControls();
+    if (_volumeMenuFuture != null && !_isVolumeButtonHovered) {
+      _isVolumeMenuHovered = false;
+      _closeVolumeMenu();
+    }
+  }
+
   void _hideDesktopControlsIfIdle() {
     if (!mounted ||
         !widget.controller.value.isPlaying ||
@@ -2027,7 +2023,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       _showOverflowControls = false;
       _showVolumeSlider = false;
     });
-    _volumeOverlayEntry?.markNeedsBuild();
+    _closeVolumeMenu();
   }
 
   void _scheduleDesktopControlsHide() {
@@ -2475,7 +2471,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (nextVolume > 0.01) _lastAudibleVolume = nextVolume;
     await widget.controller.setVolume(nextVolume);
     unawaited(_persistVolume(nextVolume));
-    _volumeOverlayEntry?.markNeedsBuild();
     _startHideTimer();
     if (mounted) setState(() {});
   }
@@ -2494,25 +2489,141 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     }
   }
 
-  void _showVolumeOverlay() {
-    _isVolumeControlHovered = true;
+  void _showVolumeMenu(double buttonSize) {
     _volumeOverlayHideTimer?.cancel();
     _hideTimer?.cancel();
-    if (mounted && !_showVolumeSlider) {
-      _showVolumeSlider = true;
-      _volumeOverlayEntry?.markNeedsBuild();
+    if (_volumeMenuFuture == null) _openVolumeMenu(buttonSize);
+    if (mounted && !_showVolumeSlider) setState(() => _showVolumeSlider = true);
+  }
+
+  void _openVolumeMenu(double buttonSize) {
+    final anchorBox =
+        _volumeAnchorKey.currentContext?.findRenderObject() as RenderBox?;
+    final overlayBox =
+        Navigator.of(
+              context,
+              rootNavigator: true,
+            ).overlay?.context.findRenderObject()
+            as RenderBox?;
+    if (anchorBox == null || !anchorBox.hasSize || overlayBox == null) return;
+
+    final anchorTopLeft = anchorBox.localToGlobal(
+      Offset.zero,
+      ancestor: overlayBox,
+    );
+    const menuSize = Size(44, 132);
+    final left = (anchorTopLeft.dx + (buttonSize - menuSize.width) / 2)
+        .clamp(0.0, max(0.0, overlayBox.size.width - menuSize.width))
+        .toDouble();
+    final top = (anchorTopLeft.dy - menuSize.height)
+        .clamp(0.0, max(0.0, overlayBox.size.height - menuSize.height))
+        .toDouble();
+
+    final future = showGeneralDialog<void>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.transparent,
+      requestFocus: false,
+      transitionDuration: Duration.zero,
+      transitionBuilder: (_, _, _, child) => child,
+      pageBuilder: (_, _, _) => Stack(
+        children: [
+          Positioned(
+            left: left,
+            top: top,
+            child: MouseRegion(
+              key: const Key('desktop_volume_menu_hover_region'),
+              onEnter: (_) {
+                _isVolumeMenuHovered = true;
+                _volumeOverlayHideTimer?.cancel();
+              },
+              onHover: (_) {
+                _isVolumeMenuHovered = true;
+                _volumeOverlayHideTimer?.cancel();
+              },
+              onExit: (_) {
+                _isVolumeMenuHovered = false;
+                _scheduleVolumeMenuHide();
+              },
+              child: Material(
+                color: const Color(0xF21A1A24),
+                elevation: 8,
+                borderRadius: BorderRadius.circular(6),
+                child: SizedBox(
+                  width: menuSize.width,
+                  height: menuSize.height,
+                  child: _buildVolumeSlider(),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    _volumeMenuFuture = future;
+    unawaited(
+      future.whenComplete(() {
+        if (!identical(_volumeMenuFuture, future)) return;
+        _volumeMenuFuture = null;
+        _isVolumeMenuHovered = false;
+        if (mounted && _showVolumeSlider) {
+          setState(() => _showVolumeSlider = false);
+        }
+      }),
+    );
+  }
+
+  Widget _buildVolumeSlider() => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: SliderTheme(
+      data: SliderTheme.of(context).copyWith(
+        trackHeight: 3,
+        activeTrackColor: const Color(0xFF5D5FEF),
+        inactiveTrackColor: Colors.white24,
+        thumbColor: Colors.white,
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+      ),
+      child: RotatedBox(
+        quarterTurns: 3,
+        child: Slider(
+          key: const Key('desktop_volume_slider'),
+          value: widget.controller.value.volume.clamp(0.0, 1.0).toDouble(),
+          min: 0,
+          max: 1,
+          onChangeStart: (_) {
+            _isVolumeSliderDragging = true;
+            _volumeOverlayHideTimer?.cancel();
+          },
+          onChanged: _setPlayerVolume,
+          onChangeEnd: (_) {
+            _isVolumeSliderDragging = false;
+            if (!_isVolumeControlHovered) _scheduleVolumeMenuHide();
+          },
+        ),
+      ),
+    ),
+  );
+
+  void _closeVolumeMenu() {
+    _volumeOverlayHideTimer?.cancel();
+    _isVolumeButtonHovered = false;
+    _isVolumeMenuHovered = false;
+    if (_volumeMenuFuture != null) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+    if (mounted && _showVolumeSlider) {
+      setState(() => _showVolumeSlider = false);
     }
   }
 
-  void _scheduleVolumeOverlayHide() {
-    _isVolumeControlHovered = false;
+  void _scheduleVolumeMenuHide() {
     _volumeOverlayHideTimer?.cancel();
     _volumeOverlayHideTimer = Timer(const Duration(milliseconds: 500), () {
       if (_isVolumeControlHovered || _isVolumeSliderDragging) return;
-      if (mounted && _showVolumeSlider) {
-        _showVolumeSlider = false;
-        _volumeOverlayEntry?.markNeedsBuild();
-      }
+      _closeVolumeMenu();
       if (_isDesktopMode && !_isDesktopPointerInside) {
         _scheduleDesktopControlsHide();
       } else {
@@ -2521,118 +2632,36 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     });
   }
 
-  void _insertVolumeOverlay() {
-    if (_volumeOverlayEntry != null) return;
-    final entry = OverlayEntry(builder: _buildVolumeOverlay);
-    _volumeOverlayEntry = entry;
-    Overlay.of(context, rootOverlay: true).insert(entry);
-  }
-
-  void _removeVolumeOverlay() {
-    final entry = _volumeOverlayEntry;
-    _volumeOverlayEntry = null;
-    entry?.remove();
-    entry?.dispose();
-  }
-
-  Widget _buildVolumeOverlay(BuildContext overlayContext) => Positioned.fill(
-    child: Stack(
-      clipBehavior: Clip.none,
-      children: [
-        ExcludeSemantics(
-          child: CompositedTransformFollower(
-            link: _volumeControlLink,
-            showWhenUnlinked: false,
-            targetAnchor: Alignment.topCenter,
-            followerAnchor: Alignment.bottomCenter,
-            offset: Offset.zero,
-            child: SizedBox(
-              width: 44,
-              height: 132,
-              child: IgnorePointer(
-                ignoring: !_showVolumeSlider,
-                child: Opacity(
-                  opacity: _showVolumeSlider ? 1 : 0,
-                  child: MouseRegion(
-                    onEnter: (_) => _showVolumeOverlay(),
-                    onExit: (_) => _scheduleVolumeOverlayHide(),
-                    child: Material(
-                      color: const Color(0xF21A1A24),
-                      elevation: 8,
-                      shadowColor: Colors.black54,
-                      borderRadius: BorderRadius.circular(6),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: SliderTheme(
-                          data: SliderTheme.of(overlayContext).copyWith(
-                            trackHeight: 3,
-                            activeTrackColor: const Color(0xFF5D5FEF),
-                            inactiveTrackColor: Colors.white24,
-                            thumbColor: Colors.white,
-                            thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 6,
-                            ),
-                            overlayShape: const RoundSliderOverlayShape(
-                              overlayRadius: 14,
-                            ),
-                          ),
-                          child: RotatedBox(
-                            quarterTurns: 3,
-                            child: Slider(
-                              key: const Key('desktop_volume_slider'),
-                              value: widget.controller.value.volume
-                                  .clamp(0.0, 1.0)
-                                  .toDouble(),
-                              min: 0,
-                              max: 1,
-                              onChangeStart: (_) {
-                                _isVolumeSliderDragging = true;
-                                _showVolumeOverlay();
-                              },
-                              onChanged: _setPlayerVolume,
-                              onChangeEnd: (_) {
-                                _isVolumeSliderDragging = false;
-                                if (!_isVolumeControlHovered) {
-                                  _scheduleVolumeOverlayHide();
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-
   Widget _buildHoverVolumeControl(
     VideoPlayerValue videoValue, {
     required double iconSize,
   }) {
     final buttonSize = max(32.0, iconSize + 12);
-    return CompositedTransformTarget(
-      link: _volumeControlLink,
-      child: MouseRegion(
-        onEnter: (_) => _showVolumeOverlay(),
-        onExit: (_) => _scheduleVolumeOverlayHide(),
-        child: _PlayerIconButton(
-          key: const Key('desktop_volume_button'),
-          tooltip: videoValue.volume <= 0.01
-              ? context.l10n.unmute
-              : context.l10n.mute,
-          icon: _volumeIcon(videoValue.volume),
-          padding: EdgeInsets.zero,
-          constraints: BoxConstraints.tightFor(width: buttonSize, height: 40),
-          iconSize: iconSize,
-          showTooltip: false,
-          onPressed: _toggleMute,
-        ),
+    return MouseRegion(
+      key: _volumeAnchorKey,
+      onEnter: (_) {
+        _isVolumeButtonHovered = true;
+        _showVolumeMenu(buttonSize);
+      },
+      onHover: (_) {
+        _isVolumeButtonHovered = true;
+        _showVolumeMenu(buttonSize);
+      },
+      onExit: (_) {
+        _isVolumeButtonHovered = false;
+        if (_volumeMenuFuture == null) _scheduleVolumeMenuHide();
+      },
+      child: _PlayerIconButton(
+        key: const Key('desktop_volume_button'),
+        tooltip: videoValue.volume <= 0.01
+            ? context.l10n.unmute
+            : context.l10n.mute,
+        icon: _volumeIcon(videoValue.volume),
+        padding: EdgeInsets.zero,
+        constraints: BoxConstraints.tightFor(width: buttonSize, height: 40),
+        iconSize: iconSize,
+        showTooltip: false,
+        onPressed: _toggleMute,
       ),
     );
   }
@@ -2906,7 +2935,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         includeSemantics: false,
         onKeyEvent: _handleDesktopKeyEvent,
         child: MouseRegion(
-          onHover: (_) => _showDesktopControls(),
+          onHover: _handleDesktopPointerHover,
           onExit: _handleDesktopPointerExit,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
