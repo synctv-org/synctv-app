@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
@@ -101,7 +103,11 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
   }
 
   Future<void> _openMenu(BuildContext anchorContext) async {
-    final position = _menuPosition(anchorContext);
+    final qualityItems = _buildQualityMenu();
+    var position = _menuPosition(
+      anchorContext,
+      menuHeight: _menuHeight(qualityItems),
+    );
     if (position == null) return;
     var action = await showMenu<_PlaybackMenuAction>(
       context: context,
@@ -109,17 +115,23 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
       color: const Color(0xF21A1D21),
       constraints: const BoxConstraints(minWidth: 240, maxWidth: 320),
       position: position,
-      items: _buildQualityMenu(),
+      items: qualityItems,
     );
-    if (!mounted || action == null) return;
+    if (!mounted || !anchorContext.mounted || action == null) return;
     if (action.kind == _PlaybackMenuActionKind.routes) {
+      final routeItems = _buildRouteMenu();
+      position = _menuPosition(
+        anchorContext,
+        menuHeight: _menuHeight(routeItems),
+      );
+      if (position == null) return;
       action = await showMenu<_PlaybackMenuAction>(
         context: context,
         useRootNavigator: true,
         color: const Color(0xF21A1D21),
         constraints: const BoxConstraints(minWidth: 240, maxWidth: 320),
         position: position,
-        items: _buildRouteMenu(),
+        items: routeItems,
       );
       if (!mounted || action == null) return;
     }
@@ -133,7 +145,10 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
     }
   }
 
-  RelativeRect? _menuPosition(BuildContext anchorContext) {
+  RelativeRect? _menuPosition(
+    BuildContext anchorContext, {
+    required double menuHeight,
+  }) {
     final renderBox = anchorContext.findRenderObject() as RenderBox?;
     final overlay =
         Navigator.of(
@@ -147,12 +162,19 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
       renderBox.size.bottomRight(Offset.zero),
       ancestor: overlay,
     );
+    final menuTop = (topLeft.dy - menuHeight - 8)
+        .clamp(8.0, max(8.0, overlay.size.height - menuHeight - 8))
+        .toDouble();
     return RelativeRect.fromLTRB(
       topLeft.dx,
-      topLeft.dy - 8,
+      menuTop,
       overlay.size.width - bottomRight.dx,
       overlay.size.height - bottomRight.dy + 8,
     );
+  }
+
+  double _menuHeight<T>(List<PopupMenuEntry<T>> items) {
+    return 16 + items.fold<double>(0, (height, item) => height + item.height);
   }
 
   List<PopupMenuEntry<_PlaybackMenuAction>> _buildQualityMenu() {

@@ -3325,8 +3325,9 @@ class _RoomScreenState extends State<RoomScreen>
                         onEnterPictureInPicture: _pictureInPictureAvailable
                             ? () => unawaited(_enterPictureInPicture())
                             : null,
-                        onOpenFreeModeSettings: () =>
-                            unawaited(_openFreeModeSettings()),
+                        freeModeEnabled: _playbackModeConfig.freeModeEnabled,
+                        onFreeModeChanged: (enabled) =>
+                            unawaited(_setFreeModeEnabled(enabled)),
                         canControlPlayback: _canControlPlaybackState,
                         isPlaybackExpectedToBePlaying: () =>
                             _currentStatus?.isPlaying == true,
@@ -3624,6 +3625,16 @@ class _RoomScreenState extends State<RoomScreen>
     AppNotifications.showSuccess(context, context.l10n.freeModeSettingsSaved);
   }
 
+  Future<void> _setFreeModeEnabled(bool enabled) async {
+    final nextConfig = _playbackModeConfig
+        .copyWith(freeModeEnabled: enabled)
+        .normalized();
+    if (mounted) {
+      setState(() => _playbackModeConfig = nextConfig);
+    }
+    await _playbackModePreferences.update(nextConfig);
+  }
+
   Future<void> _observeRoomMembers() async {
     if (_membersLoading) return;
     if (mounted) setState(() => _membersLoading = true);
@@ -3771,7 +3782,9 @@ class _RoomScreenState extends State<RoomScreen>
           onEnterPictureInPicture: _pictureInPictureAvailable
               ? () => unawaited(_enterPictureInPicture())
               : null,
-          onOpenFreeModeSettings: () => unawaited(_openFreeModeSettings()),
+          freeModeEnabled: _playbackModeConfig.freeModeEnabled,
+          onFreeModeChanged: (enabled) =>
+              unawaited(_setFreeModeEnabled(enabled)),
           canControlPlayback: _canControlPlaybackState,
           isPlaybackExpectedToBePlaying: () =>
               _currentStatus?.isPlaying == true,

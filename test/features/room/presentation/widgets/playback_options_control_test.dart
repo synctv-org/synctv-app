@@ -6,6 +6,53 @@ import 'package:synctv_app/features/room/presentation/widgets/playback_options_c
 import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 
 void main() {
+  testWidgets('opens playback options above the player control', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    const mode = SyncTvPlaybackModeOption(
+      key: 'main',
+      urls: [SyncTvPlaybackUrlOption(name: '1080P', url: 'https://a')],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: PlaybackOptionsControl(
+                modes: const [mode],
+                selectedModeKey: 'main',
+                selectedMediaIndex: 0,
+                adaptiveTracks: const AdaptiveVideoTrackSnapshot(),
+                tooltip: 'Playback route',
+                compact: true,
+                onMediaSelected: (_, _) async {},
+                onAdaptiveTrackSelected: (_) async {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final button = find.byKey(const Key('playback_route_button_compact'));
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+
+    final option = find.byKey(const Key('playback_media_option_main_0'));
+    expect(option, findsOneWidget);
+    expect(
+      tester.getRect(option).bottom,
+      lessThanOrEqualTo(tester.getRect(button).top),
+    );
+  });
+
   testWidgets('opens the route page and selects a route default media', (
     tester,
   ) async {
