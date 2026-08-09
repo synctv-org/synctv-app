@@ -157,6 +157,118 @@ class RoomScreen extends StatefulWidget {
   State<RoomScreen> createState() => _RoomScreenState();
 }
 
+class RoomCollaborationTabBar extends StatelessWidget {
+  const RoomCollaborationTabBar({
+    super.key,
+    required this.labels,
+    required this.icons,
+    required this.selectedIndex,
+    required this.enabled,
+    required this.onSelected,
+  }) : assert(labels.length == icons.length),
+       assert(labels.length == enabled.length);
+
+  final List<String> labels;
+  final List<IconData> icons;
+  final int selectedIndex;
+  final List<bool> enabled;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppPanelSurface(
+      height: 56,
+      color: theme.colorScheme.surface,
+      borderRadius: BorderRadius.zero,
+      border: Border(
+        bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        children: [
+          for (var index = 0; index < labels.length; index++)
+            Expanded(
+              child: _RoomCollaborationTabButton(
+                label: labels[index],
+                icon: icons[index],
+                selected: selectedIndex == index,
+                enabled: enabled[index],
+                onPressed: () => onSelected(index),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoomCollaborationTabButton extends StatelessWidget {
+  const _RoomCollaborationTabButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppTooltip(
+      message: label,
+      child: AppInkSurface(
+        onTap: enabled ? onPressed : null,
+        semanticLabel: label,
+        color: selected
+            ? theme.colorScheme.primary.withValues(alpha: 0.10)
+            : Colors.transparent,
+        borderRadius: BorderRadius.zero,
+        child: SizedBox.expand(
+          child: Stack(
+            children: [
+              Center(
+                child: IgnorePointer(
+                  child: AppIconButton(
+                    onPressed: enabled ? onPressed : null,
+                    icon: icon,
+                    tooltip: label,
+                    iconSize: 22,
+                    selected: selected,
+                    showTooltip: false,
+                    style: selected
+                        ? AppIconButtonStyle.tonal
+                        : AppIconButtonStyle.ghost,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: IgnorePointer(
+                  child: AppAnimatedPanelSurface(
+                    duration: const Duration(milliseconds: 160),
+                    height: selected ? 2 : 0,
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.zero,
+                    child: const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 enum _PlaylistViewMode { compact, detailed, grid }
 
 class _RoomScreenState extends State<RoomScreen>
@@ -3246,6 +3358,9 @@ class _RoomScreenState extends State<RoomScreen>
       onPlaybackStateChanged: _canControlPlaybackState
           ? _handleUserPlaybackStateChanged
           : null,
+      onPlaybackSpeedChanged: _canControlPlaybackState
+          ? _handleUserPlaybackSpeedChanged
+          : null,
       onSeek: _canControlPlaybackState ? _handleUserSeek : null,
       onSync: _currentStatus == null ? null : _handleSync,
       onPrevious: _canNavigatePlayback
@@ -3858,7 +3973,7 @@ class _RoomScreenState extends State<RoomScreen>
   Widget _buildTabBar(ThemeData theme) {
     final labels = [
       context.l10n.chat,
-      context.l10n.list,
+      context.l10n.playlist,
       context.l10n.members,
       if (_showRealtimeDebugTab) context.l10n.realtime,
     ];
@@ -3869,84 +3984,17 @@ class _RoomScreenState extends State<RoomScreen>
       if (_showRealtimeDebugTab) Icons.bolt_rounded,
     ];
 
-    return AnimatedBuilder(
-      animation: _tabController,
-      builder: (context, _) {
-        return AppPanelSurface(
-          height: 56,
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.zero,
-          border: Border(
-            bottom: BorderSide(
-              color: theme.dividerColor.withValues(alpha: 0.6),
-            ),
-          ),
-          child: Row(
-            children: [
-              for (var i = 0; i < labels.length; i++)
-                Expanded(
-                  child: _buildRoomTabIconButton(
-                    theme: theme,
-                    label: labels[i],
-                    icon: icons[i],
-                    index: i,
-                    selected: _roomTabIndex == i,
-                    enabled: switch (i) {
-                      0 => _canViewChatHistory || _canSendChatMessages,
-                      1 => _canBrowseLibrary,
-                      2 => _canViewMembers,
-                      _ => true,
-                    },
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRoomTabIconButton({
-    required ThemeData theme,
-    required String label,
-    required IconData icon,
-    required int index,
-    required bool selected,
-    required bool enabled,
-  }) {
-    return AppPanelSurface(
-      color: selected
-          ? theme.colorScheme.primary.withValues(alpha: 0.10)
-          : Colors.transparent,
-      borderRadius: BorderRadius.zero,
-      child: Stack(
-        children: [
-          Center(
-            child: AppIconButton(
-              onPressed: enabled ? () => _selectRoomTab(index) : null,
-              icon: icon,
-              tooltip: label,
-              iconSize: 22,
-              selected: selected,
-              style: selected
-                  ? AppIconButtonStyle.tonal
-                  : AppIconButtonStyle.ghost,
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: AppAnimatedPanelSurface(
-              duration: const Duration(milliseconds: 160),
-              height: selected ? 2 : 0,
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.zero,
-              child: const SizedBox.shrink(),
-            ),
-          ),
-        ],
-      ),
+    return RoomCollaborationTabBar(
+      labels: labels,
+      icons: icons,
+      selectedIndex: _roomTabIndex,
+      enabled: [
+        _canViewChatHistory || _canSendChatMessages,
+        _canBrowseLibrary,
+        _canViewMembers,
+        if (_showRealtimeDebugTab) true,
+      ],
+      onSelected: _selectRoomTab,
     );
   }
 
