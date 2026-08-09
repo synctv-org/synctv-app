@@ -1366,6 +1366,7 @@ class RoomAdminPermissions {
   ];
 }
 
+/// Effective snapshots are projected by the server into the admin bitspace.
 class RoomEffectivePermissions {
   static const int sendChatMessages = RoomAdminPermissions.sendChatMessages;
   static const int manageOwnMedia = RoomAdminPermissions.manageOwnMedia;

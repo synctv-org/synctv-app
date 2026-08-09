@@ -85,23 +85,28 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
 
   Future<void> _openAddServerDialog() async {
     if (_busy) return;
-    final profile = await showAppDialog<ServerConnectionProfile>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => _AddServerDialog(initialAddress: widget.initialAddress),
-    );
-    if (!mounted || profile == null) return;
+    setState(() => _busy = true);
+    try {
+      final profile = await showAppDialog<ServerConnectionProfile>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => _AddServerDialog(initialAddress: widget.initialAddress),
+      );
+      if (!mounted || profile == null) return;
 
-    _changed = true;
-    widget.onServerChanged?.call();
-    AppNotifications.showSuccess(
-      context,
-      context.l10n.serverConnected(profile.name),
-    );
-    await _loadServerInfo(refresh: true);
-    if (!mounted) return;
-    if (widget.requireServer) {
-      Navigator.pop(context, true);
+      _changed = true;
+      widget.onServerChanged?.call();
+      AppNotifications.showSuccess(
+        context,
+        context.l10n.serverConnected(profile.name),
+      );
+      await _loadServerInfo(refresh: true);
+      if (!mounted) return;
+      if (widget.requireServer) {
+        Navigator.pop(context, true);
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 

@@ -1653,9 +1653,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     widget.controller.removeListener(_videoListener);
     widget.danmakuController?.removeListener(_onDanmakuUpdate);
     _hideTimer?.cancel();
-    _volumeOverlayHideTimer?.cancel();
-    _volumeOverlayEntry?.remove();
-    _volumeOverlayEntry = null;
+    _closeVolumeMenu();
     _overflowMenuFuture = null;
     _subtitleTimer?.cancel();
     _subtitleLoadGeneration++;
@@ -3003,8 +3001,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _volumeOverlayHideTimer?.cancel();
     _isVolumeButtonHovered = false;
     _isVolumeMenuHovered = false;
-    _volumeOverlayEntry?.remove();
+    final entry = _volumeOverlayEntry;
     _volumeOverlayEntry = null;
+    entry?.remove();
+    entry?.dispose();
   }
 
   void _scheduleVolumeMenuHide() {
@@ -4186,8 +4186,10 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
   void _closeMenu() {
     _menuHideTimer?.cancel();
     _isMenuHovered = false;
-    _menuOverlayEntry?.remove();
+    final entry = _menuOverlayEntry;
     _menuOverlayEntry = null;
+    entry?.remove();
+    entry?.dispose();
   }
 
   @override
@@ -4198,9 +4200,7 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
 
   @override
   void dispose() {
-    _menuHideTimer?.cancel();
-    _menuOverlayEntry?.remove();
-    _menuOverlayEntry = null;
+    _closeMenu();
     super.dispose();
   }
 

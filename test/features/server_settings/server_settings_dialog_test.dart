@@ -127,6 +127,46 @@ void main() {
     expect(find.widgetWithText(AppActionButton, 'Add server'), findsOneWidget);
   });
 
+  testWidgets('rapid add server taps open one dialog', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          ...AppLocalizations.localizationsDelegates,
+          FLocalizations.delegate,
+        ],
+        builder: (context, child) => DependencyScope<ServerConnectionGateway>(
+          value: const _EmptyServerConnectionGateway(),
+          child: buildThemedTestApp(context, child),
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showServerSettingsDialog(context: context),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    final addServerButton = find.widgetWithText(AppActionButton, 'Add server');
+    final openAddServer = tester
+        .widget<AppActionButton>(addServerButton)
+        .onPressed!;
+    openAddServer();
+    openAddServer();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Server address'), findsOneWidget);
+    expect(find.byType(AppDialogHeader, skipOffstage: false), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('server list and add dialog stay distinct at mobile width', (
     tester,
   ) async {
