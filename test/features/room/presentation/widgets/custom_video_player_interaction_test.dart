@@ -787,7 +787,8 @@ void main() {
       closeTo(controller.value.volume, 0.001),
     );
 
-    await tester.tapAt(const Offset(20, 20));
+    await mouse.moveTo(const Offset(20, 20));
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
     expect(slider, findsNothing);
   });
@@ -806,6 +807,7 @@ void main() {
       );
       addTearDown(controller.dispose);
       var freeModeEnabled = false;
+      var pictureInPictureCalls = 0;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -823,6 +825,7 @@ void main() {
                 title: 'Video',
                 interactionMode: VideoPlayerInteractionMode.desktop,
                 onFreeModeChanged: (enabled) => freeModeEnabled = enabled,
+                onEnterPictureInPicture: () => pictureInPictureCalls++,
                 onToggleFullScreen: () {},
               ),
             ),
@@ -863,6 +866,35 @@ void main() {
         tester.getRect(find.byKey(const Key('playback_progress_slider'))).top,
         progressTop,
       );
+
+      final danmaku = find.byKey(const Key('playback_danmaku_button'));
+      final pictureInPicture = find.byKey(
+        const Key('picture_in_picture_button'),
+      );
+      expect(danmaku, findsOneWidget);
+      expect(pictureInPicture, findsOneWidget);
+      expect(tester.getSize(danmaku), const Size.square(40));
+      expect(tester.getSize(pictureInPicture), const Size.square(40));
+
+      IconButton danmakuButton() => tester.widget<IconButton>(
+        find.descendant(of: danmaku, matching: find.byType(IconButton)),
+      );
+      expect(
+        danmakuButton().style?.backgroundColor?.resolve({}),
+        Colors.white24,
+      );
+      await tester.tap(danmaku);
+      await tester.pump();
+      expect(menu, findsOneWidget);
+      expect(
+        danmakuButton().style?.backgroundColor?.resolve({}),
+        Colors.transparent,
+      );
+
+      await tester.tap(pictureInPicture);
+      await tester.pump();
+      expect(pictureInPictureCalls, 1);
+      expect(menu, findsOneWidget);
 
       await tester.tap(find.byKey(const Key('free_mode_toggle')));
       await tester.pump();
@@ -911,14 +943,18 @@ void main() {
     await mouse.addPointer();
     await mouse.moveTo(tester.getCenter(speed));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 120));
 
     final option = find.byKey(const ValueKey('playback_speed_option_2.0'));
     expect(option, findsOneWidget);
     expect(tester.getRect(option).bottom, lessThan(tester.getRect(speed).top));
 
-    await tester.pumpAndSettle();
+    await mouse.moveTo(tester.getCenter(option));
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(option, findsOneWidget);
+
     await mouse.moveTo(const Offset(10, 10));
-    await tester.tapAt(const Offset(10, 10));
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
     expect(option, findsNothing);
   });

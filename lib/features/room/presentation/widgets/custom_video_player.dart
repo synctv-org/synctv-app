@@ -24,6 +24,7 @@ import 'package:synctv_app/features/room/application/player_volume_preferences_c
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_context_menu.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_diagnostics.dart';
+import 'package:synctv_app/features/room/presentation/widgets/player_control_popup_style.dart';
 
 class DanmakuController extends ChangeNotifier {
   DanmakuController(
@@ -572,6 +573,32 @@ class _PlayerIconButton extends StatelessWidget {
   }
 }
 
+class _PlayerControlsPopupEntry extends PopupMenuEntry<bool> {
+  const _PlayerControlsPopupEntry({
+    super.key,
+    required this.entryHeight,
+    required this.child,
+  });
+
+  final double entryHeight;
+  final Widget child;
+
+  @override
+  double get height => entryHeight;
+
+  @override
+  bool represents(bool? value) => false;
+
+  @override
+  State<_PlayerControlsPopupEntry> createState() =>
+      _PlayerControlsPopupEntryState();
+}
+
+class _PlayerControlsPopupEntryState extends State<_PlayerControlsPopupEntry> {
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 @immutable
 class PictureInPicturePlaybackChoice {
   const PictureInPicturePlaybackChoice({
@@ -647,6 +674,7 @@ class PictureInPicturePlaybackOptionsControl extends StatelessWidget {
     final selected = await showMenu<String>(
       context: anchorContext,
       useRootNavigator: true,
+      popUpAnimationStyle: playerControlPopupAnimationStyle,
       color: const Color(0xF21A1A24),
       position: RelativeRect.fromLTRB(
         topLeft.dx,
@@ -2120,17 +2148,24 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     );
   }
 
-  Widget _buildSpeedControl(VideoPlayerValue value, double iconSize) {
+  Widget _buildSpeedControl(
+    VideoPlayerValue value,
+    double iconSize, {
+    VoidCallback? onChanged,
+  }) {
     return _PlaybackSpeedMenuButton(
       currentSpeed: value.playbackSpeed,
       options: _playbackSpeedOptions(),
       dimension: widget.isFullScreen ? 40 : max(32.0, iconSize + 12),
       iconSize: widget.isFullScreen ? 24 : iconSize,
-      onSelected: _setPlaybackSpeedFromUser,
+      onSelected: (speed) async {
+        await _setPlaybackSpeedFromUser(speed);
+        onChanged?.call();
+      },
     );
   }
 
-  Widget _buildDanmakuControl(double iconSize) {
+  Widget _buildDanmakuControl(double iconSize, {VoidCallback? onChanged}) {
     return _PlayerIconButton(
       key: const Key('playback_danmaku_button'),
       icon: Icons.comment_rounded,
@@ -2138,7 +2173,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           ? context.l10n.disableDanmaku
           : context.l10n.enableDanmaku,
       selected: _showDanmaku,
-      onPressed: () => setState(() => _showDanmaku = !_showDanmaku),
+      onPressed: () {
+        setState(() => _showDanmaku = !_showDanmaku);
+        onChanged?.call();
+      },
       padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
       constraints: widget.isFullScreen ? null : const BoxConstraints(),
       iconSize: widget.isFullScreen ? 24 : iconSize,
@@ -2159,7 +2197,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   Future<void> _openOverflowMenu(
     BuildContext anchorContext,
-    List<Widget> controls,
+    List<Widget Function(VoidCallback onChanged)> controls,
   ) async {
     if (_overflowMenuFuture != null) return;
     final renderBox = anchorContext.findRenderObject() as RenderBox?;
@@ -2184,14 +2222,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     final controlRows = controls.isEmpty
         ? 0
         : (controls.length / controlsPerRow).ceil();
-    final menuHeight =
-        16.0 +
+    final contentHeight =
+        8.0 +
         (widget.onFreeModeChanged == null ? 0 : 52.0) +
         (controls.isEmpty
             ? 0
             : (widget.onFreeModeChanged == null ? 0 : 8.0) +
                   controlRows * 40.0 +
                   max(0, controlRows - 1) * 4.0);
+    final menuHeight = 16.0 + contentHeight;
     final menuTop = (topLeft.dy - menuHeight - 8)
         .clamp(8.0, max(8.0, overlayBox.size.height - menuHeight - 8))
         .toDouble();
@@ -2200,6 +2239,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     final future = showMenu<bool>(
       context: context,
       useRootNavigator: true,
+      popUpAnimationStyle: playerControlPopupAnimationStyle,
       color: const Color(0xF21A1A24),
       constraints: BoxConstraints.tightFor(width: menuWidth),
       position: RelativeRect.fromLTRB(
@@ -2209,70 +2249,80 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         overlayBox.size.height - bottomRight.dy + 8,
       ),
       items: [
-        PopupMenuItem<bool>(
+        _PlayerControlsPopupEntry(
           key: const Key('playback_overflow_controls'),
-          value: false,
-          height: 0,
-          padding: const EdgeInsets.all(4),
-          child: StatefulBuilder(
-            builder: (context, setMenuState) => Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (widget.onFreeModeChanged != null)
-                  InkWell(
-                    key: const Key('free_mode_toggle'),
-                    borderRadius: BorderRadius.circular(4),
-                    onTap: () {
-                      final enabled = !freeModeEnabled;
-                      setMenuState(() => freeModeEnabled = enabled);
-                      widget.onFreeModeChanged?.call(enabled);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.explore_rounded,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              context.l10n.freeMode,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
+          entryHeight: contentHeight,
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: StatefulBuilder(
+              builder: (context, setMenuState) => Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (widget.onFreeModeChanged != null)
+                    InkWell(
+                      key: const Key('free_mode_toggle'),
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () {
+                        final enabled = !freeModeEnabled;
+                        setMenuState(() => freeModeEnabled = enabled);
+                        widget.onFreeModeChanged?.call(enabled);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.explore_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                context.l10n.freeMode,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
-                          ),
-                          Switch(
-                            value: freeModeEnabled,
-                            onChanged: (enabled) {
-                              setMenuState(() => freeModeEnabled = enabled);
-                              widget.onFreeModeChanged?.call(enabled);
-                            },
-                          ),
-                        ],
+                            Switch(
+                              value: freeModeEnabled,
+                              onChanged: (enabled) {
+                                setMenuState(() => freeModeEnabled = enabled);
+                                widget.onFreeModeChanged?.call(enabled);
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                if (controls.isNotEmpty) ...[
-                  if (widget.onFreeModeChanged != null)
-                    const Divider(height: 8, color: Colors.white24),
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    alignment: WrapAlignment.end,
-                    children: controls,
-                  ),
+                  if (controls.isNotEmpty) ...[
+                    if (widget.onFreeModeChanged != null)
+                      const Divider(height: 8, color: Colors.white24),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      alignment: WrapAlignment.end,
+                      children: [
+                        for (var index = 0; index < controls.length; index++)
+                          SizedBox.square(
+                            key: ValueKey(
+                              'playback_overflow_control_slot_$index',
+                            ),
+                            dimension: 40,
+                            child: controls[index](() => setMenuState(() {})),
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -2290,7 +2340,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   Widget _buildOverflowButton(
     BuildContext anchorContext,
-    List<Widget> controls,
+    List<Widget Function(VoidCallback onChanged)> controls,
     double iconSize,
   ) {
     return _PlayerIconButton(
@@ -2765,7 +2815,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _scheduleVolumeMenuHide() {
     _volumeOverlayHideTimer?.cancel();
-    _volumeOverlayHideTimer = Timer(const Duration(milliseconds: 500), () {
+    _volumeOverlayHideTimer = Timer(playerControlHoverDismissDelay, () {
       if (_isVolumeControlHovered || _isVolumeSliderDragging) return;
       _closeVolumeMenu();
       if (_isDesktopMode && !_isDesktopPointerInside) {
@@ -2779,6 +2829,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   Widget _buildHoverVolumeControl(
     VideoPlayerValue videoValue, {
     required double iconSize,
+    VoidCallback? onChanged,
   }) {
     final buttonSize = max(32.0, iconSize + 12);
     return MouseRegion(
@@ -2793,7 +2844,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       },
       onExit: (_) {
         _isVolumeButtonHovered = false;
-        if (_volumeMenuFuture == null) _scheduleVolumeMenuHide();
+        _scheduleVolumeMenuHide();
       },
       child: _PlayerIconButton(
         key: const Key('desktop_volume_button'),
@@ -2805,7 +2856,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         constraints: BoxConstraints.tightFor(width: buttonSize, height: 40),
         iconSize: iconSize,
         showTooltip: false,
-        onPressed: _toggleMute,
+        onPressed: () async {
+          await _toggleMute();
+          onChanged?.call();
+        },
       ),
     );
   }
@@ -3316,59 +3370,74 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   iconSize: playIconSize,
                                 );
                                 final controls =
-                                    <({Widget control, bool visible})>[
+                                    <
+                                      ({
+                                        Widget Function(VoidCallback onChanged)
+                                        build,
+                                        bool visible,
+                                      })
+                                    >[
                                       if (_isDesktopMode)
                                         (
-                                          control: _buildHoverVolumeControl(
-                                            videoValue,
-                                            iconSize: widget.isFullScreen
-                                                ? 24
-                                                : 20,
-                                          ),
+                                          build: (onChanged) =>
+                                              _buildHoverVolumeControl(
+                                                widget.controller.value,
+                                                iconSize: widget.isFullScreen
+                                                    ? 24
+                                                    : 20,
+                                                onChanged: onChanged,
+                                              ),
                                           visible: visibility.showVolume,
                                         ),
                                       if (widget.subtitles != null &&
                                           widget.subtitles!.isNotEmpty)
                                         (
-                                          control: _buildSubtitleControl(
-                                            iconSize,
-                                          ),
+                                          build: (_) =>
+                                              _buildSubtitleControl(iconSize),
                                           visible: visibility.showSubtitles,
                                         ),
                                       if (widget.canControlPlayback &&
                                           !widget.isLive)
                                         (
-                                          control: _buildSpeedControl(
-                                            videoValue,
-                                            iconSize,
-                                          ),
+                                          build: (onChanged) =>
+                                              _buildSpeedControl(
+                                                widget.controller.value,
+                                                iconSize,
+                                                onChanged: onChanged,
+                                              ),
                                           visible: visibility.showSpeed,
                                         ),
                                       (
-                                        control: _buildDanmakuControl(iconSize),
+                                        build: (onChanged) =>
+                                            _buildDanmakuControl(
+                                              iconSize,
+                                              onChanged: onChanged,
+                                            ),
                                         visible: visibility.showDanmaku,
                                       ),
                                       if (widget.onSync != null)
                                         (
-                                          control: _buildSyncControl(iconSize),
+                                          build: (_) =>
+                                              _buildSyncControl(iconSize),
                                           visible: visibility.showSync,
                                         ),
                                       if (widget.extraBottomWidget
                                           case final control?)
                                         (
-                                          control: control,
+                                          build: (_) => control,
                                           visible: visibility.showPlaybackRoute,
                                         ),
                                       if (widget.isFullScreen &&
                                           widget.onSendDanmaku != null)
                                         (
-                                          control: _buildSendDanmakuControl(),
+                                          build: (_) =>
+                                              _buildSendDanmakuControl(),
                                           visible: visibility.showSendDanmaku,
                                         ),
                                       if (widget.onEnterPictureInPicture !=
                                           null)
                                         (
-                                          control: PictureInPictureControl(
+                                          build: (_) => PictureInPictureControl(
                                             tooltip:
                                                 context.l10n.pictureInPicture,
                                             onPressed:
@@ -3381,18 +3450,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               visibility.showPictureInPicture,
                                         ),
                                     ];
-                                final hiddenControls = [
-                                  for (final entry in controls)
-                                    if (!entry.visible) entry.control,
-                                ];
+                                final hiddenControls =
+                                    <Widget Function(VoidCallback)>[
+                                      for (final entry in controls)
+                                        if (!entry.visible) entry.build,
+                                    ];
                                 final fullscreenControl =
                                     widget.onToggleFullScreen == null
                                     ? null
                                     : _buildFullscreenControl(iconSize);
-                                if (fullscreenControl != null &&
-                                    !visibility.showFullscreen) {
-                                  hiddenControls.add(fullscreenControl);
-                                }
                                 final showOverflow =
                                     hiddenControls.isNotEmpty ||
                                     widget.onFreeModeChanged != null;
@@ -3594,7 +3660,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   ? 0
                                                   : 4,
                                             ),
-                                            entry.control,
+                                            entry.build(() {}),
                                           ],
                                         if (showOverflow) ...[
                                           SizedBox(width: horizontalGap),
@@ -3697,9 +3763,29 @@ class _PlaybackSpeedMenuButton extends StatefulWidget {
 
 class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
   Future<double?>? _menuFuture;
+  Timer? _menuHideTimer;
+  bool _dismissOnPointerExit = false;
+  bool _isButtonHovered = false;
+  bool _isMenuHovered = false;
 
-  Future<void> _openMenu() async {
+  void _keepMenuOpen() => _menuHideTimer?.cancel();
+
+  void _scheduleMenuHide() {
+    _menuHideTimer?.cancel();
+    if (!_dismissOnPointerExit || _menuFuture == null) return;
+    _menuHideTimer = Timer(playerControlHoverDismissDelay, () {
+      if (!mounted || _isButtonHovered || _isMenuHovered) return;
+      Navigator.of(context, rootNavigator: true).pop();
+    });
+  }
+
+  Future<void> _openMenu({required bool dismissOnPointerExit}) async {
+    if (!dismissOnPointerExit) {
+      _dismissOnPointerExit = false;
+      _keepMenuOpen();
+    }
     if (_menuFuture != null) return;
+    _dismissOnPointerExit = dismissOnPointerExit;
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null || !renderBox.hasSize) return;
     final overlay =
@@ -3725,6 +3811,7 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
     final future = showMenu<double>(
       context: context,
       useRootNavigator: true,
+      popUpAnimationStyle: playerControlPopupAnimationStyle,
       color: const Color(0xF21A1A24),
       constraints: const BoxConstraints.tightFor(width: menuWidth),
       position: RelativeRect.fromLTRB(
@@ -3739,20 +3826,37 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
             key: ValueKey('playback_speed_option_${option.speed}'),
             value: option.speed,
             height: 36,
-            child: Row(
-              children: [
-                Icon(
-                  (widget.currentSpeed - option.speed).abs() < 0.001
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  size: 18,
-                  color: (widget.currentSpeed - option.speed).abs() < 0.001
-                      ? const Color(0xFF7CFFB2)
-                      : Colors.white70,
-                ),
-                const SizedBox(width: 8),
-                Text(option.label, style: const TextStyle(color: Colors.white)),
-              ],
+            child: MouseRegion(
+              onEnter: (_) {
+                _isMenuHovered = true;
+                _keepMenuOpen();
+              },
+              onHover: (_) {
+                _isMenuHovered = true;
+                _keepMenuOpen();
+              },
+              onExit: (_) {
+                _isMenuHovered = false;
+                _scheduleMenuHide();
+              },
+              child: Row(
+                children: [
+                  Icon(
+                    (widget.currentSpeed - option.speed).abs() < 0.001
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    size: 18,
+                    color: (widget.currentSpeed - option.speed).abs() < 0.001
+                        ? const Color(0xFF7CFFB2)
+                        : Colors.white70,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    option.label,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
             ),
           ),
       ],
@@ -3760,7 +3864,16 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
     _menuFuture = future;
     final selected = await future;
     if (identical(_menuFuture, future)) _menuFuture = null;
-    if (selected != null) widget.onSelected(selected);
+    _menuHideTimer?.cancel();
+    _dismissOnPointerExit = false;
+    _isMenuHovered = false;
+    if (selected != null && mounted) widget.onSelected(selected);
+  }
+
+  @override
+  void dispose() {
+    _menuHideTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -3773,10 +3886,22 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
           widget.currentSpeed.toStringAsFixed(2),
         ),
         child: MouseRegion(
-          onEnter: (_) => unawaited(_openMenu()),
+          onEnter: (_) {
+            _isButtonHovered = true;
+            _keepMenuOpen();
+            unawaited(_openMenu(dismissOnPointerExit: true));
+          },
+          onHover: (_) {
+            _isButtonHovered = true;
+            _keepMenuOpen();
+          },
+          onExit: (_) {
+            _isButtonHovered = false;
+            _scheduleMenuHide();
+          },
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: _openMenu,
+            onTap: () => _openMenu(dismissOnPointerExit: false),
             child: AppInkSurface(
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(widget.dimension / 2),

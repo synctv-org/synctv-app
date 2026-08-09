@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/features/room/presentation/widgets/player_control_popup_style.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 
 enum PlaybackContextMenuAction {
@@ -99,6 +100,7 @@ Future<PlaybackContextMenuAction?> showPlaybackContextMenu({
 
   return showMenu<PlaybackContextMenuAction>(
     context: context,
+    popUpAnimationStyle: playerControlPopupAnimationStyle,
     color: const Color(0xF51C1C22),
     elevation: 18,
     shape: RoundedRectangleBorder(

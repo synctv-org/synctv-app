@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/room/presentation/widgets/player_control_popup_style.dart';
 import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 
 class PlaybackOptionsControl extends StatefulWidget {
@@ -112,6 +113,7 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
     var action = await showMenu<_PlaybackMenuAction>(
       context: context,
       useRootNavigator: true,
+      popUpAnimationStyle: playerControlPopupAnimationStyle,
       color: const Color(0xF21A1D21),
       constraints: const BoxConstraints(minWidth: 240, maxWidth: 320),
       position: position,
@@ -128,6 +130,7 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
       action = await showMenu<_PlaybackMenuAction>(
         context: context,
         useRootNavigator: true,
+        popUpAnimationStyle: playerControlPopupAnimationStyle,
         color: const Color(0xF21A1D21),
         constraints: const BoxConstraints(minWidth: 240, maxWidth: 320),
         position: position,
