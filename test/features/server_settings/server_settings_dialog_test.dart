@@ -11,7 +11,7 @@ import 'package:synctv_app/contracts/public_models.dart';
 import '../../test_app.dart';
 
 void main() {
-  testWidgets('server setup forwards the insecure TLS preference', (
+  testWidgets('add server dialog forwards the insecure TLS preference', (
     tester,
   ) async {
     final gateway = _RecordingServerConnectionGateway();
@@ -41,6 +41,10 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
     expect(find.textContaining('stale server info'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    await tester.tap(find.widgetWithText(AppActionButton, 'Add server'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
     await tester.enterText(
       find.byType(TextField),
       'https://self-signed.example.test',
@@ -92,14 +96,66 @@ void main() {
       find.widgetWithText(AppActionButton, 'Done'),
     );
     expect(doneButton.onPressed, isNull);
+    expect(find.text('Server address'), findsNothing);
+
+    await tester.tap(find.widgetWithText(AppActionButton, 'Add server'));
+    await tester.pumpAndSettle();
+    expect(find.text('Server address'), findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppDialogHeader),
+        matching: find.byType(AppIconButton),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     await tester.tapAt(const Offset(4, 4));
     await tester.pumpAndSettle();
-    expect(find.text('Server address'), findsOneWidget);
+    expect(find.widgetWithText(AppActionButton, 'Add server'), findsOneWidget);
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppActionButton, 'Add server'), findsOneWidget);
+  });
+
+  testWidgets('server list and add dialog stay distinct at mobile width', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          ...AppLocalizations.localizationsDelegates,
+          FLocalizations.delegate,
+        ],
+        builder: (context, child) => DependencyScope<ServerConnectionGateway>(
+          value: const _EmptyServerConnectionGateway(),
+          child: buildThemedTestApp(context, child),
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showServerSettingsDialog(context: context),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Server address'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.widgetWithText(AppActionButton, 'Add server'));
+    await tester.pumpAndSettle();
     expect(find.text('Server address'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
 
