@@ -57,6 +57,7 @@ class SyncTvService {
   static String get baseUrl => _runtime.baseUrl;
   static List<SyncTvServerProfile> get servers => _runtime.servers;
   static SyncTvServerProfile? get activeServer => _runtime.activeServer;
+  static bool get allowInsecureTls => _runtime.allowInsecureTls;
   static bool get hasRecoverableSession => _runtime.hasRecoverableSession;
   static String resolveResourceUrl(String url) =>
       _runtime.resolveResourceUrl(url);
@@ -85,8 +86,14 @@ class SyncTvService {
     _domains = _createDomains();
   }
 
-  static Future<SyncTvServerProfile> addServer(String url) async {
-    final profile = await _runtime.addServer(url);
+  static Future<SyncTvServerProfile> addServer(
+    String url, {
+    bool allowInsecureTls = false,
+  }) async {
+    final profile = await _runtime.addServer(
+      url,
+      allowInsecureTls: allowInsecureTls,
+    );
     _domains = _createDomains();
     return profile;
   }
@@ -868,10 +875,6 @@ class SyncTvService {
       sortBy: sortBy,
       sortDirection: sortDirection,
     );
-  }
-
-  static Future<SyncTvPlaybackStatus> getPlaybackStatus(String roomId) async {
-    return _domains.roomMedia.getPlaybackStatus(roomId);
   }
 
   static Future<SyncTvPlaybackStatus> playPrevious(String roomId) {
@@ -3126,13 +3129,11 @@ class SyncTvService {
     );
   }
 
-  static Future<void> setRoomMemberRole(
+  static Future<AdminRoomMember> setRoomMemberRole(
     String roomId,
     String userId,
     int role,
-  ) async {
-    await _domains.roomManagement.setRoomMemberRole(roomId, userId, role);
-  }
+  ) => _domains.roomManagement.setRoomMemberRole(roomId, userId, role);
 
   static Future<void> updateRoomMemberPermissionOverrides(
     String roomId,

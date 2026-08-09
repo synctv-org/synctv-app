@@ -855,9 +855,11 @@ void main() {
           .toList(growable: false);
       final observeIds = messages
           .map((message) => message.observeResource.observeId)
-          .toSet();
+          .toList(growable: false);
+      expect(observeIds.where((id) => id == 'playback_state'), hasLength(1));
+      expect(observeIds.where((id) => id == 'playback'), hasLength(1));
       expect(
-        observeIds,
+        observeIds.toSet(),
         containsAll([
           'playback_state',
           'playback',
@@ -4273,44 +4275,16 @@ void main() {
           request.response
             ..statusCode = 200
             ..headers.contentType = io.ContentType.json
-            ..write('{}');
-        case '/api/rooms/room_1/playback':
-          if (request.method == 'GET') {
-            request.response
-              ..statusCode = 200
-              ..headers.contentType = io.ContentType.json
-              ..write(
-                jsonEncode({
-                  'playbackState': {
-                    'roomId': 'room_1',
-                    'playingMediaId': 'med_1',
-                    'position': 0.0,
-                    'speed': 1.0,
-                    'isPlaying': true,
-                    'version': '8',
-                  },
-                  'playback': {
-                    'mediaId': 'med_1',
-                    'roomId': 'room_1',
-                    'name': 'Episode 1',
-                  },
-                }),
-              );
-          } else {
-            request.response
-              ..statusCode = 200
-              ..headers.contentType = io.ContentType.json
-              ..write(
-                jsonEncode({
-                  'roomId': 'room_1',
-                  'playingMediaId': 'med_1',
-                  'position': 0.0,
-                  'speed': 1.0,
-                  'isPlaying': true,
-                  'version': '9',
-                }),
-              );
-          }
+            ..write(
+              jsonEncode({
+                'roomId': 'room_1',
+                'playingMediaId': 'med_1',
+                'position': 0.0,
+                'speed': 1.0,
+                'isPlaying': true,
+                'version': '8',
+              }),
+            );
         default:
           request.response
             ..statusCode = 404
@@ -4331,17 +4305,14 @@ void main() {
         'med_1',
       );
 
-      expect(playback.entry?.id, 'med_1');
       expect(playback.isPlaying, isTrue);
+      expect(playback.playingMediaId, 'med_1');
       expect(
         List.generate(
           requestUris.length,
           (index) => '${requestMethods[index]} ${requestUris[index].path}',
         ),
-        [
-          'POST /api/rooms/room_1/playback/start',
-          'GET /api/rooms/room_1/playback',
-        ],
+        ['POST /api/rooms/room_1/playback/start'],
       );
       final startBody = jsonDecode(requestBodies[0]) as Map<String, dynamic>;
       final operationId = startBody.remove('clientOperationId');
@@ -4358,56 +4329,6 @@ void main() {
       await subscription.cancel();
       await server.close(force: true);
     }
-  });
-
-  test('dynamic playback state keeps playlist target identity', () {
-    final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
-      session: SyncTvSession(),
-    );
-    final target = testProviderTarget('/shows/ep1.mkv');
-    final encodedTarget = testProviderTargetToken(target);
-
-    final status = api.mapPlayback(
-      client.GetPlaybackResponse(
-        playbackState: client.PlaybackState(
-          roomId: 'room_1',
-          playingPlaylistId: 'pl_dynamic',
-          target: target,
-          position: 12,
-          speed: 1,
-          isPlaying: true,
-        ),
-        playback: client.Playback(
-          roomId: 'room_1',
-          playlistId: 'pl_dynamic',
-          name: 'Episode 1',
-          playbackInfos: [
-            MapEntry(
-              'direct',
-              client.PlaybackInfo(
-                medias: [
-                  client.PlaybackMedia(
-                    url: '/proxy/episode-1.m3u8',
-                    format: 'hls',
-                  ),
-                ],
-              ),
-            ),
-          ],
-          defaultMode: 'direct',
-        ),
-      ),
-    );
-
-    final entry = status.entry!;
-    expect(entry.id, encodedTarget);
-    expect(entry.parentId, 'pl_dynamic');
-    expect(entry.subPath, encodedTarget);
-    expect(entry.playbackMediaId, '');
-    expect(entry.playbackPlaylistId, 'pl_dynamic');
-    expect(entry.playbackTarget, encodedTarget);
-    expect(entry.url, 'https://example.test/proxy/episode-1.m3u8');
   });
 
   test('playback mapping preserves mode and url choices', () {
@@ -7575,6 +7496,54 @@ void main() {
     expect(adminBody['adminAddedPermissions'], '2');
     expect(adminBody['adminRemovedPermissions'], '8');
   });
+
+  test(
+    'member role update returns the authoritative member snapshot',
+    () async {
+      http.Request? capturedRequest;
+      final api = SyncTvApiClient(
+        baseUrl: 'https://example.test/api',
+        session: SyncTvSession()..accessToken = 'token',
+        httpClient: MockClient((request) async {
+          capturedRequest = request;
+          return http.Response(
+            jsonEncode({
+              'roomId': 'room_1',
+              'userId': 'usr_1',
+              'username': 'alice',
+              'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+              'permissions': '${RoomAdminPermissions.defaults}',
+              'adminAddedPermissions':
+                  '${RoomAdminPermissions.controlPlaybackState}',
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+      );
+      final service = SyncTvRoomManagementDomainService(api);
+
+      final member = await service.setRoomMemberRole(
+        'room_1',
+        'usr_1',
+        common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+      );
+
+      expect(member.userId, 'usr_1');
+      expect(member.role, common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value);
+      expect(member.permissions, RoomAdminPermissions.defaults);
+      expect(
+        member.adminAddedPermissions,
+        RoomAdminPermissions.controlPlaybackState,
+      );
+      expect(capturedRequest?.method, 'PATCH');
+      expect(capturedRequest?.url.path, '/api/rooms/room_1/members/usr_1');
+    expect(jsonDecode(capturedRequest!.body), {
+      'userId': 'usr_1',
+      'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+    });
+    },
+  );
 
   test('member display metadata routes use latest protobuf contract', () async {
     final requests = <http.Request>[];

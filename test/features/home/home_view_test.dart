@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/features/home/showcase/home_showcase.dart';
+import 'package:synctv_app/features/home/presentation/home_view.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/home/presentation/widgets/cinema_room_card.dart';
 
@@ -102,5 +103,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Created by me'), findsOneWidget);
+  });
+
+  testWidgets('account menu icons remain visible in the light theme', (
+    tester,
+  ) async {
+    await setViewport(tester, const Size(1440, 1000));
+    await tester.pumpWidget(const HomeShowcaseApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Account menu'));
+    await tester.pumpAndSettle();
+
+    final accountIcon = tester.widget<Icon>(
+      find.byIcon(Icons.account_circle_rounded),
+    );
+    expect(
+      accountIcon.color,
+      Theme.of(tester.element(find.byType(HomeView))).colorScheme.onSurface,
+    );
+    expect(find.text('Account center'), findsOneWidget);
   });
 }

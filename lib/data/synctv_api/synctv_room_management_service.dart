@@ -449,14 +449,19 @@ class SyncTvRoomManagementDomainService {
     );
   }
 
-  Future<void> setRoomMemberRole(String roomId, String userId, int role) async {
-    await _api.room.updateMemberPermissions(
+  Future<AdminRoomMember> setRoomMemberRole(
+    String roomId,
+    String userId,
+    int role,
+  ) async {
+    final member = await _api.room.updateMemberPermissions(
       roomId,
       client.UpdateMemberPermissionsRequest(
         userId: userId,
         role: roomMemberRoleFromValue(role),
       ),
     );
+    return roomMemberFromProto(member);
   }
 
   Future<void> updateRoomMemberPermissionOverrides(

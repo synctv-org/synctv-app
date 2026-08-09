@@ -122,4 +122,64 @@ void main() {
       expect(byAppTooltip('Room settings'), findsNothing);
     },
   );
+
+  testWidgets('room shell reacts to live permission state changes', (
+    tester,
+  ) async {
+    await setViewport(tester, const Size(1024, 768));
+    final state = ValueNotifier(
+      const RoomShellState(
+        roomName: 'Permission room',
+        hasCurrentPlayback: true,
+        canControlPlayback: false,
+        hasCurrentUser: true,
+        canManageRoom: false,
+      ),
+    );
+    addTearDown(state.dispose);
+
+    await tester.pumpWidget(
+      ValueListenableBuilder<RoomShellState>(
+        valueListenable: state,
+        builder: (context, value, _) => _app(
+          state: value,
+          callbacks: RoomShellCallbacks(
+            back: () {},
+            stopPlayback: () {},
+            openRoomSettings: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(byAppTooltip('Stop playback'), findsNothing);
+    expect(byAppTooltip('Room settings'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline_rounded), findsOneWidget);
+
+    state.value = const RoomShellState(
+      roomName: 'Permission room',
+      hasCurrentPlayback: true,
+      canControlPlayback: true,
+      hasCurrentUser: true,
+      canManageRoom: true,
+    );
+    await tester.pump();
+
+    expect(byAppTooltip('Stop playback'), findsOneWidget);
+    expect(find.byIcon(Icons.tune_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline_rounded), findsNothing);
+
+    state.value = const RoomShellState(
+      roomName: 'Permission room',
+      hasCurrentPlayback: true,
+      canControlPlayback: false,
+      hasCurrentUser: false,
+      canManageRoom: false,
+    );
+    await tester.pump();
+
+    expect(byAppTooltip('Stop playback'), findsNothing);
+    expect(byAppTooltip('Room settings'), findsNothing);
+  });
 }

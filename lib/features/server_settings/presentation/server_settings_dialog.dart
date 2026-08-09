@@ -45,6 +45,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   final _controller = TextEditingController();
   var _changed = false;
   var _busy = false;
+  var _allowInsecureTls = false;
   ServerInfo? _serverInfo;
   Object? _serverInfoError;
   var _loadingServerInfo = true;
@@ -96,9 +97,15 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
 
     setState(() => _busy = true);
     try {
-      final profile = await _gateway.addServer(input);
+      final profile = await _gateway.addServer(
+        input,
+        allowInsecureTls: _allowInsecureTls,
+      );
       await _gateway.syncServerTime(refresh: true);
+      if (!mounted) return;
+      await _loadServerInfo(refresh: true);
       _controller.clear();
+      _allowInsecureTls = false;
       _changed = true;
       if (mounted) {
         AppNotifications.showSuccess(
@@ -241,6 +248,76 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                 hintText: l10n.serverAddressExample,
                 prefixIcon: Icons.link_rounded,
                 onSubmitted: (_) => _busy ? null : _addServer(),
+              ),
+              const SizedBox(height: 10),
+              AppPanelSurface(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.42,
+                ),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.65,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _busy
+                        ? null
+                        : () => setState(
+                            () => _allowInsecureTls = !_allowInsecureTls,
+                          ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.gpp_maybe_outlined,
+                            color: _allowInsecureTls
+                                ? theme.colorScheme.error
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.allowInsecureTls,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  l10n.allowInsecureTlsDescription,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Semantics(
+                            label: l10n.allowInsecureTls,
+                            toggled: _allowInsecureTls,
+                            child: Switch.adaptive(
+                              value: _allowInsecureTls,
+                              onChanged: _busy
+                                  ? null
+                                  : (value) => setState(
+                                      () => _allowInsecureTls = value,
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 10),
               Row(
@@ -536,6 +613,10 @@ class _ServerProfileTile extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _MetaLine(icon: Icons.link_rounded, text: profile.endpoint),
+          if (profile.allowInsecureTls) ...[
+            const SizedBox(height: 6),
+            _MetaLine(icon: Icons.gpp_maybe_outlined, text: l10n.tlsUnverified),
+          ],
           if (profile.declaredServerId.isNotEmpty) ...[
             const SizedBox(height: 6),
             _MetaLine(

@@ -6,6 +6,7 @@ final class ServerConnectionProfile {
     required this.declaredServerId,
     required this.name,
     required this.isBuiltIn,
+    required this.allowInsecureTls,
     this.lastSeenAt,
   });
 
@@ -13,6 +14,7 @@ final class ServerConnectionProfile {
   final String declaredServerId;
   final String name;
   final bool isBuiltIn;
+  final bool allowInsecureTls;
   final DateTime? lastSeenAt;
 }
 
@@ -34,7 +36,10 @@ abstract interface class ServerConnectionGateway {
 
   Future<ServerInfo> getServerInfo({bool refresh = false});
 
-  Future<ServerConnectionProfile> addServer(String address);
+  Future<ServerConnectionProfile> addServer(
+    String address, {
+    bool allowInsecureTls = false,
+  });
 
   Future<void> activateServer(String endpoint);
 

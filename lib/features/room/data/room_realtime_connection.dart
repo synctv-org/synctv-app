@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:synctv_app/core/time/synced_clock.dart';
+import 'package:synctv_app/core/network/server_http_client.dart';
 import 'package:synctv_app/features/room/application/room_realtime_channel.dart';
 import 'package:synctv_app/features/room/application/room_session_gateway.dart';
 import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
@@ -29,6 +30,7 @@ final class IoRoomRealtimeChannelFactory implements RoomRealtimeChannelFactory {
       encodeMessage: sessionGateway.encodeMessage,
       decodeMessage: sessionGateway.decodeMessage,
       nowMillis: SyncedClock.nowMillis,
+      allowInsecureTls: sessionGateway.allowInsecureTls,
       initialMessages: initialMessages,
       onOutgoing: onOutgoing,
       onIncoming: onIncoming,
@@ -77,6 +79,7 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
     required RealtimeMessageEncoder encodeMessage,
     required RealtimeMessageDecoder decodeMessage,
     required int Function() nowMillis,
+    bool allowInsecureTls = false,
     void Function(List<int> bytes)? onOutgoing,
     void Function(Uint8List bytes)? onIncoming,
   }) {
@@ -89,7 +92,10 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
     final socketFuture = createWebSocketUri(roomId)
         .timeout(_connectTimeout)
         .then(
-          (uri) => WebSocket.connect(uri.toString()).timeout(_connectTimeout),
+          (uri) => _connectWebSocket(
+            uri,
+            allowInsecureTls: allowInsecureTls,
+          ).timeout(_connectTimeout),
         )
         .then((connected) {
           socket = connected;
@@ -153,5 +159,23 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
       stream: incoming.stream,
       onOutgoing: onOutgoing,
     );
+  }
+
+  static Future<WebSocket> _connectWebSocket(
+    Uri uri, {
+    required bool allowInsecureTls,
+  }) async {
+    if (!allowInsecureTls || uri.scheme.toLowerCase() != 'wss') {
+      return WebSocket.connect(uri.toString());
+    }
+    final client = createServerIoHttpClient(
+      uri.replace(scheme: 'https'),
+      allowInsecureTls: true,
+    );
+    try {
+      return await WebSocket.connect(uri.toString(), customClient: client);
+    } finally {
+      client.close(force: false);
+    }
   }
 }

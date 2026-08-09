@@ -11,26 +11,24 @@ import 'local_backend_test_auth.dart';
 
 void main() {
   test('seed a restricted local room member', () async {
-    const roomId = String.fromEnvironment(
-      'SYNCTV_MEMBER_ROOM_ID',
-      defaultValue: 'room_4',
-    );
-    const username = String.fromEnvironment(
-      'SYNCTV_MEMBER_USERNAME',
-      defaultValue: 'restricted_member',
-    );
-    const password = String.fromEnvironment(
-      'SYNCTV_MEMBER_PASSWORD',
-      defaultValue: 'RestrictedMemberPass2026!',
-    );
-    const rootPassword = String.fromEnvironment(
-      'SYNCTV_SMOKE_ROOT_PASSWORD',
-      defaultValue: 'LocalDevRootPass2026!',
-    );
+    const baseUrl = String.fromEnvironment('SYNCTV_MEMBER_BASE_URL');
+    const roomId = String.fromEnvironment('SYNCTV_MEMBER_ROOM_ID');
+    const username = String.fromEnvironment('SYNCTV_MEMBER_USERNAME');
+    const password = String.fromEnvironment('SYNCTV_MEMBER_PASSWORD');
+    const rootPassword = String.fromEnvironment('SYNCTV_SMOKE_ROOT_PASSWORD');
+    if (baseUrl.isEmpty ||
+        roomId.isEmpty ||
+        username.isEmpty ||
+        password.isEmpty ||
+        rootPassword.isEmpty) {
+      throw StateError(
+        'SYNCTV_MEMBER_BASE_URL, room ID, username, password, and root password are required',
+      );
+    }
 
     SharedPreferences.setMockInitialValues({});
     await SyncTvService.init();
-    await SyncTvService.setBaseUrl('http://127.0.0.1:8080');
+    await SyncTvService.setBaseUrl(baseUrl);
     await loginLocalRoot(rootPassword);
     final users = await SyncTvService.adminListUsersPage(search: username);
     if (!users.users.any((user) => user.username == username)) {
@@ -66,7 +64,6 @@ void main() {
     );
 
     print('RESTRICTED_MEMBER_USERNAME=$username');
-    print('RESTRICTED_MEMBER_PASSWORD=$password');
     print('RESTRICTED_MEMBER_USER_ID=${member.id}');
   });
 }

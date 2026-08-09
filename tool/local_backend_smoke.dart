@@ -20,12 +20,11 @@ import 'local_backend_test_auth.dart';
 
 void main() {
   test('local_backend_smoke', () async {
-    await runSmoke(
-      const String.fromEnvironment(
-        'SYNCTV_SMOKE_BASE_URL',
-        defaultValue: 'http://127.0.0.1:8080',
-      ),
-    );
+    const baseUrl = String.fromEnvironment('SYNCTV_SMOKE_BASE_URL');
+    if (baseUrl.isEmpty) {
+      throw StateError('SYNCTV_SMOKE_BASE_URL is required');
+    }
+    await runSmoke(baseUrl);
   }, timeout: const Timeout(Duration(minutes: 2)));
 }
 
@@ -34,10 +33,7 @@ Future<void> runSmoke(String baseUrl) async {
   final username = 'smoke_$stamp';
   final password = 'SmokePass_$stamp!';
   final roomName = 'Smoke Room $stamp';
-  const rootPassword = String.fromEnvironment(
-    'SYNCTV_SMOKE_ROOT_PASSWORD',
-    defaultValue: 'LocalDevRootPass2026!',
-  );
+  const rootPassword = String.fromEnvironment('SYNCTV_SMOKE_ROOT_PASSWORD');
 
   SharedPreferences.setMockInitialValues({});
   await SyncTvService.init();
@@ -91,10 +87,6 @@ Future<void> runSmoke(String baseUrl) async {
   print('media=$mediaId page_total=${mediaPage.total}');
 
   await SyncTvService.switchMediaAndPlay(room.roomId, mediaId);
-  final playback = await SyncTvService.getPlaybackStatus(room.roomId);
-  if (playback.entry?.id != mediaId) {
-    throw StateError('playback media mismatch: ${playback.entry?.id}');
-  }
   await SyncTvService.updatePlaybackState(
     room.roomId,
     action: PlaybackControlAction.pause,

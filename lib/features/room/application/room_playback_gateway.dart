@@ -2,8 +2,6 @@ import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
 abstract interface class RoomPlaybackGateway {
-  Future<SyncTvPlaybackStatus> getStatus(String roomId);
-
   Future<SyncTvPlaybackStatus> playPrevious(String roomId);
 
   Future<SyncTvPlaybackStatus> playNext(String roomId);

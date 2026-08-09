@@ -11,6 +11,7 @@ import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart'
 
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/core/network/server_endpoint_identity.dart';
+import 'package:synctv_app/core/network/server_http_client.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -147,15 +148,26 @@ class SyncTvApiClient {
     required this.session,
     this.onAuthError,
     this.onTokenRefresh,
+    bool allowInsecureTls = false,
     http.Client? httpClient,
-  }) : _http = httpClient ?? http.Client(),
-       _baseUri = _normalizeBaseUri(baseUrl);
+  }) : _baseUri = _normalizeBaseUri(baseUrl),
+       _allowInsecureTls = allowInsecureTls,
+       _usesInjectedHttpClient = httpClient != null {
+    _http =
+        httpClient ??
+        createServerHttpClient(
+          _baseUri.toString(),
+          allowInsecureTls: allowInsecureTls,
+        );
+  }
 
-  final http.Client _http;
+  late http.Client _http;
+  final bool _usesInjectedHttpClient;
   final SyncTvSession session;
   final AuthErrorSink? onAuthError;
   final TokenRefreshSink? onTokenRefresh;
   Uri _baseUri;
+  bool _allowInsecureTls;
   int _endpointGeneration = 0;
   ({int generation, Future<bool> future})? _refreshInFlight;
   final Expando<int> _responseGenerations = Expando<int>(
@@ -215,6 +227,7 @@ class SyncTvApiClient {
       SyncTvTrueNasProviderApi._(this);
 
   String get baseUrl => _baseUri.toString();
+  bool get allowInsecureTls => _allowInsecureTls;
 
   Map<String, String> get authenticatedResourceHeaders {
     final token = session.accessToken;
@@ -224,11 +237,28 @@ class SyncTvApiClient {
   }
 
   set baseUrl(String value) {
+    configureServer(value, allowInsecureTls: _allowInsecureTls);
+  }
+
+  void configureServer(String value, {required bool allowInsecureTls}) {
     final normalized = _normalizeBaseUri(value);
-    if (normalized == _baseUri) return;
+    if (normalized == _baseUri && allowInsecureTls == _allowInsecureTls) {
+      return;
+    }
+    final previousClient = _http;
     _baseUri = normalized;
+    _allowInsecureTls = allowInsecureTls;
+    if (!_usesInjectedHttpClient) {
+      _http = createServerHttpClient(
+        normalized.toString(),
+        allowInsecureTls: allowInsecureTls,
+      );
+      previousClient.close();
+    }
     _endpointGeneration++;
   }
+
+  void close() => _http.close();
 
   bool isEndpointGenerationCurrent(int generation) =>
       generation == _endpointGeneration;
@@ -1612,37 +1642,6 @@ extension SyncTvModelMapping on SyncTvApiClient {
           ? item.playlistSourceConfig.deepCopy()
           : null,
       metadata: metadata,
-    );
-  }
-
-  SyncTvPlaybackStatus mapPlayback(client.GetPlaybackResponse response) {
-    final state = response.playbackState;
-    final playback = response.playback;
-    final encodedTarget = providerTargetToBase64(state.target);
-    RoomMediaEntry? entry;
-    if (playback.mediaId.isNotEmpty || playback.playlistId.isNotEmpty) {
-      entry = RoomMediaEntry.fromPlaybackProto(
-        playback,
-        id: encodedTarget.isNotEmpty
-            ? encodedTarget
-            : playback.mediaId.isNotEmpty
-            ? playback.mediaId
-            : playback.playlistId,
-        subPath: encodedTarget.isEmpty ? null : encodedTarget,
-        parentId: encodedTarget.isEmpty ? null : state.playingPlaylistId,
-        resolveUrl: resolveResourceUrl,
-      );
-    }
-    return SyncTvPlaybackStatus(
-      entry: entry,
-      isPlaying: state.isPlaying,
-      currentTime: state.position,
-      playbackRate: state.speed == 0 ? 1.0 : state.speed,
-      generatedAtMillis: state.generatedAtMillis.toInt(),
-      version: state.version.toInt(),
-      playingMediaId: state.playingMediaId,
-      playingPlaylistId: state.playingPlaylistId,
-      targetHash: state.targetHash,
     );
   }
 

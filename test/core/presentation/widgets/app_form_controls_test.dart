@@ -33,6 +33,47 @@ Finder _byTooltip(String message) {
 }
 
 void main() {
+  testWidgets('scrollable tabs accept mouse drag input', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 240));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      _app(
+        const DefaultTabController(
+          length: 4,
+          child: AppTabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [
+              SizedBox(width: 120, child: Tab(text: 'Overview')),
+              SizedBox(width: 120, child: Tab(text: 'Users')),
+              SizedBox(width: 120, child: Tab(text: 'Providers')),
+              SizedBox(width: 120, child: Tab(text: 'Settings')),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final scrollable = find.descendant(
+      of: find.byType(AppTabBar),
+      matching: find.byType(Scrollable),
+    );
+    final position = tester.state<ScrollableState>(scrollable).position;
+    expect(position.pixels, 0);
+
+    final mouse = await tester.createGesture(kind: ui.PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    final start = tester.getCenter(find.text('Users'));
+    await mouse.addPointer(location: start);
+    await mouse.down(start);
+    await mouse.moveBy(const Offset(-140, 0));
+    await mouse.up();
+    await tester.pumpAndSettle();
+
+    expect(position.pixels, greaterThan(0));
+  });
+
   testWidgets('AppDialog keeps actions visible when its body is tall', (
     tester,
   ) async {

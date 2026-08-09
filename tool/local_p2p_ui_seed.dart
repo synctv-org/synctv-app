@@ -15,17 +15,21 @@ void main() {
     const username = String.fromEnvironment('SYNCTV_P2P_USERNAME');
     const password = String.fromEnvironment('SYNCTV_P2P_PASSWORD');
     const roomId = String.fromEnvironment('SYNCTV_P2P_ROOM_ID');
-    const origin = String.fromEnvironment(
-      'SYNCTV_P2P_ORIGIN',
-      defaultValue: 'http://127.0.0.1:18080',
-    );
-    if (username.isEmpty || password.isEmpty || roomId.isEmpty) {
-      throw StateError('P2P seed credentials and room ID are required');
+    const origin = String.fromEnvironment('SYNCTV_P2P_ORIGIN');
+    const baseUrl = String.fromEnvironment('SYNCTV_P2P_BASE_URL');
+    if (username.isEmpty ||
+        password.isEmpty ||
+        roomId.isEmpty ||
+        origin.isEmpty ||
+        baseUrl.isEmpty) {
+      throw StateError(
+        'SYNCTV_P2P_BASE_URL, SYNCTV_P2P_ORIGIN, credentials, and room ID are required',
+      );
     }
 
     SharedPreferences.setMockInitialValues({});
     await SyncTvService.init();
-    await SyncTvService.setBaseUrl('http://127.0.0.1:8080');
+    await SyncTvService.setBaseUrl(baseUrl);
     await loginLocalPasswordUser(username, password);
     if (const bool.fromEnvironment('SYNCTV_P2P_STOP')) {
       await SyncTvService.switchMedia(roomId, '', subPath: '');

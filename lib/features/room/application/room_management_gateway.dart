@@ -81,7 +81,11 @@ abstract interface class RoomManagementGateway {
     String userId,
     String displayTag,
   );
-  Future<void> setRoomMemberRole(String roomId, String userId, int role);
+  Future<AdminRoomMember> setRoomMemberRole(
+    String roomId,
+    String userId,
+    int role,
+  );
   Future<void> updateRoomMemberPermissionOverrides(
     String roomId,
     String userId, {

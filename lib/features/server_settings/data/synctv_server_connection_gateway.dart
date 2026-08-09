@@ -26,9 +26,17 @@ final class SyncTvServerConnectionGateway implements ServerConnectionGateway {
       SyncTvService.getServerInfo(refresh: refresh);
 
   @override
-  Future<ServerConnectionProfile> addServer(String address) async {
+  Future<ServerConnectionProfile> addServer(
+    String address, {
+    bool allowInsecureTls = false,
+  }) async {
     try {
-      return _toConnectionProfile(await SyncTvService.addServer(address));
+      return _toConnectionProfile(
+        await SyncTvService.addServer(
+          address,
+          allowInsecureTls: allowInsecureTls,
+        ),
+      );
     } on SyncTvApiException catch (error) {
       throw ServerConnectionException(error.message);
     }
@@ -53,5 +61,6 @@ ServerConnectionProfile _toConnectionProfile(SyncTvServerProfile profile) =>
       declaredServerId: profile.declaredServerId,
       name: profile.name,
       isBuiltIn: profile.isBuiltIn,
+      allowInsecureTls: profile.allowInsecureTls,
       lastSeenAt: profile.lastSeenAt,
     );

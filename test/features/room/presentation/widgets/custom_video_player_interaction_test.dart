@@ -123,6 +123,147 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
 }
 
 void main() {
+  for (final brightness in Brightness.values) {
+    testWidgets('player controls stay visible in ${brightness.name} theme', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 700));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: brightness == Brightness.dark
+              ? ThemeMode.dark
+              : ThemeMode.light,
+          builder: buildThemedTestApp,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: 1000,
+              height: 560,
+              child: CustomVideoPlayer(
+                volumePreferences: _volumePreferences(),
+                subtitleSource: const _EmptySubtitleSource(),
+                controller: controller,
+                title: 'Video',
+                interactionMode: VideoPlayerInteractionMode.desktop,
+                subtitles: const {
+                  'en': {'name': 'English'},
+                },
+                onSync: () {},
+                onToggleFullScreen: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      for (final key in [
+        const Key('desktop_volume_button'),
+        const Key('playback_sync_button'),
+        const Key('playback_subtitles_button'),
+        const Key('playback_fullscreen_button'),
+      ]) {
+        final iconButton = tester.widget<IconButton>(
+          find.descendant(
+            of: find.byKey(key),
+            matching: find.byType(IconButton),
+          ),
+        );
+        expect(
+          iconButton.style?.foregroundColor?.resolve(const {}),
+          Colors.white,
+        );
+      }
+    });
+  }
+
+  testWidgets('fullscreen changes orientation and restores system defaults', (
+    tester,
+  ) async {
+    final calls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        calls.add(call);
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    Widget player(bool fullscreen) => MaterialApp(
+      builder: buildThemedTestApp,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: CustomVideoPlayer(
+        key: const Key('player'),
+        volumePreferences: _volumePreferences(),
+        subtitleSource: const _EmptySubtitleSource(),
+        controller: controller,
+        title: 'Video',
+        isFullScreen: fullscreen,
+      ),
+    );
+
+    await tester.pumpWidget(player(false));
+    calls.clear();
+    await tester.pumpWidget(player(true));
+    await tester.pump();
+
+    expect(
+      calls.where(
+        (call) => call.method == 'SystemChrome.setPreferredOrientations',
+      ),
+      isNotEmpty,
+    );
+    expect(
+      calls.any(
+        (call) =>
+            call.method == 'SystemChrome.setPreferredOrientations' &&
+            (call.arguments as List).contains(
+              'DeviceOrientation.landscapeLeft',
+            ),
+      ),
+      isTrue,
+    );
+
+    calls.clear();
+    await tester.pumpWidget(player(false));
+    await tester.pump();
+    expect(
+      calls.any(
+        (call) =>
+            call.method == 'SystemChrome.setPreferredOrientations' &&
+            (call.arguments as List).isEmpty,
+      ),
+      isTrue,
+    );
+  });
+
   test('picture-in-picture selects a supported platform backend', () {
     expect(
       pictureInPictureBackendForPlatform(TargetPlatform.android),
@@ -632,6 +773,7 @@ void main() {
 
     expect(controller.volumes, isNotEmpty);
     expect(controller.value.volume, greaterThan(0.5));
+    expect(controller.seekPositions, isEmpty);
   });
 
   testWidgets(

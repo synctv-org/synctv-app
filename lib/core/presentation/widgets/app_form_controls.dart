@@ -1750,27 +1750,139 @@ class AppTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return TabBar(
-      controller: controller,
-      tabs: tabs,
-      isScrollable: isScrollable,
-      tabAlignment: tabAlignment,
-      padding: padding,
-      labelPadding: labelPadding,
-      indicator: indicator,
-      indicatorSize: indicatorSize ?? TabBarIndicatorSize.tab,
-      dividerColor: dividerColor ?? Colors.transparent,
-      labelColor: labelColor ?? theme.colorScheme.primary,
-      unselectedLabelColor:
-          unselectedLabelColor ?? theme.colorScheme.onSurfaceVariant,
-      labelStyle:
-          labelStyle ??
-          theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
-      unselectedLabelStyle:
-          unselectedLabelStyle ??
-          theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500),
-      physics: physics,
-      onTap: onTap,
+    final scrollBehavior = ScrollConfiguration.of(context).copyWith(
+      dragDevices: const {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.invertedStylus,
+        PointerDeviceKind.trackpad,
+      },
+    );
+    return _HorizontalPointerScroller(
+      enabled: isScrollable,
+      child: ScrollConfiguration(
+        behavior: scrollBehavior,
+        child: TabBar(
+          controller: controller,
+          tabs: tabs,
+          isScrollable: isScrollable,
+          tabAlignment: tabAlignment,
+          padding: padding,
+          labelPadding: labelPadding,
+          indicator: indicator,
+          indicatorSize: indicatorSize ?? TabBarIndicatorSize.tab,
+          dividerColor: dividerColor ?? Colors.transparent,
+          labelColor: labelColor ?? theme.colorScheme.primary,
+          unselectedLabelColor:
+              unselectedLabelColor ?? theme.colorScheme.onSurfaceVariant,
+          labelStyle:
+              labelStyle ??
+              theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+          unselectedLabelStyle:
+              unselectedLabelStyle ??
+              theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+          physics: physics,
+          onTap: onTap,
+        ),
+      ),
+    );
+  }
+}
+
+class _HorizontalPointerScroller extends StatefulWidget {
+  const _HorizontalPointerScroller({
+    required this.enabled,
+    required this.child,
+  });
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  State<_HorizontalPointerScroller> createState() =>
+      _HorizontalPointerScrollerState();
+}
+
+class _HorizontalPointerScrollerState
+    extends State<_HorizontalPointerScroller> {
+  final _contentKey = GlobalKey();
+  int? _mousePointer;
+  double? _lastMouseX;
+
+  ScrollPosition? get _position {
+    ScrollableState? scrollable;
+    void visit(Element element) {
+      if (scrollable != null) return;
+      if (element is StatefulElement && element.state is ScrollableState) {
+        scrollable = element.state as ScrollableState;
+        return;
+      }
+      element.visitChildren(visit);
+    }
+
+    final context = _contentKey.currentContext;
+    if (context is Element) context.visitChildren(visit);
+    return scrollable?.position;
+  }
+
+  void _moveBy(double delta) {
+    final position = _position;
+    if (position == null || !position.hasContentDimensions) return;
+    position.jumpTo(
+      (position.pixels + delta).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      ),
+    );
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    if (!widget.enabled || event.kind != PointerDeviceKind.mouse) return;
+    _mousePointer = event.pointer;
+    _lastMouseX = event.position.dx;
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    if (event.pointer != _mousePointer ||
+        event.buttons & kPrimaryMouseButton == 0) {
+      return;
+    }
+    final previousX = _lastMouseX;
+    _lastMouseX = event.position.dx;
+    if (previousX != null) _moveBy(previousX - event.position.dx);
+  }
+
+  void _handlePointerEnd(PointerEvent event) {
+    if (event.pointer != _mousePointer) return;
+    _mousePointer = null;
+    _lastMouseX = null;
+  }
+
+  void _handlePointerSignal(PointerSignalEvent event) {
+    if (!widget.enabled || event is! PointerScrollEvent) return;
+    final delta = event.scrollDelta.dx.abs() > event.scrollDelta.dy.abs()
+        ? event.scrollDelta.dx
+        : event.scrollDelta.dy;
+    if (delta == 0) return;
+    GestureBinding.instance.pointerSignalResolver.register(
+      event,
+      (_) => _moveBy(delta),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: _handlePointerDown,
+      onPointerMove: _handlePointerMove,
+      onPointerUp: _handlePointerEnd,
+      onPointerCancel: _handlePointerEnd,
+      onPointerSignal: _handlePointerSignal,
+      child: KeyedSubtree(key: _contentKey, child: widget.child),
     );
   }
 }

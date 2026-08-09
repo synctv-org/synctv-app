@@ -38,6 +38,20 @@ void main() {
     expect(restored!.isBuiltIn, isTrue);
   });
 
+  test('server profile persists its TLS verification policy', () {
+    final profile = SyncTvServerProfile(
+      endpoint: 'https://self-signed.example.com',
+      declaredServerId: 'self-signed',
+      name: 'Self signed',
+      allowInsecureTls: true,
+    );
+
+    final restored = SyncTvServerProfile.fromJson(profile.toJson());
+
+    expect(restored, isNotNull);
+    expect(restored!.allowInsecureTls, isTrue);
+  });
+
   test('explicit server configuration has priority in every build mode', () {
     expect(
       SyncTvSessionStore.resolveBuiltInServerUrl(

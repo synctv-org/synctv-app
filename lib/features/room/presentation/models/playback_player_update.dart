@@ -2,6 +2,18 @@ import 'package:synctv_app/contracts/synctv_models.dart';
 
 enum PlaybackPlayerUpdateAction { dispose, drain, keep, initialize, reload }
 
+bool activePlaybackSourceCanContinue({
+  required int? expireAt,
+  required DateTime now,
+}) {
+  if (expireAt == null || expireAt <= 0) return false;
+  final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+    expireAt * 1000,
+    isUtc: true,
+  );
+  return expiresAt.isAfter(now.toUtc());
+}
+
 bool liveStreamGenerationChanged(
   RoomMediaEntry? previous,
   RoomMediaEntry? next,

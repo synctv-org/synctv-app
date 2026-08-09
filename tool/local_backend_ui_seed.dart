@@ -15,7 +15,7 @@ import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
 
 import 'local_showcase_seed_config.dart';
 
-const _password = 'LocalShowcasePass2026!';
+const _password = String.fromEnvironment('SYNCTV_SHOWCASE_USER_PASSWORD');
 final _opaqueAuthenticator = OpaqueAuthenticatorService(
   gateway: const SyncTvOpaqueAuthGateway(),
 );
@@ -179,22 +179,26 @@ void main() {
   test(
     'seed realistic English showcase content',
     () async {
-      const baseUrl = String.fromEnvironment(
-        'SYNCTV_SMOKE_BASE_URL',
-        defaultValue: 'http://127.0.0.1:8080',
-      );
-      const rootPassword = String.fromEnvironment(
-        'SYNCTV_SMOKE_ROOT_PASSWORD',
-        defaultValue: 'LocalDevRootPass2026!',
-      );
+      const baseUrl = String.fromEnvironment('SYNCTV_SMOKE_BASE_URL');
+      const rootPassword = String.fromEnvironment('SYNCTV_SMOKE_ROOT_PASSWORD');
       const coverDirectory = String.fromEnvironment(
         'SYNCTV_SHOWCASE_COVER_DIR',
       );
       const mediaOrigin = String.fromEnvironment(
         'SYNCTV_SHOWCASE_MEDIA_ORIGIN',
-        defaultValue: 'http://127.0.0.1:18080',
       );
       const allowReset = bool.fromEnvironment('SYNCTV_SHOWCASE_ALLOW_RESET');
+
+      if (baseUrl.isEmpty ||
+          rootPassword.isEmpty ||
+          mediaOrigin.isEmpty ||
+          _password.isEmpty) {
+        throw StateError(
+          'SYNCTV_SMOKE_BASE_URL, SYNCTV_SMOKE_ROOT_PASSWORD, '
+          'SYNCTV_SHOWCASE_MEDIA_ORIGIN, and SYNCTV_SHOWCASE_USER_PASSWORD '
+          'are required',
+        );
+      }
 
       validateLocalShowcaseConfiguration(
         baseUrl: baseUrl,
@@ -262,7 +266,6 @@ void main() {
       await _seedOliviaFavorites(roomIds);
 
       print('SHOWCASE_USERNAME=olivia');
-      print('SHOWCASE_PASSWORD=$_password');
       print('SHOWCASE_PRIMARY_ROOM_ID=${roomIds['animation-after-dark']}');
       for (final room in _rooms) {
         print('SHOWCASE_ROOM_${room.key.toUpperCase()}=${roomIds[room.key]}');

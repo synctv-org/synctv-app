@@ -221,6 +221,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   StreamSubscription<RoomRealtimeMessage>? _realtimeMessageSubscription;
   StreamSubscription<RealtimeEventLogEntry>? _realtimeEventSubscription;
   StreamSubscription<void>? _realtimeReconnectSubscription;
+  StreamSubscription<void>? _realtimeDisconnectSubscription;
   RoomMediaLibraryPage? _mediaPage;
   final _RealtimeWatchStats _settingsWatchStats = _RealtimeWatchStats();
   final _RealtimeWatchStats _membersWatchStats = _RealtimeWatchStats();
@@ -358,7 +359,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       }
       _startResourceWatches();
     });
+    _realtimeDisconnectSubscription = widget.realtime.disconnections.listen(
+      (_) => _closeAfterRealtimeDisconnect(),
+    );
     _startResourceWatches();
+  }
+
+  void _closeAfterRealtimeDisconnect() {
+    if (_isDisposing || !mounted) return;
+    final route = ModalRoute.of(context);
+    if (route == null) return;
+    final navigator = Navigator.of(context);
+    navigator.popUntil((candidate) => candidate == route);
+    if (route.isCurrent) navigator.pop();
   }
 
   @override
@@ -382,6 +395,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _realtimeMessageSubscription?.cancel();
     _realtimeEventSubscription?.cancel();
     _realtimeReconnectSubscription?.cancel();
+    _realtimeDisconnectSubscription?.cancel();
     _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     _passwordController.dispose();
@@ -1969,12 +1983,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final result = await _showMemberRoleDialog(member.role);
     if (result == null || result == member.role) return;
     try {
-      await _roomGateway.setRoomMemberRole(
+      final updatedMember = await _roomGateway.setRoomMemberRole(
         widget.roomId,
         member.userId,
         result,
       );
-      await _loadMembers();
+      if (!mounted) return;
+      setState(() {
+        final index = _members.indexWhere(
+          (item) => item.userId == updatedMember.userId,
+        );
+        if (index >= 0) _members[index] = updatedMember;
+      });
       if (mounted) {
         AppNotifications.showSuccess(context, context.l10n.memberRoleUpdated);
       }
@@ -3502,6 +3522,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     var removed = isAdmin
         ? member.adminRemovedPermissions
         : member.removedPermissions;
+    final permissions = isAdmin
+        ? RoomAdminPermissions.values
+        : RoomMemberPermissions.values;
 
     return showAppDialog<_MemberPermissionOverrideResult>(
       context: context,
@@ -3527,19 +3550,28 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               title: Text(context.l10n.permissionOverrides),
               body: SizedBox(
                 width: 440,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: RoomMemberPermissions.values
-                      .map(
-                        (permission) => _buildPermissionOverrideRow(
-                          context.l10n.roomMemberPermissionLabel(permission),
-                          permission,
-                          added,
-                          removed,
-                          setOverride,
-                        ),
-                      )
-                      .toList(),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 520),
+                  child: AppListView(
+                    shrinkWrap: true,
+                    children: permissions
+                        .map(
+                          (permission) => _buildPermissionOverrideRow(
+                            isAdmin
+                                ? context.l10n.roomAdminPermissionLabel(
+                                    permission,
+                                  )
+                                : context.l10n.roomMemberPermissionLabel(
+                                    permission,
+                                  ),
+                            permission,
+                            added,
+                            removed,
+                            setOverride,
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ),
               ),
               actions: [

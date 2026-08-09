@@ -1295,7 +1295,7 @@ class RoomGuestPermissions {
       viewMembers | viewChatHistory | useVoiceChat | useP2pMedia;
 }
 
-class RoomEffectivePermissions {
+class RoomAdminPermissions {
   static const int sendChatMessages = 1 << 0;
   static const int manageOwnMedia = 1 << 1;
   static const int browseLibrary = 1 << 2;
@@ -1317,6 +1317,80 @@ class RoomEffectivePermissions {
   static const int deleteRoom = 1 << 18;
   static const int viewPlaybackHistory = 1 << 19;
   static const int useP2pMedia = 1 << 20;
+  static const int all =
+      sendChatMessages |
+      manageOwnMedia |
+      browseLibrary |
+      viewMembers |
+      viewChatHistory |
+      useVoiceChat |
+      deleteMedia |
+      reorderMedia |
+      clearMedia |
+      manageLiveStreams |
+      controlPlaybackState |
+      navigatePlayback |
+      reviewJoinRequests |
+      removeMembers |
+      manageMemberPermissions |
+      addMembers |
+      manageRoomSettings |
+      deleteChatMessages |
+      deleteRoom |
+      viewPlaybackHistory |
+      useP2pMedia;
+  static const int defaults = all & ~deleteRoom;
+
+  static const List<int> values = [
+    sendChatMessages,
+    manageOwnMedia,
+    browseLibrary,
+    viewMembers,
+    viewChatHistory,
+    useVoiceChat,
+    deleteMedia,
+    reorderMedia,
+    clearMedia,
+    manageLiveStreams,
+    controlPlaybackState,
+    navigatePlayback,
+    reviewJoinRequests,
+    removeMembers,
+    manageMemberPermissions,
+    addMembers,
+    manageRoomSettings,
+    deleteChatMessages,
+    deleteRoom,
+    viewPlaybackHistory,
+    useP2pMedia,
+  ];
+}
+
+class RoomEffectivePermissions {
+  static const int sendChatMessages = RoomAdminPermissions.sendChatMessages;
+  static const int manageOwnMedia = RoomAdminPermissions.manageOwnMedia;
+  static const int browseLibrary = RoomAdminPermissions.browseLibrary;
+  static const int viewMembers = RoomAdminPermissions.viewMembers;
+  static const int viewChatHistory = RoomAdminPermissions.viewChatHistory;
+  static const int useVoiceChat = RoomAdminPermissions.useVoiceChat;
+  static const int deleteMedia = RoomAdminPermissions.deleteMedia;
+  static const int reorderMedia = RoomAdminPermissions.reorderMedia;
+  static const int clearMedia = RoomAdminPermissions.clearMedia;
+  static const int manageLiveStreams = RoomAdminPermissions.manageLiveStreams;
+  static const int controlPlaybackState =
+      RoomAdminPermissions.controlPlaybackState;
+  static const int navigatePlayback = RoomAdminPermissions.navigatePlayback;
+  static const int reviewJoinRequests = RoomAdminPermissions.reviewJoinRequests;
+  static const int removeMembers = RoomAdminPermissions.removeMembers;
+  static const int manageMemberPermissions =
+      RoomAdminPermissions.manageMemberPermissions;
+  static const int addMembers = RoomAdminPermissions.addMembers;
+  static const int manageRoomSettings = RoomAdminPermissions.manageRoomSettings;
+  static const int deleteChatMessages = RoomAdminPermissions.deleteChatMessages;
+  static const int deleteRoom = RoomAdminPermissions.deleteRoom;
+  static const int viewPlaybackHistory =
+      RoomAdminPermissions.viewPlaybackHistory;
+  static const int useP2pMedia = RoomAdminPermissions.useP2pMedia;
 }
 
 class SyncTvRoomSettings {

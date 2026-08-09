@@ -12,6 +12,7 @@ class SyncTvServerProfile {
     required this.declaredServerId,
     required this.name,
     this.isBuiltIn = false,
+    this.allowInsecureTls = false,
     this.lastSeenAt,
     this.sessionData = const SyncTvServerSessionData(),
   });
@@ -20,6 +21,7 @@ class SyncTvServerProfile {
   final String declaredServerId;
   final String name;
   final bool isBuiltIn;
+  final bool allowInsecureTls;
   final DateTime? lastSeenAt;
   final SyncTvServerSessionData sessionData;
 
@@ -29,6 +31,7 @@ class SyncTvServerProfile {
     String? declaredServerId,
     String? name,
     bool? isBuiltIn,
+    bool? allowInsecureTls,
     DateTime? lastSeenAt,
     SyncTvServerSessionData? sessionData,
   }) {
@@ -37,6 +40,7 @@ class SyncTvServerProfile {
       declaredServerId: declaredServerId ?? this.declaredServerId,
       name: name ?? this.name,
       isBuiltIn: isBuiltIn ?? this.isBuiltIn,
+      allowInsecureTls: allowInsecureTls ?? this.allowInsecureTls,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       sessionData: sessionData ?? this.sessionData,
     );
@@ -47,6 +51,7 @@ class SyncTvServerProfile {
     'declared_server_id': declaredServerId,
     'name': name,
     'is_built_in': isBuiltIn,
+    'allow_insecure_tls': allowInsecureTls,
     'session': sessionData.toJson(),
     if (lastSeenAt != null) 'last_seen_at': lastSeenAt!.toIso8601String(),
   };
@@ -61,6 +66,7 @@ class SyncTvServerProfile {
         declaredServerId: json['declared_server_id']?.toString().trim() ?? '',
         name: json['name']?.toString().trim() ?? endpoint,
         isBuiltIn: json['is_built_in'] == true,
+        allowInsecureTls: json['allow_insecure_tls'] == true,
         lastSeenAt: DateTime.tryParse(json['last_seen_at']?.toString() ?? ''),
         sessionData: SyncTvServerSessionData.fromJson(
           (json['session'] as Map?) ?? const {},
@@ -146,6 +152,7 @@ class SyncTvSessionStore {
     required String declaredServerId,
     required String name,
     required String endpoint,
+    bool allowInsecureTls = false,
     bool activate = true,
   }) async {
     final normalizedEndpoint = ServerEndpointIdentity.normalize(endpoint);
@@ -164,6 +171,7 @@ class SyncTvSessionStore {
       name: name.trim().isEmpty ? normalizedEndpoint : name.trim(),
       isBuiltIn:
           existing?.isBuiltIn == true || _isBuiltInEndpoint(normalizedEndpoint),
+      allowInsecureTls: allowInsecureTls,
       lastSeenAt: DateTime.now().toUtc(),
       sessionData: carryCurrentSession
           ? _currentSessionData()

@@ -139,8 +139,11 @@ final class SyncTvRoomManagementGateway implements RoomManagementGateway {
     String displayTag,
   ) => SyncTvService.updateRoomMemberDisplayTag(roomId, userId, displayTag);
   @override
-  Future<void> setRoomMemberRole(String roomId, String userId, int role) =>
-      SyncTvService.setRoomMemberRole(roomId, userId, role);
+  Future<AdminRoomMember> setRoomMemberRole(
+    String roomId,
+    String userId,
+    int role,
+  ) => SyncTvService.setRoomMemberRole(roomId, userId, role);
   @override
   Future<void> updateRoomMemberPermissionOverrides(
     String roomId,

@@ -19,16 +19,14 @@ import 'local_backend_test_auth.dart';
 /// notifications listing. Run against a local backend that allows root login.
 void main() {
   test('local_backend_smoke_extended', () async {
-    await runExtendedSmoke(
-      const String.fromEnvironment(
-        'SYNCTV_SMOKE_BASE_URL',
-        defaultValue: 'http://127.0.0.1:8080',
-      ),
-      const String.fromEnvironment(
-        'SYNCTV_SMOKE_ROOT_PASSWORD',
-        defaultValue: 'LocalDevRootPass2026!',
-      ),
-    );
+    const baseUrl = String.fromEnvironment('SYNCTV_SMOKE_BASE_URL');
+    const rootPassword = String.fromEnvironment('SYNCTV_SMOKE_ROOT_PASSWORD');
+    if (baseUrl.isEmpty || rootPassword.isEmpty) {
+      throw StateError(
+        'SYNCTV_SMOKE_BASE_URL and SYNCTV_SMOKE_ROOT_PASSWORD are required',
+      );
+    }
+    await runExtendedSmoke(baseUrl, rootPassword);
   }, timeout: const Timeout(Duration(minutes: 3)));
 }
 

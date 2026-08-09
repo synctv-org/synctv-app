@@ -22,7 +22,7 @@ void main() {
                   'id': '1',
                   'serverId': 'nas-home',
                   'endpoint': 'https://nas.example',
-                  'hostname': 'truenas',
+                  'hostname': 'storage-node.example',
                   'version': '25.10',
                   'systemProduct': 'TrueNAS SCALE',
                   'createdAt': '100',

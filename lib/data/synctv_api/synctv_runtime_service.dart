@@ -30,6 +30,7 @@ class SyncTvRuntimeService {
   List<SyncTvServerProfile> get servers =>
       List.unmodifiable(sessionStore.servers);
   SyncTvServerProfile? get activeServer => sessionStore.activeServer;
+  bool get allowInsecureTls => activeServer?.allowInsecureTls == true;
   String? get guestRoomId => sessionStore.guestRoomId;
   bool get isGuestSession => sessionStore.isGuestSession;
 
@@ -39,28 +40,39 @@ class SyncTvRuntimeService {
       sessionStore.baseUrl.isEmpty
           ? SyncTvSessionStore.clientBootstrapBaseUrl
           : sessionStore.baseUrl,
+      allowInsecureTls: allowInsecureTls,
     );
     await _promotePendingActiveServer();
   }
 
   Future<void> setBaseUrl(String url) async {
-    _api.baseUrl = url;
+    _api.configureServer(url, allowInsecureTls: false);
     await sessionStore.setBaseUrl(_api.baseUrl);
   }
 
-  Future<SyncTvServerProfile> addServer(String url) async {
-    final serverClient = _createClient(url);
-    final info = await serverClient.publicService.getServerInfo(
-      client.GetServerInfoRequest(),
-    );
-    final declaredServerId = info.serverId.trim();
-    _api.baseUrl = serverClient.baseUrl;
-    final profile = await sessionStore.addOrUpdateServer(
-      declaredServerId: declaredServerId,
-      name: info.serverName,
-      endpoint: serverClient.baseUrl,
-    );
-    return profile;
+  Future<SyncTvServerProfile> addServer(
+    String url, {
+    bool allowInsecureTls = false,
+  }) async {
+    final serverClient = _createClient(url, allowInsecureTls: allowInsecureTls);
+    try {
+      final info = await serverClient.publicService.getServerInfo(
+        client.GetServerInfoRequest(),
+      );
+      final declaredServerId = info.serverId.trim();
+      _api.configureServer(
+        serverClient.baseUrl,
+        allowInsecureTls: allowInsecureTls,
+      );
+      return sessionStore.addOrUpdateServer(
+        declaredServerId: declaredServerId,
+        name: info.serverName,
+        endpoint: serverClient.baseUrl,
+        allowInsecureTls: allowInsecureTls,
+      );
+    } finally {
+      serverClient.close();
+    }
   }
 
   Future<void> activateServer(String endpoint) async {
@@ -68,7 +80,10 @@ class SyncTvRuntimeService {
     if (!servers.any((server) => server.endpoint == normalized)) {
       throw ArgumentError.value(endpoint, 'endpoint', 'Unknown server');
     }
-    _api.baseUrl = normalized;
+    final target = servers.firstWhere(
+      (server) => server.endpoint == normalized,
+    );
+    _api.configureServer(normalized, allowInsecureTls: target.allowInsecureTls);
     await sessionStore.activateServer(normalized);
   }
 
@@ -78,8 +93,10 @@ class SyncTvRuntimeService {
       final next = servers
           .where((server) => server.endpoint != normalized)
           .firstOrNull;
-      _api.baseUrl =
-          next?.endpoint ?? SyncTvSessionStore.clientBootstrapBaseUrl;
+      _api.configureServer(
+        next?.endpoint ?? SyncTvSessionStore.clientBootstrapBaseUrl,
+        allowInsecureTls: next?.allowInsecureTls == true,
+      );
     }
     await sessionStore.removeServer(normalized);
   }
@@ -146,10 +163,14 @@ class SyncTvRuntimeService {
     await sessionStore.clearGuestContextAndPersist();
   }
 
-  SyncTvApiClient _createClient(String baseUrl) {
+  SyncTvApiClient _createClient(
+    String baseUrl, {
+    bool allowInsecureTls = false,
+  }) {
     late final SyncTvApiClient api;
     api = SyncTvApiClient(
       baseUrl: baseUrl,
+      allowInsecureTls: allowInsecureTls,
       session: session,
       onAuthError: (generation) => _handleAuthError(api, generation),
       onTokenRefresh: (generation) async {
@@ -204,8 +225,12 @@ class SyncTvRuntimeService {
         declaredServerId: declaredServerId,
         name: info.serverName,
         endpoint: _api.baseUrl,
+        allowInsecureTls: active.allowInsecureTls,
       );
-      _api.baseUrl = sessionStore.baseUrl;
+      _api.configureServer(
+        sessionStore.baseUrl,
+        allowInsecureTls: active.allowInsecureTls,
+      );
     } catch (_) {
       // Keep the pending profile usable offline; the next successful launch or
       // manual server edit can promote it to the server-provided identity.

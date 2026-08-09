@@ -67,13 +67,6 @@ final class ProtobufRoomRealtimeProtocol implements RoomRealtimeProtocol {
   );
 
   @override
-  List<List<int>> encodePlaybackObservations({
-    bool includeResolvedPlayback = true,
-  }) => RoomRealtimeCodec.encodePlaybackObservations(
-    includeResolvedPlayback: includeResolvedPlayback,
-  );
-
-  @override
   List<int> encodePlaylistObservation({
     String observeId = 'playlist_items',
     String version = '',

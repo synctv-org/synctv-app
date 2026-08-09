@@ -1536,6 +1536,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     var removed = isAdmin
         ? member.adminRemovedPermissions
         : member.removedPermissions;
+    final permissions = isAdmin
+        ? RoomAdminPermissions.values
+        : RoomMemberPermissions.values;
 
     return AppDialogs.showStyledDialog<_PermissionOverrideResult>(
       context: context,
@@ -1560,19 +1563,26 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
 
           return SizedBox(
             width: 460,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: RoomMemberPermissions.values
-                  .map(
-                    (permission) => _permissionOverrideRow(
-                      context.l10n.roomMemberPermissionLabel(permission),
-                      permission,
-                      added,
-                      removed,
-                      setOverride,
-                    ),
-                  )
-                  .toList(),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 520),
+              child: AppListView(
+                shrinkWrap: true,
+                children: permissions
+                    .map(
+                      (permission) => _permissionOverrideRow(
+                        isAdmin
+                            ? context.l10n.roomAdminPermissionLabel(permission)
+                            : context.l10n.roomMemberPermissionLabel(
+                                permission,
+                              ),
+                        permission,
+                        added,
+                        removed,
+                        setOverride,
+                      ),
+                    )
+                    .toList(),
+              ),
             ),
           );
         },

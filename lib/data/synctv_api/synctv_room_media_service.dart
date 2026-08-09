@@ -27,14 +27,6 @@ class SyncTvRoomMediaDomainService {
 
   final SyncTvApiClient _api;
 
-  Future<SyncTvPlaybackStatus> getPlaybackStatus(String roomId) async {
-    final response = await _api.room.getPlayback(
-      roomId,
-      client.GetPlaybackRequest(),
-    );
-    return _api.mapPlayback(response);
-  }
-
   Future<SyncTvPlaybackStatus> playPrevious(String roomId) async {
     final state = await _api.room.playPrevious(
       roomId,
@@ -1529,7 +1521,7 @@ class SyncTvRoomMediaDomainService {
         'A dynamic provider target requires a pl_ playlist ID',
       );
     }
-    await _api.room.startPlayback(
+    final state = await _api.room.startPlayback(
       roomId,
       client.StartPlaybackRequest(
         mediaId: !hasTarget && isStaticMedia ? entryId : '',
@@ -1544,18 +1536,7 @@ class SyncTvRoomMediaDomainService {
         clientOperationId: clientOperationId,
       ),
     );
-    final current = await getPlaybackStatus(roomId);
-    return SyncTvPlaybackStatus(
-      entry: current.entry,
-      isPlaying: true,
-      currentTime: 0,
-      playbackRate: current.playbackRate,
-      generatedAtMillis: SyncedClock.nowMillis(),
-      version: current.version,
-      playingMediaId: current.playingMediaId,
-      playingPlaylistId: current.playingPlaylistId,
-      targetHash: current.targetHash,
-    );
+    return _playbackStatusFromState(state);
   }
 
   Future<SyncTvPlaybackStatus> updatePlaybackState(
@@ -1566,7 +1547,6 @@ class SyncTvRoomMediaDomainService {
     double speed = 1.0,
     int? version,
   }) async {
-    final current = await getPlaybackStatus(roomId);
     final response = await _api.room.updatePlaybackState(
       roomId,
       client.UpdatePlaybackStateRequest(
@@ -1577,7 +1557,7 @@ class SyncTvRoomMediaDomainService {
         version: version == null ? null : Int64(version),
       ),
     );
-    return _api.mapPlaybackState(response, entry: current.entry);
+    return _api.mapPlaybackState(response);
   }
 
   Future<String> _addMedia(

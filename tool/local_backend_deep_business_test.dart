@@ -23,14 +23,8 @@ void main() {
     'local_backend_deep_business_test',
     () async {
       await runDeepBusinessTest(
-        const String.fromEnvironment(
-          'SYNCTV_SMOKE_BASE_URL',
-          defaultValue: 'http://127.0.0.1:8080',
-        ),
-        const String.fromEnvironment(
-          'SYNCTV_SMOKE_ROOT_PASSWORD',
-          defaultValue: 'LocalDevRootPass2026!',
-        ),
+        const String.fromEnvironment('SYNCTV_SMOKE_BASE_URL'),
+        const String.fromEnvironment('SYNCTV_SMOKE_ROOT_PASSWORD'),
       );
     },
     timeout: const Timeout(Duration(minutes: 5)),
@@ -38,6 +32,11 @@ void main() {
 }
 
 Future<void> runDeepBusinessTest(String baseUrl, String rootPassword) async {
+  if (baseUrl.isEmpty || rootPassword.isEmpty) {
+    throw StateError(
+      'SYNCTV_SMOKE_BASE_URL and SYNCTV_SMOKE_ROOT_PASSWORD are required',
+    );
+  }
   final stamp = DateTime.now().microsecondsSinceEpoch;
   final owner = _UserSeed('deep_owner_$stamp', 'DeepOwnerPass9!');
   final member = _UserSeed('deep_member_$stamp', 'DeepMemberPass8!');
@@ -555,7 +554,7 @@ Future<void> _exerciseAdminLifecycle({
   if (ownerRows.users.isEmpty) {
     throw StateError('owner missing from admin search');
   }
-  print('admin_lifecycle=ok root=$rootPassword');
+  print('admin_lifecycle=ok');
 }
 
 Future<void> _expectApiFailure(

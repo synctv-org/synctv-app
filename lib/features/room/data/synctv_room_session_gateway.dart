@@ -12,6 +12,9 @@ final class SyncTvRoomSessionGateway implements RoomSessionGateway {
   bool get isGuestSession => SyncTvService.isGuestSession;
 
   @override
+  bool get allowInsecureTls => SyncTvService.allowInsecureTls;
+
+  @override
   Stream<void> get authErrors => SyncTvService.onAuthError;
 
   @override

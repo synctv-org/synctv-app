@@ -467,7 +467,7 @@ class PlaybackNavigationControls extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppIconButton(
+        _PlayerIconButton(
           key: const Key('playback_previous_button'),
           icon: Icons.skip_previous_rounded,
           tooltip: previousTooltip,
@@ -477,7 +477,7 @@ class PlaybackNavigationControls extends StatelessWidget {
         ),
         SizedBox(width: gap),
         if (center != null) ...[center!, SizedBox(width: gap)],
-        AppIconButton(
+        _PlayerIconButton(
           key: const Key('playback_next_button'),
           icon: Icons.skip_next_rounded,
           tooltip: nextTooltip,
@@ -504,7 +504,7 @@ class PictureInPictureControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppIconButton(
+    return _PlayerIconButton(
       key: const Key('picture_in_picture_button'),
       icon: Icons.picture_in_picture_alt_rounded,
       tooltip: tooltip,
@@ -523,39 +523,49 @@ class _PlayerIconButton extends StatelessWidget {
     required this.onPressed,
     this.iconSize = 20,
     this.constraints = const BoxConstraints.tightFor(width: 40, height: 40),
+    this.padding = EdgeInsets.zero,
+    this.selected = false,
+    this.showTooltip = true,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
   final double iconSize;
-  final BoxConstraints constraints;
+  final BoxConstraints? constraints;
+  final EdgeInsetsGeometry padding;
+  final bool selected;
+  final bool showTooltip;
 
   @override
   Widget build(BuildContext context) {
+    Widget button = IconButton(
+      onPressed: onPressed,
+      padding: padding,
+      constraints: const BoxConstraints(),
+      icon: Icon(icon),
+      style: IconButton.styleFrom(
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        foregroundColor: Colors.white,
+        disabledForegroundColor: Colors.white60,
+        backgroundColor: selected ? Colors.white24 : Colors.transparent,
+        hoverColor: Colors.white12,
+        focusColor: Colors.white12,
+        highlightColor: Colors.white24,
+      ),
+      iconSize: iconSize,
+    );
+    if (constraints != null) {
+      button = ConstrainedBox(constraints: constraints!, child: button);
+    }
+    button = ExcludeSemantics(child: button);
     return Semantics(
       button: true,
       enabled: onPressed != null,
       label: tooltip,
       onTap: onPressed,
-      child: AppTooltip(
-        message: tooltip,
-        child: ExcludeSemantics(
-          child: IconButton(
-            onPressed: onPressed,
-            padding: EdgeInsets.zero,
-            constraints: constraints,
-            icon: Icon(icon),
-            style: IconButton.styleFrom(
-              foregroundColor: Colors.white,
-              // Disabled navigation remains discoverable against the black
-              // player surface while retaining a clear enabled/disabled state.
-              disabledForegroundColor: Colors.white60,
-            ),
-            iconSize: iconSize,
-          ),
-        ),
-      ),
+      child: showTooltip ? AppTooltip(message: tooltip, child: button) : button,
     );
   }
 }
@@ -1369,17 +1379,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   @override
   void initState() {
     super.initState();
-    if (widget.isFullScreen) {
-      // Lock to landscape mode only for fullscreen
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-      // Delay setting immersive mode slightly to allow orientation to settle
-      Future.delayed(const Duration(milliseconds: 100), () {
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-      });
-    }
+    if (widget.isFullScreen) _applyFullScreenSystemUi(fullScreen: true);
     widget.controller.addListener(_videoListener);
     widget.danmakuController?.addListener(_onDanmakuUpdate);
     _restorePersistedVolume();
@@ -1399,6 +1399,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   @override
   void didUpdateWidget(CustomVideoPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.isFullScreen != oldWidget.isFullScreen) {
+      _applyFullScreenSystemUi(fullScreen: widget.isFullScreen);
+    }
     if (widget.controller != oldWidget.controller) {
       oldWidget.controller.removeListener(_videoListener);
       widget.controller.addListener(_videoListener);
@@ -1451,15 +1454,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   @override
   void dispose() {
     if (widget.isFullScreen) {
-      // Restore orientation and UI mode when exiting fullscreen
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
-      // Delay resetting UI mode slightly to allow orientation to settle
-      Future.delayed(const Duration(milliseconds: 100), () {
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      });
+      _applyFullScreenSystemUi(fullScreen: false);
     }
     widget.controller.removeListener(_videoListener);
     widget.danmakuController?.removeListener(_onDanmakuUpdate);
@@ -1469,6 +1464,23 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _subtitleTimer?.cancel();
     _subtitleLoadGeneration++;
     super.dispose();
+  }
+
+  void _applyFullScreenSystemUi({required bool fullScreen}) {
+    if (fullScreen) {
+      unawaited(
+        SystemChrome.setPreferredOrientations(const [
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]),
+      );
+      unawaited(
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+      );
+      return;
+    }
+    unawaited(SystemChrome.setPreferredOrientations(const []));
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   }
 
   void _videoListener() {
@@ -2072,7 +2084,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Widget _buildSubtitleControl(double iconSize) {
-    return AppIconButton(
+    return _PlayerIconButton(
+      key: const Key('playback_subtitles_button'),
       icon: Icons.closed_caption_rounded,
       tooltip: context.l10n.subtitles,
       onPressed: _showSubtitleMenu,
@@ -2093,13 +2106,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Widget _buildDanmakuControl(double iconSize) {
-    return AppIconButton(
+    return _PlayerIconButton(
+      key: const Key('playback_danmaku_button'),
       icon: Icons.comment_rounded,
       tooltip: _showDanmaku
           ? context.l10n.disableDanmaku
           : context.l10n.enableDanmaku,
       selected: _showDanmaku,
-      style: _showDanmaku ? AppIconButtonStyle.tonal : AppIconButtonStyle.ghost,
       onPressed: () => setState(() => _showDanmaku = !_showDanmaku),
       padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
       constraints: widget.isFullScreen ? null : const BoxConstraints(),
@@ -2108,7 +2121,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Widget _buildSyncControl(double iconSize) {
-    return AppIconButton(
+    return _PlayerIconButton(
+      key: const Key('playback_sync_button'),
       icon: widget.isLive ? Icons.refresh_rounded : Icons.sync_rounded,
       tooltip: widget.isLive ? context.l10n.reload : context.l10n.sync,
       onPressed: widget.onSync,
@@ -2119,7 +2133,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Widget _buildFreeModeSettingsControl(double iconSize) {
-    return AppIconButton(
+    return _PlayerIconButton(
       key: const Key('free_mode_settings_button'),
       icon: Icons.settings_rounded,
       tooltip: context.l10n.freeModeSettings,
@@ -2131,7 +2145,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Widget _buildFullscreenControl(double iconSize) {
-    return AppIconButton(
+    return _PlayerIconButton(
+      key: const Key('playback_fullscreen_button'),
       icon: widget.isFullScreen
           ? (widget.exitFullScreenIcon ?? Icons.fullscreen_exit)
           : (widget.fullScreenIcon ?? Icons.fullscreen),
@@ -2146,7 +2161,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Widget _buildSendDanmakuControl() {
-    return AppIconButton(
+    return _PlayerIconButton(
       icon: Icons.send_rounded,
       onPressed: _showDanmakuInput,
       tooltip: context.l10n.sendDanmaku,
@@ -2467,7 +2482,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _scheduleVolumeOverlayHide() {
     _volumeOverlayHideTimer?.cancel();
-    _volumeOverlayHideTimer = Timer(const Duration(milliseconds: 180), () {
+    _volumeOverlayHideTimer = Timer(const Duration(milliseconds: 500), () {
       if (mounted && _showVolumeSlider) {
         _showVolumeSlider = false;
         _volumeOverlayEntry?.markNeedsBuild();
@@ -2540,7 +2555,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   .toDouble(),
                               min: 0,
                               max: 1,
+                              onChangeStart: (_) => _showVolumeOverlay(),
                               onChanged: _setPlayerVolume,
+                              onChangeEnd: (_) => _scheduleVolumeOverlayHide(),
                             ),
                           ),
                         ),
@@ -2566,7 +2583,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       child: MouseRegion(
         onEnter: (_) => _showVolumeOverlay(),
         onExit: (_) => _scheduleVolumeOverlayHide(),
-        child: AppIconButton(
+        child: _PlayerIconButton(
           key: const Key('desktop_volume_button'),
           tooltip: videoValue.volume <= 0.01
               ? context.l10n.unmute
@@ -3374,7 +3391,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                           ],
                                         if (hiddenControls.isNotEmpty) ...[
                                           SizedBox(width: horizontalGap),
-                                          AppIconButton(
+                                          _PlayerIconButton(
                                             key: const Key(
                                               'playback_overflow_button',
                                             ),

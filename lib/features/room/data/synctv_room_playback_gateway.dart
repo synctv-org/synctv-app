@@ -7,10 +7,6 @@ final class SyncTvRoomPlaybackGateway implements RoomPlaybackGateway {
   const SyncTvRoomPlaybackGateway();
 
   @override
-  Future<SyncTvPlaybackStatus> getStatus(String roomId) =>
-      SyncTvService.getPlaybackStatus(roomId);
-
-  @override
   Future<SyncTvPlaybackStatus> playPrevious(String roomId) =>
       SyncTvService.playPrevious(roomId);
 

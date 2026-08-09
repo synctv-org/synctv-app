@@ -363,12 +363,14 @@ class RoomRealtimeSession {
     required this.messages,
     required this.events,
     required this.reconnects,
+    this.disconnections = const Stream<void>.empty(),
   });
 
   final void Function(List<int> bytes) send;
   final Stream<RoomRealtimeMessage> messages;
   final Stream<RealtimeEventLogEntry> events;
   final Stream<void> reconnects;
+  final Stream<void> disconnections;
 }
 
 class RoomRealtimeChatEntry {

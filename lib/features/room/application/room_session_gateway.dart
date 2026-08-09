@@ -5,6 +5,8 @@ abstract interface class RoomSessionGateway {
 
   bool get isGuestSession;
 
+  bool get allowInsecureTls;
+
   Stream<void> get authErrors;
 
   Future<void> syncServerTime({bool refresh = false});

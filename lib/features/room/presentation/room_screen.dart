@@ -15,9 +15,9 @@ import 'package:synctv_app/features/room/presentation/playback_control_reporter.
 import 'package:synctv_app/features/room/domain/playback_operation_tracker.dart';
 import 'package:synctv_app/features/room/presentation/models/playlist_source_presentation.dart';
 import 'package:synctv_app/features/room/presentation/models/playback_player_update.dart';
+import 'package:synctv_app/features/room/presentation/models/room_ui_capabilities.dart';
 import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_target.dart';
-import 'package:synctv_app/features/room/domain/playback_resource_refresh.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
 import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
@@ -191,11 +191,7 @@ class _RoomScreenState extends State<RoomScreen>
   VideoPlayerController? _recoveringErroredVideoController;
   bool _isDrainingEndedLiveStream = false;
   Timer? _endedLiveStreamDrainTimer;
-  Timer? _playbackResourceRefreshTimer;
-  String _playbackResourceRefreshKey = '';
-  int _playbackResourceRefreshAttempts = 0;
   int _forcedVideoLoadGeneration = 0;
-  Future<bool>? _currentPlaybackLoad;
   final LatestAsyncOperationCoordinator _videoInitialization =
       LatestAsyncOperationCoordinator();
   final SerialAsyncOperationCoordinator _p2pEngineOperations =
@@ -221,6 +217,8 @@ class _RoomScreenState extends State<RoomScreen>
       StreamController<RealtimeEventLogEntry>.broadcast();
   final StreamController<void> _realtimeReconnectBus =
       StreamController<void>.broadcast();
+  final StreamController<void> _realtimeDisconnectBus =
+      StreamController<void>.broadcast();
   String _lastChatEventId = '';
   String? _hoveredChatMessageId;
   String? _activeChatMessageId;
@@ -240,6 +238,7 @@ class _RoomScreenState extends State<RoomScreen>
   List<SyncTvUser> _mentionCandidates = [];
   List<ChatMentionInfo> _pendingChatMentions = [];
   AdminRoomMember? _selfMember;
+  bool _membershipObservationStarted = false;
   SyncTvRoomSettings _roomSettings = SyncTvRoomSettings();
   bool _playModeUpdateInFlight = false;
   int _roomOnlineCount = 0;
@@ -334,28 +333,17 @@ class _RoomScreenState extends State<RoomScreen>
 
   bool get _showRealtimeDebugTab => kDebugMode;
   int get _roomTabCount => 3 + (_showRealtimeDebugTab ? 1 : 0);
-  bool get _canManageRoom {
-    final user = _currentUser;
-    if (user == null) return false;
-    if (user.id.isNotEmpty && user.id == widget.room.creatorId) return true;
-    final isSystemAdmin =
-        user.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
-        user.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
-    if (isSystemAdmin) return true;
-    final selfRole = _selfMember?.role;
-    return selfRole ==
-            common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value ||
-        selfRole == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
-  }
+  RoomUiCapabilities get _capabilities => RoomUiCapabilities(
+    room: widget.room,
+    currentUser: _currentUser,
+    selfMember: _selfMember,
+    allowDiscoveryFallback: !_membershipObservationStarted,
+  );
+
+  bool get _canManageRoom => _capabilities.canManageRoomSettings;
 
   bool get _canManagePlaybackMode {
-    final member = _selfMember;
-    if (member != null &&
-        (member.permissions & RoomEffectivePermissions.manageRoomSettings) !=
-            0) {
-      return true;
-    }
-    return _canManageRoom;
+    return _capabilities.canManageRoomSettings;
   }
 
   bool get _isCurrentPlaybackLive => _currentStatus?.entry?.live == true;
@@ -367,89 +355,44 @@ class _RoomScreenState extends State<RoomScreen>
             status.playingPlaylistId.isNotEmpty);
   }
 
-  bool get _isRoomCreator =>
-      _currentUser?.id.isNotEmpty == true &&
-      _currentUser?.id == widget.room.creatorId;
-  bool get _canNavigatePlayback {
-    final member = _selfMember;
-    if (member != null) {
-      return (member.permissions & RoomEffectivePermissions.navigatePlayback) !=
-          0;
-    }
-    return _isRoomCreator;
-  }
-
-  bool get _canControlPlaybackState {
-    final member = _selfMember;
-    if (member != null) {
-      return (member.permissions &
-              RoomEffectivePermissions.controlPlaybackState) !=
-          0;
-    }
-    return _isRoomCreator;
-  }
+  bool get _isRoomCreator => _capabilities.isRoomCreator;
+  bool get _canNavigatePlayback => _capabilities.canNavigatePlayback;
+  bool get _canControlPlaybackState => _capabilities.canControlPlaybackState;
 
   bool get _canUseVoiceChat {
     if (!_roomSettings.voiceChatEnabled) return false;
-    final member = _selfMember;
-    if (member != null) {
-      return (member.permissions & RoomEffectivePermissions.useVoiceChat) != 0;
-    }
-    return _isRoomCreator;
+    return _capabilities.canUseVoiceChat;
   }
 
   bool get _canUseP2pMedia {
     if (!_roomSettings.p2pMediaEnabled) return false;
-    final member = _selfMember;
-    if (member != null) {
-      return (member.permissions & RoomEffectivePermissions.useP2pMedia) != 0;
-    }
-    return _isRoomCreator;
+    return _capabilities.canUseP2pMedia;
   }
 
-  bool get _canBrowseLibrary =>
-      _hasEffectivePermission(RoomEffectivePermissions.browseLibrary);
-  bool get _canViewMembers =>
-      _hasEffectivePermission(RoomEffectivePermissions.viewMembers);
-  bool get _canViewChatHistory =>
-      _hasEffectivePermission(RoomEffectivePermissions.viewChatHistory);
-  bool get _canSendChatMessages =>
-      _hasEffectivePermission(RoomEffectivePermissions.sendChatMessages);
+  bool get _canBrowseLibrary => _capabilities.canBrowseLibrary;
+  bool get _canViewMembers => _capabilities.canViewMembers;
+  bool get _canViewChatHistory => _capabilities.canViewChatHistory;
+  bool get _canSendChatMessages => _capabilities.canSendChatMessages;
+  bool get _canManageOwnMedia => _capabilities.canManageOwnMedia;
+  bool get _canDeleteMedia => _capabilities.canDeleteMedia;
+  bool get _canClearMedia => _capabilities.canClearMedia;
+  bool get _canRemoveMembers => _capabilities.canRemoveMembers;
+  bool get _canManageMemberPermissions =>
+      _capabilities.canManageMemberPermissions;
+  bool get _canDeleteChatMessages => _capabilities.canDeleteChatMessages;
 
-  bool _hasEffectivePermission(int permission) {
-    final member = _selfMember;
-    if (member != null) return (member.permissions & permission) != 0;
-    return _isRoomCreator;
-  }
-
-  bool get _canViewPlaybackHistory {
-    final member = _selfMember;
-    if (member == null) return _isRoomCreator;
-    if ((member.permissions & RoomEffectivePermissions.viewPlaybackHistory) ==
-        0) {
-      return false;
-    }
-    return member.role ==
-            common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value ||
-        member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
-  }
+  bool get _canViewPlaybackHistory => _capabilities.canViewPlaybackHistory;
 
   Future<void> _navigatePlayback({required bool previous}) async {
     if (_playbackNavigationInFlight || !_canNavigatePlayback) return;
     setState(() => _playbackNavigationInFlight = true);
     try {
-      final status = previous
-          ? await _playbackGateway.playPrevious(widget.room.roomId)
-          : await _playbackGateway.playNext(widget.room.roomId);
+      if (previous) {
+        await _playbackGateway.playPrevious(widget.room.roomId);
+      } else {
+        await _playbackGateway.playNext(widget.room.roomId);
+      }
       if (!mounted) return;
-      await _applyPlaybackStatus(
-        _mergePlaybackStatus(status, incomingHasTiming: true),
-      );
-      if (!mounted) return;
-      // Navigation returns state identity without resolved playback URLs. Load
-      // a fresh resource snapshot even when an older initial load is active.
-      // Its lower version cannot overwrite the navigation response above.
-      await _loadCurrentPlaybackOnce();
     } catch (error) {
       if (mounted) {
         AppNotifications.showError(context, error.toString());
@@ -503,7 +446,16 @@ class _RoomScreenState extends State<RoomScreen>
       _handleRealtimeLogMaxEntriesChanged,
     );
     _danmakuController.onStreamAccessExpired = () {
-      unawaited(_loadCurrentPlayback());
+      final status = _currentStatus;
+      if (status?.entry?.url.isNotEmpty == true) {
+        unawaited(
+          _applyPlaybackStatus(
+            status!,
+            forceReloadVideo: true,
+            forceSeek: true,
+          ),
+        );
+      }
     };
 
     // Initialize independent voice-chat and P2P-media sessions.
@@ -875,6 +827,14 @@ class _RoomScreenState extends State<RoomScreen>
     final channel = _channel;
     if (channel == null || _selfMember == null) return;
 
+    if (!_canSelectCurrentPlaylistEntries &&
+        (_isSelectionMode || _selectedMediaEntryIds.isNotEmpty)) {
+      setState(() {
+        _isSelectionMode = false;
+        _selectedMediaEntryIds.clear();
+      });
+    }
+
     if (_canBrowseLibrary) {
       if (!_playlistItemsObserved) {
         _playlistItemsObserved = _sendRealtimeMessage(
@@ -948,7 +908,6 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _handleRoomSessionClosed(String message) async {
     _reconnectTimer?.cancel();
-    _cancelPlaybackResourceRefresh();
     await _disposeVideoController();
     await _realtimeSubscription?.cancel();
     _realtimeSubscription = null;
@@ -1033,128 +992,6 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Future<void> _loadCurrentPlayback() async {
-    await _loadCurrentPlaybackTracked();
-  }
-
-  Future<bool> _loadCurrentPlaybackTracked() {
-    final activeLoad = _currentPlaybackLoad;
-    if (activeLoad != null) return activeLoad;
-
-    late final Future<bool> trackedLoad;
-    trackedLoad = _loadCurrentPlaybackOnce().whenComplete(() {
-      if (identical(_currentPlaybackLoad, trackedLoad)) {
-        _currentPlaybackLoad = null;
-      }
-    });
-    _currentPlaybackLoad = trackedLoad;
-    return trackedLoad;
-  }
-
-  Future<bool> _loadCurrentPlaybackOnce() async {
-    try {
-      final status = await _playbackGateway.getStatus(widget.room.roomId);
-      if (!mounted) return false;
-      await _applyPlaybackStatus(
-        _mergePlaybackStatus(
-          status,
-          incomingHasTiming: status.entry?.url.isEmpty != true,
-        ),
-      );
-      return true;
-    } catch (e) {
-      debugPrint('Load current playback error: $e');
-      return false;
-    }
-  }
-
-  void _cancelPlaybackResourceRefresh() {
-    _playbackResourceRefreshTimer?.cancel();
-    _playbackResourceRefreshTimer = null;
-    _playbackResourceRefreshKey = '';
-    _playbackResourceRefreshAttempts = 0;
-  }
-
-  String? _refreshablePlaybackResourceKey(RoomMediaEntry? entry) {
-    final option = entry?.selectedPlaybackUrlOption;
-    final selectedMediaExpireAt = _videoPlayerController == null
-        ? option?.expireAt
-        : _videoPlayerSourceExpireAt;
-    final expireAt = earliestPlaybackResourceExpiration(
-      selectedMediaExpireAt: selectedMediaExpireAt,
-      playbackExpireAt: entry?.playbackExpireAt,
-    );
-    if (entry == null ||
-        !entry.isLiveStreamPlayable ||
-        expireAt == null ||
-        expireAt <= 0) {
-      return null;
-    }
-    return [
-      entry.id,
-      entry.playbackMediaId,
-      entry.playbackPlaylistId,
-      entry.playbackTarget ?? '',
-      entry.selectedPlaybackMode,
-      entry.selectedPlaybackUrlIndex,
-      _videoPlayerSourceKey ?? option?.url ?? entry.url,
-      expireAt,
-    ].join('\u001f');
-  }
-
-  void _schedulePlaybackResourceRefresh(RoomMediaEntry? entry) {
-    final key = _refreshablePlaybackResourceKey(entry);
-    if (key == null) {
-      _cancelPlaybackResourceRefresh();
-      return;
-    }
-    if (key == _playbackResourceRefreshKey &&
-        _playbackResourceRefreshTimer?.isActive == true) {
-      return;
-    }
-    if (key != _playbackResourceRefreshKey) {
-      _playbackResourceRefreshTimer?.cancel();
-      _playbackResourceRefreshTimer = null;
-      _playbackResourceRefreshKey = key;
-      _playbackResourceRefreshAttempts = 0;
-    }
-    final currentEntry = entry!;
-    final selectedMediaExpireAt = _videoPlayerController == null
-        ? currentEntry.selectedPlaybackUrlOption?.expireAt
-        : _videoPlayerSourceExpireAt;
-    final expireAt = earliestPlaybackResourceExpiration(
-      selectedMediaExpireAt: selectedMediaExpireAt,
-      playbackExpireAt: currentEntry.playbackExpireAt,
-    );
-    if (expireAt == null) return;
-    final expiryDelay = playbackResourceRefreshDelay(
-      expireAt: expireAt,
-      now: SyncedClock.now(),
-    );
-    if (expiryDelay == null) return;
-    final retryDelay = _playbackResourceRefreshAttempts == 0
-        ? Duration.zero
-        : playbackResourceRefreshRetryDelay(
-            attempt: _playbackResourceRefreshAttempts,
-            expireAt: expireAt,
-            now: SyncedClock.now(),
-          );
-    final delay = expiryDelay > retryDelay ? expiryDelay : retryDelay;
-    _playbackResourceRefreshTimer = Timer(
-      delay,
-      () => unawaited(_refreshPlaybackResource(key)),
-    );
-  }
-
-  Future<void> _refreshPlaybackResource(String expectedKey) async {
-    if (!mounted || expectedKey != _playbackResourceRefreshKey) return;
-    _playbackResourceRefreshTimer = null;
-    _playbackResourceRefreshAttempts++;
-    await _loadCurrentPlaybackTracked();
-    if (!mounted) return;
-    _schedulePlaybackResourceRefresh(_currentStatus?.entry);
-  }
-
   void _sortMembers(List<SyncTvUser> members) {
     members.sort((a, b) {
       if (a.id == widget.room.creatorId) return -1;
@@ -1237,6 +1074,8 @@ class _RoomScreenState extends State<RoomScreen>
     _reconnectTimer?.cancel();
     RoomRealtimeChannel? connectingChannel;
 
+    _invalidateRealtimeMembership();
+
     try {
       final previousSubscription = _realtimeSubscription;
       final previousChannel = _channel;
@@ -1280,16 +1119,12 @@ class _RoomScreenState extends State<RoomScreen>
         onError: (error) {
           if (_isDisposing) return;
           debugPrint('Realtime stream error: $error');
-          if (_channel != channel) return;
-          _channel = null;
-          _scheduleReconnect();
+          _handleRealtimeTransportClosed(channel);
         },
         onDone: () {
           if (_isDisposing) return;
           debugPrint('Realtime stream closed');
-          if (_channel != channel) return;
-          _channel = null;
-          _scheduleReconnect();
+          _handleRealtimeTransportClosed(channel);
         },
       );
       await channel.ready;
@@ -1299,12 +1134,32 @@ class _RoomScreenState extends State<RoomScreen>
         _realtimeReconnectBus.add(null);
       }
       _syncMemberTabObservation();
-      unawaited(_loadCurrentPlayback());
     } catch (e) {
       debugPrint('Realtime stream connection error: $e');
       if (_channel == connectingChannel) _channel = null;
       _scheduleReconnect();
     }
+  }
+
+  void _invalidateRealtimeMembership() {
+    _membershipObservationStarted = true;
+    if (_selfMember == null) return;
+    if (mounted) {
+      setState(() => _selfMember = null);
+    } else {
+      _selfMember = null;
+    }
+  }
+
+  void _handleRealtimeTransportClosed(RoomRealtimeChannel channel) {
+    if (_channel != channel) return;
+    _channel = null;
+    _realtimeSubscription = null;
+    _invalidateRealtimeMembership();
+    if (!_realtimeDisconnectBus.isClosed) {
+      _realtimeDisconnectBus.add(null);
+    }
+    _scheduleReconnect();
   }
 
   Future<void> _disposePreviousRealtimeConnection(
@@ -1461,11 +1316,17 @@ class _RoomScreenState extends State<RoomScreen>
     } else if (type == RoomRealtimeMessageKind.sync ||
         type == RoomRealtimeMessageKind.status ||
         type == RoomRealtimeMessageKind.checkStatus) {
+      if (type == RoomRealtimeMessageKind.checkStatus &&
+          message.resourceEvent &&
+          message.resourceObserveId == 'chat_events') {
+        if (_canViewChatHistory) {
+          unawaited(_loadChatHistory());
+          unawaited(_loadPinnedChatMessages());
+        }
+        return;
+      }
       final playbackStatus = message.playbackStatus;
       if (playbackStatus != null) {
-        final shouldLoadSnapshot = _needsPlaybackResourceSnapshot(
-          playbackStatus,
-        );
         final mergedStatus = _mergePlaybackStatus(
           playbackStatus,
           incomingHasTiming: true,
@@ -1478,9 +1339,6 @@ class _RoomScreenState extends State<RoomScreen>
           _applyPlaybackStatus(mergedStatus);
         } else if (operationResolution.stateToApply case final state?) {
           _applyPlaybackStatus(state, skipPlayerSync: true);
-        }
-        if (shouldLoadSnapshot) {
-          unawaited(_loadCurrentPlayback());
         }
       } else if (message.status != null) {
         final status = message.status!;
@@ -1600,7 +1458,6 @@ class _RoomScreenState extends State<RoomScreen>
         _rejectLocalPlaybackOperation(error.clientOperationId);
       }
       if (error?.isConflict == true) {
-        unawaited(_refreshPlaybackAfterConflict());
         return;
       }
       final errorMsg = error?.message ?? '';
@@ -1905,25 +1762,6 @@ class _RoomScreenState extends State<RoomScreen>
         () => _setActiveP2pResource(_p2pSubtitleRole, null),
       ),
     );
-  }
-
-  bool _needsPlaybackResourceSnapshot(SyncTvPlaybackStatus incoming) {
-    if (incoming.entry != null && incoming.entry!.url.isNotEmpty) {
-      return false;
-    }
-    final current = _currentStatus;
-    final incomingHasTarget =
-        incoming.playingMediaId.isNotEmpty ||
-        incoming.playingPlaylistId.isNotEmpty ||
-        incoming.targetHash.isNotEmpty;
-    if (!incomingHasTarget) return false;
-    if (current == null || current.entry == null) return true;
-    return (incoming.playingMediaId.isNotEmpty &&
-            incoming.playingMediaId != current.playingMediaId) ||
-        (incoming.playingPlaylistId.isNotEmpty &&
-            incoming.playingPlaylistId != current.playingPlaylistId) ||
-        (incoming.targetHash.isNotEmpty &&
-            incoming.targetHash != current.targetHash);
   }
 
   void _applyMediaLibrary(RoomMediaLibraryPage mediaLibrary) {
@@ -2470,20 +2308,15 @@ class _RoomScreenState extends State<RoomScreen>
     }
     _recoveringErroredVideoController = controller;
     try {
-      final refreshed = await _loadCurrentPlaybackTracked();
-      if (!mounted ||
-          !refreshed ||
-          !identical(_videoPlayerController, controller) ||
-          !controller.value.hasError) {
-        return;
+      final status = _currentStatus;
+      if (status?.entry?.url.isNotEmpty == true) {
+        await _applyPlaybackStatus(
+          status!,
+          forceReloadVideo: true,
+          forceSeek: true,
+        );
       }
-      final latestStatus = _currentStatus;
-      if (latestStatus == null) return;
-      await _applyPlaybackStatus(
-        latestStatus,
-        forceReloadVideo: true,
-        forceSeek: true,
-      );
+      await Future<void>.delayed(const Duration(seconds: 1));
     } finally {
       if (identical(_recoveringErroredVideoController, controller)) {
         _recoveringErroredVideoController = null;
@@ -2611,18 +2444,6 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  void _requestPlaybackSnapshot() {
-    try {
-      for (final bytes in _realtimeProtocol.encodePlaybackObservations(
-        includeResolvedPlayback: !_sessionGateway.isGuestSession,
-      )) {
-        _sendRealtimeMessage(bytes);
-      }
-    } catch (e) {
-      debugPrint('Request playback snapshot error: $e');
-    }
-  }
-
   Future<void> _maybeFetchPlaybackDanmaku(
     double positionSeconds, {
     bool force = false,
@@ -2701,6 +2522,10 @@ class _RoomScreenState extends State<RoomScreen>
     final sourceChanged =
         previousStatus != null &&
         (!previousStatus.hasSamePlaybackSource(status) || generationChanged);
+    final reloadErroredController =
+        _videoPlayerController?.value.hasError == true;
+    final effectiveForceReloadVideo =
+        forceReloadVideo || reloadErroredController;
     if (oldMovieId != nextMovieId || sourceChanged) {
       _danmakuController.clear();
       _playbackDanmakuWindow = null;
@@ -2741,7 +2566,7 @@ class _RoomScreenState extends State<RoomScreen>
                   now: SyncedClock.now(),
                 ),
               )),
-      forceReload: forceReloadVideo,
+      forceReload: effectiveForceReloadVideo,
     );
     if (_videoPlayerController != null &&
         newSourceKey != null &&
@@ -2757,7 +2582,6 @@ class _RoomScreenState extends State<RoomScreen>
         _videoError = null;
       }
     });
-    _schedulePlaybackResourceRefresh(status.entry);
     _reconcileActiveP2pTickets(status.entry);
 
     if (playerUpdate == PlaybackPlayerUpdateAction.drain) {
@@ -2777,7 +2601,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (skipPlayerSync &&
         canPlayEntry &&
         !generationChanged &&
-        !forceReloadVideo) {
+        !effectiveForceReloadVideo) {
       _updateDanmakuResources(
         previousEntry: previousEntry,
         nextEntry: nextEntry,
@@ -2793,7 +2617,6 @@ class _RoomScreenState extends State<RoomScreen>
         sourceExpireAt: nextEntry.selectedPlaybackUrlOption?.expireAt,
         forceReload: playerUpdate == PlaybackPlayerUpdateAction.reload,
       );
-      _schedulePlaybackResourceRefresh(_currentStatus?.entry);
       if (!mounted ||
           !_isCurrentPlaybackSource(newUrl, nextEntry.liveStreamGenerationId)) {
         return;
@@ -2887,22 +2710,6 @@ class _RoomScreenState extends State<RoomScreen>
         currentUrl != null &&
         currentUrl.isNotEmpty &&
         _resourceUrlResolver.resolve(currentUrl) == url;
-  }
-
-  Future<void> _refreshPlaybackAfterConflict() async {
-    try {
-      final status = await _playbackGateway.getStatus(widget.room.roomId);
-      if (!mounted) return;
-      await _applyPlaybackStatus(
-        _mergePlaybackStatus(
-          status,
-          incomingHasTiming: status.entry?.url.isEmpty != true,
-        ),
-        forceSeek: true,
-      );
-    } catch (e) {
-      debugPrint('Refresh playback after conflict error: $e');
-    }
   }
 
   Future<void> _initVideo(
@@ -3325,7 +3132,6 @@ class _RoomScreenState extends State<RoomScreen>
     _diagnosticsTimer?.cancel();
     _chatHighlightTimer?.cancel();
     _reconnectTimer?.cancel();
-    _cancelPlaybackResourceRefresh();
     unawaited(_channel?.close());
     _messageController.dispose();
     _chatScrollController.dispose();
@@ -3343,6 +3149,7 @@ class _RoomScreenState extends State<RoomScreen>
     _realtimeMessageBus.close();
     _realtimeEventBus.close();
     _realtimeReconnectBus.close();
+    _realtimeDisconnectBus.close();
     super.dispose();
   }
 
@@ -3731,31 +3538,20 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _reloadCurrentPlaybackUrl() async {
-    try {
-      final status = await _playbackGateway.getStatus(widget.room.roomId);
-      if (!mounted) return;
+    final status = _currentStatus;
+    if (status?.entry?.url.isNotEmpty == true) {
       await _applyPlaybackStatus(
-        _mergePlaybackStatus(
-          status,
-          incomingHasTiming: status.entry?.url.isEmpty != true,
-        ),
+        status!,
         forceReloadVideo: true,
+        forceSeek: true,
       );
-      if (mounted) {
-        AppNotifications.showInfo(
-          context,
-          context.l10n.playbackAddressReloaded,
-          duration: const Duration(seconds: 1),
-        );
-      }
-    } catch (e) {
-      debugPrint('Reload playback URL error: $e');
-      if (mounted) {
-        AppNotifications.showError(
-          context,
-          context.l10n.reloadPlaybackAddressFailed,
-        );
-      }
+    }
+    if (mounted) {
+      AppNotifications.showInfo(
+        context,
+        context.l10n.playbackAddressReloaded,
+        duration: const Duration(seconds: 1),
+      );
     }
   }
 
@@ -5075,7 +4871,7 @@ class _RoomScreenState extends State<RoomScreen>
         icon: message.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
         onPressed: () => _toggleChatPin(message),
       ),
-      if (isMine || _canManageRoom)
+      if (isMine || _canDeleteChatMessages)
         _buildChatActionIcon(
           tooltip: context.l10n.delete,
           icon: Icons.delete_outline_rounded,
@@ -5242,7 +5038,7 @@ class _RoomScreenState extends State<RoomScreen>
       anchorX: position.dx,
       anchorY: position.dy,
       reactionCount: commonChatReactionKeys.length,
-      actionCount: isMine || _canManageRoom ? 5 : 4,
+      actionCount: isMine || _canDeleteChatMessages ? 5 : 4,
     );
     await showGeneralDialog<void>(
       context: context,
@@ -5349,7 +5145,7 @@ class _RoomScreenState extends State<RoomScreen>
                   onClose: onClose,
                   onPressed: () => _toggleChatPin(message),
                 ),
-                if (isMine || _canManageRoom)
+                if (isMine || _canDeleteChatMessages)
                   _buildContextActionIcon(
                     tooltip: context.l10n.delete,
                     icon: Icons.delete_outline_rounded,
@@ -5462,6 +5258,8 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _deleteChatMessage(RoomRealtimeChatEntry message) async {
     if (message.id.isEmpty) return;
+    final isMine = _currentUser != null && message.userId == _currentUser!.id;
+    if (!isMine && !_canDeleteChatMessages) return;
     final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AppConfirmDialog(
@@ -5810,8 +5608,9 @@ class _RoomScreenState extends State<RoomScreen>
 
   Widget _buildPlaylistTab() {
     const primaryColor = Color(0xFF5D5FEF);
-    final canMutatePlaylist = _canMutateCurrentPlaylist;
-    final selectionMode = _isSelectionMode && canMutatePlaylist;
+    final canAddMedia = _canAddMediaToCurrentPlaylist;
+    final canSelectEntries = _canSelectCurrentPlaylistEntries;
+    final selectionMode = _isSelectionMode && canSelectEntries;
 
     return Column(
       children: [
@@ -5863,12 +5662,13 @@ class _RoomScreenState extends State<RoomScreen>
                           : context.l10n.refresh,
                     ),
                   _buildPlaylistViewModeMenu(),
-                  if (canMutatePlaylist) ...[
+                  if (canAddMedia)
                     AppIconButton(
                       icon: Icons.add_rounded,
                       onPressed: _showAddMediaDialog,
                       tooltip: context.l10n.add,
                     ),
+                  if (canSelectEntries)
                     AppIconButton(
                       icon: selectionMode
                           ? Icons.close_rounded
@@ -5886,7 +5686,6 @@ class _RoomScreenState extends State<RoomScreen>
                           ? AppIconButtonStyle.tonal
                           : AppIconButtonStyle.ghost,
                     ),
-                  ],
                 ],
               ),
               const SizedBox(height: 6),
@@ -5906,7 +5705,7 @@ class _RoomScreenState extends State<RoomScreen>
                 ),
                 const Spacer(),
                 AppActionButton(
-                  onPressed: _selectedMediaEntryIds.isEmpty
+                  onPressed: !_canDeleteCurrentSelection
                       ? null
                       : _deleteSelectedMediaEntries,
                   label: context.l10n.delete,
@@ -5920,7 +5719,7 @@ class _RoomScreenState extends State<RoomScreen>
               ? const AppLoadingIndicator()
               : _mediaEntries.isEmpty
               ? PlaylistEmptyState(
-                  onAdd: canMutatePlaylist ? _showAddMediaDialog : null,
+                  onAdd: canAddMedia ? _showAddMediaDialog : null,
                   compact: true,
                 )
               : _buildPlaylistEntries(primaryColor, selectionMode),
@@ -6449,7 +6248,7 @@ class _RoomScreenState extends State<RoomScreen>
     RoomMediaEntry entry,
     bool selectionMode,
   ) {
-    if (_canMutateCurrentPlaylist &&
+    if (_canSelectCurrentPlaylistEntries &&
         !selectionMode &&
         _isPersistedLibraryEntry(entry)) {
       _enterSelectionMode(entry);
@@ -6668,20 +6467,11 @@ class _RoomScreenState extends State<RoomScreen>
               itemBuilder: (context, index) {
                 final member = _members[index];
 
-                final myMemberInfo = _members
-                    .where((m) => m.id == _currentUser?.id)
-                    .firstOrNull;
-
-                final viewerIsCreator =
-                    _currentUser?.username == widget.room.creator;
+                final viewerIsCreator = _isRoomCreator;
                 final viewerIsRoomAdmin =
-                    myMemberInfo?.role ==
+                    _selfMember?.role ==
                     common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
-                final viewerIsSysAdmin =
-                    _currentUser?.role ==
-                        common_enum.UserRole.USER_ROLE_ROOT.value ||
-                    _currentUser?.role ==
-                        common_enum.UserRole.USER_ROLE_ADMIN.value;
+                final viewerIsSysAdmin = _capabilities.isSystemAdmin;
                 int viewerLevel = 1;
                 if (viewerIsCreator) {
                   viewerLevel = 3;
@@ -6706,11 +6496,13 @@ class _RoomScreenState extends State<RoomScreen>
                 final targetLevel = isTargetCreator
                     ? 3
                     : (isTargetAdmin ? 2 : 1);
-                final canKick = viewerLevel > targetLevel;
+                final canManageRole =
+                    _canManageMemberPermissions && viewerLevel > targetLevel;
+                final canKick = _canRemoveMembers && viewerLevel > targetLevel;
 
                 final memberActions = <Widget>[
                   if (!isMe && !isTargetCreator) ...[
-                    if ((viewerIsCreator || viewerIsRoomAdmin) &&
+                    if (canManageRole &&
                         member.role ==
                             common_enum
                                 .RoomMemberRole
@@ -6724,7 +6516,7 @@ class _RoomScreenState extends State<RoomScreen>
                         iconSize: 18,
                         style: AppIconButtonStyle.tonal,
                       ),
-                    if (viewerIsCreator && isTargetAdmin)
+                    if (canManageRole && isTargetAdmin)
                       AppIconButton(
                         icon: Icons.remove_moderator_outlined,
                         tooltip: context.l10n.removeAdmin,
@@ -6982,14 +6774,12 @@ class _RoomScreenState extends State<RoomScreen>
         final parentId? when parentId.isNotEmpty => parentId,
         _ => currentPlaylist?.playbackPlaylistId ?? '',
       };
-      final playback = await _playbackGateway.switchMedia(
+      await _playbackGateway.switchMedia(
         widget.room.roomId,
         entry.id,
         subPath: entry.subPath,
         playlistId: playlistId,
       );
-      await _applyPlaybackStatus(playback);
-      _requestPlaybackSnapshot();
       if (mounted) {
         AppNotifications.showSuccess(context, context.l10n.switchedAndPlaying);
       }
@@ -7001,7 +6791,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _enterSelectionMode(RoomMediaEntry entry) {
-    if (!_canMutateCurrentPlaylist) return;
+    if (!_canSelectCurrentPlaylistEntries) return;
     setState(() {
       _isSelectionMode = true;
       _selectedMediaEntryIds.clear();
@@ -7010,7 +6800,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _toggleSelection(RoomMediaEntry entry) {
-    if (!_canMutateCurrentPlaylist) return;
+    if (!_canSelectCurrentPlaylistEntries) return;
     if (!_isPersistedLibraryEntry(entry)) return;
     setState(() {
       if (_selectedMediaEntryIds.contains(entry.id)) {
@@ -7025,7 +6815,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _selectAll() {
-    if (!_canMutateCurrentPlaylist) return;
+    if (!_canSelectCurrentPlaylistEntries) return;
     setState(() {
       final selectable = _mediaEntries
           .where(_isPersistedLibraryEntry)
@@ -7059,11 +6849,27 @@ class _RoomScreenState extends State<RoomScreen>
     return playlist.id.startsWith('pl_') ? playlist.id : '';
   }
 
-  bool get _canMutateCurrentPlaylist => !_isInsideProviderTargetScope;
+  bool get _canAddMediaToCurrentPlaylist =>
+      _canManageOwnMedia && !_isInsideProviderTargetScope;
+
+  bool get _canSelectCurrentPlaylistEntries =>
+      (_canDeleteMedia || _canClearMedia) && !_isInsideProviderTargetScope;
+
+  bool get _canDeleteCurrentSelection {
+    if (_selectedMediaEntryIds.isEmpty || _isInsideProviderTargetScope) {
+      return false;
+    }
+    if (_canDeleteMedia) return true;
+    if (!_canClearMedia || _hasMoreMediaEntries) return false;
+    final selectableCount = _mediaEntries
+        .where(_isPersistedLibraryEntry)
+        .length;
+    return selectableCount > 0 &&
+        _selectedMediaEntryIds.length == selectableCount;
+  }
 
   Future<void> _deleteSelectedMediaEntries() async {
-    if (!_canMutateCurrentPlaylist) return;
-    if (_selectedMediaEntryIds.isEmpty) return;
+    if (!_canDeleteCurrentSelection) return;
 
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
@@ -7085,7 +6891,6 @@ class _RoomScreenState extends State<RoomScreen>
 
     if (confirmed == true) {
       try {
-        final canClearScope = _canMutateCurrentPlaylist;
         final selectableCount = _mediaEntries
             .where(_isPersistedLibraryEntry)
             .length;
@@ -7106,19 +6911,21 @@ class _RoomScreenState extends State<RoomScreen>
           }
           return;
         }
-        if (isAllLoadedSelected && !_hasMoreMediaEntries && canClearScope) {
+        if (isAllLoadedSelected && !_hasMoreMediaEntries && _canClearMedia) {
           await _mediaLibraryGateway.clearMediaLibrary(
             widget.room.roomId,
             parentId: _currentPersistedPlaylistId.isEmpty
                 ? null
                 : _currentPersistedPlaylistId,
           );
-        } else {
+        } else if (_canDeleteMedia) {
           await _mediaLibraryGateway.deleteMediaLibraryEntries(
             widget.room.roomId,
             mediaIds: mediaIds,
             playlistIds: playlistIds,
           );
+        } else {
+          return;
         }
 
         setState(() {
@@ -7144,11 +6951,6 @@ class _RoomScreenState extends State<RoomScreen>
       await _playbackGateway.switchMedia(widget.room.roomId, '', subPath: '');
       if (mounted) {
         AppNotifications.showSuccess(context, context.l10n.playbackStopped);
-        await _disposeVideoController();
-        _cancelPlaybackResourceRefresh();
-        setState(() {
-          _currentStatus = null;
-        });
       }
     } catch (e) {
       if (mounted) {
@@ -7195,6 +6997,7 @@ class _RoomScreenState extends State<RoomScreen>
                 messages: _realtimeMessageBus.stream,
                 events: _realtimeEventBus.stream,
                 reconnects: _realtimeReconnectBus.stream,
+                disconnections: _realtimeDisconnectBus.stream,
               ),
             ),
           ),
@@ -7219,7 +7022,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _showAddMediaDialog() async {
-    if (!_canMutateCurrentPlaylist) return;
+    if (!_canAddMediaToCurrentPlaylist) return;
     await AddMediaDialog.show(
       context,
       widget.room.roomId,
@@ -7231,6 +7034,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _setRoomAdmin(SyncTvUser member) async {
+    if (!_canManageMemberPermissions) return;
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.makeAdmin,
@@ -7266,6 +7070,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _removeRoomAdmin(SyncTvUser member) async {
+    if (!_canManageMemberPermissions) return;
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.removeAdmin,
@@ -7304,6 +7109,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _kickMember(SyncTvUser member) async {
+    if (!_canRemoveMembers) return;
     final cooldown = await _askKickCooldownSeconds(member.username);
     if (cooldown == null) return;
     try {

@@ -337,19 +337,6 @@ class RoomRealtimeCodec {
     bool includeResolvedPlayback = true,
   }) {
     return [
-      ...encodePlaybackObservations(
-        includeResolvedPlayback: includeResolvedPlayback,
-      ),
-      encodeRoomSettingsObservation(),
-      encodeSelfRoomMemberObservation(),
-      encodeOnlineCountObservation(),
-    ];
-  }
-
-  static List<List<int>> encodePlaybackObservations({
-    bool includeResolvedPlayback = true,
-  }) {
-    return [
       _observe('playback_state', playbackState: client.ObservePlaybackState()),
       if (includeResolvedPlayback)
         _observe(
@@ -358,6 +345,9 @@ class RoomRealtimeCodec {
             playbackClientProfile: defaultPlaybackClientProfile(),
           ),
         ),
+      encodeRoomSettingsObservation(),
+      encodeSelfRoomMemberObservation(),
+      encodeOnlineCountObservation(),
     ];
   }
 

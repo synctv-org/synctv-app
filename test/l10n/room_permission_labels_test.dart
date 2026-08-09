@@ -30,4 +30,27 @@ void main() {
       ['发送聊天/弹幕', '添加媒体', '浏览媒体库', '查看成员列表', '查看聊天历史', '语音聊天', 'P2P 媒体传输'],
     );
   });
+
+  test('administrator permission labels cover the administrator bitspace', () {
+    final english = AppLocalizationsEn();
+
+    final labels = RoomAdminPermissions.values
+        .map(english.roomAdminPermissionLabel)
+        .toList();
+
+    expect(labels, hasLength(21));
+    expect(
+      labels,
+      containsAll(['Delete media', 'Playback control', 'P2P media delivery']),
+    );
+    expect(
+      labels,
+      isNot(contains(RoomAdminPermissions.useP2pMedia.toString())),
+    );
+    expect(RoomAdminPermissions.deleteMedia, RoomMemberPermissions.useP2pMedia);
+    expect(
+      RoomAdminPermissions.useP2pMedia,
+      RoomEffectivePermissions.useP2pMedia,
+    );
+  });
 }

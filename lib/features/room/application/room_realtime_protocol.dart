@@ -38,10 +38,6 @@ abstract interface class RoomRealtimeProtocol {
     bool includeResolvedPlayback = true,
   });
 
-  List<List<int>> encodePlaybackObservations({
-    bool includeResolvedPlayback = true,
-  });
-
   List<int> encodePlaylistObservation({
     String observeId = 'playlist_items',
     String version = '',

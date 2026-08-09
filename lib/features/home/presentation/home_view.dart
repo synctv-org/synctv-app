@@ -283,15 +283,27 @@ class _AccountMenu extends StatelessWidget {
           'account',
           Icons.account_circle_rounded,
           context.l10n.accountCenter,
+          color: theme.colorScheme.onSurface,
         ),
         if (state.isAdmin)
           _menuItem(
             'admin',
             Icons.admin_panel_settings_rounded,
             context.l10n.adminSettings,
+            color: theme.colorScheme.onSurface,
           ),
-        _menuItem('server', Icons.dns_rounded, context.l10n.serverSettings),
-        _menuItem('language', Icons.language_rounded, context.l10n.language),
+        _menuItem(
+          'server',
+          Icons.dns_rounded,
+          context.l10n.serverSettings,
+          color: theme.colorScheme.onSurface,
+        ),
+        _menuItem(
+          'language',
+          Icons.language_rounded,
+          context.l10n.language,
+          color: theme.colorScheme.onSurface,
+        ),
         const PopupMenuDivider(),
         _menuItem(
           'logout',

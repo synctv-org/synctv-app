@@ -2060,21 +2060,6 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.GetPlaybackResponse> getPlayback(
-    String roomId,
-    client.GetPlaybackRequest request,
-  ) {
-    final profile = request.hasPlaybackClientProfile()
-        ? request.playbackClientProfile
-        : defaultPlaybackClientProfile();
-    return _api._send(
-      'GET',
-      '/api/rooms/$roomId/playback',
-      client.GetPlaybackResponse.create,
-      query: _api._playbackClientProfileQuery(profile),
-    );
-  }
-
   Future<client.PlaybackState> updatePlaybackState(
     String roomId,
     client.UpdatePlaybackStateRequest request,
