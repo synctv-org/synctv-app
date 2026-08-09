@@ -902,6 +902,63 @@ void main() {
     },
   );
 
+  testWidgets('more actions stack hidden controls into labeled rows', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            height: 400,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              onFreeModeChanged: (_) {},
+              onEnterPictureInPicture: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('playback_overflow_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mute'), findsOneWidget);
+    expect(find.text('Playback speed'), findsOneWidget);
+    expect(find.text('Turn off danmaku'), findsOneWidget);
+    expect(find.text('Picture in picture'), findsOneWidget);
+
+    final rows = [
+      for (var index = 0; index < 4; index++)
+        tester.getRect(
+          find.byKey(ValueKey('playback_overflow_control_slot_$index')),
+        ),
+    ];
+    expect(rows.map((row) => row.left).toSet(), hasLength(1));
+    for (var index = 1; index < rows.length; index++) {
+      expect(rows[index].top, greaterThan(rows[index - 1].bottom));
+    }
+  });
+
   testWidgets('playback speed menu opens upward on desktop hover', (
     tester,
   ) async {
@@ -957,6 +1014,122 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
     expect(option, findsNothing);
+
+    await tester.tap(speed);
+    await tester.pump();
+    expect(option, findsOneWidget);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pump();
+    expect(option, findsNothing);
+  });
+
+  testWidgets(
+    'playback speed stays open while the pointer remains on the button',
+    (tester) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: buildThemedTestApp,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: 900,
+              height: 500,
+              child: CustomVideoPlayer(
+                volumePreferences: _volumePreferences(),
+                subtitleSource: const _EmptySubtitleSource(),
+                controller: controller,
+                title: 'Video',
+                interactionMode: VideoPlayerInteractionMode.desktop,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final speed = byAppTooltip('Playback speed 1.00x');
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer();
+      final speedCenter = tester.getCenter(speed);
+      await mouse.moveTo(speedCenter);
+      await tester.pump(const Duration(milliseconds: 120));
+      final option = find.byKey(const ValueKey('playback_speed_option_2.0'));
+      expect(option, findsOneWidget);
+
+      await mouse.moveTo(speedCenter);
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(option, findsOneWidget);
+
+      await mouse.moveTo(const Offset(10, 10));
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(option, findsNothing);
+    },
+  );
+
+  testWidgets('volume stays open while the pointer remains on the button', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        volume: 0.5,
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 500,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final button = find.byKey(const Key('desktop_volume_button'));
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer();
+    final buttonCenter = tester.getCenter(button);
+    await mouse.moveTo(buttonCenter);
+    await tester.pump();
+    final slider = find.byKey(const Key('desktop_volume_slider'));
+    expect(slider, findsOneWidget);
+
+    await mouse.moveTo(buttonCenter);
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(slider, findsOneWidget);
+
+    await mouse.moveTo(const Offset(10, 10));
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(slider, findsNothing);
   });
 
   testWidgets(
