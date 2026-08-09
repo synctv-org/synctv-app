@@ -11,6 +11,7 @@ Future<bool?> showServerSettingsDialog({
   required BuildContext context,
   bool requireServer = false,
   String initialAddress = '',
+  VoidCallback? onServerChanged,
 }) {
   return showAppBottomSheet<bool>(
     context: context,
@@ -21,6 +22,7 @@ Future<bool?> showServerSettingsDialog({
     builder: (context) => _ServerSettingsSheet(
       requireServer: requireServer,
       initialAddress: initialAddress,
+      onServerChanged: onServerChanged,
     ),
   );
 }
@@ -29,10 +31,12 @@ class _ServerSettingsSheet extends StatefulWidget {
   const _ServerSettingsSheet({
     required this.requireServer,
     required this.initialAddress,
+    this.onServerChanged,
   });
 
   final bool requireServer;
   final String initialAddress;
+  final VoidCallback? onServerChanged;
 
   @override
   State<_ServerSettingsSheet> createState() => _ServerSettingsSheetState();
@@ -89,6 +93,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     if (!mounted || profile == null) return;
 
     _changed = true;
+    widget.onServerChanged?.call();
     AppNotifications.showSuccess(
       context,
       context.l10n.serverConnected(profile.name),
@@ -107,6 +112,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
       await _gateway.syncServerTime(refresh: true);
       await _loadServerInfo(refresh: true);
       _changed = true;
+      widget.onServerChanged?.call();
       if (mounted) {
         AppNotifications.showSuccess(
           context,
@@ -140,6 +146,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     try {
       await _gateway.removeServer(profile.endpoint);
       _changed = true;
+      widget.onServerChanged?.call();
       if (mounted) {
         AppNotifications.showSuccess(context, context.l10n.serverRemoved);
       }

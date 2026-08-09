@@ -2575,33 +2575,36 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     );
   }
 
-  Widget _buildVolumeSlider() => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10),
-    child: SliderTheme(
-      data: SliderTheme.of(context).copyWith(
-        trackHeight: 3,
-        activeTrackColor: const Color(0xFF5D5FEF),
-        inactiveTrackColor: Colors.white24,
-        thumbColor: Colors.white,
-        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-      ),
-      child: RotatedBox(
-        quarterTurns: 3,
-        child: Slider(
-          key: const Key('desktop_volume_slider'),
-          value: widget.controller.value.volume.clamp(0.0, 1.0).toDouble(),
-          min: 0,
-          max: 1,
-          onChangeStart: (_) {
-            _isVolumeSliderDragging = true;
-            _volumeOverlayHideTimer?.cancel();
-          },
-          onChanged: _setPlayerVolume,
-          onChangeEnd: (_) {
-            _isVolumeSliderDragging = false;
-            if (!_isVolumeControlHovered) _scheduleVolumeMenuHide();
-          },
+  Widget _buildVolumeSlider() => ValueListenableBuilder<VideoPlayerValue>(
+    valueListenable: widget.controller,
+    builder: (context, value, _) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: SliderTheme(
+        data: SliderTheme.of(context).copyWith(
+          trackHeight: 3,
+          activeTrackColor: const Color(0xFF5D5FEF),
+          inactiveTrackColor: Colors.white24,
+          thumbColor: Colors.white,
+          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+          overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+        ),
+        child: RotatedBox(
+          quarterTurns: 3,
+          child: Slider(
+            key: const Key('desktop_volume_slider'),
+            value: value.volume.clamp(0.0, 1.0).toDouble(),
+            min: 0,
+            max: 1,
+            onChangeStart: (_) {
+              _isVolumeSliderDragging = true;
+              _volumeOverlayHideTimer?.cancel();
+            },
+            onChanged: _setPlayerVolume,
+            onChangeEnd: (_) {
+              _isVolumeSliderDragging = false;
+              if (!_isVolumeControlHovered) _scheduleVolumeMenuHide();
+            },
+          ),
         ),
       ),
     ),

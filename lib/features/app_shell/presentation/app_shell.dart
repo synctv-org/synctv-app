@@ -635,22 +635,32 @@ class _AppShellState extends State<AppShell> {
     if (_modalOpen) return;
     _modalOpen = true;
     () async {
+      var refreshedDuringDialog = false;
       try {
         final changed = await showServerSettingsDialog(
           context: context,
           requireServer: requireServer,
+          onServerChanged: () {
+            refreshedDuringDialog = true;
+            _refreshAfterServerChanged();
+          },
         );
-        if (!mounted || changed != true) return;
-        setState(() {
-          _clearRoomSessionState(clearTaxonomy: true);
-          _isLoading = true;
-        });
-        unawaited(_loadRooms(silent: false));
-        if (_isAccountSession) unawaited(_fetchUserInfo());
+        if (!mounted || changed != true || refreshedDuringDialog) return;
+        _refreshAfterServerChanged();
       } finally {
         _modalOpen = false;
       }
     }();
+  }
+
+  void _refreshAfterServerChanged() {
+    if (!mounted) return;
+    setState(() {
+      _clearRoomSessionState(clearTaxonomy: true);
+      _isLoading = true;
+    });
+    unawaited(_loadRooms(silent: false));
+    if (_isAccountSession) unawaited(_fetchUserInfo());
   }
 
   Future<void> _handleLogout() async {

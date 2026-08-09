@@ -775,7 +775,17 @@ void main() {
 
     expect(controller.volumes, isNotEmpty);
     expect(controller.value.volume, greaterThan(0.5));
+    expect(tester.widget<Slider>(slider).value, greaterThan(0.5));
     expect(controller.seekPositions, isEmpty);
+
+    final volumeBeforeDrag = controller.value.volume;
+    await tester.drag(slider, const Offset(0, -24));
+    await tester.pump();
+    expect(controller.value.volume, isNot(closeTo(volumeBeforeDrag, 0.01)));
+    expect(
+      tester.widget<Slider>(slider).value,
+      closeTo(controller.value.volume, 0.001),
+    );
 
     await tester.tapAt(const Offset(20, 20));
     await tester.pumpAndSettle();

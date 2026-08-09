@@ -15,6 +15,7 @@ void main() {
     tester,
   ) async {
     final gateway = _RecordingServerConnectionGateway();
+    var serverChangedCalls = 0;
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en'),
@@ -30,7 +31,10 @@ void main() {
         home: Builder(
           builder: (context) => Scaffold(
             body: TextButton(
-              onPressed: () => showServerSettingsDialog(context: context),
+              onPressed: () => showServerSettingsDialog(
+                context: context,
+                onServerChanged: () => serverChangedCalls++,
+              ),
               child: const Text('Open'),
             ),
           ),
@@ -59,6 +63,7 @@ void main() {
 
     expect(gateway.address, 'https://self-signed.example.test');
     expect(gateway.allowInsecureTls, isTrue);
+    expect(serverChangedCalls, 1);
     expect(gateway.getServerInfoCalls, 2);
     expect(find.textContaining('stale server info'), findsNothing);
     await tester.pump(const Duration(seconds: 3));
