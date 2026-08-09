@@ -1551,6 +1551,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   bool _isVolumeButtonHovered = false;
   bool _isVolumeMenuHovered = false;
   bool _isVolumeSliderDragging = false;
+  bool _isPlaybackSpeedMenuOpen = false;
   bool _isDesktopPointerInside = false;
   Future<bool?>? _overflowMenuFuture;
 
@@ -2213,6 +2214,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         _isSliderDragging ||
         _isVolumeControlHovered ||
         _isVolumeSliderDragging ||
+        _isPlaybackSpeedMenuOpen ||
         _isDesktopPointerInside) {
       return;
     }
@@ -2228,6 +2230,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       const Duration(milliseconds: 900),
       _hideDesktopControlsIfIdle,
     );
+  }
+
+  void _handlePlaybackSpeedMenuVisibilityChanged(bool isVisible) {
+    _isPlaybackSpeedMenuOpen = isVisible;
+    if (isVisible) {
+      _hideTimer?.cancel();
+    } else if (_isDesktopMode && !_isDesktopPointerInside) {
+      _scheduleDesktopControlsHide();
+    }
   }
 
   void _handleDesktopPointerExit(PointerExitEvent event) {
@@ -2321,6 +2332,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       options: _playbackSpeedOptions(),
       dimension: widget.isFullScreen ? 40 : max(32.0, iconSize + 12),
       iconSize: widget.isFullScreen ? 24 : iconSize,
+      onMenuVisibilityChanged: _handlePlaybackSpeedMenuVisibilityChanged,
       onSelected: (speed) async {
         await _setPlaybackSpeedFromUser(speed);
         onChanged?.call();
@@ -4037,6 +4049,7 @@ class _PlaybackSpeedMenuButton extends StatefulWidget {
   final List<_PlaybackSpeedOption> options;
   final double dimension;
   final double iconSize;
+  final ValueChanged<bool> onMenuVisibilityChanged;
   final ValueChanged<double> onSelected;
 
   const _PlaybackSpeedMenuButton({
@@ -4045,6 +4058,7 @@ class _PlaybackSpeedMenuButton extends StatefulWidget {
     required this.options,
     required this.dimension,
     required this.iconSize,
+    required this.onMenuVisibilityChanged,
     required this.onSelected,
   });
 
@@ -4090,7 +4104,7 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
         .clamp(8.0, max(8.0, overlayBox.size.width - menuWidth - 8))
         .toDouble();
     final menuHeight = widget.options.length * 36.0 + 16;
-    final top = (topLeft.dy - menuHeight - 4)
+    final top = (topLeft.dy - menuHeight)
         .clamp(8.0, max(8.0, overlayBox.size.height - menuHeight - 8))
         .toDouble();
 
@@ -4102,6 +4116,7 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
         child: TapRegion(
           groupId: _tapRegionGroup,
           child: MouseRegion(
+            key: const Key('playback_speed_menu_hover_region'),
             onEnter: (_) {
               _isMenuHovered = true;
               _keepMenuOpen();
@@ -4177,6 +4192,7 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
     );
     _menuOverlayEntry = entry;
     overlay.insert(entry);
+    widget.onMenuVisibilityChanged(true);
   }
 
   void openMenuFromOverflow() {
@@ -4188,8 +4204,10 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
     _isMenuHovered = false;
     final entry = _menuOverlayEntry;
     _menuOverlayEntry = null;
-    entry?.remove();
-    entry?.dispose();
+    if (entry == null) return;
+    entry.remove();
+    entry.dispose();
+    widget.onMenuVisibilityChanged(false);
   }
 
   @override

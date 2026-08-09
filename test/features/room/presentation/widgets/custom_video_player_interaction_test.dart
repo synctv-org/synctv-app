@@ -974,6 +974,7 @@ void main() {
       const VideoPlayerValue(
         duration: Duration(minutes: 1),
         isInitialized: true,
+        isPlaying: true,
         size: Size(1920, 1080),
       ),
     );
@@ -1011,11 +1012,19 @@ void main() {
     await tester.pump(const Duration(milliseconds: 120));
 
     final option = find.byKey(const ValueKey('playback_speed_option_2.0'));
+    final menu = find.byKey(const Key('playback_speed_menu_hover_region'));
     expect(option, findsOneWidget);
+    expect(menu, findsOneWidget);
     expect(tester.getRect(option).bottom, lessThan(tester.getRect(speed).top));
+    expect(
+      tester.getRect(menu).bottom,
+      closeTo(tester.getRect(speed).top, 0.01),
+    );
 
-    await mouse.moveTo(tester.getCenter(option));
-    await tester.pump(const Duration(milliseconds: 350));
+    await mouse.moveTo(
+      Offset(tester.getCenter(menu).dx, tester.getRect(menu).bottom - 1),
+    );
+    await tester.pump(const Duration(milliseconds: 1200));
     expect(option, findsOneWidget);
 
     await mouse.moveTo(const Offset(10, 10));
