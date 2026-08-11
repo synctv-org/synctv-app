@@ -1209,7 +1209,7 @@ class _RoomScreenState extends State<RoomScreen>
       final channel = _realtimeChannelFactory.connect(
         widget.room.roomId,
         initialMessages: _realtimeProtocol.encodeInitialObservations(
-          includeResolvedPlayback: !_sessionGateway.isGuestSession,
+          includeResolvedPlayback: true,
         ),
         onOutgoing: _recordRealtimeOutgoing,
         onIncoming: _recordRealtimeIncoming,
