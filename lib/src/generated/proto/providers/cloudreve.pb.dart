@@ -15,6 +15,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $0;
+
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 class LoginRequest extends $pb.GeneratedMessage {
@@ -308,11 +310,13 @@ class ListResponse extends $pb.GeneratedMessage {
     $core.Iterable<FileItem>? content,
     PagePagination? page,
     CursorPagination? cursor,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (content != null) result.content.addAll(content);
     if (page != null) result.page = page;
     if (cursor != null) result.cursor = cursor;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -343,6 +347,8 @@ class ListResponse extends $pb.GeneratedMessage {
         subBuilder: PagePagination.create)
     ..aOM<CursorPagination>(3, _omitFieldNames ? '' : 'cursor',
         subBuilder: CursorPagination.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -396,6 +402,17 @@ class ListResponse extends $pb.GeneratedMessage {
   void clearCursor() => $_clearField(3);
   @$pb.TagNumber(3)
   CursorPagination ensureCursor() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  $0.DiscoveredSource get source => $_getN(3);
+  @$pb.TagNumber(4)
+  set source($0.DiscoveredSource value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSource() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSource() => $_clearField(4);
+  @$pb.TagNumber(4)
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class PagePagination extends $pb.GeneratedMessage {
@@ -685,6 +702,7 @@ class FileItem extends $pb.GeneratedMessage {
     $core.bool? isDir,
     $fixnum.Int64? modified,
     $core.String? thumbnail,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -694,6 +712,7 @@ class FileItem extends $pb.GeneratedMessage {
     if (isDir != null) result.isDir = isDir;
     if (modified != null) result.modified = modified;
     if (thumbnail != null) result.thumbnail = thumbnail;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -719,6 +738,8 @@ class FileItem extends $pb.GeneratedMessage {
     ..aOB(5, _omitFieldNames ? '' : 'isDir')
     ..aInt64(6, _omitFieldNames ? '' : 'modified')
     ..aOS(7, _omitFieldNames ? '' : 'thumbnail')
+    ..aOM<$0.DiscoveredSource>(8, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -801,6 +822,17 @@ class FileItem extends $pb.GeneratedMessage {
   $core.bool hasThumbnail() => $_has(6);
   @$pb.TagNumber(7)
   void clearThumbnail() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource get source => $_getN(7);
+  @$pb.TagNumber(8)
+  set source($0.DiscoveredSource value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSource() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSource() => $_clearField(8);
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource ensureSource() => $_ensure(7);
 }
 
 class GetMeRequest extends $pb.GeneratedMessage {

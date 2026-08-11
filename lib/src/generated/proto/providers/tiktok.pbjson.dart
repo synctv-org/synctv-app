@@ -164,13 +164,15 @@ const ResolveRequest$json = {
   '2': [
     {'1': 'resource', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'resource'},
     {'1': 'instance_name', '3': 2, '4': 1, '5': 9, '10': 'instanceName'},
+    {'1': 'shared', '3': 3, '4': 1, '5': 8, '10': 'shared'},
   ],
 };
 
 /// Descriptor for `ResolveRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List resolveRequestDescriptor = $convert.base64Decode(
     'Cg5SZXNvbHZlUmVxdWVzdBIjCghyZXNvdXJjZRgBIAEoCUIHukgEcgIQAVIIcmVzb3VyY2USIw'
-    'oNaW5zdGFuY2VfbmFtZRgCIAEoCVIMaW5zdGFuY2VOYW1l');
+    'oNaW5zdGFuY2VfbmFtZRgCIAEoCVIMaW5zdGFuY2VOYW1lEhYKBnNoYXJlZBgDIAEoCFIGc2hh'
+    'cmVk');
 
 @$core.Deprecated('Use imageDescriptor instead')
 const Image$json = {
@@ -512,12 +514,12 @@ const ResolveResponse$json = {
       '10': 'variants'
     },
     {
-      '1': 'source_config',
+      '1': 'source',
       '3': 4,
       '4': 1,
       '5': 11,
-      '6': '.synctv.source_config.TikTokMediaSourceConfig',
-      '10': 'sourceConfig'
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
     },
   ],
   '8': [
@@ -530,22 +532,24 @@ final $typed_data.Uint8List resolveResponseDescriptor = $convert.base64Decode(
     'Cg9SZXNvbHZlUmVzcG9uc2USPAoIbWV0YWRhdGEYASABKAsyIC5zeW5jdHYucHJvdmlkZXIudG'
     'lrdG9rLk1ldGFkYXRhUghtZXRhZGF0YRIcCgdyb29tX2lkGAIgASgJSABSBnJvb21JZIgBARI7'
     'Cgh2YXJpYW50cxgDIAMoCzIfLnN5bmN0di5wcm92aWRlci50aWt0b2suVmFyaWFudFIIdmFyaW'
-    'FudHMSUgoNc291cmNlX2NvbmZpZxgEIAEoCzItLnN5bmN0di5zb3VyY2VfY29uZmlnLlRpa1Rv'
-    'a01lZGlhU291cmNlQ29uZmlnUgxzb3VyY2VDb25maWdCCgoIX3Jvb21faWQ=');
+    'FudHMSQAoGc291cmNlGAQgASgLMiguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVk'
+    'U291cmNlUgZzb3VyY2VCCgoIX3Jvb21faWQ=');
 
 @$core.Deprecated('Use getUserRequestDescriptor instead')
 const GetUserRequest$json = {
   '1': 'GetUserRequest',
   '2': [
-    {'1': 'unique_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'uniqueId'},
+    {'1': 'resource', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'resource'},
     {'1': 'instance_name', '3': 2, '4': 1, '5': 9, '10': 'instanceName'},
+    {'1': 'shared', '3': 3, '4': 1, '5': 8, '10': 'shared'},
   ],
 };
 
 /// Descriptor for `GetUserRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getUserRequestDescriptor = $convert.base64Decode(
-    'Cg5HZXRVc2VyUmVxdWVzdBImCgl1bmlxdWVfaWQYASABKAlCCbpIBnIEEAEYQFIIdW5pcXVlSW'
-    'QSIwoNaW5zdGFuY2VfbmFtZRgCIAEoCVIMaW5zdGFuY2VOYW1l');
+    'Cg5HZXRVc2VyUmVxdWVzdBImCghyZXNvdXJjZRgBIAEoCUIKukgHcgUQARiABFIIcmVzb3VyY2'
+    'USIwoNaW5zdGFuY2VfbmFtZRgCIAEoCVIMaW5zdGFuY2VOYW1lEhYKBnNoYXJlZBgDIAEoCFIG'
+    'c2hhcmVk');
 
 @$core.Deprecated('Use getUserResponseDescriptor instead')
 const GetUserResponse$json = {
@@ -553,21 +557,20 @@ const GetUserResponse$json = {
   '2': [
     {'1': 'sec_uid', '3': 1, '4': 1, '5': 9, '10': 'secUid'},
     {
-      '1': 'source_config',
+      '1': 'source',
       '3': 2,
       '4': 1,
       '5': 11,
-      '6': '.synctv.source_config.TikTokPlaylistSourceConfig',
-      '10': 'sourceConfig'
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
     },
   ],
 };
 
 /// Descriptor for `GetUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getUserResponseDescriptor = $convert.base64Decode(
-    'Cg9HZXRVc2VyUmVzcG9uc2USFwoHc2VjX3VpZBgBIAEoCVIGc2VjVWlkElUKDXNvdXJjZV9jb2'
-    '5maWcYAiABKAsyMC5zeW5jdHYuc291cmNlX2NvbmZpZy5UaWtUb2tQbGF5bGlzdFNvdXJjZUNv'
-    'bmZpZ1IMc291cmNlQ29uZmln');
+    'Cg9HZXRVc2VyUmVzcG9uc2USFwoHc2VjX3VpZBgBIAEoCVIGc2VjVWlkEkAKBnNvdXJjZRgCIA'
+    'EoCzIoLnN5bmN0di5wcm92aWRlci5jb21tb24uRGlzY292ZXJlZFNvdXJjZVIGc291cmNl');
 
 @$core.Deprecated('Use listUserPostsRequestDescriptor instead')
 const ListUserPostsRequest$json = {
@@ -577,6 +580,7 @@ const ListUserPostsRequest$json = {
     {'1': 'cursor', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'cursor', '17': true},
     {'1': 'page_size', '3': 3, '4': 1, '5': 13, '8': {}, '10': 'pageSize'},
     {'1': 'instance_name', '3': 4, '4': 1, '5': 9, '10': 'instanceName'},
+    {'1': 'shared', '3': 5, '4': 1, '5': 8, '10': 'shared'},
   ],
   '8': [
     {'1': '_cursor'},
@@ -587,8 +591,8 @@ const ListUserPostsRequest$json = {
 final $typed_data.Uint8List listUserPostsRequestDescriptor = $convert.base64Decode(
     'ChRMaXN0VXNlclBvc3RzUmVxdWVzdBIjCgdzZWNfdWlkGAEgASgJQgq6SAdyBRABGIACUgZzZW'
     'NVaWQSGwoGY3Vyc29yGAIgASgJSABSBmN1cnNvcogBARIkCglwYWdlX3NpemUYAyABKA1CB7pI'
-    'BCoCGCNSCHBhZ2VTaXplEiMKDWluc3RhbmNlX25hbWUYBCABKAlSDGluc3RhbmNlTmFtZUIJCg'
-    'dfY3Vyc29y');
+    'BCoCGCNSCHBhZ2VTaXplEiMKDWluc3RhbmNlX25hbWUYBCABKAlSDGluc3RhbmNlTmFtZRIWCg'
+    'ZzaGFyZWQYBSABKAhSBnNoYXJlZEIJCgdfY3Vyc29y');
 
 @$core.Deprecated('Use listItemDescriptor instead')
 const ListItem$json = {
@@ -632,6 +636,14 @@ const ListItem$json = {
       '10': 'createdAt',
       '17': true
     },
+    {
+      '1': 'source',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
   '8': [
     {'1': '_cover'},
@@ -646,8 +658,9 @@ final $typed_data.Uint8List listItemDescriptor = $convert.base64Decode(
     'l0bGUSNgoGYXV0aG9yGAMgASgLMh4uc3luY3R2LnByb3ZpZGVyLnRpa3Rvay5BdXRob3JSBmF1'
     'dGhvchI4CgVjb3ZlchgEIAEoCzIdLnN5bmN0di5wcm92aWRlci50aWt0b2suSW1hZ2VIAFIFY2'
     '92ZXKIAQESJAoLZHVyYXRpb25fbXMYBSABKARIAVIKZHVyYXRpb25Nc4gBARIiCgpjcmVhdGVk'
-    'X2F0GAYgASgDSAJSCWNyZWF0ZWRBdIgBAUIICgZfY292ZXJCDgoMX2R1cmF0aW9uX21zQg0KC1'
-    '9jcmVhdGVkX2F0');
+    'X2F0GAYgASgDSAJSCWNyZWF0ZWRBdIgBARJACgZzb3VyY2UYByABKAsyKC5zeW5jdHYucHJvdm'
+    'lkZXIuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VSBnNvdXJjZUIICgZfY292ZXJCDgoMX2R1cmF0'
+    'aW9uX21zQg0KC19jcmVhdGVkX2F0');
 
 @$core.Deprecated('Use listUserPostsResponseDescriptor instead')
 const ListUserPostsResponse$json = {
@@ -664,12 +677,12 @@ const ListUserPostsResponse$json = {
     {'1': 'cursor', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'cursor', '17': true},
     {'1': 'has_more', '3': 3, '4': 1, '5': 8, '10': 'hasMore'},
     {
-      '1': 'source_config',
+      '1': 'source',
       '3': 4,
       '4': 1,
       '5': 11,
-      '6': '.synctv.source_config.TikTokPlaylistSourceConfig',
-      '10': 'sourceConfig'
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
     },
   ],
   '8': [
@@ -681,6 +694,5 @@ const ListUserPostsResponse$json = {
 final $typed_data.Uint8List listUserPostsResponseDescriptor = $convert.base64Decode(
     'ChVMaXN0VXNlclBvc3RzUmVzcG9uc2USNgoFaXRlbXMYASADKAsyIC5zeW5jdHYucHJvdmlkZX'
     'IudGlrdG9rLkxpc3RJdGVtUgVpdGVtcxIbCgZjdXJzb3IYAiABKAlIAFIGY3Vyc29yiAEBEhkK'
-    'CGhhc19tb3JlGAMgASgIUgdoYXNNb3JlElUKDXNvdXJjZV9jb25maWcYBCABKAsyMC5zeW5jdH'
-    'Yuc291cmNlX2NvbmZpZy5UaWtUb2tQbGF5bGlzdFNvdXJjZUNvbmZpZ1IMc291cmNlQ29uZmln'
-    'QgkKB19jdXJzb3I=');
+    'CGhhc19tb3JlGAMgASgIUgdoYXNNb3JlEkAKBnNvdXJjZRgEIAEoCzIoLnN5bmN0di5wcm92aW'
+    'Rlci5jb21tb24uRGlzY292ZXJlZFNvdXJjZVIGc291cmNlQgkKB19jdXJzb3I=');

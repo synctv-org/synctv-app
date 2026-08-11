@@ -289,12 +289,30 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                       width: 112,
                       child: AppSelect<String>(
                         value: _providerType,
+                        prefixIcon: _providerType.isEmpty
+                            ? Icons.category_outlined
+                            : mediaProviderBrand(_providerType).icon,
                         options: {
                           context.l10n.allTypes: '',
                           for (final type in _providerTypeOptions(
                             selectedFilter: _providerType,
                           ))
                             _providerTypeLabel(type): type,
+                        },
+                        optionPrefixBuilder: (context, type) {
+                          if (type.isEmpty) {
+                            return const Icon(
+                              Icons.category_outlined,
+                              size: 16,
+                            );
+                          }
+                          final brand = mediaProviderBrand(type);
+                          return Icon(
+                            brand.icon,
+                            key: ValueKey('admin-provider-option-icon-$type'),
+                            size: 16,
+                            color: brand.color,
+                          );
                         },
                         onChanged: (value) {
                           if (value == null) return;
@@ -603,10 +621,15 @@ class _ProviderInstanceTile extends StatelessWidget {
                           : Colors.orange,
                     ),
                     for (final provider in instance.providers)
-                      _ProviderMetaChip(
-                        label: provider,
-                        icon: Icons.category_outlined,
-                        color: theme.colorScheme.secondary,
+                      Builder(
+                        builder: (context) {
+                          final brand = mediaProviderBrand(provider);
+                          return _ProviderMetaChip(
+                            label: brand.label,
+                            icon: brand.icon,
+                            color: brand.color,
+                          );
+                        },
                       ),
                   ],
                 ),

@@ -15,7 +15,7 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../source_config.pb.dart' as $0;
+import 'common.pb.dart' as $0;
 import 'douyu.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -25,9 +25,11 @@ export 'douyu.pbenum.dart';
 class ResolveRequest extends $pb.GeneratedMessage {
   factory ResolveRequest({
     $core.String? resource,
+    $core.String? instanceName,
   }) {
     final result = create();
     if (resource != null) result.resource = resource;
+    if (instanceName != null) result.instanceName = instanceName;
     return result;
   }
 
@@ -46,6 +48,7 @@ class ResolveRequest extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.provider.douyu'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'resource')
+    ..aOS(2, _omitFieldNames ? '' : 'instanceName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -75,6 +78,15 @@ class ResolveRequest extends $pb.GeneratedMessage {
   $core.bool hasResource() => $_has(0);
   @$pb.TagNumber(1)
   void clearResource() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get instanceName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set instanceName($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasInstanceName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearInstanceName() => $_clearField(2);
 }
 
 class Metadata extends $pb.GeneratedMessage {
@@ -385,12 +397,12 @@ class ResolveResponse extends $pb.GeneratedMessage {
   factory ResolveResponse({
     Metadata? metadata,
     $core.Iterable<Quality>? qualities,
-    $0.DouyuMediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (metadata != null) result.metadata = metadata;
     if (qualities != null) result.qualities.addAll(qualities);
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -412,8 +424,8 @@ class ResolveResponse extends $pb.GeneratedMessage {
         subBuilder: Metadata.create)
     ..pPM<Quality>(2, _omitFieldNames ? '' : 'qualities',
         subBuilder: Quality.create)
-    ..aOM<$0.DouyuMediaSourceConfig>(3, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.DouyuMediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(3, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -450,15 +462,15 @@ class ResolveResponse extends $pb.GeneratedMessage {
   $pb.PbList<Quality> get qualities => $_getList(1);
 
   @$pb.TagNumber(3)
-  $0.DouyuMediaSourceConfig get sourceConfig => $_getN(2);
+  $0.DiscoveredSource get source => $_getN(2);
   @$pb.TagNumber(3)
-  set sourceConfig($0.DouyuMediaSourceConfig value) => $_setField(3, value);
+  set source($0.DiscoveredSource value) => $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasSourceConfig() => $_has(2);
+  $core.bool hasSource() => $_has(2);
   @$pb.TagNumber(3)
-  void clearSourceConfig() => $_clearField(3);
+  void clearSource() => $_clearField(3);
   @$pb.TagNumber(3)
-  $0.DouyuMediaSourceConfig ensureSourceConfig() => $_ensure(2);
+  $0.DiscoveredSource ensureSource() => $_ensure(2);
 }
 
 const $core.bool _omitFieldNames =

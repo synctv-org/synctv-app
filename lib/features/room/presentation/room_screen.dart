@@ -16,6 +16,7 @@ import 'package:synctv_app/features/room/domain/playback_operation_tracker.dart'
 import 'package:synctv_app/features/room/presentation/models/playlist_source_presentation.dart';
 import 'package:synctv_app/features/room/presentation/models/playback_player_update.dart';
 import 'package:synctv_app/features/room/presentation/models/room_ui_capabilities.dart';
+import 'package:synctv_app/features/room/presentation/models/playlist_selection_policy.dart';
 import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_target.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
@@ -45,6 +46,8 @@ import 'package:synctv_app/features/room/application/room_realtime_channel.dart'
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/image/local_image_picker.dart';
 import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
+import 'package:synctv_app/core/presentation/media_provider_brand.dart';
+import 'package:synctv_app/core/presentation/media_variant_label.dart';
 import 'package:synctv_app/features/room/domain/chat_reactions.dart';
 import 'package:synctv_app/features/room/presentation/playback_danmaku.dart';
 import 'package:synctv_app/features/room/presentation/playback_error_messages.dart';
@@ -440,6 +443,9 @@ class _RoomScreenState extends State<RoomScreen>
 
   bool _isSelectionMode = false;
   final Set<String> _selectedMediaEntryIds = {};
+  final Map<String, RoomMediaEntry> _selectedMediaEntries = {};
+  String _mediaEntriesScopeKey = '';
+  String _selectionObservationScopeKey = '';
   int _roomTabIndex = 0;
   _PlaylistViewMode _playlistViewMode = _PlaylistViewMode.compact;
 
@@ -944,6 +950,7 @@ class _RoomScreenState extends State<RoomScreen>
       setState(() {
         _isSelectionMode = false;
         _selectedMediaEntryIds.clear();
+        _selectedMediaEntries.clear();
       });
     }
 
@@ -1556,6 +1563,7 @@ class _RoomScreenState extends State<RoomScreen>
           _isLoadingMediaEntries = false;
           _isLoadingMoreMediaEntries = false;
           _selectedMediaEntryIds.clear();
+          _selectedMediaEntries.clear();
           _isSelectionMode = false;
         });
       }
@@ -1878,8 +1886,24 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _applyMediaLibrary(RoomMediaLibraryPage mediaLibrary) {
     if (!mounted) return;
+    final scopeChanged = _mediaEntriesScopeKey != _selectionObservationScopeKey;
+    if (!scopeChanged) {
+      final currentIds = mediaLibrary.entries.map((entry) => entry.id).toSet();
+      for (final entry in _mediaEntries) {
+        if (!currentIds.contains(entry.id)) {
+          _selectedMediaEntryIds.remove(entry.id);
+          _selectedMediaEntries.remove(entry.id);
+        }
+      }
+    }
+    for (final entry in mediaLibrary.entries) {
+      if (_selectedMediaEntryIds.contains(entry.id)) {
+        _selectedMediaEntries[entry.id] = entry;
+      }
+    }
     setState(() {
       _mediaEntries = mediaLibrary.entries;
+      _mediaEntriesScopeKey = _selectionObservationScopeKey;
       _currentPage = mediaLibrary.page;
       _usesCursorPagination = mediaLibrary.usesCursor;
       _nextCursor = mediaLibrary.nextCursor;
@@ -1887,9 +1911,6 @@ class _RoomScreenState extends State<RoomScreen>
           ? mediaLibrary.nextCursor.isNotEmpty
           : (mediaLibrary.total ?? 0) > _mediaEntries.length;
       _isLoadingMediaEntries = false;
-      _selectedMediaEntryIds.removeWhere(
-        (id) => !_mediaEntries.any((entry) => entry.id == id),
-      );
       if (_selectedMediaEntryIds.isEmpty) _isSelectionMode = false;
     });
   }
@@ -5729,6 +5750,18 @@ class _RoomScreenState extends State<RoomScreen>
                       onPressed: _showAddMediaDialog,
                       tooltip: context.l10n.add,
                     ),
+                  if (_canClearCurrentPlaylistEntries && !selectionMode)
+                    AppIconButton(
+                      key: const Key('playlist-clear-button'),
+                      icon: Icons.delete_sweep_outlined,
+                      onPressed: _mediaEntries.isEmpty
+                          ? null
+                          : _clearCurrentPlaylistEntries,
+                      tooltip: _playlistStack.isEmpty
+                          ? context.l10n.clearMediaLibrary
+                          : context.l10n.clearPlaylist,
+                      style: AppIconButtonStyle.destructive,
+                    ),
                   if (canSelectEntries)
                     AppIconButton(
                       icon: selectionMode
@@ -5738,6 +5771,7 @@ class _RoomScreenState extends State<RoomScreen>
                         setState(() {
                           _isSelectionMode = !_isSelectionMode;
                           _selectedMediaEntryIds.clear();
+                          _selectedMediaEntries.clear();
                         });
                       },
                       tooltip: selectionMode
@@ -5764,14 +5798,21 @@ class _RoomScreenState extends State<RoomScreen>
                   label: context.l10n.selectAll,
                   style: AppActionButtonStyle.text,
                 ),
-                const Spacer(),
-                AppActionButton(
-                  onPressed: !_canDeleteCurrentSelection
-                      ? null
-                      : _deleteSelectedMediaEntries,
-                  label: context.l10n.delete,
-                  style: AppActionButtonStyle.tonal,
+                const SizedBox(width: 8),
+                Text(
+                  context.l10n.selectedCount(_selectedMediaEntryIds.length),
+                  key: const Key('playlist-selection-count'),
+                  style: Theme.of(context).textTheme.labelMedium,
                 ),
+                const Spacer(),
+                if (_canOfferSelectionDeletion)
+                  AppActionButton(
+                    onPressed: !_canDeleteCurrentSelection
+                        ? null
+                        : _deleteSelectedMediaEntries,
+                    label: context.l10n.delete,
+                    style: AppActionButtonStyle.tonal,
+                  ),
               ],
             ),
           ),
@@ -5906,7 +5947,6 @@ class _RoomScreenState extends State<RoomScreen>
       child: AppSingleChildScrollView(
         key: const Key('playlist-breadcrumbs'),
         scrollDirection: Axis.horizontal,
-        reverse: _playlistStack.isNotEmpty,
         child: Row(
           children: [
             for (var index = 0; index < crumbs.length; index++) ...[
@@ -6008,10 +6048,8 @@ class _RoomScreenState extends State<RoomScreen>
         selectionMode,
         primaryColor,
       ),
-      onPressed: _canActivatePlaylistEntry(entry, selectionMode)
-          ? () => _handlePlaylistEntryPressed(entry, selectionMode)
-          : null,
-      onLongPress: () => _handlePlaylistEntryLongPressed(entry, selectionMode),
+      onPressed: _playlistEntryTapHandler(entry, selectionMode),
+      onLongPress: _playlistEntryLongPressHandler(entry, selectionMode),
     );
   }
 
@@ -6035,11 +6073,8 @@ class _RoomScreenState extends State<RoomScreen>
             : theme.dividerColor.withValues(alpha: 0.12),
       ),
       child: InkWell(
-        onTap: _canActivatePlaylistEntry(entry, selectionMode)
-            ? () => _handlePlaylistEntryPressed(entry, selectionMode)
-            : null,
-        onLongPress: () =>
-            _handlePlaylistEntryLongPressed(entry, selectionMode),
+        onTap: _playlistEntryTapHandler(entry, selectionMode),
+        onLongPress: _playlistEntryLongPressHandler(entry, selectionMode),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Row(
@@ -6128,11 +6163,8 @@ class _RoomScreenState extends State<RoomScreen>
             : theme.dividerColor.withValues(alpha: 0.12),
       ),
       child: InkWell(
-        onTap: _canActivatePlaylistEntry(entry, selectionMode)
-            ? () => _handlePlaylistEntryPressed(entry, selectionMode)
-            : null,
-        onLongPress: () =>
-            _handlePlaylistEntryLongPressed(entry, selectionMode),
+        onTap: _playlistEntryTapHandler(entry, selectionMode),
+        onLongPress: _playlistEntryLongPressHandler(entry, selectionMode),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -6292,35 +6324,58 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  bool _canActivatePlaylistEntry(RoomMediaEntry entry, bool selectionMode) =>
-      selectionMode || entry.isPlaylist || _canControlPlaybackState;
-
-  void _handlePlaylistEntryPressed(RoomMediaEntry entry, bool selectionMode) {
-    if (selectionMode) {
-      _toggleSelection(entry);
-    } else if (entry.isPlaylist) {
-      _enterPlaylist(entry);
-    } else {
-      _switchMedia(entry);
-    }
-  }
-
-  void _handlePlaylistEntryLongPressed(
+  VoidCallback? _playlistEntryTapHandler(
     RoomMediaEntry entry,
     bool selectionMode,
   ) {
-    if (_canSelectCurrentPlaylistEntries &&
-        !selectionMode &&
-        _isPersistedLibraryEntry(entry)) {
-      _enterSelectionMode(entry);
+    final intent = PlaylistSelectionPolicy.tapIntent(
+      entry: entry,
+      selectionMode: selectionMode,
+      canActivate: entry.isPlaylist || _canControlPlaybackState,
+    );
+    return intent == null
+        ? null
+        : () => _applyPlaylistEntryIntent(entry, intent);
+  }
+
+  VoidCallback? _playlistEntryLongPressHandler(
+    RoomMediaEntry entry,
+    bool selectionMode,
+  ) {
+    final intent = PlaylistSelectionPolicy.longPressIntent(
+      entry: entry,
+      selectionMode: selectionMode,
+      canSelectEntries: _canSelectCurrentPlaylistEntries,
+    );
+    return intent == null
+        ? null
+        : () => _applyPlaylistEntryIntent(entry, intent);
+  }
+
+  void _applyPlaylistEntryIntent(
+    RoomMediaEntry entry,
+    PlaylistEntryGestureIntent intent,
+  ) {
+    switch (intent) {
+      case PlaylistEntryGestureIntent.activate:
+        if (entry.isPlaylist) {
+          _enterPlaylist(entry);
+        } else {
+          _switchMedia(entry);
+        }
+        return;
+      case PlaylistEntryGestureIntent.enterSelection:
+        _enterSelectionMode(entry);
+        return;
+      case PlaylistEntryGestureIntent.toggleSelection:
+        _toggleSelection(entry);
+        return;
     }
   }
 
   IconData _playlistEntryIcon(RoomMediaEntry entry) {
     final providerIcon = _playlistProviderIcon(entry);
-    if (providerIcon != null && entry.isProviderDynamicEntry) {
-      return providerIcon;
-    }
+    if (providerIcon != null) return providerIcon;
     if (entry.isPlaylist) {
       return entry.isDynamicPlaylist || entry.isProviderDynamicItem
           ? Icons.folder_special_rounded
@@ -6334,21 +6389,10 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   IconData? _playlistProviderIcon(RoomMediaEntry entry) {
-    final provider = entry.sourceProvider.trim().toLowerCase();
-    return switch (provider) {
-      'youtube' => Icons.play_circle_outline_rounded,
-      'bilibili' => Icons.smart_display_outlined,
-      'twitch' || 'huya' || 'douyu' => Icons.live_tv_rounded,
-      'douyin' || 'tiktok' => Icons.video_collection_outlined,
-      'alist' ||
-      'cloudreve' ||
-      'nextcloud' ||
-      'seafile' ||
-      'truenas' => Icons.cloud_outlined,
-      'emby' || 'fnos' || 'qnap' || 'synology' => Icons.dns_outlined,
-      'directurl' || 'direct_url' || 'direct' => Icons.link_rounded,
-      _ => null,
-    };
+    final provider = entry.sourceProvider.trim();
+    if (provider.isEmpty) return null;
+    final brand = mediaProviderBrand(provider);
+    return brand.known ? brand.icon : null;
   }
 
   Color _playlistEntryAccent(
@@ -6357,22 +6401,10 @@ class _RoomScreenState extends State<RoomScreen>
     Color primaryColor,
   ) {
     if (isCurrent) return primaryColor;
-    final provider = entry.sourceProvider.trim().toLowerCase();
-    final providerColor = switch (provider) {
-      'youtube' => const Color(0xFFE5484D),
-      'bilibili' => const Color(0xFFE45C96),
-      'twitch' => const Color(0xFF7C5CFC),
-      'douyin' || 'tiktok' => const Color(0xFF20B8A6),
-      'alist' ||
-      'cloudreve' ||
-      'nextcloud' ||
-      'seafile' ||
-      'truenas' => const Color(0xFF3B82C4),
-      'emby' || 'fnos' || 'qnap' || 'synology' => const Color(0xFF4E9F6D),
-      _ => null,
-    };
-    if (providerColor != null && entry.isProviderDynamicEntry) {
-      return providerColor;
+    final provider = entry.sourceProvider.trim();
+    if (provider.isNotEmpty) {
+      final brand = mediaProviderBrand(provider);
+      if (brand.known) return brand.color;
     }
     if (entry.isPlaylist) return Colors.amber;
     if (entry.live) return Colors.redAccent;
@@ -6428,7 +6460,7 @@ class _RoomScreenState extends State<RoomScreen>
             PlaylistSourceFactKind.instance =>
               '${context.l10n.instance}: ${fact.value}',
             PlaylistSourceFactKind.type =>
-              '${context.l10n.sourceType}: ${fact.value}',
+              '${context.l10n.sourceType}: ${localizedMediaVariant(context, fact.value)}',
             PlaylistSourceFactKind.path =>
               '${context.l10n.sourcePath}: ${fact.value}',
             PlaylistSourceFactKind.query =>
@@ -6453,32 +6485,16 @@ class _RoomScreenState extends State<RoomScreen>
     if (entry.live) return context.l10n.live;
     final type = entry.type.trim();
     if (type.isEmpty) return context.l10n.media;
-    return type.toUpperCase();
+    return localizedMediaVariant(context, type);
   }
 
   String _playlistProviderLabel(RoomMediaEntry entry) {
     final provider = entry.sourceProvider.trim().isNotEmpty
         ? entry.sourceProvider.trim()
         : entry.providerInstanceName.trim();
-    return switch (provider.toLowerCase()) {
-      'alist' => 'AList',
-      'emby' => 'Emby',
-      'bilibili' => 'Bilibili',
-      'cloudreve' => 'Cloudreve',
-      'twitch' => 'Twitch',
-      'youtube' => 'YouTube',
-      'douyin' => 'Douyin',
-      'tiktok' => 'TikTok',
-      'huya' => 'Huya',
-      'douyu' => 'Douyu',
-      'acfun' => 'AcFun',
-      'cctv' => 'CCTV',
-      'fnos' => 'FNOS',
-      'qnap' => 'QNAP',
-      'directurl' || 'direct_url' || 'direct' => context.l10n.directLink,
-      '' => '',
-      _ => provider,
-    };
+    if (provider.isEmpty) return '';
+    final brand = mediaProviderBrand(provider);
+    return brand.known ? brand.label : provider;
   }
 
   Widget _buildMembersTab() {
@@ -6770,8 +6786,6 @@ class _RoomScreenState extends State<RoomScreen>
       _playlistStack.removeRange(depth, _playlistStack.length);
       _playlistNameStack.removeRange(depth + 1, _playlistNameStack.length);
       _isLoadingMediaEntries = true;
-      _selectedMediaEntryIds.clear();
-      _isSelectionMode = false;
     });
     _observeCurrentPlaylist();
   }
@@ -6780,6 +6794,9 @@ class _RoomScreenState extends State<RoomScreen>
     final parentPlaylist = _playlistStack.isNotEmpty
         ? _playlistStack.last
         : null;
+    _selectionObservationScopeKey =
+        '${parentPlaylist?.playbackPlaylistId ?? ''}::'
+        '${parentPlaylist?.playbackTarget ?? ''}';
     try {
       _sendRealtimeMessage(
         _realtimeProtocol.encodePlaylistObservation(
@@ -6853,24 +6870,29 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _enterSelectionMode(RoomMediaEntry entry) {
     if (!_canSelectCurrentPlaylistEntries) return;
+    if (!PlaylistSelectionPolicy.isSelectable(entry)) return;
     setState(() {
       _isSelectionMode = true;
       _selectedMediaEntryIds.clear();
+      _selectedMediaEntries.clear();
       _selectedMediaEntryIds.add(entry.id);
+      _selectedMediaEntries[entry.id] = entry;
     });
   }
 
   void _toggleSelection(RoomMediaEntry entry) {
     if (!_canSelectCurrentPlaylistEntries) return;
-    if (!_isPersistedLibraryEntry(entry)) return;
+    if (!PlaylistSelectionPolicy.isSelectable(entry)) return;
     setState(() {
       if (_selectedMediaEntryIds.contains(entry.id)) {
         _selectedMediaEntryIds.remove(entry.id);
+        _selectedMediaEntries.remove(entry.id);
         if (_selectedMediaEntryIds.isEmpty) {
           _isSelectionMode = false;
         }
       } else {
         _selectedMediaEntryIds.add(entry.id);
+        _selectedMediaEntries[entry.id] = entry;
       }
     });
   }
@@ -6879,21 +6901,27 @@ class _RoomScreenState extends State<RoomScreen>
     if (!_canSelectCurrentPlaylistEntries) return;
     setState(() {
       final selectable = _mediaEntries
-          .where(_isPersistedLibraryEntry)
+          .where(PlaylistSelectionPolicy.isSelectable)
           .map((entry) => entry.id)
           .toList();
-      if (_selectedMediaEntryIds.length == selectable.length) {
-        _selectedMediaEntryIds.clear();
+      final allSelected =
+          selectable.isNotEmpty &&
+          selectable.every(_selectedMediaEntryIds.contains);
+      if (allSelected) {
+        for (final entry in _mediaEntries) {
+          _selectedMediaEntryIds.remove(entry.id);
+          _selectedMediaEntries.remove(entry.id);
+        }
+        if (_selectedMediaEntryIds.isEmpty) _isSelectionMode = false;
       } else {
-        _selectedMediaEntryIds.clear();
-        _selectedMediaEntryIds.addAll(selectable);
+        _isSelectionMode = true;
+        for (final entry in _mediaEntries) {
+          if (!selectable.contains(entry.id)) continue;
+          _selectedMediaEntryIds.add(entry.id);
+          _selectedMediaEntries[entry.id] = entry;
+        }
       }
     });
-  }
-
-  bool _isPersistedLibraryEntry(RoomMediaEntry entry) {
-    return !entry.isProviderDynamicEntry &&
-        (entry.id.startsWith('med_') || entry.id.startsWith('pl_'));
   }
 
   bool get _isInsideProviderTargetScope {
@@ -6907,26 +6935,28 @@ class _RoomScreenState extends State<RoomScreen>
   String get _currentPersistedPlaylistId {
     if (_playlistStack.isEmpty || _isInsideProviderTargetScope) return '';
     final playlist = _playlistStack.last;
-    return playlist.id.startsWith('pl_') ? playlist.id : '';
+    return playlist.isPlaylist ? playlist.id : '';
   }
 
   bool get _canAddMediaToCurrentPlaylist =>
       _canManageOwnMedia && !_isInsideProviderTargetScope;
 
-  bool get _canSelectCurrentPlaylistEntries =>
-      (_canDeleteMedia || _canClearMedia) && !_isInsideProviderTargetScope;
+  bool get _canSelectCurrentPlaylistEntries => _canBrowseLibrary;
+
+  bool get _canClearCurrentPlaylistEntries =>
+      _canClearMedia && !_isInsideProviderTargetScope;
+
+  bool get _canOfferSelectionDeletion =>
+      _canDeleteMedia && !_isInsideProviderTargetScope;
 
   bool get _canDeleteCurrentSelection {
-    if (_selectedMediaEntryIds.isEmpty || _isInsideProviderTargetScope) {
+    if (!_canOfferSelectionDeletion || _selectedMediaEntryIds.isEmpty) {
       return false;
     }
-    if (_canDeleteMedia) return true;
-    if (!_canClearMedia || _hasMoreMediaEntries) return false;
-    final selectableCount = _mediaEntries
-        .where(_isPersistedLibraryEntry)
-        .length;
-    return selectableCount > 0 &&
-        _selectedMediaEntryIds.length == selectableCount;
+    return _selectedMediaEntries.length == _selectedMediaEntryIds.length &&
+        _selectedMediaEntries.values.every(
+          (entry) => !entry.isProviderDynamicItem,
+        );
   }
 
   Future<void> _deleteSelectedMediaEntries() async {
@@ -6952,16 +6982,14 @@ class _RoomScreenState extends State<RoomScreen>
 
     if (confirmed == true) {
       try {
-        final selectableCount = _mediaEntries
-            .where(_isPersistedLibraryEntry)
-            .length;
-        final isAllLoadedSelected =
-            _selectedMediaEntryIds.length == selectableCount;
-        final mediaIds = _selectedMediaEntryIds
-            .where((id) => id.startsWith('med_'))
+        final selectedEntries = _selectedMediaEntries.values.toList();
+        final mediaIds = selectedEntries
+            .where((entry) => !entry.isPlaylist)
+            .map((entry) => entry.id)
             .toList();
-        final playlistIds = _selectedMediaEntryIds
-            .where((id) => id.startsWith('pl_'))
+        final playlistIds = selectedEntries
+            .where((entry) => entry.isPlaylist)
+            .map((entry) => entry.id)
             .toList();
         if (mediaIds.isEmpty && playlistIds.isEmpty) {
           if (mounted) {
@@ -6972,26 +7000,16 @@ class _RoomScreenState extends State<RoomScreen>
           }
           return;
         }
-        if (isAllLoadedSelected && !_hasMoreMediaEntries && _canClearMedia) {
-          await _mediaLibraryGateway.clearMediaLibrary(
-            widget.room.roomId,
-            parentId: _currentPersistedPlaylistId.isEmpty
-                ? null
-                : _currentPersistedPlaylistId,
-          );
-        } else if (_canDeleteMedia) {
-          await _mediaLibraryGateway.deleteMediaLibraryEntries(
-            widget.room.roomId,
-            mediaIds: mediaIds,
-            playlistIds: playlistIds,
-          );
-        } else {
-          return;
-        }
+        await _mediaLibraryGateway.deleteMediaLibraryEntries(
+          widget.room.roomId,
+          mediaIds: mediaIds,
+          playlistIds: playlistIds,
+        );
 
         setState(() {
           _isSelectionMode = false;
           _selectedMediaEntryIds.clear();
+          _selectedMediaEntries.clear();
         });
         _observeCurrentPlaylist();
         if (mounted) AppNotifications.showInfo(context, context.l10n.deleted);
@@ -7002,6 +7020,52 @@ class _RoomScreenState extends State<RoomScreen>
             context.l10n.deleteEntryFailed('$e'),
           );
         }
+      }
+    }
+  }
+
+  Future<void> _clearCurrentPlaylistEntries() async {
+    if (!_canClearCurrentPlaylistEntries || _mediaEntries.isEmpty) return;
+    final playlistId = _currentPersistedPlaylistId;
+    final confirmed = await AppDialogs.showStyledDialog<bool>(
+      context: context,
+      title: playlistId.isEmpty
+          ? context.l10n.clearMediaLibrary
+          : context.l10n.clearPlaylist,
+      icon: const Icon(Icons.delete_sweep_outlined, color: Colors.red),
+      content: Text(
+        playlistId.isEmpty
+            ? context.l10n.confirmClearMediaLibrary
+            : context.l10n.confirmClearPlaylist,
+      ),
+      actions: [
+        AppDialogs.createCancelButton(context),
+        const SizedBox(width: 8),
+        AppDialogs.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: context.l10n.clear,
+        ),
+      ],
+    );
+    if (confirmed != true) return;
+
+    try {
+      await _mediaLibraryGateway.clearMediaLibrary(
+        widget.room.roomId,
+        parentId: playlistId.isEmpty ? null : playlistId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _isSelectionMode = false;
+        _selectedMediaEntryIds.clear();
+        _selectedMediaEntries.clear();
+      });
+      _observeCurrentPlaylist();
+      AppNotifications.showSuccess(context, context.l10n.mediaLibraryCleared);
+    } catch (e) {
+      if (mounted) {
+        AppNotifications.showError(context, context.l10n.clearFailed('$e'));
       }
     }
   }

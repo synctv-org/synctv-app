@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
+import 'package:synctv_app/contracts/provider_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
@@ -17,6 +18,7 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
 import 'local_backend_test_auth.dart';
+import 'local_backend_media_helpers.dart';
 
 void main() {
   test(
@@ -148,7 +150,7 @@ Future<void> _exerciseWatchers(String roomId, int stamp) async {
   print('watchers_initial=ok');
 
   print('watchers_add_media');
-  final mediaId = await SyncTvService.addDirectUrlMedia(
+  final mediaId = await prepareDirectUrlAndAdd(
     roomId,
     url: 'https://example.com/deep-watch-$stamp.mp4',
     playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
@@ -224,21 +226,32 @@ Future<void> _exerciseMediaAndRealtime(
   }
 
   final batchUrl = 'https://example.com/deep-batch-$stamp.mp4';
-  await SyncTvService.addMediaBatch(roomId, [
-    {
-      'playlistId': nested.id,
-      'sourceProvider': 'directUrl',
-      'sourceConfig': {'url': batchUrl},
-      'name': 'batch direct $stamp',
-      'description': 'batch insert',
-    },
-    {
-      'playlistId': nested.id,
-      'sourceProvider': 'liveProxy',
-      'sourceConfig': {'url': 'http://127.0.0.1:18081/live.flv'},
-      'name': 'batch live proxy $stamp',
-    },
-  ]);
+  await prepareDirectUrlAndAdd(
+    roomId,
+    playlistId: nested.id,
+    url: batchUrl,
+    playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
+    name: 'batch direct $stamp',
+  );
+  try {
+    await prepareHttpFlvAndAdd(
+      roomId,
+      playlistId: nested.id,
+      url: 'http://127.0.0.1:18081/live.flv',
+      name: 'blocked live proxy $stamp',
+    );
+    throw StateError('loopback LiveProxy source was accepted');
+  } catch (error) {
+    if (!error.toString().contains('blocked by SSRF policy')) {
+      rethrow;
+    }
+  }
+  await prepareHttpFlvAndAdd(
+    roomId,
+    playlistId: nested.id,
+    url: 'https://example.com/live.flv',
+    name: 'batch live proxy $stamp',
+  );
 
   final searchPage = await SyncTvService.listMediaLibrary(
     roomId,
@@ -250,7 +263,7 @@ Future<void> _exerciseMediaAndRealtime(
     throw StateError('batch media missing: ${searchPage.media.length}');
   }
 
-  final rtmpId = await SyncTvService.addRtmpMedia(
+  final rtmpId = await prepareRtmpAndAdd(
     roomId,
     playlistId: nested.id,
     name: 'rtmp generated $stamp',
@@ -269,7 +282,7 @@ Future<void> _exerciseMediaAndRealtime(
     throw StateError('rtmp stream info mismatch');
   }
 
-  final directId = await SyncTvService.addDirectUrlMedia(
+  final directId = await prepareDirectUrlAndAdd(
     roomId,
     playlistId: nested.id,
     url: 'https://example.com/deep-playback-$stamp.mp4',
@@ -317,7 +330,8 @@ Future<void> _exerciseMediaAndRealtime(
   if (embyBinds.isNotEmpty) {
     final bind = embyBinds.first;
     final page = await SyncTvService.listEmbyPage(
-      '/',
+      EmbyListMode.folder,
+      targetId: '/',
       keyword: 'Big Buck',
       serverId: bind.serverId,
       instanceName: bind.providerInstanceName,

@@ -14,6 +14,8 @@ import 'package:synctv_app/src/generated/proto/providers/douyin.pb.dart'
 import 'package:synctv_app/src/generated/proto/providers/douyu.pb.dart'
     as douyu;
 import 'package:synctv_app/src/generated/proto/providers/huya.pb.dart' as huya;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -29,339 +31,16 @@ final class SyncTvProviderGateway implements ProviderGateway {
   const SyncTvProviderGateway();
 
   @override
-  Future<String> addAcFunMedia(
+  Future<String> addDiscoveredSource(
     String roomId, {
-    String playlistId = '',
-    required String kind,
-    required String id,
-    String? episodeQuery,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addAcFunMedia(
-    roomId,
-    playlistId: playlistId,
-    kind: kind,
-    id: id,
-    episodeQuery: episodeQuery,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addAlistMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String password = '',
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addAlistMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    password: password,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addCctvMedia(
-    String roomId, {
-    String playlistId = '',
-    required String resource,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addCctvMedia(
-    roomId,
-    playlistId: playlistId,
-    resource: resource,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addCloudreveMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addCloudreveMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addDirectUrlMedia(
-    String roomId, {
-    String playlistId = '',
-    required String url,
-    required source_enum.PlaybackKind playbackKind,
-    Map<String, String> headers = const {},
-    String name = '',
-    bool preferProxy = false,
-    bool proxyOnly = false,
-  }) => SyncTvService.addDirectUrlMedia(
-    roomId,
-    playlistId: playlistId,
-    url: url,
-    playbackKind: playbackKind,
-    headers: headers,
-    name: name,
-    preferProxy: preferProxy,
-    proxyOnly: proxyOnly,
-  );
-
-  @override
-  Future<String> addDouyuMedia(
-    String roomId, {
-    String playlistId = '',
-    required String room,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addDouyuMedia(
-    roomId,
-    playlistId: playlistId,
-    room: room,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addEmbyMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String itemId,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addEmbyMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    itemId: itemId,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addFnosFileMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addFnosFileMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addFnosMediaLibraryItem(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String itemGuid,
-    String mediaGuid = '',
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addFnosMediaLibraryItem(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    itemGuid: itemGuid,
-    mediaGuid: mediaGuid,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addHuyaMedia(
-    String roomId, {
-    String playlistId = '',
-    required String kind,
-    required String id,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addHuyaMedia(
-    roomId,
-    playlistId: playlistId,
-    kind: kind,
-    id: id,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addLiveProxyMedia(
-    String roomId, {
-    String playlistId = '',
-    required source_config.LiveProxyMediaSourceConfig sourceConfig,
-    String name = '',
-  }) => SyncTvService.addLiveProxyMedia(
-    roomId,
-    playlistId: playlistId,
-    sourceConfig: sourceConfig,
-    name: name,
-  );
-
-  @override
-  Future<void> addMediaBatch(String roomId, List<Map<String, dynamic>> items) =>
-      SyncTvService.addMediaBatch(roomId, items);
-
-  @override
-  Future<String> addMediaFromSourceConfig(
-    String roomId, {
-    String playlistId = '',
-    String providerInstanceName = '',
-    required source_config.MediaSourceConfig sourceConfig,
-    String name = '',
-  }) => SyncTvService.addMediaFromSourceConfig(
-    roomId,
-    playlistId: playlistId,
-    providerInstanceName: providerInstanceName,
-    sourceConfig: sourceConfig,
-    name: name,
-  );
-
-  @override
-  Future<String> addNextcloudMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    required int fileId,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addNextcloudMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    fileId: fileId,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addQnapMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addQnapMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addRtmpMedia(
-    String roomId, {
+    required provider_common.DiscoveredSource source,
     String playlistId = '',
     String name = '',
-    source_enum.RtmpStreamMode mode =
-        source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
-  }) => SyncTvService.addRtmpMedia(
+  }) => SyncTvService.addDiscoveredSource(
     roomId,
+    source: source,
     playlistId: playlistId,
     name: name,
-    mode: mode,
-  );
-
-  @override
-  Future<String> addSeafileMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String repositoryId,
-    required String path,
-    required String objectId,
-    required bool hasThumbnail,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addSeafileMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    repositoryId: repositoryId,
-    path: path,
-    objectId: objectId,
-    hasThumbnail: hasThumbnail,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addSynologyFileMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addSynologyFileMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addSynologyLibraryMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String kind,
-    required int itemId,
-    required int fileId,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addSynologyLibraryMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    kind: kind,
-    itemId: itemId,
-    fileId: fileId,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  @override
-  Future<String> addTrueNasMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) => SyncTvService.addTrueNasMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    name: name,
-    providerInstanceName: providerInstanceName,
   );
 
   @override
@@ -419,42 +98,6 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String key, {
     String instanceName = '',
   }) => SyncTvService.checkBilibiliQrLogin(key, instanceName: instanceName);
-
-  @override
-  Future<RoomPlaylistItem> createPlaylist(
-    String roomId, {
-    required String name,
-    String parentId = '',
-    String sourceProvider = '',
-    Map<String, dynamic> sourceConfig = const {},
-    String providerInstanceName = '',
-    String description = '',
-  }) => SyncTvService.createPlaylist(
-    roomId,
-    name: name,
-    parentId: parentId,
-    sourceProvider: sourceProvider,
-    sourceConfig: sourceConfig,
-    providerInstanceName: providerInstanceName,
-    description: description,
-  );
-
-  @override
-  Future<RoomPlaylistItem> createPlaylistFromSourceConfig(
-    String roomId, {
-    required String name,
-    required source_config.PlaylistSourceConfig sourceConfig,
-    String parentId = '',
-    String providerInstanceName = '',
-    String description = '',
-  }) => SyncTvService.createPlaylistFromSourceConfig(
-    roomId,
-    name: name,
-    sourceConfig: sourceConfig,
-    parentId: parentId,
-    providerInstanceName: providerInstanceName,
-    description: description,
-  );
 
   @override
   Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
@@ -558,9 +201,14 @@ final class SyncTvProviderGateway implements ProviderGateway {
 
   @override
   Future<tiktok.GetUserResponse> getTikTokUser(
-    String uniqueId, {
+    String resource, {
     String instanceName = '',
-  }) => SyncTvService.getTikTokUser(uniqueId, instanceName: instanceName);
+    bool shared = false,
+  }) => SyncTvService.getTikTokUser(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   @override
   Future<AlistListPage> listAlistPage(
@@ -590,7 +238,11 @@ final class SyncTvProviderGateway implements ProviderGateway {
   @override
   Future<List<BilibiliFavoriteFolderInfo>> listBilibiliFavoriteFolders({
     String instanceName = '',
-  }) => SyncTvService.listBilibiliFavoriteFolders(instanceName: instanceName);
+    bool shared = false,
+  }) => SyncTvService.listBilibiliFavoriteFolders(
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   @override
   Future<BilibiliFollowedPgcPage> listBilibiliFollowedPgc({
@@ -598,17 +250,23 @@ final class SyncTvProviderGateway implements ProviderGateway {
     int page = 1,
     int pageSize = 30,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listBilibiliFollowedPgc(
     cinema: cinema,
     page: page,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   @override
   Future<List<BilibiliLiveAreaInfo>> listBilibiliLiveAreas({
     String instanceName = '',
-  }) => SyncTvService.listBilibiliLiveAreas(instanceName: instanceName);
+    bool shared = false,
+  }) => SyncTvService.listBilibiliLiveAreas(
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   @override
   Future<BilibiliPgcSeasonPage> listBilibiliPgcSeasons({
@@ -622,6 +280,7 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String? year,
     int? styleId,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listBilibiliPgcSeasons(
     type: type,
     page: page,
@@ -633,6 +292,7 @@ final class SyncTvProviderGateway implements ProviderGateway {
     year: year,
     styleId: styleId,
     instanceName: instanceName,
+    shared: shared,
   );
 
   @override
@@ -641,11 +301,32 @@ final class SyncTvProviderGateway implements ProviderGateway {
     int beforeDays = 3,
     int afterDays = 7,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listBilibiliPgcTimeline(
     type: type,
     beforeDays: beforeDays,
     afterDays: afterDays,
     instanceName: instanceName,
+    shared: shared,
+  );
+
+  @override
+  Future<BilibiliPlaylistListPage> listBilibiliPlaylist(
+    BilibiliPlaylistListIntent intent, {
+    int page = 1,
+    int pageSize = 30,
+    String? cursor,
+    String search = '',
+    String instanceName = '',
+    bool shared = false,
+  }) => SyncTvService.listBilibiliPlaylist(
+    intent,
+    page: page,
+    pageSize: pageSize,
+    cursor: cursor,
+    search: search,
+    instanceName: instanceName,
+    shared: shared,
   );
 
   @override
@@ -675,23 +356,29 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listDouyinUserPosts(
     secUid,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   @override
   Future<EmbyListPage> listEmbyPage(
-    String path, {
+    EmbyListMode mode, {
+    String targetId = '',
+    List<String> itemTypes = const [],
     String? keyword,
     int page = 1,
     int max = 20,
     String serverId = '',
     String instanceName = '',
   }) => SyncTvService.listEmbyPage(
-    path,
+    mode,
+    targetId: targetId,
+    itemTypes: itemTypes,
     keyword: keyword,
     page: page,
     max: max,
@@ -927,11 +614,13 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listTikTokUserPosts(
     secUid,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   @override
@@ -958,27 +647,31 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listTwitchCategoryStreams(
     categoryId: categoryId,
     categoryName: categoryName,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   @override
   Future<twitch.ListChannelItemsResponse> listTwitchChannelItems(
-    String channel, {
+    String resource, {
     required source_enum.TwitchPlaylistContent content,
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listTwitchChannelItems(
-    channel,
+    resource,
     content: content,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   @override
@@ -986,10 +679,12 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listTwitchFollowedLive(
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   @override
@@ -998,11 +693,13 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listTwitchSchedule(
     broadcasterId,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   @override
@@ -1010,11 +707,17 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.listTwitchTopCategories(
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
+
+  @override
+  Future<youtube.ListResponse> listYoutube(youtube.ListRequest request) =>
+      SyncTvService.listYoutube(request);
 
   @override
   Future<AlistLoginInfo> loginAList(
@@ -1198,7 +901,12 @@ final class SyncTvProviderGateway implements ProviderGateway {
   Future<BilibiliParseInfo> parseBilibiliInfo(
     String url, {
     String instanceName = '',
-  }) => SyncTvService.parseBilibiliInfo(url, instanceName: instanceName);
+    bool shared = false,
+  }) => SyncTvService.parseBilibiliInfo(
+    url,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   @override
   Future<NextcloudBindInfo> pollNextcloudLoginFlow({
@@ -1212,44 +920,87 @@ final class SyncTvProviderGateway implements ProviderGateway {
   );
 
   @override
-  Future<acfun.ResolveResponse> resolveAcFun(String resource) =>
-      SyncTvService.resolveAcFun(resource);
+  Future<provider_common.PreparedMediaSource> prepareDirectUrl(
+    provider_common.PrepareDirectUrlRequest intent,
+  ) => SyncTvService.prepareDirectUrl(intent);
 
   @override
-  Future<cctv.ResolveResponse> resolveCctv(String resource) =>
-      SyncTvService.resolveCctv(resource);
+  Future<provider_common.PreparedMediaSource> prepareLiveProxy(
+    provider_common.PrepareLiveProxyRequest intent,
+  ) => SyncTvService.prepareLiveProxy(intent);
+
+  @override
+  Future<provider_common.PreparedMediaSource> prepareRtmp(
+    source_enum.RtmpStreamMode mode,
+  ) => SyncTvService.prepareRtmp(mode);
+
+  @override
+  Future<acfun.ResolveResponse> resolveAcFun(
+    String resource, {
+    String instanceName = '',
+  }) => SyncTvService.resolveAcFun(resource, instanceName: instanceName);
+
+  @override
+  Future<cctv.ResolveResponse> resolveCctv(
+    String resource, {
+    String instanceName = '',
+  }) => SyncTvService.resolveCctv(resource, instanceName: instanceName);
 
   @override
   Future<douyin.ResolveResponse> resolveDouyin(
     String resource, {
     String instanceName = '',
-  }) => SyncTvService.resolveDouyin(resource, instanceName: instanceName);
+    bool shared = false,
+  }) => SyncTvService.resolveDouyin(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   @override
-  Future<douyu.ResolveResponse> resolveDouyu(String resource) =>
-      SyncTvService.resolveDouyu(resource);
+  Future<douyu.ResolveResponse> resolveDouyu(
+    String resource, {
+    String instanceName = '',
+  }) => SyncTvService.resolveDouyu(resource, instanceName: instanceName);
 
   @override
-  Future<huya.ResolveResponse> resolveHuya(String resource) =>
-      SyncTvService.resolveHuya(resource);
+  Future<huya.ResolveResponse> resolveHuya(
+    String resource, {
+    String instanceName = '',
+  }) => SyncTvService.resolveHuya(resource, instanceName: instanceName);
 
   @override
   Future<tiktok.ResolveResponse> resolveTikTok(
     String resource, {
     String instanceName = '',
-  }) => SyncTvService.resolveTikTok(resource, instanceName: instanceName);
+    bool shared = false,
+  }) => SyncTvService.resolveTikTok(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   @override
   Future<twitch.ResolveResponse> resolveTwitch(
     String resource, {
     String instanceName = '',
-  }) => SyncTvService.resolveTwitch(resource, instanceName: instanceName);
+    bool shared = false,
+  }) => SyncTvService.resolveTwitch(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   @override
   Future<youtube.ResolveResponse> resolveYoutube(
     String resource, {
     String instanceName = '',
-  }) => SyncTvService.resolveYoutube(resource, instanceName: instanceName);
+    bool shared = false,
+  }) => SyncTvService.resolveYoutube(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   @override
   Future<twitch.SearchLiveChannelsResponse> searchTwitchLiveChannels(
@@ -1257,11 +1008,13 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => SyncTvService.searchTwitchLiveChannels(
     query,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   @override

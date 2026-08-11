@@ -449,12 +449,17 @@ class _ProviderTypeSelector extends StatelessWidget {
             runSpacing: 8,
             children: [
               for (final provider in options)
-                AppChip(
-                  label: Text(_providerTypeLabel(provider)),
-                  avatar: Icon(_providerTypeIcon(provider), size: 16),
-                  selected: selectedProviders.contains(provider),
-                  onSelected: (selected) => onChanged(provider, selected),
-                  showCheckmark: true,
+                Builder(
+                  builder: (context) {
+                    final brand = mediaProviderBrand(provider);
+                    return AppChip(
+                      label: Text(brand.label),
+                      avatar: Icon(brand.icon, size: 16, color: brand.color),
+                      selected: selectedProviders.contains(provider),
+                      onSelected: (selected) => onChanged(provider, selected),
+                      showCheckmark: true,
+                    );
+                  },
                 ),
               if (options.isEmpty)
                 Text(
@@ -476,25 +481,4 @@ class _ProviderTypeSelector extends StatelessWidget {
       ),
     );
   }
-}
-
-IconData _providerTypeIcon(String provider) {
-  return switch (provider) {
-    'directUrl' => Icons.link_rounded,
-    'alist' => Icons.folder_copy_outlined,
-    'emby' => Icons.movie_filter_outlined,
-    'bilibili' => Icons.live_tv_outlined,
-    'rtmp' => Icons.podcasts_outlined,
-    'cloudreve' => Icons.cloud_outlined,
-    'twitch' => Icons.live_tv_rounded,
-    'youtube' => Icons.smart_display_rounded,
-    'douyin' => Icons.music_video_rounded,
-    'tiktok' => Icons.music_video_rounded,
-    'huya' => Icons.sports_esports_rounded,
-    'douyu' => Icons.live_tv_rounded,
-    'acfun' => Icons.ondemand_video_rounded,
-    'cctv' => Icons.tv_rounded,
-    'liveProxy' => Icons.route_rounded,
-    _ => Icons.extension_outlined,
-  };
 }

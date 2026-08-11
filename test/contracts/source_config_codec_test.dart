@@ -3,6 +3,98 @@ import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart' as source;
 
 void main() {
+  group('Playback proxy mode source config', () {
+    final mediaCases = <(String, Map<String, dynamic>)>[
+      ('directUrl', {'url': 'https://example.test/video.mp4'}),
+      ('alist', {'serverId': 'alist-main', 'path': '/movies/video.mp4'}),
+      ('bilibili', {'kind': 'video', 'bvid': 'BV1test', 'cid': 42}),
+      ('emby', {'serverId': 'emby-main', 'itemId': 'item-42'}),
+      (
+        'cloudreve',
+        {'serverId': 'cloudreve-main', 'path': '/movies/video.mp4'},
+      ),
+    ];
+    final playlistCases = <(String, Map<String, dynamic>)>[
+      ('alist', {'serverId': 'alist-main', 'path': '/movies'}),
+      (
+        'bilibili',
+        {
+          'source': {'type': 'popular'},
+        },
+      ),
+      (
+        'emby',
+        {
+          'serverId': 'emby-main',
+          'source': {'type': 'folder', 'itemId': 'folder-42'},
+        },
+      ),
+      ('cloudreve', {'serverId': 'cloudreve-main', 'path': '/movies'}),
+    ];
+
+    test('round trips proxy preferences for supported media sources', () {
+      for (final (provider, baseConfig) in mediaCases) {
+        for (final mode in ['prefer', 'only']) {
+          final config = {...baseConfig, 'proxyMode': mode};
+          final encoded = SourceConfigCodec.mediaSourceConfigFromMap(
+            sourceProvider: provider,
+            sourceConfig: config,
+          )!;
+
+          expect(
+            SourceConfigCodec.mediaSourceConfigToMap(encoded)['proxyMode'],
+            mode,
+            reason: '$provider media should preserve $mode',
+          );
+        }
+      }
+    });
+
+    test('round trips proxy preferences for supported playlists', () {
+      for (final (provider, baseConfig) in playlistCases) {
+        for (final mode in ['prefer', 'only']) {
+          final config = {...baseConfig, 'proxyMode': mode};
+          final encoded = SourceConfigCodec.playlistSourceConfigFromMap(
+            sourceProvider: provider,
+            sourceConfig: config,
+          )!;
+
+          expect(
+            SourceConfigCodec.playlistSourceConfigToMap(encoded)['proxyMode'],
+            mode,
+            reason: '$provider playlist should preserve $mode',
+          );
+        }
+      }
+    });
+
+    test('omits automatic mode from persisted source config maps', () {
+      for (final (provider, baseConfig) in [...mediaCases, ...playlistCases]) {
+        final isMedia = mediaCases.any(
+          (entry) => identical(entry.$2, baseConfig),
+        );
+        final encoded = isMedia
+            ? SourceConfigCodec.mediaSourceConfigFromMap(
+                sourceProvider: provider,
+                sourceConfig: baseConfig,
+              )!
+            : SourceConfigCodec.playlistSourceConfigFromMap(
+                sourceProvider: provider,
+                sourceConfig: baseConfig,
+              )!;
+        final result = isMedia
+            ? SourceConfigCodec.mediaSourceConfigToMap(
+                encoded as source.MediaSourceConfig,
+              )
+            : SourceConfigCodec.playlistSourceConfigToMap(
+                encoded as source.PlaylistSourceConfig,
+              );
+
+        expect(result, isNot(contains('proxyMode')));
+      }
+    });
+  });
+
   group('Bilibili playlist source config', () {
     test('encodes every provider-specific source shape', () {
       final cases = <Map<String, dynamic>>[

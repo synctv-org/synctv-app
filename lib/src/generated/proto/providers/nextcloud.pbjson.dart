@@ -231,6 +231,14 @@ const FileItem$json = {
       '10': 'durationMillis',
       '17': true
     },
+    {
+      '1': 'source',
+      '3': 18,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
   '8': [
     {'1': '_modified_at'},
@@ -257,10 +265,11 @@ final $typed_data.Uint8List fileItemDescriptor = $convert.base64Decode(
     'bGF5TmFtZYgBARIaCghmYXZvcml0ZRgMIAEoCFIIZmF2b3JpdGUSHwoLaGFzX3ByZXZpZXcYDS'
     'ABKAhSCmhhc1ByZXZpZXcSHwoIYmx1cmhhc2gYDiABKAlIBlIIYmx1cmhhc2iIAQESGQoFd2lk'
     'dGgYDyABKA1IB1IFd2lkdGiIAQESGwoGaGVpZ2h0GBAgASgNSAhSBmhlaWdodIgBARIsCg9kdX'
-    'JhdGlvbl9taWxsaXMYESABKARICVIOZHVyYXRpb25NaWxsaXOIAQFCDgoMX21vZGlmaWVkX2F0'
-    'Qg8KDV9jb250ZW50X3R5cGVCBwoFX2V0YWdCDgoMX3Blcm1pc3Npb25zQgsKCV9vd25lcl9pZE'
-    'IVChNfb3duZXJfZGlzcGxheV9uYW1lQgsKCV9ibHVyaGFzaEIICgZfd2lkdGhCCQoHX2hlaWdo'
-    'dEISChBfZHVyYXRpb25fbWlsbGlz');
+    'JhdGlvbl9taWxsaXMYESABKARICVIOZHVyYXRpb25NaWxsaXOIAQESQAoGc291cmNlGBIgASgL'
+    'Miguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2VCDgoMX2'
+    '1vZGlmaWVkX2F0Qg8KDV9jb250ZW50X3R5cGVCBwoFX2V0YWdCDgoMX3Blcm1pc3Npb25zQgsK'
+    'CV9vd25lcl9pZEIVChNfb3duZXJfZGlzcGxheV9uYW1lQgsKCV9ibHVyaGFzaEIICgZfd2lkdG'
+    'hCCQoHX2hlaWdodEISChBfZHVyYXRpb25fbWlsbGlz');
 
 @$core.Deprecated('Use listResponseDescriptor instead')
 const ListResponse$json = {
@@ -277,6 +286,14 @@ const ListResponse$json = {
     {'1': 'total', '3': 2, '4': 1, '5': 4, '9': 0, '10': 'total', '17': true},
     {'1': 'page', '3': 3, '4': 1, '5': 4, '10': 'page'},
     {'1': 'has_more', '3': 4, '4': 1, '5': 8, '10': 'hasMore'},
+    {
+      '1': 'source',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
   '8': [
     {'1': '_total'},
@@ -287,7 +304,9 @@ const ListResponse$json = {
 final $typed_data.Uint8List listResponseDescriptor = $convert.base64Decode(
     'CgxMaXN0UmVzcG9uc2USPQoHY29udGVudBgBIAMoCzIjLnN5bmN0di5wcm92aWRlci5uZXh0Y2'
     'xvdWQuRmlsZUl0ZW1SB2NvbnRlbnQSGQoFdG90YWwYAiABKARIAFIFdG90YWyIAQESEgoEcGFn'
-    'ZRgDIAEoBFIEcGFnZRIZCghoYXNfbW9yZRgEIAEoCFIHaGFzTW9yZUIICgZfdG90YWw=');
+    'ZRgDIAEoBFIEcGFnZRIZCghoYXNfbW9yZRgEIAEoCFIHaGFzTW9yZRJACgZzb3VyY2UYBSABKA'
+    'syKC5zeW5jdHYucHJvdmlkZXIuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VSBnNvdXJjZUIICgZf'
+    'dG90YWw=');
 
 @$core.Deprecated('Use logoutRequestDescriptor instead')
 const LogoutRequest$json = {

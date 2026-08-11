@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 enum FnosBrowseMode { files, mediaLibrary }
 
@@ -34,6 +42,7 @@ class FnosAddMediaForm extends StatefulWidget {
     required this.playlistId,
     required this.binds,
     this.onDraftChanged,
+    this.onOpenBinding,
     this.fileLoader,
     this.libraryLoader,
     this.mediaItemLoader,
@@ -43,6 +52,7 @@ class FnosAddMediaForm extends StatefulWidget {
   final String playlistId;
   final List<FnosBindInfo> binds;
   final ValueChanged<bool>? onDraftChanged;
+  final Future<void> Function()? onOpenBinding;
   final FnosFileLoader? fileLoader;
   final FnosLibraryLoader? libraryLoader;
   final FnosMediaItemLoader? mediaItemLoader;
@@ -54,6 +64,7 @@ class FnosAddMediaForm extends StatefulWidget {
 class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   static const _pageSize = 50;
 
+  final _selection = DiscoverySelectionController();
   final _searchController = TextEditingController();
   FnosBrowseMode _mode = FnosBrowseMode.files;
   FnosBindInfo? _bind;
@@ -68,6 +79,9 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   final List<(String, String)> _mediaPath = [];
   List<FnosMediaItemInfo> _mediaItems = const [];
   final Set<String> _mutatingItems = {};
+  provider_common.DiscoveredSource? _listSource;
+  source_enum.PlaybackProxyMode _proxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
 
   @override
   void initState() {
@@ -80,7 +94,8 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   @override
   void didUpdateWidget(covariant FnosAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_bind == null && widget.binds.isNotEmpty) {
+    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
+        widget.binds.isNotEmpty) {
       _bind = widget.binds.first;
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
@@ -101,10 +116,22 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   Widget build(BuildContext context) {
     if (widget.binds.isEmpty) {
       return Center(
-        child: AppEmptyState(
-          icon: Icons.storage_rounded,
-          title: 'FNOS',
-          subtitle: context.l10n.bindAccountToAccessResources,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppEmptyState(
+              icon: Icons.storage_rounded,
+              title: 'FNOS',
+              subtitle: context.l10n.bindAccountToAccessResources,
+            ),
+            const SizedBox(height: 16),
+            ProviderAccountAction(
+              providerType: 'fnos',
+              onPressed: widget.onOpenBinding == null
+                  ? null
+                  : () => widget.onOpenBinding!(),
+            ),
+          ],
         ),
       );
     }
@@ -119,16 +146,16 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
             Expanded(
               child: AppSegmentedControl<FnosBrowseMode>(
                 segments: [
-                  const ButtonSegment(
+                  ButtonSegment(
                     value: FnosBrowseMode.files,
-                    icon: Icon(Icons.folder_outlined),
-                    label: Text('Files'),
+                    icon: const Icon(Icons.folder_outlined),
+                    label: Text(context.l10n.files),
                   ),
                   ButtonSegment(
                     value: FnosBrowseMode.mediaLibrary,
                     enabled: mediaEnabled,
                     icon: const Icon(Icons.video_library_outlined),
-                    label: const Text('Media'),
+                    label: Text(context.l10n.media),
                   ),
                 ],
                 value: _mode,
@@ -145,27 +172,25 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
           ],
         ),
         const SizedBox(height: 12),
+        PlaybackProxyModeControl(
+          value: _proxyMode,
+          onChanged: (value) => setState(() => _proxyMode = value),
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: AppTextField(
                 controller: _searchController,
-                label: 'Search',
+                label: context.l10n.search,
                 prefixIcon: Icons.search_rounded,
                 suffix: AppIconButton(
-                  tooltip: 'Search',
+                  tooltip: context.l10n.search,
                   onPressed: _loading ? null : _search,
                   icon: Icons.arrow_forward_rounded,
                 ),
                 onSubmitted: (_) => _search(),
               ),
-            ),
-            const SizedBox(width: 8),
-            AppIconButton(
-              tooltip: context.l10n.dynamicPlaylist,
-              onPressed: _loading ? null : _addCurrentPlaylist,
-              icon: Icons.playlist_add_rounded,
-              style: AppIconButtonStyle.tonal,
             ),
           ],
         ),
@@ -186,28 +211,16 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   }
 
   Widget _buildBindSelector() {
-    return DropdownButtonFormField<String>(
-      initialValue: _bind?.serverId,
-      decoration: const InputDecoration(
-        labelText: 'FNOS',
-        prefixIcon: Icon(Icons.dns_outlined),
-      ),
-      items: widget.binds
-          .map(
-            (bind) => DropdownMenuItem(
-              value: bind.serverId,
-              child: Text(
-                bind.endpoint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          )
-          .toList(),
-      onChanged: (serverId) {
-        final bind = widget.binds.firstWhere(
-          (candidate) => candidate.serverId == serverId,
-        );
+    return ProviderAccountSelector<FnosBindInfo>(
+      accounts: widget.binds,
+      selectedId: _bind?.id,
+      idOf: (bind) => bind.id,
+      labelOf: (bind) => bind.providerInstanceName.isEmpty
+          ? bind.endpoint
+          : '${bind.endpoint} · ${bind.providerInstanceName}',
+      enabled: !_loading,
+      onChanged: (bind) {
+        if (bind == null) return;
         setState(() {
           _bind = bind;
           if (!bind.mediaAvailable) _mode = FnosBrowseMode.files;
@@ -225,9 +238,9 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
         _mediaPath.lastOrNull?.$2 ??
             _library?.title ??
             switch (_collection) {
-              FnosMediaCollection.library => 'Libraries',
-              FnosMediaCollection.favorites => 'Favorites',
-              FnosMediaCollection.history => 'Continue watching',
+              FnosMediaCollection.library => context.l10n.libraries,
+              FnosMediaCollection.favorites => context.l10n.favorites,
+              FnosMediaCollection.history => context.l10n.continueWatching,
             },
     };
     final canGoUp = switch (_mode) {
@@ -262,31 +275,24 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   }
 
   Widget _buildFileList() {
-    if (_files.isEmpty) return _empty();
-    return AppListView.separated(
-      itemCount: _files.length,
-      separatorBuilder: (_, _) => const AppDivider(height: 1),
-      itemBuilder: (context, index) {
-        final item = _files[index];
-        return ListTile(
-          leading: Icon(
-            item.isDir ? Icons.folder_rounded : Icons.movie_outlined,
+    final itemsByKey = {for (final item in _files) item.path: item};
+    return DiscoveryBrowser(
+      selectionController: _selection,
+      selectionScope: _bind?.id,
+      items: [
+        for (final item in _files)
+          DiscoveryBrowserEntry(
+            key: item.path,
+            title: item.name,
+            subtitle: item.size == null ? '' : _formatBytes(item.size!),
+            source: item.source,
+            isContainer: item.isDir,
           ),
-          title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: item.size == null ? null : Text(_formatBytes(item.size!)),
-          onTap: item.isDir ? () => _openFileFolder(item) : null,
-          trailing: AppIconButton(
-            tooltip: item.isDir
-                ? context.l10n.dynamicPlaylist
-                : context.l10n.add,
-            onPressed: () =>
-                item.isDir ? _addFilePlaylist(item) : _addFileMedia(item),
-            icon: item.isDir
-                ? Icons.playlist_add_rounded
-                : Icons.add_circle_outline_rounded,
-          ),
-        );
-      },
+      ],
+      loading: _loading,
+      onOpen: (entry) => _openFileFolder(itemsByKey[entry.key]!),
+      onAddSelected: _addSelected,
+      onAddCurrentList: _listSource == null ? null : _addCurrentPlaylist,
     );
   }
 
@@ -299,27 +305,15 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
           if (index == 0) {
             return ListTile(
               leading: const Icon(Icons.star_rounded),
-              title: const Text('Favorites'),
+              title: Text(context.l10n.favorites),
               onTap: () => _openCollection(FnosMediaCollection.favorites),
-              trailing: AppIconButton(
-                tooltip: context.l10n.dynamicPlaylist,
-                onPressed: () =>
-                    _addNativePlaylist('favorites', 'FNOS Favorites'),
-                icon: Icons.playlist_add_rounded,
-              ),
             );
           }
           if (index == 1) {
             return ListTile(
               leading: const Icon(Icons.history_rounded),
-              title: const Text('Continue watching'),
+              title: Text(context.l10n.continueWatching),
               onTap: () => _openCollection(FnosMediaCollection.history),
-              trailing: AppIconButton(
-                tooltip: context.l10n.dynamicPlaylist,
-                onPressed: () =>
-                    _addNativePlaylist('history', 'FNOS Continue watching'),
-                icon: Icons.playlist_add_rounded,
-              ),
             );
           }
           final library = _libraries[index - 2];
@@ -331,45 +325,34 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
             title: Text(library.title),
             subtitle: library.category.isEmpty ? null : Text(library.category),
             onTap: () => _openLibrary(library),
-            trailing: AppIconButton(
-              tooltip: context.l10n.dynamicPlaylist,
-              onPressed: () => _addMediaPlaylist(
-                ancestorGuid: library.guid,
-                name: library.title,
-              ),
-              icon: Icons.playlist_add_rounded,
-            ),
           );
         },
       );
     }
-    if (_mediaItems.isEmpty) return _empty();
-    return AppListView.separated(
-      itemCount: _mediaItems.length,
-      separatorBuilder: (_, _) => const AppDivider(height: 1),
-      itemBuilder: (context, index) {
-        final item = _mediaItems[index];
-        return ListTile(
-          leading: _thumbnail(
-            item.poster,
-            fallback: item.isFolder
-                ? Icons.folder_rounded
-                : Icons.movie_outlined,
-          ),
-          title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: item.overview.isEmpty
-              ? null
-              : Text(
-                  item.overview,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-          onTap: item.isFolder ? () => _openMediaFolder(item) : null,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+    final itemsByKey = {for (final item in _mediaItems) item.guid: item};
+    return DiscoveryBrowser(
+      selectionController: _selection,
+      selectionScope: _bind?.id,
+      items: [
+        for (final item in _mediaItems)
+          DiscoveryBrowserEntry(
+            key: item.guid,
+            title: item.title,
+            subtitle: item.overview,
+            source: item.source,
+            isContainer: item.isFolder,
+            selectable: item.isFolder || item.isPlayable,
+            leading: _thumbnail(
+              item.poster,
+              fallback: item.isFolder
+                  ? Icons.folder_rounded
+                  : Icons.movie_outlined,
+            ),
+            actions: [
               AppIconButton(
-                tooltip: item.favorite ? 'Remove favorite' : 'Favorite',
+                tooltip: item.favorite
+                    ? context.l10n.removeFavorite
+                    : context.l10n.favorite,
                 onPressed: _mutatingItems.contains(item.guid)
                     ? null
                     : () => _setFavorite(item, !item.favorite),
@@ -380,7 +363,9 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
               ),
               if (item.isPlayable)
                 AppIconButton(
-                  tooltip: item.watched ? 'Mark unwatched' : 'Mark watched',
+                  tooltip: item.watched
+                      ? context.l10n.markUnwatched
+                      : context.l10n.markWatched,
                   onPressed: _mutatingItems.contains(item.guid)
                       ? null
                       : () => _setWatched(item, !item.watched),
@@ -389,25 +374,13 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
                       : Icons.check_circle_outline_rounded,
                   iconSize: 20,
                 ),
-              if (item.isFolder || item.isPlayable)
-                AppIconButton(
-                  tooltip: item.isFolder
-                      ? context.l10n.dynamicPlaylist
-                      : context.l10n.add,
-                  onPressed: () => item.isFolder
-                      ? _addMediaPlaylist(
-                          ancestorGuid: item.guid,
-                          name: item.title,
-                        )
-                      : _addMediaItem(item),
-                  icon: item.isFolder
-                      ? Icons.playlist_add_rounded
-                      : Icons.add_circle_outline_rounded,
-                ),
             ],
           ),
-        );
-      },
+      ],
+      loading: _loading,
+      onOpen: (entry) => _openMediaFolder(itemsByKey[entry.key]!),
+      onAddSelected: _addSelected,
+      onAddCurrentList: _listSource == null ? null : _addCurrentPlaylist,
     );
   }
 
@@ -456,10 +429,6 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
     );
   }
 
-  Widget _empty() => Center(
-    child: AppEmptyState(icon: Icons.video_file_outlined, title: 'No items'),
-  );
-
   void _resetLocation() {
     _filePath = '';
     _page = 1;
@@ -469,6 +438,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
     _collection = FnosMediaCollection.library;
     _mediaPath.clear();
     _mediaItems = const [];
+    _listSource = null;
   }
 
   void _search() {
@@ -519,7 +489,10 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   Future<void> _load() async {
     final bind = _bind;
     if (bind == null || _loading) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _listSource = null;
+    });
     try {
       switch (_mode) {
         case FnosBrowseMode.files:
@@ -543,6 +516,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
           setState(() {
             _files = result.items;
             _hasMore = result.hasMore;
+            _listSource = result.source;
           });
         case FnosBrowseMode.mediaLibrary:
           if (_collection == FnosMediaCollection.library && _library == null) {
@@ -556,6 +530,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
             setState(() {
               _libraries = libraries;
               _hasMore = false;
+              _listSource = null;
             });
           } else {
             final ancestorGuid =
@@ -582,6 +557,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
             setState(() {
               _mediaItems = result.items;
               _hasMore = result.hasMore;
+              _listSource = result.source;
             });
           }
       }
@@ -651,116 +627,24 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
     _load();
   }
 
-  Future<void> _addCurrentPlaylist() async {
-    if (_mode == FnosBrowseMode.files) {
-      await _addFilePlaylist(
-        FnosFileItemInfo(
-          name: _filePath.split('/').lastOrNull ?? 'FNOS Files',
-          path: _filePath,
-          size: null,
-          modifiedAt: null,
-          createdAt: null,
-          isDir: true,
-          storageId: null,
-        ),
-      );
-      return;
-    }
-    switch (_collection) {
-      case FnosMediaCollection.library:
-        final library = _library;
-        if (library == null) return;
-        await _addMediaPlaylist(
-          ancestorGuid: _mediaPath.lastOrNull?.$1 ?? library.guid,
-          name: _mediaPath.lastOrNull?.$2 ?? library.title,
-        );
-        return;
-      case FnosMediaCollection.favorites:
-        await _addNativePlaylist('favorites', 'FNOS Favorites');
-        return;
-      case FnosMediaCollection.history:
-        await _addNativePlaylist('history', 'FNOS Continue watching');
-        return;
-    }
-  }
-
-  Future<void> _addFileMedia(FnosFileItemInfo item) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.addFnosFileMedia(
+  Future<void> _addCurrentPlaylist() => _runAdd(() async {
+    await providerGateway.addDiscoveredSource(
       widget.roomId,
       playlistId: widget.playlistId,
-      serverId: bind.serverId,
-      path: item.path,
-      name: item.name,
-      providerInstanceName: bind.providerInstanceName,
+      source: _listSource!.withPlaybackProxyMode(_proxyMode),
     );
   });
 
-  Future<void> _addMediaItem(FnosMediaItemInfo item) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.addFnosMediaLibraryItem(
-      widget.roomId,
-      playlistId: widget.playlistId,
-      serverId: bind.serverId,
-      itemGuid: item.guid,
-      mediaGuid: item.mediaGuid,
-      name: item.title,
-      providerInstanceName: bind.providerInstanceName,
-    );
-  });
-
-  Future<void> _addFilePlaylist(FnosFileItemInfo item) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.createPlaylist(
-      widget.roomId,
-      parentId: widget.playlistId,
-      sourceProvider: 'fnos',
-      providerInstanceName: bind.providerInstanceName,
-      sourceConfig: {
-        'serverId': bind.serverId,
-        'type': 'files',
-        'path': item.path,
-      },
-      name: item.name.isEmpty ? 'FNOS Files' : item.name,
-    );
-  });
-
-  Future<void> _addMediaPlaylist({
-    required String ancestorGuid,
-    required String name,
-  }) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.createPlaylist(
-      widget.roomId,
-      parentId: widget.playlistId,
-      sourceProvider: 'fnos',
-      providerInstanceName: bind.providerInstanceName,
-      sourceConfig: {
-        'serverId': bind.serverId,
-        'type': 'mediaLibrary',
-        'ancestorGuid': ancestorGuid,
-        'mediaTypes': ['Movie', 'TV', 'Directory', 'Video'],
-      },
-      name: name,
-    );
-  });
-
-  Future<void> _addNativePlaylist(String type, String name) =>
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> entries) =>
       _runAdd(() async {
-        final bind = _bind!;
-        await providerGateway.createPlaylist(
-          widget.roomId,
-          parentId: widget.playlistId,
-          sourceProvider: 'fnos',
-          providerInstanceName: bind.providerInstanceName,
-          sourceConfig: {
-            'serverId': bind.serverId,
-            'type': type,
-            if (type == 'favorites')
-              'mediaTypes': ['Movie', 'TV', 'Directory', 'Video'],
-          },
-          name: name,
-        );
+        for (final entry in entries) {
+          await providerGateway.addDiscoveredSource(
+            widget.roomId,
+            playlistId: widget.playlistId,
+            source: entry.source.withPlaybackProxyMode(_proxyMode),
+            name: entry.title,
+          );
+        }
       });
 
   Future<void> _runAdd(Future<void> Function() action) async {

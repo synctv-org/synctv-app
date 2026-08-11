@@ -1,29 +1,33 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:synctv_app/core/config/distribution_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
-import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
-    as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
+import 'package:synctv_app/core/presentation/media_provider_brand.dart';
+import 'package:synctv_app/core/presentation/media_variant_label.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/acfun_add_media_form.dart';
-import 'package:synctv_app/features/media_library/presentation/add_media/bilibili_playlist_preview.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/bilibili_playlist_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/cctv_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/douyin_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/douyu_add_media_form.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/emby_playlist_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/fnos_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/huya_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/nextcloud_add_media_form.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/qnap_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/seafile_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/tiktok_add_media_form.dart';
@@ -32,6 +36,8 @@ import 'package:synctv_app/features/media_library/presentation/add_media/truenas
 import 'package:synctv_app/features/media_library/presentation/add_media/youtube_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/synology_add_media_form.dart';
 import 'package:synctv_app/features/providers/presentation/binding/platform_binding_dialog.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 
 class AddMediaDialog extends StatefulWidget {
   final String roomId;
@@ -181,15 +187,29 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   final _alistPasswordController = TextEditingController();
   final _embySearchController = TextEditingController();
   final _cloudreveSearchController = TextEditingController();
+  final _bilibiliSelection = DiscoverySelectionController();
+  final _alistSelection = DiscoverySelectionController();
+  final _embySelection = DiscoverySelectionController();
+  final _cloudreveSelection = DiscoverySelectionController();
 
-  bool _preferProxy = false;
-  bool _proxyOnly = false;
+  source_enum.PlaybackProxyMode _directProxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
+  source_enum.PlaybackProxyMode _bilibiliProxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
+  source_enum.PlaybackProxyMode _alistProxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
+  source_enum.PlaybackProxyMode _embyProxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
+  source_enum.PlaybackProxyMode _cloudreveProxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
   source_enum.PlaybackKind _directPlaybackKind =
       source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR;
   bool _isLoading = false;
   String _directHeaderError = '';
+  List<provider_common.PreparedMediaSource> _directPreview = const [];
   source_enum.RtmpStreamMode _rtmpPublishMode =
       source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT;
+  provider_common.PreparedMediaSource? _rtmpPreview;
   _LivePullProtocol _liveProxyProtocol = _LivePullProtocol.rtmp;
   source_enum.RtmpStreamMode _liveProxyRtmpMode =
       source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT;
@@ -197,11 +217,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       source_enum.RtspTransport.RTSP_TRANSPORT_TCP;
   _RtspTrackMode _liveProxyVideoTrackMode = _RtspTrackMode.firstCompatible;
   _RtspTrackMode _liveProxyAudioTrackMode = _RtspTrackMode.firstCompatible;
+  provider_common.PreparedMediaSource? _liveProxyPreview;
 
   BilibiliParseInfo? _biliInfo;
   int _biliSelectedIndex = 0;
   bool _bilibiliShared = false;
-  RoomMediaLibraryPage? _biliPreview;
+  BilibiliPlaylistListPage? _biliPreview;
 
   String _alistPath = '/';
   List<AlistItemInfo> _alistFiles = [];
@@ -214,10 +235,11 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   String _alistPassword = '';
   List<AlistBindInfo> _alistBinds = [];
   static const int _pageSize = 20;
-  final Map<String, AlistItemInfo> _selectedAlistItems = {};
+  provider_common.DiscoveredSource? _alistListSource;
   final List<_DirectHeaderDraft> _directHeaders = [];
 
   String _embyPath = '';
+  final List<(String, String)> _embyBreadcrumbs = [];
   List<EmbyItemInfo> _embyFiles = [];
   bool _embyLoading = false;
   int _embyPage = 1;
@@ -226,6 +248,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   String _embyInstanceName = '';
   String _embyKeyword = '';
   List<EmbyBindInfo> _embyBinds = [];
+  provider_common.DiscoveredSource? _embyListSource;
   bool _embyPlaylistMode = false;
   bool _embyPlaylistHasDraft = false;
 
@@ -240,6 +263,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   String _cloudreveInstanceName = '';
   String _cloudreveKeyword = '';
   List<CloudreveBindInfo> _cloudreveBinds = [];
+  provider_common.DiscoveredSource? _cloudreveListSource;
 
   List<TwitchBindInfo> _twitchBinds = [];
   bool _twitchHasDraft = false;
@@ -272,7 +296,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   String _bilibiliInstanceName = '';
   List<BilibiliBindInfo> _bilibiliBinds = [];
-  bool _bilibiliPlaylistMode = false;
+  ProviderAddTarget _bilibiliTarget = ProviderAddTarget.parse;
   bool _bilibiliPlaylistHasDraft = false;
 
   List<String> _boundVendors = [];
@@ -396,6 +420,23 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
+  Future<void> _openProviderBinding(String providerType) async {
+    await PlatformBindingDialog.show(
+      context,
+      initialProviderType: providerType,
+    );
+    await _checkVendors();
+    if (!mounted) return;
+    switch (providerType) {
+      case 'alist' when _alistBinds.isNotEmpty:
+        _loadAlist(_alistPath);
+      case 'emby' when _embyBinds.isNotEmpty:
+        _loadEmby(_embyPath);
+      case 'cloudreve' when _cloudreveBinds.isNotEmpty:
+        _loadCloudreve(_cloudrevePath);
+    }
+  }
+
   Future<void> _checkUserOwnedVendors() async {
     try {
       final results = await Future.wait([
@@ -482,8 +523,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     final compact = AppBreakpoints.widthOf(context) < 720;
     final availableHeight = AppMetrics.dialogMaxHeight(context, null);
     final contentHeight = compact
-        ? (availableHeight - 84).clamp(500.0, 660.0)
-        : (availableHeight - 84).clamp(460.0, 660.0);
+        ? (availableHeight - 64).clamp(500.0, 660.0)
+        : (availableHeight - 64).clamp(460.0, 660.0);
 
     return PopScope(
       canPop: !_hasUnsavedDraft,
@@ -719,6 +760,18 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               color: Color(0xFFFE2C55),
             ),
           ]
+          .map((spec) {
+            final providerType = _providerTypeForSourceIndex(spec.index);
+            if (providerType == null) return spec;
+            final brand = mediaProviderBrand(providerType);
+            return _MediaSourceSpec(
+              index: spec.index,
+              title: spec.title,
+              subtitle: spec.subtitle,
+              icon: brand.icon,
+              color: brand.color,
+            );
+          })
           .where((spec) {
             final providerType = _providerTypeForSourceIndex(spec.index);
             return providerType == null ||
@@ -815,14 +868,38 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           prefixIcon: Icon(selectedSpec.icon, color: selectedSpec.color),
         ),
         menuMaxHeight: 420,
-        items: [
+        selectedItemBuilder: (context) => [
           for (final spec in _sourceSpecs)
-            DropdownMenuItem<int>(
-              value: spec.index,
+            Align(
+              alignment: Alignment.centerLeft,
               child: Text(
                 spec.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+              ),
+            ),
+        ],
+        items: [
+          for (final spec in _sourceSpecs)
+            DropdownMenuItem<int>(
+              value: spec.index,
+              child: Row(
+                children: [
+                  Icon(
+                    spec.icon,
+                    key: ValueKey('add-media-provider-icon-${spec.index}'),
+                    size: 18,
+                    color: spec.color,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      spec.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
         ],
@@ -900,6 +977,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildSourcePanel(ThemeData theme, {bool compact = false}) {
+    final selectedSpec = _sourceSpecs.firstWhere(
+      (spec) => spec.index == _selectedIndex,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -915,6 +995,15 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           ),
           child: Row(
             children: [
+              AppIconBadge(
+                key: ValueKey('selected-provider-icon-$_selectedIndex'),
+                icon: selectedSpec.icon,
+                color: selectedSpec.color,
+                size: 30,
+                iconSize: 18,
+                backgroundAlpha: 0.12,
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   _getTitle(_selectedIndex),
@@ -927,25 +1016,11 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               ),
               if (_providerBindingType(_selectedIndex) != null)
                 AppActionButton(
-                  onPressed: () async {
-                    await PlatformBindingDialog.show(
-                      context,
-                      initialProviderType: _providerBindingType(_selectedIndex),
-                    );
-                    await _checkVendors();
-                    if (!mounted) return;
-                    if (_selectedIndex == 4 && _alistBinds.isNotEmpty) {
-                      _loadAlist(_alistPath);
-                    }
-                    if (_selectedIndex == 5 && _embyBinds.isNotEmpty) {
-                      _loadEmby(_embyPath);
-                    }
-                    if (_selectedIndex == 6 && _cloudreveBinds.isNotEmpty) {
-                      _loadCloudreve(_cloudrevePath);
-                    }
-                  },
-                  icon: Icons.tune_rounded,
-                  label: context.l10n.mediaSource,
+                  onPressed: () => _openProviderBinding(
+                    _providerBindingType(_selectedIndex)!,
+                  ),
+                  icon: Icons.link_rounded,
+                  label: context.l10n.manageConnections,
                   style: AppActionButtonStyle.text,
                 ),
             ],
@@ -955,7 +1030,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           child: Padding(
             padding: compact
                 ? const EdgeInsets.all(10)
-                : const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                : const EdgeInsets.fromLTRB(18, 10, 18, 10),
             child: _buildContent(theme),
           ),
         ),
@@ -1020,6 +1095,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           playlistId: widget.parentId ?? '',
           binds: _fnosBinds,
           onDraftChanged: (value) => _fnosHasDraft = value,
+          onOpenBinding: () => _openProviderBinding('fnos'),
         );
       case 13:
         return QnapAddMediaForm(
@@ -1027,6 +1103,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           playlistId: widget.parentId ?? '',
           binds: _qnapBinds,
           onDraftChanged: (value) => _qnapHasDraft = value,
+          onOpenBinding: () => _openProviderBinding('qnap'),
         );
       case 14:
         return SynologyAddMediaForm(
@@ -1034,6 +1111,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           playlistId: widget.parentId ?? '',
           binds: _synologyBinds,
           onDraftChanged: (value) => _synologyHasDraft = value,
+          onOpenBinding: () => _openProviderBinding('synology'),
         );
       case 15:
         return NextcloudAddMediaForm(
@@ -1041,6 +1119,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           playlistId: widget.parentId ?? '',
           binds: _nextcloudBinds,
           onDraftChanged: (value) => _nextcloudHasDraft = value,
+          onOpenBinding: () => _openProviderBinding('nextcloud'),
         );
       case 16:
         return SeafileAddMediaForm(
@@ -1048,6 +1127,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           playlistId: widget.parentId ?? '',
           binds: _seafileBinds,
           onDraftChanged: (value) => _seafileHasDraft = value,
+          onOpenBinding: () => _openProviderBinding('seafile'),
         );
       case 17:
         return TrueNasAddMediaForm(
@@ -1055,6 +1135,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           playlistId: widget.parentId ?? '',
           binds: _trueNasBinds,
           onDraftChanged: (value) => _trueNasHasDraft = value,
+          onOpenBinding: () => _openProviderBinding('truenas'),
         );
       case 18:
         return YoutubeAddMediaForm(
@@ -1083,93 +1164,113 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildDirectLinkContent(ThemeData theme) {
-    return AppSingleChildScrollView(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildDirectTextField(
-            controller: _urlController,
-            focusNode: _urlFocusNode,
-            label: context.l10n.videoLinks,
-            hintText: context.l10n.videoLinksHint,
-            prefixIcon: Icons.link_rounded,
-            minLines: 1,
-            maxLines: 2,
-            keyboardType: TextInputType.url,
-            textInputAction: TextInputAction.newline,
-            autocorrect: false,
-            smartDashesType: SmartDashesType.disabled,
-            smartQuotesType: SmartQuotesType.disabled,
-            enabled: !_isLoading,
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 10),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final nameField = _buildDirectTextField(
-                controller: _nameController,
-                label: constraints.maxWidth < 520
-                    ? context.l10n.name
-                    : context.l10n.optionalVideoName,
-                hintText: context.l10n.defaultsToFileName,
-                prefixIcon: Icons.title_rounded,
-                textInputAction: TextInputAction.next,
-                enabled: !_isLoading,
-                onChanged: (_) => setState(() {}),
-              );
-              final playbackKindControl = _buildDirectPlaybackKindControl();
-              if (constraints.maxWidth >= 330) {
-                return Row(
-                  children: [
-                    Expanded(child: nameField),
-                    const SizedBox(width: 12),
-                    SizedBox(width: 180, child: playbackKindControl),
-                  ],
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    return _buildActionForm(
+      children: [
+        _buildDirectTextField(
+          controller: _urlController,
+          focusNode: _urlFocusNode,
+          label: context.l10n.videoLinks,
+          hintText: context.l10n.videoLinksHint,
+          prefixIcon: Icons.link_rounded,
+          minLines: 1,
+          maxLines: 2,
+          keyboardType: TextInputType.url,
+          textInputAction: TextInputAction.newline,
+          autocorrect: false,
+          smartDashesType: SmartDashesType.disabled,
+          smartQuotesType: SmartQuotesType.disabled,
+          enabled: !_isLoading,
+          onChanged: (_) => setState(() => _directPreview = const []),
+        ),
+        const SizedBox(height: 10),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final nameField = _buildDirectTextField(
+              controller: _nameController,
+              label: constraints.maxWidth < 520
+                  ? context.l10n.name
+                  : context.l10n.optionalVideoName,
+              hintText: context.l10n.defaultsToFileName,
+              prefixIcon: Icons.title_rounded,
+              textInputAction: TextInputAction.next,
+              enabled: !_isLoading,
+              onChanged: (_) => setState(() {}),
+            );
+            final playbackKindControl = _buildDirectPlaybackKindControl();
+            if (constraints.maxWidth >= 560) {
+              return Row(
                 children: [
-                  playbackKindControl,
-                  const SizedBox(height: 10),
-                  nameField,
+                  Expanded(child: nameField),
+                  const SizedBox(width: 12),
+                  SizedBox(width: 220, child: playbackKindControl),
                 ],
               );
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildDirectHeadersEditor(theme),
-          const SizedBox(height: 12),
-          AppSwitchTile(
-            value: _preferProxy,
-            onChanged: _isLoading
-                ? null
-                : (val) => setState(() => _preferProxy = val),
-            title: Text(context.l10n.preferProxyPlayback),
-            subtitle: Text(context.l10n.proxyPlaybackDescription),
-            prefix: const Icon(Icons.route_rounded),
-            semanticsLabel: context.l10n.preferProxyPlayback,
-          ),
-          const SizedBox(height: 8),
-          AppSwitchTile(
-            value: _proxyOnly,
-            onChanged: _isLoading
-                ? null
-                : (value) => setState(() => _proxyOnly = value),
-            title: Text(context.l10n.proxyOnlyPlayback),
-            subtitle: Text(context.l10n.proxyOnlyPlaybackDescription),
-            prefix: const Icon(Icons.lock_outline_rounded),
-            semanticsLabel: context.l10n.proxyOnlyPlayback,
-          ),
-          const SizedBox(height: 18),
-          _buildActionButton(
-            context.l10n.addToPlaylist,
-            _addDirectLink,
-            icon: Icons.playlist_add_rounded,
-          ),
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                playbackKindControl,
+                const SizedBox(height: 10),
+                nameField,
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        _buildDirectHeadersEditor(theme),
+        const SizedBox(height: 12),
+        PlaybackProxyModeControl(
+          value: _directProxyMode,
+          enabled: !_isLoading,
+          onChanged: (value) => setState(() {
+            _directProxyMode = value;
+            _directPreview = const [];
+          }),
+        ),
+        if (_directPreview.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          SizedBox(height: 280, child: _buildDirectPreview()),
         ],
-      ),
+      ],
+      actions: [
+        OutlinedButton.icon(
+          key: const Key('direct-url-preview'),
+          onPressed: _isLoading || _urlController.text.trim().isEmpty
+              ? null
+              : _prepareDirectLinks,
+          icon: const Icon(Icons.preview_outlined),
+          label: Text(context.l10n.preview),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionForm({
+    required List<Widget> children,
+    required List<Widget> actions,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: AppSingleChildScrollView(
+            padding: EdgeInsets.zero,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        const AppDivider(height: 1),
+        const SizedBox(height: 10),
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 10,
+          runSpacing: 10,
+          children: actions,
+        ),
+      ],
     );
   }
 
@@ -1200,7 +1301,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         onSelectionChanged: _isLoading
             ? null
             : (selection) {
-                setState(() => _directPlaybackKind = selection.single);
+                setState(() {
+                  _directPlaybackKind = selection.single;
+                  _directPreview = const [];
+                });
               },
       ),
     );
@@ -1398,21 +1502,123 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildRtmpPublishContent(ThemeData theme) {
-    return AppSingleChildScrollView(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildTextField(
-            theme,
-            _nameController,
-            context.l10n.liveName,
-            context.l10n.liveNameHint,
-            Icons.live_tv_rounded,
-          ),
+    return _buildActionForm(
+      children: [
+        _buildTextField(
+          theme,
+          _nameController,
+          context.l10n.liveName,
+          context.l10n.liveNameHint,
+          Icons.live_tv_rounded,
+        ),
+        const SizedBox(height: 12),
+        AppSelect<source_enum.RtmpStreamMode>(
+          value: _rtmpPublishMode,
+          label: context.l10n.streamMode,
+          prefixIcon: Icons.tune_rounded,
+          options: {
+            context.l10n.audioAndVideo:
+                source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
+            context.l10n.videoOnly:
+                source_enum.RtmpStreamMode.RTMP_STREAM_MODE_VIDEO_ONLY,
+            context.l10n.audioOnly:
+                source_enum.RtmpStreamMode.RTMP_STREAM_MODE_AUDIO_ONLY,
+          },
+          enabled: !_isLoading,
+          onChanged: (value) {
+            if (value != null) {
+              setState(() {
+                _rtmpPublishMode = value;
+                _rtmpPreview = null;
+              });
+            }
+          },
+        ),
+        const SizedBox(height: 18),
+        if (_publicSettings != null) ...[
+          _buildRtmpPublicSettingsPanel(theme, _publicSettings!),
+          const SizedBox(height: 16),
+        ],
+        _buildInlineNotice(
+          theme,
+          icon: Icons.key_rounded,
+          title: context.l10n.publishAddressGeneratedDescription,
+          subtitle: context.l10n.copyToStreamingToolDescription,
+          color: Colors.deepOrange.shade600,
+        ),
+        if (_rtmpPreview case final preview?) ...[
+          const SizedBox(height: 16),
+          _buildPreparedSourceCard(preview, icon: Icons.live_tv_rounded),
+        ],
+      ],
+      actions: [
+        OutlinedButton.icon(
+          key: const Key('rtmp-preview'),
+          onPressed: _isLoading ? null : _prepareRtmpPublish,
+          icon: const Icon(Icons.preview_outlined),
+          label: Text(context.l10n.preview),
+        ),
+        FilledButton.icon(
+          key: const Key('rtmp-submit'),
+          onPressed: _isLoading || _rtmpPreview == null
+              ? null
+              : _addRtmpPublish,
+          icon: const Icon(Icons.live_tv_rounded),
+          label: Text(context.l10n.createPublishingEntry),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLiveProxyContent(ThemeData theme) {
+    return _buildActionForm(
+      children: [
+        SegmentedButton<_LivePullProtocol>(
+          segments: [
+            const ButtonSegment(
+              value: _LivePullProtocol.rtmp,
+              label: Text('RTMP'),
+              icon: Icon(Icons.podcasts_rounded),
+            ),
+            const ButtonSegment(
+              value: _LivePullProtocol.rtsp,
+              label: Text('RTSP'),
+              icon: Icon(Icons.videocam_outlined),
+            ),
+            const ButtonSegment(
+              value: _LivePullProtocol.httpFlv,
+              label: Text('HTTP-FLV'),
+              icon: Icon(Icons.http_rounded),
+            ),
+          ],
+          selected: {_liveProxyProtocol},
+          onSelectionChanged: _isLoading
+              ? null
+              : (selection) {
+                  setState(() {
+                    _liveProxyProtocol = selection.single;
+                    _liveProxyPreview = null;
+                  });
+                },
+        ),
+        const SizedBox(height: 12),
+        AppTextField(
+          controller: _liveProxyUrlController,
+          label: context.l10n.sourceAddress,
+          hintText: context.l10n.liveSourceAddressHint,
+          prefixIcon: Icons.sensors_rounded,
+          keyboardType: TextInputType.url,
+          textInputAction: TextInputAction.next,
+          autocorrect: false,
+          smartDashesType: SmartDashesType.disabled,
+          smartQuotesType: SmartQuotesType.disabled,
+          enabled: !_isLoading,
+          onChanged: (_) => setState(() => _liveProxyPreview = null),
+        ),
+        if (_liveProxyProtocol == _LivePullProtocol.rtmp) ...[
           const SizedBox(height: 12),
           AppSelect<source_enum.RtmpStreamMode>(
-            value: _rtmpPublishMode,
+            value: _liveProxyRtmpMode,
             label: context.l10n.streamMode,
             prefixIcon: Icons.tune_rounded,
             options: {
@@ -1425,179 +1631,119 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             },
             enabled: !_isLoading,
             onChanged: (value) {
-              if (value != null) setState(() => _rtmpPublishMode = value);
+              if (value != null) {
+                setState(() {
+                  _liveProxyRtmpMode = value;
+                  _liveProxyPreview = null;
+                });
+              }
             },
           ),
-          const SizedBox(height: 18),
-          if (_publicSettings != null) ...[
-            _buildRtmpPublicSettingsPanel(theme, _publicSettings!),
-            const SizedBox(height: 16),
-          ],
-          _buildInlineNotice(
-            theme,
-            icon: Icons.key_rounded,
-            title: context.l10n.publishAddressGeneratedDescription,
-            subtitle: context.l10n.copyToStreamingToolDescription,
-            color: Colors.deepOrange.shade600,
-          ),
-          const SizedBox(height: 18),
-          _buildActionButton(
-            context.l10n.createPublishingEntry,
-            _addRtmpPublish,
-            color: Colors.deepOrange.shade600,
-            icon: Icons.live_tv_rounded,
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLiveProxyContent(ThemeData theme) {
-    return AppSingleChildScrollView(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SegmentedButton<_LivePullProtocol>(
-            segments: [
-              const ButtonSegment(
-                value: _LivePullProtocol.rtmp,
-                label: Text('RTMP'),
-                icon: Icon(Icons.podcasts_rounded),
-              ),
-              const ButtonSegment(
-                value: _LivePullProtocol.rtsp,
-                label: Text('RTSP'),
-                icon: Icon(Icons.videocam_outlined),
-              ),
-              const ButtonSegment(
-                value: _LivePullProtocol.httpFlv,
-                label: Text('HTTP-FLV'),
-                icon: Icon(Icons.http_rounded),
-              ),
-            ],
-            selected: {_liveProxyProtocol},
-            onSelectionChanged: _isLoading
-                ? null
-                : (selection) {
-                    setState(() => _liveProxyProtocol = selection.single);
-                  },
+        if (_liveProxyProtocol == _LivePullProtocol.rtsp) ...[
+          const SizedBox(height: 12),
+          AppSelect<source_enum.RtspTransport>(
+            value: _liveProxyRtspTransport,
+            label: context.l10n.rtspTransport,
+            prefixIcon: Icons.swap_horiz_rounded,
+            options: {
+              'TCP': source_enum.RtspTransport.RTSP_TRANSPORT_TCP,
+              'UDP': source_enum.RtspTransport.RTSP_TRANSPORT_UDP,
+            },
+            enabled: !_isLoading,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _liveProxyRtspTransport = value;
+                  _liveProxyPreview = null;
+                });
+              }
+            },
           ),
           const SizedBox(height: 12),
-          AppTextField(
-            controller: _liveProxyUrlController,
-            label: context.l10n.sourceAddress,
-            hintText: context.l10n.liveSourceAddressHint,
-            prefixIcon: Icons.sensors_rounded,
-            keyboardType: TextInputType.url,
-            textInputAction: TextInputAction.next,
-            autocorrect: false,
-            smartDashesType: SmartDashesType.disabled,
-            smartQuotesType: SmartQuotesType.disabled,
-            enabled: !_isLoading,
-            onChanged: (_) => setState(() {}),
-          ),
-          if (_liveProxyProtocol == _LivePullProtocol.rtmp) ...[
-            const SizedBox(height: 12),
-            AppSelect<source_enum.RtmpStreamMode>(
-              value: _liveProxyRtmpMode,
-              label: context.l10n.streamMode,
-              prefixIcon: Icons.tune_rounded,
-              options: {
-                context.l10n.audioAndVideo:
-                    source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
-                context.l10n.videoOnly:
-                    source_enum.RtmpStreamMode.RTMP_STREAM_MODE_VIDEO_ONLY,
-                context.l10n.audioOnly:
-                    source_enum.RtmpStreamMode.RTMP_STREAM_MODE_AUDIO_ONLY,
-              },
-              enabled: !_isLoading,
-              onChanged: (value) {
-                if (value != null) setState(() => _liveProxyRtmpMode = value);
-              },
-            ),
-          ],
-          if (_liveProxyProtocol == _LivePullProtocol.rtsp) ...[
-            const SizedBox(height: 12),
-            AppSelect<source_enum.RtspTransport>(
-              value: _liveProxyRtspTransport,
-              label: context.l10n.rtspTransport,
-              prefixIcon: Icons.swap_horiz_rounded,
-              options: {
-                'TCP': source_enum.RtspTransport.RTSP_TRANSPORT_TCP,
-                'UDP': source_enum.RtspTransport.RTSP_TRANSPORT_UDP,
-              },
-              enabled: !_isLoading,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _liveProxyRtspTransport = value);
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final video = _buildRtspTrackControl(
-                  label: context.l10n.videoTrack,
-                  icon: Icons.videocam_outlined,
-                  mode: _liveProxyVideoTrackMode,
-                  indexController: _liveProxyVideoTrackIndexController,
-                  onChanged: (value) {
-                    setState(() => _liveProxyVideoTrackMode = value);
-                  },
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final video = _buildRtspTrackControl(
+                label: context.l10n.videoTrack,
+                icon: Icons.videocam_outlined,
+                mode: _liveProxyVideoTrackMode,
+                indexController: _liveProxyVideoTrackIndexController,
+                onChanged: (value) {
+                  setState(() {
+                    _liveProxyVideoTrackMode = value;
+                    _liveProxyPreview = null;
+                  });
+                },
+              );
+              final audio = _buildRtspTrackControl(
+                label: context.l10n.audioTrack,
+                icon: Icons.audiotrack_rounded,
+                mode: _liveProxyAudioTrackMode,
+                indexController: _liveProxyAudioTrackIndexController,
+                onChanged: (value) {
+                  setState(() {
+                    _liveProxyAudioTrackMode = value;
+                    _liveProxyPreview = null;
+                  });
+                },
+              );
+              if (constraints.maxWidth < 560) {
+                return Column(
+                  children: [video, const SizedBox(height: 12), audio],
                 );
-                final audio = _buildRtspTrackControl(
-                  label: context.l10n.audioTrack,
-                  icon: Icons.audiotrack_rounded,
-                  mode: _liveProxyAudioTrackMode,
-                  indexController: _liveProxyAudioTrackIndexController,
-                  onChanged: (value) {
-                    setState(() => _liveProxyAudioTrackMode = value);
-                  },
-                );
-                if (constraints.maxWidth < 560) {
-                  return Column(
-                    children: [video, const SizedBox(height: 12), audio],
-                  );
-                }
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: video),
-                    const SizedBox(width: 12),
-                    Expanded(child: audio),
-                  ],
-                );
-              },
-            ),
-          ],
-          const SizedBox(height: 10),
-          AppTextField(
-            controller: _liveProxyNameController,
-            label: context.l10n.optionalLiveName,
-            hintText: context.l10n.optionalLiveNameHint,
-            prefixIcon: Icons.title_rounded,
-            textInputAction: TextInputAction.done,
-            enabled: !_isLoading,
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 18),
-          _buildInlineNotice(
-            theme,
-            icon: Icons.route_rounded,
-            title: context.l10n.serverPullsUpstreamLiveSource,
-            subtitle: context.l10n.livePullSupportDescription,
-            color: Colors.teal.shade600,
-          ),
-          const SizedBox(height: 18),
-          _buildActionButton(
-            context.l10n.addLivePull,
-            _addLiveProxyMedia,
-            color: Colors.teal.shade600,
-            icon: Icons.playlist_add_rounded,
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: video),
+                  const SizedBox(width: 12),
+                  Expanded(child: audio),
+                ],
+              );
+            },
           ),
         ],
-      ),
+        const SizedBox(height: 10),
+        AppTextField(
+          controller: _liveProxyNameController,
+          label: context.l10n.optionalLiveName,
+          hintText: context.l10n.optionalLiveNameHint,
+          prefixIcon: Icons.title_rounded,
+          textInputAction: TextInputAction.done,
+          enabled: !_isLoading,
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 18),
+        _buildInlineNotice(
+          theme,
+          icon: Icons.route_rounded,
+          title: context.l10n.serverPullsUpstreamLiveSource,
+          subtitle: context.l10n.livePullSupportDescription,
+          color: Colors.teal.shade600,
+        ),
+        if (_liveProxyPreview case final preview?) ...[
+          const SizedBox(height: 16),
+          _buildPreparedSourceCard(preview, icon: Icons.sensors_rounded),
+        ],
+      ],
+      actions: [
+        OutlinedButton.icon(
+          key: const Key('live-proxy-preview'),
+          onPressed: _isLoading || _liveProxyUrlController.text.trim().isEmpty
+              ? null
+              : _prepareLiveProxy,
+          icon: const Icon(Icons.preview_outlined),
+          label: Text(context.l10n.preview),
+        ),
+        FilledButton.icon(
+          key: const Key('live-proxy-submit'),
+          onPressed: _isLoading || _liveProxyPreview == null
+              ? null
+              : _addLiveProxyMedia,
+          icon: const Icon(Icons.playlist_add_rounded),
+          label: Text(context.l10n.addLivePull),
+        ),
+      ],
     );
   }
 
@@ -1634,6 +1780,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             enabled: !_isLoading,
+            onChanged: (_) => setState(() => _liveProxyPreview = null),
           ),
         ],
       ],
@@ -1643,35 +1790,37 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   Widget _buildBilibiliContent(ThemeData theme) {
     return Column(
       children: [
-        SegmentedButton<bool>(
-          segments: const [
-            ButtonSegment(
-              value: false,
-              icon: Icon(Icons.play_circle_outline),
-              label: Text('Media'),
-            ),
-            ButtonSegment(
-              value: true,
-              icon: Icon(Icons.playlist_play),
-              label: Text('Dynamic playlist'),
-            ),
+        ProviderAddTargetSelector(
+          value: _bilibiliTarget,
+          targets: const [
+            ProviderAddTarget.parse,
+            ProviderAddTarget.media,
+            ProviderAddTarget.playlist,
           ],
-          selected: {_bilibiliPlaylistMode},
-          onSelectionChanged: _isLoading
-              ? null
-              : (values) =>
-                    setState(() => _bilibiliPlaylistMode = values.first),
+          enabled: !_isLoading,
+          onChanged: (value) => setState(() => _bilibiliTarget = value),
+        ),
+        const SizedBox(height: 12),
+        PlaybackProxyModeControl(
+          value: _bilibiliProxyMode,
+          enabled: !_isLoading,
+          onChanged: (value) => setState(() => _bilibiliProxyMode = value),
         ),
         const SizedBox(height: 14),
         Expanded(
-          child: _bilibiliPlaylistMode
-              ? BilibiliPlaylistForm(
-                  roomId: widget.roomId,
-                  parentId: widget.parentId ?? '',
-                  binds: _bilibiliBinds,
-                  onDraftChanged: (value) => _bilibiliPlaylistHasDraft = value,
-                )
-              : _buildBilibiliMediaContent(theme),
+          child: switch (_bilibiliTarget) {
+            ProviderAddTarget.parse => _buildBilibiliMediaContent(theme),
+            ProviderAddTarget.media ||
+            ProviderAddTarget.playlist => BilibiliPlaylistForm(
+              key: ValueKey(_bilibiliTarget),
+              roomId: widget.roomId,
+              parentId: widget.parentId ?? '',
+              binds: _bilibiliBinds,
+              target: _bilibiliTarget,
+              proxyMode: _bilibiliProxyMode,
+              onDraftChanged: (value) => _bilibiliPlaylistHasDraft = value,
+            ),
+          },
         ),
       ],
     );
@@ -1697,15 +1846,29 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         if (selected?.height case final height?) '${width}x$height',
     ];
     final previewItems =
-        _biliPreview?.dynamicItems ?? const <RoomDynamicMediaEntry>[];
+        _biliPreview?.items ?? const <BilibiliPlaylistListItemInfo>[];
 
     return Column(
       children: [
         _buildProviderBindSelector<BilibiliBindInfo>(
           theme: theme,
           items: _bilibiliBinds,
-          selectedKey: _bilibiliInstanceName,
-          keyOf: (bind) => bind.providerInstanceName,
+          selectedKey:
+              _bilibiliBinds
+                  .where(
+                    (bind) =>
+                        bind.providerInstanceName == _bilibiliInstanceName,
+                  )
+                  .map(
+                    (bind) => _providerBindKey(
+                      bind.serverId,
+                      bind.providerInstanceName,
+                    ),
+                  )
+                  .firstOrNull ??
+              '',
+          keyOf: (bind) =>
+              _providerBindKey(bind.serverId, bind.providerInstanceName),
           labelOf: (bind) => _providerBindLabel(
             title: context.l10n.bilibiliAccount,
             instanceName: bind.providerInstanceName,
@@ -1719,15 +1882,18 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             });
           },
         ),
-        SwitchListTile(
+        AppSwitchTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Use room owner credential'),
+          title: Text(context.l10n.shareMyCredentials),
+          prefix: const Icon(Icons.key_rounded),
+          semanticsLabel: context.l10n.shareMyCredentials,
           value: _bilibiliShared,
           onChanged: _isLoading
               ? null
               : (value) {
                   setState(() {
                     _bilibiliShared = value;
+                    _biliInfo = null;
                     _biliPreview = null;
                   });
                 },
@@ -1744,6 +1910,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   context.l10n.bilibiliVideoLinkHint,
                   Icons.search,
                   urlInput: true,
+                  onChanged: (_) => setState(() {
+                    _biliInfo = null;
+                    _biliPreview = null;
+                  }),
                 ),
               ),
               const SizedBox(width: 12),
@@ -1762,15 +1932,26 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         ),
         Expanded(
           child: _biliInfo == null
-              ? Center(
-                  child: AppEmptyState(
-                    icon: Icons.tv_rounded,
-                    iconColor: const Color(0xFFFB7299),
-                    iconSize: 58,
-                    title: context.l10n.pasteBilibiliLink,
-                    subtitle: context.l10n.bilibiliSupportedLinks,
-                    maxWidth: 360,
-                  ),
+              ? LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxHeight < 180;
+                    return Center(
+                      child: AppEmptyState(
+                        icon: Icons.tv_rounded,
+                        iconColor: const Color(0xFFFB7299),
+                        iconSize: compact ? 32 : 58,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: compact ? 6 : 16,
+                        ),
+                        title: context.l10n.pasteBilibiliLink,
+                        subtitle: compact
+                            ? null
+                            : context.l10n.bilibiliSupportedLinks,
+                        maxWidth: 360,
+                      ),
+                    );
+                  },
                 )
               : AppSingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(0, 0, 0, 18),
@@ -1832,23 +2013,61 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                             alignment: Alignment.centerRight,
                             child: OutlinedButton.icon(
                               key: const Key('bilibili-candidate-preview'),
-                              onPressed: _isLoading
+                              onPressed: _isLoading || selected?.browse == null
                                   ? null
                                   : _previewBilibiliCandidate,
                               icon: const Icon(Icons.preview_outlined),
-                              label: const Text('Preview'),
+                              label: Text(context.l10n.preview),
                             ),
                           ),
                       if (_biliPreview != null) ...[
                         const SizedBox(height: 16),
-                        BilibiliPlaylistPreview(
-                          items: previewItems,
-                          loading: _isLoading,
-                          hasMore: _bilibiliPreviewHasMore,
-                          onLoadMore: () =>
-                              _previewBilibiliCandidate(loadMore: true),
-                          onAddSelected: _addSelectedBilibiliPreviewItems,
-                          onCreatePlaylist: _addBilibiliCandidate,
+                        SizedBox(
+                          height: 380,
+                          child: DiscoveryBrowser(
+                            key: ValueKey(
+                              'bilibili-parse-preview:${selected?.title ?? ''}',
+                            ),
+                            items: [
+                              for (final item in previewItems)
+                                DiscoveryBrowserEntry(
+                                  key: item.id,
+                                  title: item.title,
+                                  subtitle: item.description,
+                                  source: item.source,
+                                  isContainer: item.isContainer,
+                                  selectable:
+                                      item.source.hasMedia() ||
+                                      item.source.hasPlaylist(),
+                                  leading: item.cover.isEmpty
+                                      ? Icon(
+                                          item.isContainer
+                                              ? Icons.video_library_outlined
+                                              : Icons.play_circle_outline,
+                                        )
+                                      : AppImageThumbnail(
+                                          url: item.cover,
+                                          width: 48,
+                                          height: 48,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                ),
+                            ],
+                            selectionController: _bilibiliSelection,
+                            selectionScope:
+                                '$_bilibiliInstanceName:$selectedIndex:$title',
+                            loading: _isLoading,
+                            hasMore: _bilibiliPreviewHasMore,
+                            onLoadMore: () =>
+                                _previewBilibiliCandidate(loadMore: true),
+                            onAddSelected: _addSelectedBilibiliPreviewItems,
+                            onAddCurrentList: _addBilibiliCandidate,
+                            currentListLabel: context.l10n.addCurrentList,
+                            emptyIcon: Icons.video_collection_outlined,
+                            emptyTitle: context.l10n.noItems,
+                          ),
                         ),
                       ],
                     ],
@@ -1891,127 +2110,91 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               _alistPassword = '';
               _alistSearchController.clear();
               _alistPasswordController.clear();
-              _selectedAlistItems.clear();
+              _alistListSource = null;
             });
             _loadAlist('/');
           },
         ),
+        PlaybackProxyModeControl(
+          value: _alistProxyMode,
+          enabled: !_alistLoading && !_isLoading,
+          onChanged: (value) => setState(() => _alistProxyMode = value),
+        ),
+        const SizedBox(height: 12),
         _buildAlistSearchBar(theme),
         _buildAlistPasswordField(theme),
         _buildPathBar(theme, _alistPath, _goUpAlist),
         Expanded(
-          child: !_alistLoading && _alistFiles.isEmpty
-              ? Center(
-                  child: AppEmptyState(
-                    icon: Icons.cloud_queue_rounded,
-                    iconColor: Colors.amber.shade700,
-                    iconSize: 58,
-                    title: context.l10n.noFiles,
-                    subtitle: context.l10n.noMediaInDirectory,
-                    maxWidth: 360,
-                  ),
-                )
-              : _alistLoading && _alistFiles.isEmpty
+          child: _alistLoading && _alistFiles.isEmpty
               ? const AppLoadingIndicator()
-              : NotificationListener<ScrollNotification>(
-                  onNotification: (ScrollNotification scrollInfo) {
-                    if (!_alistLoading &&
-                        _alistHasMore &&
-                        scrollInfo.metrics.pixels >=
-                            scrollInfo.metrics.maxScrollExtent - 200) {
-                      _loadAlist(_alistPath, loadMore: true);
-                    }
-                    return false;
-                  },
-                  child: AppListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    itemCount: _alistFiles.length + (_alistHasMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _alistFiles.length) {
-                        return AppLoadMoreFooter(
-                          loading: _alistLoading,
-                          onPressed: () =>
-                              _loadAlist(_alistPath, loadMore: true),
-                        );
-                      }
-
-                      final file = _alistFiles[index];
-                      final path = file.path;
-                      final isSelected = _selectedAlistItems.containsKey(path);
-
-                      return _buildFileItem(
-                        theme,
-                        file.name,
-                        file.isDir,
-                        () => file.isDir
-                            ? _openAlistDirectory(file.path)
-                            : _addAlistFile(file),
-                        subtitle: file.isDir ? null : _formatSize(file.size),
-                        isSelected: isSelected,
-                        trailing: file.isDir
-                            ? AppIconButton(
-                                icon: Icons.playlist_add_rounded,
-                                tooltip: context.l10n.addAsDynamicPlaylist,
-                                onPressed: () =>
-                                    _addAlistDirectoryPlaylist(file),
-                              )
-                            : null,
-                        onSelectionChanged: (val) {
-                          setState(() {
-                            if (val == true) {
-                              _selectedAlistItems[path] = file;
-                            } else {
-                              _selectedAlistItems.remove(path);
-                            }
-                          });
-                        },
-                      );
-                    },
+              : DiscoveryBrowser(
+                  key: ValueKey(
+                    'alist:$_alistServerId:$_alistInstanceName:'
+                    '$_alistPath:$_alistKeyword:$_alistPassword',
                   ),
+                  items: [
+                    for (final file in _alistFiles)
+                      DiscoveryBrowserEntry(
+                        key: file.path,
+                        title: file.name,
+                        subtitle: file.isDir ? '' : _formatSize(file.size),
+                        source: file.source,
+                        isContainer: file.isDir,
+                      ),
+                  ],
+                  selectionController: _alistSelection,
+                  selectionScope: _providerBindKey(
+                    _alistServerId,
+                    _alistInstanceName,
+                  ),
+                  loading: _alistLoading || _isLoading,
+                  hasMore: _alistHasMore,
+                  onLoadMore: () => _loadAlist(_alistPath, loadMore: true),
+                  onOpen: (entry) => _openAlistDirectory(entry.key),
+                  onAddSelected: _addDiscoveredEntries,
+                  onAddCurrentList: _alistListSource == null
+                      ? null
+                      : () => _addDiscoveredSource(
+                          _alistListSource!,
+                          _alistPath.split('/').last,
+                        ),
+                  emptyIcon: Icons.cloud_queue_rounded,
+                  emptyTitle: context.l10n.noFiles,
                 ),
         ),
-        if (_selectedAlistItems.isNotEmpty)
-          AppPanelSurface(
-            padding: const EdgeInsets.all(16),
-            color: theme.cardColor,
-            borderRadius: BorderRadius.zero,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -4),
-              ),
-            ],
-            child: _buildActionButton(
-              context.l10n.addSelectedItems(_selectedAlistItems.length),
-              _addSelectedAlistItems,
-              icon: Icons.playlist_add_check_rounded,
-            ),
-          ),
       ],
     );
   }
 
   Widget _buildEmbyContent(ThemeData theme) {
+    if (_checkingVendors) return const AppLoadingIndicator();
+    if (_embyBinds.isEmpty) return _buildBindGuide('Emby', theme);
+
     return Column(
       children: [
         SegmentedButton<bool>(
-          segments: const [
+          segments: [
             ButtonSegment(
               value: false,
-              icon: Icon(Icons.folder_open_outlined),
-              label: Text('Library'),
+              icon: const Icon(Icons.folder_open_outlined),
+              label: Text(context.l10n.library),
             ),
             ButtonSegment(
               value: true,
-              icon: Icon(Icons.favorite_outline),
-              label: Text('Favorites & people'),
+              icon: const Icon(Icons.favorite_outline),
+              label: Text(context.l10n.embyDiscoveryAndLists),
             ),
           ],
           selected: {_embyPlaylistMode},
           onSelectionChanged: _isLoading
               ? null
               : (values) => setState(() => _embyPlaylistMode = values.first),
+        ),
+        const SizedBox(height: 12),
+        PlaybackProxyModeControl(
+          value: _embyProxyMode,
+          enabled: !_isLoading,
+          onChanged: (value) => setState(() => _embyProxyMode = value),
         ),
         const SizedBox(height: 14),
         Expanded(
@@ -2020,7 +2203,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   roomId: widget.roomId,
                   parentId: widget.parentId ?? '',
                   binds: _embyBinds,
+                  proxyMode: _embyProxyMode,
                   onDraftChanged: (value) => _embyPlaylistHasDraft = value,
+                  onOpenBinding: () => _openProviderBinding('emby'),
                 )
               : _buildEmbyLibraryContent(theme),
         ),
@@ -2051,73 +2236,81 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               _embyServerId = bind.serverId;
               _embyInstanceName = bind.providerInstanceName;
               _embyPath = '';
+              _embyBreadcrumbs.clear();
               _embyFiles = [];
               _embyPage = 1;
               _embyHasMore = true;
               _embyKeyword = '';
               _embySearchController.clear();
+              _embyListSource = null;
             });
             _loadEmby('');
           },
         ),
         _buildEmbySearchBar(theme),
-        _buildPathBar(theme, _embyPath, _goUpEmby),
+        _buildPathBar(
+          theme,
+          _embyBreadcrumbs.isEmpty
+              ? '/'
+              : '/${_embyBreadcrumbs.map((entry) => entry.$2).join('/')}',
+          _goUpEmby,
+        ),
         Expanded(
-          child: !_embyLoading && _embyFiles.isEmpty
-              ? Center(
-                  child: AppEmptyState(
-                    icon: Icons.video_library_rounded,
-                    iconColor: Colors.green.shade600,
-                    iconSize: 58,
-                    title: context.l10n.noMedia,
-                    subtitle: context.l10n.noMediaLibraryItems,
-                    maxWidth: 360,
-                  ),
-                )
-              : _embyLoading && _embyFiles.isEmpty
+          child: _embyLoading && _embyFiles.isEmpty
               ? const AppLoadingIndicator()
-              : NotificationListener<ScrollNotification>(
-                  onNotification: (scrollInfo) {
-                    if (!_embyLoading &&
-                        _embyHasMore &&
-                        scrollInfo.metrics.pixels >=
-                            scrollInfo.metrics.maxScrollExtent - 200) {
-                      _loadEmby(_embyPath, loadMore: true);
-                    }
-                    return false;
-                  },
-                  child: AppListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemCount: _embyFiles.length + (_embyHasMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _embyFiles.length) {
-                        return AppLoadMoreFooter(
-                          loading: _embyLoading,
-                          onPressed: () => _loadEmby(_embyPath, loadMore: true),
-                        );
-                      }
-                      final file = _embyFiles[index];
-                      return _buildFileItem(
-                        theme,
-                        file.name.isEmpty ? 'Unknown' : file.name,
-                        file.isDir,
-                        () => file.isDir
-                            ? _enterEmbyDir(file.name, file.id)
-                            : _addEmbyFile(file),
-                        subtitle: file.isDir ? null : 'Emby Media',
-                        thumbnailUrl: file.thumbnail,
-                        iconColor: Colors.green,
-                        trailing: file.isDir
-                            ? AppIconButton(
-                                icon: Icons.playlist_add_rounded,
-                                tooltip: context.l10n.addAsDynamicPlaylist,
-                                onPressed: () =>
-                                    _addEmbyDirectoryPlaylist(file),
-                              )
-                            : null,
-                      );
-                    },
+              : DiscoveryBrowser(
+                  key: ValueKey(
+                    'emby:$_embyServerId:$_embyInstanceName:'
+                    '$_embyPath:$_embyKeyword',
                   ),
+                  items: [
+                    for (final file in _embyFiles)
+                      DiscoveryBrowserEntry(
+                        key: file.id,
+                        title: file.name.isEmpty
+                            ? context.l10n.unknown
+                            : file.name,
+                        subtitle: file.description.isNotEmpty
+                            ? file.description
+                            : localizedMediaVariant(context, file.type),
+                        source: file.source,
+                        isContainer: file.isDir,
+                        leading: file.thumbnail.isEmpty
+                            ? Icon(
+                                file.isDir
+                                    ? Icons.folder_rounded
+                                    : Icons.movie_outlined,
+                                color: Colors.green,
+                              )
+                            : AppImageThumbnail(
+                                url: file.thumbnail,
+                                headers:
+                                    resourceUrlResolver.authenticatedHeaders,
+                                width: 48,
+                                height: 48,
+                                borderRadius: BorderRadius.circular(4),
+                                errorIcon: Icons.movie_outlined,
+                              ),
+                      ),
+                  ],
+                  selectionController: _embySelection,
+                  selectionScope: _providerBindKey(
+                    _embyServerId,
+                    _embyInstanceName,
+                  ),
+                  loading: _embyLoading || _isLoading,
+                  hasMore: _embyHasMore,
+                  onLoadMore: () => _loadEmby(_embyPath, loadMore: true),
+                  onOpen: (entry) => _enterEmbyDir(entry.key, entry.title),
+                  onAddSelected: _addDiscoveredEntries,
+                  onAddCurrentList: _embyListSource == null
+                      ? null
+                      : () => _addDiscoveredSource(
+                          _embyListSource!,
+                          _embyPath.isEmpty ? 'Emby Library' : '',
+                        ),
+                  emptyIcon: Icons.video_library_rounded,
+                  emptyTitle: context.l10n.noMedia,
                 ),
         ),
       ],
@@ -2157,10 +2350,17 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               _cloudreveHasMore = true;
               _cloudreveKeyword = '';
               _cloudreveSearchController.clear();
+              _cloudreveListSource = null;
             });
             _loadCloudreve(_cloudrevePath);
           },
         ),
+        PlaybackProxyModeControl(
+          value: _cloudreveProxyMode,
+          enabled: !_cloudreveLoading && !_isLoading,
+          onChanged: (value) => setState(() => _cloudreveProxyMode = value),
+        ),
+        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
           child: AppSearchField(
@@ -2176,63 +2376,61 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         ),
         _buildPathBar(theme, _cloudrevePath, _goUpCloudreve),
         Expanded(
-          child: !_cloudreveLoading && _cloudreveFiles.isEmpty
-              ? Center(
-                  child: AppEmptyState(
-                    icon: Icons.cloud_off_rounded,
-                    iconColor: Colors.teal.shade600,
-                    iconSize: 58,
-                    title: context.l10n.noFiles,
-                    subtitle: context.l10n.noMediaInDirectory,
-                    maxWidth: 360,
-                  ),
-                )
-              : _cloudreveLoading && _cloudreveFiles.isEmpty
+          child: _cloudreveLoading && _cloudreveFiles.isEmpty
               ? const AppLoadingIndicator()
-              : NotificationListener<ScrollNotification>(
-                  onNotification: (scrollInfo) {
-                    if (!_cloudreveLoading &&
-                        _cloudreveHasMore &&
-                        scrollInfo.metrics.pixels >=
-                            scrollInfo.metrics.maxScrollExtent - 200) {
-                      _loadCloudreve(_cloudrevePath, loadMore: true);
-                    }
-                    return false;
-                  },
-                  child: AppListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    itemCount:
-                        _cloudreveFiles.length + (_cloudreveHasMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _cloudreveFiles.length) {
-                        return AppLoadMoreFooter(
-                          loading: _cloudreveLoading,
-                          onPressed: () =>
-                              _loadCloudreve(_cloudrevePath, loadMore: true),
-                        );
-                      }
-                      final file = _cloudreveFiles[index];
-                      return _buildFileItem(
-                        theme,
-                        file.name,
-                        file.isDir,
-                        () => file.isDir
-                            ? _openCloudreveDirectory(file.path)
-                            : _addCloudreveFile(file),
-                        subtitle: file.isDir ? null : _formatSize(file.size),
-                        thumbnailUrl: file.thumbnail,
-                        iconColor: Colors.teal,
-                        trailing: file.isDir
-                            ? AppIconButton(
-                                icon: Icons.playlist_add_rounded,
-                                tooltip: context.l10n.addAsDynamicPlaylist,
-                                onPressed: () =>
-                                    _addCloudreveDirectoryPlaylist(file),
-                              )
-                            : null,
-                      );
-                    },
+              : DiscoveryBrowser(
+                  key: ValueKey(
+                    'cloudreve:$_cloudreveServerId:$_cloudreveInstanceName:'
+                    '$_cloudrevePath:$_cloudreveKeyword',
                   ),
+                  items: [
+                    for (final file in _cloudreveFiles)
+                      DiscoveryBrowserEntry(
+                        key: file.path,
+                        title: file.name,
+                        subtitle: file.isDir ? '' : _formatSize(file.size),
+                        source: file.source,
+                        isContainer: file.isDir,
+                        leading: file.thumbnail.isEmpty
+                            ? Icon(
+                                file.isDir
+                                    ? Icons.folder_rounded
+                                    : Icons.movie_outlined,
+                                color: Colors.teal,
+                              )
+                            : AppImageThumbnail(
+                                url: file.thumbnail,
+                                headers:
+                                    resourceUrlResolver.authenticatedHeaders,
+                                width: 48,
+                                height: 48,
+                                borderRadius: BorderRadius.circular(4),
+                                errorIcon: Icons.movie_outlined,
+                              ),
+                      ),
+                  ],
+                  selectionController: _cloudreveSelection,
+                  selectionScope: _providerBindKey(
+                    _cloudreveServerId,
+                    _cloudreveInstanceName,
+                  ),
+                  loading: _cloudreveLoading || _isLoading,
+                  hasMore: _cloudreveHasMore,
+                  onLoadMore: () =>
+                      _loadCloudreve(_cloudrevePath, loadMore: true),
+                  onOpen: (entry) => _openCloudreveDirectory(entry.key),
+                  onAddSelected: _addDiscoveredEntries,
+                  onAddCurrentList: _cloudreveListSource == null
+                      ? null
+                      : () => _addDiscoveredSource(
+                          _cloudreveListSource!,
+                          Uri.tryParse(
+                                _cloudrevePath,
+                              )?.pathSegments.lastOrNull ??
+                              'Cloudreve',
+                        ),
+                  emptyIcon: Icons.cloud_off_rounded,
+                  emptyTitle: context.l10n.noFiles,
                 ),
         ),
       ],
@@ -2246,6 +2444,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     String hint,
     IconData icon, {
     bool urlInput = false,
+    ValueChanged<String>? onChanged,
   }) {
     return AppTextField(
       controller: controller,
@@ -2261,6 +2460,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       smartQuotesType: urlInput
           ? SmartQuotesType.disabled
           : SmartQuotesType.enabled,
+      onChanged: onChanged,
     );
   }
 
@@ -2351,17 +2551,26 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     required String Function(T item) labelOf,
     required ValueChanged<T> onChanged,
   }) {
-    if (items.length <= 1) return const SizedBox.shrink();
+    if (items.isEmpty) return const SizedBox.shrink();
     final value = items.any((item) => keyOf(item) == selectedKey)
         ? selectedKey
         : keyOf(items.first);
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
-      child: AppSelect<String>(
-        value: value,
-        label: context.l10n.mediaSourceAccount,
-        prefixIcon: Icons.account_tree_rounded,
-        options: {for (final item in items) labelOf(item): keyOf(item)},
+      child: DropdownButtonFormField<String>(
+        initialValue: value,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: context.l10n.mediaSourceAccount,
+          prefixIcon: const Icon(Icons.account_circle_outlined),
+        ),
+        items: [
+          for (final item in items)
+            DropdownMenuItem(
+              value: keyOf(item),
+              child: Text(labelOf(item), overflow: TextOverflow.ellipsis),
+            ),
+        ],
         onChanged: (key) {
           if (key == null) return;
           onChanged(items.firstWhere((item) => keyOf(item) == key));
@@ -2446,7 +2655,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               ? context.l10n.videoNumber(index + 1)
               : candidate.title;
           final subtitle = [
-            candidate.isPlaylist ? 'Dynamic playlist' : 'Media',
+            candidate.isPlaylist
+                ? context.l10n.dynamicPlaylist
+                : context.l10n.media,
             if (candidate.partNumber case final part?) 'P$part',
             if (candidate.durationSeconds case final duration?) '${duration}s',
           ].join(' · ');
@@ -2476,87 +2687,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
-  Widget _buildFileItem(
-    ThemeData theme,
-    String name,
-    bool isDir,
-    VoidCallback onTap, {
-    String? subtitle,
-    String? thumbnailUrl,
-    Color? iconColor,
-    bool? isSelected,
-    ValueChanged<bool?>? onSelectionChanged,
-    Widget? trailing,
-  }) {
-    final hasThumbnail = thumbnailUrl != null && thumbnailUrl.isNotEmpty;
-    return AppPanelSurface(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: theme.cardColor,
-      borderRadius: BorderRadius.circular(8),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.02),
-          blurRadius: 4,
-          offset: const Offset(0, 2),
-        ),
-      ],
-      child: AppTile(
-        onPressed: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        prefix: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (onSelectionChanged != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 4.0),
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: AppCheckbox(
-                    value: isSelected ?? false,
-                    semanticsLabel: context.l10n.selectMedia,
-                    onChanged: onSelectionChanged,
-                  ),
-                ),
-              ),
-            hasThumbnail
-                ? AppImageThumbnail(
-                    url: thumbnailUrl,
-                    width: 40,
-                    height: 40,
-                    errorIcon: isDir
-                        ? Icons.folder_rounded
-                        : Icons.movie_rounded,
-                  )
-                : _buildFileIcon(isDir, iconColor),
-          ],
-        ),
-        title: Text(
-          name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-        ),
-        subtitle: subtitle != null
-            ? Text(
-                subtitle,
-                style: TextStyle(fontSize: 12, color: theme.hintColor),
-              )
-            : null,
-        suffix: trailing,
-      ),
-    );
-  }
-
-  Widget _buildFileIcon(bool isDir, Color? iconColor) {
-    final color = isDir ? Colors.amber : (iconColor ?? Colors.blue);
-    return AppIconBadge(
-      icon: isDir ? Icons.folder_rounded : Icons.movie_rounded,
-      color: color,
-      size: 40,
-    );
-  }
-
   Widget _buildBindGuide(String name, ThemeData theme) {
     return Center(
       child: Column(
@@ -2578,16 +2708,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             style: TextStyle(color: theme.hintColor),
           ),
           const SizedBox(height: 24),
-          AppActionButton(
-            onPressed: () async {
-              await PlatformBindingDialog.show(
-                context,
-                initialProviderType: name.toLowerCase(),
-              );
-              _checkVendors();
-            },
-            icon: Icons.link_rounded,
-            label: context.l10n.bindProviderNow(name),
+          ProviderAccountAction(
+            providerType: name,
+            onPressed: () =>
+                _openProviderBinding(mediaProviderBrand(name).type),
           ),
         ],
       ),
@@ -2705,20 +2829,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     return '${(size / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
   }
 
-  String _directUrlDisplayName(String url) {
-    final parsed = Uri.tryParse(url);
-    final segments =
-        parsed?.pathSegments
-            .where((segment) => segment.trim().isNotEmpty)
-            .toList(growable: false) ??
-        const <String>[];
-    final fileName = segments.isEmpty ? '' : Uri.decodeComponent(segments.last);
-    if (fileName.isNotEmpty) return fileName;
-    final host = parsed?.host ?? '';
-    if (host.isNotEmpty) return host;
-    return context.l10n.directLinkVideo;
-  }
-
   void _addDirectHeaderRow() {
     final hasBlank = _directHeaders.any(
       (header) =>
@@ -2734,6 +2844,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     setState(() {
       _directHeaders.add(_DirectHeaderDraft());
       _directHeaderError = _currentDirectHeaderValidationMessage();
+      _directPreview = const [];
     });
   }
 
@@ -2741,21 +2852,25 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     if (index < 0 || index >= _directHeaders.length) return;
     final header = _directHeaders.removeAt(index);
     header.dispose();
+    _directPreview = const [];
     _updateDirectHeaderValidation();
   }
 
   void _updateDirectHeaderValidation() {
     final message = _currentDirectHeaderValidationMessage();
     if (!mounted || _directHeaderError == message) return;
-    setState(() => _directHeaderError = message);
+    setState(() {
+      _directHeaderError = message;
+      _directPreview = const [];
+    });
   }
 
   String _currentDirectHeaderValidationMessage() {
     try {
       _collectDirectHeaders(validateCompleteRows: false);
       return '';
-    } on DirectUrlSourceConfigException catch (e) {
-      return e.message;
+    } on FormatException catch (error) {
+      return error.message;
     }
   }
 
@@ -2769,17 +2884,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       final value = draft.valueController.text.trim();
       if (name.isEmpty && value.isEmpty) continue;
       if (validateCompleteRows && (name.isEmpty || value.isEmpty)) {
-        throw DirectUrlSourceConfigException(
-          context.l10n.completeRequestHeaderNameAndValue,
-        );
+        throw FormatException(context.l10n.completeRequestHeaderNameAndValue);
       }
       if (name.isNotEmpty) {
-        DirectUrlSourceConfig.validateHeaderName(name);
         final normalized = name.toLowerCase();
         if (!normalizedNames.add(normalized)) {
-          throw DirectUrlSourceConfigException(
-            context.l10n.duplicateRequestHeader(name),
-          );
+          throw FormatException(context.l10n.duplicateRequestHeader(name));
         }
       }
       if (validateCompleteRows) {
@@ -2788,12 +2898,21 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         headers[name] = value;
       }
     }
-    DirectUrlSourceConfig.validateHeaders(headers);
     return headers;
   }
 
   bool get _hasUnsavedDraft {
     if (_directPlaybackKind != source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR ||
+        _directProxyMode !=
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO ||
+        _bilibiliProxyMode !=
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO ||
+        _alistProxyMode !=
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO ||
+        _embyProxyMode !=
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO ||
+        _cloudreveProxyMode !=
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO ||
         _urlController.text.trim().isNotEmpty ||
         _nameController.text.trim().isNotEmpty ||
         _liveProxyUrlController.text.trim().isNotEmpty ||
@@ -2866,93 +2985,156 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     Navigator.of(context).pop();
   }
 
-  Future<void> _addDirectLink() async {
-    late final List<String> urls;
+  Future<void> _prepareDirectLinks() async {
+    final urls = _urlController.text
+        .split('\n')
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
+    if (urls.isEmpty) {
+      AppNotifications.showWarning(context, context.l10n.enterHttpLinks);
+      return;
+    }
     late final Map<String, String> headers;
     try {
-      urls = _parseDirectUrls(_urlController.text);
       headers = _collectDirectHeaders();
-    } on DirectUrlSourceConfigException catch (e) {
-      setState(() => _directHeaderError = e.message);
-      AppNotifications.showWarning(context, e.message);
+    } on FormatException catch (error) {
+      final message = error.message;
+      setState(() => _directHeaderError = message);
+      AppNotifications.showWarning(context, message);
       return;
     }
 
     setState(() => _isLoading = true);
     try {
-      final name = _nameController.text.trim();
-      if (urls.length == 1) {
-        await providerGateway.addDirectUrlMedia(
-          widget.roomId,
-          playlistId: widget.parentId ?? '',
-          url: urls.single,
-          playbackKind: _directPlaybackKind,
-          name: name.isEmpty ? _directUrlDisplayName(urls.single) : name,
-          headers: headers,
-          preferProxy: _preferProxy,
-          proxyOnly: _proxyOnly,
-        );
-      } else {
-        await providerGateway.addMediaBatch(
-          widget.roomId,
-          urls
-              .map(
-                (url) => {
-                  'playlistId': widget.parentId ?? '',
-                  'sourceProvider': DirectUrlSourceConfig.sourceProvider,
-                  'sourceConfig': DirectUrlSourceConfig.fromUserInput(
-                    url: url,
-                    playbackKind: _directPlaybackKind,
-                    headers: headers,
-                    preferProxy: _preferProxy,
-                    proxyOnly: _proxyOnly,
-                  ).toJson(),
-                  'name': _directUrlDisplayName(url),
-                },
-              )
-              .toList(growable: false),
-        );
-      }
+      final preview = await Future.wait([
+        for (final url in urls)
+          providerGateway.prepareDirectUrl(
+            provider_common.PrepareDirectUrlRequest(
+              url: url,
+              headers: headers.entries,
+              playbackKind: _directPlaybackKind,
+              proxyMode: _directProxyMode,
+            ),
+          ),
+      ]);
+      if (mounted) setState(() => _directPreview = preview);
+    } catch (error) {
       if (mounted) {
-        Navigator.pop(context);
-        AppNotifications.showSuccess(
-          context,
-          urls.length == 1
-              ? context.l10n.addedSuccessfully
-              : context.l10n.itemsAdded(urls.length),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(context, context.l10n.addFailed('$e'));
+        AppNotifications.showError(context, context.l10n.parseFailed('$error'));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  List<String> _parseDirectUrls(String input) {
-    final urls = <String>[];
-    for (final rawLine in input.split('\n')) {
-      final url = DirectUrlSourceConfig.normalizeUrlInput(rawLine);
-      if (url.isEmpty) continue;
-      urls.add(DirectUrlSourceConfig.validateUrl(url));
+  Widget _buildDirectPreview() {
+    return DiscoveryBrowser(
+      key: ValueKey('direct-preview:${_directPreview.length}'),
+      items: [
+        for (final (index, prepared) in _directPreview.indexed)
+          DiscoveryBrowserEntry(
+            key: 'direct-$index',
+            title: prepared.suggestedName,
+            subtitle: _playbackKindLabel(prepared.playbackKind),
+            source: prepared.source,
+            isContainer: false,
+            selectable: prepared.hasSource(),
+            leading: const Icon(Icons.link_rounded),
+          ),
+      ],
+      loading: _isLoading,
+      initiallySelectAll: true,
+      onAddSelected: _addPreparedDirectLinks,
+      emptyIcon: Icons.link_off_rounded,
+      emptyTitle: context.l10n.noPreparedLinks,
+    );
+  }
+
+  Future<void> _addPreparedDirectLinks(
+    List<DiscoveryBrowserEntry> entries,
+  ) async {
+    if (entries.isEmpty) return;
+    setState(() => _isLoading = true);
+    try {
+      final customName = _nameController.text.trim();
+      for (final entry in entries) {
+        await providerGateway.addDiscoveredSource(
+          widget.roomId,
+          playlistId: widget.parentId ?? '',
+          source: entry.source,
+          name: entries.length == 1 && customName.isNotEmpty
+              ? customName
+              : entry.title,
+        );
+      }
+      if (!mounted) return;
+      Navigator.pop(context);
+      AppNotifications.showSuccess(
+        context,
+        context.l10n.itemsAdded(entries.length),
+      );
+    } catch (error) {
+      if (mounted) {
+        AppNotifications.showError(context, context.l10n.addFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    if (urls.isEmpty) {
-      throw DirectUrlSourceConfigException(context.l10n.enterHttpLinks);
+  }
+
+  String _playbackKindLabel(source_enum.PlaybackKind kind) => switch (kind) {
+    source_enum.PlaybackKind.PLAYBACK_KIND_LIVE => context.l10n.live,
+    source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR => context.l10n.onDemand,
+    _ => context.l10n.source,
+  };
+
+  Widget _buildPreparedSourceCard(
+    provider_common.PreparedMediaSource prepared, {
+    required IconData icon,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(
+          prepared.suggestedName,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(_playbackKindLabel(prepared.playbackKind)),
+      ),
+    );
+  }
+
+  Future<void> _prepareRtmpPublish() async {
+    setState(() => _isLoading = true);
+    try {
+      final preview = await providerGateway.prepareRtmp(_rtmpPublishMode);
+      if (mounted) setState(() => _rtmpPreview = preview);
+    } catch (error) {
+      if (mounted) {
+        AppNotifications.showError(context, context.l10n.parseFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    return urls;
   }
 
   Future<void> _addRtmpPublish() async {
+    final preview = _rtmpPreview;
+    if (preview == null || !preview.hasSource()) return;
     setState(() => _isLoading = true);
     try {
       final name = _nameController.text.trim();
-      final mediaId = await providerGateway.addRtmpMedia(
+      final mediaId = await providerGateway.addDiscoveredSource(
         widget.roomId,
         playlistId: widget.parentId ?? '',
-        name: name.isEmpty ? context.l10n.rtmpLive : name,
-        mode: _rtmpPublishMode,
+        source: preview.source,
+        name: name.isEmpty ? preview.suggestedName : name,
       );
       final publish = await providerGateway.createRtmpPublishKeyInfo(
         widget.roomId,
@@ -2978,28 +3160,40 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  Future<void> _addLiveProxyMedia() async {
-    late final String url;
-    late final source_config.LiveProxyMediaSourceConfig sourceConfig;
+  Future<void> _prepareLiveProxy() async {
+    final url = _liveProxyUrlController.text.trim();
+    late final provider_common.PrepareLiveProxyRequest intent;
     try {
-      url = _validateLiveProxyUrl(
-        _liveProxyUrlController.text.trim(),
-        _liveProxyProtocol,
-      );
-      sourceConfig = _liveProxySourceConfig(url);
-    } on FormatException catch (e) {
-      AppNotifications.showWarning(context, e.message);
+      intent = _liveProxyIntent(url);
+    } on FormatException catch (error) {
+      AppNotifications.showWarning(context, error.message);
       return;
     }
 
     setState(() => _isLoading = true);
     try {
+      final preview = await providerGateway.prepareLiveProxy(intent);
+      if (mounted) setState(() => _liveProxyPreview = preview);
+    } catch (error) {
+      if (mounted) {
+        AppNotifications.showError(context, context.l10n.parseFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _addLiveProxyMedia() async {
+    final preview = _liveProxyPreview;
+    if (preview == null || !preview.hasSource()) return;
+    setState(() => _isLoading = true);
+    try {
       final name = _liveProxyNameController.text.trim();
-      await providerGateway.addLiveProxyMedia(
+      await providerGateway.addDiscoveredSource(
         widget.roomId,
         playlistId: widget.parentId ?? '',
-        sourceConfig: sourceConfig,
-        name: name.isEmpty ? _liveProxyDisplayName(url) : name,
+        source: preview.source,
+        name: name.isEmpty ? preview.suggestedName : name,
       );
       if (mounted) {
         Navigator.pop(context);
@@ -3017,58 +3211,35 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  String _validateLiveProxyUrl(String rawUrl, _LivePullProtocol protocol) {
-    if (rawUrl.isEmpty) {
-      throw FormatException(context.l10n.enterLiveSourceAddress);
-    }
-    final uri = Uri.tryParse(rawUrl);
-    if (uri == null || uri.scheme.isEmpty || uri.host.isEmpty) {
-      throw FormatException(context.l10n.enterValidLiveSourceAddress);
-    }
-    final scheme = uri.scheme.toLowerCase();
-    final valid = switch (protocol) {
-      _LivePullProtocol.rtmp => scheme == 'rtmp',
-      _LivePullProtocol.rtsp => scheme == 'rtsp',
-      _LivePullProtocol.httpFlv =>
-        (scheme == 'http' || scheme == 'https') && uri.path.endsWith('.flv'),
-    };
-    if (!valid) {
-      throw FormatException(context.l10n.livePullUrlSupport);
-    }
-    return rawUrl;
-  }
-
-  source_config.LiveProxyMediaSourceConfig _liveProxySourceConfig(String url) {
+  provider_common.PrepareLiveProxyRequest _liveProxyIntent(String url) {
     return switch (_liveProxyProtocol) {
-      _LivePullProtocol.rtmp => source_config.LiveProxyMediaSourceConfig(
-        rtmp: source_config.RtmpPullSourceConfig(
+      _LivePullProtocol.rtmp => provider_common.PrepareLiveProxyRequest(
+        rtmp: provider_common.PrepareRtmpPullIntent(
           url: url,
           mode: _liveProxyRtmpMode,
         ),
       ),
-      _LivePullProtocol.rtsp => _rtspLiveProxySourceConfig(url),
-      _LivePullProtocol.httpFlv => source_config.LiveProxyMediaSourceConfig(
-        httpFlv: source_config.HttpFlvPullSourceConfig(url: url),
+      _LivePullProtocol.rtsp => _rtspLiveProxyIntent(url),
+      _LivePullProtocol.httpFlv => provider_common.PrepareLiveProxyRequest(
+        httpFlv: provider_common.PrepareHttpFlvPullIntent(url: url),
       ),
     };
   }
 
-  source_config.LiveProxyMediaSourceConfig _rtspLiveProxySourceConfig(
-    String url,
-  ) {
+  provider_common.PrepareLiveProxyRequest _rtspLiveProxyIntent(String url) {
     if (_liveProxyVideoTrackMode == _RtspTrackMode.disabled &&
         _liveProxyAudioTrackMode == _RtspTrackMode.disabled) {
       throw FormatException(context.l10n.selectRtspTrack);
     }
-    return source_config.LiveProxyMediaSourceConfig(
-      rtsp: source_config.RtspPullSourceConfig(
+    return provider_common.PrepareLiveProxyRequest(
+      rtsp: provider_common.PrepareRtspPullIntent(
         url: url,
         transport: _liveProxyRtspTransport,
-        videoTrack: _rtspTrackSelection(
+        videoTrack: _rtspTrackIntent(
           _liveProxyVideoTrackMode,
           _liveProxyVideoTrackIndexController,
         ),
-        audioTrack: _rtspTrackSelection(
+        audioTrack: _rtspTrackIntent(
           _liveProxyAudioTrackMode,
           _liveProxyAudioTrackIndexController,
         ),
@@ -3076,18 +3247,18 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
-  source_config.RtspTrackSelection _rtspTrackSelection(
+  provider_common.PrepareRtspTrackIntent _rtspTrackIntent(
     _RtspTrackMode mode,
     TextEditingController indexController,
   ) {
     return switch (mode) {
-      _RtspTrackMode.firstCompatible => source_config.RtspTrackSelection(
+      _RtspTrackMode.firstCompatible => provider_common.PrepareRtspTrackIntent(
         firstCompatible: true,
       ),
-      _RtspTrackMode.disabled => source_config.RtspTrackSelection(
+      _RtspTrackMode.disabled => provider_common.PrepareRtspTrackIntent(
         disabled: true,
       ),
-      _RtspTrackMode.explicitIndex => source_config.RtspTrackSelection(
+      _RtspTrackMode.explicitIndex => provider_common.PrepareRtspTrackIntent(
         index: _validatedTrackIndex(indexController.text),
       ),
     };
@@ -3099,20 +3270,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       throw FormatException(context.l10n.enterValidTrackIndex);
     }
     return index;
-  }
-
-  String _liveProxyDisplayName(String url) {
-    final uri = Uri.tryParse(url);
-    final segments =
-        uri?.pathSegments
-            .where((segment) => segment.trim().isNotEmpty)
-            .toList(growable: false) ??
-        const <String>[];
-    final lastSegment = segments.isEmpty ? null : segments.last;
-    if (lastSegment == null || lastSegment.isEmpty) {
-      return context.l10n.livePull;
-    }
-    return Uri.decodeComponent(lastSegment);
   }
 
   Future<void> _showRtmpPublishDialog({
@@ -3269,6 +3426,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       final info = await providerGateway.parseBilibiliInfo(
         url,
         instanceName: _bilibiliInstanceName,
+        shared: _bilibiliShared,
       );
       if (mounted) {
         setState(() {
@@ -3294,55 +3452,35 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   bool get _bilibiliPreviewHasMore {
-    final preview = _biliPreview;
-    if (preview == null) return false;
-    if (preview.usesCursor) return preview.nextCursor.isNotEmpty;
-    if (preview.total case final total?) {
-      return preview.dynamicItems.length < total;
-    }
-    return false;
+    return _biliPreview?.hasMore ?? false;
   }
 
   Future<void> _previewBilibiliCandidate({bool loadMore = false}) async {
     final candidate = _selectedBilibiliCandidate;
-    final sourceConfig = candidate?.playlistSourceConfig;
-    if (sourceConfig == null) return;
+    if (candidate == null || !candidate.isPlaylist) return;
+    final intent = candidate.browse;
+    if (intent == null) return;
     final current = _biliPreview;
     if (loadMore && (current == null || !_bilibiliPreviewHasMore)) return;
     setState(() => _isLoading = true);
     try {
-      final preview = await providerGateway.listMediaLibrary(
-        widget.roomId,
-        sourceProvider: 'bilibili',
-        typedPreviewSourceConfig: BilibiliSourceConfig.playlistWithShared(
-          sourceConfig,
-          _bilibiliShared,
-        ),
-        providerInstanceName: _bilibiliInstanceName,
+      final preview = await providerGateway.listBilibiliPlaylist(
+        intent,
+        page: loadMore ? (current?.page ?? 1) + 1 : 1,
         pageSize: 24,
-        page: loadMore && current?.usesCursor == false ? current!.page + 1 : 1,
-        cursor: loadMore && current?.usesCursor == true
-            ? current!.nextCursor
-            : null,
+        cursor: loadMore ? current?.cursor : null,
+        instanceName: candidate.source.providerInstanceName,
+        shared: _bilibiliShared,
       );
       if (mounted) {
         setState(() {
           _biliPreview = loadMore && current != null
-              ? RoomMediaLibraryPage(
-                  playlists: preview.playlists,
-                  media: preview.media,
-                  dynamicItems: [
-                    ...current.dynamicItems,
-                    ...preview.dynamicItems,
-                  ],
-                  currentPath: preview.currentPath,
-                  total: preview.total,
-                  playlistCount: preview.playlistCount,
-                  fileCount: preview.fileCount,
-                  version: preview.version,
-                  usesCursor: preview.usesCursor,
-                  nextCursor: preview.nextCursor,
+              ? BilibiliPlaylistListPage(
+                  items: [...current.items, ...preview.items],
+                  hasMore: preview.hasMore,
                   page: preview.page,
+                  cursor: preview.cursor,
+                  source: preview.source,
                 )
               : preview;
         });
@@ -3366,35 +3504,15 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         throw Exception(context.l10n.bilibiliVideoInfoUnavailable);
       }
       final title = candidate.title.isEmpty ? 'Bilibili' : candidate.title;
-      if (candidate.mediaSourceConfig case final sourceConfig?) {
-        await providerGateway.addMediaFromSourceConfig(
-          widget.roomId,
-          playlistId: widget.parentId ?? '',
-          providerInstanceName: _bilibiliInstanceName,
-          sourceConfig: BilibiliSourceConfig.mediaWithShared(
-            sourceConfig,
-            _bilibiliShared,
-          ),
-          name: title,
-        );
-      } else if (candidate.playlistSourceConfig case final sourceConfig?) {
-        if (_biliPreview == null) {
-          throw StateError('Preview the dynamic playlist before creating it');
-        }
-        await providerGateway.createPlaylistFromSourceConfig(
-          widget.roomId,
-          parentId: widget.parentId ?? '',
-          providerInstanceName: _bilibiliInstanceName,
-          sourceConfig: BilibiliSourceConfig.playlistWithShared(
-            sourceConfig,
-            _bilibiliShared,
-          ),
-          name: title,
-          description: candidate.description,
-        );
-      } else {
-        throw StateError('Bilibili parse candidate has no source config');
+      if (candidate.isPlaylist && _biliPreview == null) {
+        throw StateError('Preview the dynamic playlist before creating it');
       }
+      await providerGateway.addDiscoveredSource(
+        widget.roomId,
+        playlistId: widget.parentId ?? '',
+        source: candidate.source.withPlaybackProxyMode(_bilibiliProxyMode),
+        name: title,
+      );
       if (mounted) {
         Navigator.pop(context);
         AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
@@ -3409,23 +3527,17 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Future<void> _addSelectedBilibiliPreviewItems(
-    List<RoomDynamicMediaEntry> items,
+    List<DiscoveryBrowserEntry> items,
   ) async {
     if (items.isEmpty) return;
     setState(() => _isLoading = true);
     try {
       for (final item in items) {
-        final sourceConfig = item.mediaSourceConfig;
-        if (sourceConfig == null) continue;
-        await providerGateway.addMediaFromSourceConfig(
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
           playlistId: widget.parentId ?? '',
-          providerInstanceName: _bilibiliInstanceName,
-          sourceConfig: BilibiliSourceConfig.mediaWithShared(
-            sourceConfig,
-            _bilibiliShared,
-          ),
-          name: item.name,
+          source: item.source.withPlaybackProxyMode(_bilibiliProxyMode),
+          name: item.title,
         );
       }
       if (mounted) {
@@ -3457,6 +3569,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       if (!loadMore) {
         _alistPath = path;
         _alistFiles = [];
+        _alistListSource = null;
       }
     });
 
@@ -3486,6 +3599,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           }
 
           _alistHasMore = _alistFiles.length < total;
+          _alistListSource = pageInfo.source;
         });
       }
     } catch (e) {
@@ -3507,6 +3621,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       if (!loadMore) {
         _cloudrevePath = path;
         _cloudreveFiles = [];
+        _cloudreveListSource = null;
       }
     });
     try {
@@ -3538,6 +3653,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         _cloudreveHasMore = page.usesCursor
             ? page.nextCursor.isNotEmpty
             : _cloudreveFiles.length < page.total;
+        _cloudreveListSource = page.source;
       });
     } catch (e) {
       if (mounted) {
@@ -3557,6 +3673,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _cloudreveHasMore = true;
       _cloudreveUsesCursor = false;
       _cloudreveNextCursor = '';
+      _cloudreveListSource = null;
     });
     _loadCloudreve(_cloudrevePath);
   }
@@ -3572,6 +3689,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _cloudreveHasMore = true;
       _cloudreveUsesCursor = false;
       _cloudreveNextCursor = '';
+      _cloudreveListSource = null;
     });
     _loadCloudreve(_cloudrevePath);
   }
@@ -3599,54 +3717,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
-  Future<void> _addCloudreveFile(CloudreveItemInfo file) async {
-    if (_cloudreveServerId.isEmpty) return;
-    setState(() => _isLoading = true);
-    try {
-      await providerGateway.addCloudreveMedia(
-        widget.roomId,
-        playlistId: widget.parentId ?? '',
-        serverId: _cloudreveServerId,
-        path: file.path,
-        name: file.name,
-        providerInstanceName: _cloudreveInstanceName,
-      );
-      if (!mounted) return;
-      Navigator.pop(context);
-      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(context, context.l10n.addFailed('$e'));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _addCloudreveDirectoryPlaylist(CloudreveItemInfo file) async {
-    if (_cloudreveServerId.isEmpty) return;
-    setState(() => _isLoading = true);
-    try {
-      await providerGateway.createPlaylist(
-        widget.roomId,
-        parentId: widget.parentId ?? '',
-        sourceProvider: 'cloudreve',
-        providerInstanceName: _cloudreveInstanceName,
-        sourceConfig: {'serverId': _cloudreveServerId, 'path': file.path},
-        name: file.name,
-      );
-      if (!mounted) return;
-      Navigator.pop(context);
-      AppNotifications.showSuccess(context, context.l10n.dynamicPlaylistAdded);
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(context, context.l10n.addFailed('$e'));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   void _searchAlist() {
     final keyword = _alistSearchController.text.trim();
     if (keyword == _alistKeyword) return;
@@ -3654,7 +3724,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _alistKeyword = keyword;
       _alistPage = 1;
       _alistHasMore = true;
-      _selectedAlistItems.clear();
+      _alistListSource = null;
     });
     _loadAlist(_alistPath);
   }
@@ -3666,7 +3736,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _alistKeyword = '';
       _alistPage = 1;
       _alistHasMore = true;
-      _selectedAlistItems.clear();
+      _alistListSource = null;
     });
     _loadAlist(_alistPath);
   }
@@ -3678,7 +3748,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _alistPassword = password;
       _alistPage = 1;
       _alistHasMore = true;
-      _selectedAlistItems.clear();
+      _alistListSource = null;
     });
     _loadAlist(_alistPath);
   }
@@ -3692,7 +3762,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _alistPassword = '';
       _alistPage = 1;
       _alistHasMore = true;
-      _selectedAlistItems.clear();
+      _alistListSource = null;
     });
     _loadAlist(_alistPath);
   }
@@ -3702,7 +3772,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _alistSearchController.clear();
       setState(() {
         _alistKeyword = '';
-        _selectedAlistItems.clear();
+        _alistListSource = null;
       });
     }
     _loadAlist(path);
@@ -3719,149 +3789,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     _loadAlist(parts.length == 1 && parts[0] == '' ? '/' : parts.join('/'));
   }
 
-  Future<void> _addAlistFile(AlistItemInfo file) async {
-    if (_alistServerId.isEmpty) {
-      AppNotifications.showWarning(
-        context,
-        context.l10n.chooseBoundAlistAccount,
-      );
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      final password = _alistPasswordController.text;
-      await providerGateway.addAlistMedia(
-        widget.roomId,
-        playlistId: widget.parentId ?? '',
-        serverId: _alistServerId,
-        path: file.path,
-        password: password,
-        name: file.name,
-        providerInstanceName: _alistInstanceName,
-      );
-      if (mounted) {
-        Navigator.pop(context);
-        AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
-      }
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(context, context.l10n.addFailed('$e'));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _addAlistDirectoryPlaylist(AlistItemInfo file) async {
-    if (_alistServerId.isEmpty) {
-      AppNotifications.showWarning(
-        context,
-        context.l10n.chooseBoundAlistAccount,
-      );
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      final password = _alistPasswordController.text;
-      final sourceConfig = <String, dynamic>{
-        'serverId': _alistServerId,
-        'path': file.path,
-      };
-      if (password.isNotEmpty) sourceConfig['password'] = password;
-      await providerGateway.createPlaylist(
-        widget.roomId,
-        parentId: widget.parentId ?? '',
-        sourceProvider: 'alist',
-        providerInstanceName: _alistInstanceName,
-        sourceConfig: sourceConfig,
-        name: file.name,
-      );
-      if (mounted) {
-        Navigator.pop(context);
-        AppNotifications.showSuccess(
-          context,
-          context.l10n.dynamicPlaylistAdded,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(context, context.l10n.addFailed('$e'));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _addSelectedAlistItems() async {
-    if (_selectedAlistItems.isEmpty) return;
-    if (_alistServerId.isEmpty) {
-      AppNotifications.showWarning(
-        context,
-        context.l10n.chooseBoundAlistAccount,
-      );
-      return;
-    }
-    setState(() => _isLoading = true);
-
-    try {
-      final List<Map<String, dynamic>> items = [];
-      final List<AlistItemInfo> directories = [];
-      final password = _alistPasswordController.text;
-      for (final file in _selectedAlistItems.values) {
-        final sourceConfig = <String, dynamic>{
-          'serverId': _alistServerId,
-          'path': file.path,
-        };
-        if (password.isNotEmpty) sourceConfig['password'] = password;
-        if (file.isDir) {
-          directories.add(file);
-          continue;
-        }
-        items.add({
-          'playlistId': widget.parentId ?? '',
-          'sourceProvider':
-              source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value,
-          'providerInstanceName': _alistInstanceName,
-          'sourceConfig': sourceConfig,
-          'name': file.name,
-        });
-      }
-
-      if (items.isNotEmpty) {
-        await providerGateway.addMediaBatch(widget.roomId, items);
-      }
-      for (final directory in directories) {
-        final sourceConfig = <String, dynamic>{
-          'serverId': _alistServerId,
-          'path': directory.path,
-        };
-        if (password.isNotEmpty) sourceConfig['password'] = password;
-        await providerGateway.createPlaylist(
-          widget.roomId,
-          parentId: widget.parentId ?? '',
-          sourceProvider: 'alist',
-          providerInstanceName: _alistInstanceName,
-          sourceConfig: sourceConfig,
-          name: directory.name,
-        );
-      }
-
-      if (mounted) {
-        Navigator.pop(context);
-        AppNotifications.showSuccess(
-          context,
-          context.l10n.itemsAdded(_selectedAlistItems.length),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(context, context.l10n.batchAddFailed('$e'));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _loadEmby(String path, {bool loadMore = false}) async {
     if (_embyBinds.isEmpty || _embyServerId.isEmpty) return;
     if (loadMore && _embyLoading) return;
@@ -3873,11 +3800,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       if (!loadMore) {
         _embyPath = path;
         _embyFiles = [];
+        _embyListSource = null;
       }
     });
     try {
       final pageInfo = await providerGateway.listEmbyPage(
-        path,
+        EmbyListMode.folder,
+        targetId: path,
         keyword: keyword,
         page: targetPage,
         max: _pageSize,
@@ -3898,6 +3827,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             _embyPage = 1;
           }
           _embyHasMore = _embyFiles.length < total;
+          _embyListSource = pageInfo.source;
         });
       }
     } catch (e) {
@@ -3916,6 +3846,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _embyKeyword = keyword;
       _embyPage = 1;
       _embyHasMore = true;
+      _embyListSource = null;
     });
     _loadEmby(_embyPath);
   }
@@ -3927,106 +3858,77 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _embyKeyword = '';
       _embyPage = 1;
       _embyHasMore = true;
+      _embyListSource = null;
     });
     _loadEmby(_embyPath);
   }
 
-  void _enterEmbyDir(String name, String pathOrId) {
+  void _enterEmbyDir(String itemId, String name) {
     if (_embyKeyword.isNotEmpty) {
       _embySearchController.clear();
       setState(() => _embyKeyword = '');
     }
-    _loadEmby(
-      (pathOrId.contains('/') || pathOrId.length > 20)
-          ? pathOrId
-          : (_embyPath.endsWith('/') ? '$_embyPath$name' : '$_embyPath/$name'),
-    );
+    setState(() => _embyBreadcrumbs.add((itemId, name)));
+    _loadEmby(itemId);
   }
 
   void _goUpEmby() {
-    if (_embyPath.isEmpty || _embyPath == '/') return;
     if (_embyKeyword.isNotEmpty) {
       _clearEmbySearch();
       return;
     }
-    final parts = _embyPath.split('/');
-    parts.removeLast();
-    _loadEmby(parts.length == 1 && parts[0] == '' ? '' : parts.join('/'));
+    if (_embyBreadcrumbs.isEmpty) return;
+    setState(() => _embyBreadcrumbs.removeLast());
+    _loadEmby(_embyBreadcrumbs.lastOrNull?.$1 ?? '');
   }
 
-  Future<void> _addEmbyFile(EmbyItemInfo file) async {
-    if (_embyServerId.isEmpty) {
-      AppNotifications.showWarning(
-        context,
-        context.l10n.chooseBoundEmbyAccount,
-      );
-      return;
-    }
+  Future<void> _addDiscoveredEntries(
+    List<DiscoveryBrowserEntry> entries,
+  ) async {
+    if (entries.isEmpty) return;
     setState(() => _isLoading = true);
     try {
-      final itemId = file.id;
-      if (itemId.isEmpty) {
-        throw Exception(context.l10n.embyMediaIdUnavailable);
-      }
-      await providerGateway.addEmbyMedia(
-        widget.roomId,
-        playlistId: widget.parentId ?? '',
-        serverId: _embyServerId,
-        itemId: itemId,
-        name: file.name.isEmpty ? 'Emby Video' : file.name,
-        providerInstanceName: _embyInstanceName,
-      );
-      if (mounted) {
-        Navigator.pop(context);
-        AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
-      }
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(context, context.l10n.addFailed('$e'));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _addEmbyDirectoryPlaylist(EmbyItemInfo file) async {
-    if (_embyServerId.isEmpty) {
-      AppNotifications.showWarning(
-        context,
-        context.l10n.chooseBoundEmbyAccount,
-      );
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      final itemId = file.id;
-      if (itemId.isEmpty) {
-        throw Exception(context.l10n.embyDirectoryIdUnavailable);
-      }
-      await providerGateway.createPlaylist(
-        widget.roomId,
-        parentId: widget.parentId ?? '',
-        sourceProvider: 'emby',
-        providerInstanceName: _embyInstanceName,
-        sourceConfig: {
-          'serverId': _embyServerId,
-          'source': {'type': 'folder', 'itemId': itemId},
-        },
-        name: file.name.isEmpty ? 'Emby Playlist' : file.name,
-      );
-      if (mounted) {
-        Navigator.pop(context);
-        AppNotifications.showSuccess(
-          context,
-          context.l10n.dynamicPlaylistAdded,
+      for (final entry in entries) {
+        await providerGateway.addDiscoveredSource(
+          widget.roomId,
+          playlistId: widget.parentId ?? '',
+          source: entry.source.withPlaybackProxyMode(_activeProxyMode),
+          name: entry.title,
         );
       }
-    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      AppNotifications.showSuccess(
+        context,
+        context.l10n.itemsAdded(entries.length),
+      );
+    } catch (error) {
       if (mounted) {
-        AppNotifications.showError(context, context.l10n.addFailed('$e'));
+        AppNotifications.showError(context, context.l10n.addFailed('$error'));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  Future<void> _addDiscoveredSource(
+    provider_common.DiscoveredSource source,
+    String name,
+  ) => _addDiscoveredEntries([
+    DiscoveryBrowserEntry(
+      key: 'current-list',
+      title: name.isEmpty ? context.l10n.dynamicPlaylist : name,
+      source: source,
+      isContainer: true,
+    ),
+  ]);
+
+  source_enum.PlaybackProxyMode get _activeProxyMode =>
+      switch (_selectedIndex) {
+        3 => _bilibiliProxyMode,
+        4 => _alistProxyMode,
+        5 => _embyProxyMode,
+        6 => _cloudreveProxyMode,
+        _ => source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+      };
 }

@@ -7,6 +7,8 @@ import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_provider_service.dart';
 import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
     as youtube;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart' as source;
 
 void main() {
@@ -22,7 +24,12 @@ void main() {
         ),
         formats: [youtube.Format(itag: 22, name: '720p')],
         subtitles: [youtube.Subtitle(language: 'en')],
-        sourceConfig: source.YoutubeMediaSourceConfig(videoId: 'abcdefghijk'),
+        source: provider_common.DiscoveredSource(
+          providerInstanceName: 'edge',
+          media: source.MediaSourceConfig(
+            youtube: source.YoutubeMediaSourceConfig(videoId: 'abcdefghijk'),
+          ),
+        ),
       );
       final api = SyncTvApiClient(
         baseUrl: 'https://synctv.example',
@@ -44,8 +51,8 @@ void main() {
       expect(result.metadata.title, 'Video');
       expect(result.formats.single.itag, 22);
       expect(result.subtitles.single.language, 'en');
-      expect(result.sourceConfig.videoId, 'abcdefghijk');
-      expect(result.sourceConfig.shared, isFalse);
+      expect(result.source.media.youtube.videoId, 'abcdefghijk');
+      expect(result.source.media.youtube.shared, isFalse);
       expect(capturedRequest.url.path, '/api/providers/youtube/resolve');
       final body = jsonDecode(capturedRequest.body) as Map<String, dynamic>;
       expect(body['resource'], 'https://youtu.be/abcdefghijk');

@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 enum SeafileBrowseMode { folder, starred, search }
 
@@ -32,6 +40,7 @@ class SeafileAddMediaForm extends StatefulWidget {
     required this.playlistId,
     required this.binds,
     this.onDraftChanged,
+    this.onOpenBinding,
     this.pageLoader,
     this.libraryUnlocker,
     this.resourceHeaders,
@@ -41,6 +50,7 @@ class SeafileAddMediaForm extends StatefulWidget {
   final String playlistId;
   final List<SeafileBindInfo> binds;
   final ValueChanged<bool>? onDraftChanged;
+  final Future<void> Function()? onOpenBinding;
   final SeafilePageLoader? pageLoader;
   final SeafileLibraryUnlocker? libraryUnlocker;
   final Map<String, String> Function()? resourceHeaders;
@@ -51,6 +61,7 @@ class SeafileAddMediaForm extends StatefulWidget {
 
 class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
   static const _pageSize = 50;
+  final _selection = DiscoverySelectionController();
   final _searchController = TextEditingController();
   SeafileBindInfo? _bind;
   SeafileBrowseMode _mode = SeafileBrowseMode.folder;
@@ -61,6 +72,9 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
   bool _hasMore = false;
   bool _loading = false;
   List<SeafileFileItemInfo> _items = const [];
+  provider_common.DiscoveredSource? _listSource;
+  source_enum.PlaybackProxyMode _proxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
 
   @override
   void initState() {
@@ -68,6 +82,16 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
     _bind = widget.binds.firstOrNull;
     _searchController.addListener(_notifyDraft);
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void didUpdateWidget(covariant SeafileAddMediaForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
+        widget.binds.isNotEmpty) {
+      _bind = widget.binds.first;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    }
   }
 
   @override
@@ -84,10 +108,22 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
   Widget build(BuildContext context) {
     if (widget.binds.isEmpty) {
       return Center(
-        child: AppEmptyState(
-          icon: Icons.cloud_off_outlined,
-          title: 'Seafile',
-          subtitle: context.l10n.bindAccountToAccessResources,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppEmptyState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Seafile',
+              subtitle: context.l10n.bindAccountToAccessResources,
+            ),
+            const SizedBox(height: 16),
+            ProviderAccountAction(
+              providerType: 'seafile',
+              onPressed: widget.onOpenBinding == null
+                  ? null
+                  : () => widget.onOpenBinding!(),
+            ),
+          ],
         ),
       );
     }
@@ -96,22 +132,27 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
       children: [
         _bindSelector(),
         const SizedBox(height: 10),
+        PlaybackProxyModeControl(
+          value: _proxyMode,
+          onChanged: (value) => setState(() => _proxyMode = value),
+        ),
+        const SizedBox(height: 10),
         SegmentedButton<SeafileBrowseMode>(
-          segments: const [
+          segments: [
             ButtonSegment(
               value: SeafileBrowseMode.folder,
-              icon: Icon(Icons.folder_outlined),
-              label: Text('Files'),
+              icon: const Icon(Icons.folder_outlined),
+              label: Text(context.l10n.files),
             ),
             ButtonSegment(
               value: SeafileBrowseMode.starred,
-              icon: Icon(Icons.star_outline_rounded),
-              label: Text('Starred'),
+              icon: const Icon(Icons.star_outline_rounded),
+              label: Text(context.l10n.starred),
             ),
             ButtonSegment(
               value: SeafileBrowseMode.search,
-              icon: Icon(Icons.search_rounded),
-              label: Text('Search'),
+              icon: const Icon(Icons.search_rounded),
+              label: Text(context.l10n.search),
             ),
           ],
           selected: {_mode},
@@ -136,14 +177,14 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
               Expanded(
                 child: AppTextField(
                   controller: _searchController,
-                  label: 'Search current library',
+                  label: context.l10n.searchMediaLibrary,
                   prefixIcon: Icons.search_rounded,
                   onSubmitted: (_) => _search(),
                 ),
               ),
               const SizedBox(width: 8),
               AppIconButton(
-                tooltip: 'Search',
+                tooltip: context.l10n.search,
                 onPressed: _loading ? null : _search,
                 icon: Icons.arrow_forward_rounded,
               ),
@@ -159,27 +200,21 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
     );
   }
 
-  Widget _bindSelector() => DropdownButtonFormField<String>(
-    initialValue: _bind?.serverId,
-    decoration: const InputDecoration(
-      labelText: 'Seafile',
-      prefixIcon: Icon(Icons.cloud_outlined),
-    ),
-    items: widget.binds
-        .map(
-          (bind) => DropdownMenuItem(
-            value: bind.serverId,
-            child: Text(
-              '${bind.username} · ${bind.endpoint}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        )
-        .toList(),
-    onChanged: (serverId) {
+  Widget _bindSelector() => ProviderAccountSelector<SeafileBindInfo>(
+    accounts: widget.binds,
+    selectedId: _bind?.id,
+    idOf: (bind) => bind.id,
+    labelOf: (bind) {
+      final title = '${bind.username} · ${bind.endpoint}';
+      return bind.providerInstanceName.isEmpty
+          ? title
+          : '$title · ${bind.providerInstanceName}';
+    },
+    enabled: !_loading,
+    onChanged: (bind) {
+      if (bind == null) return;
       setState(() {
-        _bind = widget.binds.firstWhere((bind) => bind.serverId == serverId);
+        _bind = bind;
         _repositoryId = '';
         _repositoryName = '';
         _path = '';
@@ -209,12 +244,6 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
         ),
       ),
       AppIconButton(
-        tooltip: context.l10n.dynamicPlaylist,
-        onPressed: _canCreatePlaylist && !_loading ? _addCurrentPlaylist : null,
-        icon: Icons.playlist_add_rounded,
-        style: AppIconButtonStyle.tonal,
-      ),
-      AppIconButton(
         tooltip: context.l10n.refresh,
         onPressed: !_loading ? _load : null,
         icon: Icons.refresh_rounded,
@@ -223,53 +252,46 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
   );
 
   String get _locationTitle {
-    if (_mode == SeafileBrowseMode.starred) return 'Starred';
-    if (_repositoryId.isEmpty) return 'Libraries';
+    if (_mode == SeafileBrowseMode.starred) return context.l10n.starred;
+    if (_repositoryId.isEmpty) return context.l10n.libraries;
     return _path.isEmpty ? _repositoryName : '$_repositoryName · $_path';
   }
 
   Widget _list() {
-    if (_items.isEmpty) {
-      return const Center(
-        child: AppEmptyState(
-          icon: Icons.video_library_outlined,
-          title: 'No items',
-        ),
-      );
-    }
-    return AppListView.separated(
-      itemCount: _items.length,
-      separatorBuilder: (_, _) => const AppDivider(height: 1),
-      itemBuilder: (context, index) {
-        final item = _items[index];
-        final isLibrary = _repositoryId.isEmpty && item.isDir;
-        return ListTile(
-          leading: _thumbnail(item),
-          title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            _details(item, isLibrary),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+    final itemsByKey = {
+      for (final item in _items) '${item.repositoryId}:${item.path}': item,
+    };
+    return DiscoveryBrowser(
+      selectionController: _selection,
+      selectionScope: _bind?.id,
+      items: [
+        for (final item in _items)
+          DiscoveryBrowserEntry(
+            key: '${item.repositoryId}:${item.path}',
+            title: item.name,
+            subtitle: _details(item, _repositoryId.isEmpty && item.isDir),
+            source: item.source.withPlaybackProxyMode(_proxyMode),
+            isContainer: item.isDir,
+            leading: _thumbnail(item),
+            selectable: !item.passwordRequired,
+            openIcon: item.passwordRequired
+                ? Icons.lock_open_rounded
+                : Icons.chevron_right_rounded,
+            openTooltip: item.passwordRequired
+                ? context.l10n.unlock
+                : context.l10n.openFolder,
           ),
-          onTap: item.isDir ? () => _open(item, isLibrary) : null,
-          trailing: item.passwordRequired
-              ? AppIconButton(
-                  tooltip: 'Unlock library',
-                  onPressed: () => _unlock(item),
-                  icon: Icons.lock_open_rounded,
-                )
-              : AppIconButton(
-                  tooltip: item.isDir
-                      ? context.l10n.dynamicPlaylist
-                      : context.l10n.add,
-                  onPressed: () =>
-                      item.isDir ? _addFolderPlaylist(item) : _addMedia(item),
-                  icon: item.isDir
-                      ? Icons.playlist_add_rounded
-                      : Icons.add_circle_outline_rounded,
-                ),
-        );
+      ],
+      loading: _loading,
+      emptyIcon: Icons.video_library_outlined,
+      onOpen: (entry) {
+        final item = itemsByKey[entry.key]!;
+        _open(item, _repositoryId.isEmpty && item.isDir);
       },
+      onAddSelected: _addSelected,
+      onAddCurrentList: _canCreatePlaylist && _listSource != null
+          ? _addCurrentPlaylist
+          : null,
     );
   }
 
@@ -348,7 +370,7 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
 
   void _search() {
     if (_repositoryId.isEmpty) {
-      AppNotifications.showError(context, 'Select a library first');
+      AppNotifications.showError(context, context.l10n.selectLibraryFirst);
       return;
     }
     if (_searchController.text.trim().isEmpty) return;
@@ -397,7 +419,10 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
         (_repositoryId.isEmpty || _searchController.text.trim().isEmpty)) {
       return;
     }
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _listSource = null;
+    });
     try {
       final page = await (widget.pageLoader ?? _defaultLoader)(
         bind,
@@ -413,6 +438,7 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
         _items = page.items;
         _page = page.page;
         _hasMore = page.hasMore;
+        _listSource = page.source;
       });
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
@@ -493,55 +519,35 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
     await _load();
   }
 
-  Future<void> _addMedia(SeafileFileItemInfo item) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.addSeafileMedia(
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> items) =>
+      _runAdd(() async {
+        for (final item in items) {
+          await providerGateway.addDiscoveredSource(
+            widget.roomId,
+            playlistId: widget.playlistId,
+            source: item.source.withPlaybackProxyMode(_proxyMode),
+            name: item.title,
+          );
+        }
+      });
+
+  Future<void> _addCurrentPlaylist() => _runAdd(() async {
+    final source = _listSource;
+    if (source == null) return;
+    final name = switch (_mode) {
+      SeafileBrowseMode.folder =>
+        _path.split('/').where((part) => part.isNotEmpty).lastOrNull ??
+            _repositoryName,
+      SeafileBrowseMode.starred => 'Seafile Starred',
+      SeafileBrowseMode.search => 'Seafile: ${_searchController.text.trim()}',
+    };
+    await providerGateway.addDiscoveredSource(
       widget.roomId,
       playlistId: widget.playlistId,
-      serverId: bind.serverId,
-      repositoryId: item.repositoryId,
-      path: item.path,
-      objectId: item.objectId,
-      hasThumbnail: item.hasThumbnail,
-      name: item.name,
-      providerInstanceName: bind.providerInstanceName,
+      source: source.withPlaybackProxyMode(_proxyMode),
+      name: name.isEmpty ? 'Seafile' : name,
     );
   });
-
-  Future<void> _addFolderPlaylist(SeafileFileItemInfo item) => _createPlaylist(
-    item.name,
-    {'type': 'folder', 'repositoryId': item.repositoryId, 'path': item.path},
-  );
-
-  Future<void> _addCurrentPlaylist() => switch (_mode) {
-    SeafileBrowseMode.folder => _createPlaylist(
-      _path.split('/').where((part) => part.isNotEmpty).lastOrNull ??
-          _repositoryName,
-      {'type': 'folder', 'repositoryId': _repositoryId, 'path': _path},
-    ),
-    SeafileBrowseMode.starred => _createPlaylist('Seafile Starred', {
-      'type': 'starred',
-    }),
-    SeafileBrowseMode.search =>
-      _createPlaylist('Seafile: ${_searchController.text.trim()}', {
-        'type': 'search',
-        'repositoryId': _repositoryId,
-        'query': _searchController.text.trim(),
-      }),
-  };
-
-  Future<void> _createPlaylist(String name, Map<String, dynamic> source) =>
-      _runAdd(() async {
-        final bind = _bind!;
-        await providerGateway.createPlaylist(
-          widget.roomId,
-          parentId: widget.playlistId,
-          sourceProvider: 'seafile',
-          providerInstanceName: bind.providerInstanceName,
-          sourceConfig: {'serverId': bind.serverId, 'source': source},
-          name: name.isEmpty ? 'Seafile' : name,
-        );
-      });
 
   Future<void> _runAdd(Future<void> Function() action) async {
     setState(() => _loading = true);
@@ -600,7 +606,7 @@ class _SeafileUnlockDialogState extends State<_SeafileUnlockDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           AppDialogHeader(
-            title: Text('Unlock ${widget.libraryName}'),
+            title: Text(context.l10n.unlockLibrary(widget.libraryName)),
             icon: Icons.lock_open_rounded,
             onClose: () => Navigator.pop(context),
           ),
@@ -611,7 +617,7 @@ class _SeafileUnlockDialogState extends State<_SeafileUnlockDialog> {
               children: [
                 AppTextField(
                   controller: _controller,
-                  label: 'Library password',
+                  label: context.l10n.libraryPassword,
                   prefixIcon: Icons.password_rounded,
                   autofocus: true,
                   obscureText: true,
@@ -631,7 +637,7 @@ class _SeafileUnlockDialogState extends State<_SeafileUnlockDialog> {
                     const SizedBox(width: 8),
                     AppActionButton(
                       onPressed: _submit,
-                      label: 'Unlock',
+                      label: context.l10n.unlock,
                       icon: Icons.lock_open_rounded,
                     ),
                   ],

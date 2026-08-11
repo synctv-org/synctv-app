@@ -38,7 +38,7 @@ void main() {
             playlistId: '',
             binds: const [bind],
             fileLoader: (_, _, page, _, _) async => FnosFileListPage(
-              items: const [
+              items: [
                 FnosFileItemInfo(
                   name: 'Movie.mkv',
                   path: '/Movie.mkv',
@@ -47,11 +47,13 @@ void main() {
                   createdAt: null,
                   isDir: false,
                   storageId: 1,
+                  source: testDiscoveredMediaSource(name: 'Movie.mkv'),
                 ),
               ],
               total: 1,
               page: page,
               hasMore: false,
+              source: testDiscoveredPlaylistSource(),
             ),
             libraryLoader: (_) async => const [
               FnosMediaLibraryInfo(
@@ -68,7 +70,7 @@ void main() {
               loadedCollection = collection;
               mediaSearch = search;
               return FnosMediaListPage(
-                items: const [
+                items: [
                   FnosMediaItemInfo(
                     guid: 'movie',
                     title: 'Interstellar',
@@ -85,11 +87,13 @@ void main() {
                     isFolder: false,
                     isPlayable: true,
                     favorite: true,
+                    source: testDiscoveredMediaSource(name: 'Interstellar'),
                   ),
                 ],
                 total: 0,
                 page: page,
                 hasMore: false,
+                source: testDiscoveredPlaylistSource(),
               );
             },
           ),

@@ -3,10 +3,9 @@ import 'package:synctv_app/features/providers/presentation/provider_gateway_scop
 import 'package:synctv_app/src/generated/proto/providers/huya.pb.dart' as huya;
 import 'package:synctv_app/src/generated/proto/providers/huya.pbenum.dart'
     as huya_enum;
-import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
-    as source_config;
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 
 class HuyaAddRequest {
   const HuyaAddRequest({
@@ -71,6 +70,14 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
     setState(() {});
   }
 
+  void _nameChanged() {
+    widget.onDraftChanged(
+      _resourceController.text.trim().isNotEmpty ||
+          _nameController.text.trim().isNotEmpty,
+    );
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final instances = {'', ...widget.instances}.toList();
@@ -84,7 +91,7 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
             key: const Key('huya-resource'),
             controller: _resourceController,
             enabled: !_loading,
-            label: 'Live room or video URL',
+            label: context.l10n.liveRoomOrVideoUrl,
             prefixIcon: Icons.link_outlined,
             keyboardType: TextInputType.url,
             enableSuggestions: false,
@@ -96,16 +103,16 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
             key: const Key('huya-name'),
             controller: _nameController,
             enabled: !_loading,
-            label: 'Name',
+            label: context.l10n.name,
             prefixIcon: Icons.title,
-            onChanged: (_) => _changed(),
+            onChanged: (_) => _nameChanged(),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _instanceName,
-            decoration: const InputDecoration(
-              labelText: 'Provider instance',
-              prefixIcon: Icon(Icons.dns_outlined),
+            decoration: InputDecoration(
+              labelText: context.l10n.providerInstance,
+              prefixIcon: const Icon(Icons.dns_outlined),
             ),
             items: instances
                 .map(
@@ -117,7 +124,10 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
                 .toList(),
             onChanged: _loading
                 ? null
-                : (value) => setState(() => _instanceName = value ?? ''),
+                : (value) => setState(() {
+                    _instanceName = value ?? '';
+                    _resolved = null;
+                  }),
           ),
           if (_preview() case final preview?) ...[
             const SizedBox(height: 12),
@@ -133,12 +143,12 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
                     ? null
                     : _loadPreview,
                 icon: const Icon(Icons.preview_outlined),
-                label: const Text('Preview'),
+                label: Text(context.l10n.preview),
               ),
               const SizedBox(width: 10),
               FilledButton.icon(
                 key: const Key('huya-submit'),
-                onPressed: _loading || _resourceController.text.trim().isEmpty
+                onPressed: _loading || _resolved?.hasSource() != true
                     ? null
                     : _submit,
                 icon: _loading
@@ -150,7 +160,7 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
                         ),
                       )
                     : const Icon(Icons.add),
-                label: const Text('Add media'),
+                label: Text(context.l10n.addMedia),
               ),
             ],
           ),
@@ -234,7 +244,10 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
     try {
       _resolved =
           await (widget.onResolve?.call(_request.resource) ??
-              providerGateway.resolveHuya(_request.resource));
+              providerGateway.resolveHuya(
+                _request.resource,
+                instanceName: _instanceName,
+              ));
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
     } finally {
@@ -243,35 +256,22 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
   }
 
   Future<void> _submit() async {
+    final resolved = _resolved;
+    if (resolved == null) {
+      AppNotifications.showError(context, context.l10n.previewSourceFirst);
+      return;
+    }
     setState(() => _loading = true);
     try {
       final request = _request;
       if (widget.onSubmit case final submit?) {
         await submit(request);
       } else {
-        final resolved =
-            _resolved ?? await providerGateway.resolveHuya(request.resource);
-        final config = resolved.sourceConfig;
-        final (kind, id) = switch (config.whichSource()) {
-          source_config.HuyaMediaSourceConfig_Source.live => (
-            'live',
-            config.live.roomId,
-          ),
-          source_config.HuyaMediaSourceConfig_Source.video => (
-            'video',
-            config.video.videoId,
-          ),
-          source_config.HuyaMediaSourceConfig_Source.notSet => throw StateError(
-            'Huya resolve response has no source config',
-          ),
-        };
-        await providerGateway.addHuyaMedia(
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
           playlistId: widget.playlistId,
-          kind: kind,
-          id: id,
+          source: resolved.source,
           name: request.name.isEmpty ? resolved.metadata.title : request.name,
-          providerInstanceName: request.instanceName,
         );
       }
       if (!mounted) return;
@@ -279,7 +279,7 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
       _nameController.clear();
       _resolved = null;
       widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, 'Huya source added');
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');

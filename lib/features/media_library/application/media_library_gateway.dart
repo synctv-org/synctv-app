@@ -46,9 +46,6 @@ abstract interface class MediaLibraryGateway {
     String roomId, {
     required String name,
     String parentId = '',
-    String sourceProvider = '',
-    Map<String, dynamic> sourceConfig = const {},
-    String providerInstanceName = '',
     String description = '',
   });
   Future<RoomPlaylistItem> updatePlaylist(

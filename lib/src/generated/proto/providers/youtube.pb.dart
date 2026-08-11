@@ -15,7 +15,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../source_config.pb.dart' as $0;
+import '../source_config.pbenum.dart' as $1;
+import 'common.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -535,10 +536,12 @@ class ResolveRequest extends $pb.GeneratedMessage {
   factory ResolveRequest({
     $core.String? resource,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (resource != null) result.resource = resource;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -558,6 +561,7 @@ class ResolveRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'resource')
     ..aOS(2, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(3, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -596,6 +600,15 @@ class ResolveRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(1);
   @$pb.TagNumber(2)
   void clearInstanceName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get shared => $_getBF(2);
+  @$pb.TagNumber(3)
+  set shared($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasShared() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearShared() => $_clearField(3);
 }
 
 class Metadata extends $pb.GeneratedMessage {
@@ -1083,14 +1096,14 @@ class ResolveResponse extends $pb.GeneratedMessage {
     $core.Iterable<Format>? formats,
     $core.Iterable<Subtitle>? subtitles,
     $core.String? storyboardSpec,
-    $0.YoutubeMediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (metadata != null) result.metadata = metadata;
     if (formats != null) result.formats.addAll(formats);
     if (subtitles != null) result.subtitles.addAll(subtitles);
     if (storyboardSpec != null) result.storyboardSpec = storyboardSpec;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1115,8 +1128,8 @@ class ResolveResponse extends $pb.GeneratedMessage {
     ..pPM<Subtitle>(3, _omitFieldNames ? '' : 'subtitles',
         subBuilder: Subtitle.create)
     ..aOS(4, _omitFieldNames ? '' : 'storyboardSpec')
-    ..aOM<$0.YoutubeMediaSourceConfig>(5, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.YoutubeMediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(5, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1165,15 +1178,787 @@ class ResolveResponse extends $pb.GeneratedMessage {
   void clearStoryboardSpec() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $0.YoutubeMediaSourceConfig get sourceConfig => $_getN(4);
+  $0.DiscoveredSource get source => $_getN(4);
   @$pb.TagNumber(5)
-  set sourceConfig($0.YoutubeMediaSourceConfig value) => $_setField(5, value);
+  set source($0.DiscoveredSource value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasSourceConfig() => $_has(4);
+  $core.bool hasSource() => $_has(4);
   @$pb.TagNumber(5)
-  void clearSourceConfig() => $_clearField(5);
+  void clearSource() => $_clearField(5);
   @$pb.TagNumber(5)
-  $0.YoutubeMediaSourceConfig ensureSourceConfig() => $_ensure(4);
+  $0.DiscoveredSource ensureSource() => $_ensure(4);
+}
+
+class ListRequest_Playlist extends $pb.GeneratedMessage {
+  factory ListRequest_Playlist({
+    $core.String? resource,
+  }) {
+    final result = create();
+    if (resource != null) result.resource = resource;
+    return result;
+  }
+
+  ListRequest_Playlist._();
+
+  factory ListRequest_Playlist.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRequest_Playlist.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRequest.Playlist',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.youtube'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'resource')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_Playlist clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_Playlist copyWith(void Function(ListRequest_Playlist) updates) =>
+      super.copyWith((message) => updates(message as ListRequest_Playlist))
+          as ListRequest_Playlist;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_Playlist create() => ListRequest_Playlist._();
+  @$core.override
+  ListRequest_Playlist createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_Playlist getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRequest_Playlist>(create);
+  static ListRequest_Playlist? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get resource => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set resource($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasResource() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearResource() => $_clearField(1);
+}
+
+class ListRequest_Channel extends $pb.GeneratedMessage {
+  factory ListRequest_Channel({
+    $core.String? resource,
+    $1.YoutubeChannelContent? content,
+  }) {
+    final result = create();
+    if (resource != null) result.resource = resource;
+    if (content != null) result.content = content;
+    return result;
+  }
+
+  ListRequest_Channel._();
+
+  factory ListRequest_Channel.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRequest_Channel.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRequest.Channel',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.youtube'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'resource')
+    ..aE<$1.YoutubeChannelContent>(2, _omitFieldNames ? '' : 'content',
+        enumValues: $1.YoutubeChannelContent.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_Channel clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_Channel copyWith(void Function(ListRequest_Channel) updates) =>
+      super.copyWith((message) => updates(message as ListRequest_Channel))
+          as ListRequest_Channel;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_Channel create() => ListRequest_Channel._();
+  @$core.override
+  ListRequest_Channel createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_Channel getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRequest_Channel>(create);
+  static ListRequest_Channel? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get resource => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set resource($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasResource() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearResource() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $1.YoutubeChannelContent get content => $_getN(1);
+  @$pb.TagNumber(2)
+  set content($1.YoutubeChannelContent value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasContent() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearContent() => $_clearField(2);
+}
+
+class ListRequest_Search extends $pb.GeneratedMessage {
+  factory ListRequest_Search({
+    $core.String? query,
+  }) {
+    final result = create();
+    if (query != null) result.query = query;
+    return result;
+  }
+
+  ListRequest_Search._();
+
+  factory ListRequest_Search.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRequest_Search.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRequest.Search',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.youtube'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'query')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_Search clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_Search copyWith(void Function(ListRequest_Search) updates) =>
+      super.copyWith((message) => updates(message as ListRequest_Search))
+          as ListRequest_Search;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_Search create() => ListRequest_Search._();
+  @$core.override
+  ListRequest_Search createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_Search getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRequest_Search>(create);
+  static ListRequest_Search? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get query => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set query($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasQuery() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearQuery() => $_clearField(1);
+}
+
+class ListRequest_Subscriptions extends $pb.GeneratedMessage {
+  factory ListRequest_Subscriptions() => create();
+
+  ListRequest_Subscriptions._();
+
+  factory ListRequest_Subscriptions.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRequest_Subscriptions.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRequest.Subscriptions',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.youtube'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_Subscriptions clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_Subscriptions copyWith(
+          void Function(ListRequest_Subscriptions) updates) =>
+      super.copyWith((message) => updates(message as ListRequest_Subscriptions))
+          as ListRequest_Subscriptions;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_Subscriptions create() => ListRequest_Subscriptions._();
+  @$core.override
+  ListRequest_Subscriptions createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_Subscriptions getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRequest_Subscriptions>(create);
+  static ListRequest_Subscriptions? _defaultInstance;
+}
+
+class ListRequest_LikedVideos extends $pb.GeneratedMessage {
+  factory ListRequest_LikedVideos() => create();
+
+  ListRequest_LikedVideos._();
+
+  factory ListRequest_LikedVideos.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRequest_LikedVideos.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRequest.LikedVideos',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.youtube'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_LikedVideos clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_LikedVideos copyWith(
+          void Function(ListRequest_LikedVideos) updates) =>
+      super.copyWith((message) => updates(message as ListRequest_LikedVideos))
+          as ListRequest_LikedVideos;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_LikedVideos create() => ListRequest_LikedVideos._();
+  @$core.override
+  ListRequest_LikedVideos createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_LikedVideos getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRequest_LikedVideos>(create);
+  static ListRequest_LikedVideos? _defaultInstance;
+}
+
+class ListRequest_WatchLater extends $pb.GeneratedMessage {
+  factory ListRequest_WatchLater() => create();
+
+  ListRequest_WatchLater._();
+
+  factory ListRequest_WatchLater.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRequest_WatchLater.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRequest.WatchLater',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.youtube'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_WatchLater clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest_WatchLater copyWith(
+          void Function(ListRequest_WatchLater) updates) =>
+      super.copyWith((message) => updates(message as ListRequest_WatchLater))
+          as ListRequest_WatchLater;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_WatchLater create() => ListRequest_WatchLater._();
+  @$core.override
+  ListRequest_WatchLater createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRequest_WatchLater getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRequest_WatchLater>(create);
+  static ListRequest_WatchLater? _defaultInstance;
+}
+
+enum ListRequest_Source {
+  playlist,
+  channel,
+  search,
+  subscriptions,
+  likedVideos,
+  watchLater,
+  notSet
+}
+
+class ListRequest extends $pb.GeneratedMessage {
+  factory ListRequest({
+    $core.bool? shared,
+    $core.String? cursor,
+    $core.String? instanceName,
+    ListRequest_Playlist? playlist,
+    ListRequest_Channel? channel,
+    ListRequest_Search? search,
+    ListRequest_Subscriptions? subscriptions,
+    ListRequest_LikedVideos? likedVideos,
+    ListRequest_WatchLater? watchLater,
+  }) {
+    final result = create();
+    if (shared != null) result.shared = shared;
+    if (cursor != null) result.cursor = cursor;
+    if (instanceName != null) result.instanceName = instanceName;
+    if (playlist != null) result.playlist = playlist;
+    if (channel != null) result.channel = channel;
+    if (search != null) result.search = search;
+    if (subscriptions != null) result.subscriptions = subscriptions;
+    if (likedVideos != null) result.likedVideos = likedVideos;
+    if (watchLater != null) result.watchLater = watchLater;
+    return result;
+  }
+
+  ListRequest._();
+
+  factory ListRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, ListRequest_Source>
+      _ListRequest_SourceByTag = {
+    4: ListRequest_Source.playlist,
+    5: ListRequest_Source.channel,
+    6: ListRequest_Source.search,
+    7: ListRequest_Source.subscriptions,
+    8: ListRequest_Source.likedVideos,
+    9: ListRequest_Source.watchLater,
+    0: ListRequest_Source.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.youtube'),
+      createEmptyInstance: create)
+    ..oo(0, [4, 5, 6, 7, 8, 9])
+    ..aOB(1, _omitFieldNames ? '' : 'shared')
+    ..aOS(2, _omitFieldNames ? '' : 'cursor')
+    ..aOS(3, _omitFieldNames ? '' : 'instanceName')
+    ..aOM<ListRequest_Playlist>(4, _omitFieldNames ? '' : 'playlist',
+        subBuilder: ListRequest_Playlist.create)
+    ..aOM<ListRequest_Channel>(5, _omitFieldNames ? '' : 'channel',
+        subBuilder: ListRequest_Channel.create)
+    ..aOM<ListRequest_Search>(6, _omitFieldNames ? '' : 'search',
+        subBuilder: ListRequest_Search.create)
+    ..aOM<ListRequest_Subscriptions>(7, _omitFieldNames ? '' : 'subscriptions',
+        subBuilder: ListRequest_Subscriptions.create)
+    ..aOM<ListRequest_LikedVideos>(8, _omitFieldNames ? '' : 'likedVideos',
+        subBuilder: ListRequest_LikedVideos.create)
+    ..aOM<ListRequest_WatchLater>(9, _omitFieldNames ? '' : 'watchLater',
+        subBuilder: ListRequest_WatchLater.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRequest copyWith(void Function(ListRequest) updates) =>
+      super.copyWith((message) => updates(message as ListRequest))
+          as ListRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRequest create() => ListRequest._();
+  @$core.override
+  ListRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRequest>(create);
+  static ListRequest? _defaultInstance;
+
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  ListRequest_Source whichSource() =>
+      _ListRequest_SourceByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  void clearSource() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.bool get shared => $_getBF(0);
+  @$pb.TagNumber(1)
+  set shared($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasShared() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearShared() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get cursor => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set cursor($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCursor() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCursor() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get instanceName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set instanceName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasInstanceName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearInstanceName() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  ListRequest_Playlist get playlist => $_getN(3);
+  @$pb.TagNumber(4)
+  set playlist(ListRequest_Playlist value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPlaylist() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPlaylist() => $_clearField(4);
+  @$pb.TagNumber(4)
+  ListRequest_Playlist ensurePlaylist() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  ListRequest_Channel get channel => $_getN(4);
+  @$pb.TagNumber(5)
+  set channel(ListRequest_Channel value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasChannel() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearChannel() => $_clearField(5);
+  @$pb.TagNumber(5)
+  ListRequest_Channel ensureChannel() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  ListRequest_Search get search => $_getN(5);
+  @$pb.TagNumber(6)
+  set search(ListRequest_Search value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSearch() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSearch() => $_clearField(6);
+  @$pb.TagNumber(6)
+  ListRequest_Search ensureSearch() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  ListRequest_Subscriptions get subscriptions => $_getN(6);
+  @$pb.TagNumber(7)
+  set subscriptions(ListRequest_Subscriptions value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSubscriptions() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSubscriptions() => $_clearField(7);
+  @$pb.TagNumber(7)
+  ListRequest_Subscriptions ensureSubscriptions() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  ListRequest_LikedVideos get likedVideos => $_getN(7);
+  @$pb.TagNumber(8)
+  set likedVideos(ListRequest_LikedVideos value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasLikedVideos() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearLikedVideos() => $_clearField(8);
+  @$pb.TagNumber(8)
+  ListRequest_LikedVideos ensureLikedVideos() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  ListRequest_WatchLater get watchLater => $_getN(8);
+  @$pb.TagNumber(9)
+  set watchLater(ListRequest_WatchLater value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasWatchLater() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearWatchLater() => $_clearField(9);
+  @$pb.TagNumber(9)
+  ListRequest_WatchLater ensureWatchLater() => $_ensure(8);
+}
+
+class ListItem extends $pb.GeneratedMessage {
+  factory ListItem({
+    $core.String? videoId,
+    $core.String? title,
+    $core.String? channelName,
+    $core.String? channelId,
+    $fixnum.Int64? durationSeconds,
+    $core.String? viewCountText,
+    $core.String? publishedTimeText,
+    $core.String? thumbnailUrl,
+    $core.bool? isLive,
+    $core.bool? isShort,
+    $0.DiscoveredSource? source,
+  }) {
+    final result = create();
+    if (videoId != null) result.videoId = videoId;
+    if (title != null) result.title = title;
+    if (channelName != null) result.channelName = channelName;
+    if (channelId != null) result.channelId = channelId;
+    if (durationSeconds != null) result.durationSeconds = durationSeconds;
+    if (viewCountText != null) result.viewCountText = viewCountText;
+    if (publishedTimeText != null) result.publishedTimeText = publishedTimeText;
+    if (thumbnailUrl != null) result.thumbnailUrl = thumbnailUrl;
+    if (isLive != null) result.isLive = isLive;
+    if (isShort != null) result.isShort = isShort;
+    if (source != null) result.source = source;
+    return result;
+  }
+
+  ListItem._();
+
+  factory ListItem.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListItem.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListItem',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.youtube'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'videoId')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'channelName')
+    ..aOS(4, _omitFieldNames ? '' : 'channelId')
+    ..a<$fixnum.Int64>(
+        5, _omitFieldNames ? '' : 'durationSeconds', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(6, _omitFieldNames ? '' : 'viewCountText')
+    ..aOS(7, _omitFieldNames ? '' : 'publishedTimeText')
+    ..aOS(8, _omitFieldNames ? '' : 'thumbnailUrl')
+    ..aOB(9, _omitFieldNames ? '' : 'isLive')
+    ..aOB(10, _omitFieldNames ? '' : 'isShort')
+    ..aOM<$0.DiscoveredSource>(11, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListItem clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListItem copyWith(void Function(ListItem) updates) =>
+      super.copyWith((message) => updates(message as ListItem)) as ListItem;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListItem create() => ListItem._();
+  @$core.override
+  ListItem createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListItem getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ListItem>(create);
+  static ListItem? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get videoId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set videoId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVideoId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVideoId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get channelName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set channelName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasChannelName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearChannelName() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get channelId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set channelId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasChannelId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearChannelId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get durationSeconds => $_getI64(4);
+  @$pb.TagNumber(5)
+  set durationSeconds($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasDurationSeconds() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearDurationSeconds() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get viewCountText => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set viewCountText($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasViewCountText() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearViewCountText() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get publishedTimeText => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set publishedTimeText($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasPublishedTimeText() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearPublishedTimeText() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get thumbnailUrl => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set thumbnailUrl($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasThumbnailUrl() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearThumbnailUrl() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.bool get isLive => $_getBF(8);
+  @$pb.TagNumber(9)
+  set isLive($core.bool value) => $_setBool(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasIsLive() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearIsLive() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.bool get isShort => $_getBF(9);
+  @$pb.TagNumber(10)
+  set isShort($core.bool value) => $_setBool(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasIsShort() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearIsShort() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $0.DiscoveredSource get source => $_getN(10);
+  @$pb.TagNumber(11)
+  set source($0.DiscoveredSource value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasSource() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearSource() => $_clearField(11);
+  @$pb.TagNumber(11)
+  $0.DiscoveredSource ensureSource() => $_ensure(10);
+}
+
+class ListResponse extends $pb.GeneratedMessage {
+  factory ListResponse({
+    $core.Iterable<ListItem>? items,
+    $core.String? cursor,
+    $core.bool? hasMore,
+    $0.DiscoveredSource? source,
+  }) {
+    final result = create();
+    if (items != null) result.items.addAll(items);
+    if (cursor != null) result.cursor = cursor;
+    if (hasMore != null) result.hasMore = hasMore;
+    if (source != null) result.source = source;
+    return result;
+  }
+
+  ListResponse._();
+
+  factory ListResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.youtube'),
+      createEmptyInstance: create)
+    ..pPM<ListItem>(1, _omitFieldNames ? '' : 'items',
+        subBuilder: ListItem.create)
+    ..aOS(2, _omitFieldNames ? '' : 'cursor')
+    ..aOB(3, _omitFieldNames ? '' : 'hasMore')
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListResponse copyWith(void Function(ListResponse) updates) =>
+      super.copyWith((message) => updates(message as ListResponse))
+          as ListResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListResponse create() => ListResponse._();
+  @$core.override
+  ListResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListResponse>(create);
+  static ListResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<ListItem> get items => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.String get cursor => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set cursor($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCursor() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCursor() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get hasMore => $_getBF(2);
+  @$pb.TagNumber(3)
+  set hasMore($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasHasMore() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearHasMore() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $0.DiscoveredSource get source => $_getN(3);
+  @$pb.TagNumber(4)
+  set source($0.DiscoveredSource value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSource() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSource() => $_clearField(4);
+  @$pb.TagNumber(4)
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 const $core.bool _omitFieldNames =

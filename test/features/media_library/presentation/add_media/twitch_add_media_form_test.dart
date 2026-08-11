@@ -4,6 +4,8 @@ import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/src/generated/proto/providers/twitch.pb.dart'
     as twitch;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/providers/twitch.pbenum.dart'
     as twitch_enum;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
@@ -11,10 +13,43 @@ import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/features/media_library/presentation/add_media/twitch_add_media_form.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
 
 import '../../../../test_app.dart';
 
 void main() {
+  testWidgets('Twitch sources remain selectable before account binding', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 760));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: TwitchAddMediaForm(
+            roomId: 'room',
+            playlistId: '',
+            binds: const [],
+            onDraftChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Dynamic playlist'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('twitch-source')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Search live channels').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Channel search'), findsOneWidget);
+  });
+
   testWidgets('Twitch media preview exposes native metadata and qualities', (
     tester,
   ) async {
@@ -70,9 +105,9 @@ void main() {
     expect(find.textContaining('1 chapters'), findsOneWidget);
     expect(find.textContaining('Storyboard'), findsOneWidget);
 
-    await tester.tap(find.byType(Switch));
-    await tester.pump();
-    expect(find.text('Twitch VOD'), findsOneWidget);
+    await tester.tap(find.text('Share my credentials'));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Twitch VOD'), findsNothing);
   });
 
   testWidgets('Twitch channel form submits clips playlist and shared scope', (
@@ -93,12 +128,18 @@ void main() {
             playlistId: '',
             binds: const [],
             onDraftChanged: (_) {},
+            onListChannelItems: (request, channel, cursor) async =>
+                twitch.ListChannelItemsResponse(
+                  source: testDiscoveredPlaylistSource(),
+                ),
             onSubmit: (request) async => submitted = request,
           ),
         ),
       ),
     );
 
+    await tester.tap(find.text('Dynamic playlist'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('twitch-source')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Channel archive').last);
@@ -111,14 +152,16 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Clips').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.text('Share my credentials'));
     await tester.pump();
-    await tester.ensureVisible(find.byKey(const Key('twitch-submit')));
-    await tester.tap(find.byKey(const Key('twitch-submit')));
+    await tester.ensureVisible(find.byKey(const Key('twitch-preview')));
+    await tester.tap(find.byKey(const Key('twitch-preview')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('discovery-add-current-list')));
     await tester.pumpAndSettle();
 
     expect(submitted, isNotNull);
-    expect(submitted!.playlist, isTrue);
+    expect(submitted!.target, ProviderAddTarget.playlist);
     expect(
       submitted!.content,
       source_enum.TwitchPlaylistContent.TWITCH_PLAYLIST_CONTENT_CLIPS,
@@ -146,7 +189,7 @@ void main() {
             binds: const [],
             onDraftChanged: (_) {},
             onSubmit: (request) async => submitted = request,
-            onListFollowedLive: (request) async =>
+            onListFollowedLive: (request, cursor) async =>
                 twitch.ListFollowedLiveResponse(
                   items: [
                     twitch.StreamItem(
@@ -155,11 +198,16 @@ void main() {
                       title: 'Building SyncTV',
                       categoryName: 'Development',
                       viewerCount: Int64(42),
+                      source: testDiscoveredMediaSource(),
                     ),
                   ],
-                  sourceConfig: source_config.TwitchPlaylistSourceConfig(
-                    followedLive:
-                        source_config.TwitchPlaylistSourceConfig_FollowedLive(),
+                  source: provider_common.DiscoveredSource(
+                    playlist: source_config.PlaylistSourceConfig(
+                      twitch: source_config.TwitchPlaylistSourceConfig(
+                        followedLive:
+                            source_config.TwitchPlaylistSourceConfig_FollowedLive(),
+                      ),
+                    ),
                   ),
                 ),
           ),
@@ -167,6 +215,8 @@ void main() {
       ),
     );
 
+    await tester.tap(find.text('Dynamic playlist'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('twitch-source')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Followed live').last);
@@ -177,7 +227,7 @@ void main() {
     expect(find.text('Building SyncTV'), findsOneWidget);
     expect(find.textContaining('42 viewers'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('twitch-submit')));
+    await tester.tap(find.byKey(const Key('discovery-add-current-list')));
     await tester.pumpAndSettle();
     expect(submitted?.mode, TwitchAddMode.followedLive);
     await tester.pump(const Duration(seconds: 4));
@@ -207,7 +257,7 @@ void main() {
                     twitch.CategoryItem(id: 'game-1', name: 'Development'),
                   ],
                 ),
-            onListCategoryStreams: (request) async {
+            onListCategoryStreams: (request, cursor) async {
               previewed = request;
               return twitch.ListCategoryStreamsResponse(
                 items: [
@@ -216,8 +266,10 @@ void main() {
                     displayName: 'SyncTV',
                     title: 'Rust release',
                     categoryName: 'Development',
+                    source: testDiscoveredMediaSource(),
                   ),
                 ],
+                source: testDiscoveredPlaylistSource(),
               );
             },
           ),
@@ -225,9 +277,11 @@ void main() {
       ),
     );
 
+    await tester.tap(find.text('Select media'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('twitch-source')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Category live').last);
+    await tester.tap(find.text('Live by category').last);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('twitch-load-categories')));
     await tester.pumpAndSettle();
@@ -241,6 +295,8 @@ void main() {
     expect(previewed?.categoryId, 'game-1');
     expect(previewed?.categoryName, 'Development');
     expect(find.text('Rust release'), findsOneWidget);
+    expect(find.byKey(const Key('discovery-add-current-list')), findsNothing);
+    expect(find.byKey(const Key('discovery-add-selected')), findsOneWidget);
   });
 
   testWidgets('Twitch live search can preview a broadcaster schedule', (
@@ -260,7 +316,7 @@ void main() {
             playlistId: '',
             binds: const [],
             onDraftChanged: (_) {},
-            onSearchLiveChannels: (request) async =>
+            onSearchLiveChannels: (request, cursor) async =>
                 twitch.SearchLiveChannelsResponse(
                   items: [
                     twitch.SearchChannelItem(
@@ -270,8 +326,10 @@ void main() {
                       title: 'Live now',
                       categoryName: 'Development',
                       isLive: true,
+                      source: testDiscoveredMediaSource(),
                     ),
                   ],
+                  source: testDiscoveredPlaylistSource(),
                 ),
             onListSchedule: (request, broadcasterId) async {
               expect(broadcasterId, 'user-1');
@@ -292,9 +350,11 @@ void main() {
       ),
     );
 
+    await tester.tap(find.text('Select media'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('twitch-source')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Search live').last);
+    await tester.tap(find.text('Search live channels').last);
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('twitch-resource')), 'sync');
     await tester.pump();

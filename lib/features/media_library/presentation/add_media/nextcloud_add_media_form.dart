@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 enum NextcloudBrowseMode { folder, favorites, search }
 
@@ -24,6 +32,7 @@ class NextcloudAddMediaForm extends StatefulWidget {
     required this.playlistId,
     required this.binds,
     this.onDraftChanged,
+    this.onOpenBinding,
     this.fileLoader,
     this.resourceHeaders,
   });
@@ -32,6 +41,7 @@ class NextcloudAddMediaForm extends StatefulWidget {
   final String playlistId;
   final List<NextcloudBindInfo> binds;
   final ValueChanged<bool>? onDraftChanged;
+  final Future<void> Function()? onOpenBinding;
   final NextcloudFileLoader? fileLoader;
   final Map<String, String> Function()? resourceHeaders;
 
@@ -42,6 +52,7 @@ class NextcloudAddMediaForm extends StatefulWidget {
 class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   static const _pageSize = 50;
 
+  final _selection = DiscoverySelectionController();
   final _searchController = TextEditingController();
   NextcloudBindInfo? _bind;
   NextcloudBrowseMode _mode = NextcloudBrowseMode.folder;
@@ -50,6 +61,9 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   bool _hasMore = false;
   bool _loading = false;
   List<NextcloudFileItemInfo> _items = const [];
+  provider_common.DiscoveredSource? _listSource;
+  source_enum.PlaybackProxyMode _proxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
 
   @override
   void initState() {
@@ -62,7 +76,8 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   @override
   void didUpdateWidget(covariant NextcloudAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_bind == null && widget.binds.isNotEmpty) {
+    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
+        widget.binds.isNotEmpty) {
       _bind = widget.binds.first;
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
@@ -83,10 +98,22 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   Widget build(BuildContext context) {
     if (widget.binds.isEmpty) {
       return Center(
-        child: AppEmptyState(
-          icon: Icons.cloud_off_outlined,
-          title: 'Nextcloud',
-          subtitle: context.l10n.bindAccountToAccessResources,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppEmptyState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Nextcloud',
+              subtitle: context.l10n.bindAccountToAccessResources,
+            ),
+            const SizedBox(height: 16),
+            ProviderAccountAction(
+              providerType: 'nextcloud',
+              onPressed: widget.onOpenBinding == null
+                  ? null
+                  : () => widget.onOpenBinding!(),
+            ),
+          ],
         ),
       );
     }
@@ -95,22 +122,27 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
       children: [
         _buildBindSelector(),
         const SizedBox(height: 10),
+        PlaybackProxyModeControl(
+          value: _proxyMode,
+          onChanged: (value) => setState(() => _proxyMode = value),
+        ),
+        const SizedBox(height: 10),
         SegmentedButton<NextcloudBrowseMode>(
-          segments: const [
+          segments: [
             ButtonSegment(
               value: NextcloudBrowseMode.folder,
-              icon: Icon(Icons.folder_outlined),
-              label: Text('Files'),
+              icon: const Icon(Icons.folder_outlined),
+              label: Text(context.l10n.files),
             ),
             ButtonSegment(
               value: NextcloudBrowseMode.favorites,
-              icon: Icon(Icons.star_outline_rounded),
-              label: Text('Favorites'),
+              icon: const Icon(Icons.star_outline_rounded),
+              label: Text(context.l10n.favorites),
             ),
             ButtonSegment(
               value: NextcloudBrowseMode.search,
-              icon: Icon(Icons.search_rounded),
-              label: Text('Search'),
+              icon: const Icon(Icons.search_rounded),
+              label: Text(context.l10n.search),
             ),
           ],
           selected: {_mode},
@@ -135,14 +167,14 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
               Expanded(
                 child: AppTextField(
                   controller: _searchController,
-                  label: 'Search',
+                  label: context.l10n.search,
                   prefixIcon: Icons.search_rounded,
                   onSubmitted: (_) => _search(),
                 ),
               ),
               const SizedBox(width: 8),
               AppIconButton(
-                tooltip: 'Search',
+                tooltip: context.l10n.search,
                 onPressed: _loading ? null : _search,
                 icon: Icons.arrow_forward_rounded,
               ),
@@ -160,30 +192,21 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   }
 
   Widget _buildBindSelector() {
-    return DropdownButtonFormField<String>(
-      initialValue: _bind?.serverId,
-      decoration: const InputDecoration(
-        labelText: 'Nextcloud',
-        prefixIcon: Icon(Icons.cloud_outlined),
-      ),
-      items: widget.binds
-          .map(
-            (bind) => DropdownMenuItem(
-              value: bind.serverId,
-              child: Text(
-                bind.displayName.isNotEmpty
-                    ? '${bind.displayName} · ${bind.endpoint}'
-                    : bind.endpoint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          )
-          .toList(),
-      onChanged: (serverId) {
-        final bind = widget.binds.firstWhere(
-          (candidate) => candidate.serverId == serverId,
-        );
+    return ProviderAccountSelector<NextcloudBindInfo>(
+      accounts: widget.binds,
+      selectedId: _bind?.id,
+      idOf: (bind) => bind.id,
+      labelOf: (bind) {
+        final title = bind.displayName.isNotEmpty
+            ? '${bind.displayName} · ${bind.endpoint}'
+            : bind.endpoint;
+        return bind.providerInstanceName.isEmpty
+            ? title
+            : '$title · ${bind.providerInstanceName}';
+      },
+      enabled: !_loading,
+      onChanged: (bind) {
+        if (bind == null) return;
         setState(() {
           _bind = bind;
           _path = '';
@@ -200,9 +223,10 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
 
   Widget _buildLocationBar() {
     final title = switch (_mode) {
-      NextcloudBrowseMode.folder => _path.isEmpty ? 'Files' : _path,
-      NextcloudBrowseMode.favorites => 'Favorites',
-      NextcloudBrowseMode.search => _path.isEmpty ? 'All files' : _path,
+      NextcloudBrowseMode.folder => _path.isEmpty ? context.l10n.files : _path,
+      NextcloudBrowseMode.favorites => context.l10n.favorites,
+      NextcloudBrowseMode.search =>
+        _path.isEmpty ? context.l10n.allFiles : _path,
     };
     return Row(
       children: [
@@ -223,12 +247,6 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
           ),
         ),
         AppIconButton(
-          tooltip: context.l10n.dynamicPlaylist,
-          onPressed: _canAddPlaylist && !_loading ? _addCurrentPlaylist : null,
-          icon: Icons.playlist_add_rounded,
-          style: AppIconButtonStyle.tonal,
-        ),
-        AppIconButton(
           tooltip: context.l10n.refresh,
           onPressed: _canLoad && !_loading ? _load : null,
           icon: Icons.refresh_rounded,
@@ -238,42 +256,30 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   }
 
   Widget _buildList() {
-    if (_items.isEmpty) {
-      return Center(
-        child: AppEmptyState(
-          icon: _mode == NextcloudBrowseMode.favorites
-              ? Icons.star_outline_rounded
-              : Icons.video_file_outlined,
-          title: 'No items',
-        ),
-      );
-    }
-    return AppListView.separated(
-      itemCount: _items.length,
-      separatorBuilder: (_, _) => const AppDivider(height: 1),
-      itemBuilder: (context, index) {
-        final item = _items[index];
-        return ListTile(
-          leading: _preview(item),
-          title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            _itemDetails(item),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+    final itemsByKey = {for (final item in _items) item.path: item};
+    return DiscoveryBrowser(
+      selectionController: _selection,
+      selectionScope: _bind?.id,
+      items: [
+        for (final item in _items)
+          DiscoveryBrowserEntry(
+            key: item.path,
+            title: item.name,
+            subtitle: _itemDetails(item),
+            source: item.source.withPlaybackProxyMode(_proxyMode),
+            isContainer: item.isDir,
+            leading: _preview(item),
           ),
-          onTap: item.isDir ? () => _openFolder(item) : null,
-          trailing: AppIconButton(
-            tooltip: item.isDir
-                ? context.l10n.dynamicPlaylist
-                : context.l10n.add,
-            onPressed: () =>
-                item.isDir ? _addFolderPlaylist(item) : _addMedia(item),
-            icon: item.isDir
-                ? Icons.playlist_add_rounded
-                : Icons.add_circle_outline_rounded,
-          ),
-        );
-      },
+      ],
+      loading: _loading,
+      emptyIcon: _mode == NextcloudBrowseMode.favorites
+          ? Icons.star_outline_rounded
+          : Icons.video_file_outlined,
+      onOpen: (entry) => _openFolder(itemsByKey[entry.key]!),
+      onAddSelected: _addSelected,
+      onAddCurrentList: _canAddPlaylist && _listSource != null
+          ? _addCurrentPlaylist
+          : null,
     );
   }
 
@@ -297,7 +303,11 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   }
 
   String _itemDetails(NextcloudFileItemInfo item) {
-    if (item.isDir) return item.favorite ? 'Folder · Favorite' : 'Folder';
+    if (item.isDir) {
+      return item.favorite
+          ? '${context.l10n.folder} · ${context.l10n.favorite}'
+          : context.l10n.folder;
+    }
     final details = <String>[];
     if (item.durationMillis case final duration?) {
       details.add(_formatDuration(duration));
@@ -307,7 +317,7 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
       final height = item.height;
       if (height != null) details.add('$width×$height');
     }
-    if (item.favorite) details.add('Favorite');
+    if (item.favorite) details.add(context.l10n.favorite);
     return details.join(' · ');
   }
 
@@ -350,7 +360,10 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
 
   void _search() {
     if (_searchController.text.trim().length < 3) {
-      AppNotifications.showError(context, 'Enter at least 3 characters');
+      AppNotifications.showError(
+        context,
+        context.l10n.enterAtLeastThreeCharacters,
+      );
       return;
     }
     setState(() => _page = 1);
@@ -382,7 +395,10 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   Future<void> _load() async {
     final bind = _bind;
     if (bind == null || _loading || !_canLoad) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _listSource = null;
+    });
     try {
       final loader = widget.fileLoader ?? _defaultLoader;
       final result = await loader(
@@ -398,6 +414,7 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
         _items = result.items;
         _page = result.page;
         _hasMore = result.hasMore;
+        _listSource = result.source;
       });
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
@@ -439,58 +456,35 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
     };
   }
 
-  Future<void> _addMedia(NextcloudFileItemInfo item) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.addNextcloudMedia(
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> items) =>
+      _runAdd(() async {
+        for (final item in items) {
+          await providerGateway.addDiscoveredSource(
+            widget.roomId,
+            playlistId: widget.playlistId,
+            source: item.source.withPlaybackProxyMode(_proxyMode),
+            name: item.title,
+          );
+        }
+      });
+
+  Future<void> _addCurrentPlaylist() => _runAdd(() async {
+    final source = _listSource;
+    if (source == null) return;
+    final pathName = _path
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .lastOrNull;
+    final name = switch (_mode) {
+      NextcloudBrowseMode.folder => pathName ?? 'Nextcloud Files',
+      NextcloudBrowseMode.favorites => 'Nextcloud Favorites',
+      NextcloudBrowseMode.search =>
+        'Nextcloud: ${_searchController.text.trim()}',
+    };
+    await providerGateway.addDiscoveredSource(
       widget.roomId,
       playlistId: widget.playlistId,
-      serverId: bind.serverId,
-      path: item.path,
-      fileId: item.fileId,
-      name: item.name,
-      providerInstanceName: bind.providerInstanceName,
-    );
-  });
-
-  Future<void> _addFolderPlaylist(NextcloudFileItemInfo item) =>
-      _createPlaylist(
-        name: item.name,
-        source: {'type': 'folder', 'path': item.path},
-      );
-
-  Future<void> _addCurrentPlaylist() {
-    final name = _path.split('/').where((part) => part.isNotEmpty).lastOrNull;
-    return switch (_mode) {
-      NextcloudBrowseMode.folder => _createPlaylist(
-        name: name ?? 'Nextcloud Files',
-        source: {'type': 'folder', 'path': _path},
-      ),
-      NextcloudBrowseMode.favorites => _createPlaylist(
-        name: 'Nextcloud Favorites',
-        source: {'type': 'favorites'},
-      ),
-      NextcloudBrowseMode.search => _createPlaylist(
-        name: 'Nextcloud: ${_searchController.text.trim()}',
-        source: {
-          'type': 'search',
-          'path': _path,
-          'query': _searchController.text.trim(),
-        },
-      ),
-    };
-  }
-
-  Future<void> _createPlaylist({
-    required String name,
-    required Map<String, dynamic> source,
-  }) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.createPlaylist(
-      widget.roomId,
-      parentId: widget.playlistId,
-      sourceProvider: 'nextcloud',
-      providerInstanceName: bind.providerInstanceName,
-      sourceConfig: {'serverId': bind.serverId, 'source': source},
+      source: source.withPlaybackProxyMode(_proxyMode),
       name: name,
     );
   });

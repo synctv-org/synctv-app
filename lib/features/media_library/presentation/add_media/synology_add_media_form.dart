@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 enum _SynologyBrowseMode { files, videoStation }
 
@@ -35,6 +43,7 @@ class SynologyAddMediaForm extends StatefulWidget {
     required this.playlistId,
     required this.binds,
     this.onDraftChanged,
+    this.onOpenBinding,
     this.fileLoader,
     this.libraryLoader,
     this.videoLoader,
@@ -44,6 +53,7 @@ class SynologyAddMediaForm extends StatefulWidget {
   final String playlistId;
   final List<SynologyBindInfo> binds;
   final ValueChanged<bool>? onDraftChanged;
+  final Future<void> Function()? onOpenBinding;
   final SynologyFileLoader? fileLoader;
   final SynologyLibraryLoader? libraryLoader;
   final SynologyVideoLoader? videoLoader;
@@ -55,6 +65,7 @@ class SynologyAddMediaForm extends StatefulWidget {
 class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
   static const _pageSize = 50;
 
+  final _selection = DiscoverySelectionController();
   final _searchController = TextEditingController();
   SynologyBindInfo? _bind;
   _SynologyBrowseMode _mode = _SynologyBrowseMode.files;
@@ -68,6 +79,9 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
   int _page = 1;
   bool _hasMore = false;
   bool _loading = false;
+  provider_common.DiscoveredSource? _listSource;
+  source_enum.PlaybackProxyMode _proxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
 
   @override
   void initState() {
@@ -80,7 +94,8 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
   @override
   void didUpdateWidget(covariant SynologyAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_bind == null && widget.binds.isNotEmpty) {
+    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
+        widget.binds.isNotEmpty) {
       _bind = widget.binds.first;
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
@@ -101,10 +116,22 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
   Widget build(BuildContext context) {
     if (widget.binds.isEmpty) {
       return Center(
-        child: AppEmptyState(
-          icon: Icons.storage_rounded,
-          title: 'Synology DSM',
-          subtitle: context.l10n.bindAccountToAccessResources,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppEmptyState(
+              icon: Icons.storage_rounded,
+              title: 'Synology DSM',
+              subtitle: context.l10n.bindAccountToAccessResources,
+            ),
+            const SizedBox(height: 16),
+            ProviderAccountAction(
+              providerType: 'synology',
+              onPressed: widget.onOpenBinding == null
+                  ? null
+                  : () => widget.onOpenBinding!(),
+            ),
+          ],
         ),
       );
     }
@@ -114,18 +141,23 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
       children: [
         _buildBindSelector(),
         const SizedBox(height: 10),
+        PlaybackProxyModeControl(
+          value: _proxyMode,
+          onChanged: (value) => setState(() => _proxyMode = value),
+        ),
+        const SizedBox(height: 10),
         SegmentedButton<_SynologyBrowseMode>(
           segments: [
-            const ButtonSegment(
+            ButtonSegment(
               value: _SynologyBrowseMode.files,
-              icon: Icon(Icons.folder_outlined),
-              label: Text('File Station'),
+              icon: const Icon(Icons.folder_outlined),
+              label: Text(context.l10n.fileStation),
             ),
             ButtonSegment(
               value: _SynologyBrowseMode.videoStation,
               enabled: canUseVideo,
               icon: const Icon(Icons.video_library_outlined),
-              label: const Text('Video Station'),
+              label: Text(context.l10n.videoStation),
             ),
           ],
           selected: {_mode},
@@ -147,22 +179,16 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
             Expanded(
               child: AppTextField(
                 controller: _searchController,
-                label: 'Search',
+                label: context.l10n.search,
                 prefixIcon: Icons.search_rounded,
                 onSubmitted: (_) => _search(),
               ),
             ),
             const SizedBox(width: 8),
             AppIconButton(
-              tooltip: 'Search',
+              tooltip: context.l10n.search,
               onPressed: _loading ? null : _search,
               icon: Icons.arrow_forward_rounded,
-            ),
-            AppIconButton(
-              tooltip: context.l10n.dynamicPlaylist,
-              onPressed: _loading ? null : _addCurrentPlaylist,
-              icon: Icons.playlist_add_rounded,
-              style: AppIconButtonStyle.tonal,
             ),
           ],
         ),
@@ -186,28 +212,16 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
   }
 
   Widget _buildBindSelector() {
-    return DropdownButtonFormField<String>(
-      initialValue: _bind?.serverId,
-      decoration: const InputDecoration(
-        labelText: 'Synology DSM',
-        prefixIcon: Icon(Icons.dns_outlined),
-      ),
-      items: widget.binds
-          .map(
-            (bind) => DropdownMenuItem(
-              value: bind.serverId,
-              child: Text(
-                bind.endpoint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          )
-          .toList(),
-      onChanged: (serverId) {
-        final bind = widget.binds.firstWhere(
-          (candidate) => candidate.serverId == serverId,
-        );
+    return ProviderAccountSelector<SynologyBindInfo>(
+      accounts: widget.binds,
+      selectedId: _bind?.id,
+      idOf: (bind) => bind.id,
+      labelOf: (bind) => bind.providerInstanceName.isEmpty
+          ? bind.endpoint
+          : '${bind.endpoint} · ${bind.providerInstanceName}',
+      enabled: !_loading,
+      onChanged: (bind) {
+        if (bind == null) return;
         setState(() {
           _bind = bind;
           if (!bind.videoStationAvailable) _mode = _SynologyBrowseMode.files;
@@ -218,6 +232,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
           _tvShow = null;
           _files = const [];
           _videos = const [];
+          _listSource = null;
         });
         _load();
       },
@@ -255,7 +270,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
     if (_libraries.isEmpty) {
       return Row(
         children: [
-          const Expanded(child: Text('Video Station')),
+          Expanded(child: Text(context.l10n.videoStation)),
           AppIconButton(
             tooltip: context.l10n.refresh,
             onPressed: _loading ? null : _load,
@@ -286,9 +301,9 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
             Expanded(
               child: DropdownButtonFormField<int>(
                 initialValue: _library?.id,
-                decoration: const InputDecoration(
-                  labelText: 'Library',
-                  prefixIcon: Icon(Icons.video_library_outlined),
+                decoration: InputDecoration(
+                  labelText: context.l10n.library,
+                  prefixIcon: const Icon(Icons.video_library_outlined),
                 ),
                 items: _libraries
                     .map(
@@ -364,103 +379,75 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
   }
 
   Widget _buildFileList() {
-    if (_files.isEmpty) {
-      return const Center(
-        child: AppEmptyState(
-          icon: Icons.folder_off_outlined,
-          title: 'No files',
-        ),
-      );
-    }
-    return AppListView.separated(
-      itemCount: _files.length,
-      separatorBuilder: (_, _) => const AppDivider(height: 1),
-      itemBuilder: (context, index) {
-        final item = _files[index];
-        return ListTile(
-          leading: item.isDir || item.thumbnailUrl.isEmpty
-              ? Icon(item.isDir ? Icons.folder_rounded : Icons.movie_outlined)
-              : AppImageThumbnail(
-                  url: item.thumbnailUrl,
-                  headers: resourceUrlResolver.authenticatedHeaders,
-                  width: 72,
-                  height: 44,
-                  borderRadius: BorderRadius.circular(4),
-                  errorIcon: Icons.movie_outlined,
-                ),
-          title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            item.isDir ? 'Folder' : _formatBytes(item.size),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+    final itemsByKey = {for (final item in _files) item.path: item};
+    return DiscoveryBrowser(
+      selectionController: _selection,
+      selectionScope: _bind?.id,
+      items: [
+        for (final item in _files)
+          DiscoveryBrowserEntry(
+            key: item.path,
+            title: item.name,
+            subtitle: item.isDir
+                ? context.l10n.folder
+                : _formatBytes(item.size),
+            source: item.source.withPlaybackProxyMode(_proxyMode),
+            isContainer: item.isDir,
+            leading: item.isDir || item.thumbnailUrl.isEmpty
+                ? Icon(item.isDir ? Icons.folder_rounded : Icons.movie_outlined)
+                : AppImageThumbnail(
+                    url: item.thumbnailUrl,
+                    headers: resourceUrlResolver.authenticatedHeaders,
+                    width: 48,
+                    height: 44,
+                    borderRadius: BorderRadius.circular(4),
+                    errorIcon: Icons.movie_outlined,
+                  ),
           ),
-          onTap: item.isDir ? () => _openFolder(item) : null,
-          trailing: AppIconButton(
-            tooltip: item.isDir
-                ? context.l10n.dynamicPlaylist
-                : context.l10n.add,
-            onPressed: () => item.isDir
-                ? _createFilePlaylist(item.path, item.name)
-                : _addFile(item),
-            icon: item.isDir
-                ? Icons.playlist_add_rounded
-                : Icons.add_circle_outline_rounded,
-          ),
-        );
-      },
+      ],
+      loading: _loading,
+      onOpen: (entry) => _openFolder(itemsByKey[entry.key]!),
+      onAddSelected: _addSelected,
+      onAddCurrentList: _listSource == null ? null : _addCurrentPlaylist,
+      emptyIcon: Icons.folder_off_outlined,
+      emptyTitle: context.l10n.noFiles,
     );
   }
 
   Widget _buildVideoList() {
-    if (_videos.isEmpty) {
-      return const Center(
-        child: AppEmptyState(
-          icon: Icons.video_library_outlined,
-          title: 'No videos',
-        ),
-      );
-    }
-    return AppListView.separated(
-      itemCount: _videos.length,
-      separatorBuilder: (_, _) => const AppDivider(height: 1),
-      itemBuilder: (context, index) {
-        final item = _videos[index];
-        final file = item.files.firstOrNull;
-        return ListTile(
-          leading: AppImageThumbnail(
-            url: item.posterUrl,
-            headers: resourceUrlResolver.authenticatedHeaders,
-            width: 52,
-            height: 72,
-            borderRadius: BorderRadius.circular(4),
-            errorIcon: item.type == SynologyVideoEntryType.tvShow
-                ? Icons.tv_rounded
-                : Icons.movie_outlined,
+    final itemsByKey = {
+      for (final item in _videos) '${item.type}:${item.id}': item,
+    };
+    return DiscoveryBrowser(
+      selectionController: _selection,
+      selectionScope: _bind?.id,
+      items: [
+        for (final item in _videos)
+          DiscoveryBrowserEntry(
+            key: '${item.type}:${item.id}',
+            title: item.title,
+            subtitle: _videoDetails(item, item.files.firstOrNull),
+            source: item.source,
+            isContainer: item.type == SynologyVideoEntryType.tvShow,
+            selectable:
+                item.type == SynologyVideoEntryType.tvShow || item.isPlayable,
+            leading: AppImageThumbnail(
+              url: item.posterUrl,
+              headers: resourceUrlResolver.authenticatedHeaders,
+              width: 48,
+              height: 48,
+              borderRadius: BorderRadius.circular(4),
+              errorIcon: item.type == SynologyVideoEntryType.tvShow
+                  ? Icons.tv_rounded
+                  : Icons.movie_outlined,
+            ),
           ),
-          title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            _videoDetails(item, file),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          onTap: item.type == SynologyVideoEntryType.tvShow
-              ? () => _openTvShow(item)
-              : null,
-          trailing: AppIconButton(
-            tooltip: item.type == SynologyVideoEntryType.tvShow
-                ? context.l10n.dynamicPlaylist
-                : context.l10n.add,
-            onPressed: item.type == SynologyVideoEntryType.tvShow
-                ? () => _createTvShowPlaylist(item)
-                : item.isPlayable
-                ? () => _addVideo(item)
-                : null,
-            icon: item.type == SynologyVideoEntryType.tvShow
-                ? Icons.playlist_add_rounded
-                : Icons.add_circle_outline_rounded,
-          ),
-        );
-      },
+      ],
+      loading: _loading,
+      onOpen: (entry) => _openTvShow(itemsByKey[entry.key]!),
+      onAddSelected: _addSelected,
+      onAddCurrentList: _listSource == null ? null : _addCurrentPlaylist,
+      emptyTitle: context.l10n.noMedia,
     );
   }
 
@@ -505,7 +492,10 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
   Future<void> _loadFiles() async {
     final bind = _bind;
     if (bind == null) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _listSource = null;
+    });
     try {
       final page =
           await (widget.fileLoader?.call(
@@ -527,6 +517,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
       setState(() {
         _files = page.items;
         _hasMore = page.hasMore;
+        _listSource = page.source;
       });
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
@@ -539,7 +530,10 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
     final bind = _bind;
     if (bind == null || !bind.videoStationAvailable) return;
     if (_libraries.isEmpty) {
-      setState(() => _loading = true);
+      setState(() {
+        _loading = true;
+        _listSource = null;
+      });
       try {
         final libraries =
             await (widget.libraryLoader?.call(bind) ??
@@ -565,7 +559,10 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
     final bind = _bind;
     final library = _library;
     if (bind == null || library == null) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _listSource = null;
+    });
     try {
       final collection = _tvShow == null
           ? _collection
@@ -594,6 +591,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
       setState(() {
         _videos = page.items;
         _hasMore = page.hasMore;
+        _listSource = page.source;
       });
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
@@ -632,95 +630,25 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
     _loadVideos();
   }
 
-  Future<void> _addCurrentPlaylist() {
-    if (_mode == _SynologyBrowseMode.files) {
-      final name = _path.split('/').where((part) => part.isNotEmpty).lastOrNull;
-      return _createFilePlaylist(_path, name ?? 'Synology Shares');
-    }
-    final tvShow = _tvShow;
-    if (tvShow != null) return _createTvShowPlaylist(tvShow);
-    final library = _library;
-    if (library == null) return Future.value();
-    return _createVideoPlaylist(
-      _collectionType(_collection),
-      '${library.title} · ${_collectionLabel(_collection)}',
-      library.id,
-    );
-  }
-
-  Future<void> _addFile(SynologyFileItemInfo item) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.addSynologyFileMedia(
+  Future<void> _addCurrentPlaylist() => _runAdd(() async {
+    await providerGateway.addDiscoveredSource(
       widget.roomId,
       playlistId: widget.playlistId,
-      serverId: bind.serverId,
-      path: item.path,
-      name: item.name,
-      providerInstanceName: bind.providerInstanceName,
+      source: _listSource!,
     );
   });
 
-  Future<void> _addVideo(SynologyVideoItemInfo item) => _runAdd(() async {
-    final bind = _bind!;
-    final file = item.files.first;
-    await providerGateway.addSynologyLibraryMedia(
-      widget.roomId,
-      playlistId: widget.playlistId,
-      serverId: bind.serverId,
-      kind: _entryType(item.type),
-      itemId: item.id,
-      fileId: file.id,
-      name: item.title,
-      providerInstanceName: bind.providerInstanceName,
-    );
-  });
-
-  Future<void> _createFilePlaylist(String path, String name) =>
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> entries) =>
       _runAdd(() async {
-        final bind = _bind!;
-        await providerGateway.createPlaylist(
-          widget.roomId,
-          parentId: widget.playlistId,
-          sourceProvider: 'synology',
-          providerInstanceName: bind.providerInstanceName,
-          sourceConfig: {
-            'serverId': bind.serverId,
-            'type': 'files',
-            'path': path,
-          },
-          name: name,
-        );
+        for (final entry in entries) {
+          await providerGateway.addDiscoveredSource(
+            widget.roomId,
+            playlistId: widget.playlistId,
+            source: entry.source.withPlaybackProxyMode(_proxyMode),
+            name: entry.title,
+          );
+        }
       });
-
-  Future<void> _createTvShowPlaylist(SynologyVideoItemInfo item) =>
-      _createVideoPlaylist(
-        'episodes',
-        item.title,
-        item.libraryId,
-        tvShowId: item.id,
-      );
-
-  Future<void> _createVideoPlaylist(
-    String type,
-    String name,
-    int libraryId, {
-    int? tvShowId,
-  }) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.createPlaylist(
-      widget.roomId,
-      parentId: widget.playlistId,
-      sourceProvider: 'synology',
-      providerInstanceName: bind.providerInstanceName,
-      sourceConfig: {
-        'serverId': bind.serverId,
-        'type': type,
-        'libraryId': libraryId,
-        'tvShowId': ?tvShowId,
-      },
-      name: name,
-    );
-  });
 
   Future<void> _runAdd(Future<void> Function() action) async {
     setState(() => _loading = true);
@@ -744,22 +672,6 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
     SynologyVideoCollection.episodes => 'Episodes',
     SynologyVideoCollection.homeVideos => 'Home Videos',
     SynologyVideoCollection.tvRecordings => 'TV Recordings',
-  };
-
-  String _collectionType(SynologyVideoCollection value) => switch (value) {
-    SynologyVideoCollection.movies => 'movies',
-    SynologyVideoCollection.tvShows => 'tvShows',
-    SynologyVideoCollection.episodes => 'episodes',
-    SynologyVideoCollection.homeVideos => 'homeVideos',
-    SynologyVideoCollection.tvRecordings => 'tvRecordings',
-  };
-
-  String _entryType(SynologyVideoEntryType value) => switch (value) {
-    SynologyVideoEntryType.movie => 'movie',
-    SynologyVideoEntryType.episode => 'episode',
-    SynologyVideoEntryType.homeVideo => 'homeVideo',
-    SynologyVideoEntryType.tvRecording => 'tvRecording',
-    SynologyVideoEntryType.tvShow => 'movie',
   };
 
   String _videoDetails(

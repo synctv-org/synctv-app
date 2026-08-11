@@ -188,6 +188,14 @@ const FileItem$json = {
       '5': 8,
       '10': 'passwordRequired'
     },
+    {
+      '1': 'source',
+      '3': 15,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -201,7 +209,8 @@ final $typed_data.Uint8List fileItemDescriptor = $convert.base64Decode(
     '9uYW1lGAogASgJUgxtb2RpZmllck5hbWUSGAoHc3RhcnJlZBgLIAEoCFIHc3RhcnJlZBIjCg1o'
     'YXNfdGh1bWJuYWlsGAwgASgIUgxoYXNUaHVtYm5haWwSMQoUcmVwb3NpdG9yeV9lbmNyeXB0ZW'
     'QYDSABKAhSE3JlcG9zaXRvcnlFbmNyeXB0ZWQSKwoRcGFzc3dvcmRfcmVxdWlyZWQYDiABKAhS'
-    'EHBhc3N3b3JkUmVxdWlyZWQ=');
+    'EHBhc3N3b3JkUmVxdWlyZWQSQAoGc291cmNlGA8gASgLMiguc3luY3R2LnByb3ZpZGVyLmNvbW'
+    '1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use listResponseDescriptor instead')
 const ListResponse$json = {
@@ -218,6 +227,14 @@ const ListResponse$json = {
     {'1': 'total', '3': 2, '4': 1, '5': 4, '10': 'total'},
     {'1': 'page', '3': 3, '4': 1, '5': 4, '10': 'page'},
     {'1': 'has_more', '3': 4, '4': 1, '5': 8, '10': 'hasMore'},
+    {
+      '1': 'source',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -225,7 +242,8 @@ const ListResponse$json = {
 final $typed_data.Uint8List listResponseDescriptor = $convert.base64Decode(
     'CgxMaXN0UmVzcG9uc2USOwoHY29udGVudBgBIAMoCzIhLnN5bmN0di5wcm92aWRlci5zZWFmaW'
     'xlLkZpbGVJdGVtUgdjb250ZW50EhQKBXRvdGFsGAIgASgEUgV0b3RhbBISCgRwYWdlGAMgASgE'
-    'UgRwYWdlEhkKCGhhc19tb3JlGAQgASgIUgdoYXNNb3Jl');
+    'UgRwYWdlEhkKCGhhc19tb3JlGAQgASgIUgdoYXNNb3JlEkAKBnNvdXJjZRgFIAEoCzIoLnN5bm'
+    'N0di5wcm92aWRlci5jb21tb24uRGlzY292ZXJlZFNvdXJjZVIGc291cmNl');
 
 @$core.Deprecated('Use logoutRequestDescriptor instead')
 const LogoutRequest$json = {

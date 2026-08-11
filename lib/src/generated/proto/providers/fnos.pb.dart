@@ -15,6 +15,7 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $0;
 import 'fnos.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -517,12 +518,14 @@ class ListResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? total,
     $core.int? page,
     $core.bool? hasMore,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (content != null) result.content.addAll(content);
     if (total != null) result.total = total;
     if (page != null) result.page = page;
     if (hasMore != null) result.hasMore = hasMore;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -546,6 +549,8 @@ class ListResponse extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aI(3, _omitFieldNames ? '' : 'page', fieldType: $pb.PbFieldType.OU3)
     ..aOB(4, _omitFieldNames ? '' : 'hasMore')
+    ..aOM<$0.DiscoveredSource>(5, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -596,6 +601,17 @@ class ListResponse extends $pb.GeneratedMessage {
   $core.bool hasHasMore() => $_has(3);
   @$pb.TagNumber(4)
   void clearHasMore() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource get source => $_getN(4);
+  @$pb.TagNumber(5)
+  set source($0.DiscoveredSource value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSource() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSource() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource ensureSource() => $_ensure(4);
 }
 
 class ListMediaLibrariesRequest extends $pb.GeneratedMessage {
@@ -980,12 +996,14 @@ class ListMediaItemsResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? total,
     $core.int? page,
     $core.bool? hasMore,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (total != null) result.total = total;
     if (page != null) result.page = page;
     if (hasMore != null) result.hasMore = hasMore;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1009,6 +1027,8 @@ class ListMediaItemsResponse extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aI(3, _omitFieldNames ? '' : 'page', fieldType: $pb.PbFieldType.OU3)
     ..aOB(4, _omitFieldNames ? '' : 'hasMore')
+    ..aOM<$0.DiscoveredSource>(5, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1060,6 +1080,17 @@ class ListMediaItemsResponse extends $pb.GeneratedMessage {
   $core.bool hasHasMore() => $_has(3);
   @$pb.TagNumber(4)
   void clearHasMore() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource get source => $_getN(4);
+  @$pb.TagNumber(5)
+  set source($0.DiscoveredSource value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSource() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSource() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource ensureSource() => $_ensure(4);
 }
 
 class MediaItem extends $pb.GeneratedMessage {
@@ -1079,6 +1110,7 @@ class MediaItem extends $pb.GeneratedMessage {
     $core.bool? isFolder,
     $core.bool? isPlayable,
     $core.bool? favorite,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (guid != null) result.guid = guid;
@@ -1096,6 +1128,7 @@ class MediaItem extends $pb.GeneratedMessage {
     if (isFolder != null) result.isFolder = isFolder;
     if (isPlayable != null) result.isPlayable = isPlayable;
     if (favorite != null) result.favorite = favorite;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1134,6 +1167,8 @@ class MediaItem extends $pb.GeneratedMessage {
     ..aOB(13, _omitFieldNames ? '' : 'isFolder')
     ..aOB(14, _omitFieldNames ? '' : 'isPlayable')
     ..aOB(15, _omitFieldNames ? '' : 'favorite')
+    ..aOM<$0.DiscoveredSource>(16, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1288,6 +1323,17 @@ class MediaItem extends $pb.GeneratedMessage {
   $core.bool hasFavorite() => $_has(14);
   @$pb.TagNumber(15)
   void clearFavorite() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $0.DiscoveredSource get source => $_getN(15);
+  @$pb.TagNumber(16)
+  set source($0.DiscoveredSource value) => $_setField(16, value);
+  @$pb.TagNumber(16)
+  $core.bool hasSource() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearSource() => $_clearField(16);
+  @$pb.TagNumber(16)
+  $0.DiscoveredSource ensureSource() => $_ensure(15);
 }
 
 class SetFavoriteRequest extends $pb.GeneratedMessage {
@@ -1591,6 +1637,7 @@ class FileItem extends $pb.GeneratedMessage {
     $fixnum.Int64? createdAt,
     $core.bool? isDir,
     $fixnum.Int64? storageId,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -1600,6 +1647,7 @@ class FileItem extends $pb.GeneratedMessage {
     if (createdAt != null) result.createdAt = createdAt;
     if (isDir != null) result.isDir = isDir;
     if (storageId != null) result.storageId = storageId;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1627,6 +1675,8 @@ class FileItem extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(
         7, _omitFieldNames ? '' : 'storageId', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<$0.DiscoveredSource>(8, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1709,6 +1759,17 @@ class FileItem extends $pb.GeneratedMessage {
   $core.bool hasStorageId() => $_has(6);
   @$pb.TagNumber(7)
   void clearStorageId() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource get source => $_getN(7);
+  @$pb.TagNumber(8)
+  set source($0.DiscoveredSource value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSource() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSource() => $_clearField(8);
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource ensureSource() => $_ensure(7);
 }
 
 class GetServerInfoRequest extends $pb.GeneratedMessage {

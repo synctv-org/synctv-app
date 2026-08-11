@@ -12,7 +12,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/core/media/local_image_upload.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_chat_manager.dart';
 import 'package:synctv_app/contracts/account_models.dart';
-import 'package:synctv_app/contracts/direct_url_source_config.dart';
 import 'package:synctv_app/contracts/playback_client_profile.dart';
 import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/public_models.dart';
@@ -30,6 +29,7 @@ import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_auth_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_admin_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_public_room_service.dart';
+import 'package:synctv_app/data/synctv_api/synctv_provider_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_room_management_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_room_media_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_session_store.dart';
@@ -5089,218 +5089,6 @@ void main() {
     },
   );
 
-  test('direct url source config only accepts backend-supported fields', () {
-    final parsed = DirectUrlSourceConfig.parseHeaderLines(
-      'Referer: https://media.example.test\n'
-      'User-Agent: SyncTV\n'
-      'Authorization: Bearer token\n'
-      'Cookie: session=secret',
-    );
-    expect(parsed, {
-      'Referer': 'https://media.example.test',
-      'User-Agent': 'SyncTV',
-      'Authorization': 'Bearer token',
-      'Cookie': 'session=secret',
-    });
-    final config = DirectUrlSourceConfig.fromUserInput(
-      url: ' https://media.example.test/feature.mp4 ',
-      playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
-      headers: parsed,
-      preferProxy: true,
-      proxyOnly: true,
-      expiresAt: 1900000000,
-    );
-    expect(config.toJson(), {
-      'url': 'https://media.example.test/feature.mp4',
-      'headers': {
-        'Referer': 'https://media.example.test',
-        'User-Agent': 'SyncTV',
-        'Authorization': 'Bearer token',
-        'Cookie': 'session=secret',
-      },
-      'playbackKind': 'live',
-      'preferProxy': true,
-      'proxyOnly': true,
-      'expiresAt': 1900000000,
-    });
-    expect(
-      DirectUrlSourceConfig.validateUrl('http//media.example.test/file.mp4'),
-      'http://media.example.test/file.mp4',
-    );
-    expect(
-      DirectUrlSourceConfig.validateUrl('https//media.example.test/file.mp4'),
-      'https://media.example.test/file.mp4',
-    );
-
-    expect(
-      () =>
-          DirectUrlSourceConfig.parseHeaderLines('Host: internal.example.test'),
-      throwsA(isA<DirectUrlSourceConfigException>()),
-    );
-    expect(
-      () => DirectUrlSourceConfig.fromUserInput(
-        url: 'rtmp://media.example.test/live',
-        playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
-      ),
-      throwsA(isA<DirectUrlSourceConfigException>()),
-    );
-  });
-
-  test(
-    'direct url media creation rejects dangerous headers before request',
-    () async {
-      var requestCount = 0;
-      final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
-        session: SyncTvSession()..accessToken = 'token',
-        httpClient: MockClient((request) async {
-          requestCount += 1;
-          return http.Response(
-            jsonEncode({}),
-            200,
-            headers: {'content-type': 'application/json'},
-          );
-        }),
-      );
-      final domain = SyncTvRoomMediaDomainService(api);
-
-      await expectLater(
-        domain.addDirectUrlMedia(
-          'room_1',
-          url: 'https://media.example.test/entry.mp4',
-          playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
-          headers: const {'Host': 'internal.example.test'},
-        ),
-        throwsA(isA<DirectUrlSourceConfigException>()),
-      );
-      expect(requestCount, 0);
-    },
-  );
-
-  test(
-    'direct url batch media sends protobuf body with shared headers',
-    () async {
-      Uri? requestedUri;
-      String? requestMethod;
-      String? requestBody;
-      final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
-        session: SyncTvSession()..accessToken = 'token',
-        httpClient: MockClient((request) async {
-          requestedUri = request.url;
-          requestMethod = request.method;
-          requestBody = request.body;
-          return http.Response(
-            jsonEncode({
-              'results': [
-                {
-                  'id': 'med_1',
-                  'roomId': 'room_1',
-                  'sourceProvider': source_enum
-                      .SourceProvider
-                      .SOURCE_PROVIDER_DIRECT_URL
-                      .value,
-                  'name': 'Episode 1',
-                },
-                {
-                  'id': 'med_2',
-                  'roomId': 'room_1',
-                  'sourceProvider': source_enum
-                      .SourceProvider
-                      .SOURCE_PROVIDER_DIRECT_URL
-                      .value,
-                  'name': 'Episode 2',
-                },
-              ],
-            }),
-            200,
-            headers: {'content-type': 'application/json'},
-          );
-        }),
-      );
-      final domain = SyncTvRoomMediaDomainService(api);
-
-      await domain.addMediaBatch('room_1', [
-        {
-          'playlistId': 'pl_1',
-          'sourceProvider':
-              source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
-          'sourceConfig': {
-            'url': 'https://media.example.test/episode-1.mp4',
-            'headers': {
-              'Referer': 'https://media.example.test',
-              'Authorization': 'Bearer shared-token',
-              'Cookie': 'sid=shared',
-            },
-          },
-          'name': '',
-        },
-        {
-          'playlistId': 'pl_1',
-          'sourceProvider':
-              source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
-          'sourceConfig': {
-            'url': 'https://media.example.test/episode-2.mp4',
-            'headers': {
-              'Referer': 'https://media.example.test',
-              'Authorization': 'Bearer shared-token',
-              'Cookie': 'sid=shared',
-            },
-          },
-          'name': '',
-        },
-      ]);
-
-      expect(requestMethod, 'POST');
-      expect(requestedUri!.path, '/api/rooms/room_1/media/batch');
-      final body = jsonDecode(requestBody!) as Map<String, dynamic>;
-      final items = body['items'] as List<dynamic>;
-      expect(items, hasLength(2));
-      expect(items[0], {
-        'playlistId': 'pl_1',
-        'providerInstanceName': '',
-        'sourceConfig': {
-          'directUrl': {
-            'medias': [
-              {
-                'name': '',
-                'url': 'https://media.example.test/episode-1.mp4',
-                'headers': {
-                  'Referer': 'https://media.example.test',
-                  'Authorization': 'Bearer shared-token',
-                  'Cookie': 'sid=shared',
-                },
-                'format': '',
-              },
-            ],
-          },
-        },
-        'name': '',
-      });
-      expect(items[1], {
-        'playlistId': 'pl_1',
-        'providerInstanceName': '',
-        'sourceConfig': {
-          'directUrl': {
-            'medias': [
-              {
-                'name': '',
-                'url': 'https://media.example.test/episode-2.mp4',
-                'headers': {
-                  'Referer': 'https://media.example.test',
-                  'Authorization': 'Bearer shared-token',
-                  'Cookie': 'sid=shared',
-                },
-                'format': '',
-              },
-            ],
-          },
-        },
-        'name': '',
-      });
-    },
-  );
-
   test('delete media uses protobuf path and query contract', () async {
     Uri? requestedUri;
     String? requestMethod;
@@ -6498,7 +6286,7 @@ void main() {
   });
 
   test(
-    'direct url, rtmp, and live proxy media creation use distinct provider contracts',
+    'direct url, rtmp, and live proxy require prepare intents before creation',
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
@@ -6506,6 +6294,63 @@ void main() {
         session: SyncTvSession()..accessToken = 'token',
         httpClient: MockClient((request) async {
           requests.add(request);
+          final requestBody = request.body.isEmpty
+              ? <String, dynamic>{}
+              : jsonDecode(request.body) as Map<String, dynamic>;
+          if (request.url.path == '/api/providers/prepare/direct-url') {
+            return http.Response(
+              jsonEncode({
+                'source': {
+                  'media': {
+                    'directUrl': {
+                      'medias': [
+                        {
+                          'url': requestBody['url'],
+                          'headers': requestBody['headers'] ?? {},
+                        },
+                      ],
+                      'playbackKind': requestBody['playbackKind'],
+                      'proxyMode': requestBody['proxyMode'],
+                    },
+                  },
+                },
+                'suggestedName': 'entry.m3u8',
+                'playbackKind': requestBody['playbackKind'],
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }
+          if (request.url.path == '/api/providers/prepare/rtmp') {
+            return http.Response(
+              jsonEncode({
+                'source': {
+                  'media': {
+                    'rtmp': {'mode': requestBody['mode']},
+                  },
+                },
+                'suggestedName': 'RTMP live stream',
+                'playbackKind':
+                    source_enum.PlaybackKind.PLAYBACK_KIND_LIVE.value,
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }
+          if (request.url.path == '/api/providers/prepare/live-proxy') {
+            return http.Response(
+              jsonEncode({
+                'source': {
+                  'media': {'liveProxy': requestBody},
+                },
+                'suggestedName': 'room',
+                'playbackKind':
+                    source_enum.PlaybackKind.PLAYBACK_KIND_LIVE.value,
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }
           if (request.url.path == '/api/rooms/room_1/media' &&
               request.method == 'POST') {
             final body = jsonDecode(request.body) as Map<String, dynamic>;
@@ -6534,77 +6379,84 @@ void main() {
               headers: {'content-type': 'application/json'},
             );
           }
-          if (request.url.path ==
-              '/api/providers/rtmp/rooms/room_1/publish-key/med_rtmp') {
-            return http.Response(
-              jsonEncode({
-                'publishKey': 'pub_1',
-                'rtmpUrl': 'rtmp://example.test/live',
-                'streamKey': 'stream_1',
-                'expiresAt': '1760000100',
-              }),
-              200,
-              headers: {'content-type': 'application/json'},
-            );
-          }
           return http.Response('{}', 404);
         }),
       );
-      final domain = SyncTvRoomMediaDomainService(api);
+      final providers = SyncTvProviderDomainService(api);
+      final roomMedia = SyncTvRoomMediaDomainService(api);
 
-      final directId = await domain.addDirectUrlMedia(
-        'room_1',
-        playlistId: 'pl_1',
-        url: 'https://media.example.test/entry.m3u8',
-        playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
-        headers: const {'User-Agent': 'Mozilla/5.0'},
-        name: 'Direct HLS',
-        preferProxy: true,
-        proxyOnly: true,
+      final direct = await providers.prepareDirectUrl(
+        provider_common.PrepareDirectUrlRequest(
+          url: 'https://media.example.test/entry.m3u8',
+          playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
+          headers: const {'User-Agent': 'Mozilla/5.0'}.entries,
+          proxyMode: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+        ),
       );
-      final rtmpId = await domain.addRtmpMedia(
+      final directId = await roomMedia.addMediaFromSourceConfig(
         'room_1',
         playlistId: 'pl_1',
+        sourceConfig: direct.source.media,
+        name: 'Direct HLS',
+      );
+      final rtmpPreview = await providers.prepareRtmp(
+        source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
+      );
+      final rtmpId = await roomMedia.addMediaFromSourceConfig(
+        'room_1',
+        playlistId: 'pl_1',
+        sourceConfig: rtmpPreview.source.media,
         name: 'Camera',
       );
-      final liveProxyId = await domain.addLiveProxyMedia(
-        'room_1',
-        playlistId: 'pl_1',
-        sourceConfig: source_config.LiveProxyMediaSourceConfig(
-          rtmp: source_config.RtmpPullSourceConfig(
+      final liveProxy = await providers.prepareLiveProxy(
+        provider_common.PrepareLiveProxyRequest(
+          rtmp: provider_common.PrepareRtmpPullIntent(
             url: 'rtmp://upstream.example.test/live/room',
             mode: source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
           ),
         ),
+      );
+      final liveProxyId = await roomMedia.addMediaFromSourceConfig(
+        'room_1',
+        playlistId: 'pl_1',
+        sourceConfig: liveProxy.source.media,
         name: 'Upstream Live',
       );
-      final publish = await domain.createRtmpPublishKeyInfo('room_1', rtmpId);
 
       expect(directId, 'med_direct');
       expect(rtmpId, 'med_rtmp');
       expect(liveProxyId, 'med_liveProxy');
-      expect(publish.streamKey, 'stream_1');
 
-      final directBody = jsonDecode(requests[0].body) as Map<String, dynamic>;
+      expect(requests[0].url.path, '/api/providers/prepare/direct-url');
+      expect(jsonDecode(requests[0].body), {
+        'url': 'https://media.example.test/entry.m3u8',
+        'headers': {'User-Agent': 'Mozilla/5.0'},
+        'playbackKind': source_enum.PlaybackKind.PLAYBACK_KIND_LIVE.value,
+        'proxyMode':
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY.value,
+      });
+      final directBody = jsonDecode(requests[1].body) as Map<String, dynamic>;
       expect(directBody.containsKey('sourceProvider'), isFalse);
       expect(directBody['playlistId'], 'pl_1');
       expect(directBody['sourceConfig'], {
         'directUrl': {
           'medias': [
             {
-              'name': '',
               'url': 'https://media.example.test/entry.m3u8',
               'headers': {'User-Agent': 'Mozilla/5.0'},
-              'format': '',
             },
           ],
           'playbackKind': source_enum.PlaybackKind.PLAYBACK_KIND_LIVE.value,
-          'preferProxy': true,
-          'proxyOnly': true,
+          'proxyMode':
+              source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY.value,
         },
       });
 
-      final rtmpBody = jsonDecode(requests[1].body) as Map<String, dynamic>;
+      expect(requests[2].url.path, '/api/providers/prepare/rtmp');
+      expect(jsonDecode(requests[2].body), {
+        'mode': source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT.value,
+      });
+      final rtmpBody = jsonDecode(requests[3].body) as Map<String, dynamic>;
       expect(rtmpBody.containsKey('sourceProvider'), isFalse);
       expect(rtmpBody['playlistId'], 'pl_1');
       expect(rtmpBody['sourceConfig'], {
@@ -6614,7 +6466,7 @@ void main() {
       });
 
       final liveProxyBody =
-          jsonDecode(requests[2].body) as Map<String, dynamic>;
+          jsonDecode(requests[5].body) as Map<String, dynamic>;
       expect(liveProxyBody.containsKey('sourceProvider'), isFalse);
       expect(liveProxyBody['playlistId'], 'pl_1');
       expect(liveProxyBody['sourceConfig'], {
@@ -6625,10 +6477,13 @@ void main() {
           },
         },
       });
-      expect(
-        requests[3].url.path,
-        '/api/providers/rtmp/rooms/room_1/publish-key/med_rtmp',
-      );
+      expect(requests[4].url.path, '/api/providers/prepare/live-proxy');
+      expect(jsonDecode(requests[4].body), {
+        'rtmp': {
+          'url': 'rtmp://upstream.example.test/live/room',
+          'mode': source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT.value,
+        },
+      });
     },
   );
 
@@ -6668,16 +6523,17 @@ void main() {
       );
       final domain = SyncTvRoomMediaDomainService(api);
 
-      final playlist = await domain.createPlaylist(
+      final playlist = await domain.createPlaylistFromSourceConfig(
         'room_1',
         name: 'Season 1',
         parentId: 'pl_parent',
-        sourceProvider: 'emby',
         providerInstanceName: 'emby_main',
-        sourceConfig: const {
-          'serverId': 'server_1',
-          'source': {'type': 'folder', 'itemId': 'folder_1'},
-        },
+        sourceConfig: source_config.PlaylistSourceConfig(
+          emby: source_config.EmbyPlaylistSourceConfig(
+            serverId: 'server_1',
+            folder: source_config.EmbyFolderPlaylistSource(itemId: 'folder_1'),
+          ),
+        ),
       );
 
       expect(requestMethod, 'POST');
@@ -8819,7 +8675,11 @@ void main() {
         await SyncTvService.init();
         await SyncTvService.setBaseUrl(origin);
 
-        page = await SyncTvService.listEmbyPage('/', serverId: 'srv_1');
+        page = await SyncTvService.listEmbyPage(
+          EmbyListMode.folder,
+          targetId: '/',
+          serverId: 'srv_1',
+        );
       } finally {
         await requests.cancel();
         await server.close(force: true);

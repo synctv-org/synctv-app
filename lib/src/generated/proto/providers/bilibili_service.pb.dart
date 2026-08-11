@@ -32,6 +32,10 @@ class BilibiliProviderServiceApi {
           $pb.ClientContext? ctx, $0.ParseRequest request) =>
       _client.invoke<$0.ParseResponse>(
           ctx, 'BilibiliProviderService', 'Parse', request, $0.ParseResponse());
+  $async.Future<$0.ListPlaylistResponse> listPlaylist(
+          $pb.ClientContext? ctx, $0.ListPlaylistRequest request) =>
+      _client.invoke<$0.ListPlaylistResponse>(ctx, 'BilibiliProviderService',
+          'ListPlaylist', request, $0.ListPlaylistResponse());
 
   /// List live categories available for dynamic playlist creation
   $async.Future<$0.ListLiveAreasResponse> listLiveAreas(

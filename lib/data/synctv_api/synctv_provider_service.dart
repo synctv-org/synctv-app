@@ -43,11 +43,27 @@ import 'package:synctv_app/src/generated/proto/providers/tiktok.pb.dart'
     as tiktok;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config;
 
 class SyncTvProviderDomainService {
   SyncTvProviderDomainService(this._api);
 
   final SyncTvApiClient _api;
+
+  Future<provider_common.PreparedMediaSource> prepareDirectUrl(
+    provider_common.PrepareDirectUrlRequest intent,
+  ) => _api.providerCommon.prepareDirectUrl(intent);
+
+  Future<provider_common.PreparedMediaSource> prepareLiveProxy(
+    provider_common.PrepareLiveProxyRequest intent,
+  ) => _api.providerCommon.prepareLiveProxy(intent);
+
+  Future<provider_common.PreparedMediaSource> prepareRtmp(
+    source_enum.RtmpStreamMode mode,
+  ) => _api.providerCommon.prepareRtmp(
+    provider_common.PrepareRtmpRequest(mode: mode),
+  );
 
   Future<AlistLoginInfo> loginAList(
     String host,
@@ -135,26 +151,30 @@ class SyncTvProviderDomainService {
   Future<twitch.ResolveResponse> resolveTwitch(
     String resource, {
     String instanceName = '',
+    bool shared = false,
   }) => _api.twitchProvider.resolve(
     twitch.ResolveRequest(
       resource: resource.trim(),
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
   Future<twitch.ListChannelItemsResponse> listTwitchChannelItems(
-    String channel, {
+    String resource, {
     required source_enum.TwitchPlaylistContent content,
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _api.twitchProvider.listChannelItems(
     twitch.ListChannelItemsRequest(
-      channel: channel.trim(),
+      resource: resource.trim(),
       content: content,
       cursor: cursor,
       pageSize: pageSize,
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
@@ -162,11 +182,13 @@ class SyncTvProviderDomainService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _api.twitchProvider.listFollowedLive(
     twitch.ListFollowedLiveRequest(
       cursor: cursor,
       pageSize: pageSize,
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
@@ -176,6 +198,7 @@ class SyncTvProviderDomainService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _api.twitchProvider.listCategoryStreams(
     twitch.ListCategoryStreamsRequest(
       categoryId: categoryId,
@@ -183,6 +206,7 @@ class SyncTvProviderDomainService {
       cursor: cursor,
       pageSize: pageSize,
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
@@ -190,11 +214,13 @@ class SyncTvProviderDomainService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _api.twitchProvider.listTopCategories(
     twitch.ListTopCategoriesRequest(
       cursor: cursor,
       pageSize: pageSize,
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
@@ -203,12 +229,14 @@ class SyncTvProviderDomainService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _api.twitchProvider.searchLiveChannels(
     twitch.SearchLiveChannelsRequest(
       query: query.trim(),
       cursor: cursor,
       pageSize: pageSize,
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
@@ -217,28 +245,44 @@ class SyncTvProviderDomainService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _api.twitchProvider.listSchedule(
     twitch.ListScheduleRequest(
       broadcasterId: broadcasterId,
       cursor: cursor,
       pageSize: pageSize,
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
-  Future<huya.ResolveResponse> resolveHuya(String resource) =>
-      _api.huyaProvider.resolve(huya.ResolveRequest(resource: resource.trim()));
+  Future<huya.ResolveResponse> resolveHuya(
+    String resource, {
+    String instanceName = '',
+  }) => _api.huyaProvider.resolve(
+    huya.ResolveRequest(resource: resource.trim(), instanceName: instanceName),
+  );
 
-  Future<douyu.ResolveResponse> resolveDouyu(String resource) => _api
-      .douyuProvider
-      .resolve(douyu.ResolveRequest(resource: resource.trim()));
+  Future<douyu.ResolveResponse> resolveDouyu(
+    String resource, {
+    String instanceName = '',
+  }) => _api.douyuProvider.resolve(
+    douyu.ResolveRequest(resource: resource.trim(), instanceName: instanceName),
+  );
 
-  Future<acfun.ResolveResponse> resolveAcFun(String resource) => _api
-      .acFunProvider
-      .resolve(acfun.ResolveRequest(resource: resource.trim()));
+  Future<acfun.ResolveResponse> resolveAcFun(
+    String resource, {
+    String instanceName = '',
+  }) => _api.acFunProvider.resolve(
+    acfun.ResolveRequest(resource: resource.trim(), instanceName: instanceName),
+  );
 
-  Future<cctv.ResolveResponse> resolveCctv(String resource) =>
-      _api.cctvProvider.resolve(cctv.ResolveRequest(resource: resource.trim()));
+  Future<cctv.ResolveResponse> resolveCctv(
+    String resource, {
+    String instanceName = '',
+  }) => _api.cctvProvider.resolve(
+    cctv.ResolveRequest(resource: resource.trim(), instanceName: instanceName),
+  );
 
   Future<YoutubeBindInfo> bindYoutube({
     required String label,
@@ -277,12 +321,18 @@ class SyncTvProviderDomainService {
   Future<youtube.ResolveResponse> resolveYoutube(
     String resource, {
     String instanceName = '',
-  }) => _api.youtubeProvider.resolve(
-    youtube.ResolveRequest(
+    bool shared = false,
+  }) {
+    final request = youtube.ResolveRequest(
       resource: resource.trim(),
       instanceName: instanceName,
-    ),
-  );
+    );
+    if (shared) request.shared = true;
+    return _api.youtubeProvider.resolve(request);
+  }
+
+  Future<youtube.ListResponse> listYoutube(youtube.ListRequest request) =>
+      _api.youtubeProvider.list(request);
 
   Future<DouyinBindInfo> bindDouyin({
     required String label,
@@ -313,11 +363,13 @@ class SyncTvProviderDomainService {
   Future<douyin.ResolveResponse> resolveDouyin(
     String resource, {
     String instanceName = '',
+    bool shared = false,
   }) {
     return _api.douyinProvider.resolve(
       douyin.ResolveRequest(
         resource: resource.trim(),
         instanceName: instanceName,
+        shared: shared,
       ),
     );
   }
@@ -327,6 +379,7 @@ class SyncTvProviderDomainService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) {
     return _api.douyinProvider.listUserPosts(
       douyin.ListUserPostsRequest(
@@ -334,6 +387,7 @@ class SyncTvProviderDomainService {
         cursor: cursor,
         pageSize: pageSize,
         instanceName: instanceName,
+        shared: shared,
       ),
     );
   }
@@ -367,20 +421,24 @@ class SyncTvProviderDomainService {
   Future<tiktok.ResolveResponse> resolveTikTok(
     String resource, {
     String instanceName = '',
+    bool shared = false,
   }) => _api.tiktokProvider.resolve(
     tiktok.ResolveRequest(
       resource: resource.trim(),
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
   Future<tiktok.GetUserResponse> getTikTokUser(
-    String uniqueId, {
+    String resource, {
     String instanceName = '',
+    bool shared = false,
   }) => _api.tiktokProvider.getUser(
     tiktok.GetUserRequest(
-      uniqueId: uniqueId.trim(),
+      resource: resource.trim(),
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
@@ -389,12 +447,14 @@ class SyncTvProviderDomainService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _api.tiktokProvider.listUserPosts(
     tiktok.ListUserPostsRequest(
       secUid: secUid.trim(),
       cursor: cursor,
       pageSize: pageSize,
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
@@ -493,12 +553,14 @@ class SyncTvProviderDomainService {
               createdAt: item.hasCreatedAt() ? item.createdAt.toInt() : null,
               isDir: item.isDir,
               storageId: item.hasStorageId() ? item.storageId.toInt() : null,
+              source: item.source.deepCopy(),
             ),
           )
           .toList(),
       total: response.total.toInt(),
       page: response.page,
       hasMore: response.hasMore,
+      source: response.hasSource() ? response.source.deepCopy() : null,
     );
   }
 
@@ -579,12 +641,14 @@ class SyncTvProviderDomainService {
               isFolder: item.isFolder,
               isPlayable: item.isPlayable,
               favorite: item.favorite,
+              source: item.source.deepCopy(),
             ),
           )
           .toList(),
       total: response.total.toInt(),
       page: response.page,
       hasMore: response.hasMore,
+      source: response.hasSource() ? response.source.deepCopy() : null,
     );
   }
 
@@ -726,6 +790,7 @@ class SyncTvProviderDomainService {
               thumbnailUrl: item.isDir
                   ? ''
                   : _qnapThumbnailUrl(serverId, item.path),
+              source: item.source.deepCopy(),
             ),
           )
           .toList(),
@@ -733,6 +798,7 @@ class SyncTvProviderDomainService {
       page: response.page.toInt(),
       hasMore: response.hasMore,
       realtimeTranscode: response.realtimeTranscode,
+      source: response.hasSource() ? response.source.deepCopy() : null,
     );
   }
 
@@ -943,12 +1009,14 @@ class SyncTvProviderDomainService {
             previewUrl: item.hasPreview
                 ? _nextcloudPreviewUrl(serverId, item.fileId.toInt())
                 : '',
+            source: item.source.deepCopy(),
           ),
         )
         .toList(),
     total: response.hasTotal() ? response.total.toInt() : null,
     page: response.page.toInt(),
     hasMore: response.hasMore,
+    source: response.hasSource() ? response.source.deepCopy() : null,
   );
 
   String _nextcloudPreviewUrl(String serverId, int fileId) {
@@ -1128,11 +1196,13 @@ class SyncTvProviderDomainService {
         repositoryEncrypted: item.repositoryEncrypted,
         passwordRequired: item.passwordRequired,
         thumbnailUrl: thumbnailUrl,
+        source: item.source.deepCopy(),
       );
     }).toList(),
     total: response.total.toInt(),
     page: response.page.toInt(),
     hasMore: response.hasMore,
+    source: response.hasSource() ? response.source.deepCopy() : null,
   );
 
   String _seafileThumbnailUrl(
@@ -1254,12 +1324,14 @@ class SyncTvProviderDomainService {
               attributes: List.unmodifiable(item.attributes),
               extendedAttributes: List.unmodifiable(item.xattrs),
               zfsAttributes: List.unmodifiable(item.zfsAttributes),
+              source: item.source.deepCopy(),
             ),
           )
           .toList(),
       total: response.total.toInt(),
       page: response.page.toInt(),
       hasMore: response.hasMore,
+      source: response.hasSource() ? response.source.deepCopy() : null,
     );
   }
 
@@ -1323,12 +1395,14 @@ class SyncTvProviderDomainService {
               thumbnailUrl: item.isDir
                   ? ''
                   : _synologyFileImageUrl(serverId, item.path),
+              source: item.source.deepCopy(),
             ),
           )
           .toList(),
       total: response.total.toInt(),
       page: response.page.toInt(),
       hasMore: response.hasMore,
+      source: response.hasSource() ? response.source.deepCopy() : null,
     );
   }
 
@@ -1429,6 +1503,7 @@ class SyncTvProviderDomainService {
       total: result.total.toInt(),
       page: result.page.toInt(),
       hasMore: result.hasMore,
+      source: result.hasSource() ? result.source.deepCopy() : null,
     );
   }
 
@@ -1629,12 +1704,16 @@ class SyncTvProviderDomainService {
 
   Future<List<BilibiliFavoriteFolderInfo>> listBilibiliFavoriteFolders({
     String instanceName = '',
+    bool shared = false,
   }) async {
     final response = await _api.bilibiliProvider.listFavoriteFolders(
-      bilibili.ListFavoriteFoldersRequest(instanceName: instanceName),
+      bilibili.ListFavoriteFoldersRequest(
+        instanceName: instanceName,
+        shared: shared,
+      ),
     );
     return response.folders
-        .where((folder) => folder.hasSourceConfig())
+        .where((folder) => folder.hasSource())
         .map(
           (folder) => BilibiliFavoriteFolderInfo(
             mediaId: folder.mediaId.toInt(),
@@ -1642,7 +1721,7 @@ class SyncTvProviderDomainService {
             mediaCount: folder.mediaCount.toInt(),
             isPrivate: folder.private,
             isDefault: folder.defaultFolder,
-            sourceConfig: folder.sourceConfig,
+            source: folder.source.deepCopy(),
           ),
         )
         .toList();
@@ -1653,6 +1732,7 @@ class SyncTvProviderDomainService {
     int page = 1,
     int pageSize = 30,
     String instanceName = '',
+    bool shared = false,
   }) async {
     final response = await _api.bilibiliProvider.listFollowedPgc(
       bilibili.ListFollowedPgcRequest(
@@ -1662,11 +1742,12 @@ class SyncTvProviderDomainService {
             : bilibili_enum.PgcFollowType.PGC_FOLLOW_TYPE_ANIME,
         page: Int64(page),
         pageSize: pageSize,
+        shared: shared,
       ),
     );
     return BilibiliFollowedPgcPage(
       items: response.seasons
-          .where((season) => season.hasSourceConfig())
+          .where((season) => season.hasSource())
           .map(
             (season) => BilibiliFollowedPgcInfo(
               seasonId: season.seasonId.toInt(),
@@ -1674,7 +1755,7 @@ class SyncTvProviderDomainService {
               cover: season.cover,
               description: season.description,
               latestEpisode: season.latestEpisode,
-              sourceConfig: season.sourceConfig,
+              source: season.source.deepCopy(),
             ),
           )
           .toList(),
@@ -1689,12 +1770,14 @@ class SyncTvProviderDomainService {
     String? cursor,
     int pageSize = 30,
     String instanceName = '',
+    bool shared = false,
   }) => _api.bilibiliProvider.listHistory(
     bilibili.ListHistoryRequest(
       type: type,
       cursor: cursor,
       pageSize: pageSize,
       instanceName: instanceName,
+      shared: shared,
     ),
   );
 
@@ -1703,6 +1786,7 @@ class SyncTvProviderDomainService {
     int beforeDays = 3,
     int afterDays = 7,
     String instanceName = '',
+    bool shared = false,
   }) async {
     final response = await _api.bilibiliProvider.listPgcTimeline(
       bilibili.ListPgcTimelineRequest(
@@ -1723,6 +1807,7 @@ class SyncTvProviderDomainService {
         beforeDays: beforeDays,
         afterDays: afterDays,
         instanceName: instanceName,
+        shared: shared,
       ),
     );
     return BilibiliPgcTimelineInfo(
@@ -1741,11 +1826,11 @@ class SyncTvProviderDomainService {
               dayOfWeek: item.dayOfWeek,
               delayed: item.delayed,
               delayReason: item.delayReason,
-              sourceConfig: item.hasSourceConfig() ? item.sourceConfig : null,
+              source: item.hasSource() ? item.source.deepCopy() : null,
             ),
           )
           .toList(),
-      sourceConfig: response.sourceConfig,
+      source: response.source.deepCopy(),
     );
   }
 
@@ -1760,6 +1845,7 @@ class SyncTvProviderDomainService {
     String? year,
     int? styleId,
     String instanceName = '',
+    bool shared = false,
   }) async {
     final response = await _api.bilibiliProvider.listPgcSeasons(
       bilibili.ListPgcSeasonsRequest(
@@ -1801,11 +1887,12 @@ class SyncTvProviderDomainService {
         year: year,
         styleId: styleId == null ? null : Int64(styleId),
         instanceName: instanceName,
+        shared: shared,
       ),
     );
     return BilibiliPgcSeasonPage(
       items: response.seasons
-          .where((season) => season.hasSourceConfig())
+          .where((season) => season.hasSource())
           .map(
             (season) => BilibiliPgcSeasonInfo(
               seasonId: season.seasonId.toInt(),
@@ -1832,7 +1919,7 @@ class SyncTvProviderDomainService {
                   BilibiliPgcSeasonKind.variety,
                 _ => BilibiliPgcSeasonKind.anime,
               },
-              sourceConfig: season.sourceConfig,
+              source: season.source.deepCopy(),
             ),
           )
           .toList(),
@@ -1843,9 +1930,10 @@ class SyncTvProviderDomainService {
 
   Future<List<BilibiliLiveAreaInfo>> listBilibiliLiveAreas({
     String instanceName = '',
+    bool shared = false,
   }) async {
     final response = await _api.bilibiliProvider.listLiveAreas(
-      bilibili.ListLiveAreasRequest(instanceName: instanceName),
+      bilibili.ListLiveAreasRequest(instanceName: instanceName, shared: shared),
     );
     return response.areas
         .map(
@@ -1856,6 +1944,7 @@ class SyncTvProviderDomainService {
             parentName: area.parentName,
             picture: area.picture,
             hot: area.hot,
+            source: area.source.deepCopy(),
           ),
         )
         .toList();
@@ -2060,12 +2149,182 @@ class SyncTvProviderDomainService {
   Future<BilibiliParseInfo> parseBilibiliInfo(
     String url, {
     String instanceName = '',
+    bool shared = false,
   }) async {
-    final response = await _api.bilibiliProvider.parse(
-      bilibili.ParseRequest(url: url, instanceName: instanceName),
-    );
+    final request = bilibili.ParseRequest(url: url, instanceName: instanceName);
+    if (shared) request.shared = true;
+    final response = await _api.bilibiliProvider.parse(request);
     return _bilibiliParseFromProto(response);
   }
+
+  Future<BilibiliPlaylistListPage> listBilibiliPlaylist(
+    BilibiliPlaylistListIntent intent, {
+    int page = 1,
+    int pageSize = 30,
+    String? cursor,
+    String search = '',
+    String instanceName = '',
+    bool shared = false,
+  }) async {
+    final response = await _api.bilibiliProvider.listPlaylist(
+      bilibili.ListPlaylistRequest(
+        intent: _bilibiliPlaylistIntentToProto(intent),
+        page: Int64(page),
+        pageSize: pageSize,
+        cursor: cursor,
+        search: search,
+        instanceName: instanceName,
+        shared: shared,
+      ),
+    );
+    return BilibiliPlaylistListPage(
+      items: [
+        for (final item in response.items)
+          BilibiliPlaylistListItemInfo(
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            cover: item.cover,
+            isContainer: item.isContainer,
+            source: item.source.deepCopy(),
+            browse: item.hasBrowse()
+                ? _bilibiliPlaylistIntentFromProto(item.browse)
+                : null,
+          ),
+      ],
+      hasMore: response.hasMore,
+      page: response.page.toInt(),
+      cursor: response.hasCursor() ? response.cursor : null,
+      source: response.source.deepCopy(),
+    );
+  }
+
+  bilibili.PlaylistListIntent _bilibiliPlaylistIntentToProto(
+    BilibiliPlaylistListIntent intent,
+  ) => bilibili.PlaylistListIntent(
+    mode: switch (intent.mode) {
+      BilibiliPlaylistListMode.popular =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_POPULAR,
+      BilibiliPlaylistListMode.recommended =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_RECOMMENDED,
+      BilibiliPlaylistListMode.videoParts =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_VIDEO_PARTS,
+      BilibiliPlaylistListMode.upVideos =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_UP_VIDEOS,
+      BilibiliPlaylistListMode.favoriteVideos =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_FAVORITE_VIDEOS,
+      BilibiliPlaylistListMode.collectionVideos =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_COLLECTION_VIDEOS,
+      BilibiliPlaylistListMode.seriesVideos =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_SERIES_VIDEOS,
+      BilibiliPlaylistListMode.watchLater =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_WATCH_LATER,
+      BilibiliPlaylistListMode.pgcSeason =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_PGC_SEASON,
+      BilibiliPlaylistListMode.liveRecommended =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_LIVE_RECOMMENDED,
+      BilibiliPlaylistListMode.liveFollowed =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_LIVE_FOLLOWED,
+      BilibiliPlaylistListMode.liveArea =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_LIVE_AREA,
+      BilibiliPlaylistListMode.history =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_HISTORY,
+      BilibiliPlaylistListMode.pgcTimeline =>
+        bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_PGC_TIMELINE,
+    },
+    bvid: intent.bvid,
+    aid: intent.aid == null ? null : Int64(intent.aid!),
+    mid: Int64(intent.mid),
+    keyword: intent.keyword,
+    mediaId: Int64(intent.mediaId),
+    seasonId: Int64(intent.seasonId),
+    seriesId: Int64(intent.seriesId),
+    parentAreaId: Int64(intent.parentAreaId),
+    areaId: Int64(intent.areaId),
+    historyType: switch (intent.historyType) {
+      BilibiliPlaylistHistoryType.all =>
+        source_enum.BilibiliHistoryType.BILIBILI_HISTORY_TYPE_ALL,
+      BilibiliPlaylistHistoryType.archive =>
+        source_enum.BilibiliHistoryType.BILIBILI_HISTORY_TYPE_ARCHIVE,
+      BilibiliPlaylistHistoryType.live =>
+        source_enum.BilibiliHistoryType.BILIBILI_HISTORY_TYPE_LIVE,
+    },
+    timelineType: switch (intent.timelineType) {
+      BilibiliPgcTimelineKind.anime =>
+        source_enum.BilibiliPgcTimelineType.BILIBILI_PGC_TIMELINE_TYPE_ANIME,
+      BilibiliPgcTimelineKind.cinema =>
+        source_enum.BilibiliPgcTimelineType.BILIBILI_PGC_TIMELINE_TYPE_CINEMA,
+      BilibiliPgcTimelineKind.guochuang =>
+        source_enum
+            .BilibiliPgcTimelineType
+            .BILIBILI_PGC_TIMELINE_TYPE_GUOCHUANG,
+    },
+    beforeDays: intent.beforeDays,
+    afterDays: intent.afterDays,
+  );
+
+  BilibiliPlaylistListIntent _bilibiliPlaylistIntentFromProto(
+    bilibili.PlaylistListIntent intent,
+  ) => BilibiliPlaylistListIntent(
+    mode: switch (intent.mode) {
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_POPULAR =>
+        BilibiliPlaylistListMode.popular,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_RECOMMENDED =>
+        BilibiliPlaylistListMode.recommended,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_VIDEO_PARTS =>
+        BilibiliPlaylistListMode.videoParts,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_UP_VIDEOS =>
+        BilibiliPlaylistListMode.upVideos,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_FAVORITE_VIDEOS =>
+        BilibiliPlaylistListMode.favoriteVideos,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_COLLECTION_VIDEOS =>
+        BilibiliPlaylistListMode.collectionVideos,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_SERIES_VIDEOS =>
+        BilibiliPlaylistListMode.seriesVideos,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_WATCH_LATER =>
+        BilibiliPlaylistListMode.watchLater,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_PGC_SEASON =>
+        BilibiliPlaylistListMode.pgcSeason,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_LIVE_RECOMMENDED =>
+        BilibiliPlaylistListMode.liveRecommended,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_LIVE_FOLLOWED =>
+        BilibiliPlaylistListMode.liveFollowed,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_LIVE_AREA =>
+        BilibiliPlaylistListMode.liveArea,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_HISTORY =>
+        BilibiliPlaylistListMode.history,
+      bilibili_enum.PlaylistListMode.PLAYLIST_LIST_MODE_PGC_TIMELINE =>
+        BilibiliPlaylistListMode.pgcTimeline,
+      _ => BilibiliPlaylistListMode.popular,
+    },
+    bvid: intent.bvid,
+    aid: intent.hasAid() ? intent.aid.toInt() : null,
+    mid: intent.mid.toInt(),
+    keyword: intent.keyword,
+    mediaId: intent.mediaId.toInt(),
+    seasonId: intent.seasonId.toInt(),
+    seriesId: intent.seriesId.toInt(),
+    parentAreaId: intent.parentAreaId.toInt(),
+    areaId: intent.areaId.toInt(),
+    historyType: switch (intent.historyType) {
+      source_enum.BilibiliHistoryType.BILIBILI_HISTORY_TYPE_ARCHIVE =>
+        BilibiliPlaylistHistoryType.archive,
+      source_enum.BilibiliHistoryType.BILIBILI_HISTORY_TYPE_LIVE =>
+        BilibiliPlaylistHistoryType.live,
+      _ => BilibiliPlaylistHistoryType.all,
+    },
+    timelineType: switch (intent.timelineType) {
+      source_enum.BilibiliPgcTimelineType.BILIBILI_PGC_TIMELINE_TYPE_CINEMA =>
+        BilibiliPgcTimelineKind.cinema,
+      source_enum
+          .BilibiliPgcTimelineType
+          .BILIBILI_PGC_TIMELINE_TYPE_GUOCHUANG =>
+        BilibiliPgcTimelineKind.guochuang,
+      _ => BilibiliPgcTimelineKind.anime,
+    },
+    beforeDays: intent.beforeDays,
+    afterDays: intent.afterDays,
+  );
 
   Future<AlistListPage> listAlistPage(
     String path, {
@@ -2098,6 +2357,7 @@ class SyncTvProviderDomainService {
         providerInstanceName: instanceName,
         items: response.content.map(_alistSearchItemFromProto).toList(),
         total: response.total.toInt(),
+        source: null,
       );
     }
 
@@ -2118,6 +2378,7 @@ class SyncTvProviderDomainService {
           .map((item) => _alistItemFromProto(item, parentPath: path))
           .toList(),
       total: response.total.toInt(),
+      source: response.hasSource() ? response.source.deepCopy() : null,
     );
   }
 
@@ -2164,6 +2425,7 @@ class SyncTvProviderDomainService {
     final normalizedKeyword = keyword?.trim() ?? '';
     final Iterable<cloudreve.FileItem> items;
     final int total;
+    provider_common.DiscoveredSource? source;
     var usesCursor = false;
     var nextCursor = '';
     if (normalizedKeyword.isNotEmpty) {
@@ -2177,6 +2439,7 @@ class SyncTvProviderDomainService {
       );
       items = response.content;
       total = response.total.toInt();
+      source = null;
     } else {
       final response = await _api.cloudreveProvider.list(
         cloudreve.ListRequest(
@@ -2191,6 +2454,7 @@ class SyncTvProviderDomainService {
         ),
       );
       items = response.content;
+      source = response.hasSource() ? response.source.deepCopy() : null;
       usesCursor =
           response.whichPagination() ==
           cloudreve.ListResponse_Pagination.cursor;
@@ -2214,17 +2478,21 @@ class SyncTvProviderDomainService {
               isDir: item.isDir,
               modified: item.modified.toInt(),
               thumbnail: item.thumbnail,
+              source: item.source.deepCopy(),
             ),
           )
           .toList(),
       total: total,
       usesCursor: usesCursor,
       nextCursor: nextCursor,
+      source: source,
     );
   }
 
   Future<EmbyListPage> listEmbyPage(
-    String path, {
+    EmbyListMode mode, {
+    String targetId = '',
+    List<String> itemTypes = const [],
     String? keyword,
     int page = 1,
     int max = 20,
@@ -2238,11 +2506,27 @@ class SyncTvProviderDomainService {
     final response = await _api.embyProvider.list(
       emby.ListRequest(
         serverId: resolvedServerId,
-        path: path,
+        mode: switch (mode) {
+          EmbyListMode.folder => emby.ListMode.LIST_MODE_FOLDER,
+          EmbyListMode.favoriteItems => emby.ListMode.LIST_MODE_FAVORITE_ITEMS,
+          EmbyListMode.favoritePeople =>
+            emby.ListMode.LIST_MODE_FAVORITE_PEOPLE,
+          EmbyListMode.personItems => emby.ListMode.LIST_MODE_PERSON_ITEMS,
+          EmbyListMode.continueWatching =>
+            emby.ListMode.LIST_MODE_CONTINUE_WATCHING,
+          EmbyListMode.nextUp => emby.ListMode.LIST_MODE_NEXT_UP,
+          EmbyListMode.recentlyAdded => emby.ListMode.LIST_MODE_RECENTLY_ADDED,
+          EmbyListMode.playlists => emby.ListMode.LIST_MODE_PLAYLISTS,
+          EmbyListMode.collections => emby.ListMode.LIST_MODE_COLLECTIONS,
+          EmbyListMode.genres => emby.ListMode.LIST_MODE_GENRES,
+          EmbyListMode.genreItems => emby.ListMode.LIST_MODE_GENRE_ITEMS,
+        },
         startIndex: Int64((page - 1) * max),
         limit: Int64(max),
         searchTerm: keyword ?? '',
         instanceName: instanceName,
+        targetId: targetId,
+        itemTypes: itemTypes,
       ),
     );
     return EmbyListPage(
@@ -2250,6 +2534,7 @@ class SyncTvProviderDomainService {
       providerInstanceName: instanceName,
       items: response.items.map(_embyItemFromProto).toList(),
       total: response.total.toInt(),
+      source: response.hasSource() ? response.source.deepCopy() : null,
     );
   }
 
@@ -2391,6 +2676,7 @@ class SyncTvProviderDomainService {
           )
           .toList(),
       posterUrl: _synologyPosterUrl(serverId, item, mediaType),
+      source: item.source.deepCopy(),
     );
   }
 
@@ -2409,11 +2695,9 @@ class SyncTvProviderDomainService {
           partNumber: candidate.hasPartNumber() ? candidate.partNumber : null,
           width: candidate.hasWidth() ? candidate.width.toInt() : null,
           height: candidate.hasHeight() ? candidate.height.toInt() : null,
-          mediaSourceConfig: candidate.hasMedia()
-              ? candidate.media.deepCopy()
-              : null,
-          playlistSourceConfig: candidate.hasPlaylist()
-              ? candidate.playlist.deepCopy()
+          source: candidate.source.deepCopy(),
+          browse: candidate.hasBrowse()
+              ? _bilibiliPlaylistIntentFromProto(candidate.browse)
               : null,
         );
       }).toList(),
@@ -2439,6 +2723,7 @@ class SyncTvProviderDomainService {
       thumb: item.thumb,
       type: item.type.toInt(),
       sign: item.sign,
+      source: item.source.deepCopy(),
     );
   }
 
@@ -2458,16 +2743,16 @@ class SyncTvProviderDomainService {
       thumb: '',
       type: item.type.toInt(),
       sign: '',
+      source: item.source.deepCopy(),
     );
   }
 
   EmbyItemInfo _embyItemFromProto(emby.MediaItem item) {
-    final type = item.type.toLowerCase();
     return EmbyItemInfo(
       id: item.id,
       name: item.name,
       type: item.type,
-      isDir: type == 'folder' || type == 'series' || type == 'season',
+      isDir: item.isContainer,
       parentId: item.parentId,
       seriesName: item.seriesName,
       seriesId: item.seriesId,
@@ -2476,6 +2761,7 @@ class SyncTvProviderDomainService {
           ? ''
           : _api.resolveResourceUrl(item.thumbnail),
       description: item.description,
+      source: item.source.deepCopy(),
     );
   }
 

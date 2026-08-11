@@ -15,8 +15,9 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../source_config.pb.dart' as $0;
+import '../source_config.pbenum.dart' as $1;
 import 'bilibili.pbenum.dart';
+import 'common.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -27,10 +28,12 @@ class ParseRequest extends $pb.GeneratedMessage {
   factory ParseRequest({
     $core.String? url,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (url != null) result.url = url;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -50,6 +53,7 @@ class ParseRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'url')
     ..aOS(2, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(3, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -88,6 +92,15 @@ class ParseRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(1);
   @$pb.TagNumber(2)
   void clearInstanceName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get shared => $_getBF(2);
+  @$pb.TagNumber(3)
+  set shared($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasShared() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearShared() => $_clearField(3);
 }
 
 /// Typed candidates that can be submitted directly to the existing add media or
@@ -154,8 +167,6 @@ class ParseResponse extends $pb.GeneratedMessage {
   $pb.PbList<ParseCandidate> get candidates => $_getList(1);
 }
 
-enum ParseCandidate_SourceConfig { media, playlist, notSet }
-
 class ParseCandidate extends $pb.GeneratedMessage {
   factory ParseCandidate({
     $core.String? title,
@@ -166,8 +177,8 @@ class ParseCandidate extends $pb.GeneratedMessage {
     $core.int? partNumber,
     $fixnum.Int64? width,
     $fixnum.Int64? height,
-    $0.MediaSourceConfig? media,
-    $0.PlaylistSourceConfig? playlist,
+    $0.DiscoveredSource? source,
+    PlaylistListIntent? browse,
   }) {
     final result = create();
     if (title != null) result.title = title;
@@ -178,8 +189,8 @@ class ParseCandidate extends $pb.GeneratedMessage {
     if (partNumber != null) result.partNumber = partNumber;
     if (width != null) result.width = width;
     if (height != null) result.height = height;
-    if (media != null) result.media = media;
-    if (playlist != null) result.playlist = playlist;
+    if (source != null) result.source = source;
+    if (browse != null) result.browse = browse;
     return result;
   }
 
@@ -192,18 +203,11 @@ class ParseCandidate extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, ParseCandidate_SourceConfig>
-      _ParseCandidate_SourceConfigByTag = {
-    9: ParseCandidate_SourceConfig.media,
-    10: ParseCandidate_SourceConfig.playlist,
-    0: ParseCandidate_SourceConfig.notSet
-  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ParseCandidate',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
-    ..oo(0, [9, 10])
     ..aOS(1, _omitFieldNames ? '' : 'title')
     ..aOS(2, _omitFieldNames ? '' : 'description')
     ..aOS(3, _omitFieldNames ? '' : 'cover')
@@ -216,10 +220,10 @@ class ParseCandidate extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(8, _omitFieldNames ? '' : 'height', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOM<$0.MediaSourceConfig>(9, _omitFieldNames ? '' : 'media',
-        subBuilder: $0.MediaSourceConfig.create)
-    ..aOM<$0.PlaylistSourceConfig>(10, _omitFieldNames ? '' : 'playlist',
-        subBuilder: $0.PlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(9, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
+    ..aOM<PlaylistListIntent>(10, _omitFieldNames ? '' : 'browse',
+        subBuilder: PlaylistListIntent.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -240,14 +244,6 @@ class ParseCandidate extends $pb.GeneratedMessage {
   static ParseCandidate getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ParseCandidate>(create);
   static ParseCandidate? _defaultInstance;
-
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  ParseCandidate_SourceConfig whichSourceConfig() =>
-      _ParseCandidate_SourceConfigByTag[$_whichOneof(0)]!;
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  void clearSourceConfig() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   $core.String get title => $_getSZ(0);
@@ -316,35 +312,628 @@ class ParseCandidate extends $pb.GeneratedMessage {
   void clearHeight() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  $0.MediaSourceConfig get media => $_getN(8);
+  $0.DiscoveredSource get source => $_getN(8);
   @$pb.TagNumber(9)
-  set media($0.MediaSourceConfig value) => $_setField(9, value);
+  set source($0.DiscoveredSource value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasMedia() => $_has(8);
+  $core.bool hasSource() => $_has(8);
   @$pb.TagNumber(9)
-  void clearMedia() => $_clearField(9);
+  void clearSource() => $_clearField(9);
   @$pb.TagNumber(9)
-  $0.MediaSourceConfig ensureMedia() => $_ensure(8);
+  $0.DiscoveredSource ensureSource() => $_ensure(8);
 
   @$pb.TagNumber(10)
-  $0.PlaylistSourceConfig get playlist => $_getN(9);
+  PlaylistListIntent get browse => $_getN(9);
   @$pb.TagNumber(10)
-  set playlist($0.PlaylistSourceConfig value) => $_setField(10, value);
+  set browse(PlaylistListIntent value) => $_setField(10, value);
   @$pb.TagNumber(10)
-  $core.bool hasPlaylist() => $_has(9);
+  $core.bool hasBrowse() => $_has(9);
   @$pb.TagNumber(10)
-  void clearPlaylist() => $_clearField(10);
+  void clearBrowse() => $_clearField(10);
   @$pb.TagNumber(10)
-  $0.PlaylistSourceConfig ensurePlaylist() => $_ensure(9);
+  PlaylistListIntent ensureBrowse() => $_ensure(9);
+}
+
+class PlaylistListIntent extends $pb.GeneratedMessage {
+  factory PlaylistListIntent({
+    PlaylistListMode? mode,
+    $core.String? bvid,
+    $fixnum.Int64? aid,
+    $fixnum.Int64? mid,
+    $core.String? keyword,
+    $fixnum.Int64? mediaId,
+    $fixnum.Int64? seasonId,
+    $fixnum.Int64? seriesId,
+    $fixnum.Int64? parentAreaId,
+    $fixnum.Int64? areaId,
+    $1.BilibiliHistoryType? historyType,
+    $1.BilibiliPgcTimelineType? timelineType,
+    $core.int? beforeDays,
+    $core.int? afterDays,
+  }) {
+    final result = create();
+    if (mode != null) result.mode = mode;
+    if (bvid != null) result.bvid = bvid;
+    if (aid != null) result.aid = aid;
+    if (mid != null) result.mid = mid;
+    if (keyword != null) result.keyword = keyword;
+    if (mediaId != null) result.mediaId = mediaId;
+    if (seasonId != null) result.seasonId = seasonId;
+    if (seriesId != null) result.seriesId = seriesId;
+    if (parentAreaId != null) result.parentAreaId = parentAreaId;
+    if (areaId != null) result.areaId = areaId;
+    if (historyType != null) result.historyType = historyType;
+    if (timelineType != null) result.timelineType = timelineType;
+    if (beforeDays != null) result.beforeDays = beforeDays;
+    if (afterDays != null) result.afterDays = afterDays;
+    return result;
+  }
+
+  PlaylistListIntent._();
+
+  factory PlaylistListIntent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlaylistListIntent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlaylistListIntent',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.bilibili'),
+      createEmptyInstance: create)
+    ..aE<PlaylistListMode>(1, _omitFieldNames ? '' : 'mode',
+        enumValues: PlaylistListMode.values)
+    ..aOS(2, _omitFieldNames ? '' : 'bvid')
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'aid', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'mid', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(5, _omitFieldNames ? '' : 'keyword')
+    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'mediaId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        7, _omitFieldNames ? '' : 'seasonId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        8, _omitFieldNames ? '' : 'seriesId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        9, _omitFieldNames ? '' : 'parentAreaId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(10, _omitFieldNames ? '' : 'areaId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aE<$1.BilibiliHistoryType>(11, _omitFieldNames ? '' : 'historyType',
+        enumValues: $1.BilibiliHistoryType.values)
+    ..aE<$1.BilibiliPgcTimelineType>(12, _omitFieldNames ? '' : 'timelineType',
+        enumValues: $1.BilibiliPgcTimelineType.values)
+    ..aI(13, _omitFieldNames ? '' : 'beforeDays',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(14, _omitFieldNames ? '' : 'afterDays', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaylistListIntent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaylistListIntent copyWith(void Function(PlaylistListIntent) updates) =>
+      super.copyWith((message) => updates(message as PlaylistListIntent))
+          as PlaylistListIntent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlaylistListIntent create() => PlaylistListIntent._();
+  @$core.override
+  PlaylistListIntent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlaylistListIntent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlaylistListIntent>(create);
+  static PlaylistListIntent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  PlaylistListMode get mode => $_getN(0);
+  @$pb.TagNumber(1)
+  set mode(PlaylistListMode value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMode() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMode() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get bvid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set bvid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasBvid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearBvid() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get aid => $_getI64(2);
+  @$pb.TagNumber(3)
+  set aid($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAid() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAid() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get mid => $_getI64(3);
+  @$pb.TagNumber(4)
+  set mid($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMid() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMid() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get keyword => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set keyword($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasKeyword() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearKeyword() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get mediaId => $_getI64(5);
+  @$pb.TagNumber(6)
+  set mediaId($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasMediaId() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearMediaId() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get seasonId => $_getI64(6);
+  @$pb.TagNumber(7)
+  set seasonId($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSeasonId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSeasonId() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get seriesId => $_getI64(7);
+  @$pb.TagNumber(8)
+  set seriesId($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSeriesId() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSeriesId() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get parentAreaId => $_getI64(8);
+  @$pb.TagNumber(9)
+  set parentAreaId($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasParentAreaId() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearParentAreaId() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get areaId => $_getI64(9);
+  @$pb.TagNumber(10)
+  set areaId($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasAreaId() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearAreaId() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $1.BilibiliHistoryType get historyType => $_getN(10);
+  @$pb.TagNumber(11)
+  set historyType($1.BilibiliHistoryType value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasHistoryType() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearHistoryType() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $1.BilibiliPgcTimelineType get timelineType => $_getN(11);
+  @$pb.TagNumber(12)
+  set timelineType($1.BilibiliPgcTimelineType value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasTimelineType() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearTimelineType() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.int get beforeDays => $_getIZ(12);
+  @$pb.TagNumber(13)
+  set beforeDays($core.int value) => $_setUnsignedInt32(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasBeforeDays() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearBeforeDays() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.int get afterDays => $_getIZ(13);
+  @$pb.TagNumber(14)
+  set afterDays($core.int value) => $_setUnsignedInt32(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasAfterDays() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearAfterDays() => $_clearField(14);
+}
+
+class ListPlaylistRequest extends $pb.GeneratedMessage {
+  factory ListPlaylistRequest({
+    PlaylistListIntent? intent,
+    $fixnum.Int64? page,
+    $core.int? pageSize,
+    $core.String? cursor,
+    $core.String? search,
+    $core.String? instanceName,
+    $core.bool? shared,
+  }) {
+    final result = create();
+    if (intent != null) result.intent = intent;
+    if (page != null) result.page = page;
+    if (pageSize != null) result.pageSize = pageSize;
+    if (cursor != null) result.cursor = cursor;
+    if (search != null) result.search = search;
+    if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
+    return result;
+  }
+
+  ListPlaylistRequest._();
+
+  factory ListPlaylistRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListPlaylistRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListPlaylistRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.bilibili'),
+      createEmptyInstance: create)
+    ..aOM<PlaylistListIntent>(1, _omitFieldNames ? '' : 'intent',
+        subBuilder: PlaylistListIntent.create)
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'page', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aI(3, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(4, _omitFieldNames ? '' : 'cursor')
+    ..aOS(5, _omitFieldNames ? '' : 'search')
+    ..aOS(6, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(7, _omitFieldNames ? '' : 'shared')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListPlaylistRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListPlaylistRequest copyWith(void Function(ListPlaylistRequest) updates) =>
+      super.copyWith((message) => updates(message as ListPlaylistRequest))
+          as ListPlaylistRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListPlaylistRequest create() => ListPlaylistRequest._();
+  @$core.override
+  ListPlaylistRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListPlaylistRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListPlaylistRequest>(create);
+  static ListPlaylistRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  PlaylistListIntent get intent => $_getN(0);
+  @$pb.TagNumber(1)
+  set intent(PlaylistListIntent value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIntent() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIntent() => $_clearField(1);
+  @$pb.TagNumber(1)
+  PlaylistListIntent ensureIntent() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get page => $_getI64(1);
+  @$pb.TagNumber(2)
+  set page($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPage() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get pageSize => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set pageSize($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPageSize() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPageSize() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get cursor => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set cursor($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCursor() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCursor() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get search => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set search($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSearch() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSearch() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get instanceName => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set instanceName($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasInstanceName() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearInstanceName() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get shared => $_getBF(6);
+  @$pb.TagNumber(7)
+  set shared($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasShared() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearShared() => $_clearField(7);
+}
+
+class PlaylistListItem extends $pb.GeneratedMessage {
+  factory PlaylistListItem({
+    $core.String? id,
+    $core.String? title,
+    $core.String? description,
+    $core.String? cover,
+    $core.bool? isContainer,
+    $0.DiscoveredSource? source,
+    PlaylistListIntent? browse,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (title != null) result.title = title;
+    if (description != null) result.description = description;
+    if (cover != null) result.cover = cover;
+    if (isContainer != null) result.isContainer = isContainer;
+    if (source != null) result.source = source;
+    if (browse != null) result.browse = browse;
+    return result;
+  }
+
+  PlaylistListItem._();
+
+  factory PlaylistListItem.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlaylistListItem.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlaylistListItem',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.bilibili'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'description')
+    ..aOS(4, _omitFieldNames ? '' : 'cover')
+    ..aOB(5, _omitFieldNames ? '' : 'isContainer')
+    ..aOM<$0.DiscoveredSource>(6, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
+    ..aOM<PlaylistListIntent>(7, _omitFieldNames ? '' : 'browse',
+        subBuilder: PlaylistListIntent.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaylistListItem clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaylistListItem copyWith(void Function(PlaylistListItem) updates) =>
+      super.copyWith((message) => updates(message as PlaylistListItem))
+          as PlaylistListItem;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlaylistListItem create() => PlaylistListItem._();
+  @$core.override
+  PlaylistListItem createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlaylistListItem getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlaylistListItem>(create);
+  static PlaylistListItem? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get description => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set description($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDescription() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDescription() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get cover => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set cover($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCover() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCover() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get isContainer => $_getBF(4);
+  @$pb.TagNumber(5)
+  set isContainer($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasIsContainer() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearIsContainer() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $0.DiscoveredSource get source => $_getN(5);
+  @$pb.TagNumber(6)
+  set source($0.DiscoveredSource value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSource() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSource() => $_clearField(6);
+  @$pb.TagNumber(6)
+  $0.DiscoveredSource ensureSource() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  PlaylistListIntent get browse => $_getN(6);
+  @$pb.TagNumber(7)
+  set browse(PlaylistListIntent value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasBrowse() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearBrowse() => $_clearField(7);
+  @$pb.TagNumber(7)
+  PlaylistListIntent ensureBrowse() => $_ensure(6);
+}
+
+class ListPlaylistResponse extends $pb.GeneratedMessage {
+  factory ListPlaylistResponse({
+    $core.Iterable<PlaylistListItem>? items,
+    $core.bool? hasMore,
+    $fixnum.Int64? page,
+    $core.String? cursor,
+    $0.DiscoveredSource? source,
+  }) {
+    final result = create();
+    if (items != null) result.items.addAll(items);
+    if (hasMore != null) result.hasMore = hasMore;
+    if (page != null) result.page = page;
+    if (cursor != null) result.cursor = cursor;
+    if (source != null) result.source = source;
+    return result;
+  }
+
+  ListPlaylistResponse._();
+
+  factory ListPlaylistResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListPlaylistResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListPlaylistResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.bilibili'),
+      createEmptyInstance: create)
+    ..pPM<PlaylistListItem>(1, _omitFieldNames ? '' : 'items',
+        subBuilder: PlaylistListItem.create)
+    ..aOB(2, _omitFieldNames ? '' : 'hasMore')
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'page', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(4, _omitFieldNames ? '' : 'cursor')
+    ..aOM<$0.DiscoveredSource>(5, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListPlaylistResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListPlaylistResponse copyWith(void Function(ListPlaylistResponse) updates) =>
+      super.copyWith((message) => updates(message as ListPlaylistResponse))
+          as ListPlaylistResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListPlaylistResponse create() => ListPlaylistResponse._();
+  @$core.override
+  ListPlaylistResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListPlaylistResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListPlaylistResponse>(create);
+  static ListPlaylistResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<PlaylistListItem> get items => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.bool get hasMore => $_getBF(1);
+  @$pb.TagNumber(2)
+  set hasMore($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasHasMore() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearHasMore() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get page => $_getI64(2);
+  @$pb.TagNumber(3)
+  set page($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPage() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPage() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get cursor => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set cursor($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCursor() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCursor() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource get source => $_getN(4);
+  @$pb.TagNumber(5)
+  set source($0.DiscoveredSource value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSource() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSource() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource ensureSource() => $_ensure(4);
 }
 
 /// List the live-area hierarchy used to build a live-area playlist source.
 class ListLiveAreasRequest extends $pb.GeneratedMessage {
   factory ListLiveAreasRequest({
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -363,6 +952,7 @@ class ListLiveAreasRequest extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(2, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -392,6 +982,15 @@ class ListLiveAreasRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(0);
   @$pb.TagNumber(1)
   void clearInstanceName() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get shared => $_getBF(1);
+  @$pb.TagNumber(2)
+  set shared($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasShared() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearShared() => $_clearField(2);
 }
 
 class LiveArea extends $pb.GeneratedMessage {
@@ -402,6 +1001,7 @@ class LiveArea extends $pb.GeneratedMessage {
     $core.String? parentName,
     $core.String? picture,
     $core.bool? hot,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -410,6 +1010,7 @@ class LiveArea extends $pb.GeneratedMessage {
     if (parentName != null) result.parentName = parentName;
     if (picture != null) result.picture = picture;
     if (hot != null) result.hot = hot;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -436,6 +1037,8 @@ class LiveArea extends $pb.GeneratedMessage {
     ..aOS(4, _omitFieldNames ? '' : 'parentName')
     ..aOS(5, _omitFieldNames ? '' : 'picture')
     ..aOB(6, _omitFieldNames ? '' : 'hot')
+    ..aOM<$0.DiscoveredSource>(7, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -509,6 +1112,17 @@ class LiveArea extends $pb.GeneratedMessage {
   $core.bool hasHot() => $_has(5);
   @$pb.TagNumber(6)
   void clearHot() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $0.DiscoveredSource get source => $_getN(6);
+  @$pb.TagNumber(7)
+  set source($0.DiscoveredSource value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSource() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSource() => $_clearField(7);
+  @$pb.TagNumber(7)
+  $0.DiscoveredSource ensureSource() => $_ensure(6);
 }
 
 class ListLiveAreasResponse extends $pb.GeneratedMessage {
@@ -565,9 +1179,11 @@ class ListLiveAreasResponse extends $pb.GeneratedMessage {
 class ListFavoriteFoldersRequest extends $pb.GeneratedMessage {
   factory ListFavoriteFoldersRequest({
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -586,6 +1202,7 @@ class ListFavoriteFoldersRequest extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(2, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -617,6 +1234,15 @@ class ListFavoriteFoldersRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(0);
   @$pb.TagNumber(1)
   void clearInstanceName() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get shared => $_getBF(1);
+  @$pb.TagNumber(2)
+  set shared($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasShared() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearShared() => $_clearField(2);
 }
 
 class FavoriteFolder extends $pb.GeneratedMessage {
@@ -626,7 +1252,7 @@ class FavoriteFolder extends $pb.GeneratedMessage {
     $fixnum.Int64? mediaCount,
     $core.bool? private,
     $core.bool? defaultFolder,
-    $0.PlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
@@ -634,7 +1260,7 @@ class FavoriteFolder extends $pb.GeneratedMessage {
     if (mediaCount != null) result.mediaCount = mediaCount;
     if (private != null) result.private = private;
     if (defaultFolder != null) result.defaultFolder = defaultFolder;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -660,8 +1286,8 @@ class FavoriteFolder extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOB(4, _omitFieldNames ? '' : 'private')
     ..aOB(5, _omitFieldNames ? '' : 'defaultFolder')
-    ..aOM<$0.PlaylistSourceConfig>(6, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.PlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(6, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -729,15 +1355,15 @@ class FavoriteFolder extends $pb.GeneratedMessage {
   void clearDefaultFolder() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $0.PlaylistSourceConfig get sourceConfig => $_getN(5);
+  $0.DiscoveredSource get source => $_getN(5);
   @$pb.TagNumber(6)
-  set sourceConfig($0.PlaylistSourceConfig value) => $_setField(6, value);
+  set source($0.DiscoveredSource value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasSourceConfig() => $_has(5);
+  $core.bool hasSource() => $_has(5);
   @$pb.TagNumber(6)
-  void clearSourceConfig() => $_clearField(6);
+  void clearSource() => $_clearField(6);
   @$pb.TagNumber(6)
-  $0.PlaylistSourceConfig ensureSourceConfig() => $_ensure(5);
+  $0.DiscoveredSource ensureSource() => $_ensure(5);
 }
 
 class ListFavoriteFoldersResponse extends $pb.GeneratedMessage {
@@ -799,12 +1425,14 @@ class ListFollowedPgcRequest extends $pb.GeneratedMessage {
     PgcFollowType? type,
     $fixnum.Int64? page,
     $core.int? pageSize,
+    $core.bool? shared,
   }) {
     final result = create();
     if (instanceName != null) result.instanceName = instanceName;
     if (type != null) result.type = type;
     if (page != null) result.page = page;
     if (pageSize != null) result.pageSize = pageSize;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -828,6 +1456,7 @@ class ListFollowedPgcRequest extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'page', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aI(4, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
+    ..aOB(5, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -885,6 +1514,15 @@ class ListFollowedPgcRequest extends $pb.GeneratedMessage {
   $core.bool hasPageSize() => $_has(3);
   @$pb.TagNumber(4)
   void clearPageSize() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get shared => $_getBF(4);
+  @$pb.TagNumber(5)
+  set shared($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasShared() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearShared() => $_clearField(5);
 }
 
 class FollowedPgcSeason extends $pb.GeneratedMessage {
@@ -894,7 +1532,7 @@ class FollowedPgcSeason extends $pb.GeneratedMessage {
     $core.String? cover,
     $core.String? description,
     $core.String? latestEpisode,
-    $0.PlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (seasonId != null) result.seasonId = seasonId;
@@ -902,7 +1540,7 @@ class FollowedPgcSeason extends $pb.GeneratedMessage {
     if (cover != null) result.cover = cover;
     if (description != null) result.description = description;
     if (latestEpisode != null) result.latestEpisode = latestEpisode;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -927,8 +1565,8 @@ class FollowedPgcSeason extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'cover')
     ..aOS(4, _omitFieldNames ? '' : 'description')
     ..aOS(5, _omitFieldNames ? '' : 'latestEpisode')
-    ..aOM<$0.PlaylistSourceConfig>(6, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.PlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(6, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -996,15 +1634,15 @@ class FollowedPgcSeason extends $pb.GeneratedMessage {
   void clearLatestEpisode() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $0.PlaylistSourceConfig get sourceConfig => $_getN(5);
+  $0.DiscoveredSource get source => $_getN(5);
   @$pb.TagNumber(6)
-  set sourceConfig($0.PlaylistSourceConfig value) => $_setField(6, value);
+  set source($0.DiscoveredSource value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasSourceConfig() => $_has(5);
+  $core.bool hasSource() => $_has(5);
   @$pb.TagNumber(6)
-  void clearSourceConfig() => $_clearField(6);
+  void clearSource() => $_clearField(6);
   @$pb.TagNumber(6)
-  $0.PlaylistSourceConfig ensureSourceConfig() => $_ensure(5);
+  $0.DiscoveredSource ensureSource() => $_ensure(5);
 }
 
 class ListFollowedPgcResponse extends $pb.GeneratedMessage {
@@ -1085,16 +1723,18 @@ class ListFollowedPgcResponse extends $pb.GeneratedMessage {
 
 class ListHistoryRequest extends $pb.GeneratedMessage {
   factory ListHistoryRequest({
-    $0.BilibiliHistoryType? type,
+    $1.BilibiliHistoryType? type,
     $core.String? cursor,
     $core.int? pageSize,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (type != null) result.type = type;
     if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -1112,11 +1752,12 @@ class ListHistoryRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
-    ..aE<$0.BilibiliHistoryType>(1, _omitFieldNames ? '' : 'type',
-        enumValues: $0.BilibiliHistoryType.values)
+    ..aE<$1.BilibiliHistoryType>(1, _omitFieldNames ? '' : 'type',
+        enumValues: $1.BilibiliHistoryType.values)
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aI(3, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..aOS(4, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(5, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1139,9 +1780,9 @@ class ListHistoryRequest extends $pb.GeneratedMessage {
   static ListHistoryRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $0.BilibiliHistoryType get type => $_getN(0);
+  $1.BilibiliHistoryType get type => $_getN(0);
   @$pb.TagNumber(1)
-  set type($0.BilibiliHistoryType value) => $_setField(1, value);
+  set type($1.BilibiliHistoryType value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasType() => $_has(0);
   @$pb.TagNumber(1)
@@ -1173,6 +1814,15 @@ class ListHistoryRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(3);
   @$pb.TagNumber(4)
   void clearInstanceName() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get shared => $_getBF(4);
+  @$pb.TagNumber(5)
+  set shared($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasShared() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearShared() => $_clearField(5);
 }
 
 class HistoryItem extends $pb.GeneratedMessage {
@@ -1184,7 +1834,7 @@ class HistoryItem extends $pb.GeneratedMessage {
     $fixnum.Int64? viewedAt,
     $fixnum.Int64? progressSeconds,
     $fixnum.Int64? durationSeconds,
-    $0.MediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (title != null) result.title = title;
@@ -1194,7 +1844,7 @@ class HistoryItem extends $pb.GeneratedMessage {
     if (viewedAt != null) result.viewedAt = viewedAt;
     if (progressSeconds != null) result.progressSeconds = progressSeconds;
     if (durationSeconds != null) result.durationSeconds = durationSeconds;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1221,8 +1871,8 @@ class HistoryItem extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(
         7, _omitFieldNames ? '' : 'durationSeconds', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOM<$0.MediaSourceConfig>(8, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.MediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(8, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1308,15 +1958,15 @@ class HistoryItem extends $pb.GeneratedMessage {
   void clearDurationSeconds() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $0.MediaSourceConfig get sourceConfig => $_getN(7);
+  $0.DiscoveredSource get source => $_getN(7);
   @$pb.TagNumber(8)
-  set sourceConfig($0.MediaSourceConfig value) => $_setField(8, value);
+  set source($0.DiscoveredSource value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasSourceConfig() => $_has(7);
+  $core.bool hasSource() => $_has(7);
   @$pb.TagNumber(8)
-  void clearSourceConfig() => $_clearField(8);
+  void clearSource() => $_clearField(8);
   @$pb.TagNumber(8)
-  $0.MediaSourceConfig ensureSourceConfig() => $_ensure(7);
+  $0.DiscoveredSource ensureSource() => $_ensure(7);
 }
 
 class ListHistoryResponse extends $pb.GeneratedMessage {
@@ -1324,13 +1974,13 @@ class ListHistoryResponse extends $pb.GeneratedMessage {
     $core.Iterable<HistoryItem>? items,
     $core.String? cursor,
     $core.bool? hasMore,
-    $0.PlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (cursor != null) result.cursor = cursor;
     if (hasMore != null) result.hasMore = hasMore;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1352,8 +2002,8 @@ class ListHistoryResponse extends $pb.GeneratedMessage {
         subBuilder: HistoryItem.create)
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aOB(3, _omitFieldNames ? '' : 'hasMore')
-    ..aOM<$0.PlaylistSourceConfig>(4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.PlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1397,29 +2047,31 @@ class ListHistoryResponse extends $pb.GeneratedMessage {
   void clearHasMore() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $0.PlaylistSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.PlaylistSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.PlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class ListPgcTimelineRequest extends $pb.GeneratedMessage {
   factory ListPgcTimelineRequest({
-    $0.BilibiliPgcTimelineType? type,
+    $1.BilibiliPgcTimelineType? type,
     $core.int? beforeDays,
     $core.int? afterDays,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (type != null) result.type = type;
     if (beforeDays != null) result.beforeDays = beforeDays;
     if (afterDays != null) result.afterDays = afterDays;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -1437,11 +2089,12 @@ class ListPgcTimelineRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
-    ..aE<$0.BilibiliPgcTimelineType>(1, _omitFieldNames ? '' : 'type',
-        enumValues: $0.BilibiliPgcTimelineType.values)
+    ..aE<$1.BilibiliPgcTimelineType>(1, _omitFieldNames ? '' : 'type',
+        enumValues: $1.BilibiliPgcTimelineType.values)
     ..aI(2, _omitFieldNames ? '' : 'beforeDays', fieldType: $pb.PbFieldType.OU3)
     ..aI(3, _omitFieldNames ? '' : 'afterDays', fieldType: $pb.PbFieldType.OU3)
     ..aOS(4, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(5, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1465,9 +2118,9 @@ class ListPgcTimelineRequest extends $pb.GeneratedMessage {
   static ListPgcTimelineRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $0.BilibiliPgcTimelineType get type => $_getN(0);
+  $1.BilibiliPgcTimelineType get type => $_getN(0);
   @$pb.TagNumber(1)
-  set type($0.BilibiliPgcTimelineType value) => $_setField(1, value);
+  set type($1.BilibiliPgcTimelineType value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasType() => $_has(0);
   @$pb.TagNumber(1)
@@ -1499,6 +2152,15 @@ class ListPgcTimelineRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(3);
   @$pb.TagNumber(4)
   void clearInstanceName() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get shared => $_getBF(4);
+  @$pb.TagNumber(5)
+  set shared($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasShared() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearShared() => $_clearField(5);
 }
 
 class PgcTimelineItem extends $pb.GeneratedMessage {
@@ -1515,7 +2177,7 @@ class PgcTimelineItem extends $pb.GeneratedMessage {
     $core.int? dayOfWeek,
     $core.bool? delayed,
     $core.String? delayReason,
-    $0.MediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (episodeId != null) result.episodeId = episodeId;
@@ -1530,7 +2192,7 @@ class PgcTimelineItem extends $pb.GeneratedMessage {
     if (dayOfWeek != null) result.dayOfWeek = dayOfWeek;
     if (delayed != null) result.delayed = delayed;
     if (delayReason != null) result.delayReason = delayReason;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1564,8 +2226,8 @@ class PgcTimelineItem extends $pb.GeneratedMessage {
     ..aI(10, _omitFieldNames ? '' : 'dayOfWeek', fieldType: $pb.PbFieldType.OU3)
     ..aOB(11, _omitFieldNames ? '' : 'delayed')
     ..aOS(12, _omitFieldNames ? '' : 'delayReason')
-    ..aOM<$0.MediaSourceConfig>(13, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.MediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(13, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1696,25 +2358,25 @@ class PgcTimelineItem extends $pb.GeneratedMessage {
   void clearDelayReason() => $_clearField(12);
 
   @$pb.TagNumber(13)
-  $0.MediaSourceConfig get sourceConfig => $_getN(12);
+  $0.DiscoveredSource get source => $_getN(12);
   @$pb.TagNumber(13)
-  set sourceConfig($0.MediaSourceConfig value) => $_setField(13, value);
+  set source($0.DiscoveredSource value) => $_setField(13, value);
   @$pb.TagNumber(13)
-  $core.bool hasSourceConfig() => $_has(12);
+  $core.bool hasSource() => $_has(12);
   @$pb.TagNumber(13)
-  void clearSourceConfig() => $_clearField(13);
+  void clearSource() => $_clearField(13);
   @$pb.TagNumber(13)
-  $0.MediaSourceConfig ensureSourceConfig() => $_ensure(12);
+  $0.DiscoveredSource ensureSource() => $_ensure(12);
 }
 
 class ListPgcTimelineResponse extends $pb.GeneratedMessage {
   factory ListPgcTimelineResponse({
     $core.Iterable<PgcTimelineItem>? items,
-    $0.PlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1734,8 +2396,8 @@ class ListPgcTimelineResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..pPM<PgcTimelineItem>(1, _omitFieldNames ? '' : 'items',
         subBuilder: PgcTimelineItem.create)
-    ..aOM<$0.PlaylistSourceConfig>(2, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.PlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(2, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1762,15 +2424,15 @@ class ListPgcTimelineResponse extends $pb.GeneratedMessage {
   $pb.PbList<PgcTimelineItem> get items => $_getList(0);
 
   @$pb.TagNumber(2)
-  $0.PlaylistSourceConfig get sourceConfig => $_getN(1);
+  $0.DiscoveredSource get source => $_getN(1);
   @$pb.TagNumber(2)
-  set sourceConfig($0.PlaylistSourceConfig value) => $_setField(2, value);
+  set source($0.DiscoveredSource value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasSourceConfig() => $_has(1);
+  $core.bool hasSource() => $_has(1);
   @$pb.TagNumber(2)
-  void clearSourceConfig() => $_clearField(2);
+  void clearSource() => $_clearField(2);
   @$pb.TagNumber(2)
-  $0.PlaylistSourceConfig ensureSourceConfig() => $_ensure(1);
+  $0.DiscoveredSource ensureSource() => $_ensure(1);
 }
 
 class ListPgcSeasonsRequest extends $pb.GeneratedMessage {
@@ -1785,6 +2447,7 @@ class ListPgcSeasonsRequest extends $pb.GeneratedMessage {
     $core.String? year,
     $fixnum.Int64? styleId,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -1797,6 +2460,7 @@ class ListPgcSeasonsRequest extends $pb.GeneratedMessage {
     if (year != null) result.year = year;
     if (styleId != null) result.styleId = styleId;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -1828,6 +2492,7 @@ class ListPgcSeasonsRequest extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(9, _omitFieldNames ? '' : 'styleId', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(10, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(11, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1939,6 +2604,15 @@ class ListPgcSeasonsRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(9);
   @$pb.TagNumber(10)
   void clearInstanceName() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.bool get shared => $_getBF(10);
+  @$pb.TagNumber(11)
+  set shared($core.bool value) => $_setBool(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasShared() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearShared() => $_clearField(11);
 }
 
 class PgcSeason extends $pb.GeneratedMessage {
@@ -1955,7 +2629,7 @@ class PgcSeason extends $pb.GeneratedMessage {
     $core.String? score,
     $core.bool? finished,
     PgcSeasonType? type,
-    $0.PlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (seasonId != null) result.seasonId = seasonId;
@@ -1970,7 +2644,7 @@ class PgcSeason extends $pb.GeneratedMessage {
     if (score != null) result.score = score;
     if (finished != null) result.finished = finished;
     if (type != null) result.type = type;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -2006,8 +2680,8 @@ class PgcSeason extends $pb.GeneratedMessage {
     ..aOB(11, _omitFieldNames ? '' : 'finished')
     ..aE<PgcSeasonType>(12, _omitFieldNames ? '' : 'type',
         enumValues: PgcSeasonType.values)
-    ..aOM<$0.PlaylistSourceConfig>(13, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.PlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(13, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2137,15 +2811,15 @@ class PgcSeason extends $pb.GeneratedMessage {
   void clearType() => $_clearField(12);
 
   @$pb.TagNumber(13)
-  $0.PlaylistSourceConfig get sourceConfig => $_getN(12);
+  $0.DiscoveredSource get source => $_getN(12);
   @$pb.TagNumber(13)
-  set sourceConfig($0.PlaylistSourceConfig value) => $_setField(13, value);
+  set source($0.DiscoveredSource value) => $_setField(13, value);
   @$pb.TagNumber(13)
-  $core.bool hasSourceConfig() => $_has(12);
+  $core.bool hasSource() => $_has(12);
   @$pb.TagNumber(13)
-  void clearSourceConfig() => $_clearField(13);
+  void clearSource() => $_clearField(13);
   @$pb.TagNumber(13)
-  $0.PlaylistSourceConfig ensureSourceConfig() => $_ensure(12);
+  $0.DiscoveredSource ensureSource() => $_ensure(12);
 }
 
 class ListPgcSeasonsResponse extends $pb.GeneratedMessage {

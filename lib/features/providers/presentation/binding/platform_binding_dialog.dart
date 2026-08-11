@@ -14,6 +14,7 @@ import 'package:synctv_app/src/generated/proto/providers/bilibili.pbenum.dart'
     as bilibili_enum;
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
+import 'package:synctv_app/core/presentation/media_provider_brand.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -107,7 +108,7 @@ class PlatformBindingDialog extends StatefulWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               AppDialogHeader(
-                title: Text(dialogContext.l10n.accountBinding),
+                title: Text(dialogContext.l10n.manageConnections),
                 icon: Icons.link_rounded,
                 color: accent,
                 onClose: () => Navigator.of(dialogContext).pop(),
@@ -139,113 +140,85 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       kind: _ProviderKind.alist,
       label: 'AList',
       tabLabel: 'AList',
-      icon: Icons.cloud_circle_rounded,
       emptyIcon: Icons.cloud_off_rounded,
-      color: Colors.amber,
     ),
     _ProviderSpec(
       kind: _ProviderKind.cloudreve,
       label: 'Cloudreve',
       tabLabel: 'Cloudreve',
-      icon: Icons.cloud_rounded,
       emptyIcon: Icons.cloud_off_rounded,
-      color: Colors.teal,
     ),
     _ProviderSpec(
       kind: _ProviderKind.emby,
       label: 'Emby',
       tabLabel: 'Emby',
-      icon: Icons.video_library_rounded,
       emptyIcon: Icons.videocam_off_rounded,
-      color: Colors.green,
     ),
     _ProviderSpec(
       kind: _ProviderKind.bilibili,
       label: 'Bilibili',
       tabLabel: 'Bilibili',
-      icon: Icons.tv_rounded,
       emptyIcon: Icons.live_tv_rounded,
-      color: Color(0xFFFB7299),
     ),
     _ProviderSpec(
       kind: _ProviderKind.twitch,
       label: 'Twitch',
       tabLabel: 'Twitch',
-      icon: Icons.live_tv_rounded,
       emptyIcon: Icons.live_tv_outlined,
-      color: Color(0xFF9146FF),
     ),
     _ProviderSpec(
       kind: _ProviderKind.fnos,
       label: 'FNOS',
       tabLabel: 'FNOS',
-      icon: Icons.storage_rounded,
       emptyIcon: Icons.storage_outlined,
-      color: Color(0xFF087F5B),
     ),
     _ProviderSpec(
       kind: _ProviderKind.qnap,
       label: 'QNAP',
       tabLabel: 'QNAP',
-      icon: Icons.storage_rounded,
       emptyIcon: Icons.storage_outlined,
-      color: Color(0xFF0076A8),
     ),
     _ProviderSpec(
       kind: _ProviderKind.synology,
       label: 'Synology DSM',
       tabLabel: 'Synology',
-      icon: Icons.video_library_rounded,
       emptyIcon: Icons.storage_outlined,
-      color: Color(0xFF1578D3),
     ),
     _ProviderSpec(
       kind: _ProviderKind.nextcloud,
       label: 'Nextcloud',
       tabLabel: 'Nextcloud',
-      icon: Icons.cloud_outlined,
       emptyIcon: Icons.cloud_off_outlined,
-      color: Color(0xFF0082C9),
     ),
     _ProviderSpec(
       kind: _ProviderKind.seafile,
       label: 'Seafile',
       tabLabel: 'Seafile',
-      icon: Icons.cloud_queue_rounded,
       emptyIcon: Icons.cloud_off_outlined,
-      color: Color(0xFFED7109),
     ),
     _ProviderSpec(
       kind: _ProviderKind.truenas,
       label: 'TrueNAS',
       tabLabel: 'TrueNAS',
-      icon: Icons.dns_rounded,
       emptyIcon: Icons.storage_outlined,
-      color: Color(0xFF0095D5),
     ),
     _ProviderSpec(
       kind: _ProviderKind.youtube,
       label: 'YouTube',
       tabLabel: 'YouTube',
-      icon: Icons.smart_display_rounded,
       emptyIcon: Icons.smart_display_outlined,
-      color: Color(0xFFFF0033),
     ),
     _ProviderSpec(
       kind: _ProviderKind.douyin,
       label: 'Douyin',
       tabLabel: 'Douyin',
-      icon: Icons.music_video_rounded,
       emptyIcon: Icons.music_video_outlined,
-      color: Color(0xFF00D4C6),
     ),
     _ProviderSpec(
       kind: _ProviderKind.tiktok,
       label: 'TikTok',
       tabLabel: 'TikTok',
-      icon: Icons.music_video_rounded,
       emptyIcon: Icons.music_video_outlined,
-      color: Color(0xFFFE2C55),
     ),
   ];
 
@@ -1075,7 +1048,24 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               tabs: [
-                for (final provider in _providers) Tab(text: provider.tabLabel),
+                for (final provider in _providers)
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          provider.icon,
+                          key: ValueKey(
+                            'binding-provider-icon-${_providerKindType(provider.kind)}',
+                          ),
+                          size: 16,
+                          color: provider.color,
+                        ),
+                        const SizedBox(width: 7),
+                        Text(provider.tabLabel),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1106,17 +1096,17 @@ class _ProviderSpec {
   final _ProviderKind kind;
   final String label;
   final String tabLabel;
-  final IconData icon;
   final IconData emptyIcon;
-  final Color color;
+
+  MediaProviderBrand get brand => mediaProviderBrand(_providerKindType(kind));
+  IconData get icon => brand.icon;
+  Color get color => brand.color;
 
   const _ProviderSpec({
     required this.kind,
     required this.label,
     required this.tabLabel,
-    required this.icon,
     required this.emptyIcon,
-    required this.color,
   });
 }
 

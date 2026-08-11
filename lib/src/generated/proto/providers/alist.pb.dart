@@ -15,6 +15,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $0;
+
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 enum LoginRequest_Credential { password, hashedPassword, notSet }
@@ -366,10 +368,12 @@ class ListResponse extends $pb.GeneratedMessage {
   factory ListResponse({
     $core.Iterable<FileItem>? content,
     $fixnum.Int64? total,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (content != null) result.content.addAll(content);
     if (total != null) result.total = total;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -391,6 +395,8 @@ class ListResponse extends $pb.GeneratedMessage {
         subBuilder: FileItem.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'total', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<$0.DiscoveredSource>(3, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -423,6 +429,17 @@ class ListResponse extends $pb.GeneratedMessage {
   $core.bool hasTotal() => $_has(1);
   @$pb.TagNumber(2)
   void clearTotal() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $0.DiscoveredSource get source => $_getN(2);
+  @$pb.TagNumber(3)
+  set source($0.DiscoveredSource value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSource() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSource() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $0.DiscoveredSource ensureSource() => $_ensure(2);
 }
 
 /// Search files and directories under a stored Alist credential.
@@ -638,6 +655,7 @@ class SearchItem extends $pb.GeneratedMessage {
     $core.bool? isDir,
     $fixnum.Int64? size,
     $fixnum.Int64? type,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (parent != null) result.parent = parent;
@@ -645,6 +663,7 @@ class SearchItem extends $pb.GeneratedMessage {
     if (isDir != null) result.isDir = isDir;
     if (size != null) result.size = size;
     if (type != null) result.type = type;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -669,6 +688,8 @@ class SearchItem extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<$0.DiscoveredSource>(6, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -733,6 +754,17 @@ class SearchItem extends $pb.GeneratedMessage {
   $core.bool hasType() => $_has(4);
   @$pb.TagNumber(5)
   void clearType() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $0.DiscoveredSource get source => $_getN(5);
+  @$pb.TagNumber(6)
+  set source($0.DiscoveredSource value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSource() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSource() => $_clearField(6);
+  @$pb.TagNumber(6)
+  $0.DiscoveredSource ensureSource() => $_ensure(5);
 }
 
 /// File/directory item
@@ -745,6 +777,7 @@ class FileItem extends $pb.GeneratedMessage {
     $core.String? sign,
     $core.String? thumb,
     $fixnum.Int64? type,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -754,6 +787,7 @@ class FileItem extends $pb.GeneratedMessage {
     if (sign != null) result.sign = sign;
     if (thumb != null) result.thumb = thumb;
     if (type != null) result.type = type;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -782,6 +816,8 @@ class FileItem extends $pb.GeneratedMessage {
     ..aOS(6, _omitFieldNames ? '' : 'thumb')
     ..a<$fixnum.Int64>(7, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<$0.DiscoveredSource>(8, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -864,6 +900,17 @@ class FileItem extends $pb.GeneratedMessage {
   $core.bool hasType() => $_has(6);
   @$pb.TagNumber(7)
   void clearType() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource get source => $_getN(7);
+  @$pb.TagNumber(8)
+  set source($0.DiscoveredSource value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSource() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSource() => $_clearField(8);
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource ensureSource() => $_ensure(7);
 }
 
 /// Get user info request

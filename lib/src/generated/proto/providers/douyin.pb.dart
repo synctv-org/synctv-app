@@ -15,7 +15,7 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../source_config.pb.dart' as $0;
+import 'common.pb.dart' as $0;
 import 'douyin.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -490,10 +490,12 @@ class ResolveRequest extends $pb.GeneratedMessage {
   factory ResolveRequest({
     $core.String? resource,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (resource != null) result.resource = resource;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -513,6 +515,7 @@ class ResolveRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'resource')
     ..aOS(2, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(3, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -551,6 +554,15 @@ class ResolveRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(1);
   @$pb.TagNumber(2)
   void clearInstanceName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get shared => $_getBF(2);
+  @$pb.TagNumber(3)
+  set shared($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasShared() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearShared() => $_clearField(3);
 }
 
 class Image extends $pb.GeneratedMessage {
@@ -1170,13 +1182,13 @@ class ResolveResponse extends $pb.GeneratedMessage {
     Metadata? metadata,
     $core.String? roomId,
     $core.Iterable<Variant>? variants,
-    $0.DouyinMediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (metadata != null) result.metadata = metadata;
     if (roomId != null) result.roomId = roomId;
     if (variants != null) result.variants.addAll(variants);
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1199,8 +1211,8 @@ class ResolveResponse extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'roomId')
     ..pPM<Variant>(3, _omitFieldNames ? '' : 'variants',
         subBuilder: Variant.create)
-    ..aOM<$0.DouyinMediaSourceConfig>(4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.DouyinMediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1246,15 +1258,15 @@ class ResolveResponse extends $pb.GeneratedMessage {
   $pb.PbList<Variant> get variants => $_getList(2);
 
   @$pb.TagNumber(4)
-  $0.DouyinMediaSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.DouyinMediaSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.DouyinMediaSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class ListUserPostsRequest extends $pb.GeneratedMessage {
@@ -1263,12 +1275,14 @@ class ListUserPostsRequest extends $pb.GeneratedMessage {
     $core.String? cursor,
     $core.int? pageSize,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (secUid != null) result.secUid = secUid;
     if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -1290,6 +1304,7 @@ class ListUserPostsRequest extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aI(3, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..aOS(4, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(5, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1346,6 +1361,15 @@ class ListUserPostsRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(3);
   @$pb.TagNumber(4)
   void clearInstanceName() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get shared => $_getBF(4);
+  @$pb.TagNumber(5)
+  set shared($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasShared() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearShared() => $_clearField(5);
 }
 
 class ListItem extends $pb.GeneratedMessage {
@@ -1356,6 +1380,7 @@ class ListItem extends $pb.GeneratedMessage {
     Image? cover,
     $fixnum.Int64? durationMs,
     $fixnum.Int64? createdAt,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (awemeId != null) result.awemeId = awemeId;
@@ -1364,6 +1389,7 @@ class ListItem extends $pb.GeneratedMessage {
     if (cover != null) result.cover = cover;
     if (durationMs != null) result.durationMs = durationMs;
     if (createdAt != null) result.createdAt = createdAt;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1389,6 +1415,8 @@ class ListItem extends $pb.GeneratedMessage {
         5, _omitFieldNames ? '' : 'durationMs', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aInt64(6, _omitFieldNames ? '' : 'createdAt')
+    ..aOM<$0.DiscoveredSource>(7, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1466,6 +1494,17 @@ class ListItem extends $pb.GeneratedMessage {
   $core.bool hasCreatedAt() => $_has(5);
   @$pb.TagNumber(6)
   void clearCreatedAt() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $0.DiscoveredSource get source => $_getN(6);
+  @$pb.TagNumber(7)
+  set source($0.DiscoveredSource value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSource() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSource() => $_clearField(7);
+  @$pb.TagNumber(7)
+  $0.DiscoveredSource ensureSource() => $_ensure(6);
 }
 
 class ListUserPostsResponse extends $pb.GeneratedMessage {
@@ -1473,13 +1512,13 @@ class ListUserPostsResponse extends $pb.GeneratedMessage {
     $core.Iterable<ListItem>? items,
     $core.String? cursor,
     $core.bool? hasMore,
-    $0.DouyinPlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (cursor != null) result.cursor = cursor;
     if (hasMore != null) result.hasMore = hasMore;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1501,9 +1540,8 @@ class ListUserPostsResponse extends $pb.GeneratedMessage {
         subBuilder: ListItem.create)
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aOB(3, _omitFieldNames ? '' : 'hasMore')
-    ..aOM<$0.DouyinPlaylistSourceConfig>(
-        4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.DouyinPlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1548,15 +1586,15 @@ class ListUserPostsResponse extends $pb.GeneratedMessage {
   void clearHasMore() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $0.DouyinPlaylistSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.DouyinPlaylistSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.DouyinPlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 const $core.bool _omitFieldNames =

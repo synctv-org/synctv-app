@@ -10,6 +10,8 @@ import 'package:synctv_app/core/media/local_image_upload.dart';
 import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
 import 'package:synctv_app/features/auth/data/synctv_opaque_auth_gateway.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 
@@ -404,19 +406,21 @@ Future<void> _createPrimaryRoomMedia(
     playlist.id,
     await _imageUpload(coverPath),
   );
-  final mediaId = await SyncTvService.addMediaFromSourceConfig(
+  final mediaId = await SyncTvService.addDiscoveredSource(
     roomId,
     playlistId: playlist.id,
     name: 'Sintel — Official Trailer',
-    sourceConfig: source_config.MediaSourceConfig(
-      directUrl: source_config.DirectUrlMediaSourceConfig(
-        medias: [
-          source_config.DirectUrlMediaResourceConfig(
-            name: '480p',
-            url: videoUrl,
-            format: 'mp4',
-          ),
-        ],
+    source: provider_common.DiscoveredSource(
+      media: source_config.MediaSourceConfig(
+        directUrl: source_config.DirectUrlMediaSourceConfig(
+          medias: [
+            source_config.DirectUrlMediaResourceConfig(
+              name: '480p',
+              url: videoUrl,
+              format: 'mp4',
+            ),
+          ],
+        ),
       ),
     ),
   );

@@ -1002,11 +1002,11 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   }
 
   String _normalizeProviderHost(String value, {String port = ''}) {
-    final normalizedUrl = DirectUrlSourceConfig.normalizeUrlInput(value);
-    final normalized = switch (normalizedUrl) {
+    final input = value.trim();
+    final normalized = switch (input) {
       final value when !value.contains('://') && value.isNotEmpty =>
         'http://$value',
-      _ => normalizedUrl,
+      _ => input,
     };
     final parsed = Uri.tryParse(normalized);
     final trimmedPort = port.trim();

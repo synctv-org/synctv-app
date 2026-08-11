@@ -4,13 +4,17 @@ import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
 import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
     as youtube;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/features/media_library/presentation/add_media/youtube_add_media_form.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 
+import '../../../../test_app.dart';
+
 void main() {
-  testWidgets('normalizes playlist URL and submits native playlist config', (
+  testWidgets('lists a playlist URL before submitting the discovered source', (
     tester,
   ) async {
     YoutubeAddRequest? submitted;
@@ -19,6 +23,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -39,6 +44,13 @@ void main() {
             ],
             onDraftChanged: (_) {},
             onSubmit: (request) async => submitted = request,
+            onList: (request) async {
+              expect(
+                request.playlist.resource,
+                contains('playlist?list=PL123'),
+              );
+              return youtube.ListResponse(source: _youtubePlaylistSource());
+            },
           ),
         ),
       ),
@@ -48,6 +60,7 @@ void main() {
       find.byKey(const Key('youtube-value')),
       'dQw4w9WgXcQ',
     );
+    await _selectTarget(tester, 'Dynamic playlist');
     await _selectMode(tester, 'Playlist');
     expect(
       tester
@@ -61,13 +74,21 @@ void main() {
       'https://www.youtube.com/playlist?list=PL123',
     );
     await tester.enterText(find.byKey(const Key('youtube-name')), 'Favorites');
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.text('Share my credentials'));
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('youtube-submit')))
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(const Key('youtube-preview')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('youtube-submit')));
     await tester.pumpAndSettle();
 
     expect(submitted, isNotNull);
     expect(submitted!.mode, YoutubeAddMode.playlist);
-    expect(submitted!.value, 'PL123');
+    expect(submitted!.value, 'https://www.youtube.com/playlist?list=PL123');
     expect(submitted!.name, 'Favorites');
     expect(submitted!.shared, isTrue);
     await tester.pump(const Duration(seconds: 4));
@@ -82,6 +103,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -102,19 +124,24 @@ void main() {
             ],
             onDraftChanged: (_) {},
             onSubmit: (request) async => submitted = request,
+            onList: (_) async =>
+                youtube.ListResponse(source: _youtubePlaylistSource()),
           ),
         ),
       ),
     );
 
+    await _selectTarget(tester, 'Dynamic playlist');
     await _selectMode(tester, 'Subscriptions');
     final submit = tester.widget<FilledButton>(
       find.byKey(const Key('youtube-submit')),
     );
     expect(submit.onPressed, isNull);
 
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.text('Share my credentials'));
     await tester.pump();
+    await tester.tap(find.byKey(const Key('youtube-preview')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('youtube-submit')));
     await tester.pumpAndSettle();
     expect(submitted?.mode, YoutubeAddMode.subscriptions);
@@ -128,6 +155,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -137,11 +165,16 @@ void main() {
             binds: const [],
             onDraftChanged: (_) {},
             onSubmit: (request) async => submitted = request,
+            onList: (request) async {
+              expect(request.channel.resource, contains('/channel/'));
+              return youtube.ListResponse(source: _youtubePlaylistSource());
+            },
           ),
         ),
       ),
     );
 
+    await _selectTarget(tester, 'Dynamic playlist');
     await _selectMode(tester, 'Channel');
     await tester.tap(find.text('Shorts'));
     await tester.pump();
@@ -150,16 +183,22 @@ void main() {
       'https://www.youtube.com/channel/UC1234567890123456789012/shorts',
     );
     await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('youtube-preview')));
+    await tester.tap(find.byKey(const Key('youtube-preview')));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('youtube-submit')));
     await tester.tap(find.byKey(const Key('youtube-submit')));
     await tester.pumpAndSettle();
     expect(submitted?.mode, YoutubeAddMode.channel);
     expect(submitted?.channelMode, YoutubeChannelMode.shorts);
-    expect(submitted?.value, 'UC1234567890123456789012');
+    expect(
+      submitted?.value,
+      'https://www.youtube.com/channel/UC1234567890123456789012/shorts',
+    );
     await tester.pump(const Duration(seconds: 4));
   });
 
-  testWidgets('previews a video and keeps metadata when scope changes', (
+  testWidgets('invalidates a video preview when credential scope changes', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(900, 700));
@@ -167,6 +206,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -184,9 +224,7 @@ void main() {
               ),
               formats: [youtube.Format(name: '1080p')],
               subtitles: [youtube.Subtitle(language: 'en')],
-              sourceConfig: source_config.YoutubeMediaSourceConfig(
-                videoId: request.value,
-              ),
+              source: _youtubeMediaSource(request.value),
             ),
           ),
         ),
@@ -206,15 +244,44 @@ void main() {
     expect(find.textContaining('1 formats'), findsOneWidget);
     expect(find.textContaining('1 subtitles'), findsOneWidget);
 
-    await tester.tap(find.byType(Switch));
-    await tester.pump();
-    expect(find.text('YouTube video'), findsOneWidget);
+    await tester.tap(find.text('Share my credentials'));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('YouTube video'), findsNothing);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('youtube-submit')))
+          .onPressed,
+      isNull,
+    );
   });
 }
+
+provider_common.DiscoveredSource _youtubeMediaSource(String videoId) =>
+    provider_common.DiscoveredSource(
+      media: source_config.MediaSourceConfig(
+        youtube: source_config.YoutubeMediaSourceConfig(videoId: videoId),
+      ),
+    );
+
+provider_common.DiscoveredSource _youtubePlaylistSource() =>
+    provider_common.DiscoveredSource(
+      playlist: source_config.PlaylistSourceConfig(
+        youtube: source_config.YoutubePlaylistSourceConfig(
+          search: source_config.YoutubePlaylistSourceConfig_Search(
+            query: 'test',
+          ),
+        ),
+      ),
+    );
 
 Future<void> _selectMode(WidgetTester tester, String label) async {
   await tester.tap(find.byKey(const Key('youtube-mode')));
   await tester.pumpAndSettle();
   await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _selectTarget(WidgetTester tester, String label) async {
+  await tester.tap(find.text(label));
   await tester.pumpAndSettle();
 }

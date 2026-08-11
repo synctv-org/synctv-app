@@ -74,6 +74,21 @@ final $typed_data.Uint8List playbackKindDescriptor = $convert.base64Decode(
     'CgxQbGF5YmFja0tpbmQSHQoZUExBWUJBQ0tfS0lORF9VTlNQRUNJRklFRBAAEhkKFVBMQVlCQU'
     'NLX0tJTkRfUkVHVUxBUhABEhYKElBMQVlCQUNLX0tJTkRfTElWRRAC');
 
+@$core.Deprecated('Use playbackProxyModeDescriptor instead')
+const PlaybackProxyMode$json = {
+  '1': 'PlaybackProxyMode',
+  '2': [
+    {'1': 'PLAYBACK_PROXY_MODE_AUTO', '2': 0},
+    {'1': 'PLAYBACK_PROXY_MODE_PREFER', '2': 1},
+    {'1': 'PLAYBACK_PROXY_MODE_ONLY', '2': 2},
+  ],
+};
+
+/// Descriptor for `PlaybackProxyMode`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playbackProxyModeDescriptor = $convert.base64Decode(
+    'ChFQbGF5YmFja1Byb3h5TW9kZRIcChhQTEFZQkFDS19QUk9YWV9NT0RFX0FVVE8QABIeChpQTE'
+    'FZQkFDS19QUk9YWV9NT0RFX1BSRUZFUhABEhwKGFBMQVlCQUNLX1BST1hZX01PREVfT05MWRAC');
+
 @$core.Deprecated('Use rtmpStreamModeDescriptor instead')
 const RtmpStreamMode$json = {
   '1': 'RtmpStreamMode',
@@ -425,22 +440,13 @@ const DirectUrlMediaSourceConfig$json = {
       '17': true
     },
     {
-      '1': 'prefer_proxy',
+      '1': 'proxy_mode',
       '3': 9,
       '4': 1,
-      '5': 8,
-      '9': 5,
-      '10': 'preferProxy',
-      '17': true
-    },
-    {
-      '1': 'proxy_only',
-      '3': 10,
-      '4': 1,
-      '5': 8,
-      '9': 6,
-      '10': 'proxyOnly',
-      '17': true
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
     },
   ],
   '8': [
@@ -449,8 +455,6 @@ const DirectUrlMediaSourceConfig$json = {
     {'1': '_default_danmaku_index'},
     {'1': '_playback_kind'},
     {'1': '_duration_seconds'},
-    {'1': '_prefer_proxy'},
-    {'1': '_proxy_only'},
   ],
 };
 
@@ -466,11 +470,10 @@ final $typed_data.Uint8List directUrlMediaSourceConfigDescriptor = $convert.base
     'x0X2Rhbm1ha3VfaW5kZXgYBiABKA1IAlITZGVmYXVsdERhbm1ha3VJbmRleIgBARJWCg1wbGF5'
     'YmFja19raW5kGAcgASgOMiIuc3luY3R2LnNvdXJjZV9jb25maWcuUGxheWJhY2tLaW5kQgi6SA'
     'WCAQIQAUgDUgxwbGF5YmFja0tpbmSIAQESLgoQZHVyYXRpb25fc2Vjb25kcxgIIAEoAUgEUg9k'
-    'dXJhdGlvblNlY29uZHOIAQESJgoMcHJlZmVyX3Byb3h5GAkgASgISAVSC3ByZWZlclByb3h5iA'
-    'EBEiIKCnByb3h5X29ubHkYCiABKAhIBlIJcHJveHlPbmx5iAEBQhYKFF9kZWZhdWx0X21lZGlh'
-    'X2luZGV4QhkKF19kZWZhdWx0X3N1YnRpdGxlX2luZGV4QhgKFl9kZWZhdWx0X2Rhbm1ha3VfaW'
-    '5kZXhCEAoOX3BsYXliYWNrX2tpbmRCEwoRX2R1cmF0aW9uX3NlY29uZHNCDwoNX3ByZWZlcl9w'
-    'cm94eUINCgtfcHJveHlfb25seQ==');
+    'dXJhdGlvblNlY29uZHOIAQESUAoKcHJveHlfbW9kZRgJIAEoDjInLnN5bmN0di5zb3VyY2VfY2'
+    '9uZmlnLlBsYXliYWNrUHJveHlNb2RlQgi6SAWCAQIQAVIJcHJveHlNb2RlQhYKFF9kZWZhdWx0'
+    'X21lZGlhX2luZGV4QhkKF19kZWZhdWx0X3N1YnRpdGxlX2luZGV4QhgKFl9kZWZhdWx0X2Rhbm'
+    '1ha3VfaW5kZXhCEAoOX3BsYXliYWNrX2tpbmRCEwoRX2R1cmF0aW9uX3NlY29uZHM=');
 
 @$core.Deprecated('Use alistMediaSourceConfigDescriptor instead')
 const AlistMediaSourceConfig$json = {
@@ -487,6 +490,15 @@ const AlistMediaSourceConfig$json = {
       '10': 'password',
       '17': true
     },
+    {
+      '1': 'proxy_mode',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': '_password'},
@@ -496,8 +508,9 @@ const AlistMediaSourceConfig$json = {
 /// Descriptor for `AlistMediaSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List alistMediaSourceConfigDescriptor = $convert.base64Decode(
     'ChZBbGlzdE1lZGlhU291cmNlQ29uZmlnEhsKCXNlcnZlcl9pZBgBIAEoCVIIc2VydmVySWQSEg'
-    'oEcGF0aBgCIAEoCVIEcGF0aBIfCghwYXNzd29yZBgDIAEoCUgAUghwYXNzd29yZIgBAUILCglf'
-    'cGFzc3dvcmQ=');
+    'oEcGF0aBgCIAEoCVIEcGF0aBIfCghwYXNzd29yZBgDIAEoCUgAUghwYXNzd29yZIgBARJQCgpw'
+    'cm94eV9tb2RlGAQgASgOMicuc3luY3R2LnNvdXJjZV9jb25maWcuUGxheWJhY2tQcm94eU1vZG'
+    'VCCLpIBYIBAhABUglwcm94eU1vZGVCCwoJX3Bhc3N3b3Jk');
 
 @$core.Deprecated('Use alistPlaylistSourceConfigDescriptor instead')
 const AlistPlaylistSourceConfig$json = {
@@ -514,6 +527,15 @@ const AlistPlaylistSourceConfig$json = {
       '10': 'password',
       '17': true
     },
+    {
+      '1': 'proxy_mode',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': '_password'},
@@ -523,8 +545,9 @@ const AlistPlaylistSourceConfig$json = {
 /// Descriptor for `AlistPlaylistSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List alistPlaylistSourceConfigDescriptor = $convert.base64Decode(
     'ChlBbGlzdFBsYXlsaXN0U291cmNlQ29uZmlnEhsKCXNlcnZlcl9pZBgBIAEoCVIIc2VydmVySW'
-    'QSEgoEcGF0aBgCIAEoCVIEcGF0aBIfCghwYXNzd29yZBgDIAEoCUgAUghwYXNzd29yZIgBAUIL'
-    'CglfcGFzc3dvcmQ=');
+    'QSEgoEcGF0aBgCIAEoCVIEcGF0aBIfCghwYXNzd29yZBgDIAEoCUgAUghwYXNzd29yZIgBARJQ'
+    'Cgpwcm94eV9tb2RlGAQgASgOMicuc3luY3R2LnNvdXJjZV9jb25maWcuUGxheWJhY2tQcm94eU'
+    '1vZGVCCLpIBYIBAhABUglwcm94eU1vZGVCCwoJX3Bhc3N3b3Jk');
 
 @$core.Deprecated('Use cloudreveMediaSourceConfigDescriptor instead')
 const CloudreveMediaSourceConfig$json = {
@@ -532,6 +555,15 @@ const CloudreveMediaSourceConfig$json = {
   '2': [
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '10': 'serverId'},
     {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
+    {
+      '1': 'proxy_mode',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
 };
 
@@ -539,7 +571,8 @@ const CloudreveMediaSourceConfig$json = {
 final $typed_data.Uint8List cloudreveMediaSourceConfigDescriptor =
     $convert.base64Decode(
         'ChpDbG91ZHJldmVNZWRpYVNvdXJjZUNvbmZpZxIbCglzZXJ2ZXJfaWQYASABKAlSCHNlcnZlck'
-        'lkEhIKBHBhdGgYAiABKAlSBHBhdGg=');
+        'lkEhIKBHBhdGgYAiABKAlSBHBhdGgSUAoKcHJveHlfbW9kZRgDIAEoDjInLnN5bmN0di5zb3Vy'
+        'Y2VfY29uZmlnLlBsYXliYWNrUHJveHlNb2RlQgi6SAWCAQIQAVIJcHJveHlNb2Rl');
 
 @$core.Deprecated('Use cloudrevePlaylistSourceConfigDescriptor instead')
 const CloudrevePlaylistSourceConfig$json = {
@@ -547,6 +580,15 @@ const CloudrevePlaylistSourceConfig$json = {
   '2': [
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '10': 'serverId'},
     {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
+    {
+      '1': 'proxy_mode',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
 };
 
@@ -554,7 +596,8 @@ const CloudrevePlaylistSourceConfig$json = {
 final $typed_data.Uint8List cloudrevePlaylistSourceConfigDescriptor =
     $convert.base64Decode(
         'Ch1DbG91ZHJldmVQbGF5bGlzdFNvdXJjZUNvbmZpZxIbCglzZXJ2ZXJfaWQYASABKAlSCHNlcn'
-        'ZlcklkEhIKBHBhdGgYAiABKAlSBHBhdGg=');
+        'ZlcklkEhIKBHBhdGgYAiABKAlSBHBhdGgSUAoKcHJveHlfbW9kZRgDIAEoDjInLnN5bmN0di5z'
+        'b3VyY2VfY29uZmlnLlBsYXliYWNrUHJveHlNb2RlQgi6SAWCAQIQAVIJcHJveHlNb2Rl');
 
 @$core.Deprecated('Use embyMediaSourceConfigDescriptor instead')
 const EmbyMediaSourceConfig$json = {
@@ -562,13 +605,23 @@ const EmbyMediaSourceConfig$json = {
   '2': [
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '10': 'serverId'},
     {'1': 'item_id', '3': 2, '4': 1, '5': 9, '10': 'itemId'},
+    {
+      '1': 'proxy_mode',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
 };
 
 /// Descriptor for `EmbyMediaSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List embyMediaSourceConfigDescriptor = $convert.base64Decode(
     'ChVFbWJ5TWVkaWFTb3VyY2VDb25maWcSGwoJc2VydmVyX2lkGAEgASgJUghzZXJ2ZXJJZBIXCg'
-    'dpdGVtX2lkGAIgASgJUgZpdGVtSWQ=');
+    'dpdGVtX2lkGAIgASgJUgZpdGVtSWQSUAoKcHJveHlfbW9kZRgDIAEoDjInLnN5bmN0di5zb3Vy'
+    'Y2VfY29uZmlnLlBsYXliYWNrUHJveHlNb2RlQgi6SAWCAQIQAVIJcHJveHlNb2Rl');
 
 @$core.Deprecated('Use embyPlaylistSourceConfigDescriptor instead')
 const EmbyPlaylistSourceConfig$json = {
@@ -674,6 +727,15 @@ const EmbyPlaylistSourceConfig$json = {
       '9': 0,
       '10': 'genreItems'
     },
+    {
+      '1': 'proxy_mode',
+      '3': 13,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -700,7 +762,9 @@ final $typed_data.Uint8List embyPlaylistSourceConfigDescriptor = $convert.base64
     'NQbGF5bGlzdFNvdXJjZUgAUgtjb2xsZWN0aW9ucxJICgZnZW5yZXMYCyABKAsyLi5zeW5jdHYu'
     'c291cmNlX2NvbmZpZy5FbWJ5R2VucmVzUGxheWxpc3RTb3VyY2VIAFIGZ2VucmVzElUKC2dlbn'
     'JlX2l0ZW1zGAwgASgLMjIuc3luY3R2LnNvdXJjZV9jb25maWcuRW1ieUdlbnJlSXRlbXNQbGF5'
-    'bGlzdFNvdXJjZUgAUgpnZW5yZUl0ZW1zQggKBnNvdXJjZQ==');
+    'bGlzdFNvdXJjZUgAUgpnZW5yZUl0ZW1zElAKCnByb3h5X21vZGUYDSABKA4yJy5zeW5jdHYuc2'
+    '91cmNlX2NvbmZpZy5QbGF5YmFja1Byb3h5TW9kZUIIukgFggECEAFSCXByb3h5TW9kZUIICgZz'
+    'b3VyY2U=');
 
 @$core.Deprecated('Use embyFolderPlaylistSourceDescriptor instead')
 const EmbyFolderPlaylistSource$json = {
@@ -1079,6 +1143,15 @@ const BilibiliMediaSourceConfig$json = {
       '9': 0,
       '10': 'live'
     },
+    {
+      '1': 'proxy_mode',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -1091,7 +1164,8 @@ final $typed_data.Uint8List bilibiliMediaSourceConfigDescriptor = $convert.base6
     'JjZV9jb25maWcuQmlsaWJpbGlWaWRlb1NvdXJjZUNvbmZpZ0gAUgV2aWRlbxJBCgNwZ2MYAiAB'
     'KAsyLS5zeW5jdHYuc291cmNlX2NvbmZpZy5CaWxpYmlsaVBnY1NvdXJjZUNvbmZpZ0gAUgNwZ2'
     'MSRAoEbGl2ZRgDIAEoCzIuLnN5bmN0di5zb3VyY2VfY29uZmlnLkJpbGliaWxpTGl2ZVNvdXJj'
-    'ZUNvbmZpZ0gAUgRsaXZlQggKBnNvdXJjZQ==');
+    'ZUNvbmZpZ0gAUgRsaXZlElAKCnByb3h5X21vZGUYBCABKA4yJy5zeW5jdHYuc291cmNlX2Nvbm'
+    'ZpZy5QbGF5YmFja1Byb3h5TW9kZUIIukgFggECEAFSCXByb3h5TW9kZUIICgZzb3VyY2U=');
 
 @$core.Deprecated('Use bilibiliPopularPlaylistSourceDescriptor instead')
 const BilibiliPopularPlaylistSource$json = {
@@ -1423,6 +1497,15 @@ const BilibiliPlaylistSourceConfig$json = {
       '10': 'pgcTimeline'
     },
     {'1': 'shared', '3': 15, '4': 1, '5': 8, '10': 'shared'},
+    {
+      '1': 'proxy_mode',
+      '3': 16,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -1455,7 +1538,9 @@ final $typed_data.Uint8List bilibiliPlaylistSourceConfigDescriptor = $convert.ba
     'J5GA0gASgLMjMuc3luY3R2LnNvdXJjZV9jb25maWcuQmlsaWJpbGlIaXN0b3J5UGxheWxpc3RT'
     'b3VyY2VIAFIHaGlzdG9yeRJcCgxwZ2NfdGltZWxpbmUYDiABKAsyNy5zeW5jdHYuc291cmNlX2'
     'NvbmZpZy5CaWxpYmlsaVBnY1RpbWVsaW5lUGxheWxpc3RTb3VyY2VIAFILcGdjVGltZWxpbmUS'
-    'FgoGc2hhcmVkGA8gASgIUgZzaGFyZWRCCAoGc291cmNl');
+    'FgoGc2hhcmVkGA8gASgIUgZzaGFyZWQSUAoKcHJveHlfbW9kZRgQIAEoDjInLnN5bmN0di5zb3'
+    'VyY2VfY29uZmlnLlBsYXliYWNrUHJveHlNb2RlQgi6SAWCAQIQAVIJcHJveHlNb2RlQggKBnNv'
+    'dXJjZQ==');
 
 @$core.Deprecated('Use twitchLiveSourceConfigDescriptor instead')
 const TwitchLiveSourceConfig$json = {
@@ -2138,6 +2223,15 @@ const FnosMediaSourceConfig$json = {
       '9': 0,
       '10': 'libraryItem'
     },
+    {
+      '1': 'proxy_mode',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -2149,8 +2243,9 @@ final $typed_data.Uint8List fnosMediaSourceConfigDescriptor = $convert.base64Dec
     'ChVGbm9zTWVkaWFTb3VyY2VDb25maWcSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUghzZX'
     'J2ZXJJZBJACgRmaWxlGAIgASgLMiouc3luY3R2LnNvdXJjZV9jb25maWcuRm5vc0ZpbGVTb3Vy'
     'Y2VDb25maWdIAFIEZmlsZRJWCgxsaWJyYXJ5X2l0ZW0YAyABKAsyMS5zeW5jdHYuc291cmNlX2'
-    'NvbmZpZy5Gbm9zTGlicmFyeUl0ZW1Tb3VyY2VDb25maWdIAFILbGlicmFyeUl0ZW1CCAoGc291'
-    'cmNl');
+    'NvbmZpZy5Gbm9zTGlicmFyeUl0ZW1Tb3VyY2VDb25maWdIAFILbGlicmFyeUl0ZW0SUAoKcHJv'
+    'eHlfbW9kZRgEIAEoDjInLnN5bmN0di5zb3VyY2VfY29uZmlnLlBsYXliYWNrUHJveHlNb2RlQg'
+    'i6SAWCAQIQAVIJcHJveHlNb2RlQggKBnNvdXJjZQ==');
 
 @$core.Deprecated('Use fnosFilesPlaylistSourceConfigDescriptor instead')
 const FnosFilesPlaylistSourceConfig$json = {
@@ -2256,6 +2351,15 @@ const FnosPlaylistSourceConfig$json = {
       '9': 0,
       '10': 'history'
     },
+    {
+      '1': 'proxy_mode',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -2271,7 +2375,9 @@ final $typed_data.Uint8List fnosPlaylistSourceConfigDescriptor = $convert.base64
     'aWdIAFIMbWVkaWFMaWJyYXJ5ElcKCWZhdm9yaXRlcxgEIAEoCzI3LnN5bmN0di5zb3VyY2VfY2'
     '9uZmlnLkZub3NGYXZvcml0ZXNQbGF5bGlzdFNvdXJjZUNvbmZpZ0gAUglmYXZvcml0ZXMSUQoH'
     'aGlzdG9yeRgFIAEoCzI1LnN5bmN0di5zb3VyY2VfY29uZmlnLkZub3NIaXN0b3J5UGxheWxpc3'
-    'RTb3VyY2VDb25maWdIAFIHaGlzdG9yeUIICgZzb3VyY2U=');
+    'RTb3VyY2VDb25maWdIAFIHaGlzdG9yeRJQCgpwcm94eV9tb2RlGAYgASgOMicuc3luY3R2LnNv'
+    'dXJjZV9jb25maWcuUGxheWJhY2tQcm94eU1vZGVCCLpIBYIBAhABUglwcm94eU1vZGVCCAoGc2'
+    '91cmNl');
 
 @$core.Deprecated('Use qnapMediaSourceConfigDescriptor instead')
 const QnapMediaSourceConfig$json = {
@@ -2279,13 +2385,24 @@ const QnapMediaSourceConfig$json = {
   '2': [
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
     {'1': 'path', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'path'},
+    {
+      '1': 'proxy_mode',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
 };
 
 /// Descriptor for `QnapMediaSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List qnapMediaSourceConfigDescriptor = $convert.base64Decode(
     'ChVRbmFwTWVkaWFTb3VyY2VDb25maWcSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUghzZX'
-    'J2ZXJJZBIbCgRwYXRoGAIgASgJQge6SARyAhABUgRwYXRo');
+    'J2ZXJJZBIbCgRwYXRoGAIgASgJQge6SARyAhABUgRwYXRoElAKCnByb3h5X21vZGUYAyABKA4y'
+    'Jy5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5YmFja1Byb3h5TW9kZUIIukgFggECEAFSCXByb3'
+    'h5TW9kZQ==');
 
 @$core.Deprecated('Use qnapPlaylistSourceConfigDescriptor instead')
 const QnapPlaylistSourceConfig$json = {
@@ -2293,14 +2410,24 @@ const QnapPlaylistSourceConfig$json = {
   '2': [
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
     {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
+    {
+      '1': 'proxy_mode',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
 };
 
 /// Descriptor for `QnapPlaylistSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List qnapPlaylistSourceConfigDescriptor =
-    $convert.base64Decode(
-        'ChhRbmFwUGxheWxpc3RTb3VyY2VDb25maWcSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUg'
-        'hzZXJ2ZXJJZBISCgRwYXRoGAIgASgJUgRwYXRo');
+final $typed_data.Uint8List qnapPlaylistSourceConfigDescriptor = $convert.base64Decode(
+    'ChhRbmFwUGxheWxpc3RTb3VyY2VDb25maWcSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUg'
+    'hzZXJ2ZXJJZBISCgRwYXRoGAIgASgJUgRwYXRoElAKCnByb3h5X21vZGUYAyABKA4yJy5zeW5j'
+    'dHYuc291cmNlX2NvbmZpZy5QbGF5YmFja1Byb3h5TW9kZUIIukgFggECEAFSCXByb3h5TW9kZQ'
+    '==');
 
 @$core.Deprecated('Use synologyFileSourceConfigDescriptor instead')
 const SynologyFileSourceConfig$json = {
@@ -2365,6 +2492,15 @@ const SynologyMediaSourceConfig$json = {
       '9': 0,
       '10': 'libraryItem'
     },
+    {
+      '1': 'proxy_mode',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -2377,7 +2513,8 @@ final $typed_data.Uint8List synologyMediaSourceConfigDescriptor = $convert.base6
     'IIc2VydmVySWQSRAoEZmlsZRgCIAEoCzIuLnN5bmN0di5zb3VyY2VfY29uZmlnLlN5bm9sb2d5'
     'RmlsZVNvdXJjZUNvbmZpZ0gAUgRmaWxlEloKDGxpYnJhcnlfaXRlbRgDIAEoCzI1LnN5bmN0di'
     '5zb3VyY2VfY29uZmlnLlN5bm9sb2d5TGlicmFyeUl0ZW1Tb3VyY2VDb25maWdIAFILbGlicmFy'
-    'eUl0ZW1CCAoGc291cmNl');
+    'eUl0ZW0SUAoKcHJveHlfbW9kZRgEIAEoDjInLnN5bmN0di5zb3VyY2VfY29uZmlnLlBsYXliYW'
+    'NrUHJveHlNb2RlQgi6SAWCAQIQAVIJcHJveHlNb2RlQggKBnNvdXJjZQ==');
 
 @$core.Deprecated('Use synologyFilesPlaylistSourceConfigDescriptor instead')
 const SynologyFilesPlaylistSourceConfig$json = {
@@ -2526,6 +2663,15 @@ const SynologyPlaylistSourceConfig$json = {
       '9': 0,
       '10': 'tvRecordings'
     },
+    {
+      '1': 'proxy_mode',
+      '3': 8,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -2545,7 +2691,8 @@ final $typed_data.Uint8List synologyPlaylistSourceConfigDescriptor = $convert.ba
     'dXJjZV9jb25maWcuU3lub2xvZ3lIb21lVmlkZW9zUGxheWxpc3RTb3VyY2VDb25maWdIAFIKaG'
     '9tZVZpZGVvcxJlCg10dl9yZWNvcmRpbmdzGAcgASgLMj4uc3luY3R2LnNvdXJjZV9jb25maWcu'
     'U3lub2xvZ3lUdlJlY29yZGluZ3NQbGF5bGlzdFNvdXJjZUNvbmZpZ0gAUgx0dlJlY29yZGluZ3'
-    'NCCAoGc291cmNl');
+    'MSUAoKcHJveHlfbW9kZRgIIAEoDjInLnN5bmN0di5zb3VyY2VfY29uZmlnLlBsYXliYWNrUHJv'
+    'eHlNb2RlQgi6SAWCAQIQAVIJcHJveHlNb2RlQggKBnNvdXJjZQ==');
 
 @$core.Deprecated('Use nextcloudMediaSourceConfigDescriptor instead')
 const NextcloudMediaSourceConfig$json = {
@@ -2554,15 +2701,24 @@ const NextcloudMediaSourceConfig$json = {
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
     {'1': 'path', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'path'},
     {'1': 'file_id', '3': 3, '4': 1, '5': 4, '8': {}, '10': 'fileId'},
+    {
+      '1': 'proxy_mode',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
 };
 
 /// Descriptor for `NextcloudMediaSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List nextcloudMediaSourceConfigDescriptor =
-    $convert.base64Decode(
-        'ChpOZXh0Y2xvdWRNZWRpYVNvdXJjZUNvbmZpZxIkCglzZXJ2ZXJfaWQYASABKAlCB7pIBHICEA'
-        'FSCHNlcnZlcklkEhsKBHBhdGgYAiABKAlCB7pIBHICEAFSBHBhdGgSIAoHZmlsZV9pZBgDIAEo'
-        'BEIHukgEMgIgAFIGZmlsZUlk');
+final $typed_data.Uint8List nextcloudMediaSourceConfigDescriptor = $convert.base64Decode(
+    'ChpOZXh0Y2xvdWRNZWRpYVNvdXJjZUNvbmZpZxIkCglzZXJ2ZXJfaWQYASABKAlCB7pIBHICEA'
+    'FSCHNlcnZlcklkEhsKBHBhdGgYAiABKAlCB7pIBHICEAFSBHBhdGgSIAoHZmlsZV9pZBgDIAEo'
+    'BEIHukgEMgIgAFIGZmlsZUlkElAKCnByb3h5X21vZGUYBCABKA4yJy5zeW5jdHYuc291cmNlX2'
+    'NvbmZpZy5QbGF5YmFja1Byb3h5TW9kZUIIukgFggECEAFSCXByb3h5TW9kZQ==');
 
 @$core.Deprecated('Use nextcloudFolderPlaylistSourceConfigDescriptor instead')
 const NextcloudFolderPlaylistSourceConfig$json = {
@@ -2636,6 +2792,15 @@ const NextcloudPlaylistSourceConfig$json = {
       '9': 0,
       '10': 'search'
     },
+    {
+      '1': 'proxy_mode',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -2650,7 +2815,8 @@ final $typed_data.Uint8List nextcloudPlaylistSourceConfigDescriptor = $convert.b
     'MYAyABKAsyPC5zeW5jdHYuc291cmNlX2NvbmZpZy5OZXh0Y2xvdWRGYXZvcml0ZXNQbGF5bGlz'
     'dFNvdXJjZUNvbmZpZ0gAUglmYXZvcml0ZXMSUwoGc2VhcmNoGAQgASgLMjkuc3luY3R2LnNvdX'
     'JjZV9jb25maWcuTmV4dGNsb3VkU2VhcmNoUGxheWxpc3RTb3VyY2VDb25maWdIAFIGc2VhcmNo'
-    'QggKBnNvdXJjZQ==');
+    'ElAKCnByb3h5X21vZGUYBSABKA4yJy5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5YmFja1Byb3'
+    'h5TW9kZUIIukgFggECEAFSCXByb3h5TW9kZUIICgZzb3VyY2U=');
 
 @$core.Deprecated('Use seafileMediaSourceConfigDescriptor instead')
 const SeafileMediaSourceConfig$json = {
@@ -2668,6 +2834,15 @@ const SeafileMediaSourceConfig$json = {
     {'1': 'path', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'path'},
     {'1': 'object_id', '3': 4, '4': 1, '5': 9, '10': 'objectId'},
     {'1': 'has_thumbnail', '3': 5, '4': 1, '5': 8, '10': 'hasThumbnail'},
+    {
+      '1': 'proxy_mode',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
 };
 
@@ -2676,7 +2851,9 @@ final $typed_data.Uint8List seafileMediaSourceConfigDescriptor = $convert.base64
     'ChhTZWFmaWxlTWVkaWFTb3VyY2VDb25maWcSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUg'
     'hzZXJ2ZXJJZBIsCg1yZXBvc2l0b3J5X2lkGAIgASgJQge6SARyAhABUgxyZXBvc2l0b3J5SWQS'
     'GwoEcGF0aBgDIAEoCUIHukgEcgIQAVIEcGF0aBIbCglvYmplY3RfaWQYBCABKAlSCG9iamVjdE'
-    'lkEiMKDWhhc190aHVtYm5haWwYBSABKAhSDGhhc1RodW1ibmFpbA==');
+    'lkEiMKDWhhc190aHVtYm5haWwYBSABKAhSDGhhc1RodW1ibmFpbBJQCgpwcm94eV9tb2RlGAYg'
+    'ASgOMicuc3luY3R2LnNvdXJjZV9jb25maWcuUGxheWJhY2tQcm94eU1vZGVCCLpIBYIBAhABUg'
+    'lwcm94eU1vZGU=');
 
 @$core.Deprecated('Use seafileFolderPlaylistSourceConfigDescriptor instead')
 const SeafileFolderPlaylistSourceConfig$json = {
@@ -2764,6 +2941,15 @@ const SeafilePlaylistSourceConfig$json = {
       '9': 0,
       '10': 'search'
     },
+    {
+      '1': 'proxy_mode',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -2777,7 +2963,9 @@ final $typed_data.Uint8List seafilePlaylistSourceConfigDescriptor = $convert.bas
     'aWxlRm9sZGVyUGxheWxpc3RTb3VyY2VDb25maWdIAFIGZm9sZGVyElQKB3N0YXJyZWQYAyABKA'
     'syOC5zeW5jdHYuc291cmNlX2NvbmZpZy5TZWFmaWxlU3RhcnJlZFBsYXlsaXN0U291cmNlQ29u'
     'ZmlnSABSB3N0YXJyZWQSUQoGc2VhcmNoGAQgASgLMjcuc3luY3R2LnNvdXJjZV9jb25maWcuU2'
-    'VhZmlsZVNlYXJjaFBsYXlsaXN0U291cmNlQ29uZmlnSABSBnNlYXJjaEIICgZzb3VyY2U=');
+    'VhZmlsZVNlYXJjaFBsYXlsaXN0U291cmNlQ29uZmlnSABSBnNlYXJjaBJQCgpwcm94eV9tb2Rl'
+    'GAUgASgOMicuc3luY3R2LnNvdXJjZV9jb25maWcuUGxheWJhY2tQcm94eU1vZGVCCLpIBYIBAh'
+    'ABUglwcm94eU1vZGVCCAoGc291cmNl');
 
 @$core.Deprecated('Use trueNasMediaSourceConfigDescriptor instead')
 const TrueNasMediaSourceConfig$json = {
@@ -2785,14 +2973,24 @@ const TrueNasMediaSourceConfig$json = {
   '2': [
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
     {'1': 'path', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'path'},
+    {
+      '1': 'proxy_mode',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
 };
 
 /// Descriptor for `TrueNasMediaSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List trueNasMediaSourceConfigDescriptor =
-    $convert.base64Decode(
-        'ChhUcnVlTmFzTWVkaWFTb3VyY2VDb25maWcSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUg'
-        'hzZXJ2ZXJJZBIbCgRwYXRoGAIgASgJQge6SARyAhABUgRwYXRo');
+final $typed_data.Uint8List trueNasMediaSourceConfigDescriptor = $convert.base64Decode(
+    'ChhUcnVlTmFzTWVkaWFTb3VyY2VDb25maWcSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUg'
+    'hzZXJ2ZXJJZBIbCgRwYXRoGAIgASgJQge6SARyAhABUgRwYXRoElAKCnByb3h5X21vZGUYAyAB'
+    'KA4yJy5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5YmFja1Byb3h5TW9kZUIIukgFggECEAFSCX'
+    'Byb3h5TW9kZQ==');
 
 @$core.Deprecated('Use trueNasFolderPlaylistSourceConfigDescriptor instead')
 const TrueNasFolderPlaylistSourceConfig$json = {
@@ -2846,6 +3044,15 @@ const TrueNasPlaylistSourceConfig$json = {
       '9': 0,
       '10': 'search'
     },
+    {
+      '1': 'proxy_mode',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -2858,7 +3065,8 @@ final $typed_data.Uint8List trueNasPlaylistSourceConfigDescriptor = $convert.bas
     'ABUghzZXJ2ZXJJZBJRCgZmb2xkZXIYAiABKAsyNy5zeW5jdHYuc291cmNlX2NvbmZpZy5UcnVl'
     'TmFzRm9sZGVyUGxheWxpc3RTb3VyY2VDb25maWdIAFIGZm9sZGVyElEKBnNlYXJjaBgDIAEoCz'
     'I3LnN5bmN0di5zb3VyY2VfY29uZmlnLlRydWVOYXNTZWFyY2hQbGF5bGlzdFNvdXJjZUNvbmZp'
-    'Z0gAUgZzZWFyY2hCCAoGc291cmNl');
+    'Z0gAUgZzZWFyY2gSUAoKcHJveHlfbW9kZRgEIAEoDjInLnN5bmN0di5zb3VyY2VfY29uZmlnLl'
+    'BsYXliYWNrUHJveHlNb2RlQgi6SAWCAQIQAVIJcHJveHlNb2RlQggKBnNvdXJjZQ==');
 
 @$core.Deprecated('Use tikTokVideoSourceConfigDescriptor instead')
 const TikTokVideoSourceConfig$json = {

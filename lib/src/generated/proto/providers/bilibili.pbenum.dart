@@ -14,6 +14,73 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+class PlaylistListMode extends $pb.ProtobufEnum {
+  static const PlaylistListMode PLAYLIST_LIST_MODE_POPULAR =
+      PlaylistListMode._(0, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_POPULAR');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_RECOMMENDED =
+      PlaylistListMode._(
+          1, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_RECOMMENDED');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_VIDEO_PARTS =
+      PlaylistListMode._(
+          2, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_VIDEO_PARTS');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_UP_VIDEOS =
+      PlaylistListMode._(
+          3, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_UP_VIDEOS');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_FAVORITE_VIDEOS =
+      PlaylistListMode._(
+          4, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_FAVORITE_VIDEOS');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_COLLECTION_VIDEOS =
+      PlaylistListMode._(
+          5, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_COLLECTION_VIDEOS');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_SERIES_VIDEOS =
+      PlaylistListMode._(
+          6, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_SERIES_VIDEOS');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_WATCH_LATER =
+      PlaylistListMode._(
+          7, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_WATCH_LATER');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_PGC_SEASON =
+      PlaylistListMode._(
+          8, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_PGC_SEASON');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_LIVE_RECOMMENDED =
+      PlaylistListMode._(
+          9, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_LIVE_RECOMMENDED');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_LIVE_FOLLOWED =
+      PlaylistListMode._(
+          10, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_LIVE_FOLLOWED');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_LIVE_AREA =
+      PlaylistListMode._(
+          11, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_LIVE_AREA');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_HISTORY = PlaylistListMode._(
+      12, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_HISTORY');
+  static const PlaylistListMode PLAYLIST_LIST_MODE_PGC_TIMELINE =
+      PlaylistListMode._(
+          13, _omitEnumNames ? '' : 'PLAYLIST_LIST_MODE_PGC_TIMELINE');
+
+  static const $core.List<PlaylistListMode> values = <PlaylistListMode>[
+    PLAYLIST_LIST_MODE_POPULAR,
+    PLAYLIST_LIST_MODE_RECOMMENDED,
+    PLAYLIST_LIST_MODE_VIDEO_PARTS,
+    PLAYLIST_LIST_MODE_UP_VIDEOS,
+    PLAYLIST_LIST_MODE_FAVORITE_VIDEOS,
+    PLAYLIST_LIST_MODE_COLLECTION_VIDEOS,
+    PLAYLIST_LIST_MODE_SERIES_VIDEOS,
+    PLAYLIST_LIST_MODE_WATCH_LATER,
+    PLAYLIST_LIST_MODE_PGC_SEASON,
+    PLAYLIST_LIST_MODE_LIVE_RECOMMENDED,
+    PLAYLIST_LIST_MODE_LIVE_FOLLOWED,
+    PLAYLIST_LIST_MODE_LIVE_AREA,
+    PLAYLIST_LIST_MODE_HISTORY,
+    PLAYLIST_LIST_MODE_PGC_TIMELINE,
+  ];
+
+  static final $core.List<PlaylistListMode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 13);
+  static PlaylistListMode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaylistListMode._(super.value, super.name);
+}
+
 class PgcFollowType extends $pb.ProtobufEnum {
   static const PgcFollowType PGC_FOLLOW_TYPE_UNSPECIFIED =
       PgcFollowType._(0, _omitEnumNames ? '' : 'PGC_FOLLOW_TYPE_UNSPECIFIED');

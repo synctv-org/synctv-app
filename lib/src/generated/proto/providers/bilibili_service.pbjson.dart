@@ -15,8 +15,9 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-import '../source_config.pbjson.dart' as $1;
+import '../source_config.pbjson.dart' as $2;
 import 'bilibili.pbjson.dart' as $0;
+import 'common.pbjson.dart' as $1;
 
 const $core.Map<$core.String, $core.dynamic> BilibiliProviderServiceBase$json =
     {
@@ -26,6 +27,11 @@ const $core.Map<$core.String, $core.dynamic> BilibiliProviderServiceBase$json =
       '1': 'Parse',
       '2': '.synctv.provider.bilibili.ParseRequest',
       '3': '.synctv.provider.bilibili.ParseResponse'
+    },
+    {
+      '1': 'ListPlaylist',
+      '2': '.synctv.provider.bilibili.ListPlaylistRequest',
+      '3': '.synctv.provider.bilibili.ListPlaylistResponse'
     },
     {
       '1': 'ListLiveAreas',
@@ -106,229 +112,235 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.provider.bilibili.ParseRequest': $0.ParseRequest$json,
   '.synctv.provider.bilibili.ParseResponse': $0.ParseResponse$json,
   '.synctv.provider.bilibili.ParseCandidate': $0.ParseCandidate$json,
-  '.synctv.source_config.MediaSourceConfig': $1.MediaSourceConfig$json,
+  '.synctv.provider.common.DiscoveredSource': $1.DiscoveredSource$json,
+  '.synctv.source_config.MediaSourceConfig': $2.MediaSourceConfig$json,
   '.synctv.source_config.DirectUrlMediaSourceConfig':
-      $1.DirectUrlMediaSourceConfig$json,
+      $2.DirectUrlMediaSourceConfig$json,
   '.synctv.source_config.DirectUrlMediaResourceConfig':
-      $1.DirectUrlMediaResourceConfig$json,
+      $2.DirectUrlMediaResourceConfig$json,
   '.synctv.source_config.DirectUrlMediaResourceConfig.HeadersEntry':
-      $1.DirectUrlMediaResourceConfig_HeadersEntry$json,
+      $2.DirectUrlMediaResourceConfig_HeadersEntry$json,
   '.synctv.source_config.DirectUrlSubtitleSourceConfig':
-      $1.DirectUrlSubtitleSourceConfig$json,
+      $2.DirectUrlSubtitleSourceConfig$json,
   '.synctv.source_config.DirectUrlSubtitleSourceConfig.HeadersEntry':
-      $1.DirectUrlSubtitleSourceConfig_HeadersEntry$json,
+      $2.DirectUrlSubtitleSourceConfig_HeadersEntry$json,
   '.synctv.source_config.DirectUrlDanmakuSourceConfig':
-      $1.DirectUrlDanmakuSourceConfig$json,
+      $2.DirectUrlDanmakuSourceConfig$json,
   '.synctv.source_config.DirectUrlDanmakuSourceConfig.HeadersEntry':
-      $1.DirectUrlDanmakuSourceConfig_HeadersEntry$json,
+      $2.DirectUrlDanmakuSourceConfig_HeadersEntry$json,
   '.synctv.source_config.BilibiliMediaSourceConfig':
-      $1.BilibiliMediaSourceConfig$json,
+      $2.BilibiliMediaSourceConfig$json,
   '.synctv.source_config.BilibiliVideoSourceConfig':
-      $1.BilibiliVideoSourceConfig$json,
+      $2.BilibiliVideoSourceConfig$json,
   '.synctv.source_config.BilibiliPgcSourceConfig':
-      $1.BilibiliPgcSourceConfig$json,
+      $2.BilibiliPgcSourceConfig$json,
   '.synctv.source_config.BilibiliLiveSourceConfig':
-      $1.BilibiliLiveSourceConfig$json,
+      $2.BilibiliLiveSourceConfig$json,
   '.synctv.source_config.AlistMediaSourceConfig':
-      $1.AlistMediaSourceConfig$json,
-  '.synctv.source_config.EmbyMediaSourceConfig': $1.EmbyMediaSourceConfig$json,
-  '.synctv.source_config.RtmpMediaSourceConfig': $1.RtmpMediaSourceConfig$json,
+      $2.AlistMediaSourceConfig$json,
+  '.synctv.source_config.EmbyMediaSourceConfig': $2.EmbyMediaSourceConfig$json,
+  '.synctv.source_config.RtmpMediaSourceConfig': $2.RtmpMediaSourceConfig$json,
   '.synctv.source_config.LiveProxyMediaSourceConfig':
-      $1.LiveProxyMediaSourceConfig$json,
-  '.synctv.source_config.RtmpPullSourceConfig': $1.RtmpPullSourceConfig$json,
-  '.synctv.source_config.RtspPullSourceConfig': $1.RtspPullSourceConfig$json,
-  '.synctv.source_config.RtspTrackSelection': $1.RtspTrackSelection$json,
+      $2.LiveProxyMediaSourceConfig$json,
+  '.synctv.source_config.RtmpPullSourceConfig': $2.RtmpPullSourceConfig$json,
+  '.synctv.source_config.RtspPullSourceConfig': $2.RtspPullSourceConfig$json,
+  '.synctv.source_config.RtspTrackSelection': $2.RtspTrackSelection$json,
   '.synctv.source_config.HttpFlvPullSourceConfig':
-      $1.HttpFlvPullSourceConfig$json,
+      $2.HttpFlvPullSourceConfig$json,
   '.synctv.source_config.CloudreveMediaSourceConfig':
-      $1.CloudreveMediaSourceConfig$json,
+      $2.CloudreveMediaSourceConfig$json,
   '.synctv.source_config.TwitchMediaSourceConfig':
-      $1.TwitchMediaSourceConfig$json,
+      $2.TwitchMediaSourceConfig$json,
   '.synctv.source_config.TwitchLiveSourceConfig':
-      $1.TwitchLiveSourceConfig$json,
+      $2.TwitchLiveSourceConfig$json,
   '.synctv.source_config.TwitchVideoSourceConfig':
-      $1.TwitchVideoSourceConfig$json,
+      $2.TwitchVideoSourceConfig$json,
   '.synctv.source_config.TwitchClipSourceConfig':
-      $1.TwitchClipSourceConfig$json,
-  '.synctv.source_config.HuyaMediaSourceConfig': $1.HuyaMediaSourceConfig$json,
-  '.synctv.source_config.HuyaLiveSourceConfig': $1.HuyaLiveSourceConfig$json,
-  '.synctv.source_config.HuyaVideoSourceConfig': $1.HuyaVideoSourceConfig$json,
+      $2.TwitchClipSourceConfig$json,
+  '.synctv.source_config.HuyaMediaSourceConfig': $2.HuyaMediaSourceConfig$json,
+  '.synctv.source_config.HuyaLiveSourceConfig': $2.HuyaLiveSourceConfig$json,
+  '.synctv.source_config.HuyaVideoSourceConfig': $2.HuyaVideoSourceConfig$json,
   '.synctv.source_config.DouyuMediaSourceConfig':
-      $1.DouyuMediaSourceConfig$json,
+      $2.DouyuMediaSourceConfig$json,
   '.synctv.source_config.DouyinMediaSourceConfig':
-      $1.DouyinMediaSourceConfig$json,
+      $2.DouyinMediaSourceConfig$json,
   '.synctv.source_config.DouyinVideoSourceConfig':
-      $1.DouyinVideoSourceConfig$json,
+      $2.DouyinVideoSourceConfig$json,
   '.synctv.source_config.DouyinLiveSourceConfig':
-      $1.DouyinLiveSourceConfig$json,
+      $2.DouyinLiveSourceConfig$json,
   '.synctv.source_config.AcFunMediaSourceConfig':
-      $1.AcFunMediaSourceConfig$json,
+      $2.AcFunMediaSourceConfig$json,
   '.synctv.source_config.AcFunVideoSourceConfig':
-      $1.AcFunVideoSourceConfig$json,
+      $2.AcFunVideoSourceConfig$json,
   '.synctv.source_config.AcFunBangumiSourceConfig':
-      $1.AcFunBangumiSourceConfig$json,
-  '.synctv.source_config.AcFunLiveSourceConfig': $1.AcFunLiveSourceConfig$json,
-  '.synctv.source_config.CctvMediaSourceConfig': $1.CctvMediaSourceConfig$json,
-  '.synctv.source_config.FnosMediaSourceConfig': $1.FnosMediaSourceConfig$json,
-  '.synctv.source_config.FnosFileSourceConfig': $1.FnosFileSourceConfig$json,
+      $2.AcFunBangumiSourceConfig$json,
+  '.synctv.source_config.AcFunLiveSourceConfig': $2.AcFunLiveSourceConfig$json,
+  '.synctv.source_config.CctvMediaSourceConfig': $2.CctvMediaSourceConfig$json,
+  '.synctv.source_config.FnosMediaSourceConfig': $2.FnosMediaSourceConfig$json,
+  '.synctv.source_config.FnosFileSourceConfig': $2.FnosFileSourceConfig$json,
   '.synctv.source_config.FnosLibraryItemSourceConfig':
-      $1.FnosLibraryItemSourceConfig$json,
-  '.synctv.source_config.QnapMediaSourceConfig': $1.QnapMediaSourceConfig$json,
+      $2.FnosLibraryItemSourceConfig$json,
+  '.synctv.source_config.QnapMediaSourceConfig': $2.QnapMediaSourceConfig$json,
   '.synctv.source_config.SynologyMediaSourceConfig':
-      $1.SynologyMediaSourceConfig$json,
+      $2.SynologyMediaSourceConfig$json,
   '.synctv.source_config.SynologyFileSourceConfig':
-      $1.SynologyFileSourceConfig$json,
+      $2.SynologyFileSourceConfig$json,
   '.synctv.source_config.SynologyLibraryItemSourceConfig':
-      $1.SynologyLibraryItemSourceConfig$json,
+      $2.SynologyLibraryItemSourceConfig$json,
   '.synctv.source_config.NextcloudMediaSourceConfig':
-      $1.NextcloudMediaSourceConfig$json,
+      $2.NextcloudMediaSourceConfig$json,
   '.synctv.source_config.SeafileMediaSourceConfig':
-      $1.SeafileMediaSourceConfig$json,
+      $2.SeafileMediaSourceConfig$json,
   '.synctv.source_config.TrueNasMediaSourceConfig':
-      $1.TrueNasMediaSourceConfig$json,
+      $2.TrueNasMediaSourceConfig$json,
   '.synctv.source_config.YoutubeMediaSourceConfig':
-      $1.YoutubeMediaSourceConfig$json,
+      $2.YoutubeMediaSourceConfig$json,
   '.synctv.source_config.TikTokMediaSourceConfig':
-      $1.TikTokMediaSourceConfig$json,
+      $2.TikTokMediaSourceConfig$json,
   '.synctv.source_config.TikTokVideoSourceConfig':
-      $1.TikTokVideoSourceConfig$json,
+      $2.TikTokVideoSourceConfig$json,
   '.synctv.source_config.TikTokLiveSourceConfig':
-      $1.TikTokLiveSourceConfig$json,
-  '.synctv.source_config.PlaylistSourceConfig': $1.PlaylistSourceConfig$json,
+      $2.TikTokLiveSourceConfig$json,
+  '.synctv.source_config.PlaylistSourceConfig': $2.PlaylistSourceConfig$json,
   '.synctv.source_config.BilibiliPlaylistSourceConfig':
-      $1.BilibiliPlaylistSourceConfig$json,
+      $2.BilibiliPlaylistSourceConfig$json,
   '.synctv.source_config.BilibiliVideoPartsPlaylistSource':
-      $1.BilibiliVideoPartsPlaylistSource$json,
+      $2.BilibiliVideoPartsPlaylistSource$json,
   '.synctv.source_config.BilibiliPopularPlaylistSource':
-      $1.BilibiliPopularPlaylistSource$json,
+      $2.BilibiliPopularPlaylistSource$json,
   '.synctv.source_config.BilibiliRecommendedPlaylistSource':
-      $1.BilibiliRecommendedPlaylistSource$json,
+      $2.BilibiliRecommendedPlaylistSource$json,
   '.synctv.source_config.BilibiliUpVideosPlaylistSource':
-      $1.BilibiliUpVideosPlaylistSource$json,
+      $2.BilibiliUpVideosPlaylistSource$json,
   '.synctv.source_config.BilibiliFavoriteVideosPlaylistSource':
-      $1.BilibiliFavoriteVideosPlaylistSource$json,
+      $2.BilibiliFavoriteVideosPlaylistSource$json,
   '.synctv.source_config.BilibiliCollectionVideosPlaylistSource':
-      $1.BilibiliCollectionVideosPlaylistSource$json,
+      $2.BilibiliCollectionVideosPlaylistSource$json,
   '.synctv.source_config.BilibiliSeriesVideosPlaylistSource':
-      $1.BilibiliSeriesVideosPlaylistSource$json,
+      $2.BilibiliSeriesVideosPlaylistSource$json,
   '.synctv.source_config.BilibiliWatchLaterPlaylistSource':
-      $1.BilibiliWatchLaterPlaylistSource$json,
+      $2.BilibiliWatchLaterPlaylistSource$json,
   '.synctv.source_config.BilibiliPgcSeasonPlaylistSource':
-      $1.BilibiliPgcSeasonPlaylistSource$json,
+      $2.BilibiliPgcSeasonPlaylistSource$json,
   '.synctv.source_config.BilibiliLiveRecommendedPlaylistSource':
-      $1.BilibiliLiveRecommendedPlaylistSource$json,
+      $2.BilibiliLiveRecommendedPlaylistSource$json,
   '.synctv.source_config.BilibiliLiveFollowedPlaylistSource':
-      $1.BilibiliLiveFollowedPlaylistSource$json,
+      $2.BilibiliLiveFollowedPlaylistSource$json,
   '.synctv.source_config.BilibiliLiveAreaPlaylistSource':
-      $1.BilibiliLiveAreaPlaylistSource$json,
+      $2.BilibiliLiveAreaPlaylistSource$json,
   '.synctv.source_config.BilibiliHistoryPlaylistSource':
-      $1.BilibiliHistoryPlaylistSource$json,
+      $2.BilibiliHistoryPlaylistSource$json,
   '.synctv.source_config.BilibiliPgcTimelinePlaylistSource':
-      $1.BilibiliPgcTimelinePlaylistSource$json,
+      $2.BilibiliPgcTimelinePlaylistSource$json,
   '.synctv.source_config.AlistPlaylistSourceConfig':
-      $1.AlistPlaylistSourceConfig$json,
+      $2.AlistPlaylistSourceConfig$json,
   '.synctv.source_config.EmbyPlaylistSourceConfig':
-      $1.EmbyPlaylistSourceConfig$json,
+      $2.EmbyPlaylistSourceConfig$json,
   '.synctv.source_config.EmbyFolderPlaylistSource':
-      $1.EmbyFolderPlaylistSource$json,
+      $2.EmbyFolderPlaylistSource$json,
   '.synctv.source_config.EmbyFavoriteItemsPlaylistSource':
-      $1.EmbyFavoriteItemsPlaylistSource$json,
+      $2.EmbyFavoriteItemsPlaylistSource$json,
   '.synctv.source_config.EmbyFavoritePeoplePlaylistSource':
-      $1.EmbyFavoritePeoplePlaylistSource$json,
+      $2.EmbyFavoritePeoplePlaylistSource$json,
   '.synctv.source_config.EmbyPersonItemsPlaylistSource':
-      $1.EmbyPersonItemsPlaylistSource$json,
+      $2.EmbyPersonItemsPlaylistSource$json,
   '.synctv.source_config.EmbyContinueWatchingPlaylistSource':
-      $1.EmbyContinueWatchingPlaylistSource$json,
+      $2.EmbyContinueWatchingPlaylistSource$json,
   '.synctv.source_config.EmbyNextUpPlaylistSource':
-      $1.EmbyNextUpPlaylistSource$json,
+      $2.EmbyNextUpPlaylistSource$json,
   '.synctv.source_config.EmbyRecentlyAddedPlaylistSource':
-      $1.EmbyRecentlyAddedPlaylistSource$json,
+      $2.EmbyRecentlyAddedPlaylistSource$json,
   '.synctv.source_config.EmbyPlaylistsPlaylistSource':
-      $1.EmbyPlaylistsPlaylistSource$json,
+      $2.EmbyPlaylistsPlaylistSource$json,
   '.synctv.source_config.EmbyCollectionsPlaylistSource':
-      $1.EmbyCollectionsPlaylistSource$json,
+      $2.EmbyCollectionsPlaylistSource$json,
   '.synctv.source_config.EmbyGenresPlaylistSource':
-      $1.EmbyGenresPlaylistSource$json,
+      $2.EmbyGenresPlaylistSource$json,
   '.synctv.source_config.EmbyGenreItemsPlaylistSource':
-      $1.EmbyGenreItemsPlaylistSource$json,
+      $2.EmbyGenreItemsPlaylistSource$json,
   '.synctv.source_config.CloudrevePlaylistSourceConfig':
-      $1.CloudrevePlaylistSourceConfig$json,
+      $2.CloudrevePlaylistSourceConfig$json,
   '.synctv.source_config.TwitchPlaylistSourceConfig':
-      $1.TwitchPlaylistSourceConfig$json,
+      $2.TwitchPlaylistSourceConfig$json,
   '.synctv.source_config.TwitchPlaylistSourceConfig.Channel':
-      $1.TwitchPlaylistSourceConfig_Channel$json,
+      $2.TwitchPlaylistSourceConfig_Channel$json,
   '.synctv.source_config.TwitchPlaylistSourceConfig.FollowedLive':
-      $1.TwitchPlaylistSourceConfig_FollowedLive$json,
+      $2.TwitchPlaylistSourceConfig_FollowedLive$json,
   '.synctv.source_config.TwitchPlaylistSourceConfig.CategoryLive':
-      $1.TwitchPlaylistSourceConfig_CategoryLive$json,
+      $2.TwitchPlaylistSourceConfig_CategoryLive$json,
   '.synctv.source_config.TwitchPlaylistSourceConfig.SearchLive':
-      $1.TwitchPlaylistSourceConfig_SearchLive$json,
+      $2.TwitchPlaylistSourceConfig_SearchLive$json,
   '.synctv.source_config.DouyinPlaylistSourceConfig':
-      $1.DouyinPlaylistSourceConfig$json,
+      $2.DouyinPlaylistSourceConfig$json,
   '.synctv.source_config.FnosPlaylistSourceConfig':
-      $1.FnosPlaylistSourceConfig$json,
+      $2.FnosPlaylistSourceConfig$json,
   '.synctv.source_config.FnosFilesPlaylistSourceConfig':
-      $1.FnosFilesPlaylistSourceConfig$json,
+      $2.FnosFilesPlaylistSourceConfig$json,
   '.synctv.source_config.FnosMediaLibraryPlaylistSourceConfig':
-      $1.FnosMediaLibraryPlaylistSourceConfig$json,
+      $2.FnosMediaLibraryPlaylistSourceConfig$json,
   '.synctv.source_config.FnosFavoritesPlaylistSourceConfig':
-      $1.FnosFavoritesPlaylistSourceConfig$json,
+      $2.FnosFavoritesPlaylistSourceConfig$json,
   '.synctv.source_config.FnosHistoryPlaylistSourceConfig':
-      $1.FnosHistoryPlaylistSourceConfig$json,
+      $2.FnosHistoryPlaylistSourceConfig$json,
   '.synctv.source_config.QnapPlaylistSourceConfig':
-      $1.QnapPlaylistSourceConfig$json,
+      $2.QnapPlaylistSourceConfig$json,
   '.synctv.source_config.SynologyPlaylistSourceConfig':
-      $1.SynologyPlaylistSourceConfig$json,
+      $2.SynologyPlaylistSourceConfig$json,
   '.synctv.source_config.SynologyFilesPlaylistSourceConfig':
-      $1.SynologyFilesPlaylistSourceConfig$json,
+      $2.SynologyFilesPlaylistSourceConfig$json,
   '.synctv.source_config.SynologyMoviesPlaylistSourceConfig':
-      $1.SynologyMoviesPlaylistSourceConfig$json,
+      $2.SynologyMoviesPlaylistSourceConfig$json,
   '.synctv.source_config.SynologyTvShowsPlaylistSourceConfig':
-      $1.SynologyTvShowsPlaylistSourceConfig$json,
+      $2.SynologyTvShowsPlaylistSourceConfig$json,
   '.synctv.source_config.SynologyEpisodesPlaylistSourceConfig':
-      $1.SynologyEpisodesPlaylistSourceConfig$json,
+      $2.SynologyEpisodesPlaylistSourceConfig$json,
   '.synctv.source_config.SynologyHomeVideosPlaylistSourceConfig':
-      $1.SynologyHomeVideosPlaylistSourceConfig$json,
+      $2.SynologyHomeVideosPlaylistSourceConfig$json,
   '.synctv.source_config.SynologyTvRecordingsPlaylistSourceConfig':
-      $1.SynologyTvRecordingsPlaylistSourceConfig$json,
+      $2.SynologyTvRecordingsPlaylistSourceConfig$json,
   '.synctv.source_config.NextcloudPlaylistSourceConfig':
-      $1.NextcloudPlaylistSourceConfig$json,
+      $2.NextcloudPlaylistSourceConfig$json,
   '.synctv.source_config.NextcloudFolderPlaylistSourceConfig':
-      $1.NextcloudFolderPlaylistSourceConfig$json,
+      $2.NextcloudFolderPlaylistSourceConfig$json,
   '.synctv.source_config.NextcloudFavoritesPlaylistSourceConfig':
-      $1.NextcloudFavoritesPlaylistSourceConfig$json,
+      $2.NextcloudFavoritesPlaylistSourceConfig$json,
   '.synctv.source_config.NextcloudSearchPlaylistSourceConfig':
-      $1.NextcloudSearchPlaylistSourceConfig$json,
+      $2.NextcloudSearchPlaylistSourceConfig$json,
   '.synctv.source_config.SeafilePlaylistSourceConfig':
-      $1.SeafilePlaylistSourceConfig$json,
+      $2.SeafilePlaylistSourceConfig$json,
   '.synctv.source_config.SeafileFolderPlaylistSourceConfig':
-      $1.SeafileFolderPlaylistSourceConfig$json,
+      $2.SeafileFolderPlaylistSourceConfig$json,
   '.synctv.source_config.SeafileStarredPlaylistSourceConfig':
-      $1.SeafileStarredPlaylistSourceConfig$json,
+      $2.SeafileStarredPlaylistSourceConfig$json,
   '.synctv.source_config.SeafileSearchPlaylistSourceConfig':
-      $1.SeafileSearchPlaylistSourceConfig$json,
+      $2.SeafileSearchPlaylistSourceConfig$json,
   '.synctv.source_config.TrueNasPlaylistSourceConfig':
-      $1.TrueNasPlaylistSourceConfig$json,
+      $2.TrueNasPlaylistSourceConfig$json,
   '.synctv.source_config.TrueNasFolderPlaylistSourceConfig':
-      $1.TrueNasFolderPlaylistSourceConfig$json,
+      $2.TrueNasFolderPlaylistSourceConfig$json,
   '.synctv.source_config.TrueNasSearchPlaylistSourceConfig':
-      $1.TrueNasSearchPlaylistSourceConfig$json,
+      $2.TrueNasSearchPlaylistSourceConfig$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig':
-      $1.YoutubePlaylistSourceConfig$json,
+      $2.YoutubePlaylistSourceConfig$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig.Playlist':
-      $1.YoutubePlaylistSourceConfig_Playlist$json,
+      $2.YoutubePlaylistSourceConfig_Playlist$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig.Channel':
-      $1.YoutubePlaylistSourceConfig_Channel$json,
+      $2.YoutubePlaylistSourceConfig_Channel$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig.Search':
-      $1.YoutubePlaylistSourceConfig_Search$json,
+      $2.YoutubePlaylistSourceConfig_Search$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig.Subscriptions':
-      $1.YoutubePlaylistSourceConfig_Subscriptions$json,
+      $2.YoutubePlaylistSourceConfig_Subscriptions$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig.LikedVideos':
-      $1.YoutubePlaylistSourceConfig_LikedVideos$json,
+      $2.YoutubePlaylistSourceConfig_LikedVideos$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig.WatchLater':
-      $1.YoutubePlaylistSourceConfig_WatchLater$json,
+      $2.YoutubePlaylistSourceConfig_WatchLater$json,
   '.synctv.source_config.TikTokPlaylistSourceConfig':
-      $1.TikTokPlaylistSourceConfig$json,
+      $2.TikTokPlaylistSourceConfig$json,
+  '.synctv.provider.bilibili.PlaylistListIntent': $0.PlaylistListIntent$json,
+  '.synctv.provider.bilibili.ListPlaylistRequest': $0.ListPlaylistRequest$json,
+  '.synctv.provider.bilibili.ListPlaylistResponse':
+      $0.ListPlaylistResponse$json,
+  '.synctv.provider.bilibili.PlaylistListItem': $0.PlaylistListItem$json,
   '.synctv.provider.bilibili.ListLiveAreasRequest':
       $0.ListLiveAreasRequest$json,
   '.synctv.provider.bilibili.ListLiveAreasResponse':
@@ -382,6 +394,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
 final $typed_data.Uint8List bilibiliProviderServiceDescriptor = $convert.base64Decode(
     'ChdCaWxpYmlsaVByb3ZpZGVyU2VydmljZRJYCgVQYXJzZRImLnN5bmN0di5wcm92aWRlci5iaW'
     'xpYmlsaS5QYXJzZVJlcXVlc3QaJy5zeW5jdHYucHJvdmlkZXIuYmlsaWJpbGkuUGFyc2VSZXNw'
+    'b25zZRJtCgxMaXN0UGxheWxpc3QSLS5zeW5jdHYucHJvdmlkZXIuYmlsaWJpbGkuTGlzdFBsYX'
+    'lsaXN0UmVxdWVzdBouLnN5bmN0di5wcm92aWRlci5iaWxpYmlsaS5MaXN0UGxheWxpc3RSZXNw'
     'b25zZRJwCg1MaXN0TGl2ZUFyZWFzEi4uc3luY3R2LnByb3ZpZGVyLmJpbGliaWxpLkxpc3RMaX'
     'ZlQXJlYXNSZXF1ZXN0Gi8uc3luY3R2LnByb3ZpZGVyLmJpbGliaWxpLkxpc3RMaXZlQXJlYXNS'
     'ZXNwb25zZRKCAQoTTGlzdEZhdm9yaXRlRm9sZGVycxI0LnN5bmN0di5wcm92aWRlci5iaWxpYm'

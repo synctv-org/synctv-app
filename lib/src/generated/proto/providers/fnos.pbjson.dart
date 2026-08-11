@@ -202,6 +202,14 @@ const ListResponse$json = {
     {'1': 'total', '3': 2, '4': 1, '5': 4, '10': 'total'},
     {'1': 'page', '3': 3, '4': 1, '5': 13, '10': 'page'},
     {'1': 'has_more', '3': 4, '4': 1, '5': 8, '10': 'hasMore'},
+    {
+      '1': 'source',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -209,7 +217,8 @@ const ListResponse$json = {
 final $typed_data.Uint8List listResponseDescriptor = $convert.base64Decode(
     'CgxMaXN0UmVzcG9uc2USOAoHY29udGVudBgBIAMoCzIeLnN5bmN0di5wcm92aWRlci5mbm9zLk'
     'ZpbGVJdGVtUgdjb250ZW50EhQKBXRvdGFsGAIgASgEUgV0b3RhbBISCgRwYWdlGAMgASgNUgRw'
-    'YWdlEhkKCGhhc19tb3JlGAQgASgIUgdoYXNNb3Jl');
+    'YWdlEhkKCGhhc19tb3JlGAQgASgIUgdoYXNNb3JlEkAKBnNvdXJjZRgFIAEoCzIoLnN5bmN0di'
+    '5wcm92aWRlci5jb21tb24uRGlzY292ZXJlZFNvdXJjZVIGc291cmNl');
 
 @$core.Deprecated('Use listMediaLibrariesRequestDescriptor instead')
 const ListMediaLibrariesRequest$json = {
@@ -341,6 +350,14 @@ const ListMediaItemsResponse$json = {
     {'1': 'total', '3': 2, '4': 1, '5': 4, '10': 'total'},
     {'1': 'page', '3': 3, '4': 1, '5': 13, '10': 'page'},
     {'1': 'has_more', '3': 4, '4': 1, '5': 8, '10': 'hasMore'},
+    {
+      '1': 'source',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -348,7 +365,8 @@ const ListMediaItemsResponse$json = {
 final $typed_data.Uint8List listMediaItemsResponseDescriptor = $convert.base64Decode(
     'ChZMaXN0TWVkaWFJdGVtc1Jlc3BvbnNlEjUKBWl0ZW1zGAEgAygLMh8uc3luY3R2LnByb3ZpZG'
     'VyLmZub3MuTWVkaWFJdGVtUgVpdGVtcxIUCgV0b3RhbBgCIAEoBFIFdG90YWwSEgoEcGFnZRgD'
-    'IAEoDVIEcGFnZRIZCghoYXNfbW9yZRgEIAEoCFIHaGFzTW9yZQ==');
+    'IAEoDVIEcGFnZRIZCghoYXNfbW9yZRgEIAEoCFIHaGFzTW9yZRJACgZzb3VyY2UYBSABKAsyKC'
+    '5zeW5jdHYucHJvdmlkZXIuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VSBnNvdXJjZQ==');
 
 @$core.Deprecated('Use mediaItemDescriptor instead')
 const MediaItem$json = {
@@ -393,6 +411,14 @@ const MediaItem$json = {
     {'1': 'is_folder', '3': 13, '4': 1, '5': 8, '10': 'isFolder'},
     {'1': 'is_playable', '3': 14, '4': 1, '5': 8, '10': 'isPlayable'},
     {'1': 'favorite', '3': 15, '4': 1, '5': 8, '10': 'favorite'},
+    {
+      '1': 'source',
+      '3': 16,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
   '8': [
     {'1': '_poster'},
@@ -412,8 +438,10 @@ final $typed_data.Uint8List mediaItemDescriptor = $convert.base64Decode(
     '9uZHMYCSABKARSD3Byb2dyZXNzU2Vjb25kcxIYCgd3YXRjaGVkGAogASgIUgd3YXRjaGVkEiMK'
     'DXNlYXNvbl9udW1iZXIYCyABKA1SDHNlYXNvbk51bWJlchIlCg5lcGlzb2RlX251bWJlchgMIA'
     'EoDVINZXBpc29kZU51bWJlchIbCglpc19mb2xkZXIYDSABKAhSCGlzRm9sZGVyEh8KC2lzX3Bs'
-    'YXlhYmxlGA4gASgIUgppc1BsYXlhYmxlEhoKCGZhdm9yaXRlGA8gASgIUghmYXZvcml0ZUIJCg'
-    'dfcG9zdGVyQg0KC19tZWRpYV9ndWlkQg4KDF9wYXJlbnRfZ3VpZEILCglfb3ZlcnZpZXc=');
+    'YXlhYmxlGA4gASgIUgppc1BsYXlhYmxlEhoKCGZhdm9yaXRlGA8gASgIUghmYXZvcml0ZRJACg'
+    'Zzb3VyY2UYECABKAsyKC5zeW5jdHYucHJvdmlkZXIuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VS'
+    'BnNvdXJjZUIJCgdfcG9zdGVyQg0KC19tZWRpYV9ndWlkQg4KDF9wYXJlbnRfZ3VpZEILCglfb3'
+    'ZlcnZpZXc=');
 
 @$core.Deprecated('Use setFavoriteRequestDescriptor instead')
 const SetFavoriteRequest$json = {
@@ -510,6 +538,14 @@ const FileItem$json = {
       '10': 'storageId',
       '17': true
     },
+    {
+      '1': 'source',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
   '8': [
     {'1': '_size'},
@@ -524,8 +560,9 @@ final $typed_data.Uint8List fileItemDescriptor = $convert.base64Decode(
     'CghGaWxlSXRlbRISCgRuYW1lGAEgASgJUgRuYW1lEhIKBHBhdGgYAiABKAlSBHBhdGgSFwoEc2'
     'l6ZRgDIAEoBEgAUgRzaXpliAEBEiQKC21vZGlmaWVkX2F0GAQgASgDSAFSCm1vZGlmaWVkQXSI'
     'AQESIgoKY3JlYXRlZF9hdBgFIAEoA0gCUgljcmVhdGVkQXSIAQESFQoGaXNfZGlyGAYgASgIUg'
-    'Vpc0RpchIiCgpzdG9yYWdlX2lkGAcgASgESANSCXN0b3JhZ2VJZIgBAUIHCgVfc2l6ZUIOCgxf'
-    'bW9kaWZpZWRfYXRCDQoLX2NyZWF0ZWRfYXRCDQoLX3N0b3JhZ2VfaWQ=');
+    'Vpc0RpchIiCgpzdG9yYWdlX2lkGAcgASgESANSCXN0b3JhZ2VJZIgBARJACgZzb3VyY2UYCCAB'
+    'KAsyKC5zeW5jdHYucHJvdmlkZXIuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VSBnNvdXJjZUIHCg'
+    'Vfc2l6ZUIOCgxfbW9kaWZpZWRfYXRCDQoLX2NyZWF0ZWRfYXRCDQoLX3N0b3JhZ2VfaWQ=');
 
 @$core.Deprecated('Use getServerInfoRequestDescriptor instead')
 const GetServerInfoRequest$json = {

@@ -100,6 +100,14 @@ const FileItem$json = {
       '5': 13,
       '10': 'preTranscodedHeights'
     },
+    {
+      '1': 'source',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -108,7 +116,8 @@ final $typed_data.Uint8List fileItemDescriptor = $convert.base64Decode(
     'CghGaWxlSXRlbRISCgRuYW1lGAEgASgJUgRuYW1lEhIKBHBhdGgYAiABKAlSBHBhdGgSFQoGaX'
     'NfZGlyGAMgASgIUgVpc0RpchISCgRzaXplGAQgASgEUgRzaXplEh8KC21vZGlmaWVkX2F0GAUg'
     'ASgEUgptb2RpZmllZEF0EhsKCWZpbGVfdHlwZRgGIAEoBFIIZmlsZVR5cGUSNAoWcHJlX3RyYW'
-    '5zY29kZWRfaGVpZ2h0cxgHIAMoDVIUcHJlVHJhbnNjb2RlZEhlaWdodHM=');
+    '5zY29kZWRfaGVpZ2h0cxgHIAMoDVIUcHJlVHJhbnNjb2RlZEhlaWdodHMSQAoGc291cmNlGAgg'
+    'ASgLMiguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use listResponseDescriptor instead')
 const ListResponse$json = {
@@ -132,6 +141,14 @@ const ListResponse$json = {
       '5': 8,
       '10': 'realtimeTranscode'
     },
+    {
+      '1': 'source',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -140,7 +157,8 @@ final $typed_data.Uint8List listResponseDescriptor = $convert.base64Decode(
     'CgxMaXN0UmVzcG9uc2USOAoHY29udGVudBgBIAMoCzIeLnN5bmN0di5wcm92aWRlci5xbmFwLk'
     'ZpbGVJdGVtUgdjb250ZW50EhQKBXRvdGFsGAIgASgEUgV0b3RhbBISCgRwYWdlGAMgASgEUgRw'
     'YWdlEhkKCGhhc19tb3JlGAQgASgIUgdoYXNNb3JlEi0KEnJlYWx0aW1lX3RyYW5zY29kZRgFIA'
-    'EoCFIRcmVhbHRpbWVUcmFuc2NvZGU=');
+    'EoCFIRcmVhbHRpbWVUcmFuc2NvZGUSQAoGc291cmNlGAYgASgLMiguc3luY3R2LnByb3ZpZGVy'
+    'LmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use getCapabilitiesRequestDescriptor instead')
 const GetCapabilitiesRequest$json = {

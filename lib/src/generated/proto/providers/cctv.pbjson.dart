@@ -37,12 +37,14 @@ const ResolveRequest$json = {
   '1': 'ResolveRequest',
   '2': [
     {'1': 'resource', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'resource'},
+    {'1': 'instance_name', '3': 2, '4': 1, '5': 9, '10': 'instanceName'},
   ],
 };
 
 /// Descriptor for `ResolveRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List resolveRequestDescriptor = $convert.base64Decode(
-    'Cg5SZXNvbHZlUmVxdWVzdBIjCghyZXNvdXJjZRgBIAEoCUIHukgEcgIQAVIIcmVzb3VyY2U=');
+    'Cg5SZXNvbHZlUmVxdWVzdBIjCghyZXNvdXJjZRgBIAEoCUIHukgEcgIQAVIIcmVzb3VyY2USIw'
+    'oNaW5zdGFuY2VfbmFtZRgCIAEoCVIMaW5zdGFuY2VOYW1l');
 
 @$core.Deprecated('Use chapterDescriptor instead')
 const Chapter$json = {
@@ -210,12 +212,12 @@ const ResolveResponse$json = {
       '10': 'streams'
     },
     {
-      '1': 'source_config',
+      '1': 'source',
       '3': 3,
       '4': 1,
       '5': 11,
-      '6': '.synctv.source_config.CctvMediaSourceConfig',
-      '10': 'sourceConfig'
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
     },
   ],
 };
@@ -224,5 +226,5 @@ const ResolveResponse$json = {
 final $typed_data.Uint8List resolveResponseDescriptor = $convert.base64Decode(
     'Cg9SZXNvbHZlUmVzcG9uc2USOgoIbWV0YWRhdGEYASABKAsyHi5zeW5jdHYucHJvdmlkZXIuY2'
     'N0di5NZXRhZGF0YVIIbWV0YWRhdGESNgoHc3RyZWFtcxgCIAMoCzIcLnN5bmN0di5wcm92aWRl'
-    'ci5jY3R2LlN0cmVhbVIHc3RyZWFtcxJQCg1zb3VyY2VfY29uZmlnGAMgASgLMisuc3luY3R2Ln'
-    'NvdXJjZV9jb25maWcuQ2N0dk1lZGlhU291cmNlQ29uZmlnUgxzb3VyY2VDb25maWc=');
+    'ci5jY3R2LlN0cmVhbVIHc3RyZWFtcxJACgZzb3VyY2UYAyABKAsyKC5zeW5jdHYucHJvdmlkZX'
+    'IuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VSBnNvdXJjZQ==');

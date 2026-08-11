@@ -41,7 +41,7 @@ void main() {
               requestedSearch = search;
               return QnapFileListPage(
                 items: path.isEmpty
-                    ? const [
+                    ? [
                         QnapFileItemInfo(
                           name: 'Multimedia',
                           path: '/Multimedia',
@@ -51,9 +51,10 @@ void main() {
                           fileType: 0,
                           preTranscodedHeights: [],
                           thumbnailUrl: '',
+                          source: testDiscoveredPlaylistSource(),
                         ),
                       ]
-                    : const [
+                    : [
                         QnapFileItemInfo(
                           name: 'Movie.mkv',
                           path: '/Multimedia/Movie.mkv',
@@ -63,12 +64,14 @@ void main() {
                           fileType: 1,
                           preTranscodedHeights: [720, 1080],
                           thumbnailUrl: '',
+                          source: testDiscoveredMediaSource(name: 'Movie.mkv'),
                         ),
                       ],
                 total: 1,
                 page: page,
                 hasMore: false,
                 realtimeTranscode: true,
+                source: testDiscoveredPlaylistSource(),
               );
             },
           ),
@@ -78,12 +81,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Multimedia'), findsOneWidget);
-    await tester.tap(find.text('Multimedia'));
+    await tester.tap(find.byKey(const ValueKey('discovery-open-/Multimedia')));
     await tester.pumpAndSettle();
 
     expect(requestedPath, '/Multimedia');
     expect(find.text('Movie.mkv'), findsOneWidget);
-    expect(find.textContaining('Ready 720p / 1080p'), findsOneWidget);
+    expect(find.textContaining('Ready: 720p / 1080p'), findsOneWidget);
     expect(find.textContaining('RTT'), findsNothing);
 
     await tester.enterText(find.byType(TextField), 'movie');

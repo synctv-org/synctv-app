@@ -12,6 +12,8 @@ import 'package:synctv_app/src/generated/proto/providers/douyin.pb.dart'
 import 'package:synctv_app/src/generated/proto/providers/douyu.pb.dart'
     as douyu;
 import 'package:synctv_app/src/generated/proto/providers/huya.pb.dart' as huya;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -24,182 +26,11 @@ import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
     as youtube;
 
 abstract interface class ProviderGateway {
-  Future<String> addAcFunMedia(
+  Future<String> addDiscoveredSource(
     String roomId, {
-    String playlistId = '',
-    required String kind,
-    required String id,
-    String? episodeQuery,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addAlistMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String password = '',
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addCctvMedia(
-    String roomId, {
-    String playlistId = '',
-    required String resource,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addCloudreveMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addDirectUrlMedia(
-    String roomId, {
-    String playlistId = '',
-    required String url,
-    required source_enum.PlaybackKind playbackKind,
-    Map<String, String> headers = const {},
-    String name = '',
-    bool preferProxy = false,
-    bool proxyOnly = false,
-  });
-
-  Future<String> addDouyuMedia(
-    String roomId, {
-    String playlistId = '',
-    required String room,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addEmbyMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String itemId,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addFnosFileMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addFnosMediaLibraryItem(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String itemGuid,
-    String mediaGuid = '',
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addHuyaMedia(
-    String roomId, {
-    String playlistId = '',
-    required String kind,
-    required String id,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addLiveProxyMedia(
-    String roomId, {
-    String playlistId = '',
-    required source_config.LiveProxyMediaSourceConfig sourceConfig,
-    String name = '',
-  });
-
-  Future<void> addMediaBatch(String roomId, List<Map<String, dynamic>> items);
-
-  Future<String> addMediaFromSourceConfig(
-    String roomId, {
-    String playlistId = '',
-    String providerInstanceName = '',
-    required source_config.MediaSourceConfig sourceConfig,
-    String name = '',
-  });
-
-  Future<String> addNextcloudMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    required int fileId,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addQnapMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addRtmpMedia(
-    String roomId, {
+    required provider_common.DiscoveredSource source,
     String playlistId = '',
     String name = '',
-    source_enum.RtmpStreamMode mode =
-        source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
-  });
-
-  Future<String> addSeafileMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String repositoryId,
-    required String path,
-    required String objectId,
-    required bool hasThumbnail,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addSynologyFileMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addSynologyLibraryMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String kind,
-    required int itemId,
-    required int fileId,
-    String name = '',
-    String providerInstanceName = '',
-  });
-
-  Future<String> addTrueNasMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
   });
 
   Future<DouyinBindInfo> bindDouyin({
@@ -232,25 +63,6 @@ abstract interface class ProviderGateway {
   Future<bilibili_enum.QRLoginStatus> checkBilibiliQrLogin(
     String key, {
     String instanceName = '',
-  });
-
-  Future<RoomPlaylistItem> createPlaylist(
-    String roomId, {
-    required String name,
-    String parentId = '',
-    String sourceProvider = '',
-    Map<String, dynamic> sourceConfig = const {},
-    String providerInstanceName = '',
-    String description = '',
-  });
-
-  Future<RoomPlaylistItem> createPlaylistFromSourceConfig(
-    String roomId, {
-    required String name,
-    required source_config.PlaylistSourceConfig sourceConfig,
-    String parentId = '',
-    String providerInstanceName = '',
-    String description = '',
   });
 
   Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
@@ -316,8 +128,9 @@ abstract interface class ProviderGateway {
   });
 
   Future<tiktok.GetUserResponse> getTikTokUser(
-    String uniqueId, {
+    String resource, {
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<AlistListPage> listAlistPage(
@@ -336,6 +149,7 @@ abstract interface class ProviderGateway {
 
   Future<List<BilibiliFavoriteFolderInfo>> listBilibiliFavoriteFolders({
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<BilibiliFollowedPgcPage> listBilibiliFollowedPgc({
@@ -343,10 +157,12 @@ abstract interface class ProviderGateway {
     int page = 1,
     int pageSize = 30,
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<List<BilibiliLiveAreaInfo>> listBilibiliLiveAreas({
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<BilibiliPgcSeasonPage> listBilibiliPgcSeasons({
@@ -360,6 +176,7 @@ abstract interface class ProviderGateway {
     String? year,
     int? styleId,
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<BilibiliPgcTimelineInfo> listBilibiliPgcTimeline({
@@ -367,6 +184,17 @@ abstract interface class ProviderGateway {
     int beforeDays = 3,
     int afterDays = 7,
     String instanceName = '',
+    bool shared = false,
+  });
+
+  Future<BilibiliPlaylistListPage> listBilibiliPlaylist(
+    BilibiliPlaylistListIntent intent, {
+    int page = 1,
+    int pageSize = 30,
+    String? cursor,
+    String search = '',
+    String instanceName = '',
+    bool shared = false,
   });
 
   Future<CloudreveListPage> listCloudrevePage(
@@ -385,10 +213,13 @@ abstract interface class ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<EmbyListPage> listEmbyPage(
-    String path, {
+    EmbyListMode mode, {
+    String targetId = '',
+    List<String> itemTypes = const [],
     String? keyword,
     int page = 1,
     int max = 20,
@@ -521,6 +352,7 @@ abstract interface class ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<TrueNasFileListPage> listTrueNasFiles(
@@ -538,20 +370,23 @@ abstract interface class ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<twitch.ListChannelItemsResponse> listTwitchChannelItems(
-    String channel, {
+    String resource, {
     required source_enum.TwitchPlaylistContent content,
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<twitch.ListFollowedLiveResponse> listTwitchFollowedLive({
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<twitch.ListScheduleResponse> listTwitchSchedule(
@@ -559,13 +394,17 @@ abstract interface class ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<twitch.ListTopCategoriesResponse> listTwitchTopCategories({
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   });
+
+  Future<youtube.ListResponse> listYoutube(youtube.ListRequest request);
 
   Future<AlistLoginInfo> loginAList(
     String host,
@@ -666,6 +505,7 @@ abstract interface class ProviderGateway {
   Future<BilibiliParseInfo> parseBilibiliInfo(
     String url, {
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<NextcloudBindInfo> pollNextcloudLoginFlow({
@@ -674,32 +514,60 @@ abstract interface class ProviderGateway {
     String instanceName = '',
   });
 
-  Future<acfun.ResolveResponse> resolveAcFun(String resource);
+  Future<provider_common.PreparedMediaSource> prepareDirectUrl(
+    provider_common.PrepareDirectUrlRequest intent,
+  );
 
-  Future<cctv.ResolveResponse> resolveCctv(String resource);
+  Future<provider_common.PreparedMediaSource> prepareLiveProxy(
+    provider_common.PrepareLiveProxyRequest intent,
+  );
 
-  Future<douyin.ResolveResponse> resolveDouyin(
+  Future<provider_common.PreparedMediaSource> prepareRtmp(
+    source_enum.RtmpStreamMode mode,
+  );
+
+  Future<acfun.ResolveResponse> resolveAcFun(
     String resource, {
     String instanceName = '',
   });
 
-  Future<douyu.ResolveResponse> resolveDouyu(String resource);
+  Future<cctv.ResolveResponse> resolveCctv(
+    String resource, {
+    String instanceName = '',
+  });
 
-  Future<huya.ResolveResponse> resolveHuya(String resource);
+  Future<douyin.ResolveResponse> resolveDouyin(
+    String resource, {
+    String instanceName = '',
+    bool shared = false,
+  });
+
+  Future<douyu.ResolveResponse> resolveDouyu(
+    String resource, {
+    String instanceName = '',
+  });
+
+  Future<huya.ResolveResponse> resolveHuya(
+    String resource, {
+    String instanceName = '',
+  });
 
   Future<tiktok.ResolveResponse> resolveTikTok(
     String resource, {
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<twitch.ResolveResponse> resolveTwitch(
     String resource, {
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<youtube.ResolveResponse> resolveYoutube(
     String resource, {
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<twitch.SearchLiveChannelsResponse> searchTwitchLiveChannels(
@@ -707,6 +575,7 @@ abstract interface class ProviderGateway {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   });
 
   Future<BilibiliSmsLoginInfo> sendBilibiliSms({

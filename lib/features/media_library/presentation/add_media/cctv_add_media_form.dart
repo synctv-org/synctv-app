@@ -7,13 +7,6 @@ import 'package:synctv_app/src/generated/proto/providers/cctv.pbenum.dart'
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 
-class CctvResourceInput {
-  const CctvResourceInput({required this.resource, required this.defaultName});
-
-  final String resource;
-  final String defaultName;
-}
-
 class CctvAddRequest {
   const CctvAddRequest({
     required this.resource,
@@ -24,37 +17,6 @@ class CctvAddRequest {
   final String resource;
   final String name;
   final String instanceName;
-}
-
-CctvResourceInput? parseCctvResource(String raw) {
-  final value = raw.trim();
-  if (RegExp(r'^[0-9a-fA-F]{32}$').hasMatch(value)) {
-    final videoId = value.toLowerCase();
-    return CctvResourceInput(resource: videoId, defaultName: videoId);
-  }
-  final uri = Uri.tryParse(value.contains('://') ? value : 'https://$value');
-  if (uri == null || !{'http', 'https'}.contains(uri.scheme.toLowerCase())) {
-    return null;
-  }
-  final host = uri.host.toLowerCase();
-  final supported =
-      host == 'ncpa-classic.com' ||
-      host == 'www.ncpa-classic.com' ||
-      const [
-        'cctv.com',
-        'cctv.cn',
-        'cntv.com',
-        'cntv.cn',
-      ].any((suffix) => host == suffix || host.endsWith('.$suffix'));
-  if (!supported) return null;
-  final name = uri.pathSegments
-      .where((segment) => segment.isNotEmpty)
-      .lastOrNull
-      ?.replaceFirst(RegExp(r'\.s?html$'), '');
-  return CctvResourceInput(
-    resource: uri.toString(),
-    defaultName: name == null || name.isEmpty ? 'CCTV' : name,
-  );
 }
 
 class CctvAddMediaForm extends StatefulWidget {
@@ -89,21 +51,27 @@ class _CctvAddMediaFormState extends State<CctvAddMediaForm> {
   @override
   void initState() {
     super.initState();
-    _resourceController.addListener(_notifyDraftChanged);
-    _nameController.addListener(_notifyDraftChanged);
+    _resourceController.addListener(_resourceChanged);
+    _nameController.addListener(_nameChanged);
   }
 
   @override
   void dispose() {
-    _resourceController.removeListener(_notifyDraftChanged);
-    _nameController.removeListener(_notifyDraftChanged);
+    _resourceController.removeListener(_resourceChanged);
+    _nameController.removeListener(_nameChanged);
     _resourceController.dispose();
     _nameController.dispose();
     super.dispose();
   }
 
-  void _notifyDraftChanged() {
+  void _resourceChanged() {
     _resolved = null;
+    _notifyDraftChanged();
+  }
+
+  void _nameChanged() => _notifyDraftChanged();
+
+  void _notifyDraftChanged() {
     widget.onDraftChanged?.call(
       _resourceController.text.trim().isNotEmpty ||
           _nameController.text.trim().isNotEmpty,
@@ -122,7 +90,7 @@ class _CctvAddMediaFormState extends State<CctvAddMediaForm> {
         children: [
           AppTextField(
             key: const Key('cctv-resource'),
-            label: 'CCTV URL / Video ID',
+            label: context.l10n.cctvUrlOrVideoId,
             controller: _resourceController,
             prefixIcon: Icons.link_rounded,
             keyboardType: TextInputType.url,
@@ -157,7 +125,10 @@ class _CctvAddMediaFormState extends State<CctvAddMediaForm> {
                 .toList(),
             onChanged: _loading
                 ? null
-                : (value) => setState(() => _instanceName = value ?? ''),
+                : (value) => setState(() {
+                    _instanceName = value ?? '';
+                    _resolved = null;
+                  }),
           ),
           if (_preview() case final preview?) ...[
             const SizedBox(height: 12),
@@ -173,12 +144,12 @@ class _CctvAddMediaFormState extends State<CctvAddMediaForm> {
                     ? null
                     : _loadPreview,
                 icon: const Icon(Icons.preview_outlined),
-                label: const Text('Preview'),
+                label: Text(context.l10n.preview),
               ),
               const SizedBox(width: 10),
               FilledButton.icon(
                 key: const Key('cctv-submit'),
-                onPressed: _loading || _resourceController.text.trim().isEmpty
+                onPressed: _loading || _resolved?.hasSource() != true
                     ? null
                     : _submit,
                 icon: _loading
@@ -190,7 +161,7 @@ class _CctvAddMediaFormState extends State<CctvAddMediaForm> {
                         ),
                       )
                     : const Icon(Icons.add),
-                label: const Text('Add media'),
+                label: Text(context.l10n.addMedia),
               ),
             ],
           ),
@@ -273,7 +244,10 @@ class _CctvAddMediaFormState extends State<CctvAddMediaForm> {
       final resource = _resourceController.text.trim();
       _resolved =
           await (widget.onResolve?.call(resource) ??
-              providerGateway.resolveCctv(resource));
+              providerGateway.resolveCctv(
+                resource,
+                instanceName: _instanceName,
+              ));
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
     } finally {
@@ -282,30 +256,26 @@ class _CctvAddMediaFormState extends State<CctvAddMediaForm> {
   }
 
   Future<void> _submit() async {
-    final parsed = parseCctvResource(_resourceController.text);
-    if (parsed == null) {
-      AppNotifications.showError(context, 'Invalid CCTV URL or video ID');
+    final resolved = _resolved;
+    if (resolved == null) {
+      AppNotifications.showError(context, context.l10n.previewSourceFirst);
       return;
     }
     setState(() => _loading = true);
     try {
       final request = CctvAddRequest(
-        resource: parsed.resource,
+        resource: _resourceController.text.trim(),
         name: _nameController.text.trim(),
         instanceName: _instanceName,
       );
       if (widget.onSubmit case final submit?) {
         await submit(request);
       } else {
-        final resolved =
-            _resolved ?? await providerGateway.resolveCctv(request.resource);
-        final source = resolved.sourceConfig;
-        await providerGateway.addCctvMedia(
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
           playlistId: widget.playlistId,
-          resource: source.resource,
+          source: resolved.source,
           name: request.name.isEmpty ? resolved.metadata.title : request.name,
-          providerInstanceName: request.instanceName,
         );
       }
       if (!mounted) return;
@@ -313,7 +283,7 @@ class _CctvAddMediaFormState extends State<CctvAddMediaForm> {
       _nameController.clear();
       _resolved = null;
       widget.onDraftChanged?.call(false);
-      AppNotifications.showSuccess(context, 'CCTV source added');
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
       if (mounted) {

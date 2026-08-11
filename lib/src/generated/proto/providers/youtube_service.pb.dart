@@ -40,4 +40,8 @@ class YoutubeProviderServiceApi {
           $pb.ClientContext? ctx, $0.ResolveRequest request) =>
       _client.invoke<$0.ResolveResponse>(ctx, 'YoutubeProviderService',
           'Resolve', request, $0.ResolveResponse());
+  $async.Future<$0.ListResponse> list(
+          $pb.ClientContext? ctx, $0.ListRequest request) =>
+      _client.invoke<$0.ListResponse>(
+          ctx, 'YoutubeProviderService', 'List', request, $0.ListResponse());
 }

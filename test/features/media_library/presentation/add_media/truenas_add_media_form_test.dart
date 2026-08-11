@@ -39,7 +39,7 @@ void main() {
               requestedSearch = search;
               return TrueNasFileListPage(
                 items: path == '/mnt'
-                    ? const [
+                    ? [
                         TrueNasFileItemInfo(
                           name: 'tank',
                           path: '/mnt/tank',
@@ -57,9 +57,10 @@ void main() {
                           attributes: [],
                           extendedAttributes: [],
                           zfsAttributes: [],
+                          source: testDiscoveredPlaylistSource(),
                         ),
                       ]
-                    : const [
+                    : [
                         TrueNasFileItemInfo(
                           name: 'Movie.mkv',
                           path: '/mnt/tank/Movie.mkv',
@@ -77,11 +78,13 @@ void main() {
                           attributes: [],
                           extendedAttributes: [],
                           zfsAttributes: [],
+                          source: testDiscoveredMediaSource(name: 'Movie.mkv'),
                         ),
                       ],
                 total: 1,
                 page: page,
                 hasMore: false,
+                source: testDiscoveredPlaylistSource(),
               );
             },
           ),
@@ -90,13 +93,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('tank'));
+    await tester.tap(find.byKey(const ValueKey('discovery-open-/mnt/tank')));
     await tester.pumpAndSettle();
     expect(requestedPath, '/mnt/tank');
     expect(find.text('Movie.mkv'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'movie');
-    await tester.tap(byAppTooltip('搜索'));
+    await tester.tap(byAppTooltip('Search'));
     await tester.pumpAndSettle();
     expect(requestedSearch, 'movie');
   });

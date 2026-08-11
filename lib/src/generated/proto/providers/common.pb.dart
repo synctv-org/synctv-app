@@ -15,12 +15,793 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../source_config.pbenum.dart' as $0;
+import '../source_config.pb.dart' as $0;
 import 'common.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 export 'common.pbenum.dart';
+
+enum DiscoveredSource_SourceConfig { media, playlist, notSet }
+
+/// A source prepared by the server during provider discovery. Clients submit
+/// this value unchanged to AddMedia or CreatePlaylist.
+class DiscoveredSource extends $pb.GeneratedMessage {
+  factory DiscoveredSource({
+    $0.MediaSourceConfig? media,
+    $0.PlaylistSourceConfig? playlist,
+    $core.String? providerInstanceName,
+  }) {
+    final result = create();
+    if (media != null) result.media = media;
+    if (playlist != null) result.playlist = playlist;
+    if (providerInstanceName != null)
+      result.providerInstanceName = providerInstanceName;
+    return result;
+  }
+
+  DiscoveredSource._();
+
+  factory DiscoveredSource.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DiscoveredSource.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, DiscoveredSource_SourceConfig>
+      _DiscoveredSource_SourceConfigByTag = {
+    1: DiscoveredSource_SourceConfig.media,
+    2: DiscoveredSource_SourceConfig.playlist,
+    0: DiscoveredSource_SourceConfig.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DiscoveredSource',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOM<$0.MediaSourceConfig>(1, _omitFieldNames ? '' : 'media',
+        subBuilder: $0.MediaSourceConfig.create)
+    ..aOM<$0.PlaylistSourceConfig>(2, _omitFieldNames ? '' : 'playlist',
+        subBuilder: $0.PlaylistSourceConfig.create)
+    ..aOS(3, _omitFieldNames ? '' : 'providerInstanceName')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DiscoveredSource clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DiscoveredSource copyWith(void Function(DiscoveredSource) updates) =>
+      super.copyWith((message) => updates(message as DiscoveredSource))
+          as DiscoveredSource;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DiscoveredSource create() => DiscoveredSource._();
+  @$core.override
+  DiscoveredSource createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DiscoveredSource getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DiscoveredSource>(create);
+  static DiscoveredSource? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  DiscoveredSource_SourceConfig whichSourceConfig() =>
+      _DiscoveredSource_SourceConfigByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearSourceConfig() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $0.MediaSourceConfig get media => $_getN(0);
+  @$pb.TagNumber(1)
+  set media($0.MediaSourceConfig value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMedia() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMedia() => $_clearField(1);
+  @$pb.TagNumber(1)
+  $0.MediaSourceConfig ensureMedia() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $0.PlaylistSourceConfig get playlist => $_getN(1);
+  @$pb.TagNumber(2)
+  set playlist($0.PlaylistSourceConfig value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPlaylist() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPlaylist() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $0.PlaylistSourceConfig ensurePlaylist() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $core.String get providerInstanceName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set providerInstanceName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasProviderInstanceName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearProviderInstanceName() => $_clearField(3);
+}
+
+class PreparedMediaSource extends $pb.GeneratedMessage {
+  factory PreparedMediaSource({
+    DiscoveredSource? source,
+    $core.String? suggestedName,
+    $0.PlaybackKind? playbackKind,
+  }) {
+    final result = create();
+    if (source != null) result.source = source;
+    if (suggestedName != null) result.suggestedName = suggestedName;
+    if (playbackKind != null) result.playbackKind = playbackKind;
+    return result;
+  }
+
+  PreparedMediaSource._();
+
+  factory PreparedMediaSource.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PreparedMediaSource.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PreparedMediaSource',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..aOM<DiscoveredSource>(1, _omitFieldNames ? '' : 'source',
+        subBuilder: DiscoveredSource.create)
+    ..aOS(2, _omitFieldNames ? '' : 'suggestedName')
+    ..aE<$0.PlaybackKind>(3, _omitFieldNames ? '' : 'playbackKind',
+        enumValues: $0.PlaybackKind.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PreparedMediaSource clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PreparedMediaSource copyWith(void Function(PreparedMediaSource) updates) =>
+      super.copyWith((message) => updates(message as PreparedMediaSource))
+          as PreparedMediaSource;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PreparedMediaSource create() => PreparedMediaSource._();
+  @$core.override
+  PreparedMediaSource createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PreparedMediaSource getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PreparedMediaSource>(create);
+  static PreparedMediaSource? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  DiscoveredSource get source => $_getN(0);
+  @$pb.TagNumber(1)
+  set source(DiscoveredSource value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSource() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSource() => $_clearField(1);
+  @$pb.TagNumber(1)
+  DiscoveredSource ensureSource() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.String get suggestedName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set suggestedName($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSuggestedName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSuggestedName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $0.PlaybackKind get playbackKind => $_getN(2);
+  @$pb.TagNumber(3)
+  set playbackKind($0.PlaybackKind value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPlaybackKind() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPlaybackKind() => $_clearField(3);
+}
+
+class PrepareDirectUrlRequest extends $pb.GeneratedMessage {
+  factory PrepareDirectUrlRequest({
+    $core.String? url,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? headers,
+    $0.PlaybackKind? playbackKind,
+    $0.PlaybackProxyMode? proxyMode,
+    $fixnum.Int64? expiresAt,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    if (headers != null) result.headers.addEntries(headers);
+    if (playbackKind != null) result.playbackKind = playbackKind;
+    if (proxyMode != null) result.proxyMode = proxyMode;
+    if (expiresAt != null) result.expiresAt = expiresAt;
+    return result;
+  }
+
+  PrepareDirectUrlRequest._();
+
+  factory PrepareDirectUrlRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PrepareDirectUrlRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PrepareDirectUrlRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..m<$core.String, $core.String>(2, _omitFieldNames ? '' : 'headers',
+        entryClassName: 'PrepareDirectUrlRequest.HeadersEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('synctv.provider.common'))
+    ..aE<$0.PlaybackKind>(3, _omitFieldNames ? '' : 'playbackKind',
+        enumValues: $0.PlaybackKind.values)
+    ..aE<$0.PlaybackProxyMode>(4, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: $0.PlaybackProxyMode.values)
+    ..aInt64(6, _omitFieldNames ? '' : 'expiresAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareDirectUrlRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareDirectUrlRequest copyWith(
+          void Function(PrepareDirectUrlRequest) updates) =>
+      super.copyWith((message) => updates(message as PrepareDirectUrlRequest))
+          as PrepareDirectUrlRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PrepareDirectUrlRequest create() => PrepareDirectUrlRequest._();
+  @$core.override
+  PrepareDirectUrlRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PrepareDirectUrlRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PrepareDirectUrlRequest>(create);
+  static PrepareDirectUrlRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbMap<$core.String, $core.String> get headers => $_getMap(1);
+
+  @$pb.TagNumber(3)
+  $0.PlaybackKind get playbackKind => $_getN(2);
+  @$pb.TagNumber(3)
+  set playbackKind($0.PlaybackKind value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPlaybackKind() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPlaybackKind() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $0.PlaybackProxyMode get proxyMode => $_getN(3);
+  @$pb.TagNumber(4)
+  set proxyMode($0.PlaybackProxyMode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasProxyMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProxyMode() => $_clearField(4);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get expiresAt => $_getI64(4);
+  @$pb.TagNumber(6)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(6)
+  $core.bool hasExpiresAt() => $_has(4);
+  @$pb.TagNumber(6)
+  void clearExpiresAt() => $_clearField(6);
+}
+
+class PrepareRtmpPullIntent extends $pb.GeneratedMessage {
+  factory PrepareRtmpPullIntent({
+    $core.String? url,
+    $0.RtmpStreamMode? mode,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    if (mode != null) result.mode = mode;
+    return result;
+  }
+
+  PrepareRtmpPullIntent._();
+
+  factory PrepareRtmpPullIntent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PrepareRtmpPullIntent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PrepareRtmpPullIntent',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..aE<$0.RtmpStreamMode>(2, _omitFieldNames ? '' : 'mode',
+        enumValues: $0.RtmpStreamMode.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareRtmpPullIntent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareRtmpPullIntent copyWith(
+          void Function(PrepareRtmpPullIntent) updates) =>
+      super.copyWith((message) => updates(message as PrepareRtmpPullIntent))
+          as PrepareRtmpPullIntent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PrepareRtmpPullIntent create() => PrepareRtmpPullIntent._();
+  @$core.override
+  PrepareRtmpPullIntent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PrepareRtmpPullIntent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PrepareRtmpPullIntent>(create);
+  static PrepareRtmpPullIntent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $0.RtmpStreamMode get mode => $_getN(1);
+  @$pb.TagNumber(2)
+  set mode($0.RtmpStreamMode value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMode() => $_clearField(2);
+}
+
+enum PrepareRtspTrackIntent_Mode { firstCompatible, index_, disabled, notSet }
+
+class PrepareRtspTrackIntent extends $pb.GeneratedMessage {
+  factory PrepareRtspTrackIntent({
+    $core.bool? firstCompatible,
+    $core.int? index,
+    $core.bool? disabled,
+  }) {
+    final result = create();
+    if (firstCompatible != null) result.firstCompatible = firstCompatible;
+    if (index != null) result.index = index;
+    if (disabled != null) result.disabled = disabled;
+    return result;
+  }
+
+  PrepareRtspTrackIntent._();
+
+  factory PrepareRtspTrackIntent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PrepareRtspTrackIntent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, PrepareRtspTrackIntent_Mode>
+      _PrepareRtspTrackIntent_ModeByTag = {
+    1: PrepareRtspTrackIntent_Mode.firstCompatible,
+    2: PrepareRtspTrackIntent_Mode.index_,
+    3: PrepareRtspTrackIntent_Mode.disabled,
+    0: PrepareRtspTrackIntent_Mode.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PrepareRtspTrackIntent',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3])
+    ..aOB(1, _omitFieldNames ? '' : 'firstCompatible')
+    ..aI(2, _omitFieldNames ? '' : 'index', fieldType: $pb.PbFieldType.OU3)
+    ..aOB(3, _omitFieldNames ? '' : 'disabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareRtspTrackIntent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareRtspTrackIntent copyWith(
+          void Function(PrepareRtspTrackIntent) updates) =>
+      super.copyWith((message) => updates(message as PrepareRtspTrackIntent))
+          as PrepareRtspTrackIntent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PrepareRtspTrackIntent create() => PrepareRtspTrackIntent._();
+  @$core.override
+  PrepareRtspTrackIntent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PrepareRtspTrackIntent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PrepareRtspTrackIntent>(create);
+  static PrepareRtspTrackIntent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  PrepareRtspTrackIntent_Mode whichMode() =>
+      _PrepareRtspTrackIntent_ModeByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  void clearMode() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.bool get firstCompatible => $_getBF(0);
+  @$pb.TagNumber(1)
+  set firstCompatible($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFirstCompatible() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFirstCompatible() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get index => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set index($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIndex() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIndex() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get disabled => $_getBF(2);
+  @$pb.TagNumber(3)
+  set disabled($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDisabled() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDisabled() => $_clearField(3);
+}
+
+class PrepareRtspPullIntent extends $pb.GeneratedMessage {
+  factory PrepareRtspPullIntent({
+    $core.String? url,
+    $0.RtspTransport? transport,
+    PrepareRtspTrackIntent? videoTrack,
+    PrepareRtspTrackIntent? audioTrack,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    if (transport != null) result.transport = transport;
+    if (videoTrack != null) result.videoTrack = videoTrack;
+    if (audioTrack != null) result.audioTrack = audioTrack;
+    return result;
+  }
+
+  PrepareRtspPullIntent._();
+
+  factory PrepareRtspPullIntent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PrepareRtspPullIntent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PrepareRtspPullIntent',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..aE<$0.RtspTransport>(2, _omitFieldNames ? '' : 'transport',
+        enumValues: $0.RtspTransport.values)
+    ..aOM<PrepareRtspTrackIntent>(3, _omitFieldNames ? '' : 'videoTrack',
+        subBuilder: PrepareRtspTrackIntent.create)
+    ..aOM<PrepareRtspTrackIntent>(4, _omitFieldNames ? '' : 'audioTrack',
+        subBuilder: PrepareRtspTrackIntent.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareRtspPullIntent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareRtspPullIntent copyWith(
+          void Function(PrepareRtspPullIntent) updates) =>
+      super.copyWith((message) => updates(message as PrepareRtspPullIntent))
+          as PrepareRtspPullIntent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PrepareRtspPullIntent create() => PrepareRtspPullIntent._();
+  @$core.override
+  PrepareRtspPullIntent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PrepareRtspPullIntent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PrepareRtspPullIntent>(create);
+  static PrepareRtspPullIntent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $0.RtspTransport get transport => $_getN(1);
+  @$pb.TagNumber(2)
+  set transport($0.RtspTransport value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTransport() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTransport() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  PrepareRtspTrackIntent get videoTrack => $_getN(2);
+  @$pb.TagNumber(3)
+  set videoTrack(PrepareRtspTrackIntent value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasVideoTrack() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVideoTrack() => $_clearField(3);
+  @$pb.TagNumber(3)
+  PrepareRtspTrackIntent ensureVideoTrack() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  PrepareRtspTrackIntent get audioTrack => $_getN(3);
+  @$pb.TagNumber(4)
+  set audioTrack(PrepareRtspTrackIntent value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAudioTrack() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAudioTrack() => $_clearField(4);
+  @$pb.TagNumber(4)
+  PrepareRtspTrackIntent ensureAudioTrack() => $_ensure(3);
+}
+
+class PrepareHttpFlvPullIntent extends $pb.GeneratedMessage {
+  factory PrepareHttpFlvPullIntent({
+    $core.String? url,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    return result;
+  }
+
+  PrepareHttpFlvPullIntent._();
+
+  factory PrepareHttpFlvPullIntent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PrepareHttpFlvPullIntent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PrepareHttpFlvPullIntent',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareHttpFlvPullIntent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareHttpFlvPullIntent copyWith(
+          void Function(PrepareHttpFlvPullIntent) updates) =>
+      super.copyWith((message) => updates(message as PrepareHttpFlvPullIntent))
+          as PrepareHttpFlvPullIntent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PrepareHttpFlvPullIntent create() => PrepareHttpFlvPullIntent._();
+  @$core.override
+  PrepareHttpFlvPullIntent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PrepareHttpFlvPullIntent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PrepareHttpFlvPullIntent>(create);
+  static PrepareHttpFlvPullIntent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+}
+
+enum PrepareLiveProxyRequest_Source { rtmp, rtsp, httpFlv, notSet }
+
+class PrepareLiveProxyRequest extends $pb.GeneratedMessage {
+  factory PrepareLiveProxyRequest({
+    PrepareRtmpPullIntent? rtmp,
+    PrepareRtspPullIntent? rtsp,
+    PrepareHttpFlvPullIntent? httpFlv,
+  }) {
+    final result = create();
+    if (rtmp != null) result.rtmp = rtmp;
+    if (rtsp != null) result.rtsp = rtsp;
+    if (httpFlv != null) result.httpFlv = httpFlv;
+    return result;
+  }
+
+  PrepareLiveProxyRequest._();
+
+  factory PrepareLiveProxyRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PrepareLiveProxyRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, PrepareLiveProxyRequest_Source>
+      _PrepareLiveProxyRequest_SourceByTag = {
+    1: PrepareLiveProxyRequest_Source.rtmp,
+    2: PrepareLiveProxyRequest_Source.rtsp,
+    3: PrepareLiveProxyRequest_Source.httpFlv,
+    0: PrepareLiveProxyRequest_Source.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PrepareLiveProxyRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3])
+    ..aOM<PrepareRtmpPullIntent>(1, _omitFieldNames ? '' : 'rtmp',
+        subBuilder: PrepareRtmpPullIntent.create)
+    ..aOM<PrepareRtspPullIntent>(2, _omitFieldNames ? '' : 'rtsp',
+        subBuilder: PrepareRtspPullIntent.create)
+    ..aOM<PrepareHttpFlvPullIntent>(3, _omitFieldNames ? '' : 'httpFlv',
+        subBuilder: PrepareHttpFlvPullIntent.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareLiveProxyRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareLiveProxyRequest copyWith(
+          void Function(PrepareLiveProxyRequest) updates) =>
+      super.copyWith((message) => updates(message as PrepareLiveProxyRequest))
+          as PrepareLiveProxyRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PrepareLiveProxyRequest create() => PrepareLiveProxyRequest._();
+  @$core.override
+  PrepareLiveProxyRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PrepareLiveProxyRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PrepareLiveProxyRequest>(create);
+  static PrepareLiveProxyRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  PrepareLiveProxyRequest_Source whichSource() =>
+      _PrepareLiveProxyRequest_SourceByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  void clearSource() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  PrepareRtmpPullIntent get rtmp => $_getN(0);
+  @$pb.TagNumber(1)
+  set rtmp(PrepareRtmpPullIntent value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRtmp() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRtmp() => $_clearField(1);
+  @$pb.TagNumber(1)
+  PrepareRtmpPullIntent ensureRtmp() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  PrepareRtspPullIntent get rtsp => $_getN(1);
+  @$pb.TagNumber(2)
+  set rtsp(PrepareRtspPullIntent value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRtsp() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRtsp() => $_clearField(2);
+  @$pb.TagNumber(2)
+  PrepareRtspPullIntent ensureRtsp() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  PrepareHttpFlvPullIntent get httpFlv => $_getN(2);
+  @$pb.TagNumber(3)
+  set httpFlv(PrepareHttpFlvPullIntent value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasHttpFlv() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearHttpFlv() => $_clearField(3);
+  @$pb.TagNumber(3)
+  PrepareHttpFlvPullIntent ensureHttpFlv() => $_ensure(2);
+}
+
+class PrepareRtmpRequest extends $pb.GeneratedMessage {
+  factory PrepareRtmpRequest({
+    $0.RtmpStreamMode? mode,
+  }) {
+    final result = create();
+    if (mode != null) result.mode = mode;
+    return result;
+  }
+
+  PrepareRtmpRequest._();
+
+  factory PrepareRtmpRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PrepareRtmpRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PrepareRtmpRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..aE<$0.RtmpStreamMode>(1, _omitFieldNames ? '' : 'mode',
+        enumValues: $0.RtmpStreamMode.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareRtmpRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareRtmpRequest copyWith(void Function(PrepareRtmpRequest) updates) =>
+      super.copyWith((message) => updates(message as PrepareRtmpRequest))
+          as PrepareRtmpRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PrepareRtmpRequest create() => PrepareRtmpRequest._();
+  @$core.override
+  PrepareRtmpRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PrepareRtmpRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PrepareRtmpRequest>(create);
+  static PrepareRtmpRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $0.RtmpStreamMode get mode => $_getN(0);
+  @$pb.TagNumber(1)
+  set mode($0.RtmpStreamMode value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMode() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMode() => $_clearField(1);
+}
 
 class ProviderInstanceQuery extends $pb.GeneratedMessage {
   factory ProviderInstanceQuery({

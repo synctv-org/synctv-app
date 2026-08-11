@@ -15,6 +15,7 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $0;
 import 'synology.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -329,6 +330,7 @@ class FileItem extends $pb.GeneratedMessage {
     $fixnum.Int64? modifiedAt,
     $fixnum.Int64? createdAt,
     $core.String? fileType,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -338,6 +340,7 @@ class FileItem extends $pb.GeneratedMessage {
     if (modifiedAt != null) result.modifiedAt = modifiedAt;
     if (createdAt != null) result.createdAt = createdAt;
     if (fileType != null) result.fileType = fileType;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -367,6 +370,8 @@ class FileItem extends $pb.GeneratedMessage {
         6, _omitFieldNames ? '' : 'createdAt', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(7, _omitFieldNames ? '' : 'fileType')
+    ..aOM<$0.DiscoveredSource>(8, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -449,6 +454,17 @@ class FileItem extends $pb.GeneratedMessage {
   $core.bool hasFileType() => $_has(6);
   @$pb.TagNumber(7)
   void clearFileType() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource get source => $_getN(7);
+  @$pb.TagNumber(8)
+  set source($0.DiscoveredSource value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSource() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSource() => $_clearField(8);
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource ensureSource() => $_ensure(7);
 }
 
 class ListFilesResponse extends $pb.GeneratedMessage {
@@ -457,12 +473,14 @@ class ListFilesResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? total,
     $fixnum.Int64? page,
     $core.bool? hasMore,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (total != null) result.total = total;
     if (page != null) result.page = page;
     if (hasMore != null) result.hasMore = hasMore;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -487,6 +505,8 @@ class ListFilesResponse extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'page', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOB(4, _omitFieldNames ? '' : 'hasMore')
+    ..aOM<$0.DiscoveredSource>(5, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -537,6 +557,17 @@ class ListFilesResponse extends $pb.GeneratedMessage {
   $core.bool hasHasMore() => $_has(3);
   @$pb.TagNumber(4)
   void clearHasMore() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource get source => $_getN(4);
+  @$pb.TagNumber(5)
+  set source($0.DiscoveredSource value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSource() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSource() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource ensureSource() => $_ensure(4);
 }
 
 class ListLibrariesRequest extends $pb.GeneratedMessage {
@@ -1644,6 +1675,7 @@ class VideoItem extends $pb.GeneratedMessage {
     $core.String? posterMtime,
     $core.String? backdropMtime,
     $core.Iterable<VideoFile>? files,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -1671,6 +1703,7 @@ class VideoItem extends $pb.GeneratedMessage {
     if (posterMtime != null) result.posterMtime = posterMtime;
     if (backdropMtime != null) result.backdropMtime = backdropMtime;
     if (files != null) result.files.addAll(files);
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1714,6 +1747,8 @@ class VideoItem extends $pb.GeneratedMessage {
     ..aOS(23, _omitFieldNames ? '' : 'backdropMtime')
     ..pPM<VideoFile>(24, _omitFieldNames ? '' : 'files',
         subBuilder: VideoFile.create)
+    ..aOM<$0.DiscoveredSource>(25, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1919,6 +1954,17 @@ class VideoItem extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(24)
   $pb.PbList<VideoFile> get files => $_getList(23);
+
+  @$pb.TagNumber(25)
+  $0.DiscoveredSource get source => $_getN(24);
+  @$pb.TagNumber(25)
+  set source($0.DiscoveredSource value) => $_setField(25, value);
+  @$pb.TagNumber(25)
+  $core.bool hasSource() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearSource() => $_clearField(25);
+  @$pb.TagNumber(25)
+  $0.DiscoveredSource ensureSource() => $_ensure(24);
 }
 
 class ListVideoItemsResponse extends $pb.GeneratedMessage {
@@ -1927,12 +1973,14 @@ class ListVideoItemsResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? total,
     $fixnum.Int64? page,
     $core.bool? hasMore,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (total != null) result.total = total;
     if (page != null) result.page = page;
     if (hasMore != null) result.hasMore = hasMore;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1957,6 +2005,8 @@ class ListVideoItemsResponse extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'page', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOB(4, _omitFieldNames ? '' : 'hasMore')
+    ..aOM<$0.DiscoveredSource>(5, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2008,6 +2058,17 @@ class ListVideoItemsResponse extends $pb.GeneratedMessage {
   $core.bool hasHasMore() => $_has(3);
   @$pb.TagNumber(4)
   void clearHasMore() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource get source => $_getN(4);
+  @$pb.TagNumber(5)
+  set source($0.DiscoveredSource value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSource() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSource() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource ensureSource() => $_ensure(4);
 }
 
 class LogoutRequest extends $pb.GeneratedMessage {

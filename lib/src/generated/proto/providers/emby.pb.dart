@@ -15,7 +15,12 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $0;
+import 'emby.pbenum.dart';
+
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+export 'emby.pbenum.dart';
 
 enum LoginRequest_Credential { password, apiKey, notSet }
 
@@ -230,23 +235,27 @@ class LoginResponse extends $pb.GeneratedMessage {
   void clearServerId() => $_clearField(4);
 }
 
-/// List items request
+/// List items request. The backend maps this discovery intent to a source config.
 class ListRequest extends $pb.GeneratedMessage {
   factory ListRequest({
     $core.String? serverId,
-    $core.String? path,
+    ListMode? mode,
     $fixnum.Int64? startIndex,
     $fixnum.Int64? limit,
     $core.String? searchTerm,
     $core.String? instanceName,
+    $core.String? targetId,
+    $core.Iterable<$core.String>? itemTypes,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
-    if (path != null) result.path = path;
+    if (mode != null) result.mode = mode;
     if (startIndex != null) result.startIndex = startIndex;
     if (limit != null) result.limit = limit;
     if (searchTerm != null) result.searchTerm = searchTerm;
     if (instanceName != null) result.instanceName = instanceName;
+    if (targetId != null) result.targetId = targetId;
+    if (itemTypes != null) result.itemTypes.addAll(itemTypes);
     return result;
   }
 
@@ -265,7 +274,8 @@ class ListRequest extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.provider.emby'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
-    ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..aE<ListMode>(2, _omitFieldNames ? '' : 'mode',
+        enumValues: ListMode.values)
     ..a<$fixnum.Int64>(
         3, _omitFieldNames ? '' : 'startIndex', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
@@ -273,6 +283,8 @@ class ListRequest extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(5, _omitFieldNames ? '' : 'searchTerm')
     ..aOS(6, _omitFieldNames ? '' : 'instanceName')
+    ..aOS(7, _omitFieldNames ? '' : 'targetId')
+    ..pPS(8, _omitFieldNames ? '' : 'itemTypes')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -304,13 +316,13 @@ class ListRequest extends $pb.GeneratedMessage {
   void clearServerId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get path => $_getSZ(1);
+  ListMode get mode => $_getN(1);
   @$pb.TagNumber(2)
-  set path($core.String value) => $_setString(1, value);
+  set mode(ListMode value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasPath() => $_has(1);
+  $core.bool hasMode() => $_has(1);
   @$pb.TagNumber(2)
-  void clearPath() => $_clearField(2);
+  void clearMode() => $_clearField(2);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get startIndex => $_getI64(2);
@@ -347,6 +359,18 @@ class ListRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(5);
   @$pb.TagNumber(6)
   void clearInstanceName() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get targetId => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set targetId($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasTargetId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearTargetId() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $pb.PbList<$core.String> get itemTypes => $_getList(7);
 }
 
 /// List items response
@@ -354,10 +378,12 @@ class ListResponse extends $pb.GeneratedMessage {
   factory ListResponse({
     $core.Iterable<MediaItem>? items,
     $fixnum.Int64? total,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (total != null) result.total = total;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -379,6 +405,8 @@ class ListResponse extends $pb.GeneratedMessage {
         subBuilder: MediaItem.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'total', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<$0.DiscoveredSource>(3, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -411,6 +439,17 @@ class ListResponse extends $pb.GeneratedMessage {
   $core.bool hasTotal() => $_has(1);
   @$pb.TagNumber(2)
   void clearTotal() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $0.DiscoveredSource get source => $_getN(2);
+  @$pb.TagNumber(3)
+  set source($0.DiscoveredSource value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSource() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSource() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $0.DiscoveredSource ensureSource() => $_ensure(2);
 }
 
 /// Media item information
@@ -425,6 +464,8 @@ class MediaItem extends $pb.GeneratedMessage {
     $core.String? seasonName,
     $core.String? thumbnail,
     $core.String? description,
+    $core.bool? isContainer,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -436,6 +477,8 @@ class MediaItem extends $pb.GeneratedMessage {
     if (seasonName != null) result.seasonName = seasonName;
     if (thumbnail != null) result.thumbnail = thumbnail;
     if (description != null) result.description = description;
+    if (isContainer != null) result.isContainer = isContainer;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -462,6 +505,9 @@ class MediaItem extends $pb.GeneratedMessage {
     ..aOS(7, _omitFieldNames ? '' : 'seasonName')
     ..aOS(8, _omitFieldNames ? '' : 'thumbnail')
     ..aOS(9, _omitFieldNames ? '' : 'description')
+    ..aOB(10, _omitFieldNames ? '' : 'isContainer')
+    ..aOM<$0.DiscoveredSource>(11, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -562,6 +608,26 @@ class MediaItem extends $pb.GeneratedMessage {
   $core.bool hasDescription() => $_has(8);
   @$pb.TagNumber(9)
   void clearDescription() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.bool get isContainer => $_getBF(9);
+  @$pb.TagNumber(10)
+  set isContainer($core.bool value) => $_setBool(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasIsContainer() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearIsContainer() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $0.DiscoveredSource get source => $_getN(10);
+  @$pb.TagNumber(11)
+  set source($0.DiscoveredSource value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasSource() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearSource() => $_clearField(11);
+  @$pb.TagNumber(11)
+  $0.DiscoveredSource ensureSource() => $_ensure(10);
 }
 
 /// Get user info request

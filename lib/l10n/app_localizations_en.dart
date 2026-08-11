@@ -1379,18 +1379,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get defaultsToFileName => 'Defaults to the file name';
 
   @override
-  String get preferProxyPlayback => 'Use proxy playback by default';
+  String get playbackProxyMode => 'Playback route';
 
   @override
-  String get proxyPlaybackDescription =>
-      'The SyncTV server forwards media requests';
+  String get playbackProxyAuto => 'Automatic';
 
   @override
-  String get proxyOnlyPlayback => 'Proxy playback only';
+  String get playbackProxyPrefer => 'Prefer proxy';
 
   @override
-  String get proxyOnlyPlaybackDescription =>
-      'Route every media request through the SyncTV server proxy';
+  String get playbackProxyOnly => 'Proxy only';
+
+  @override
+  String get playbackProxyAutoDescription =>
+      'Use the media source\'s default playback route';
+
+  @override
+  String get playbackProxyPreferDescription =>
+      'Keep direct and proxy routes, selecting the proxy by default';
+
+  @override
+  String get playbackProxyOnlyDescription =>
+      'Keep routes that the SyncTV server can proxy';
+
+  @override
+  String get playbackProxyDirectRisk =>
+      'Direct playback can expose upstream URLs, signed links, tokens, cookies, or authorization headers to room members. Use it only in a trusted room and network.';
 
   @override
   String get addToPlaylist => 'Add to playlist';
@@ -1750,7 +1764,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not get the Emby directory ID';
 
   @override
-  String get accountBinding => 'Account binding';
+  String get manageConnections => 'Manage connections';
 
   @override
   String get bilibiliBound => 'Bilibili bound';
@@ -2594,6 +2608,507 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharedSource => 'Shared source';
+
+  @override
+  String get shareMyCredentials => 'Share my credentials';
+
+  @override
+  String get parseLink => 'Parse link';
+
+  @override
+  String get preview => 'Preview';
+
+  @override
+  String get noItems => 'No items';
+
+  @override
+  String get addCurrentList => 'Add current list';
+
+  @override
+  String addSelectedCount(int count) {
+    return 'Add selected ($count)';
+  }
+
+  @override
+  String selectItem(String name) {
+    return 'Select $name';
+  }
+
+  @override
+  String get playlistName => 'Playlist name';
+
+  @override
+  String get providerInstance => 'Provider instance';
+
+  @override
+  String get defaultMediaSource => 'Default media source';
+
+  @override
+  String get defaultProviderInstance => 'Default';
+
+  @override
+  String get video => 'Video';
+
+  @override
+  String get videos => 'Videos';
+
+  @override
+  String get shorts => 'Shorts';
+
+  @override
+  String get posts => 'Posts';
+
+  @override
+  String get channel => 'Channel';
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String get subscriptions => 'Subscriptions';
+
+  @override
+  String get likedVideos => 'Liked videos';
+
+  @override
+  String get watchLater => 'Watch later';
+
+  @override
+  String get movie => 'Movie';
+
+  @override
+  String get movies => 'Movies';
+
+  @override
+  String get episode => 'Episode';
+
+  @override
+  String get episodes => 'Episodes';
+
+  @override
+  String get audio => 'Audio';
+
+  @override
+  String get folder => 'Folder';
+
+  @override
+  String get series => 'Series';
+
+  @override
+  String get bangumi => 'Bangumi';
+
+  @override
+  String get vod => 'VOD';
+
+  @override
+  String get popular => 'Popular';
+
+  @override
+  String get recommended => 'Recommended';
+
+  @override
+  String get videoParts => 'Video parts';
+
+  @override
+  String get creatorVideos => 'Creator videos';
+
+  @override
+  String get favoriteVideos => 'Favorite videos';
+
+  @override
+  String get collectionVideos => 'Collection videos';
+
+  @override
+  String get seriesVideos => 'Series videos';
+
+  @override
+  String get pgcSeason => 'PGC season';
+
+  @override
+  String get liveRecommended => 'Recommended live streams';
+
+  @override
+  String get liveFollowed => 'Followed live streams';
+
+  @override
+  String get liveArea => 'Live category';
+
+  @override
+  String get history => 'History';
+
+  @override
+  String get pgcTimeline => 'PGC timeline';
+
+  @override
+  String get pgcIndex => 'PGC index';
+
+  @override
+  String get followedAnime => 'Followed anime';
+
+  @override
+  String get followedCinema => 'Followed cinema';
+
+  @override
+  String get ongoing => 'Ongoing';
+
+  @override
+  String get finished => 'Finished';
+
+  @override
+  String get keyword => 'Keyword';
+
+  @override
+  String get liveCategory => 'Live category';
+
+  @override
+  String get liveSubcategory => 'Live subcategory';
+
+  @override
+  String get favoriteFolder => 'Favorite folder';
+
+  @override
+  String get privateLabel => 'Private';
+
+  @override
+  String get continueWatching => 'Continue watching';
+
+  @override
+  String get nextUp => 'Next up';
+
+  @override
+  String get recentlyAdded => 'Recently added';
+
+  @override
+  String get favoritePeople => 'Favorite people';
+
+  @override
+  String get serverPlaylists => 'Server playlists';
+
+  @override
+  String get collections => 'Collections';
+
+  @override
+  String get genres => 'Genres';
+
+  @override
+  String get files => 'Files';
+
+  @override
+  String get mediaLibrary => 'Media library';
+
+  @override
+  String get favorites => 'Favorites';
+
+  @override
+  String get starred => 'Starred';
+
+  @override
+  String get libraries => 'Libraries';
+
+  @override
+  String get tvShows => 'TV shows';
+
+  @override
+  String get homeVideos => 'Home videos';
+
+  @override
+  String get tvRecordings => 'TV recordings';
+
+  @override
+  String get mediaUrl => 'Media URL';
+
+  @override
+  String get channelArchive => 'Channel archive';
+
+  @override
+  String get followedLive => 'Followed live';
+
+  @override
+  String get categoryLive => 'Live by category';
+
+  @override
+  String get searchLive => 'Search live channels';
+
+  @override
+  String get highlights => 'Highlights';
+
+  @override
+  String get uploads => 'Uploads';
+
+  @override
+  String get clips => 'Clips';
+
+  @override
+  String get loadCategories => 'Load categories';
+
+  @override
+  String get noScheduledStreams => 'No scheduled streams';
+
+  @override
+  String get videoUrlOrId => 'Video URL or ID';
+
+  @override
+  String get playlistUrlOrId => 'Playlist URL or ID';
+
+  @override
+  String get channelUrlOrId => 'Channel URL or ID';
+
+  @override
+  String get searchQueryLabel => 'Search query';
+
+  @override
+  String get liveUrlOrId => 'Live URL or ID';
+
+  @override
+  String get authorIdentifier => 'Creator identifier';
+
+  @override
+  String get liveVodClipUrl => 'Live, VOD, or clip URL';
+
+  @override
+  String get channelNameOrUrl => 'Channel name or URL';
+
+  @override
+  String get channelSearch => 'Channel search';
+
+  @override
+  String get creatorSecUid => 'Creator sec_uid';
+
+  @override
+  String get usernameOrHandle => 'Username or @handle';
+
+  @override
+  String get videoUrlShortLinkOrId => 'Video URL, short link, or ID';
+
+  @override
+  String get liveUrlOrRoomId => 'Live URL or room ID';
+
+  @override
+  String get noPosts => 'No posts';
+
+  @override
+  String get noTwitchItems => 'No Twitch items';
+
+  @override
+  String get schedule => 'Schedule';
+
+  @override
+  String get recurring => 'Recurring';
+
+  @override
+  String get clip => 'Clip';
+
+  @override
+  String viewsCount(int count) {
+    return '$count views';
+  }
+
+  @override
+  String viewersCount(int count) {
+    return '$count viewers';
+  }
+
+  @override
+  String get previewSourceFirst => 'Preview the source before adding';
+
+  @override
+  String get embyAccount => 'Emby account';
+
+  @override
+  String get listSourceToPreview => 'List a source to preview items';
+
+  @override
+  String get acfunUrl => 'AcFun URL';
+
+  @override
+  String get cctvUrlOrVideoId => 'CCTV URL or video ID';
+
+  @override
+  String get liveRoomOrVideoUrl => 'Live room or video URL';
+
+  @override
+  String get roomIdAliasOrUrl => 'Room ID, alias, or URL';
+
+  @override
+  String get embyDiscoveryAndLists => 'Discovery & lists';
+
+  @override
+  String get noPreparedLinks => 'No prepared links';
+
+  @override
+  String get fileStation => 'File Station';
+
+  @override
+  String get videoStation => 'Video Station';
+
+  @override
+  String get library => 'Library';
+
+  @override
+  String get selectLibraryFirst => 'Select a library first';
+
+  @override
+  String unlockLibrary(String name) {
+    return 'Unlock $name';
+  }
+
+  @override
+  String get libraryPassword => 'Library password';
+
+  @override
+  String get unlock => 'Unlock';
+
+  @override
+  String get enterAtLeastThreeCharacters => 'Enter at least 3 characters';
+
+  @override
+  String get favorite => 'Favorite';
+
+  @override
+  String get markWatched => 'Mark watched';
+
+  @override
+  String get markUnwatched => 'Mark unwatched';
+
+  @override
+  String get encrypted => 'Encrypted';
+
+  @override
+  String get openFolder => 'Open folder';
+
+  @override
+  String get sharedFolders => 'Shared folders';
+
+  @override
+  String get shares => 'Shares';
+
+  @override
+  String get allFiles => 'All files';
+
+  @override
+  String readyQualities(String qualities) {
+    return 'Ready: $qualities';
+  }
+
+  @override
+  String formatsCount(int count) {
+    return '$count formats';
+  }
+
+  @override
+  String subtitlesCount(int count) {
+    return '$count subtitles';
+  }
+
+  @override
+  String variantsCount(int count) {
+    return '$count variants';
+  }
+
+  @override
+  String qualitiesCount(int count) {
+    return '$count qualities';
+  }
+
+  @override
+  String chaptersCount(int count) {
+    return '$count chapters';
+  }
+
+  @override
+  String watermarkFreeCount(int count) {
+    return '$count watermark-free';
+  }
+
+  @override
+  String get storyboard => 'Storyboard';
+
+  @override
+  String get hotLabel => 'Hot';
+
+  @override
+  String get anime => 'Anime';
+
+  @override
+  String get cinema => 'Cinema';
+
+  @override
+  String get guochuang => 'Chinese animation';
+
+  @override
+  String get documentary => 'Documentary';
+
+  @override
+  String get television => 'TV';
+
+  @override
+  String get variety => 'Variety';
+
+  @override
+  String get updated => 'Recently updated';
+
+  @override
+  String get plays => 'Plays';
+
+  @override
+  String get followers => 'Followers';
+
+  @override
+  String get score => 'Score';
+
+  @override
+  String get started => 'Start date';
+
+  @override
+  String get released => 'Release date';
+
+  @override
+  String get timeline => 'Timeline';
+
+  @override
+  String get daysBefore => 'Days before';
+
+  @override
+  String get daysAfter => 'Days after';
+
+  @override
+  String get sortOrder => 'Order';
+
+  @override
+  String get statusLabel => 'Status';
+
+  @override
+  String get area => 'Area';
+
+  @override
+  String get yearOrRange => 'Year or range';
+
+  @override
+  String get styleId => 'Style ID';
+
+  @override
+  String get delayed => 'Delayed';
+
+  @override
+  String get published => 'Published';
+
+  @override
+  String get videoBvid => 'Video BV number';
+
+  @override
+  String get videoAidOptional => 'Video AV number (optional)';
+
+  @override
+  String get creatorMid => 'Creator UID';
+
+  @override
+  String get seasonId => 'Season ID';
+
+  @override
+  String get collectionSeasonId => 'Collection ID';
+
+  @override
+  String get seriesId => 'Series ID';
 
   @override
   String get multipleRoutes => 'Multiple routes';
@@ -4291,9 +4806,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noJoinRequests => 'No join requests';
-
-  @override
-  String get mediaLibrary => 'Media library';
 
   @override
   String get clearCurrentLevel => 'Clear current level';

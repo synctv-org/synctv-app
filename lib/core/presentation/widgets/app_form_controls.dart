@@ -4129,6 +4129,7 @@ class AppSelect<T> extends StatelessWidget {
   final String? description;
   final String? errorText;
   final IconData? prefixIcon;
+  final Widget Function(BuildContext context, T value)? optionPrefixBuilder;
   final FormFieldSetter<T>? onSaved;
   final VoidCallback? onReset;
   final FormFieldValidator<T> validator;
@@ -4153,6 +4154,7 @@ class AppSelect<T> extends StatelessWidget {
     this.description,
     this.errorText,
     this.prefixIcon,
+    this.optionPrefixBuilder,
     this.onSaved,
     this.onReset,
     this.validator = FFormFieldProperties.defaultValidator,
@@ -4170,8 +4172,11 @@ class AppSelect<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final field = FSelect<T>(
-      items: options,
+    final labels = {
+      for (final entry in options.entries) entry.value: entry.key,
+    };
+    final field = FSelect<T>.rich(
+      format: (value) => labels[value]!,
       control: FSelectControl<T>.lifted(value: value, onChange: _handleChange),
       label: label == null ? null : Text(label!),
       hint: hintText ?? context.l10n.selectOption,
@@ -4192,6 +4197,14 @@ class AppSelect<T> extends StatelessWidget {
       autofocus: autofocus,
       canRequestFocus: canRequestFocus,
       textAlign: textAlign,
+      children: [
+        for (final entry in options.entries)
+          FSelectItem<T>(
+            value: entry.value,
+            title: Text(entry.key),
+            prefix: optionPrefixBuilder?.call(context, entry.value),
+          ),
+      ],
     );
 
     final effectiveWidth = width ?? _defaultWidth(context);

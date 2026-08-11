@@ -5,22 +5,9 @@ import 'package:synctv_app/src/generated/proto/providers/acfun.pb.dart'
     as acfun;
 import 'package:synctv_app/src/generated/proto/providers/acfun.pbenum.dart'
     as acfun_enum;
-import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
-    as source_config;
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
+import 'package:synctv_app/core/presentation/media_variant_label.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
-
-class AcFunResourceInput {
-  const AcFunResourceInput({
-    required this.kind,
-    required this.id,
-    this.episodeQuery,
-  });
-
-  final String kind;
-  final String id;
-  final String? episodeQuery;
-}
 
 class AcFunAddRequest {
   const AcFunAddRequest({
@@ -32,56 +19,6 @@ class AcFunAddRequest {
   final String resource;
   final String name;
   final String instanceName;
-}
-
-AcFunResourceInput? parseAcFunResource(String raw) {
-  final value = raw.trim();
-  if (RegExp(r'^ac\d+(?:_\d+)*$').hasMatch(value)) {
-    return AcFunResourceInput(kind: 'video', id: value);
-  }
-  if (RegExp(r'^aa\d+(?:_\d+)*$').hasMatch(value)) {
-    return AcFunResourceInput(kind: 'bangumi', id: value);
-  }
-  if (RegExp(r'^\d+$').hasMatch(value)) {
-    return AcFunResourceInput(kind: 'live', id: value);
-  }
-
-  final parsed = Uri.tryParse(value.contains('://') ? value : 'https://$value');
-  if (parsed == null ||
-      !{
-        'acfun.cn',
-        'www.acfun.cn',
-        'm.acfun.cn',
-        'live.acfun.cn',
-      }.contains(parsed.host.toLowerCase())) {
-    return null;
-  }
-  final parts = parsed.pathSegments
-      .where((part) => part.isNotEmpty)
-      .toList(growable: false);
-  if (parts.length == 2 &&
-      parts.first == 'v' &&
-      RegExp(r'^ac\d+(?:_\d+)*$').hasMatch(parts[1])) {
-    return AcFunResourceInput(kind: 'video', id: parts[1]);
-  }
-  if (parts.length == 2 &&
-      parts.first == 'bangumi' &&
-      RegExp(r'^aa\d+(?:_\d+)*$').hasMatch(parts[1])) {
-    return AcFunResourceInput(
-      kind: 'bangumi',
-      id: parts[1],
-      episodeQuery: parsed.hasQuery ? parsed.query : null,
-    );
-  }
-  final liveId = switch (parts) {
-    ['live', final id] => id,
-    [final id] when parsed.host.toLowerCase() == 'live.acfun.cn' => id,
-    _ => '',
-  };
-  if (RegExp(r'^\d+$').hasMatch(liveId)) {
-    return AcFunResourceInput(kind: 'live', id: liveId);
-  }
-  return null;
 }
 
 class AcFunAddMediaForm extends StatefulWidget {
@@ -116,21 +53,27 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
   @override
   void initState() {
     super.initState();
-    _urlController.addListener(_notifyDraftChanged);
-    _nameController.addListener(_notifyDraftChanged);
+    _urlController.addListener(_resourceChanged);
+    _nameController.addListener(_nameChanged);
   }
 
   @override
   void dispose() {
-    _urlController.removeListener(_notifyDraftChanged);
-    _nameController.removeListener(_notifyDraftChanged);
+    _urlController.removeListener(_resourceChanged);
+    _nameController.removeListener(_nameChanged);
     _urlController.dispose();
     _nameController.dispose();
     super.dispose();
   }
 
-  void _notifyDraftChanged() {
+  void _resourceChanged() {
     _resolved = null;
+    _notifyDraftChanged();
+  }
+
+  void _nameChanged() => _notifyDraftChanged();
+
+  void _notifyDraftChanged() {
     widget.onDraftChanged?.call(
       _urlController.text.trim().isNotEmpty ||
           _nameController.text.trim().isNotEmpty,
@@ -149,7 +92,7 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
         children: [
           AppTextField(
             key: const Key('acfun-resource'),
-            label: 'AcFun URL',
+            label: context.l10n.acfunUrl,
             controller: _urlController,
             prefixIcon: Icons.link_rounded,
             keyboardType: TextInputType.url,
@@ -184,7 +127,10 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
                 .toList(),
             onChanged: _loading
                 ? null
-                : (value) => setState(() => _instanceName = value ?? ''),
+                : (value) => setState(() {
+                    _instanceName = value ?? '';
+                    _resolved = null;
+                  }),
           ),
           if (_preview() case final preview?) ...[
             const SizedBox(height: 12),
@@ -200,12 +146,12 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
                     ? null
                     : _loadPreview,
                 icon: const Icon(Icons.preview_outlined),
-                label: const Text('Preview'),
+                label: Text(context.l10n.preview),
               ),
               const SizedBox(width: 10),
               FilledButton.icon(
                 key: const Key('acfun-submit'),
-                onPressed: _loading || _urlController.text.trim().isEmpty
+                onPressed: _loading || _resolved?.hasSource() != true
                     ? null
                     : _submit,
                 icon: _loading
@@ -217,7 +163,7 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
                         ),
                       )
                     : const Icon(Icons.add),
-                label: const Text('Add media'),
+                label: Text(context.l10n.addMedia),
               ),
             ],
           ),
@@ -294,10 +240,10 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
   }
 
   String _kindName(acfun_enum.ResourceKind kind) => switch (kind) {
-    acfun_enum.ResourceKind.RESOURCE_KIND_VIDEO => 'Video',
-    acfun_enum.ResourceKind.RESOURCE_KIND_BANGUMI => 'Bangumi',
-    acfun_enum.ResourceKind.RESOURCE_KIND_LIVE => 'Live',
-    _ => 'Media',
+    acfun_enum.ResourceKind.RESOURCE_KIND_VIDEO => context.l10n.video,
+    acfun_enum.ResourceKind.RESOURCE_KIND_BANGUMI => context.l10n.bangumi,
+    acfun_enum.ResourceKind.RESOURCE_KIND_LIVE => context.l10n.live,
+    _ => localizedMediaVariant(context, kind.name),
   };
 
   Future<void> _loadPreview() async {
@@ -306,7 +252,10 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
       final resource = _urlController.text.trim();
       _resolved =
           await (widget.onResolve?.call(resource) ??
-              providerGateway.resolveAcFun(resource));
+              providerGateway.resolveAcFun(
+                resource,
+                instanceName: _instanceName,
+              ));
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
     } finally {
@@ -315,6 +264,11 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
   }
 
   Future<void> _submit() async {
+    final resolved = _resolved;
+    if (resolved == null) {
+      AppNotifications.showError(context, context.l10n.previewSourceFirst);
+      return;
+    }
     setState(() => _loading = true);
     try {
       final request = AcFunAddRequest(
@@ -325,38 +279,11 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
       if (widget.onSubmit case final submit?) {
         await submit(request);
       } else {
-        final resolved =
-            _resolved ?? await providerGateway.resolveAcFun(request.resource);
-        final config = resolved.sourceConfig;
-        final (kind, id, episodeQuery) = switch (config.whichSource()) {
-          source_config.AcFunMediaSourceConfig_Source.video => (
-            'video',
-            config.video.videoId,
-            null,
-          ),
-          source_config.AcFunMediaSourceConfig_Source.bangumi => (
-            'bangumi',
-            config.bangumi.bangumiId,
-            config.bangumi.hasEpisodeQuery()
-                ? config.bangumi.episodeQuery
-                : null,
-          ),
-          source_config.AcFunMediaSourceConfig_Source.live => (
-            'live',
-            config.live.authorId,
-            null,
-          ),
-          source_config.AcFunMediaSourceConfig_Source.notSet =>
-            throw StateError('AcFun resolve response has no source config'),
-        };
-        await providerGateway.addAcFunMedia(
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
           playlistId: widget.playlistId,
-          kind: kind,
-          id: id,
-          episodeQuery: episodeQuery,
+          source: resolved.source,
           name: request.name.isEmpty ? resolved.metadata.title : request.name,
-          providerInstanceName: request.instanceName,
         );
       }
       if (!mounted) return;
@@ -364,7 +291,7 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
       _nameController.clear();
       _resolved = null;
       widget.onDraftChanged?.call(false);
-      AppNotifications.showSuccess(context, 'AcFun source added');
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
       if (mounted) {

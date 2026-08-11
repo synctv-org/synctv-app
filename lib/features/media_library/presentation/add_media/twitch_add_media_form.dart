@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
-import 'package:synctv_app/contracts/twitch_source_config.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/src/generated/proto/providers/twitch.pb.dart'
     as twitch;
 import 'package:synctv_app/src/generated/proto/providers/twitch.pbenum.dart'
     as twitch_enum;
-import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
-    as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 
 enum TwitchAddMode { media, channel, followedLive, categoryLive, searchLive }
 
 class TwitchAddRequest {
   const TwitchAddRequest({
+    required this.target,
     required this.mode,
     required this.resource,
     required this.name,
@@ -27,6 +29,7 @@ class TwitchAddRequest {
     required this.instanceName,
   });
 
+  final ProviderAddTarget target;
   final TwitchAddMode mode;
   final String resource;
   final String name;
@@ -35,8 +38,6 @@ class TwitchAddRequest {
   final String categoryName;
   final bool shared;
   final String instanceName;
-
-  bool get playlist => mode != TwitchAddMode.media;
 }
 
 class TwitchAddMediaForm extends StatefulWidget {
@@ -66,14 +67,17 @@ class TwitchAddMediaForm extends StatefulWidget {
   final Future<twitch.ListChannelItemsResponse> Function(
     TwitchAddRequest request,
     String channel,
+    String? cursor,
   )?
   onListChannelItems;
   final Future<twitch.ListFollowedLiveResponse> Function(
     TwitchAddRequest request,
+    String? cursor,
   )?
   onListFollowedLive;
   final Future<twitch.ListCategoryStreamsResponse> Function(
     TwitchAddRequest request,
+    String? cursor,
   )?
   onListCategoryStreams;
   final Future<twitch.ListTopCategoriesResponse> Function(
@@ -82,6 +86,7 @@ class TwitchAddMediaForm extends StatefulWidget {
   onListTopCategories;
   final Future<twitch.SearchLiveChannelsResponse> Function(
     TwitchAddRequest request,
+    String? cursor,
   )?
   onSearchLiveChannels;
   final Future<twitch.ListScheduleResponse> Function(
@@ -98,9 +103,11 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
   final _resourceController = TextEditingController();
   final _nameController = TextEditingController();
   TwitchAddMode _mode = TwitchAddMode.media;
+  ProviderAddTarget _target = ProviderAddTarget.parse;
   bool _shared = false;
   bool _loading = false;
   String _instanceName = '';
+  String _selectedBindId = '';
   String _categoryId = '';
   String _categoryName = '';
   source_enum.TwitchPlaylistContent _content =
@@ -121,6 +128,7 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
   }
 
   TwitchAddRequest get _request => TwitchAddRequest(
+    target: _target,
     mode: _mode,
     resource: _resourceController.text.trim(),
     name: _nameController.text.trim(),
@@ -144,21 +152,17 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
     _ => true,
   };
 
-  Iterable<TwitchBindInfo> get _selectedBinds =>
-      widget.binds.where((bind) => bind.providerInstanceName == _instanceName);
-
-  bool get _hasHelixCredential =>
-      _selectedBinds.isNotEmpty ||
-      widget.onListTopCategories != null ||
-      widget.onSearchLiveChannels != null ||
-      widget.onListFollowedLive != null;
-
-  bool get _hasFollowedScope =>
-      _selectedBinds.any((bind) => bind.scopes.contains('user:read:follows')) ||
-      widget.onListFollowedLive != null;
-
   void _changed() {
     _clearPreview();
+    widget.onDraftChanged(
+      _mode != TwitchAddMode.media ||
+          _resourceController.text.trim().isNotEmpty ||
+          _nameController.text.trim().isNotEmpty,
+    );
+    setState(() {});
+  }
+
+  void _nameChanged() {
     widget.onDraftChanged(
       _mode != TwitchAddMode.media ||
           _resourceController.text.trim().isNotEmpty ||
@@ -179,59 +183,65 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
 
   @override
   Widget build(BuildContext context) {
-    final instances = {
-      '',
-      ...widget.binds.map((bind) => bind.providerInstanceName),
-    }.toList();
-    if (!instances.contains(_instanceName)) _instanceName = '';
+    if (_selectedBindId.isNotEmpty &&
+        !widget.binds.any((bind) => bind.id == _selectedBindId)) {
+      _selectedBindId = '';
+      _instanceName = '';
+    }
 
     return AppSingleChildScrollView(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DropdownButtonFormField<TwitchAddMode>(
-            key: const Key('twitch-source'),
-            initialValue: _mode,
-            decoration: const InputDecoration(
-              labelText: 'Source',
-              prefixIcon: Icon(Icons.live_tv_outlined),
-            ),
-            items: [
-              const DropdownMenuItem(
-                value: TwitchAddMode.media,
-                child: Text('Media URL'),
-              ),
-              const DropdownMenuItem(
-                value: TwitchAddMode.channel,
-                child: Text('Channel archive'),
-              ),
-              DropdownMenuItem(
-                value: TwitchAddMode.followedLive,
-                enabled: _hasFollowedScope,
-                child: const Text('Followed live'),
-              ),
-              DropdownMenuItem(
-                value: TwitchAddMode.categoryLive,
-                enabled: _hasHelixCredential,
-                child: const Text('Category live'),
-              ),
-              DropdownMenuItem(
-                value: TwitchAddMode.searchLive,
-                enabled: _hasHelixCredential,
-                child: const Text('Search live'),
-              ),
+          ProviderAddTargetSelector(
+            value: _target,
+            targets: const [
+              ProviderAddTarget.parse,
+              ProviderAddTarget.media,
+              ProviderAddTarget.playlist,
             ],
-            onChanged: _loading
-                ? null
-                : (value) {
-                    _mode = value ?? TwitchAddMode.media;
-                    _resourceController.clear();
-                    _categoryId = '';
-                    _categoryName = '';
-                    _changed();
-                  },
+            enabled: !_loading,
+            onChanged: _selectTarget,
           ),
+          if (_target != ProviderAddTarget.parse) ...[
+            const SizedBox(height: 12),
+            DropdownButtonFormField<TwitchAddMode>(
+              key: const Key('twitch-source'),
+              initialValue: _mode,
+              decoration: InputDecoration(
+                labelText: context.l10n.source,
+                prefixIcon: const Icon(Icons.live_tv_outlined),
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: TwitchAddMode.channel,
+                  child: Text(context.l10n.channelArchive),
+                ),
+                DropdownMenuItem(
+                  value: TwitchAddMode.followedLive,
+                  child: Text(context.l10n.followedLive),
+                ),
+                DropdownMenuItem(
+                  value: TwitchAddMode.categoryLive,
+                  child: Text(context.l10n.categoryLive),
+                ),
+                DropdownMenuItem(
+                  value: TwitchAddMode.searchLive,
+                  child: Text(context.l10n.searchLive),
+                ),
+              ],
+              onChanged: _loading
+                  ? null
+                  : (value) {
+                      _mode = value ?? TwitchAddMode.channel;
+                      _resourceController.clear();
+                      _categoryId = '';
+                      _categoryName = '';
+                      _changed();
+                    },
+            ),
+          ],
           if (_requiresResource) ...[
             const SizedBox(height: 12),
             AppTextField(
@@ -239,9 +249,9 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
               controller: _resourceController,
               enabled: !_loading,
               label: switch (_mode) {
-                TwitchAddMode.media => 'Live, VOD, or clip URL',
-                TwitchAddMode.channel => 'Channel name or URL',
-                TwitchAddMode.searchLive => 'Channel search',
+                TwitchAddMode.media => context.l10n.liveVodClipUrl,
+                TwitchAddMode.channel => context.l10n.channelNameOrUrl,
+                TwitchAddMode.searchLive => context.l10n.channelSearch,
                 _ => '',
               },
               prefixIcon: _mode == TwitchAddMode.media
@@ -259,34 +269,34 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
             const SizedBox(height: 12),
             DropdownButtonFormField<source_enum.TwitchPlaylistContent>(
               initialValue: _content,
-              decoration: const InputDecoration(
-                labelText: 'Content',
-                prefixIcon: Icon(Icons.video_collection_outlined),
+              decoration: InputDecoration(
+                labelText: context.l10n.content,
+                prefixIcon: const Icon(Icons.video_collection_outlined),
               ),
-              items: const [
+              items: [
                 DropdownMenuItem(
                   value: source_enum
                       .TwitchPlaylistContent
                       .TWITCH_PLAYLIST_CONTENT_VIDEOS,
-                  child: Text('Videos'),
+                  child: Text(context.l10n.videos),
                 ),
                 DropdownMenuItem(
                   value: source_enum
                       .TwitchPlaylistContent
                       .TWITCH_PLAYLIST_CONTENT_HIGHLIGHTS,
-                  child: Text('Highlights'),
+                  child: Text(context.l10n.highlights),
                 ),
                 DropdownMenuItem(
                   value: source_enum
                       .TwitchPlaylistContent
                       .TWITCH_PLAYLIST_CONTENT_UPLOADS,
-                  child: Text('Uploads'),
+                  child: Text(context.l10n.uploads),
                 ),
                 DropdownMenuItem(
                   value: source_enum
                       .TwitchPlaylistContent
                       .TWITCH_PLAYLIST_CONTENT_CLIPS,
-                  child: Text('Clips'),
+                  child: Text(context.l10n.clips),
                 ),
               ],
               onChanged: _loading
@@ -305,86 +315,91 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
             const SizedBox(height: 12),
             _categoryControl(),
           ],
-          const SizedBox(height: 12),
-          AppTextField(
-            key: const Key('twitch-name'),
-            controller: _nameController,
-            enabled: !_loading,
-            label: 'Name',
-            prefixIcon: Icons.title,
-            onChanged: (_) => _changed(),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _instanceName,
-            decoration: const InputDecoration(
-              labelText: 'Provider instance',
-              prefixIcon: Icon(Icons.dns_outlined),
+          if (_target != ProviderAddTarget.media) ...[
+            const SizedBox(height: 12),
+            AppTextField(
+              key: const Key('twitch-name'),
+              controller: _nameController,
+              enabled: !_loading,
+              label: context.l10n.name,
+              prefixIcon: Icons.title,
+              onChanged: (_) => _nameChanged(),
             ),
-            items: instances
-                .map(
-                  (value) => DropdownMenuItem(
-                    value: value,
-                    child: Text(value.isEmpty ? 'Default' : value),
-                  ),
-                )
-                .toList(),
-            onChanged: _loading
-                ? null
-                : (value) {
-                    _instanceName = value ?? '';
-                    if ((_mode == TwitchAddMode.followedLive &&
-                            !_hasFollowedScope) ||
-                        ((_mode == TwitchAddMode.categoryLive ||
-                                _mode == TwitchAddMode.searchLive) &&
-                            !_hasHelixCredential)) {
-                      _mode = TwitchAddMode.media;
-                    }
-                    _clearPreview(keepCategories: false);
-                    setState(() {});
-                  },
+          ],
+          const SizedBox(height: 12),
+          ProviderAccountSelector<TwitchBindInfo>(
+            accounts: widget.binds,
+            selectedId: _selectedBindId,
+            idOf: (bind) => bind.id,
+            labelOf: (bind) {
+              final label = bind.login.isEmpty
+                  ? context.l10n.defaultProviderInstance
+                  : bind.login;
+              return bind.providerInstanceName.isEmpty
+                  ? label
+                  : '$label · ${bind.providerInstanceName}';
+            },
+            includeDefault: true,
+            enabled: !_loading,
+            onChanged: (bind) => setState(() {
+              _selectedBindId = bind?.id ?? '';
+              _instanceName = bind?.providerInstanceName ?? '';
+              _clearPreview(keepCategories: false);
+            }),
           ),
-          SwitchListTile(
+          AppSwitchTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Use room owner credential'),
+            title: Text(context.l10n.shareMyCredentials),
+            prefix: const Icon(Icons.key_rounded),
+            semanticsLabel: context.l10n.shareMyCredentials,
             value: _shared,
             onChanged: _loading
                 ? null
-                : (value) => setState(() => _shared = value),
+                : (value) => setState(() {
+                    _shared = value;
+                    _clearPreview();
+                  }),
           ),
-          if (_preview() case final preview?) ...[
+          if (_target == ProviderAddTarget.parse) ...[
+            if (_preview() case final preview?) ...[
+              const SizedBox(height: 8),
+              preview,
+            ],
+          ] else if (_hasListPreview) ...[
             const SizedBox(height: 8),
-            preview,
+            SizedBox(height: 380, child: _listBrowser()),
+          ],
+          if (_schedulePreview() case final schedule?) ...[
+            const SizedBox(height: 8),
+            schedule,
           ],
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 10,
+            runSpacing: 10,
             children: [
               OutlinedButton.icon(
                 key: const Key('twitch-preview'),
                 onPressed: _loading || !_canAct ? null : _loadPreview,
                 icon: const Icon(Icons.preview_outlined),
-                label: const Text('Preview'),
+                label: Text(context.l10n.preview),
               ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                key: const Key('twitch-submit'),
-                onPressed: _loading || !_canAct ? null : _submit,
-                icon: _loading
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
-                        ),
-                      )
-                    : const Icon(Icons.add),
-                label: Text(
-                  _mode == TwitchAddMode.media
-                      ? 'Add media'
-                      : 'Create playlist',
+              if (_target == ProviderAddTarget.parse)
+                FilledButton.icon(
+                  key: const Key('twitch-submit'),
+                  onPressed: _loading || !_previewReady ? null : _submit,
+                  icon: _loading
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: AppLoadingIndicator(
+                            size: AppLoadingSize.sm,
+                            centered: false,
+                          ),
+                        )
+                      : const Icon(Icons.add),
+                  label: Text(context.l10n.addMedia),
                 ),
-              ),
             ],
           ),
         ],
@@ -399,15 +414,15 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
         key: const Key('twitch-load-categories'),
         onPressed: _loading ? null : _loadCategories,
         icon: const Icon(Icons.grid_view_outlined),
-        label: const Text('Load categories'),
+        label: Text(context.l10n.loadCategories),
       );
     }
     return DropdownButtonFormField<String>(
       key: const Key('twitch-category'),
       initialValue: _categoryId.isEmpty ? null : _categoryId,
-      decoration: const InputDecoration(
-        labelText: 'Category',
-        prefixIcon: Icon(Icons.category_outlined),
+      decoration: InputDecoration(
+        labelText: context.l10n.category,
+        prefixIcon: const Icon(Icons.category_outlined),
       ),
       items: categories
           .map(
@@ -436,74 +451,166 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
         title: resolved.metadata.title,
         subtitle: [
           resolved.metadata.author,
-          resolved.metadata.isLive ? 'Live' : _resourceKind(resolved.kind),
-          '${resolved.qualities.length} qualities',
+          resolved.metadata.isLive
+              ? context.l10n.live
+              : _resourceKind(resolved.kind),
+          context.l10n.qualitiesCount(resolved.qualities.length),
           if (resolved.metadata.chapters.isNotEmpty)
-            '${resolved.metadata.chapters.length} chapters',
-          if (resolved.metadata.hasStoryboardUrl()) 'Storyboard',
+            context.l10n.chaptersCount(resolved.metadata.chapters.length),
+          if (resolved.metadata.hasStoryboardUrl()) context.l10n.storyboard,
         ].where((value) => value.isNotEmpty).join(' · '),
         imageUrl: resolved.metadata.thumbnailUrl,
       );
     }
-    final tiles = <Widget>[];
-    for (final item in _channelItems?.items ?? const <twitch.ListItem>[]) {
-      tiles.add(
-        _previewTile(
+    return null;
+  }
+
+  bool get _hasListPreview => switch (_mode) {
+    TwitchAddMode.channel => _channelItems != null,
+    TwitchAddMode.followedLive => _followedLive != null,
+    TwitchAddMode.categoryLive => _categoryStreams != null,
+    TwitchAddMode.searchLive => _searchResults != null,
+    TwitchAddMode.media => false,
+  };
+
+  bool get _listHasMore => switch (_mode) {
+    TwitchAddMode.channel => _channelItems?.hasMore ?? false,
+    TwitchAddMode.followedLive => _followedLive?.hasMore ?? false,
+    TwitchAddMode.categoryLive => _categoryStreams?.hasMore ?? false,
+    TwitchAddMode.searchLive => _searchResults?.hasMore ?? false,
+    TwitchAddMode.media => false,
+  };
+
+  bool get _listSourceReady => switch (_mode) {
+    TwitchAddMode.channel => _channelItems?.hasSource() ?? false,
+    TwitchAddMode.followedLive => _followedLive?.hasSource() ?? false,
+    TwitchAddMode.categoryLive => _categoryStreams?.hasSource() ?? false,
+    TwitchAddMode.searchLive => _searchResults?.hasSource() ?? false,
+    TwitchAddMode.media => false,
+  };
+
+  Widget _listBrowser() {
+    return DiscoveryBrowser(
+      key: ValueKey(
+        'twitch-list:${_mode.name}:$_instanceName:${_shared ? 1 : 0}',
+      ),
+      items: _listEntries,
+      loading: _loading,
+      hasMore: _listHasMore,
+      onLoadMore: () => _loadPreview(loadMore: true),
+      onAddSelected: _target == ProviderAddTarget.media ? _addSelected : null,
+      onAddCurrentList:
+          _target == ProviderAddTarget.playlist && _listSourceReady
+          ? _submit
+          : null,
+      target: _target,
+      emptyIcon: Icons.live_tv_outlined,
+      emptyTitle: context.l10n.noTwitchItems,
+    );
+  }
+
+  List<DiscoveryBrowserEntry> get _listEntries => switch (_mode) {
+    TwitchAddMode.channel => [
+      for (final item in _channelItems?.items ?? const <twitch.ListItem>[])
+        DiscoveryBrowserEntry(
+          key: '${item.kind.value}:${item.id}',
           title: item.title,
           subtitle: [
             _resourceKind(item.kind),
-            if (item.hasViewCount()) '${item.viewCount} views',
+            if (item.hasViewCount())
+              context.l10n.viewsCount(item.viewCount.toInt()),
           ].join(' · '),
-          imageUrl: item.thumbnailUrl,
+          source: item.source,
+          isContainer: false,
+          selectable: item.hasSource(),
+          leading: _thumbnail(item.thumbnailUrl),
         ),
-      );
-    }
-    for (final item in [
-      ...?_followedLive?.items,
-      ...?_categoryStreams?.items,
-    ]) {
-      tiles.add(
-        _previewTile(
-          title: item.title,
-          subtitle:
-              '${item.displayName} · ${item.categoryName} · ${item.viewerCount} viewers',
-          imageUrl: item.thumbnailUrl,
-        ),
-      );
-    }
-    for (final item
-        in _searchResults?.items ?? const <twitch.SearchChannelItem>[]) {
-      tiles.add(
-        _previewTile(
+    ],
+    TwitchAddMode.followedLive => _streamEntries(
+      _followedLive?.items ?? const <twitch.StreamItem>[],
+    ),
+    TwitchAddMode.categoryLive => _streamEntries(
+      _categoryStreams?.items ?? const <twitch.StreamItem>[],
+    ),
+    TwitchAddMode.searchLive => [
+      for (final item
+          in _searchResults?.items ?? const <twitch.SearchChannelItem>[])
+        DiscoveryBrowserEntry(
+          key: item.userId,
           title: item.title.isEmpty ? item.displayName : item.title,
-          subtitle: '${item.displayName} · ${item.categoryName}',
-          imageUrl: item.thumbnailUrl,
-          trailing: AppIconButton(
-            tooltip: 'Schedule',
-            onPressed: _loading ? null : () => _loadSchedule(item.userId),
-            icon: Icons.event_outlined,
-          ),
+          subtitle: [
+            item.displayName,
+            item.categoryName,
+            if (item.isLive) context.l10n.live,
+          ].where((value) => value.isNotEmpty).join(' · '),
+          source: item.source,
+          isContainer: false,
+          selectable: item.hasSource(),
+          leading: _thumbnail(item.thumbnailUrl),
+          actions: [
+            AppIconButton(
+              tooltip: context.l10n.schedule,
+              onPressed: _loading ? null : () => _loadSchedule(item.userId),
+              icon: Icons.event_outlined,
+            ),
+          ],
         ),
-      );
-    }
-    if (_schedule case final schedule?) {
-      tiles.addAll(
-        schedule.segments.map(
-          (segment) => _previewTile(
-            title: segment.title,
-            subtitle: [
-              segment.startTime,
-              if (segment.hasCategoryName()) segment.categoryName,
-              if (segment.isRecurring) 'Recurring',
-            ].join(' · '),
-          ),
-        ),
-      );
-    }
-    if (tiles.isEmpty) return null;
+    ],
+    TwitchAddMode.media => const [],
+  };
+
+  List<DiscoveryBrowserEntry> _streamEntries(List<twitch.StreamItem> items) => [
+    for (final item in items)
+      DiscoveryBrowserEntry(
+        key: item.streamId.isEmpty ? item.channel : item.streamId,
+        title: item.title,
+        subtitle: [
+          item.displayName,
+          item.categoryName,
+          context.l10n.viewersCount(item.viewerCount.toInt()),
+        ].where((value) => value.isNotEmpty).join(' · '),
+        source: item.source,
+        isContainer: false,
+        selectable: item.hasSource(),
+        leading: _thumbnail(item.thumbnailUrl),
+      ),
+  ];
+
+  Widget _thumbnail(String url) => url.isEmpty
+      ? const Icon(Icons.live_tv_outlined)
+      : AppImageThumbnail(
+          url: url,
+          width: 48,
+          height: 48,
+          borderRadius: BorderRadius.circular(4),
+        );
+
+  Widget? _schedulePreview() {
+    final schedule = _schedule;
+    if (schedule == null) return null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: tiles.take(8).toList(),
+      children: [
+        Text(
+          schedule.broadcasterName.isEmpty
+              ? schedule.broadcasterLogin
+              : schedule.broadcasterName,
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 6),
+        if (schedule.segments.isEmpty)
+          Text(context.l10n.noScheduledStreams)
+        else
+          for (final segment in schedule.segments.take(8))
+            _previewTile(
+              title: segment.title,
+              subtitle: [
+                segment.startTime,
+                if (segment.hasCategoryName()) segment.categoryName,
+                if (segment.isRecurring) context.l10n.recurring,
+              ].join(' · '),
+            ),
+      ],
     );
   }
 
@@ -544,29 +651,11 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
   }
 
   String _resourceKind(twitch_enum.ResourceKind kind) => switch (kind) {
-    twitch_enum.ResourceKind.RESOURCE_KIND_CHANNEL => 'Channel',
-    twitch_enum.ResourceKind.RESOURCE_KIND_VIDEO => 'VOD',
-    twitch_enum.ResourceKind.RESOURCE_KIND_CLIP => 'Clip',
-    _ => 'Media',
+    twitch_enum.ResourceKind.RESOURCE_KIND_CHANNEL => context.l10n.channel,
+    twitch_enum.ResourceKind.RESOURCE_KIND_VIDEO => context.l10n.vod,
+    twitch_enum.ResourceKind.RESOURCE_KIND_CLIP => context.l10n.clip,
+    _ => context.l10n.media,
   };
-
-  String? _channel(String raw) {
-    final value = raw.trim().replaceFirst(RegExp(r'^@'), '');
-    if (RegExp(r'^[A-Za-z0-9_]{3,25}$').hasMatch(value)) {
-      return value.toLowerCase();
-    }
-    final uri = Uri.tryParse(value.contains('://') ? value : 'https://$value');
-    if (uri == null ||
-        !{'twitch.tv', 'www.twitch.tv', 'm.twitch.tv'}.contains(uri.host)) {
-      return null;
-    }
-    final parts = uri.pathSegments.where((part) => part.isNotEmpty).toList();
-    if (parts.isEmpty ||
-        !RegExp(r'^[A-Za-z0-9_]{3,25}$').hasMatch(parts.first)) {
-      return null;
-    }
-    return parts.first.toLowerCase();
-  }
 
   Future<void> _loadCategories() async {
     await _run(() async {
@@ -576,13 +665,28 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
           : await providerGateway.listTwitchTopCategories(
               pageSize: 50,
               instanceName: _instanceName,
+              shared: _shared,
             );
     });
   }
 
-  Future<void> _loadPreview() async {
+  String? get _listCursor => switch (_mode) {
+    TwitchAddMode.channel =>
+      _channelItems?.hasCursor() == true ? _channelItems!.cursor : null,
+    TwitchAddMode.followedLive =>
+      _followedLive?.hasCursor() == true ? _followedLive!.cursor : null,
+    TwitchAddMode.categoryLive =>
+      _categoryStreams?.hasCursor() == true ? _categoryStreams!.cursor : null,
+    TwitchAddMode.searchLive =>
+      _searchResults?.hasCursor() == true ? _searchResults!.cursor : null,
+    TwitchAddMode.media => null,
+  };
+
+  Future<void> _loadPreview({bool loadMore = false}) async {
+    if (loadMore && !_listHasMore) return;
     await _run(() async {
       final request = _request;
+      final cursor = loadMore ? _listCursor : null;
       switch (_mode) {
         case TwitchAddMode.media:
           final resolve = widget.onResolve;
@@ -591,46 +695,89 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
               : await providerGateway.resolveTwitch(
                   request.resource,
                   instanceName: request.instanceName,
+                  shared: request.shared,
                 );
         case TwitchAddMode.channel:
-          final channel = _channel(request.resource);
-          if (channel == null) throw StateError('Invalid Twitch channel');
           final list = widget.onListChannelItems;
-          _channelItems = list != null
-              ? await list(request, channel)
+          final page = list != null
+              ? await list(request, request.resource, cursor)
               : await providerGateway.listTwitchChannelItems(
-                  channel,
+                  request.resource,
                   content: request.content,
-                  pageSize: 8,
+                  cursor: cursor,
+                  pageSize: 20,
                   instanceName: request.instanceName,
+                  shared: request.shared,
                 );
+          final current = _channelItems;
+          _channelItems = loadMore && current != null
+              ? twitch.ListChannelItemsResponse(
+                  items: [...current.items, ...page.items],
+                  cursor: page.hasCursor() ? page.cursor : null,
+                  hasMore: page.hasMore,
+                  source: page.hasSource() ? page.source : current.source,
+                )
+              : page;
         case TwitchAddMode.followedLive:
           final list = widget.onListFollowedLive;
-          _followedLive = list != null
-              ? await list(request)
+          final page = list != null
+              ? await list(request, cursor)
               : await providerGateway.listTwitchFollowedLive(
-                  pageSize: 8,
+                  cursor: cursor,
+                  pageSize: 20,
                   instanceName: request.instanceName,
+                  shared: request.shared,
                 );
+          final current = _followedLive;
+          _followedLive = loadMore && current != null
+              ? twitch.ListFollowedLiveResponse(
+                  items: [...current.items, ...page.items],
+                  cursor: page.hasCursor() ? page.cursor : null,
+                  hasMore: page.hasMore,
+                  source: page.hasSource() ? page.source : current.source,
+                )
+              : page;
         case TwitchAddMode.categoryLive:
           final list = widget.onListCategoryStreams;
-          _categoryStreams = list != null
-              ? await list(request)
+          final page = list != null
+              ? await list(request, cursor)
               : await providerGateway.listTwitchCategoryStreams(
                   categoryId: request.categoryId,
                   categoryName: request.categoryName,
-                  pageSize: 8,
+                  cursor: cursor,
+                  pageSize: 20,
                   instanceName: request.instanceName,
+                  shared: request.shared,
                 );
+          final current = _categoryStreams;
+          _categoryStreams = loadMore && current != null
+              ? twitch.ListCategoryStreamsResponse(
+                  items: [...current.items, ...page.items],
+                  cursor: page.hasCursor() ? page.cursor : null,
+                  hasMore: page.hasMore,
+                  source: page.hasSource() ? page.source : current.source,
+                )
+              : page;
         case TwitchAddMode.searchLive:
           final search = widget.onSearchLiveChannels;
-          _searchResults = search != null
-              ? await search(request)
+          final page = search != null
+              ? await search(request, cursor)
               : await providerGateway.searchTwitchLiveChannels(
                   request.resource,
-                  pageSize: 8,
+                  cursor: cursor,
+                  pageSize: 20,
                   instanceName: request.instanceName,
+                  shared: request.shared,
                 );
+          final current = _searchResults;
+          _searchResults = loadMore && current != null
+              ? twitch.SearchLiveChannelsResponse(
+                  items: [...current.items, ...page.items],
+                  cursor: page.hasCursor() ? page.cursor : null,
+                  hasMore: page.hasMore,
+                  source: page.hasSource() ? page.source : current.source,
+                )
+              : page;
       }
     });
   }
@@ -644,6 +791,7 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
               broadcasterId,
               pageSize: 8,
               instanceName: _instanceName,
+              shared: _shared,
             );
     });
   }
@@ -661,34 +809,35 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
 
   Future<void> _submit() async {
     final request = _request;
+    final source = switch (_mode) {
+      TwitchAddMode.media =>
+        _resolved?.hasSource() == true ? _resolved!.source : null,
+      TwitchAddMode.channel =>
+        _channelItems?.hasSource() == true ? _channelItems!.source : null,
+      TwitchAddMode.followedLive =>
+        _followedLive?.hasSource() == true ? _followedLive!.source : null,
+      TwitchAddMode.categoryLive =>
+        _categoryStreams?.hasSource() == true ? _categoryStreams!.source : null,
+      TwitchAddMode.searchLive =>
+        _searchResults?.hasSource() == true ? _searchResults!.source : null,
+    };
+    if (source == null) {
+      AppNotifications.showError(context, context.l10n.previewSourceFirst);
+      return;
+    }
     await _run(() async {
       if (widget.onSubmit case final submit?) {
         await submit(request);
-      } else if (_mode == TwitchAddMode.media) {
-        final resolved =
-            _resolved ??
-            await providerGateway.resolveTwitch(
-              request.resource,
-              instanceName: request.instanceName,
-            );
-        await providerGateway.addMediaFromSourceConfig(
-          widget.roomId,
-          playlistId: widget.playlistId,
-          sourceConfig: TwitchSourceConfig.media(
-            resolved.sourceConfig,
-            request.shared,
-          ),
-          name: request.name.isEmpty ? resolved.metadata.title : request.name,
-          providerInstanceName: request.instanceName,
-        );
       } else {
-        final source = _playlistSource(request);
-        await providerGateway.createPlaylistFromSourceConfig(
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
-          sourceConfig: TwitchSourceConfig.playlist(source, request.shared),
-          parentId: widget.playlistId,
-          providerInstanceName: request.instanceName,
-          name: request.name.isEmpty ? _defaultName(request) : request.name,
+          source: source,
+          playlistId: widget.playlistId,
+          name: request.name.isEmpty
+              ? (_mode == TwitchAddMode.media
+                    ? _resolved!.metadata.title
+                    : _defaultName(request))
+              : request.name,
         );
       }
       if (!mounted) return;
@@ -696,58 +845,52 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
       _nameController.clear();
       _clearPreview();
       widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, 'Twitch source added');
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
     });
   }
 
-  source_config.TwitchPlaylistSourceConfig _playlistSource(
-    TwitchAddRequest request,
-  ) {
-    switch (request.mode) {
-      case TwitchAddMode.channel:
-        if (_channelItems?.hasSourceConfig() == true) {
-          return _channelItems!.sourceConfig;
-        }
-        final channel = _channel(request.resource);
-        if (channel == null) throw StateError('Invalid Twitch channel');
-        return source_config.TwitchPlaylistSourceConfig(
-          channel: source_config.TwitchPlaylistSourceConfig_Channel(
-            channel: channel,
-            content: request.content,
-          ),
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> entries) async {
+    if (entries.isEmpty) return;
+    await _run(() async {
+      for (final entry in entries) {
+        await providerGateway.addDiscoveredSource(
+          widget.roomId,
+          source: entry.source,
+          playlistId: widget.playlistId,
+          name: entry.title,
         );
-      case TwitchAddMode.followedLive:
-        return _followedLive?.sourceConfig ??
-            source_config.TwitchPlaylistSourceConfig(
-              followedLive:
-                  source_config.TwitchPlaylistSourceConfig_FollowedLive(),
-            );
-      case TwitchAddMode.categoryLive:
-        return _categoryStreams?.sourceConfig ??
-            source_config.TwitchPlaylistSourceConfig(
-              categoryLive:
-                  source_config.TwitchPlaylistSourceConfig_CategoryLive(
-                    categoryId: request.categoryId,
-                    categoryName: request.categoryName,
-                  ),
-            );
-      case TwitchAddMode.searchLive:
-        return _searchResults?.sourceConfig ??
-            source_config.TwitchPlaylistSourceConfig(
-              searchLive: source_config.TwitchPlaylistSourceConfig_SearchLive(
-                query: request.resource,
-              ),
-            );
-      case TwitchAddMode.media:
-        throw StateError('Twitch media is not a playlist source');
-    }
+      }
+      if (!mounted) return;
+      _resourceController.clear();
+      _nameController.clear();
+      _clearPreview();
+      widget.onDraftChanged(false);
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
+    });
   }
 
+  bool get _previewReady => _resolved?.hasSource() == true;
+
   String _defaultName(TwitchAddRequest request) => switch (request.mode) {
-    TwitchAddMode.channel => _channel(request.resource) ?? 'Twitch channel',
-    TwitchAddMode.followedLive => 'Followed live',
+    TwitchAddMode.channel => request.resource.trim(),
+    TwitchAddMode.followedLive => context.l10n.followedLive,
     TwitchAddMode.categoryLive => request.categoryName,
     TwitchAddMode.searchLive => request.resource,
-    TwitchAddMode.media => 'Twitch media',
+    TwitchAddMode.media => 'Twitch ${context.l10n.media}',
   };
+
+  void _selectTarget(ProviderAddTarget target) {
+    if (target == _target) return;
+    _target = target;
+    _mode = target == ProviderAddTarget.parse
+        ? TwitchAddMode.media
+        : TwitchAddMode.channel;
+    _resourceController.clear();
+    _nameController.clear();
+    _categoryId = '';
+    _categoryName = '';
+    _clearPreview();
+    widget.onDraftChanged(false);
+    setState(() {});
+  }
 }

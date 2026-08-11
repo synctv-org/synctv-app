@@ -8,6 +8,8 @@ import 'package:synctv_app/src/generated/proto/providers/douyu.pbenum.dart'
     as douyu_enum;
 import 'package:synctv_app/features/media_library/presentation/add_media/douyu_add_media_form.dart';
 
+import '../../../../test_app.dart';
+
 void main() {
   testWidgets('Douyu preview exposes codecs, formats, CDNs, and metadata', (
     tester,
@@ -54,6 +56,7 @@ void main() {
                   format: douyu_enum.StreamFormat.STREAM_FORMAT_FLV,
                 ),
               ],
+              source: testDiscoveredMediaSource(),
             ),
           ),
         ),
@@ -88,6 +91,10 @@ void main() {
             playlistId: '',
             instances: const ['douyu-edge'],
             onDraftChanged: (_) {},
+            onResolve: (_) async => douyu.ResolveResponse(
+              metadata: douyu.Metadata(title: 'Douyu Live'),
+              source: testDiscoveredMediaSource(),
+            ),
             onSubmit: (request) async => submitted = request,
           ),
         ),
@@ -100,6 +107,14 @@ void main() {
     await tester.tap(find.text('Default'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('douyu-edge').last);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('douyu-submit')))
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(const Key('douyu-preview')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('douyu-submit')));
     await tester.pumpAndSettle();

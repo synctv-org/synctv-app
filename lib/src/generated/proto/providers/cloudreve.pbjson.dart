@@ -115,6 +115,14 @@ const ListResponse$json = {
       '9': 0,
       '10': 'cursor'
     },
+    {
+      '1': 'source',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
   '8': [
     {'1': 'pagination'},
@@ -126,8 +134,9 @@ final $typed_data.Uint8List listResponseDescriptor = $convert.base64Decode(
     'CgxMaXN0UmVzcG9uc2USPQoHY29udGVudBgBIAMoCzIjLnN5bmN0di5wcm92aWRlci5jbG91ZH'
     'JldmUuRmlsZUl0ZW1SB2NvbnRlbnQSPwoEcGFnZRgCIAEoCzIpLnN5bmN0di5wcm92aWRlci5j'
     'bG91ZHJldmUuUGFnZVBhZ2luYXRpb25IAFIEcGFnZRJFCgZjdXJzb3IYAyABKAsyKy5zeW5jdH'
-    'YucHJvdmlkZXIuY2xvdWRyZXZlLkN1cnNvclBhZ2luYXRpb25IAFIGY3Vyc29yQgwKCnBhZ2lu'
-    'YXRpb24=');
+    'YucHJvdmlkZXIuY2xvdWRyZXZlLkN1cnNvclBhZ2luYXRpb25IAFIGY3Vyc29yEkAKBnNvdXJj'
+    'ZRgEIAEoCzIoLnN5bmN0di5wcm92aWRlci5jb21tb24uRGlzY292ZXJlZFNvdXJjZVIGc291cm'
+    'NlQgwKCnBhZ2luYXRpb24=');
 
 @$core.Deprecated('Use pagePaginationDescriptor instead')
 const PagePagination$json = {
@@ -204,6 +213,14 @@ const FileItem$json = {
     {'1': 'is_dir', '3': 5, '4': 1, '5': 8, '10': 'isDir'},
     {'1': 'modified', '3': 6, '4': 1, '5': 3, '10': 'modified'},
     {'1': 'thumbnail', '3': 7, '4': 1, '5': 9, '10': 'thumbnail'},
+    {
+      '1': 'source',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -212,7 +229,8 @@ final $typed_data.Uint8List fileItemDescriptor = $convert.base64Decode(
     'CghGaWxlSXRlbRIOCgJpZBgBIAEoCVICaWQSEgoEbmFtZRgCIAEoCVIEbmFtZRISCgRwYXRoGA'
     'MgASgJUgRwYXRoEhIKBHNpemUYBCABKARSBHNpemUSFQoGaXNfZGlyGAUgASgIUgVpc0RpchIa'
     'Cghtb2RpZmllZBgGIAEoA1IIbW9kaWZpZWQSHAoJdGh1bWJuYWlsGAcgASgJUgl0aHVtYm5haW'
-    'w=');
+    'wSQAoGc291cmNlGAggASgLMiguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291'
+    'cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use getMeRequestDescriptor instead')
 const GetMeRequest$json = {

@@ -4,6 +4,7 @@ import 'package:synctv_app/core/media/local_image_upload.dart';
 import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/contracts/admin_models.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
@@ -30,6 +31,8 @@ import 'package:synctv_app/src/generated/proto/providers/bilibili.pb.dart'
     as bilibili;
 import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
     as provider_common_enum;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/providers/douyin.pb.dart'
     as douyin;
 import 'package:synctv_app/src/generated/proto/providers/huya.pb.dart' as huya;
@@ -1050,39 +1053,27 @@ class SyncTvService {
     String roomId, {
     required String name,
     String parentId = '',
-    String sourceProvider = '',
-    Map<String, dynamic> sourceConfig = const {},
-    String providerInstanceName = '',
     String description = '',
   }) async {
     return _domains.roomMedia.createPlaylist(
       roomId,
       name: name,
       parentId: parentId,
-      sourceProvider: sourceProvider,
-      sourceConfig: sourceConfig,
-      providerInstanceName: providerInstanceName,
       description: description,
     );
   }
 
-  static Future<RoomPlaylistItem> createPlaylistFromSourceConfig(
-    String roomId, {
-    required String name,
-    required source_config.PlaylistSourceConfig sourceConfig,
-    String parentId = '',
-    String providerInstanceName = '',
-    String description = '',
-  }) {
-    return _domains.roomMedia.createPlaylistFromSourceConfig(
-      roomId,
-      name: name,
-      sourceConfig: sourceConfig,
-      parentId: parentId,
-      providerInstanceName: providerInstanceName,
-      description: description,
-    );
-  }
+  static Future<provider_common.PreparedMediaSource> prepareDirectUrl(
+    provider_common.PrepareDirectUrlRequest intent,
+  ) => _domains.providers.prepareDirectUrl(intent);
+
+  static Future<provider_common.PreparedMediaSource> prepareLiveProxy(
+    provider_common.PrepareLiveProxyRequest intent,
+  ) => _domains.providers.prepareLiveProxy(intent);
+
+  static Future<provider_common.PreparedMediaSource> prepareRtmp(
+    source_enum.RtmpStreamMode mode,
+  ) => _domains.providers.prepareRtmp(mode);
 
   static Future<RoomPlaylistItem> updatePlaylist(
     String roomId,
@@ -1548,285 +1539,29 @@ class SyncTvService {
     );
   }
 
-  static Future<String> addDirectUrlMedia(
+  static Future<String> addDiscoveredSource(
     String roomId, {
+    required provider_common.DiscoveredSource source,
     String playlistId = '',
-    required String url,
-    required source_enum.PlaybackKind playbackKind,
-    Map<String, String> headers = const {},
     String name = '',
-    bool preferProxy = false,
-    bool proxyOnly = false,
-  }) {
-    return _domains.roomMedia.addDirectUrlMedia(
+  }) async {
+    if (source.isMedia) {
+      return _domains.roomMedia.addMediaFromSourceConfig(
+        roomId,
+        playlistId: playlistId,
+        providerInstanceName: source.providerInstanceName,
+        sourceConfig: source.requireMedia(),
+        name: name,
+      );
+    }
+    final playlist = await _domains.roomMedia.createPlaylistFromSourceConfig(
       roomId,
-      playlistId: playlistId,
-      url: url,
-      playbackKind: playbackKind,
-      headers: headers,
-      name: name,
-      preferProxy: preferProxy,
-      proxyOnly: proxyOnly,
-    );
-  }
-
-  static Future<String> addBilibiliMedia(
-    String roomId, {
-    String playlistId = '',
-    String providerInstanceName = '',
-    required Map<String, dynamic> sourceConfig,
-    String name = '',
-  }) {
-    return _domains.roomMedia.addBilibiliMedia(
-      roomId,
-      playlistId: playlistId,
-      providerInstanceName: providerInstanceName,
-      sourceConfig: sourceConfig,
+      parentId: playlistId,
+      providerInstanceName: source.providerInstanceName,
+      sourceConfig: source.requirePlaylist(),
       name: name,
     );
-  }
-
-  static Future<String> addMediaFromSourceConfig(
-    String roomId, {
-    String playlistId = '',
-    String providerInstanceName = '',
-    required source_config.MediaSourceConfig sourceConfig,
-    String name = '',
-  }) {
-    return _domains.roomMedia.addMediaFromSourceConfig(
-      roomId,
-      playlistId: playlistId,
-      providerInstanceName: providerInstanceName,
-      sourceConfig: sourceConfig,
-      name: name,
-    );
-  }
-
-  static Future<String> addAlistMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String password = '',
-    String name = '',
-    String providerInstanceName = '',
-  }) {
-    return _domains.roomMedia.addAlistMedia(
-      roomId,
-      playlistId: playlistId,
-      serverId: serverId,
-      path: path,
-      password: password,
-      providerInstanceName: providerInstanceName,
-      name: name,
-    );
-  }
-
-  static Future<String> addEmbyMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String itemId,
-    String name = '',
-    String providerInstanceName = '',
-  }) {
-    return _domains.roomMedia.addEmbyMedia(
-      roomId,
-      playlistId: playlistId,
-      serverId: serverId,
-      itemId: itemId,
-      providerInstanceName: providerInstanceName,
-      name: name,
-    );
-  }
-
-  static Future<String> addCloudreveMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) {
-    return _domains.roomMedia.addCloudreveMedia(
-      roomId,
-      playlistId: playlistId,
-      serverId: serverId,
-      path: path,
-      providerInstanceName: providerInstanceName,
-      name: name,
-    );
-  }
-
-  static Future<String> addFnosFileMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addFnosFileMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addFnosMediaLibraryItem(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String itemGuid,
-    String mediaGuid = '',
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addFnosMediaLibraryItem(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    itemGuid: itemGuid,
-    mediaGuid: mediaGuid,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addQnapMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addQnapMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addNextcloudMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    required int fileId,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addNextcloudMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    fileId: fileId,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addSeafileMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String repositoryId,
-    required String path,
-    required String objectId,
-    required bool hasThumbnail,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addSeafileMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    repositoryId: repositoryId,
-    path: path,
-    objectId: objectId,
-    hasThumbnail: hasThumbnail,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addTrueNasMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addTrueNasMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addSynologyFileMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String path,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addSynologyFileMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    path: path,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addSynologyLibraryMedia(
-    String roomId, {
-    String playlistId = '',
-    required String serverId,
-    required String kind,
-    required int itemId,
-    required int fileId,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addSynologyLibraryMedia(
-    roomId,
-    playlistId: playlistId,
-    serverId: serverId,
-    kind: kind,
-    itemId: itemId,
-    fileId: fileId,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addRtmpMedia(
-    String roomId, {
-    String playlistId = '',
-    String name = '',
-    source_enum.RtmpStreamMode mode =
-        source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
-  }) {
-    return _domains.roomMedia.addRtmpMedia(
-      roomId,
-      playlistId: playlistId,
-      name: name,
-      mode: mode,
-    );
-  }
-
-  static Future<String> addLiveProxyMedia(
-    String roomId, {
-    String playlistId = '',
-    required source_config.LiveProxyMediaSourceConfig sourceConfig,
-    String name = '',
-  }) {
-    return _domains.roomMedia.addLiveProxyMedia(
-      roomId,
-      playlistId: playlistId,
-      sourceConfig: sourceConfig,
-      name: name,
-    );
+    return playlist.id;
   }
 
   static Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
@@ -1844,13 +1579,6 @@ class SyncTvService {
       roomId: roomId,
       mediaId: mediaId,
     );
-  }
-
-  static Future<void> addMediaBatch(
-    String roomId,
-    List<Map<String, dynamic>> items,
-  ) {
-    return _domains.roomMedia.addMediaBatch(roomId, items);
   }
 
   static Future<void> deleteMedia(String roomId, String mediaId) async {
@@ -1968,138 +1696,6 @@ class SyncTvService {
     email,
     password,
     instanceName: instanceName,
-  );
-
-  static Future<String> addTwitchMedia(
-    String roomId, {
-    String playlistId = '',
-    required String kind,
-    required String id,
-    bool shared = false,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addTwitchMedia(
-    roomId,
-    playlistId: playlistId,
-    kind: kind,
-    id: id,
-    shared: shared,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addYoutubeMedia(
-    String roomId, {
-    String playlistId = '',
-    required String videoId,
-    bool shared = false,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addYoutubeMedia(
-    roomId,
-    playlistId: playlistId,
-    videoId: videoId,
-    shared: shared,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addDouyinMedia(
-    String roomId, {
-    String playlistId = '',
-    required String kind,
-    required String id,
-    bool shared = false,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addDouyinMedia(
-    roomId,
-    playlistId: playlistId,
-    kind: kind,
-    id: id,
-    shared: shared,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addTikTokMedia(
-    String roomId, {
-    String playlistId = '',
-    required String kind,
-    required String id,
-    bool shared = false,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addTikTokMedia(
-    roomId,
-    playlistId: playlistId,
-    kind: kind,
-    id: id,
-    shared: shared,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addHuyaMedia(
-    String roomId, {
-    String playlistId = '',
-    required String kind,
-    required String id,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addHuyaMedia(
-    roomId,
-    playlistId: playlistId,
-    kind: kind,
-    id: id,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addDouyuMedia(
-    String roomId, {
-    String playlistId = '',
-    required String room,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addDouyuMedia(
-    roomId,
-    playlistId: playlistId,
-    room: room,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addAcFunMedia(
-    String roomId, {
-    String playlistId = '',
-    required String kind,
-    required String id,
-    String? episodeQuery,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addAcFunMedia(
-    roomId,
-    playlistId: playlistId,
-    kind: kind,
-    id: id,
-    episodeQuery: episodeQuery,
-    name: name,
-    providerInstanceName: providerInstanceName,
-  );
-
-  static Future<String> addCctvMedia(
-    String roomId, {
-    String playlistId = '',
-    required String resource,
-    String name = '',
-    String providerInstanceName = '',
-  }) => _domains.roomMedia.addCctvMedia(
-    roomId,
-    playlistId: playlistId,
-    resource: resource,
-    name: name,
-    providerInstanceName: providerInstanceName,
   );
 
   static Future<void> logoutCloudreve(String serverId) =>
@@ -2489,30 +2085,39 @@ class SyncTvService {
   static Future<twitch.ResolveResponse> resolveTwitch(
     String resource, {
     String instanceName = '',
-  }) => _domains.providers.resolveTwitch(resource, instanceName: instanceName);
+    bool shared = false,
+  }) => _domains.providers.resolveTwitch(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   static Future<twitch.ListChannelItemsResponse> listTwitchChannelItems(
-    String channel, {
+    String resource, {
     required source_enum.TwitchPlaylistContent content,
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.listTwitchChannelItems(
-    channel,
+    resource,
     content: content,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   static Future<twitch.ListFollowedLiveResponse> listTwitchFollowedLive({
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.listTwitchFollowedLive(
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   static Future<twitch.ListCategoryStreamsResponse> listTwitchCategoryStreams({
@@ -2521,22 +2126,26 @@ class SyncTvService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.listTwitchCategoryStreams(
     categoryId: categoryId,
     categoryName: categoryName,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   static Future<twitch.ListTopCategoriesResponse> listTwitchTopCategories({
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.listTwitchTopCategories(
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   static Future<twitch.SearchLiveChannelsResponse> searchTwitchLiveChannels(
@@ -2544,11 +2153,13 @@ class SyncTvService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.searchTwitchLiveChannels(
     query,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   static Future<twitch.ListScheduleResponse> listTwitchSchedule(
@@ -2556,24 +2167,34 @@ class SyncTvService {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.listTwitchSchedule(
     broadcasterId,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
-  static Future<huya.ResolveResponse> resolveHuya(String resource) =>
-      _domains.providers.resolveHuya(resource);
+  static Future<huya.ResolveResponse> resolveHuya(
+    String resource, {
+    String instanceName = '',
+  }) => _domains.providers.resolveHuya(resource, instanceName: instanceName);
 
-  static Future<douyu.ResolveResponse> resolveDouyu(String resource) =>
-      _domains.providers.resolveDouyu(resource);
+  static Future<douyu.ResolveResponse> resolveDouyu(
+    String resource, {
+    String instanceName = '',
+  }) => _domains.providers.resolveDouyu(resource, instanceName: instanceName);
 
-  static Future<acfun.ResolveResponse> resolveAcFun(String resource) =>
-      _domains.providers.resolveAcFun(resource);
+  static Future<acfun.ResolveResponse> resolveAcFun(
+    String resource, {
+    String instanceName = '',
+  }) => _domains.providers.resolveAcFun(resource, instanceName: instanceName);
 
-  static Future<cctv.ResolveResponse> resolveCctv(String resource) =>
-      _domains.providers.resolveCctv(resource);
+  static Future<cctv.ResolveResponse> resolveCctv(
+    String resource, {
+    String instanceName = '',
+  }) => _domains.providers.resolveCctv(resource, instanceName: instanceName);
 
   static Future<YoutubeBindInfo> bindYoutube({
     required String label,
@@ -2595,7 +2216,16 @@ class SyncTvService {
   static Future<youtube.ResolveResponse> resolveYoutube(
     String resource, {
     String instanceName = '',
-  }) => _domains.providers.resolveYoutube(resource, instanceName: instanceName);
+    bool shared = false,
+  }) => _domains.providers.resolveYoutube(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
+
+  static Future<youtube.ListResponse> listYoutube(
+    youtube.ListRequest request,
+  ) => _domains.providers.listYoutube(request);
 
   static Future<DouyinBindInfo> bindDouyin({
     required String label,
@@ -2613,18 +2243,25 @@ class SyncTvService {
   static Future<douyin.ResolveResponse> resolveDouyin(
     String resource, {
     String instanceName = '',
-  }) => _domains.providers.resolveDouyin(resource, instanceName: instanceName);
+    bool shared = false,
+  }) => _domains.providers.resolveDouyin(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   static Future<douyin.ListUserPostsResponse> listDouyinUserPosts(
     String secUid, {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.listDouyinUserPosts(
     secUid,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   static Future<TikTokBindInfo> bindTikTok({
@@ -2643,23 +2280,35 @@ class SyncTvService {
   static Future<tiktok.ResolveResponse> resolveTikTok(
     String resource, {
     String instanceName = '',
-  }) => _domains.providers.resolveTikTok(resource, instanceName: instanceName);
+    bool shared = false,
+  }) => _domains.providers.resolveTikTok(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   static Future<tiktok.GetUserResponse> getTikTokUser(
-    String uniqueId, {
+    String resource, {
     String instanceName = '',
-  }) => _domains.providers.getTikTokUser(uniqueId, instanceName: instanceName);
+    bool shared = false,
+  }) => _domains.providers.getTikTokUser(
+    resource,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   static Future<tiktok.ListUserPostsResponse> listTikTokUserPosts(
     String secUid, {
     String? cursor,
     int pageSize = 20,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.listTikTokUserPosts(
     secUid,
     cursor: cursor,
     pageSize: pageSize,
     instanceName: instanceName,
+    shared: shared,
   );
 
   static Future<void> logoutEmby(String serverId) {
@@ -2678,15 +2327,21 @@ class SyncTvService {
 
   static Future<List<BilibiliLiveAreaInfo>> listBilibiliLiveAreas({
     String instanceName = '',
+    bool shared = false,
   }) {
-    return _domains.providers.listBilibiliLiveAreas(instanceName: instanceName);
+    return _domains.providers.listBilibiliLiveAreas(
+      instanceName: instanceName,
+      shared: shared,
+    );
   }
 
   static Future<List<BilibiliFavoriteFolderInfo>> listBilibiliFavoriteFolders({
     String instanceName = '',
+    bool shared = false,
   }) {
     return _domains.providers.listBilibiliFavoriteFolders(
       instanceName: instanceName,
+      shared: shared,
     );
   }
 
@@ -2695,12 +2350,14 @@ class SyncTvService {
     int page = 1,
     int pageSize = 30,
     String instanceName = '',
+    bool shared = false,
   }) {
     return _domains.providers.listBilibiliFollowedPgc(
       cinema: cinema,
       page: page,
       pageSize: pageSize,
       instanceName: instanceName,
+      shared: shared,
     );
   }
 
@@ -2859,11 +2516,13 @@ class SyncTvService {
     int beforeDays = 3,
     int afterDays = 7,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.listBilibiliPgcTimeline(
     type: type,
     beforeDays: beforeDays,
     afterDays: afterDays,
     instanceName: instanceName,
+    shared: shared,
   );
 
   static Future<BilibiliPgcSeasonPage> listBilibiliPgcSeasons({
@@ -2877,6 +2536,7 @@ class SyncTvService {
     String? year,
     int? styleId,
     String instanceName = '',
+    bool shared = false,
   }) => _domains.providers.listBilibiliPgcSeasons(
     type: type,
     page: page,
@@ -2888,17 +2548,38 @@ class SyncTvService {
     year: year,
     styleId: styleId,
     instanceName: instanceName,
+    shared: shared,
   );
 
   static Future<BilibiliParseInfo> parseBilibiliInfo(
     String url, {
     String instanceName = '',
+    bool shared = false,
   }) async {
     return _domains.providers.parseBilibiliInfo(
       url,
       instanceName: instanceName,
+      shared: shared,
     );
   }
+
+  static Future<BilibiliPlaylistListPage> listBilibiliPlaylist(
+    BilibiliPlaylistListIntent intent, {
+    int page = 1,
+    int pageSize = 30,
+    String? cursor,
+    String search = '',
+    String instanceName = '',
+    bool shared = false,
+  }) => _domains.providers.listBilibiliPlaylist(
+    intent,
+    page: page,
+    pageSize: pageSize,
+    cursor: cursor,
+    search: search,
+    instanceName: instanceName,
+    shared: shared,
+  );
 
   static Future<AlistListPage> listAlistPage(
     String path, {
@@ -2957,7 +2638,9 @@ class SyncTvService {
   );
 
   static Future<EmbyListPage> listEmbyPage(
-    String path, {
+    EmbyListMode mode, {
+    String targetId = '',
+    List<String> itemTypes = const [],
     String? keyword,
     int page = 1,
     int max = 20,
@@ -2965,7 +2648,9 @@ class SyncTvService {
     String instanceName = '',
   }) async {
     return _domains.providers.listEmbyPage(
-      path,
+      mode,
+      targetId: targetId,
+      itemTypes: itemTypes,
       keyword: keyword,
       page: page,
       max: max,

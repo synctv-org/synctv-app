@@ -15,7 +15,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../source_config.pb.dart' as $0;
+import '../source_config.pbenum.dart' as $1;
+import 'common.pb.dart' as $0;
 import 'twitch.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -576,10 +577,12 @@ class ResolveRequest extends $pb.GeneratedMessage {
   factory ResolveRequest({
     $core.String? resource,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (resource != null) result.resource = resource;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -599,6 +602,7 @@ class ResolveRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'resource')
     ..aOS(2, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(3, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -637,6 +641,15 @@ class ResolveRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(1);
   @$pb.TagNumber(2)
   void clearInstanceName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get shared => $_getBF(2);
+  @$pb.TagNumber(3)
+  set shared($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasShared() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearShared() => $_clearField(3);
 }
 
 class Chapter extends $pb.GeneratedMessage {
@@ -1039,13 +1052,13 @@ class ResolveResponse extends $pb.GeneratedMessage {
     ResourceKind? kind,
     Metadata? metadata,
     $core.Iterable<Quality>? qualities,
-    $0.TwitchMediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (kind != null) result.kind = kind;
     if (metadata != null) result.metadata = metadata;
     if (qualities != null) result.qualities.addAll(qualities);
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1069,8 +1082,8 @@ class ResolveResponse extends $pb.GeneratedMessage {
         subBuilder: Metadata.create)
     ..pPM<Quality>(3, _omitFieldNames ? '' : 'qualities',
         subBuilder: Quality.create)
-    ..aOM<$0.TwitchMediaSourceConfig>(4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TwitchMediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1116,31 +1129,33 @@ class ResolveResponse extends $pb.GeneratedMessage {
   $pb.PbList<Quality> get qualities => $_getList(2);
 
   @$pb.TagNumber(4)
-  $0.TwitchMediaSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.TwitchMediaSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.TwitchMediaSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class ListChannelItemsRequest extends $pb.GeneratedMessage {
   factory ListChannelItemsRequest({
-    $core.String? channel,
-    $0.TwitchPlaylistContent? content,
+    $core.String? resource,
+    $1.TwitchPlaylistContent? content,
     $core.String? cursor,
     $core.int? pageSize,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
-    if (channel != null) result.channel = channel;
+    if (resource != null) result.resource = resource;
     if (content != null) result.content = content;
     if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -1158,12 +1173,13 @@ class ListChannelItemsRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.twitch'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'channel')
-    ..aE<$0.TwitchPlaylistContent>(2, _omitFieldNames ? '' : 'content',
-        enumValues: $0.TwitchPlaylistContent.values)
+    ..aOS(1, _omitFieldNames ? '' : 'resource')
+    ..aE<$1.TwitchPlaylistContent>(2, _omitFieldNames ? '' : 'content',
+        enumValues: $1.TwitchPlaylistContent.values)
     ..aOS(3, _omitFieldNames ? '' : 'cursor')
     ..aI(4, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..aOS(5, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(6, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1187,18 +1203,18 @@ class ListChannelItemsRequest extends $pb.GeneratedMessage {
   static ListChannelItemsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get channel => $_getSZ(0);
+  $core.String get resource => $_getSZ(0);
   @$pb.TagNumber(1)
-  set channel($core.String value) => $_setString(0, value);
+  set resource($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasChannel() => $_has(0);
+  $core.bool hasResource() => $_has(0);
   @$pb.TagNumber(1)
-  void clearChannel() => $_clearField(1);
+  void clearResource() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $0.TwitchPlaylistContent get content => $_getN(1);
+  $1.TwitchPlaylistContent get content => $_getN(1);
   @$pb.TagNumber(2)
-  set content($0.TwitchPlaylistContent value) => $_setField(2, value);
+  set content($1.TwitchPlaylistContent value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasContent() => $_has(1);
   @$pb.TagNumber(2)
@@ -1230,6 +1246,15 @@ class ListChannelItemsRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(4);
   @$pb.TagNumber(5)
   void clearInstanceName() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get shared => $_getBF(5);
+  @$pb.TagNumber(6)
+  set shared($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasShared() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearShared() => $_clearField(6);
 }
 
 class ListItem extends $pb.GeneratedMessage {
@@ -1241,6 +1266,7 @@ class ListItem extends $pb.GeneratedMessage {
     $fixnum.Int64? durationSeconds,
     $fixnum.Int64? viewCount,
     $core.String? publishedAt,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (kind != null) result.kind = kind;
@@ -1250,6 +1276,7 @@ class ListItem extends $pb.GeneratedMessage {
     if (durationSeconds != null) result.durationSeconds = durationSeconds;
     if (viewCount != null) result.viewCount = viewCount;
     if (publishedAt != null) result.publishedAt = publishedAt;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1279,6 +1306,8 @@ class ListItem extends $pb.GeneratedMessage {
         6, _omitFieldNames ? '' : 'viewCount', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(7, _omitFieldNames ? '' : 'publishedAt')
+    ..aOM<$0.DiscoveredSource>(8, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1361,6 +1390,17 @@ class ListItem extends $pb.GeneratedMessage {
   $core.bool hasPublishedAt() => $_has(6);
   @$pb.TagNumber(7)
   void clearPublishedAt() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource get source => $_getN(7);
+  @$pb.TagNumber(8)
+  set source($0.DiscoveredSource value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSource() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSource() => $_clearField(8);
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource ensureSource() => $_ensure(7);
 }
 
 class ListChannelItemsResponse extends $pb.GeneratedMessage {
@@ -1368,13 +1408,13 @@ class ListChannelItemsResponse extends $pb.GeneratedMessage {
     $core.Iterable<ListItem>? items,
     $core.String? cursor,
     $core.bool? hasMore,
-    $0.TwitchPlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (cursor != null) result.cursor = cursor;
     if (hasMore != null) result.hasMore = hasMore;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1396,9 +1436,8 @@ class ListChannelItemsResponse extends $pb.GeneratedMessage {
         subBuilder: ListItem.create)
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aOB(3, _omitFieldNames ? '' : 'hasMore')
-    ..aOM<$0.TwitchPlaylistSourceConfig>(
-        4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TwitchPlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1443,15 +1482,15 @@ class ListChannelItemsResponse extends $pb.GeneratedMessage {
   void clearHasMore() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.TwitchPlaylistSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class StreamItem extends $pb.GeneratedMessage {
@@ -1469,7 +1508,7 @@ class StreamItem extends $pb.GeneratedMessage {
     $core.String? language,
     $core.Iterable<$core.String>? tags,
     $core.bool? isMature,
-    $0.TwitchMediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (streamId != null) result.streamId = streamId;
@@ -1485,7 +1524,7 @@ class StreamItem extends $pb.GeneratedMessage {
     if (language != null) result.language = language;
     if (tags != null) result.tags.addAll(tags);
     if (isMature != null) result.isMature = isMature;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1518,8 +1557,8 @@ class StreamItem extends $pb.GeneratedMessage {
     ..aOS(11, _omitFieldNames ? '' : 'language')
     ..pPS(12, _omitFieldNames ? '' : 'tags')
     ..aOB(13, _omitFieldNames ? '' : 'isMature')
-    ..aOM<$0.TwitchMediaSourceConfig>(14, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TwitchMediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(14, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1652,15 +1691,15 @@ class StreamItem extends $pb.GeneratedMessage {
   void clearIsMature() => $_clearField(13);
 
   @$pb.TagNumber(14)
-  $0.TwitchMediaSourceConfig get sourceConfig => $_getN(13);
+  $0.DiscoveredSource get source => $_getN(13);
   @$pb.TagNumber(14)
-  set sourceConfig($0.TwitchMediaSourceConfig value) => $_setField(14, value);
+  set source($0.DiscoveredSource value) => $_setField(14, value);
   @$pb.TagNumber(14)
-  $core.bool hasSourceConfig() => $_has(13);
+  $core.bool hasSource() => $_has(13);
   @$pb.TagNumber(14)
-  void clearSourceConfig() => $_clearField(14);
+  void clearSource() => $_clearField(14);
   @$pb.TagNumber(14)
-  $0.TwitchMediaSourceConfig ensureSourceConfig() => $_ensure(13);
+  $0.DiscoveredSource ensureSource() => $_ensure(13);
 }
 
 class ListFollowedLiveRequest extends $pb.GeneratedMessage {
@@ -1668,11 +1707,13 @@ class ListFollowedLiveRequest extends $pb.GeneratedMessage {
     $core.String? cursor,
     $core.int? pageSize,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -1693,6 +1734,7 @@ class ListFollowedLiveRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'cursor')
     ..aI(2, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..aOS(3, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(4, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1741,6 +1783,15 @@ class ListFollowedLiveRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(2);
   @$pb.TagNumber(3)
   void clearInstanceName() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get shared => $_getBF(3);
+  @$pb.TagNumber(4)
+  set shared($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasShared() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearShared() => $_clearField(4);
 }
 
 class ListFollowedLiveResponse extends $pb.GeneratedMessage {
@@ -1748,13 +1799,13 @@ class ListFollowedLiveResponse extends $pb.GeneratedMessage {
     $core.Iterable<StreamItem>? items,
     $core.String? cursor,
     $core.bool? hasMore,
-    $0.TwitchPlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (cursor != null) result.cursor = cursor;
     if (hasMore != null) result.hasMore = hasMore;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1776,9 +1827,8 @@ class ListFollowedLiveResponse extends $pb.GeneratedMessage {
         subBuilder: StreamItem.create)
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aOB(3, _omitFieldNames ? '' : 'hasMore')
-    ..aOM<$0.TwitchPlaylistSourceConfig>(
-        4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TwitchPlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1823,15 +1873,15 @@ class ListFollowedLiveResponse extends $pb.GeneratedMessage {
   void clearHasMore() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.TwitchPlaylistSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class ListCategoryStreamsRequest extends $pb.GeneratedMessage {
@@ -1841,6 +1891,7 @@ class ListCategoryStreamsRequest extends $pb.GeneratedMessage {
     $core.String? cursor,
     $core.int? pageSize,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (categoryId != null) result.categoryId = categoryId;
@@ -1848,6 +1899,7 @@ class ListCategoryStreamsRequest extends $pb.GeneratedMessage {
     if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -1870,6 +1922,7 @@ class ListCategoryStreamsRequest extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'cursor')
     ..aI(4, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..aOS(5, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(6, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1937,6 +1990,15 @@ class ListCategoryStreamsRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(4);
   @$pb.TagNumber(5)
   void clearInstanceName() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get shared => $_getBF(5);
+  @$pb.TagNumber(6)
+  set shared($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasShared() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearShared() => $_clearField(6);
 }
 
 class ListCategoryStreamsResponse extends $pb.GeneratedMessage {
@@ -1944,13 +2006,13 @@ class ListCategoryStreamsResponse extends $pb.GeneratedMessage {
     $core.Iterable<StreamItem>? items,
     $core.String? cursor,
     $core.bool? hasMore,
-    $0.TwitchPlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (cursor != null) result.cursor = cursor;
     if (hasMore != null) result.hasMore = hasMore;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1972,9 +2034,8 @@ class ListCategoryStreamsResponse extends $pb.GeneratedMessage {
         subBuilder: StreamItem.create)
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aOB(3, _omitFieldNames ? '' : 'hasMore')
-    ..aOM<$0.TwitchPlaylistSourceConfig>(
-        4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TwitchPlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2021,15 +2082,15 @@ class ListCategoryStreamsResponse extends $pb.GeneratedMessage {
   void clearHasMore() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.TwitchPlaylistSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class CategoryItem extends $pb.GeneratedMessage {
@@ -2037,13 +2098,13 @@ class CategoryItem extends $pb.GeneratedMessage {
     $core.String? id,
     $core.String? name,
     $core.String? boxArtUrl,
-    $0.TwitchPlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (id != null) result.id = id;
     if (name != null) result.name = name;
     if (boxArtUrl != null) result.boxArtUrl = boxArtUrl;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -2064,9 +2125,8 @@ class CategoryItem extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'boxArtUrl')
-    ..aOM<$0.TwitchPlaylistSourceConfig>(
-        4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TwitchPlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2116,15 +2176,15 @@ class CategoryItem extends $pb.GeneratedMessage {
   void clearBoxArtUrl() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.TwitchPlaylistSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class ListTopCategoriesRequest extends $pb.GeneratedMessage {
@@ -2132,11 +2192,13 @@ class ListTopCategoriesRequest extends $pb.GeneratedMessage {
     $core.String? cursor,
     $core.int? pageSize,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -2157,6 +2219,7 @@ class ListTopCategoriesRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'cursor')
     ..aI(2, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..aOS(3, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(4, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2205,6 +2268,15 @@ class ListTopCategoriesRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(2);
   @$pb.TagNumber(3)
   void clearInstanceName() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get shared => $_getBF(3);
+  @$pb.TagNumber(4)
+  set shared($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasShared() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearShared() => $_clearField(4);
 }
 
 class ListTopCategoriesResponse extends $pb.GeneratedMessage {
@@ -2288,12 +2360,14 @@ class SearchLiveChannelsRequest extends $pb.GeneratedMessage {
     $core.String? cursor,
     $core.int? pageSize,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (query != null) result.query = query;
     if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -2315,6 +2389,7 @@ class SearchLiveChannelsRequest extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aI(3, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..aOS(4, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(5, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2372,6 +2447,15 @@ class SearchLiveChannelsRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(3);
   @$pb.TagNumber(4)
   void clearInstanceName() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get shared => $_getBF(4);
+  @$pb.TagNumber(5)
+  set shared($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasShared() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearShared() => $_clearField(5);
 }
 
 class SearchChannelItem extends $pb.GeneratedMessage {
@@ -2387,7 +2471,7 @@ class SearchChannelItem extends $pb.GeneratedMessage {
     $core.String? startedAt,
     $core.String? language,
     $core.Iterable<$core.String>? tags,
-    $0.TwitchMediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
@@ -2401,7 +2485,7 @@ class SearchChannelItem extends $pb.GeneratedMessage {
     if (startedAt != null) result.startedAt = startedAt;
     if (language != null) result.language = language;
     if (tags != null) result.tags.addAll(tags);
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -2430,8 +2514,8 @@ class SearchChannelItem extends $pb.GeneratedMessage {
     ..aOS(9, _omitFieldNames ? '' : 'startedAt')
     ..aOS(10, _omitFieldNames ? '' : 'language')
     ..pPS(11, _omitFieldNames ? '' : 'tags')
-    ..aOM<$0.TwitchMediaSourceConfig>(12, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TwitchMediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(12, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2547,15 +2631,15 @@ class SearchChannelItem extends $pb.GeneratedMessage {
   $pb.PbList<$core.String> get tags => $_getList(10);
 
   @$pb.TagNumber(12)
-  $0.TwitchMediaSourceConfig get sourceConfig => $_getN(11);
+  $0.DiscoveredSource get source => $_getN(11);
   @$pb.TagNumber(12)
-  set sourceConfig($0.TwitchMediaSourceConfig value) => $_setField(12, value);
+  set source($0.DiscoveredSource value) => $_setField(12, value);
   @$pb.TagNumber(12)
-  $core.bool hasSourceConfig() => $_has(11);
+  $core.bool hasSource() => $_has(11);
   @$pb.TagNumber(12)
-  void clearSourceConfig() => $_clearField(12);
+  void clearSource() => $_clearField(12);
   @$pb.TagNumber(12)
-  $0.TwitchMediaSourceConfig ensureSourceConfig() => $_ensure(11);
+  $0.DiscoveredSource ensureSource() => $_ensure(11);
 }
 
 class SearchLiveChannelsResponse extends $pb.GeneratedMessage {
@@ -2563,13 +2647,13 @@ class SearchLiveChannelsResponse extends $pb.GeneratedMessage {
     $core.Iterable<SearchChannelItem>? items,
     $core.String? cursor,
     $core.bool? hasMore,
-    $0.TwitchPlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (cursor != null) result.cursor = cursor;
     if (hasMore != null) result.hasMore = hasMore;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -2591,9 +2675,8 @@ class SearchLiveChannelsResponse extends $pb.GeneratedMessage {
         subBuilder: SearchChannelItem.create)
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aOB(3, _omitFieldNames ? '' : 'hasMore')
-    ..aOM<$0.TwitchPlaylistSourceConfig>(
-        4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TwitchPlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2639,15 +2722,15 @@ class SearchLiveChannelsResponse extends $pb.GeneratedMessage {
   void clearHasMore() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.TwitchPlaylistSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.TwitchPlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class ListScheduleRequest extends $pb.GeneratedMessage {
@@ -2656,12 +2739,14 @@ class ListScheduleRequest extends $pb.GeneratedMessage {
     $core.String? cursor,
     $core.int? pageSize,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (broadcasterId != null) result.broadcasterId = broadcasterId;
     if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -2683,6 +2768,7 @@ class ListScheduleRequest extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aI(3, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..aOS(4, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(5, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2739,6 +2825,15 @@ class ListScheduleRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(3);
   @$pb.TagNumber(4)
   void clearInstanceName() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get shared => $_getBF(4);
+  @$pb.TagNumber(5)
+  set shared($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasShared() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearShared() => $_clearField(5);
 }
 
 class ScheduleSegment extends $pb.GeneratedMessage {
@@ -2888,7 +2983,7 @@ class ListScheduleResponse extends $pb.GeneratedMessage {
     $core.Iterable<ScheduleSegment>? segments,
     $core.String? cursor,
     $core.bool? hasMore,
-    $0.TwitchMediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (broadcasterId != null) result.broadcasterId = broadcasterId;
@@ -2897,7 +2992,7 @@ class ListScheduleResponse extends $pb.GeneratedMessage {
     if (segments != null) result.segments.addAll(segments);
     if (cursor != null) result.cursor = cursor;
     if (hasMore != null) result.hasMore = hasMore;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -2922,8 +3017,8 @@ class ListScheduleResponse extends $pb.GeneratedMessage {
         subBuilder: ScheduleSegment.create)
     ..aOS(5, _omitFieldNames ? '' : 'cursor')
     ..aOB(6, _omitFieldNames ? '' : 'hasMore')
-    ..aOM<$0.TwitchMediaSourceConfig>(7, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TwitchMediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(7, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2994,15 +3089,15 @@ class ListScheduleResponse extends $pb.GeneratedMessage {
   void clearHasMore() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $0.TwitchMediaSourceConfig get sourceConfig => $_getN(6);
+  $0.DiscoveredSource get source => $_getN(6);
   @$pb.TagNumber(7)
-  set sourceConfig($0.TwitchMediaSourceConfig value) => $_setField(7, value);
+  set source($0.DiscoveredSource value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasSourceConfig() => $_has(6);
+  $core.bool hasSource() => $_has(6);
   @$pb.TagNumber(7)
-  void clearSourceConfig() => $_clearField(7);
+  void clearSource() => $_clearField(7);
   @$pb.TagNumber(7)
-  $0.TwitchMediaSourceConfig ensureSourceConfig() => $_ensure(6);
+  $0.DiscoveredSource ensureSource() => $_ensure(6);
 }
 
 const $core.bool _omitFieldNames =

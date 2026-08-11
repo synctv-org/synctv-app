@@ -16,6 +16,8 @@ import 'package:synctv_app/features/room/data/synctv_room_session_gateway.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
@@ -74,11 +76,16 @@ void main() {
         );
         await SyncTvService.addRoomMember(roomId, memberId, notify: false);
         await SyncTvService.addRoomMember(roomId, viewerId, notify: false);
-        final mediaId = await SyncTvService.addDirectUrlMedia(
+        final preview = await SyncTvService.prepareDirectUrl(
+          provider_common.PrepareDirectUrlRequest(
+            url:
+                'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+            playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
+          ),
+        );
+        final mediaId = await SyncTvService.addDiscoveredSource(
           roomId,
-          url:
-              'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
-          playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
+          source: preview.source,
           name: 'Multi-user bee',
         );
         await SyncTvService.switchMediaAndPlay(roomId, mediaId);

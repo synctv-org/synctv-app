@@ -115,6 +115,29 @@ class PlaybackKind extends $pb.ProtobufEnum {
   const PlaybackKind._(super.value, super.name);
 }
 
+class PlaybackProxyMode extends $pb.ProtobufEnum {
+  static const PlaybackProxyMode PLAYBACK_PROXY_MODE_AUTO =
+      PlaybackProxyMode._(0, _omitEnumNames ? '' : 'PLAYBACK_PROXY_MODE_AUTO');
+  static const PlaybackProxyMode PLAYBACK_PROXY_MODE_PREFER =
+      PlaybackProxyMode._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_PROXY_MODE_PREFER');
+  static const PlaybackProxyMode PLAYBACK_PROXY_MODE_ONLY =
+      PlaybackProxyMode._(2, _omitEnumNames ? '' : 'PLAYBACK_PROXY_MODE_ONLY');
+
+  static const $core.List<PlaybackProxyMode> values = <PlaybackProxyMode>[
+    PLAYBACK_PROXY_MODE_AUTO,
+    PLAYBACK_PROXY_MODE_PREFER,
+    PLAYBACK_PROXY_MODE_ONLY,
+  ];
+
+  static final $core.List<PlaybackProxyMode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static PlaybackProxyMode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackProxyMode._(super.value, super.name);
+}
+
 class RtmpStreamMode extends $pb.ProtobufEnum {
   static const RtmpStreamMode RTMP_STREAM_MODE_UNSPECIFIED =
       RtmpStreamMode._(0, _omitEnumNames ? '' : 'RTMP_STREAM_MODE_UNSPECIFIED');

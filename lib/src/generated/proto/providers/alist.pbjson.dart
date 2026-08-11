@@ -95,13 +95,22 @@ const ListResponse$json = {
       '10': 'content'
     },
     {'1': 'total', '3': 2, '4': 1, '5': 4, '10': 'total'},
+    {
+      '1': 'source',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
 /// Descriptor for `ListResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listResponseDescriptor = $convert.base64Decode(
     'CgxMaXN0UmVzcG9uc2USOQoHY29udGVudBgBIAMoCzIfLnN5bmN0di5wcm92aWRlci5hbGlzdC'
-    '5GaWxlSXRlbVIHY29udGVudBIUCgV0b3RhbBgCIAEoBFIFdG90YWw=');
+    '5GaWxlSXRlbVIHY29udGVudBIUCgV0b3RhbBgCIAEoBFIFdG90YWwSQAoGc291cmNlGAMgASgL'
+    'Miguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use searchRequestDescriptor instead')
 const SearchRequest$json = {
@@ -156,6 +165,14 @@ const SearchItem$json = {
     {'1': 'is_dir', '3': 3, '4': 1, '5': 8, '10': 'isDir'},
     {'1': 'size', '3': 4, '4': 1, '5': 4, '10': 'size'},
     {'1': 'type', '3': 5, '4': 1, '5': 4, '10': 'type'},
+    {
+      '1': 'source',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -163,7 +180,8 @@ const SearchItem$json = {
 final $typed_data.Uint8List searchItemDescriptor = $convert.base64Decode(
     'CgpTZWFyY2hJdGVtEhYKBnBhcmVudBgBIAEoCVIGcGFyZW50EhIKBG5hbWUYAiABKAlSBG5hbW'
     'USFQoGaXNfZGlyGAMgASgIUgVpc0RpchISCgRzaXplGAQgASgEUgRzaXplEhIKBHR5cGUYBSAB'
-    'KARSBHR5cGU=');
+    'KARSBHR5cGUSQAoGc291cmNlGAYgASgLMiguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3'
+    'ZlcmVkU291cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use fileItemDescriptor instead')
 const FileItem$json = {
@@ -176,6 +194,14 @@ const FileItem$json = {
     {'1': 'sign', '3': 5, '4': 1, '5': 9, '10': 'sign'},
     {'1': 'thumb', '3': 6, '4': 1, '5': 9, '10': 'thumb'},
     {'1': 'type', '3': 7, '4': 1, '5': 4, '10': 'type'},
+    {
+      '1': 'source',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -183,7 +209,9 @@ const FileItem$json = {
 final $typed_data.Uint8List fileItemDescriptor = $convert.base64Decode(
     'CghGaWxlSXRlbRISCgRuYW1lGAEgASgJUgRuYW1lEhIKBHNpemUYAiABKARSBHNpemUSFQoGaX'
     'NfZGlyGAMgASgIUgVpc0RpchIaCghtb2RpZmllZBgEIAEoBFIIbW9kaWZpZWQSEgoEc2lnbhgF'
-    'IAEoCVIEc2lnbhIUCgV0aHVtYhgGIAEoCVIFdGh1bWISEgoEdHlwZRgHIAEoBFIEdHlwZQ==');
+    'IAEoCVIEc2lnbhIUCgV0aHVtYhgGIAEoCVIFdGh1bWISEgoEdHlwZRgHIAEoBFIEdHlwZRJACg'
+    'Zzb3VyY2UYCCABKAsyKC5zeW5jdHYucHJvdmlkZXIuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VS'
+    'BnNvdXJjZQ==');
 
 @$core.Deprecated('Use getMeRequestDescriptor instead')
 const GetMeRequest$json = {

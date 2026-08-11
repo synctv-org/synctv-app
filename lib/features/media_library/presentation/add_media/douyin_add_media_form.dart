@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
-import 'package:synctv_app/contracts/douyin_source_config.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/src/generated/proto/providers/douyin.pb.dart'
     as douyin;
-import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
-    as source_config;
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 
 enum DouyinAddMode { video, live, userPosts }
 
 class DouyinAddRequest {
   const DouyinAddRequest({
+    required this.target,
     required this.mode,
     required this.value,
     required this.name,
@@ -20,6 +22,7 @@ class DouyinAddRequest {
     required this.instanceName,
   });
 
+  final ProviderAddTarget target;
   final DouyinAddMode mode;
   final String value;
   final String name;
@@ -46,7 +49,10 @@ class DouyinAddMediaForm extends StatefulWidget {
   final Future<void> Function(DouyinAddRequest request)? onSubmit;
   final Future<douyin.ResolveResponse> Function(DouyinAddRequest request)?
   onResolve;
-  final Future<douyin.ListUserPostsResponse> Function(DouyinAddRequest request)?
+  final Future<douyin.ListUserPostsResponse> Function(
+    DouyinAddRequest request,
+    String? cursor,
+  )?
   onListUserPosts;
 
   @override
@@ -57,9 +63,11 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
   final _valueController = TextEditingController();
   final _nameController = TextEditingController();
   DouyinAddMode _mode = DouyinAddMode.video;
+  ProviderAddTarget _target = ProviderAddTarget.parse;
   bool _shared = false;
   bool _loading = false;
   String _instanceName = '';
+  String _selectedBindId = '';
   douyin.ResolveResponse? _resolved;
   douyin.ListUserPostsResponse? _posts;
 
@@ -80,7 +88,16 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
     setState(() {});
   }
 
+  void _nameChanged() {
+    widget.onDraftChanged(
+      _valueController.text.trim().isNotEmpty ||
+          _nameController.text.trim().isNotEmpty,
+    );
+    setState(() {});
+  }
+
   DouyinAddRequest get _request => DouyinAddRequest(
+    target: _target,
     mode: _mode,
     value: _valueController.text.trim(),
     name: _nameController.text.trim(),
@@ -90,54 +107,62 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
 
   @override
   Widget build(BuildContext context) {
-    final instances = {
-      '',
-      ...widget.binds.map((bind) => bind.providerInstanceName),
-    }.toList();
-    if (!instances.contains(_instanceName)) _instanceName = '';
+    if (_selectedBindId.isNotEmpty &&
+        !widget.binds.any((bind) => bind.id == _selectedBindId)) {
+      _selectedBindId = '';
+      _instanceName = '';
+    }
     return AppSingleChildScrollView(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SegmentedButton<DouyinAddMode>(
-            segments: const [
-              ButtonSegment(
-                value: DouyinAddMode.video,
-                icon: Icon(Icons.play_circle_outline),
-                label: Text('Video'),
-              ),
-              ButtonSegment(
-                value: DouyinAddMode.live,
-                icon: Icon(Icons.live_tv_outlined),
-                label: Text('Live'),
-              ),
-              ButtonSegment(
-                value: DouyinAddMode.userPosts,
-                icon: Icon(Icons.video_library_outlined),
-                label: Text('Posts'),
-              ),
+          ProviderAddTargetSelector(
+            value: _target,
+            targets: const [
+              ProviderAddTarget.parse,
+              ProviderAddTarget.media,
+              ProviderAddTarget.playlist,
             ],
-            selected: {_mode},
-            onSelectionChanged: _loading
-                ? null
-                : (values) {
-                    final mode = values.first;
-                    if (mode == _mode) return;
-                    _mode = mode;
-                    _valueController.clear();
-                    _changed();
-                  },
+            enabled: !_loading,
+            onChanged: _selectTarget,
           ),
+          if (_target == ProviderAddTarget.parse) ...[
+            const SizedBox(height: 12),
+            SegmentedButton<DouyinAddMode>(
+              segments: [
+                ButtonSegment(
+                  value: DouyinAddMode.video,
+                  icon: const Icon(Icons.play_circle_outline),
+                  label: Text(context.l10n.video),
+                ),
+                ButtonSegment(
+                  value: DouyinAddMode.live,
+                  icon: const Icon(Icons.live_tv_outlined),
+                  label: Text(context.l10n.live),
+                ),
+              ],
+              selected: {_mode},
+              onSelectionChanged: _loading
+                  ? null
+                  : (values) {
+                      final mode = values.first;
+                      if (mode == _mode) return;
+                      _mode = mode;
+                      _valueController.clear();
+                      _changed();
+                    },
+            ),
+          ],
           const SizedBox(height: 16),
           AppTextField(
             key: const Key('douyin-value'),
             controller: _valueController,
             enabled: !_loading,
             label: switch (_mode) {
-              DouyinAddMode.video => 'Video URL, short link, or aweme ID',
-              DouyinAddMode.live => 'Live URL or web_rid',
-              DouyinAddMode.userPosts => 'Author sec_uid',
+              DouyinAddMode.video => context.l10n.videoUrlShortLinkOrId,
+              DouyinAddMode.live => context.l10n.liveUrlOrRoomId,
+              DouyinAddMode.userPosts => context.l10n.creatorSecUid,
             },
             prefixIcon: switch (_mode) {
               DouyinAddMode.video => Icons.music_video_outlined,
@@ -149,55 +174,65 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
                 : TextInputType.url,
             onChanged: (_) => _changed(),
           ),
-          const SizedBox(height: 12),
-          AppTextField(
-            key: const Key('douyin-name'),
-            controller: _nameController,
-            enabled: !_loading,
-            label: 'Name',
-            prefixIcon: Icons.title,
-            onChanged: (_) => _changed(),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _instanceName,
-            decoration: const InputDecoration(
-              labelText: 'Provider instance',
-              prefixIcon: Icon(Icons.dns_outlined),
+          if (_target != ProviderAddTarget.media) ...[
+            const SizedBox(height: 12),
+            AppTextField(
+              key: const Key('douyin-name'),
+              controller: _nameController,
+              enabled: !_loading,
+              label: context.l10n.name,
+              prefixIcon: Icons.title,
+              onChanged: (_) => _nameChanged(),
             ),
-            items: instances
-                .map(
-                  (value) => DropdownMenuItem(
-                    value: value,
-                    child: Text(value.isEmpty ? 'Default' : value),
-                  ),
-                )
-                .toList(),
-            onChanged: _loading
-                ? null
-                : (value) => setState(() {
-                    _instanceName = value ?? '';
-                    _resolved = null;
-                    _posts = null;
-                  }),
+          ],
+          const SizedBox(height: 12),
+          ProviderAccountSelector<DouyinBindInfo>(
+            accounts: widget.binds,
+            selectedId: _selectedBindId,
+            idOf: (bind) => bind.id,
+            labelOf: (bind) {
+              final label = bind.label.isEmpty
+                  ? context.l10n.defaultProviderInstance
+                  : bind.label;
+              return bind.providerInstanceName.isEmpty
+                  ? label
+                  : '$label · ${bind.providerInstanceName}';
+            },
+            includeDefault: true,
+            enabled: !_loading,
+            onChanged: (bind) => setState(() {
+              _selectedBindId = bind?.id ?? '';
+              _instanceName = bind?.providerInstanceName ?? '';
+              _resolved = null;
+              _posts = null;
+            }),
           ),
-          SwitchListTile(
+          AppSwitchTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Use room owner credential'),
+            title: Text(context.l10n.shareMyCredentials),
+            prefix: const Icon(Icons.key_rounded),
+            semanticsLabel: context.l10n.shareMyCredentials,
             value: _shared,
             onChanged: _loading
                 ? null
                 : (value) => setState(() {
                     _shared = value;
+                    _resolved = null;
+                    _posts = null;
                   }),
           ),
-          if (_preview() case final preview?) ...[
+          if (_target != ProviderAddTarget.parse && _posts != null) ...[
+            const SizedBox(height: 8),
+            SizedBox(height: 380, child: _postsBrowser()),
+          ] else if (_preview() case final preview?) ...[
             const SizedBox(height: 8),
             preview,
           ],
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 10,
+            runSpacing: 10,
             children: [
               OutlinedButton.icon(
                 key: const Key('douyin-preview'),
@@ -205,29 +240,23 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
                     ? null
                     : _loadPreview,
                 icon: const Icon(Icons.preview_outlined),
-                label: const Text('Preview'),
+                label: Text(context.l10n.preview),
               ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                key: const Key('douyin-submit'),
-                onPressed: _loading || _valueController.text.trim().isEmpty
-                    ? null
-                    : _submit,
-                icon: _loading
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
-                        ),
-                      )
-                    : const Icon(Icons.add),
-                label: Text(
-                  _mode == DouyinAddMode.userPosts
-                      ? 'Create playlist'
-                      : 'Add media',
+              if (_target == ProviderAddTarget.parse)
+                FilledButton.icon(
+                  key: const Key('douyin-submit'),
+                  onPressed: _loading || !_previewReady ? null : _submit,
+                  icon: _loading
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: AppLoadingIndicator(
+                            size: AppLoadingSize.sm,
+                            centered: false,
+                          ),
+                        )
+                      : const Icon(Icons.add),
+                  label: Text(context.l10n.addMedia),
                 ),
-              ),
             ],
           ),
         ],
@@ -237,13 +266,12 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
 
   Widget? _preview() {
     final metadata = _resolved?.metadata;
-    final post = _posts?.items.firstOrNull;
     final imageUrl = metadata?.dynamicCover.url.isNotEmpty == true
         ? metadata!.dynamicCover.url
         : metadata?.cover.url.isNotEmpty == true
         ? metadata!.cover.url
-        : post?.cover.url;
-    final title = metadata?.title ?? post?.title;
+        : null;
+    final title = metadata?.title;
     if (title == null || title.isEmpty) return null;
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -272,7 +300,7 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
                   Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
                   if (metadata != null)
                     Text(
-                      '${metadata.author.nickname} · ${_resolved!.variants.length} variants',
+                      '${metadata.author.nickname} · ${context.l10n.variantsCount(_resolved!.variants.length)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -285,19 +313,49 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
     );
   }
 
+  Widget _postsBrowser() {
+    final posts = _posts!;
+    return DiscoveryBrowser(
+      key: ValueKey('douyin-posts:$_instanceName:${_shared ? 1 : 0}'),
+      items: [
+        for (final item in posts.items)
+          DiscoveryBrowserEntry(
+            key: item.awemeId,
+            title: item.title,
+            subtitle: item.author.nickname,
+            source: item.source,
+            isContainer: false,
+            selectable: item.hasSource(),
+            leading: item.hasCover() && item.cover.url.isNotEmpty
+                ? AppImageThumbnail(
+                    url: item.cover.url,
+                    width: 48,
+                    height: 48,
+                    borderRadius: BorderRadius.circular(4),
+                  )
+                : const Icon(Icons.play_circle_outline),
+          ),
+      ],
+      loading: _loading,
+      hasMore: posts.hasMore,
+      onLoadMore: _loadMorePosts,
+      onAddSelected: _target == ProviderAddTarget.media ? _addSelected : null,
+      onAddCurrentList:
+          _target == ProviderAddTarget.playlist && posts.hasSource()
+          ? _submit
+          : null,
+      target: _target,
+      emptyIcon: Icons.video_library_outlined,
+      emptyTitle: context.l10n.noPosts,
+    );
+  }
+
   Future<void> _loadPreview() async {
     setState(() => _loading = true);
     try {
       final request = _request;
       if (_mode == DouyinAddMode.userPosts) {
-        final list = widget.onListUserPosts;
-        _posts = list != null
-            ? await list(request)
-            : await providerGateway.listDouyinUserPosts(
-                request.value,
-                pageSize: 1,
-                instanceName: request.instanceName,
-              );
+        await _loadUserPosts();
       } else {
         final resolve = widget.onResolve;
         _resolved = resolve != null
@@ -305,6 +363,7 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
             : await providerGateway.resolveDouyin(
                 request.value,
                 instanceName: request.instanceName,
+                shared: request.shared,
               );
       }
     } catch (error) {
@@ -314,39 +373,67 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
     }
   }
 
+  Future<void> _loadUserPosts({bool loadMore = false}) async {
+    final request = _request;
+    final current = _posts;
+    if (loadMore && (current == null || !current.hasMore)) return;
+    final cursor = loadMore && current?.hasCursor() == true
+        ? current!.cursor
+        : null;
+    final list = widget.onListUserPosts;
+    final page = list != null
+        ? await list(request, cursor)
+        : await providerGateway.listDouyinUserPosts(
+            request.value,
+            cursor: cursor,
+            pageSize: 20,
+            instanceName: request.instanceName,
+            shared: request.shared,
+          );
+    _posts = loadMore && current != null
+        ? douyin.ListUserPostsResponse(
+            items: [...current.items, ...page.items],
+            cursor: page.hasCursor() ? page.cursor : null,
+            hasMore: page.hasMore,
+            source: page.hasSource() ? page.source : current.source,
+          )
+        : page;
+  }
+
+  Future<void> _loadMorePosts() async {
+    setState(() => _loading = true);
+    try {
+      await _loadUserPosts(loadMore: true);
+    } catch (error) {
+      if (mounted) AppNotifications.showError(context, '$error');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   Future<void> _submit() async {
     final request = _request;
+    final discovered = _target == ProviderAddTarget.playlist
+        ? (_posts?.hasSource() == true ? _posts!.source : null)
+        : (_resolved?.hasSource() == true ? _resolved!.source : null);
+    if (discovered == null) {
+      AppNotifications.showError(context, context.l10n.previewSourceFirst);
+      return;
+    }
     setState(() => _loading = true);
     try {
       if (widget.onSubmit case final submit?) {
         await submit(request);
-      } else if (_mode == DouyinAddMode.userPosts) {
-        final source = _posts?.hasSourceConfig() == true
-            ? _posts!.sourceConfig
-            : source_config.DouyinPlaylistSourceConfig(secUid: request.value);
-        await providerGateway.createPlaylistFromSourceConfig(
-          widget.roomId,
-          sourceConfig: DouyinSourceConfig.playlist(source, request.shared),
-          name: request.name.isEmpty ? 'Douyin posts' : request.name,
-          parentId: widget.playlistId,
-          providerInstanceName: request.instanceName,
-        );
       } else {
-        final resolved =
-            _resolved ??
-            await providerGateway.resolveDouyin(
-              request.value,
-              instanceName: request.instanceName,
-            );
-        await providerGateway.addMediaFromSourceConfig(
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
           playlistId: widget.playlistId,
-          sourceConfig: DouyinSourceConfig.media(
-            resolved.sourceConfig,
-            request.shared,
-          ),
-          name: request.name.isEmpty ? resolved.metadata.title : request.name,
-          providerInstanceName: request.instanceName,
+          source: discovered,
+          name: request.name.isEmpty
+              ? (_target == ProviderAddTarget.playlist
+                    ? 'Douyin ${context.l10n.posts}'
+                    : _resolved!.metadata.title)
+              : request.name,
         );
       }
       if (!mounted) return;
@@ -355,12 +442,52 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
       _resolved = null;
       _posts = null;
       widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, 'Douyin source added');
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> entries) async {
+    if (entries.isEmpty) return;
+    setState(() => _loading = true);
+    try {
+      for (final entry in entries) {
+        await providerGateway.addDiscoveredSource(
+          widget.roomId,
+          playlistId: widget.playlistId,
+          source: entry.source,
+          name: entry.title,
+        );
+      }
+      if (!mounted) return;
+      _valueController.clear();
+      _nameController.clear();
+      _resolved = null;
+      _posts = null;
+      widget.onDraftChanged(false);
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
+      setState(() {});
+    } catch (error) {
+      if (mounted) AppNotifications.showError(context, '$error');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  bool get _previewReady => _resolved?.hasSource() == true;
+
+  void _selectTarget(ProviderAddTarget target) {
+    if (target == _target) return;
+    _target = target;
+    _mode = target == ProviderAddTarget.parse
+        ? DouyinAddMode.video
+        : DouyinAddMode.userPosts;
+    _valueController.clear();
+    _nameController.clear();
+    _changed();
   }
 }

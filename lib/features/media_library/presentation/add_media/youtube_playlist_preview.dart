@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
+    as youtube;
+import 'package:synctv_app/l10n/l10n.dart';
 
 class YoutubePlaylistPreview extends StatefulWidget {
   const YoutubePlaylistPreview({
@@ -8,15 +10,17 @@ class YoutubePlaylistPreview extends StatefulWidget {
     required this.items,
     required this.loading,
     required this.hasMore,
-    required this.onAddSelected,
+    this.onAddSelected,
     this.onLoadMore,
+    this.selectionEnabled = true,
   });
 
-  final List<RoomDynamicMediaEntry> items;
+  final List<youtube.ListItem> items;
   final bool loading;
   final bool hasMore;
-  final ValueChanged<List<RoomDynamicMediaEntry>> onAddSelected;
+  final ValueChanged<List<youtube.ListItem>>? onAddSelected;
   final VoidCallback? onLoadMore;
+  final bool selectionEnabled;
 
   @override
   State<YoutubePlaylistPreview> createState() => _YoutubePlaylistPreviewState();
@@ -37,15 +41,13 @@ class _YoutubePlaylistPreviewState extends State<YoutubePlaylistPreview> {
     _selectNew(oldWidget.items);
   }
 
-  Map<String, RoomDynamicMediaEntry> _media(
-    List<RoomDynamicMediaEntry> items,
-  ) => {
+  Map<String, youtube.ListItem> _media(List<youtube.ListItem> items) => {
     for (final (index, item) in items.indexed)
-      if (item.mediaSourceConfig?.hasYoutube() == true)
-        item.id.isEmpty ? '$index:${item.name}' : item.id: item,
+      if (item.hasSource())
+        item.videoId.isEmpty ? '$index:${item.title}' : item.videoId: item,
   };
 
-  void _selectNew(List<RoomDynamicMediaEntry> oldItems) {
+  void _selectNew(List<youtube.ListItem> oldItems) {
     final current = _media(widget.items).keys.toSet();
     final old = _media(oldItems).keys.toSet();
     _selected
@@ -59,64 +61,77 @@ class _YoutubePlaylistPreviewState extends State<YoutubePlaylistPreview> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                '${_selected.length} / ${media.length} selected',
-                style: Theme.of(context).textTheme.labelLarge,
+        if (widget.selectionEnabled)
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.selectionCount(_selected.length, media.length),
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
               ),
-            ),
-            TextButton.icon(
-              key: const Key('youtube-preview-select-all'),
-              onPressed: widget.loading || media.isEmpty
-                  ? null
-                  : () => setState(() {
-                      _selected
-                        ..clear()
-                        ..addAll(media.keys);
-                    }),
-              icon: const Icon(Icons.select_all),
-              label: const Text('Select all'),
-            ),
-            TextButton.icon(
-              key: const Key('youtube-preview-clear'),
-              onPressed: widget.loading || _selected.isEmpty
-                  ? null
-                  : () => setState(_selected.clear),
-              icon: const Icon(Icons.deselect),
-              label: const Text('Clear'),
-            ),
-          ],
-        ),
+              TextButton.icon(
+                key: const Key('youtube-preview-select-all'),
+                onPressed: widget.loading || media.isEmpty
+                    ? null
+                    : () => setState(() {
+                        _selected
+                          ..clear()
+                          ..addAll(media.keys);
+                      }),
+                icon: const Icon(Icons.select_all),
+                label: Text(context.l10n.selectAll),
+              ),
+              TextButton.icon(
+                key: const Key('youtube-preview-clear'),
+                onPressed: widget.loading || _selected.isEmpty
+                    ? null
+                    : () => setState(_selected.clear),
+                icon: const Icon(Icons.deselect),
+                label: Text(context.l10n.clear),
+              ),
+            ],
+          ),
         ...media.entries.map(
-          (entry) => CheckboxListTile(
+          (entry) => ListTile(
             key: Key('youtube-preview-item-${entry.key}'),
             contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.trailing,
-            value: _selected.contains(entry.key),
-            onChanged: widget.loading
+            onTap: !widget.selectionEnabled || widget.loading
                 ? null
-                : (selected) => setState(() {
-                    if (selected == true) {
-                      _selected.add(entry.key);
-                    } else {
+                : () => setState(() {
+                    if (_selected.contains(entry.key)) {
                       _selected.remove(entry.key);
+                    } else {
+                      _selected.add(entry.key);
                     }
                   }),
-            secondary: entry.value.coverUrl.isEmpty
+            leading: !entry.value.hasThumbnailUrl()
                 ? const Icon(Icons.play_circle_outline)
                 : AppImageThumbnail(
-                    url: entry.value.coverUrl,
+                    url: entry.value.thumbnailUrl,
                     width: 72,
                     height: 44,
                     borderRadius: BorderRadius.circular(4),
                   ),
             title: Text(
-              entry.value.name,
+              entry.value.title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
+            trailing: widget.selectionEnabled
+                ? AppCheckbox(
+                    value: _selected.contains(entry.key),
+                    enabled: !widget.loading,
+                    semanticsLabel: context.l10n.selectItem(entry.value.title),
+                    onChanged: (_) => setState(() {
+                      if (_selected.contains(entry.key)) {
+                        _selected.remove(entry.key);
+                      } else {
+                        _selected.add(entry.key);
+                      }
+                    }),
+                  )
+                : null,
           ),
         ),
         if (widget.hasMore)
@@ -125,23 +140,27 @@ class _YoutubePlaylistPreviewState extends State<YoutubePlaylistPreview> {
               key: const Key('youtube-preview-load-more'),
               onPressed: widget.loading ? null : widget.onLoadMore,
               icon: const Icon(Icons.expand_more),
-              label: const Text('Load more'),
+              label: Text(context.l10n.loadMore),
             ),
           ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: OutlinedButton.icon(
-            key: const Key('youtube-preview-add-selected'),
-            onPressed: widget.loading || _selected.isEmpty
-                ? null
-                : () => widget.onAddSelected([
-                    for (final entry in media.entries)
-                      if (_selected.contains(entry.key)) entry.value,
-                  ]),
-            icon: const Icon(Icons.playlist_add_check),
-            label: Text('Add selected (${_selected.length})'),
+        if (widget.selectionEnabled)
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              key: const Key('youtube-preview-add-selected'),
+              onPressed:
+                  widget.loading ||
+                      _selected.isEmpty ||
+                      widget.onAddSelected == null
+                  ? null
+                  : () => widget.onAddSelected!([
+                      for (final entry in media.entries)
+                        if (_selected.contains(entry.key)) entry.value,
+                    ]),
+              icon: const Icon(Icons.playlist_add_check),
+              label: Text(context.l10n.addSelectedCount(_selected.length)),
+            ),
           ),
-        ),
       ],
     );
   }

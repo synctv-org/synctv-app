@@ -24,6 +24,18 @@ class ProviderCommonServiceApi {
 
   ProviderCommonServiceApi(this._client);
 
+  $async.Future<$0.PreparedMediaSource> prepareDirectUrl(
+          $pb.ClientContext? ctx, $0.PrepareDirectUrlRequest request) =>
+      _client.invoke<$0.PreparedMediaSource>(ctx, 'ProviderCommonService',
+          'PrepareDirectUrl', request, $0.PreparedMediaSource());
+  $async.Future<$0.PreparedMediaSource> prepareLiveProxy(
+          $pb.ClientContext? ctx, $0.PrepareLiveProxyRequest request) =>
+      _client.invoke<$0.PreparedMediaSource>(ctx, 'ProviderCommonService',
+          'PrepareLiveProxy', request, $0.PreparedMediaSource());
+  $async.Future<$0.PreparedMediaSource> prepareRtmp(
+          $pb.ClientContext? ctx, $0.PrepareRtmpRequest request) =>
+      _client.invoke<$0.PreparedMediaSource>(ctx, 'ProviderCommonService',
+          'PrepareRtmp', request, $0.PreparedMediaSource());
   $async.Future<$0.ProviderInstancesResponse> listAvailableProviderInstances(
           $pb.ClientContext? ctx,
           $0.ListAvailableProviderInstancesRequest request) =>

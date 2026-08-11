@@ -17,6 +17,7 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
 import 'local_backend_test_auth.dart';
+import 'local_backend_media_helpers.dart';
 
 void main() {
   test('local_backend_smoke', () async {
@@ -72,7 +73,7 @@ Future<void> runSmoke(String baseUrl) async {
   );
   print('playlist=${playlist.id}');
 
-  final mediaId = await SyncTvService.addDirectUrlMedia(
+  final mediaId = await prepareDirectUrlAndAdd(
     room.roomId,
     playlistId: playlist.id,
     url: 'https://example.com/smoke.mp4',
@@ -123,10 +124,7 @@ Future<void> runSmoke(String baseUrl) async {
     await realtime.close();
   }
 
-  final rtmpMediaId = await SyncTvService.addRtmpMedia(
-    room.roomId,
-    name: 'Smoke RTMP',
-  );
+  final rtmpMediaId = await prepareRtmpAndAdd(room.roomId, name: 'Smoke RTMP');
   final publish = await SyncTvService.createRtmpPublishKeyInfo(
     room.roomId,
     rtmpMediaId,

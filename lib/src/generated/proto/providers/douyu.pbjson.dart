@@ -51,12 +51,14 @@ const ResolveRequest$json = {
   '1': 'ResolveRequest',
   '2': [
     {'1': 'resource', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'resource'},
+    {'1': 'instance_name', '3': 2, '4': 1, '5': 9, '10': 'instanceName'},
   ],
 };
 
 /// Descriptor for `ResolveRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List resolveRequestDescriptor = $convert.base64Decode(
-    'Cg5SZXNvbHZlUmVxdWVzdBIjCghyZXNvdXJjZRgBIAEoCUIHukgEcgIQAVIIcmVzb3VyY2U=');
+    'Cg5SZXNvbHZlUmVxdWVzdBIjCghyZXNvdXJjZRgBIAEoCUIHukgEcgIQAVIIcmVzb3VyY2USIw'
+    'oNaW5zdGFuY2VfbmFtZRgCIAEoCVIMaW5zdGFuY2VOYW1l');
 
 @$core.Deprecated('Use metadataDescriptor instead')
 const Metadata$json = {
@@ -202,12 +204,12 @@ const ResolveResponse$json = {
       '10': 'qualities'
     },
     {
-      '1': 'source_config',
+      '1': 'source',
       '3': 3,
       '4': 1,
       '5': 11,
-      '6': '.synctv.source_config.DouyuMediaSourceConfig',
-      '10': 'sourceConfig'
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
     },
   ],
 };
@@ -216,6 +218,5 @@ const ResolveResponse$json = {
 final $typed_data.Uint8List resolveResponseDescriptor = $convert.base64Decode(
     'Cg9SZXNvbHZlUmVzcG9uc2USOwoIbWV0YWRhdGEYASABKAsyHy5zeW5jdHYucHJvdmlkZXIuZG'
     '91eXUuTWV0YWRhdGFSCG1ldGFkYXRhEjwKCXF1YWxpdGllcxgCIAMoCzIeLnN5bmN0di5wcm92'
-    'aWRlci5kb3V5dS5RdWFsaXR5UglxdWFsaXRpZXMSUQoNc291cmNlX2NvbmZpZxgDIAEoCzIsLn'
-    'N5bmN0di5zb3VyY2VfY29uZmlnLkRvdXl1TWVkaWFTb3VyY2VDb25maWdSDHNvdXJjZUNvbmZp'
-    'Zw==');
+    'aWRlci5kb3V5dS5RdWFsaXR5UglxdWFsaXRpZXMSQAoGc291cmNlGAMgASgLMiguc3luY3R2Ln'
+    'Byb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2U=');

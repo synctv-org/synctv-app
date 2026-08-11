@@ -68,6 +68,323 @@ final $typed_data.Uint8List sortDirectionDescriptor = $convert.base64Decode(
     'Cg1Tb3J0RGlyZWN0aW9uEh4KGlNPUlRfRElSRUNUSU9OX1VOU1BFQ0lGSUVEEAASFgoSU09SVF'
     '9ESVJFQ1RJT05fQVNDEAESFwoTU09SVF9ESVJFQ1RJT05fREVTQxAC');
 
+@$core.Deprecated('Use discoveredSourceDescriptor instead')
+const DiscoveredSource$json = {
+  '1': 'DiscoveredSource',
+  '2': [
+    {
+      '1': 'media',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.MediaSourceConfig',
+      '9': 0,
+      '10': 'media'
+    },
+    {
+      '1': 'playlist',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.PlaylistSourceConfig',
+      '9': 0,
+      '10': 'playlist'
+    },
+    {
+      '1': 'provider_instance_name',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '10': 'providerInstanceName'
+    },
+  ],
+  '8': [
+    {'1': 'source_config'},
+  ],
+};
+
+/// Descriptor for `DiscoveredSource`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List discoveredSourceDescriptor = $convert.base64Decode(
+    'ChBEaXNjb3ZlcmVkU291cmNlEj8KBW1lZGlhGAEgASgLMicuc3luY3R2LnNvdXJjZV9jb25maW'
+    'cuTWVkaWFTb3VyY2VDb25maWdIAFIFbWVkaWESSAoIcGxheWxpc3QYAiABKAsyKi5zeW5jdHYu'
+    'c291cmNlX2NvbmZpZy5QbGF5bGlzdFNvdXJjZUNvbmZpZ0gAUghwbGF5bGlzdBI0ChZwcm92aW'
+    'Rlcl9pbnN0YW5jZV9uYW1lGAMgASgJUhRwcm92aWRlckluc3RhbmNlTmFtZUIPCg1zb3VyY2Vf'
+    'Y29uZmln');
+
+@$core.Deprecated('Use preparedMediaSourceDescriptor instead')
+const PreparedMediaSource$json = {
+  '1': 'PreparedMediaSource',
+  '2': [
+    {
+      '1': 'source',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '8': {},
+      '10': 'source'
+    },
+    {'1': 'suggested_name', '3': 2, '4': 1, '5': 9, '10': 'suggestedName'},
+    {
+      '1': 'playback_kind',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackKind',
+      '8': {},
+      '10': 'playbackKind'
+    },
+  ],
+};
+
+/// Descriptor for `PreparedMediaSource`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List preparedMediaSourceDescriptor = $convert.base64Decode(
+    'ChNQcmVwYXJlZE1lZGlhU291cmNlEkgKBnNvdXJjZRgBIAEoCzIoLnN5bmN0di5wcm92aWRlci'
+    '5jb21tb24uRGlzY292ZXJlZFNvdXJjZUIGukgDyAEBUgZzb3VyY2USJQoOc3VnZ2VzdGVkX25h'
+    'bWUYAiABKAlSDXN1Z2dlc3RlZE5hbWUSUQoNcGxheWJhY2tfa2luZBgDIAEoDjIiLnN5bmN0di'
+    '5zb3VyY2VfY29uZmlnLlBsYXliYWNrS2luZEIIukgFggECEAFSDHBsYXliYWNrS2luZA==');
+
+@$core.Deprecated('Use prepareDirectUrlRequestDescriptor instead')
+const PrepareDirectUrlRequest$json = {
+  '1': 'PrepareDirectUrlRequest',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'url'},
+    {
+      '1': 'headers',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.provider.common.PrepareDirectUrlRequest.HeadersEntry',
+      '10': 'headers'
+    },
+    {
+      '1': 'playback_kind',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackKind',
+      '8': {},
+      '10': 'playbackKind'
+    },
+    {
+      '1': 'proxy_mode',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'proxyMode'
+    },
+    {
+      '1': 'expires_at',
+      '3': 6,
+      '4': 1,
+      '5': 3,
+      '8': {},
+      '9': 0,
+      '10': 'expiresAt',
+      '17': true
+    },
+  ],
+  '3': [PrepareDirectUrlRequest_HeadersEntry$json],
+  '8': [
+    {'1': '_expires_at'},
+  ],
+};
+
+@$core.Deprecated('Use prepareDirectUrlRequestDescriptor instead')
+const PrepareDirectUrlRequest_HeadersEntry$json = {
+  '1': 'HeadersEntry',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {'1': 'value', '3': 2, '4': 1, '5': 9, '10': 'value'},
+  ],
+  '7': {'7': true},
+};
+
+/// Descriptor for `PrepareDirectUrlRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List prepareDirectUrlRequestDescriptor = $convert.base64Decode(
+    'ChdQcmVwYXJlRGlyZWN0VXJsUmVxdWVzdBIZCgN1cmwYASABKAlCB7pIBHICEAFSA3VybBJWCg'
+    'doZWFkZXJzGAIgAygLMjwuc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5QcmVwYXJlRGlyZWN0VXJs'
+    'UmVxdWVzdC5IZWFkZXJzRW50cnlSB2hlYWRlcnMSUwoNcGxheWJhY2tfa2luZBgDIAEoDjIiLn'
+    'N5bmN0di5zb3VyY2VfY29uZmlnLlBsYXliYWNrS2luZEIKukgHggEEEAEgAFIMcGxheWJhY2tL'
+    'aW5kElAKCnByb3h5X21vZGUYBCABKA4yJy5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5YmFja1'
+    'Byb3h5TW9kZUIIukgFggECEAFSCXByb3h5TW9kZRIrCgpleHBpcmVzX2F0GAYgASgDQge6SAQi'
+    'AiAASABSCWV4cGlyZXNBdIgBARo6CgxIZWFkZXJzRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSFA'
+    'oFdmFsdWUYAiABKAlSBXZhbHVlOgI4AUINCgtfZXhwaXJlc19hdA==');
+
+@$core.Deprecated('Use prepareRtmpPullIntentDescriptor instead')
+const PrepareRtmpPullIntent$json = {
+  '1': 'PrepareRtmpPullIntent',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'url'},
+    {
+      '1': 'mode',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.RtmpStreamMode',
+      '8': {},
+      '10': 'mode'
+    },
+  ],
+};
+
+/// Descriptor for `PrepareRtmpPullIntent`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List prepareRtmpPullIntentDescriptor = $convert.base64Decode(
+    'ChVQcmVwYXJlUnRtcFB1bGxJbnRlbnQSGQoDdXJsGAEgASgJQge6SARyAhABUgN1cmwSRAoEbW'
+    '9kZRgCIAEoDjIkLnN5bmN0di5zb3VyY2VfY29uZmlnLlJ0bXBTdHJlYW1Nb2RlQgq6SAeCAQQQ'
+    'ASAAUgRtb2Rl');
+
+@$core.Deprecated('Use prepareRtspTrackIntentDescriptor instead')
+const PrepareRtspTrackIntent$json = {
+  '1': 'PrepareRtspTrackIntent',
+  '2': [
+    {
+      '1': 'first_compatible',
+      '3': 1,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'firstCompatible'
+    },
+    {'1': 'index', '3': 2, '4': 1, '5': 13, '9': 0, '10': 'index'},
+    {'1': 'disabled', '3': 3, '4': 1, '5': 8, '9': 0, '10': 'disabled'},
+  ],
+  '8': [
+    {'1': 'mode', '2': {}},
+  ],
+};
+
+/// Descriptor for `PrepareRtspTrackIntent`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List prepareRtspTrackIntentDescriptor = $convert.base64Decode(
+    'ChZQcmVwYXJlUnRzcFRyYWNrSW50ZW50EisKEGZpcnN0X2NvbXBhdGlibGUYASABKAhIAFIPZm'
+    'lyc3RDb21wYXRpYmxlEhYKBWluZGV4GAIgASgNSABSBWluZGV4EhwKCGRpc2FibGVkGAMgASgI'
+    'SABSCGRpc2FibGVkQg0KBG1vZGUSBbpIAggB');
+
+@$core.Deprecated('Use prepareRtspPullIntentDescriptor instead')
+const PrepareRtspPullIntent$json = {
+  '1': 'PrepareRtspPullIntent',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'url'},
+    {
+      '1': 'transport',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.RtspTransport',
+      '8': {},
+      '10': 'transport'
+    },
+    {
+      '1': 'video_track',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.PrepareRtspTrackIntent',
+      '8': {},
+      '10': 'videoTrack'
+    },
+    {
+      '1': 'audio_track',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.PrepareRtspTrackIntent',
+      '8': {},
+      '10': 'audioTrack'
+    },
+  ],
+};
+
+/// Descriptor for `PrepareRtspPullIntent`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List prepareRtspPullIntentDescriptor = $convert.base64Decode(
+    'ChVQcmVwYXJlUnRzcFB1bGxJbnRlbnQSGQoDdXJsGAEgASgJQge6SARyAhABUgN1cmwSTQoJdH'
+    'JhbnNwb3J0GAIgASgOMiMuc3luY3R2LnNvdXJjZV9jb25maWcuUnRzcFRyYW5zcG9ydEIKukgH'
+    'ggEEEAEgAFIJdHJhbnNwb3J0ElcKC3ZpZGVvX3RyYWNrGAMgASgLMi4uc3luY3R2LnByb3ZpZG'
+    'VyLmNvbW1vbi5QcmVwYXJlUnRzcFRyYWNrSW50ZW50Qga6SAPIAQFSCnZpZGVvVHJhY2sSVwoL'
+    'YXVkaW9fdHJhY2sYBCABKAsyLi5zeW5jdHYucHJvdmlkZXIuY29tbW9uLlByZXBhcmVSdHNwVH'
+    'JhY2tJbnRlbnRCBrpIA8gBAVIKYXVkaW9UcmFjaw==');
+
+@$core.Deprecated('Use prepareHttpFlvPullIntentDescriptor instead')
+const PrepareHttpFlvPullIntent$json = {
+  '1': 'PrepareHttpFlvPullIntent',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'url'},
+  ],
+};
+
+/// Descriptor for `PrepareHttpFlvPullIntent`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List prepareHttpFlvPullIntentDescriptor =
+    $convert.base64Decode(
+        'ChhQcmVwYXJlSHR0cEZsdlB1bGxJbnRlbnQSGQoDdXJsGAEgASgJQge6SARyAhABUgN1cmw=');
+
+@$core.Deprecated('Use prepareLiveProxyRequestDescriptor instead')
+const PrepareLiveProxyRequest$json = {
+  '1': 'PrepareLiveProxyRequest',
+  '2': [
+    {
+      '1': 'rtmp',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.PrepareRtmpPullIntent',
+      '9': 0,
+      '10': 'rtmp'
+    },
+    {
+      '1': 'rtsp',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.PrepareRtspPullIntent',
+      '9': 0,
+      '10': 'rtsp'
+    },
+    {
+      '1': 'http_flv',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.PrepareHttpFlvPullIntent',
+      '9': 0,
+      '10': 'httpFlv'
+    },
+  ],
+  '8': [
+    {'1': 'source', '2': {}},
+  ],
+};
+
+/// Descriptor for `PrepareLiveProxyRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List prepareLiveProxyRequestDescriptor = $convert.base64Decode(
+    'ChdQcmVwYXJlTGl2ZVByb3h5UmVxdWVzdBJDCgRydG1wGAEgASgLMi0uc3luY3R2LnByb3ZpZG'
+    'VyLmNvbW1vbi5QcmVwYXJlUnRtcFB1bGxJbnRlbnRIAFIEcnRtcBJDCgRydHNwGAIgASgLMi0u'
+    'c3luY3R2LnByb3ZpZGVyLmNvbW1vbi5QcmVwYXJlUnRzcFB1bGxJbnRlbnRIAFIEcnRzcBJNCg'
+    'hodHRwX2ZsdhgDIAEoCzIwLnN5bmN0di5wcm92aWRlci5jb21tb24uUHJlcGFyZUh0dHBGbHZQ'
+    'dWxsSW50ZW50SABSB2h0dHBGbHZCDwoGc291cmNlEgW6SAIIAQ==');
+
+@$core.Deprecated('Use prepareRtmpRequestDescriptor instead')
+const PrepareRtmpRequest$json = {
+  '1': 'PrepareRtmpRequest',
+  '2': [
+    {
+      '1': 'mode',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.RtmpStreamMode',
+      '8': {},
+      '10': 'mode'
+    },
+  ],
+};
+
+/// Descriptor for `PrepareRtmpRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List prepareRtmpRequestDescriptor = $convert.base64Decode(
+    'ChJQcmVwYXJlUnRtcFJlcXVlc3QSRAoEbW9kZRgBIAEoDjIkLnN5bmN0di5zb3VyY2VfY29uZm'
+    'lnLlJ0bXBTdHJlYW1Nb2RlQgq6SAeCAQQQASAAUgRtb2Rl');
+
 @$core.Deprecated('Use providerInstanceQueryDescriptor instead')
 const ProviderInstanceQuery$json = {
   '1': 'ProviderInstanceQuery',

@@ -12,6 +12,7 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
 import 'local_backend_test_auth.dart';
+import 'local_backend_media_helpers.dart';
 
 /// Exercises flows not covered by tool/local_backend_smoke.dart:
 /// chat edit/delete/pin/search/context/read-receipts, media & playlist
@@ -160,14 +161,14 @@ Future<void> runExtendedSmoke(String baseUrl, String rootPassword) async {
     description: 'second',
   );
 
-  final m1 = await SyncTvService.addDirectUrlMedia(
+  final m1 = await prepareDirectUrlAndAdd(
     roomId,
     playlistId: pl1.id,
     url: 'https://example.com/a.mp4',
     playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
     name: 'A',
   );
-  final m2 = await SyncTvService.addDirectUrlMedia(
+  final m2 = await prepareDirectUrlAndAdd(
     roomId,
     playlistId: pl1.id,
     url: 'https://example.com/b.mp4',

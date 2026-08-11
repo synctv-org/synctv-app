@@ -2414,29 +2414,53 @@ abstract class AppLocalizations {
   /// **'Defaults to the file name'**
   String get defaultsToFileName;
 
-  /// No description provided for @preferProxyPlayback.
+  /// No description provided for @playbackProxyMode.
   ///
   /// In en, this message translates to:
-  /// **'Use proxy playback by default'**
-  String get preferProxyPlayback;
+  /// **'Playback route'**
+  String get playbackProxyMode;
 
-  /// No description provided for @proxyPlaybackDescription.
+  /// No description provided for @playbackProxyAuto.
   ///
   /// In en, this message translates to:
-  /// **'The SyncTV server forwards media requests'**
-  String get proxyPlaybackDescription;
+  /// **'Automatic'**
+  String get playbackProxyAuto;
 
-  /// No description provided for @proxyOnlyPlayback.
+  /// No description provided for @playbackProxyPrefer.
   ///
   /// In en, this message translates to:
-  /// **'Proxy playback only'**
-  String get proxyOnlyPlayback;
+  /// **'Prefer proxy'**
+  String get playbackProxyPrefer;
 
-  /// No description provided for @proxyOnlyPlaybackDescription.
+  /// No description provided for @playbackProxyOnly.
   ///
   /// In en, this message translates to:
-  /// **'Route every media request through the SyncTV server proxy'**
-  String get proxyOnlyPlaybackDescription;
+  /// **'Proxy only'**
+  String get playbackProxyOnly;
+
+  /// No description provided for @playbackProxyAutoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the media source\'\'s default playback route'**
+  String get playbackProxyAutoDescription;
+
+  /// No description provided for @playbackProxyPreferDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep direct and proxy routes, selecting the proxy by default'**
+  String get playbackProxyPreferDescription;
+
+  /// No description provided for @playbackProxyOnlyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep routes that the SyncTV server can proxy'**
+  String get playbackProxyOnlyDescription;
+
+  /// No description provided for @playbackProxyDirectRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct playback can expose upstream URLs, signed links, tokens, cookies, or authorization headers to room members. Use it only in a trusted room and network.'**
+  String get playbackProxyDirectRisk;
 
   /// No description provided for @addToPlaylist.
   ///
@@ -3038,11 +3062,11 @@ abstract class AppLocalizations {
   /// **'Could not get the Emby directory ID'**
   String get embyDirectoryIdUnavailable;
 
-  /// No description provided for @accountBinding.
+  /// No description provided for @manageConnections.
   ///
   /// In en, this message translates to:
-  /// **'Account binding'**
-  String get accountBinding;
+  /// **'Manage connections'**
+  String get manageConnections;
 
   /// No description provided for @bilibiliBound.
   ///
@@ -4435,6 +4459,960 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared source'**
   String get sharedSource;
+
+  /// No description provided for @shareMyCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my credentials'**
+  String get shareMyCredentials;
+
+  /// No description provided for @parseLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Parse link'**
+  String get parseLink;
+
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get preview;
+
+  /// No description provided for @noItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No items'**
+  String get noItems;
+
+  /// No description provided for @addCurrentList.
+  ///
+  /// In en, this message translates to:
+  /// **'Add current list'**
+  String get addCurrentList;
+
+  /// No description provided for @addSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add selected ({count})'**
+  String addSelectedCount(int count);
+
+  /// No description provided for @selectItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Select {name}'**
+  String selectItem(String name);
+
+  /// No description provided for @playlistName.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist name'**
+  String get playlistName;
+
+  /// No description provided for @providerInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider instance'**
+  String get providerInstance;
+
+  /// No description provided for @defaultMediaSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Default media source'**
+  String get defaultMediaSource;
+
+  /// No description provided for @defaultProviderInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get defaultProviderInstance;
+
+  /// No description provided for @video.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get video;
+
+  /// No description provided for @videos.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get videos;
+
+  /// No description provided for @shorts.
+  ///
+  /// In en, this message translates to:
+  /// **'Shorts'**
+  String get shorts;
+
+  /// No description provided for @posts.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get posts;
+
+  /// No description provided for @channel.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get channel;
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// No description provided for @subscriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions'**
+  String get subscriptions;
+
+  /// No description provided for @likedVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Liked videos'**
+  String get likedVideos;
+
+  /// No description provided for @watchLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch later'**
+  String get watchLater;
+
+  /// No description provided for @movie.
+  ///
+  /// In en, this message translates to:
+  /// **'Movie'**
+  String get movie;
+
+  /// No description provided for @movies.
+  ///
+  /// In en, this message translates to:
+  /// **'Movies'**
+  String get movies;
+
+  /// No description provided for @episode.
+  ///
+  /// In en, this message translates to:
+  /// **'Episode'**
+  String get episode;
+
+  /// No description provided for @episodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes'**
+  String get episodes;
+
+  /// No description provided for @audio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get audio;
+
+  /// No description provided for @folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get folder;
+
+  /// No description provided for @series.
+  ///
+  /// In en, this message translates to:
+  /// **'Series'**
+  String get series;
+
+  /// No description provided for @bangumi.
+  ///
+  /// In en, this message translates to:
+  /// **'Bangumi'**
+  String get bangumi;
+
+  /// No description provided for @vod.
+  ///
+  /// In en, this message translates to:
+  /// **'VOD'**
+  String get vod;
+
+  /// No description provided for @popular.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get popular;
+
+  /// No description provided for @recommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get recommended;
+
+  /// No description provided for @videoParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Video parts'**
+  String get videoParts;
+
+  /// No description provided for @creatorVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator videos'**
+  String get creatorVideos;
+
+  /// No description provided for @favoriteVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite videos'**
+  String get favoriteVideos;
+
+  /// No description provided for @collectionVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection videos'**
+  String get collectionVideos;
+
+  /// No description provided for @seriesVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Series videos'**
+  String get seriesVideos;
+
+  /// No description provided for @pgcSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'PGC season'**
+  String get pgcSeason;
+
+  /// No description provided for @liveRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended live streams'**
+  String get liveRecommended;
+
+  /// No description provided for @liveFollowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Followed live streams'**
+  String get liveFollowed;
+
+  /// No description provided for @liveArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Live category'**
+  String get liveArea;
+
+  /// No description provided for @history.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get history;
+
+  /// No description provided for @pgcTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'PGC timeline'**
+  String get pgcTimeline;
+
+  /// No description provided for @pgcIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'PGC index'**
+  String get pgcIndex;
+
+  /// No description provided for @followedAnime.
+  ///
+  /// In en, this message translates to:
+  /// **'Followed anime'**
+  String get followedAnime;
+
+  /// No description provided for @followedCinema.
+  ///
+  /// In en, this message translates to:
+  /// **'Followed cinema'**
+  String get followedCinema;
+
+  /// No description provided for @ongoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Ongoing'**
+  String get ongoing;
+
+  /// No description provided for @finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get finished;
+
+  /// No description provided for @keyword.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyword'**
+  String get keyword;
+
+  /// No description provided for @liveCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Live category'**
+  String get liveCategory;
+
+  /// No description provided for @liveSubcategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Live subcategory'**
+  String get liveSubcategory;
+
+  /// No description provided for @favoriteFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite folder'**
+  String get favoriteFolder;
+
+  /// No description provided for @privateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get privateLabel;
+
+  /// No description provided for @continueWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue watching'**
+  String get continueWatching;
+
+  /// No description provided for @nextUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Next up'**
+  String get nextUp;
+
+  /// No description provided for @recentlyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently added'**
+  String get recentlyAdded;
+
+  /// No description provided for @favoritePeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite people'**
+  String get favoritePeople;
+
+  /// No description provided for @serverPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Server playlists'**
+  String get serverPlaylists;
+
+  /// No description provided for @collections.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
+  String get collections;
+
+  /// No description provided for @genres.
+  ///
+  /// In en, this message translates to:
+  /// **'Genres'**
+  String get genres;
+
+  /// No description provided for @files.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get files;
+
+  /// No description provided for @mediaLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Media library'**
+  String get mediaLibrary;
+
+  /// No description provided for @favorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get favorites;
+
+  /// No description provided for @starred.
+  ///
+  /// In en, this message translates to:
+  /// **'Starred'**
+  String get starred;
+
+  /// No description provided for @libraries.
+  ///
+  /// In en, this message translates to:
+  /// **'Libraries'**
+  String get libraries;
+
+  /// No description provided for @tvShows.
+  ///
+  /// In en, this message translates to:
+  /// **'TV shows'**
+  String get tvShows;
+
+  /// No description provided for @homeVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Home videos'**
+  String get homeVideos;
+
+  /// No description provided for @tvRecordings.
+  ///
+  /// In en, this message translates to:
+  /// **'TV recordings'**
+  String get tvRecordings;
+
+  /// No description provided for @mediaUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Media URL'**
+  String get mediaUrl;
+
+  /// No description provided for @channelArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel archive'**
+  String get channelArchive;
+
+  /// No description provided for @followedLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Followed live'**
+  String get followedLive;
+
+  /// No description provided for @categoryLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live by category'**
+  String get categoryLive;
+
+  /// No description provided for @searchLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Search live channels'**
+  String get searchLive;
+
+  /// No description provided for @highlights.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights'**
+  String get highlights;
+
+  /// No description provided for @uploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploads'**
+  String get uploads;
+
+  /// No description provided for @clips.
+  ///
+  /// In en, this message translates to:
+  /// **'Clips'**
+  String get clips;
+
+  /// No description provided for @loadCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Load categories'**
+  String get loadCategories;
+
+  /// No description provided for @noScheduledStreams.
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled streams'**
+  String get noScheduledStreams;
+
+  /// No description provided for @videoUrlOrId.
+  ///
+  /// In en, this message translates to:
+  /// **'Video URL or ID'**
+  String get videoUrlOrId;
+
+  /// No description provided for @playlistUrlOrId.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist URL or ID'**
+  String get playlistUrlOrId;
+
+  /// No description provided for @channelUrlOrId.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel URL or ID'**
+  String get channelUrlOrId;
+
+  /// No description provided for @searchQueryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search query'**
+  String get searchQueryLabel;
+
+  /// No description provided for @liveUrlOrId.
+  ///
+  /// In en, this message translates to:
+  /// **'Live URL or ID'**
+  String get liveUrlOrId;
+
+  /// No description provided for @authorIdentifier.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator identifier'**
+  String get authorIdentifier;
+
+  /// No description provided for @liveVodClipUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Live, VOD, or clip URL'**
+  String get liveVodClipUrl;
+
+  /// No description provided for @channelNameOrUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel name or URL'**
+  String get channelNameOrUrl;
+
+  /// No description provided for @channelSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel search'**
+  String get channelSearch;
+
+  /// No description provided for @creatorSecUid.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator sec_uid'**
+  String get creatorSecUid;
+
+  /// No description provided for @usernameOrHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Username or @handle'**
+  String get usernameOrHandle;
+
+  /// No description provided for @videoUrlShortLinkOrId.
+  ///
+  /// In en, this message translates to:
+  /// **'Video URL, short link, or ID'**
+  String get videoUrlShortLinkOrId;
+
+  /// No description provided for @liveUrlOrRoomId.
+  ///
+  /// In en, this message translates to:
+  /// **'Live URL or room ID'**
+  String get liveUrlOrRoomId;
+
+  /// No description provided for @noPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts'**
+  String get noPosts;
+
+  /// No description provided for @noTwitchItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No Twitch items'**
+  String get noTwitchItems;
+
+  /// No description provided for @schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get schedule;
+
+  /// No description provided for @recurring.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get recurring;
+
+  /// No description provided for @clip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip'**
+  String get clip;
+
+  /// No description provided for @viewsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} views'**
+  String viewsCount(int count);
+
+  /// No description provided for @viewersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} viewers'**
+  String viewersCount(int count);
+
+  /// No description provided for @previewSourceFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview the source before adding'**
+  String get previewSourceFirst;
+
+  /// No description provided for @embyAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Emby account'**
+  String get embyAccount;
+
+  /// No description provided for @listSourceToPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'List a source to preview items'**
+  String get listSourceToPreview;
+
+  /// No description provided for @acfunUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'AcFun URL'**
+  String get acfunUrl;
+
+  /// No description provided for @cctvUrlOrVideoId.
+  ///
+  /// In en, this message translates to:
+  /// **'CCTV URL or video ID'**
+  String get cctvUrlOrVideoId;
+
+  /// No description provided for @liveRoomOrVideoUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Live room or video URL'**
+  String get liveRoomOrVideoUrl;
+
+  /// No description provided for @roomIdAliasOrUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Room ID, alias, or URL'**
+  String get roomIdAliasOrUrl;
+
+  /// No description provided for @embyDiscoveryAndLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery & lists'**
+  String get embyDiscoveryAndLists;
+
+  /// No description provided for @noPreparedLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'No prepared links'**
+  String get noPreparedLinks;
+
+  /// No description provided for @fileStation.
+  ///
+  /// In en, this message translates to:
+  /// **'File Station'**
+  String get fileStation;
+
+  /// No description provided for @videoStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Video Station'**
+  String get videoStation;
+
+  /// No description provided for @library.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get library;
+
+  /// No description provided for @selectLibraryFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a library first'**
+  String get selectLibraryFirst;
+
+  /// No description provided for @unlockLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock {name}'**
+  String unlockLibrary(String name);
+
+  /// No description provided for @libraryPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Library password'**
+  String get libraryPassword;
+
+  /// No description provided for @unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlock;
+
+  /// No description provided for @enterAtLeastThreeCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least 3 characters'**
+  String get enterAtLeastThreeCharacters;
+
+  /// No description provided for @favorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get favorite;
+
+  /// No description provided for @markWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark watched'**
+  String get markWatched;
+
+  /// No description provided for @markUnwatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark unwatched'**
+  String get markUnwatched;
+
+  /// No description provided for @encrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted'**
+  String get encrypted;
+
+  /// No description provided for @openFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open folder'**
+  String get openFolder;
+
+  /// No description provided for @sharedFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared folders'**
+  String get sharedFolders;
+
+  /// No description provided for @shares.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares'**
+  String get shares;
+
+  /// No description provided for @allFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'All files'**
+  String get allFiles;
+
+  /// No description provided for @readyQualities.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready: {qualities}'**
+  String readyQualities(String qualities);
+
+  /// No description provided for @formatsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} formats'**
+  String formatsCount(int count);
+
+  /// No description provided for @subtitlesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} subtitles'**
+  String subtitlesCount(int count);
+
+  /// No description provided for @variantsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} variants'**
+  String variantsCount(int count);
+
+  /// No description provided for @qualitiesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} qualities'**
+  String qualitiesCount(int count);
+
+  /// No description provided for @chaptersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} chapters'**
+  String chaptersCount(int count);
+
+  /// No description provided for @watermarkFreeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} watermark-free'**
+  String watermarkFreeCount(int count);
+
+  /// No description provided for @storyboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Storyboard'**
+  String get storyboard;
+
+  /// No description provided for @hotLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot'**
+  String get hotLabel;
+
+  /// No description provided for @anime.
+  ///
+  /// In en, this message translates to:
+  /// **'Anime'**
+  String get anime;
+
+  /// No description provided for @cinema.
+  ///
+  /// In en, this message translates to:
+  /// **'Cinema'**
+  String get cinema;
+
+  /// No description provided for @guochuang.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese animation'**
+  String get guochuang;
+
+  /// No description provided for @documentary.
+  ///
+  /// In en, this message translates to:
+  /// **'Documentary'**
+  String get documentary;
+
+  /// No description provided for @television.
+  ///
+  /// In en, this message translates to:
+  /// **'TV'**
+  String get television;
+
+  /// No description provided for @variety.
+  ///
+  /// In en, this message translates to:
+  /// **'Variety'**
+  String get variety;
+
+  /// No description provided for @updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently updated'**
+  String get updated;
+
+  /// No description provided for @plays.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays'**
+  String get plays;
+
+  /// No description provided for @followers.
+  ///
+  /// In en, this message translates to:
+  /// **'Followers'**
+  String get followers;
+
+  /// No description provided for @score.
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get score;
+
+  /// No description provided for @started.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get started;
+
+  /// No description provided for @released.
+  ///
+  /// In en, this message translates to:
+  /// **'Release date'**
+  String get released;
+
+  /// No description provided for @timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get timeline;
+
+  /// No description provided for @daysBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Days before'**
+  String get daysBefore;
+
+  /// No description provided for @daysAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Days after'**
+  String get daysAfter;
+
+  /// No description provided for @sortOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get sortOrder;
+
+  /// No description provided for @statusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get statusLabel;
+
+  /// No description provided for @area.
+  ///
+  /// In en, this message translates to:
+  /// **'Area'**
+  String get area;
+
+  /// No description provided for @yearOrRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Year or range'**
+  String get yearOrRange;
+
+  /// No description provided for @styleId.
+  ///
+  /// In en, this message translates to:
+  /// **'Style ID'**
+  String get styleId;
+
+  /// No description provided for @delayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delayed'**
+  String get delayed;
+
+  /// No description provided for @published.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get published;
+
+  /// No description provided for @videoBvid.
+  ///
+  /// In en, this message translates to:
+  /// **'Video BV number'**
+  String get videoBvid;
+
+  /// No description provided for @videoAidOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Video AV number (optional)'**
+  String get videoAidOptional;
+
+  /// No description provided for @creatorMid.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator UID'**
+  String get creatorMid;
+
+  /// No description provided for @seasonId.
+  ///
+  /// In en, this message translates to:
+  /// **'Season ID'**
+  String get seasonId;
+
+  /// No description provided for @collectionSeasonId.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection ID'**
+  String get collectionSeasonId;
+
+  /// No description provided for @seriesId.
+  ///
+  /// In en, this message translates to:
+  /// **'Series ID'**
+  String get seriesId;
 
   /// No description provided for @multipleRoutes.
   ///
@@ -7213,12 +8191,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No join requests'**
   String get noJoinRequests;
-
-  /// No description provided for @mediaLibrary.
-  ///
-  /// In en, this message translates to:
-  /// **'Media library'**
-  String get mediaLibrary;
 
   /// No description provided for @clearCurrentLevel.
   ///

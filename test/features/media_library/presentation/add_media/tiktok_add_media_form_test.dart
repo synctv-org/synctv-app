@@ -4,10 +4,14 @@ import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
 import 'package:synctv_app/src/generated/proto/providers/tiktok.pb.dart'
     as tiktok;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/features/media_library/presentation/add_media/tiktok_add_media_form.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+
+import '../../../../test_app.dart';
 
 void main() {
   testWidgets('TikTok form submits live source with shared credential scope', (
@@ -19,6 +23,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -36,6 +41,10 @@ void main() {
               ),
             ],
             onDraftChanged: (_) {},
+            onResolve: (_) async => tiktok.ResolveResponse(
+              metadata: tiktok.Metadata(title: 'Live room'),
+              source: testDiscoveredMediaSource(),
+            ),
             onSubmit: (request) async => submitted = request,
           ),
         ),
@@ -60,7 +69,16 @@ void main() {
       'https://www.tiktok.com/@creator/live',
     );
     await tester.enterText(find.byKey(const Key('tiktok-name')), 'Live room');
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.text('Share my credentials'));
+    await tester.pump();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('tiktok-submit')))
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(const Key('tiktok-preview')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('tiktok-submit')));
     await tester.pumpAndSettle();
 
@@ -81,6 +99,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -91,19 +110,25 @@ void main() {
             onDraftChanged: (_) {},
             onGetUser: (request) async => tiktok.GetUserResponse(
               secUid: 'MS4wLjABAAAAstable',
-              sourceConfig: source_config.TikTokPlaylistSourceConfig(
-                secUid: 'MS4wLjABAAAAstable',
+              source: provider_common.DiscoveredSource(
+                playlist: source_config.PlaylistSourceConfig(
+                  tiktok: source_config.TikTokPlaylistSourceConfig(
+                    secUid: 'MS4wLjABAAAAstable',
+                  ),
+                ),
               ),
             ),
-            onListUserPosts: (request, secUid) async {
+            onListUserPosts: (request, secUid, cursor) async {
               listedSecUid = secUid;
               return tiktok.ListUserPostsResponse(
                 items: [
                   tiktok.ListItem(
                     videoId: '7412345678901234567',
                     title: 'First post',
+                    source: testDiscoveredMediaSource(),
                   ),
                 ],
+                source: testDiscoveredPlaylistSource(),
               );
             },
           ),
@@ -111,7 +136,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Posts'));
+    await tester.tap(find.text('Select media'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('tiktok-value')), '@creator');
     await tester.pump();
@@ -121,5 +146,7 @@ void main() {
 
     expect(listedSecUid, 'MS4wLjABAAAAstable');
     expect(find.text('First post'), findsOneWidget);
+    expect(find.byKey(const Key('discovery-add-selected')), findsOneWidget);
+    expect(find.byKey(const Key('discovery-add-current-list')), findsNothing);
   });
 }

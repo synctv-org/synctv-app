@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
-import 'package:synctv_app/contracts/tiktok_source_config.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/src/generated/proto/providers/tiktok.pb.dart'
     as tiktok;
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 
 enum TikTokAddMode { video, live, userPosts }
 
 class TikTokAddRequest {
   const TikTokAddRequest({
+    required this.target,
     required this.mode,
     required this.value,
     required this.name,
@@ -18,6 +22,7 @@ class TikTokAddRequest {
     required this.instanceName,
   });
 
+  final ProviderAddTarget target;
   final TikTokAddMode mode;
   final String value;
   final String name;
@@ -50,6 +55,7 @@ class TikTokAddMediaForm extends StatefulWidget {
   final Future<tiktok.ListUserPostsResponse> Function(
     TikTokAddRequest request,
     String secUid,
+    String? cursor,
   )?
   onListUserPosts;
 
@@ -61,9 +67,11 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
   final _valueController = TextEditingController();
   final _nameController = TextEditingController();
   TikTokAddMode _mode = TikTokAddMode.video;
+  ProviderAddTarget _target = ProviderAddTarget.parse;
   bool _shared = false;
   bool _loading = false;
   String _instanceName = '';
+  String _selectedBindId = '';
   tiktok.ResolveResponse? _resolved;
   tiktok.GetUserResponse? _user;
   tiktok.ListUserPostsResponse? _posts;
@@ -76,6 +84,7 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
   }
 
   TikTokAddRequest get _request => TikTokAddRequest(
+    target: _target,
     mode: _mode,
     value: _valueController.text.trim(),
     name: _nameController.text.trim(),
@@ -92,6 +101,14 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
     setState(() {});
   }
 
+  void _nameChanged() {
+    widget.onDraftChanged(
+      _valueController.text.trim().isNotEmpty ||
+          _nameController.text.trim().isNotEmpty,
+    );
+    setState(() {});
+  }
+
   void _clearPreview() {
     _resolved = null;
     _user = null;
@@ -100,55 +117,63 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
 
   @override
   Widget build(BuildContext context) {
-    final instances = {
-      '',
-      ...widget.binds.map((bind) => bind.providerInstanceName),
-    }.toList();
-    if (!instances.contains(_instanceName)) _instanceName = '';
+    if (_selectedBindId.isNotEmpty &&
+        !widget.binds.any((bind) => bind.id == _selectedBindId)) {
+      _selectedBindId = '';
+      _instanceName = '';
+    }
 
     return AppSingleChildScrollView(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SegmentedButton<TikTokAddMode>(
-            segments: const [
-              ButtonSegment(
-                value: TikTokAddMode.video,
-                icon: Icon(Icons.play_circle_outline),
-                label: Text('Video'),
-              ),
-              ButtonSegment(
-                value: TikTokAddMode.live,
-                icon: Icon(Icons.live_tv_outlined),
-                label: Text('Live'),
-              ),
-              ButtonSegment(
-                value: TikTokAddMode.userPosts,
-                icon: Icon(Icons.video_library_outlined),
-                label: Text('Posts'),
-              ),
+          ProviderAddTargetSelector(
+            value: _target,
+            targets: const [
+              ProviderAddTarget.parse,
+              ProviderAddTarget.media,
+              ProviderAddTarget.playlist,
             ],
-            selected: {_mode},
-            onSelectionChanged: _loading
-                ? null
-                : (values) {
-                    final mode = values.first;
-                    if (mode == _mode) return;
-                    _mode = mode;
-                    _valueController.clear();
-                    _changed();
-                  },
+            enabled: !_loading,
+            onChanged: _selectTarget,
           ),
+          if (_target == ProviderAddTarget.parse) ...[
+            const SizedBox(height: 12),
+            SegmentedButton<TikTokAddMode>(
+              segments: [
+                ButtonSegment(
+                  value: TikTokAddMode.video,
+                  icon: const Icon(Icons.play_circle_outline),
+                  label: Text(context.l10n.video),
+                ),
+                ButtonSegment(
+                  value: TikTokAddMode.live,
+                  icon: const Icon(Icons.live_tv_outlined),
+                  label: Text(context.l10n.live),
+                ),
+              ],
+              selected: {_mode},
+              onSelectionChanged: _loading
+                  ? null
+                  : (values) {
+                      final mode = values.first;
+                      if (mode == _mode) return;
+                      _mode = mode;
+                      _valueController.clear();
+                      _changed();
+                    },
+            ),
+          ],
           const SizedBox(height: 16),
           AppTextField(
             key: const Key('tiktok-value'),
             controller: _valueController,
             enabled: !_loading,
             label: switch (_mode) {
-              TikTokAddMode.video => 'Video URL, short link, or video ID',
-              TikTokAddMode.live => 'Live URL or @username',
-              TikTokAddMode.userPosts => '@username or username',
+              TikTokAddMode.video => context.l10n.videoUrlShortLinkOrId,
+              TikTokAddMode.live => context.l10n.liveUrlOrRoomId,
+              TikTokAddMode.userPosts => context.l10n.usernameOrHandle,
             },
             prefixIcon: switch (_mode) {
               TikTokAddMode.video => Icons.music_video_outlined,
@@ -160,54 +185,63 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
                 : TextInputType.url,
             onChanged: (_) => _changed(),
           ),
-          const SizedBox(height: 12),
-          AppTextField(
-            key: const Key('tiktok-name'),
-            controller: _nameController,
-            enabled: !_loading,
-            label: 'Name',
-            prefixIcon: Icons.title,
-            onChanged: (_) => _changed(),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _instanceName,
-            decoration: const InputDecoration(
-              labelText: 'Provider instance',
-              prefixIcon: Icon(Icons.dns_outlined),
+          if (_target != ProviderAddTarget.media) ...[
+            const SizedBox(height: 12),
+            AppTextField(
+              key: const Key('tiktok-name'),
+              controller: _nameController,
+              enabled: !_loading,
+              label: context.l10n.name,
+              prefixIcon: Icons.title,
+              onChanged: (_) => _nameChanged(),
             ),
-            items: instances
-                .map(
-                  (value) => DropdownMenuItem(
-                    value: value,
-                    child: Text(value.isEmpty ? 'Default' : value),
-                  ),
-                )
-                .toList(),
-            onChanged: _loading
-                ? null
-                : (value) => setState(() {
-                    _instanceName = value ?? '';
-                    _clearPreview();
-                  }),
+          ],
+          const SizedBox(height: 12),
+          ProviderAccountSelector<TikTokBindInfo>(
+            accounts: widget.binds,
+            selectedId: _selectedBindId,
+            idOf: (bind) => bind.id,
+            labelOf: (bind) {
+              final label = bind.label.isEmpty
+                  ? context.l10n.defaultProviderInstance
+                  : bind.label;
+              return bind.providerInstanceName.isEmpty
+                  ? label
+                  : '$label · ${bind.providerInstanceName}';
+            },
+            includeDefault: true,
+            enabled: !_loading,
+            onChanged: (bind) => setState(() {
+              _selectedBindId = bind?.id ?? '';
+              _instanceName = bind?.providerInstanceName ?? '';
+              _clearPreview();
+            }),
           ),
-          SwitchListTile(
+          AppSwitchTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Use room owner credential'),
+            title: Text(context.l10n.shareMyCredentials),
+            prefix: const Icon(Icons.key_rounded),
+            semanticsLabel: context.l10n.shareMyCredentials,
             value: _shared,
             onChanged: _loading
                 ? null
                 : (value) => setState(() {
                     _shared = value;
+                    _clearPreview();
                   }),
           ),
-          if (_preview() case final preview?) ...[
+          if (_target != ProviderAddTarget.parse && _posts != null) ...[
+            const SizedBox(height: 8),
+            SizedBox(height: 380, child: _postsBrowser()),
+          ] else if (_preview() case final preview?) ...[
             const SizedBox(height: 8),
             preview,
           ],
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 10,
+            runSpacing: 10,
             children: [
               OutlinedButton.icon(
                 key: const Key('tiktok-preview'),
@@ -215,29 +249,23 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
                     ? null
                     : _loadPreview,
                 icon: const Icon(Icons.preview_outlined),
-                label: const Text('Preview'),
+                label: Text(context.l10n.preview),
               ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                key: const Key('tiktok-submit'),
-                onPressed: _loading || _valueController.text.trim().isEmpty
-                    ? null
-                    : _submit,
-                icon: _loading
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
-                        ),
-                      )
-                    : const Icon(Icons.add),
-                label: Text(
-                  _mode == TikTokAddMode.userPosts
-                      ? 'Create playlist'
-                      : 'Add media',
+              if (_target == ProviderAddTarget.parse)
+                FilledButton.icon(
+                  key: const Key('tiktok-submit'),
+                  onPressed: _loading || !_previewReady ? null : _submit,
+                  icon: _loading
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: AppLoadingIndicator(
+                            size: AppLoadingSize.sm,
+                            centered: false,
+                          ),
+                        )
+                      : const Icon(Icons.add),
+                  label: Text(context.l10n.addMedia),
                 ),
-              ),
             ],
           ),
         ],
@@ -247,13 +275,12 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
 
   Widget? _preview() {
     final metadata = _resolved?.metadata;
-    final post = _posts?.items.firstOrNull;
     final imageUrl = metadata?.dynamicCover.url.isNotEmpty == true
         ? metadata!.dynamicCover.url
         : metadata?.cover.url.isNotEmpty == true
         ? metadata!.cover.url
-        : post?.cover.url;
-    final title = metadata?.title ?? post?.title;
+        : null;
+    final title = metadata?.title;
     if (title == null || title.isEmpty) return null;
 
     final details = <String>[];
@@ -261,14 +288,12 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
       if (metadata.author.nickname.isNotEmpty) {
         details.add(metadata.author.nickname);
       }
-      details.add('${_resolved!.variants.length} variants');
-      details.add('${metadata.subtitles.length} subtitles');
+      details.add(context.l10n.variantsCount(_resolved!.variants.length));
+      details.add(context.l10n.subtitlesCount(metadata.subtitles.length));
       final cleanVariants = _resolved!.variants
           .where((variant) => !variant.watermarked)
           .length;
-      details.add('$cleanVariants watermark-free');
-    } else if (_user?.secUid.isNotEmpty == true) {
-      details.add('@${_request.value.replaceFirst(RegExp(r'^@'), '')}');
+      details.add(context.l10n.watermarkFreeCount(cleanVariants));
     }
 
     return DecoratedBox(
@@ -311,12 +336,50 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
     );
   }
 
+  Widget _postsBrowser() {
+    final posts = _posts!;
+    return DiscoveryBrowser(
+      key: ValueKey('tiktok-posts:${_user?.secUid ?? ''}'),
+      items: [
+        for (final item in posts.items)
+          DiscoveryBrowserEntry(
+            key: item.videoId,
+            title: item.title,
+            subtitle: item.author.nickname,
+            source: item.source,
+            isContainer: false,
+            selectable: item.hasSource(),
+            leading: item.hasCover() && item.cover.url.isNotEmpty
+                ? AppImageThumbnail(
+                    url: item.cover.url,
+                    width: 48,
+                    height: 48,
+                    borderRadius: BorderRadius.circular(4),
+                  )
+                : const Icon(Icons.play_circle_outline),
+          ),
+      ],
+      loading: _loading,
+      hasMore: posts.hasMore,
+      onLoadMore: _loadMorePosts,
+      onAddSelected: _target == ProviderAddTarget.media ? _addSelected : null,
+      onAddCurrentList:
+          _target == ProviderAddTarget.playlist && posts.hasSource()
+          ? _submit
+          : null,
+      target: _target,
+      emptyIcon: Icons.video_library_outlined,
+      emptyTitle: context.l10n.noPosts,
+    );
+  }
+
   Future<tiktok.GetUserResponse> _resolveUser(TikTokAddRequest request) {
     final getUser = widget.onGetUser;
     if (getUser != null) return getUser(request);
     return providerGateway.getTikTokUser(
-      request.value.replaceFirst(RegExp(r'^@'), ''),
+      request.value,
       instanceName: request.instanceName,
+      shared: request.shared,
     );
   }
 
@@ -326,14 +389,7 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
       final request = _request;
       if (_mode == TikTokAddMode.userPosts) {
         _user = await _resolveUser(request);
-        final list = widget.onListUserPosts;
-        _posts = list != null
-            ? await list(request, _user!.secUid)
-            : await providerGateway.listTikTokUserPosts(
-                _user!.secUid,
-                pageSize: 1,
-                instanceName: request.instanceName,
-              );
+        await _loadUserPosts();
       } else {
         final resolve = widget.onResolve;
         _resolved = resolve != null
@@ -341,6 +397,7 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
             : await providerGateway.resolveTikTok(
                 request.value,
                 instanceName: request.instanceName,
+                shared: request.shared,
               );
       }
     } catch (error) {
@@ -350,40 +407,68 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
     }
   }
 
+  Future<void> _loadUserPosts({bool loadMore = false}) async {
+    final request = _request;
+    final current = _posts;
+    if (loadMore && (current == null || !current.hasMore)) return;
+    final secUid = _user?.secUid ?? '';
+    final cursor = loadMore && current?.hasCursor() == true
+        ? current!.cursor
+        : null;
+    final list = widget.onListUserPosts;
+    final page = list != null
+        ? await list(request, secUid, cursor)
+        : await providerGateway.listTikTokUserPosts(
+            secUid,
+            cursor: cursor,
+            pageSize: 20,
+            instanceName: request.instanceName,
+            shared: request.shared,
+          );
+    _posts = loadMore && current != null
+        ? tiktok.ListUserPostsResponse(
+            items: [...current.items, ...page.items],
+            cursor: page.hasCursor() ? page.cursor : null,
+            hasMore: page.hasMore,
+            source: page.hasSource() ? page.source : current.source,
+          )
+        : page;
+  }
+
+  Future<void> _loadMorePosts() async {
+    setState(() => _loading = true);
+    try {
+      await _loadUserPosts(loadMore: true);
+    } catch (error) {
+      if (mounted) AppNotifications.showError(context, '$error');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   Future<void> _submit() async {
     final request = _request;
+    final discovered = _target == ProviderAddTarget.playlist
+        ? (_posts?.hasSource() == true ? _posts!.source : null)
+        : (_resolved?.hasSource() == true ? _resolved!.source : null);
+    if (discovered == null) {
+      AppNotifications.showError(context, context.l10n.previewSourceFirst);
+      return;
+    }
     setState(() => _loading = true);
     try {
       if (widget.onSubmit case final submit?) {
         await submit(request);
-      } else if (_mode == TikTokAddMode.userPosts) {
-        final user = _user ?? await _resolveUser(request);
-        await providerGateway.createPlaylistFromSourceConfig(
-          widget.roomId,
-          sourceConfig: TikTokSourceConfig.playlist(
-            user.sourceConfig,
-            request.shared,
-          ),
-          name: request.name.isEmpty ? 'TikTok posts' : request.name,
-          parentId: widget.playlistId,
-          providerInstanceName: request.instanceName,
-        );
       } else {
-        final resolved =
-            _resolved ??
-            await providerGateway.resolveTikTok(
-              request.value,
-              instanceName: request.instanceName,
-            );
-        await providerGateway.addMediaFromSourceConfig(
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
           playlistId: widget.playlistId,
-          sourceConfig: TikTokSourceConfig.media(
-            resolved.sourceConfig,
-            request.shared,
-          ),
-          name: request.name.isEmpty ? resolved.metadata.title : request.name,
-          providerInstanceName: request.instanceName,
+          source: discovered,
+          name: request.name.isEmpty
+              ? (_target == ProviderAddTarget.playlist
+                    ? 'TikTok ${context.l10n.posts}'
+                    : _resolved!.metadata.title)
+              : request.name,
         );
       }
       if (!mounted) return;
@@ -391,12 +476,51 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
       _nameController.clear();
       _clearPreview();
       widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, 'TikTok source added');
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> entries) async {
+    if (entries.isEmpty) return;
+    setState(() => _loading = true);
+    try {
+      for (final entry in entries) {
+        await providerGateway.addDiscoveredSource(
+          widget.roomId,
+          playlistId: widget.playlistId,
+          source: entry.source,
+          name: entry.title,
+        );
+      }
+      if (!mounted) return;
+      _valueController.clear();
+      _nameController.clear();
+      _clearPreview();
+      widget.onDraftChanged(false);
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
+      setState(() {});
+    } catch (error) {
+      if (mounted) AppNotifications.showError(context, '$error');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  bool get _previewReady => _resolved?.hasSource() == true;
+
+  void _selectTarget(ProviderAddTarget target) {
+    if (target == _target) return;
+    _target = target;
+    _mode = target == ProviderAddTarget.parse
+        ? TikTokAddMode.video
+        : TikTokAddMode.userPosts;
+    _valueController.clear();
+    _nameController.clear();
+    _changed();
   }
 }

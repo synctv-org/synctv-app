@@ -41,6 +41,7 @@ void main() {
                 total: 0,
                 page: page,
                 hasMore: false,
+                source: testDiscoveredPlaylistSource(),
               ),
               libraryLoader: (_) async => const [
                 SynologyVideoLibraryInfo(
@@ -53,7 +54,7 @@ void main() {
               ],
               videoLoader: (_, _, _, _, page, _, _) async =>
                   SynologyVideoListPage(
-                    items: const [
+                    items: [
                       SynologyVideoItemInfo(
                         id: 42,
                         libraryId: 7,
@@ -84,11 +85,13 @@ void main() {
                           ),
                         ],
                         posterUrl: '',
+                        source: testDiscoveredMediaSource(name: 'Native Movie'),
                       ),
                     ],
                     total: 1,
                     page: page,
                     hasMore: false,
+                    source: testDiscoveredPlaylistSource(),
                   ),
             ),
           ),

@@ -355,8 +355,7 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
     $core.int? defaultDanmakuIndex,
     PlaybackKind? playbackKind,
     $core.double? durationSeconds,
-    $core.bool? preferProxy,
-    $core.bool? proxyOnly,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (medias != null) result.medias.addAll(medias);
@@ -369,8 +368,7 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
       result.defaultDanmakuIndex = defaultDanmakuIndex;
     if (playbackKind != null) result.playbackKind = playbackKind;
     if (durationSeconds != null) result.durationSeconds = durationSeconds;
-    if (preferProxy != null) result.preferProxy = preferProxy;
-    if (proxyOnly != null) result.proxyOnly = proxyOnly;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -403,8 +401,8 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
     ..aE<PlaybackKind>(7, _omitFieldNames ? '' : 'playbackKind',
         enumValues: PlaybackKind.values)
     ..aD(8, _omitFieldNames ? '' : 'durationSeconds')
-    ..aOB(9, _omitFieldNames ? '' : 'preferProxy')
-    ..aOB(10, _omitFieldNames ? '' : 'proxyOnly')
+    ..aE<PlaybackProxyMode>(9, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -483,22 +481,13 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
   void clearDurationSeconds() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  $core.bool get preferProxy => $_getBF(8);
+  PlaybackProxyMode get proxyMode => $_getN(8);
   @$pb.TagNumber(9)
-  set preferProxy($core.bool value) => $_setBool(8, value);
+  set proxyMode(PlaybackProxyMode value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasPreferProxy() => $_has(8);
+  $core.bool hasProxyMode() => $_has(8);
   @$pb.TagNumber(9)
-  void clearPreferProxy() => $_clearField(9);
-
-  @$pb.TagNumber(10)
-  $core.bool get proxyOnly => $_getBF(9);
-  @$pb.TagNumber(10)
-  set proxyOnly($core.bool value) => $_setBool(9, value);
-  @$pb.TagNumber(10)
-  $core.bool hasProxyOnly() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearProxyOnly() => $_clearField(10);
+  void clearProxyMode() => $_clearField(9);
 }
 
 class AlistMediaSourceConfig extends $pb.GeneratedMessage {
@@ -506,11 +495,13 @@ class AlistMediaSourceConfig extends $pb.GeneratedMessage {
     $core.String? serverId,
     $core.String? path,
     $core.String? password,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (path != null) result.path = path;
     if (password != null) result.password = password;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -531,6 +522,8 @@ class AlistMediaSourceConfig extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aOS(2, _omitFieldNames ? '' : 'path')
     ..aOS(3, _omitFieldNames ? '' : 'password')
+    ..aE<PlaybackProxyMode>(4, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -579,6 +572,15 @@ class AlistMediaSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasPassword() => $_has(2);
   @$pb.TagNumber(3)
   void clearPassword() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  PlaybackProxyMode get proxyMode => $_getN(3);
+  @$pb.TagNumber(4)
+  set proxyMode(PlaybackProxyMode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasProxyMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProxyMode() => $_clearField(4);
 }
 
 class AlistPlaylistSourceConfig extends $pb.GeneratedMessage {
@@ -586,11 +588,13 @@ class AlistPlaylistSourceConfig extends $pb.GeneratedMessage {
     $core.String? serverId,
     $core.String? path,
     $core.String? password,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (path != null) result.path = path;
     if (password != null) result.password = password;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -611,6 +615,8 @@ class AlistPlaylistSourceConfig extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aOS(2, _omitFieldNames ? '' : 'path')
     ..aOS(3, _omitFieldNames ? '' : 'password')
+    ..aE<PlaybackProxyMode>(4, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -659,16 +665,27 @@ class AlistPlaylistSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasPassword() => $_has(2);
   @$pb.TagNumber(3)
   void clearPassword() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  PlaybackProxyMode get proxyMode => $_getN(3);
+  @$pb.TagNumber(4)
+  set proxyMode(PlaybackProxyMode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasProxyMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProxyMode() => $_clearField(4);
 }
 
 class CloudreveMediaSourceConfig extends $pb.GeneratedMessage {
   factory CloudreveMediaSourceConfig({
     $core.String? serverId,
     $core.String? path,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (path != null) result.path = path;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -688,6 +705,8 @@ class CloudreveMediaSourceConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..aE<PlaybackProxyMode>(3, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -728,16 +747,27 @@ class CloudreveMediaSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasPath() => $_has(1);
   @$pb.TagNumber(2)
   void clearPath() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  PlaybackProxyMode get proxyMode => $_getN(2);
+  @$pb.TagNumber(3)
+  set proxyMode(PlaybackProxyMode value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasProxyMode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearProxyMode() => $_clearField(3);
 }
 
 class CloudrevePlaylistSourceConfig extends $pb.GeneratedMessage {
   factory CloudrevePlaylistSourceConfig({
     $core.String? serverId,
     $core.String? path,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (path != null) result.path = path;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -757,6 +787,8 @@ class CloudrevePlaylistSourceConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..aE<PlaybackProxyMode>(3, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -798,16 +830,27 @@ class CloudrevePlaylistSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasPath() => $_has(1);
   @$pb.TagNumber(2)
   void clearPath() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  PlaybackProxyMode get proxyMode => $_getN(2);
+  @$pb.TagNumber(3)
+  set proxyMode(PlaybackProxyMode value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasProxyMode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearProxyMode() => $_clearField(3);
 }
 
 class EmbyMediaSourceConfig extends $pb.GeneratedMessage {
   factory EmbyMediaSourceConfig({
     $core.String? serverId,
     $core.String? itemId,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (itemId != null) result.itemId = itemId;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -827,6 +870,8 @@ class EmbyMediaSourceConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aOS(2, _omitFieldNames ? '' : 'itemId')
+    ..aE<PlaybackProxyMode>(3, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -866,6 +911,15 @@ class EmbyMediaSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasItemId() => $_has(1);
   @$pb.TagNumber(2)
   void clearItemId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  PlaybackProxyMode get proxyMode => $_getN(2);
+  @$pb.TagNumber(3)
+  set proxyMode(PlaybackProxyMode value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasProxyMode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearProxyMode() => $_clearField(3);
 }
 
 enum EmbyPlaylistSourceConfig_Source {
@@ -897,6 +951,7 @@ class EmbyPlaylistSourceConfig extends $pb.GeneratedMessage {
     EmbyCollectionsPlaylistSource? collections,
     EmbyGenresPlaylistSource? genres,
     EmbyGenreItemsPlaylistSource? genreItems,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
@@ -911,6 +966,7 @@ class EmbyPlaylistSourceConfig extends $pb.GeneratedMessage {
     if (collections != null) result.collections = collections;
     if (genres != null) result.genres = genres;
     if (genreItems != null) result.genreItems = genreItems;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -973,6 +1029,8 @@ class EmbyPlaylistSourceConfig extends $pb.GeneratedMessage {
         subBuilder: EmbyGenresPlaylistSource.create)
     ..aOM<EmbyGenreItemsPlaylistSource>(12, _omitFieldNames ? '' : 'genreItems',
         subBuilder: EmbyGenreItemsPlaylistSource.create)
+    ..aE<PlaybackProxyMode>(13, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1154,6 +1212,15 @@ class EmbyPlaylistSourceConfig extends $pb.GeneratedMessage {
   void clearGenreItems() => $_clearField(12);
   @$pb.TagNumber(12)
   EmbyGenreItemsPlaylistSource ensureGenreItems() => $_ensure(11);
+
+  @$pb.TagNumber(13)
+  PlaybackProxyMode get proxyMode => $_getN(12);
+  @$pb.TagNumber(13)
+  set proxyMode(PlaybackProxyMode value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasProxyMode() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearProxyMode() => $_clearField(13);
 }
 
 class EmbyFolderPlaylistSource extends $pb.GeneratedMessage {
@@ -2448,11 +2515,13 @@ class BilibiliMediaSourceConfig extends $pb.GeneratedMessage {
     BilibiliVideoSourceConfig? video,
     BilibiliPgcSourceConfig? pgc,
     BilibiliLiveSourceConfig? live,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (video != null) result.video = video;
     if (pgc != null) result.pgc = pgc;
     if (live != null) result.live = live;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -2484,6 +2553,8 @@ class BilibiliMediaSourceConfig extends $pb.GeneratedMessage {
         subBuilder: BilibiliPgcSourceConfig.create)
     ..aOM<BilibiliLiveSourceConfig>(3, _omitFieldNames ? '' : 'live',
         subBuilder: BilibiliLiveSourceConfig.create)
+    ..aE<PlaybackProxyMode>(4, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2548,6 +2619,15 @@ class BilibiliMediaSourceConfig extends $pb.GeneratedMessage {
   void clearLive() => $_clearField(3);
   @$pb.TagNumber(3)
   BilibiliLiveSourceConfig ensureLive() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  PlaybackProxyMode get proxyMode => $_getN(3);
+  @$pb.TagNumber(4)
+  set proxyMode(PlaybackProxyMode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasProxyMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProxyMode() => $_clearField(4);
 }
 
 class BilibiliPopularPlaylistSource extends $pb.GeneratedMessage {
@@ -3436,6 +3516,7 @@ class BilibiliPlaylistSourceConfig extends $pb.GeneratedMessage {
     BilibiliHistoryPlaylistSource? history,
     BilibiliPgcTimelinePlaylistSource? pgcTimeline,
     $core.bool? shared,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (videoParts != null) result.videoParts = videoParts;
@@ -3453,6 +3534,7 @@ class BilibiliPlaylistSourceConfig extends $pb.GeneratedMessage {
     if (history != null) result.history = history;
     if (pgcTimeline != null) result.pgcTimeline = pgcTimeline;
     if (shared != null) result.shared = shared;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -3528,6 +3610,8 @@ class BilibiliPlaylistSourceConfig extends $pb.GeneratedMessage {
         14, _omitFieldNames ? '' : 'pgcTimeline',
         subBuilder: BilibiliPgcTimelinePlaylistSource.create)
     ..aOB(15, _omitFieldNames ? '' : 'shared')
+    ..aE<PlaybackProxyMode>(16, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3756,6 +3840,15 @@ class BilibiliPlaylistSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasShared() => $_has(14);
   @$pb.TagNumber(15)
   void clearShared() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  PlaybackProxyMode get proxyMode => $_getN(15);
+  @$pb.TagNumber(16)
+  set proxyMode(PlaybackProxyMode value) => $_setField(16, value);
+  @$pb.TagNumber(16)
+  $core.bool hasProxyMode() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearProxyMode() => $_clearField(16);
 }
 
 class TwitchLiveSourceConfig extends $pb.GeneratedMessage {
@@ -6094,11 +6187,13 @@ class FnosMediaSourceConfig extends $pb.GeneratedMessage {
     $core.String? serverId,
     FnosFileSourceConfig? file,
     FnosLibraryItemSourceConfig? libraryItem,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (file != null) result.file = file;
     if (libraryItem != null) result.libraryItem = libraryItem;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -6128,6 +6223,8 @@ class FnosMediaSourceConfig extends $pb.GeneratedMessage {
         subBuilder: FnosFileSourceConfig.create)
     ..aOM<FnosLibraryItemSourceConfig>(3, _omitFieldNames ? '' : 'libraryItem',
         subBuilder: FnosLibraryItemSourceConfig.create)
+    ..aE<PlaybackProxyMode>(4, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6188,6 +6285,15 @@ class FnosMediaSourceConfig extends $pb.GeneratedMessage {
   void clearLibraryItem() => $_clearField(3);
   @$pb.TagNumber(3)
   FnosLibraryItemSourceConfig ensureLibraryItem() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  PlaybackProxyMode get proxyMode => $_getN(3);
+  @$pb.TagNumber(4)
+  set proxyMode(PlaybackProxyMode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasProxyMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProxyMode() => $_clearField(4);
 }
 
 class FnosFilesPlaylistSourceConfig extends $pb.GeneratedMessage {
@@ -6426,6 +6532,7 @@ class FnosPlaylistSourceConfig extends $pb.GeneratedMessage {
     FnosMediaLibraryPlaylistSourceConfig? mediaLibrary,
     FnosFavoritesPlaylistSourceConfig? favorites,
     FnosHistoryPlaylistSourceConfig? history,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
@@ -6433,6 +6540,7 @@ class FnosPlaylistSourceConfig extends $pb.GeneratedMessage {
     if (mediaLibrary != null) result.mediaLibrary = mediaLibrary;
     if (favorites != null) result.favorites = favorites;
     if (history != null) result.history = history;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -6470,6 +6578,8 @@ class FnosPlaylistSourceConfig extends $pb.GeneratedMessage {
         subBuilder: FnosFavoritesPlaylistSourceConfig.create)
     ..aOM<FnosHistoryPlaylistSourceConfig>(5, _omitFieldNames ? '' : 'history',
         subBuilder: FnosHistoryPlaylistSourceConfig.create)
+    ..aE<PlaybackProxyMode>(6, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6558,16 +6668,27 @@ class FnosPlaylistSourceConfig extends $pb.GeneratedMessage {
   void clearHistory() => $_clearField(5);
   @$pb.TagNumber(5)
   FnosHistoryPlaylistSourceConfig ensureHistory() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  PlaybackProxyMode get proxyMode => $_getN(5);
+  @$pb.TagNumber(6)
+  set proxyMode(PlaybackProxyMode value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasProxyMode() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearProxyMode() => $_clearField(6);
 }
 
 class QnapMediaSourceConfig extends $pb.GeneratedMessage {
   factory QnapMediaSourceConfig({
     $core.String? serverId,
     $core.String? path,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (path != null) result.path = path;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -6587,6 +6708,8 @@ class QnapMediaSourceConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..aE<PlaybackProxyMode>(3, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6626,16 +6749,27 @@ class QnapMediaSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasPath() => $_has(1);
   @$pb.TagNumber(2)
   void clearPath() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  PlaybackProxyMode get proxyMode => $_getN(2);
+  @$pb.TagNumber(3)
+  set proxyMode(PlaybackProxyMode value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasProxyMode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearProxyMode() => $_clearField(3);
 }
 
 class QnapPlaylistSourceConfig extends $pb.GeneratedMessage {
   factory QnapPlaylistSourceConfig({
     $core.String? serverId,
     $core.String? path,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (path != null) result.path = path;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -6655,6 +6789,8 @@ class QnapPlaylistSourceConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..aE<PlaybackProxyMode>(3, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6694,6 +6830,15 @@ class QnapPlaylistSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasPath() => $_has(1);
   @$pb.TagNumber(2)
   void clearPath() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  PlaybackProxyMode get proxyMode => $_getN(2);
+  @$pb.TagNumber(3)
+  set proxyMode(PlaybackProxyMode value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasProxyMode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearProxyMode() => $_clearField(3);
 }
 
 class SynologyFileSourceConfig extends $pb.GeneratedMessage {
@@ -6843,11 +6988,13 @@ class SynologyMediaSourceConfig extends $pb.GeneratedMessage {
     $core.String? serverId,
     SynologyFileSourceConfig? file,
     SynologyLibraryItemSourceConfig? libraryItem,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (file != null) result.file = file;
     if (libraryItem != null) result.libraryItem = libraryItem;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -6878,6 +7025,8 @@ class SynologyMediaSourceConfig extends $pb.GeneratedMessage {
     ..aOM<SynologyLibraryItemSourceConfig>(
         3, _omitFieldNames ? '' : 'libraryItem',
         subBuilder: SynologyLibraryItemSourceConfig.create)
+    ..aE<PlaybackProxyMode>(4, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6939,6 +7088,15 @@ class SynologyMediaSourceConfig extends $pb.GeneratedMessage {
   void clearLibraryItem() => $_clearField(3);
   @$pb.TagNumber(3)
   SynologyLibraryItemSourceConfig ensureLibraryItem() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  PlaybackProxyMode get proxyMode => $_getN(3);
+  @$pb.TagNumber(4)
+  set proxyMode(PlaybackProxyMode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasProxyMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProxyMode() => $_clearField(4);
 }
 
 class SynologyFilesPlaylistSourceConfig extends $pb.GeneratedMessage {
@@ -7332,6 +7490,7 @@ class SynologyPlaylistSourceConfig extends $pb.GeneratedMessage {
     SynologyEpisodesPlaylistSourceConfig? episodes,
     SynologyHomeVideosPlaylistSourceConfig? homeVideos,
     SynologyTvRecordingsPlaylistSourceConfig? tvRecordings,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
@@ -7341,6 +7500,7 @@ class SynologyPlaylistSourceConfig extends $pb.GeneratedMessage {
     if (episodes != null) result.episodes = episodes;
     if (homeVideos != null) result.homeVideos = homeVideos;
     if (tvRecordings != null) result.tvRecordings = tvRecordings;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -7387,6 +7547,8 @@ class SynologyPlaylistSourceConfig extends $pb.GeneratedMessage {
     ..aOM<SynologyTvRecordingsPlaylistSourceConfig>(
         7, _omitFieldNames ? '' : 'tvRecordings',
         subBuilder: SynologyTvRecordingsPlaylistSourceConfig.create)
+    ..aE<PlaybackProxyMode>(8, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -7505,6 +7667,15 @@ class SynologyPlaylistSourceConfig extends $pb.GeneratedMessage {
   void clearTvRecordings() => $_clearField(7);
   @$pb.TagNumber(7)
   SynologyTvRecordingsPlaylistSourceConfig ensureTvRecordings() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  PlaybackProxyMode get proxyMode => $_getN(7);
+  @$pb.TagNumber(8)
+  set proxyMode(PlaybackProxyMode value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasProxyMode() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearProxyMode() => $_clearField(8);
 }
 
 class NextcloudMediaSourceConfig extends $pb.GeneratedMessage {
@@ -7512,11 +7683,13 @@ class NextcloudMediaSourceConfig extends $pb.GeneratedMessage {
     $core.String? serverId,
     $core.String? path,
     $fixnum.Int64? fileId,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (path != null) result.path = path;
     if (fileId != null) result.fileId = fileId;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -7538,6 +7711,8 @@ class NextcloudMediaSourceConfig extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'path')
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'fileId', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aE<PlaybackProxyMode>(4, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -7587,6 +7762,15 @@ class NextcloudMediaSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasFileId() => $_has(2);
   @$pb.TagNumber(3)
   void clearFileId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  PlaybackProxyMode get proxyMode => $_getN(3);
+  @$pb.TagNumber(4)
+  set proxyMode(PlaybackProxyMode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasProxyMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProxyMode() => $_clearField(4);
 }
 
 class NextcloudFolderPlaylistSourceConfig extends $pb.GeneratedMessage {
@@ -7773,12 +7957,14 @@ class NextcloudPlaylistSourceConfig extends $pb.GeneratedMessage {
     NextcloudFolderPlaylistSourceConfig? folder,
     NextcloudFavoritesPlaylistSourceConfig? favorites,
     NextcloudSearchPlaylistSourceConfig? search,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (folder != null) result.folder = folder;
     if (favorites != null) result.favorites = favorites;
     if (search != null) result.search = search;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -7814,6 +8000,8 @@ class NextcloudPlaylistSourceConfig extends $pb.GeneratedMessage {
     ..aOM<NextcloudSearchPlaylistSourceConfig>(
         4, _omitFieldNames ? '' : 'search',
         subBuilder: NextcloudSearchPlaylistSourceConfig.create)
+    ..aE<PlaybackProxyMode>(5, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -7890,6 +8078,15 @@ class NextcloudPlaylistSourceConfig extends $pb.GeneratedMessage {
   void clearSearch() => $_clearField(4);
   @$pb.TagNumber(4)
   NextcloudSearchPlaylistSourceConfig ensureSearch() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  PlaybackProxyMode get proxyMode => $_getN(4);
+  @$pb.TagNumber(5)
+  set proxyMode(PlaybackProxyMode value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasProxyMode() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearProxyMode() => $_clearField(5);
 }
 
 class SeafileMediaSourceConfig extends $pb.GeneratedMessage {
@@ -7899,6 +8096,7 @@ class SeafileMediaSourceConfig extends $pb.GeneratedMessage {
     $core.String? path,
     $core.String? objectId,
     $core.bool? hasThumbnail,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
@@ -7906,6 +8104,7 @@ class SeafileMediaSourceConfig extends $pb.GeneratedMessage {
     if (path != null) result.path = path;
     if (objectId != null) result.objectId = objectId;
     if (hasThumbnail != null) result.hasThumbnail = hasThumbnail;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -7928,6 +8127,8 @@ class SeafileMediaSourceConfig extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'path')
     ..aOS(4, _omitFieldNames ? '' : 'objectId')
     ..aOB(5, _omitFieldNames ? '' : 'hasThumbnail')
+    ..aE<PlaybackProxyMode>(6, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -7994,6 +8195,15 @@ class SeafileMediaSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasHasThumbnail() => $_has(4);
   @$pb.TagNumber(5)
   void clearHasThumbnail() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  PlaybackProxyMode get proxyMode => $_getN(5);
+  @$pb.TagNumber(6)
+  set proxyMode(PlaybackProxyMode value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasProxyMode() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearProxyMode() => $_clearField(6);
 }
 
 class SeafileFolderPlaylistSourceConfig extends $pb.GeneratedMessage {
@@ -8192,12 +8402,14 @@ class SeafilePlaylistSourceConfig extends $pb.GeneratedMessage {
     SeafileFolderPlaylistSourceConfig? folder,
     SeafileStarredPlaylistSourceConfig? starred,
     SeafileSearchPlaylistSourceConfig? search,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (folder != null) result.folder = folder;
     if (starred != null) result.starred = starred;
     if (search != null) result.search = search;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -8231,6 +8443,8 @@ class SeafilePlaylistSourceConfig extends $pb.GeneratedMessage {
         subBuilder: SeafileStarredPlaylistSourceConfig.create)
     ..aOM<SeafileSearchPlaylistSourceConfig>(4, _omitFieldNames ? '' : 'search',
         subBuilder: SeafileSearchPlaylistSourceConfig.create)
+    ..aE<PlaybackProxyMode>(5, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8306,16 +8520,27 @@ class SeafilePlaylistSourceConfig extends $pb.GeneratedMessage {
   void clearSearch() => $_clearField(4);
   @$pb.TagNumber(4)
   SeafileSearchPlaylistSourceConfig ensureSearch() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  PlaybackProxyMode get proxyMode => $_getN(4);
+  @$pb.TagNumber(5)
+  set proxyMode(PlaybackProxyMode value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasProxyMode() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearProxyMode() => $_clearField(5);
 }
 
 class TrueNasMediaSourceConfig extends $pb.GeneratedMessage {
   factory TrueNasMediaSourceConfig({
     $core.String? serverId,
     $core.String? path,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (path != null) result.path = path;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -8335,6 +8560,8 @@ class TrueNasMediaSourceConfig extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..aE<PlaybackProxyMode>(3, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8374,6 +8601,15 @@ class TrueNasMediaSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasPath() => $_has(1);
   @$pb.TagNumber(2)
   void clearPath() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  PlaybackProxyMode get proxyMode => $_getN(2);
+  @$pb.TagNumber(3)
+  set proxyMode(PlaybackProxyMode value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasProxyMode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearProxyMode() => $_clearField(3);
 }
 
 class TrueNasFolderPlaylistSourceConfig extends $pb.GeneratedMessage {
@@ -8515,11 +8751,13 @@ class TrueNasPlaylistSourceConfig extends $pb.GeneratedMessage {
     $core.String? serverId,
     TrueNasFolderPlaylistSourceConfig? folder,
     TrueNasSearchPlaylistSourceConfig? search,
+    PlaybackProxyMode? proxyMode,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (folder != null) result.folder = folder;
     if (search != null) result.search = search;
+    if (proxyMode != null) result.proxyMode = proxyMode;
     return result;
   }
 
@@ -8549,6 +8787,8 @@ class TrueNasPlaylistSourceConfig extends $pb.GeneratedMessage {
         subBuilder: TrueNasFolderPlaylistSourceConfig.create)
     ..aOM<TrueNasSearchPlaylistSourceConfig>(3, _omitFieldNames ? '' : 'search',
         subBuilder: TrueNasSearchPlaylistSourceConfig.create)
+    ..aE<PlaybackProxyMode>(4, _omitFieldNames ? '' : 'proxyMode',
+        enumValues: PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8611,6 +8851,15 @@ class TrueNasPlaylistSourceConfig extends $pb.GeneratedMessage {
   void clearSearch() => $_clearField(3);
   @$pb.TagNumber(3)
   TrueNasSearchPlaylistSourceConfig ensureSearch() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  PlaybackProxyMode get proxyMode => $_getN(3);
+  @$pb.TagNumber(4)
+  set proxyMode(PlaybackProxyMode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasProxyMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProxyMode() => $_clearField(4);
 }
 
 class TikTokVideoSourceConfig extends $pb.GeneratedMessage {

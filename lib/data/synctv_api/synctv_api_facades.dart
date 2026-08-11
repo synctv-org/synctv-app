@@ -3022,6 +3022,39 @@ class SyncTvProviderCommonApi {
 
   final SyncTvApiClient _api;
 
+  Future<provider_common.PreparedMediaSource> prepareDirectUrl(
+    provider_common.PrepareDirectUrlRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/providers/prepare/direct-url',
+      provider_common.PreparedMediaSource.create,
+      body: request,
+    );
+  }
+
+  Future<provider_common.PreparedMediaSource> prepareLiveProxy(
+    provider_common.PrepareLiveProxyRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/providers/prepare/live-proxy',
+      provider_common.PreparedMediaSource.create,
+      body: request,
+    );
+  }
+
+  Future<provider_common.PreparedMediaSource> prepareRtmp(
+    provider_common.PrepareRtmpRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/providers/prepare/rtmp',
+      provider_common.PreparedMediaSource.create,
+      body: request,
+    );
+  }
+
   Future<provider_common.ProviderBackendsResponse> listProviderBackends(
     provider_common.ListProviderBackendsRequest request,
   ) {
@@ -3516,6 +3549,13 @@ class SyncTvYoutubeProviderApi {
         youtube.ResolveResponse.create,
         body: request,
       );
+
+  Future<youtube.ListResponse> list(youtube.ListRequest request) => _api._send(
+    'POST',
+    '/api/providers/youtube/list',
+    youtube.ListResponse.create,
+    body: request,
+  );
 }
 
 class SyncTvDouyinProviderApi {
@@ -3822,13 +3862,11 @@ class SyncTvEmbyProviderApi {
   }
 
   Future<emby.ListResponse> list(emby.ListRequest request) {
-    final body = request.deepCopy()
-      ..path = request.path == '/' ? '' : request.path;
     return _api._send(
       'POST',
       '/api/providers/emby/list',
       emby.ListResponse.create,
-      body: body,
+      body: request,
     );
   }
 
@@ -3870,6 +3908,17 @@ class SyncTvBilibiliProviderApi {
       'POST',
       '/api/providers/bilibili/parse',
       bilibili.ParseResponse.create,
+      body: request,
+    );
+  }
+
+  Future<bilibili.ListPlaylistResponse> listPlaylist(
+    bilibili.ListPlaylistRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/providers/bilibili/playlist/list',
+      bilibili.ListPlaylistResponse.create,
       body: request,
     );
   }

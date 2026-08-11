@@ -19,6 +19,7 @@ import 'package:synctv_app/features/room/domain/chat_reactions.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/features/room/presentation/room_taxonomy.dart';
 import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
+import 'package:synctv_app/core/presentation/media_provider_brand.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 
 part 'admin_shared_widgets.dart';
@@ -161,11 +162,15 @@ const Map<String, String> _providerTypeLabels = {
   'cctv': 'CCTV',
   'fnos': 'FNOS',
   'qnap': 'QNAP',
+  'synology': 'Synology DSM',
+  'nextcloud': 'Nextcloud',
+  'seafile': 'Seafile',
+  'truenas': 'TrueNAS',
   'liveProxy': 'Live Proxy',
 };
 
 String _providerTypeLabel(String provider) {
-  return _providerTypeLabels[provider] ?? provider;
+  return mediaProviderBrand(provider).label;
 }
 
 List<String> _providerTypeOptions({

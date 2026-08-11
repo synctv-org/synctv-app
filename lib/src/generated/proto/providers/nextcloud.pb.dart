@@ -15,6 +15,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $0;
+
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 class LoginRequest extends $pb.GeneratedMessage {
@@ -665,6 +667,7 @@ class FileItem extends $pb.GeneratedMessage {
     $core.int? width,
     $core.int? height,
     $fixnum.Int64? durationMillis,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -684,6 +687,7 @@ class FileItem extends $pb.GeneratedMessage {
     if (width != null) result.width = width;
     if (height != null) result.height = height;
     if (durationMillis != null) result.durationMillis = durationMillis;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -722,6 +726,8 @@ class FileItem extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(
         17, _omitFieldNames ? '' : 'durationMillis', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<$0.DiscoveredSource>(18, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -894,6 +900,17 @@ class FileItem extends $pb.GeneratedMessage {
   $core.bool hasDurationMillis() => $_has(16);
   @$pb.TagNumber(17)
   void clearDurationMillis() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $0.DiscoveredSource get source => $_getN(17);
+  @$pb.TagNumber(18)
+  set source($0.DiscoveredSource value) => $_setField(18, value);
+  @$pb.TagNumber(18)
+  $core.bool hasSource() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearSource() => $_clearField(18);
+  @$pb.TagNumber(18)
+  $0.DiscoveredSource ensureSource() => $_ensure(17);
 }
 
 class ListResponse extends $pb.GeneratedMessage {
@@ -902,12 +919,14 @@ class ListResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? total,
     $fixnum.Int64? page,
     $core.bool? hasMore,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (content != null) result.content.addAll(content);
     if (total != null) result.total = total;
     if (page != null) result.page = page;
     if (hasMore != null) result.hasMore = hasMore;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -932,6 +951,8 @@ class ListResponse extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'page', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOB(4, _omitFieldNames ? '' : 'hasMore')
+    ..aOM<$0.DiscoveredSource>(5, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -982,6 +1003,17 @@ class ListResponse extends $pb.GeneratedMessage {
   $core.bool hasHasMore() => $_has(3);
   @$pb.TagNumber(4)
   void clearHasMore() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource get source => $_getN(4);
+  @$pb.TagNumber(5)
+  set source($0.DiscoveredSource value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSource() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSource() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $0.DiscoveredSource ensureSource() => $_ensure(4);
 }
 
 class LogoutRequest extends $pb.GeneratedMessage {

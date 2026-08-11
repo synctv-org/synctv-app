@@ -91,6 +91,14 @@ const FileItem$json = {
     {'1': 'attributes', '3': 14, '4': 3, '5': 9, '10': 'attributes'},
     {'1': 'xattrs', '3': 15, '4': 3, '5': 9, '10': 'xattrs'},
     {'1': 'zfs_attributes', '3': 16, '4': 3, '5': 9, '10': 'zfsAttributes'},
+    {
+      '1': 'source',
+      '3': 17,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -103,7 +111,8 @@ final $typed_data.Uint8List fileItemDescriptor = $convert.base64Decode(
     'bW91bnRfaWQYCiABKARSB21vdW50SWQSEAoDYWNsGAsgASgIUgNhY2wSIwoNaXNfbW91bnRwb2'
     'ludBgMIAEoCFIMaXNNb3VudHBvaW50EhsKCWlzX2N0bGRpchgNIAEoCFIIaXNDdGxkaXISHgoK'
     'YXR0cmlidXRlcxgOIAMoCVIKYXR0cmlidXRlcxIWCgZ4YXR0cnMYDyADKAlSBnhhdHRycxIlCg'
-    '56ZnNfYXR0cmlidXRlcxgQIAMoCVINemZzQXR0cmlidXRlcw==');
+    '56ZnNfYXR0cmlidXRlcxgQIAMoCVINemZzQXR0cmlidXRlcxJACgZzb3VyY2UYESABKAsyKC5z'
+    'eW5jdHYucHJvdmlkZXIuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VSBnNvdXJjZQ==');
 
 @$core.Deprecated('Use listResponseDescriptor instead')
 const ListResponse$json = {
@@ -120,6 +129,14 @@ const ListResponse$json = {
     {'1': 'total', '3': 2, '4': 1, '5': 4, '10': 'total'},
     {'1': 'page', '3': 3, '4': 1, '5': 4, '10': 'page'},
     {'1': 'has_more', '3': 4, '4': 1, '5': 8, '10': 'hasMore'},
+    {
+      '1': 'source',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -127,7 +144,8 @@ const ListResponse$json = {
 final $typed_data.Uint8List listResponseDescriptor = $convert.base64Decode(
     'CgxMaXN0UmVzcG9uc2USOwoHY29udGVudBgBIAMoCzIhLnN5bmN0di5wcm92aWRlci50cnVlbm'
     'FzLkZpbGVJdGVtUgdjb250ZW50EhQKBXRvdGFsGAIgASgEUgV0b3RhbBISCgRwYWdlGAMgASgE'
-    'UgRwYWdlEhkKCGhhc19tb3JlGAQgASgIUgdoYXNNb3Jl');
+    'UgRwYWdlEhkKCGhhc19tb3JlGAQgASgIUgdoYXNNb3JlEkAKBnNvdXJjZRgFIAEoCzIoLnN5bm'
+    'N0di5wcm92aWRlci5jb21tb24uRGlzY292ZXJlZFNvdXJjZVIGc291cmNl');
 
 @$core.Deprecated('Use logoutRequestDescriptor instead')
 const LogoutRequest$json = {

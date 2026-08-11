@@ -6,6 +6,8 @@ import 'package:synctv_app/src/generated/proto/providers/huya.pbenum.dart'
     as huya_enum;
 import 'package:synctv_app/features/media_library/presentation/add_media/huya_add_media_form.dart';
 
+import '../../../../test_app.dart';
+
 void main() {
   testWidgets('Huya preview exposes native formats, CDNs, and metadata', (
     tester,
@@ -45,6 +47,7 @@ void main() {
                   format: huya_enum.StreamFormat.STREAM_FORMAT_FLV,
                 ),
               ],
+              source: testDiscoveredMediaSource(),
             ),
           ),
         ),
@@ -83,6 +86,11 @@ void main() {
             playlistId: '',
             instances: const ['huya-edge'],
             onDraftChanged: (_) {},
+            onResolve: (_) async => huya.ResolveResponse(
+              kind: huya_enum.ResourceKind.RESOURCE_KIND_VIDEO,
+              metadata: huya.Metadata(title: 'Replay'),
+              source: testDiscoveredMediaSource(),
+            ),
             onSubmit: (request) async => submitted = request,
           ),
         ),
@@ -97,6 +105,14 @@ void main() {
     await tester.tap(find.text('Default'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('huya-edge').last);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('huya-submit')))
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(const Key('huya-preview')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('huya-submit')));
     await tester.pumpAndSettle();

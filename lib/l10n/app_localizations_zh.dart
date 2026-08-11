@@ -1050,7 +1050,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get disableSubtitles => '关闭字幕';
 
   @override
-  String get danmaku => '弹幕';
+  String get danmaku => '弹幕数';
 
   @override
   String get danmakuHint => '发个弹幕见证当下...';
@@ -1278,16 +1278,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get defaultsToFileName => '默认为文件名';
 
   @override
-  String get preferProxyPlayback => '默认使用代理播放';
+  String get playbackProxyMode => '播放线路';
 
   @override
-  String get proxyPlaybackDescription => '由 SyncTV 服务端转发媒体请求';
+  String get playbackProxyAuto => '自动';
 
   @override
-  String get proxyOnlyPlayback => '仅使用代理播放';
+  String get playbackProxyPrefer => '优先代理';
 
   @override
-  String get proxyOnlyPlaybackDescription => '所有媒体请求均经由 SyncTV 服务端代理线路';
+  String get playbackProxyOnly => '仅代理';
+
+  @override
+  String get playbackProxyAutoDescription => '沿用媒体源的默认播放线路';
+
+  @override
+  String get playbackProxyPreferDescription => '同时保留直连与代理线路，并默认选择代理';
+
+  @override
+  String get playbackProxyOnlyDescription => '仅保留可由 SyncTV 服务端代理的播放线路';
+
+  @override
+  String get playbackProxyDirectRisk =>
+      '直连播放可能向房间成员暴露上游地址、签名链接、Token、Cookie 或授权请求头。请仅在可信房间和受控网络中启用。';
 
   @override
   String get addToPlaylist => '添加到播放列表';
@@ -1616,7 +1629,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get embyDirectoryIdUnavailable => '无法获取 Emby 目录 ID';
 
   @override
-  String get accountBinding => '账号绑定';
+  String get manageConnections => '连接管理';
 
   @override
   String get bilibiliBound => 'Bilibili 已绑定';
@@ -2402,6 +2415,507 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sharedSource => '共享来源';
+
+  @override
+  String get shareMyCredentials => '共享我的凭证';
+
+  @override
+  String get parseLink => '解析链接';
+
+  @override
+  String get preview => '预览';
+
+  @override
+  String get noItems => '暂无内容';
+
+  @override
+  String get addCurrentList => '添加当前列表';
+
+  @override
+  String addSelectedCount(int count) {
+    return '添加选中项（$count）';
+  }
+
+  @override
+  String selectItem(String name) {
+    return '选择$name';
+  }
+
+  @override
+  String get playlistName => '播放列表名称';
+
+  @override
+  String get providerInstance => 'Provider 实例';
+
+  @override
+  String get defaultMediaSource => '默认媒体源';
+
+  @override
+  String get defaultProviderInstance => '默认实例';
+
+  @override
+  String get video => '视频';
+
+  @override
+  String get videos => '视频';
+
+  @override
+  String get shorts => '短视频';
+
+  @override
+  String get posts => '作品';
+
+  @override
+  String get channel => '频道';
+
+  @override
+  String get search => '搜索';
+
+  @override
+  String get subscriptions => '订阅内容';
+
+  @override
+  String get likedVideos => '喜欢的视频';
+
+  @override
+  String get watchLater => '稍后再看';
+
+  @override
+  String get movie => '电影';
+
+  @override
+  String get movies => '电影';
+
+  @override
+  String get episode => '剧集';
+
+  @override
+  String get episodes => '剧集';
+
+  @override
+  String get audio => '音频';
+
+  @override
+  String get folder => '文件夹';
+
+  @override
+  String get series => '系列';
+
+  @override
+  String get bangumi => '番剧';
+
+  @override
+  String get vod => '回放';
+
+  @override
+  String get popular => '热门';
+
+  @override
+  String get recommended => '推荐';
+
+  @override
+  String get videoParts => '视频分P';
+
+  @override
+  String get creatorVideos => 'UP主投稿';
+
+  @override
+  String get favoriteVideos => '收藏夹视频';
+
+  @override
+  String get collectionVideos => '合集视频';
+
+  @override
+  String get seriesVideos => '系列视频';
+
+  @override
+  String get pgcSeason => '番剧季度';
+
+  @override
+  String get liveRecommended => '直播推荐';
+
+  @override
+  String get liveFollowed => '关注的直播';
+
+  @override
+  String get liveArea => '直播分区';
+
+  @override
+  String get history => '观看历史';
+
+  @override
+  String get pgcTimeline => '番剧时间表';
+
+  @override
+  String get pgcIndex => '番剧索引';
+
+  @override
+  String get followedAnime => '追番';
+
+  @override
+  String get followedCinema => '追剧';
+
+  @override
+  String get ongoing => '连载中';
+
+  @override
+  String get finished => '已完结';
+
+  @override
+  String get keyword => '关键词';
+
+  @override
+  String get liveCategory => '直播分区';
+
+  @override
+  String get liveSubcategory => '直播子分区';
+
+  @override
+  String get favoriteFolder => '收藏夹';
+
+  @override
+  String get privateLabel => '私密';
+
+  @override
+  String get continueWatching => '继续观看';
+
+  @override
+  String get nextUp => '下一集';
+
+  @override
+  String get recentlyAdded => '最近添加';
+
+  @override
+  String get favoritePeople => '收藏的演员';
+
+  @override
+  String get serverPlaylists => '服务器播放列表';
+
+  @override
+  String get collections => '合集';
+
+  @override
+  String get genres => '类型';
+
+  @override
+  String get files => '文件';
+
+  @override
+  String get mediaLibrary => '媒体库';
+
+  @override
+  String get favorites => '收藏';
+
+  @override
+  String get starred => '已加星标';
+
+  @override
+  String get libraries => '资料库';
+
+  @override
+  String get tvShows => '电视节目';
+
+  @override
+  String get homeVideos => '家庭视频';
+
+  @override
+  String get tvRecordings => '电视录制';
+
+  @override
+  String get mediaUrl => '媒体链接';
+
+  @override
+  String get channelArchive => '频道归档';
+
+  @override
+  String get followedLive => '关注的直播';
+
+  @override
+  String get categoryLive => '按分类浏览直播';
+
+  @override
+  String get searchLive => '搜索直播频道';
+
+  @override
+  String get highlights => '精彩片段';
+
+  @override
+  String get uploads => '上传内容';
+
+  @override
+  String get clips => '剪辑';
+
+  @override
+  String get loadCategories => '加载分类';
+
+  @override
+  String get noScheduledStreams => '暂无预定直播';
+
+  @override
+  String get videoUrlOrId => '视频链接或 ID';
+
+  @override
+  String get playlistUrlOrId => '播放列表链接或 ID';
+
+  @override
+  String get channelUrlOrId => '频道链接或 ID';
+
+  @override
+  String get searchQueryLabel => '搜索关键词';
+
+  @override
+  String get liveUrlOrId => '直播链接或 ID';
+
+  @override
+  String get authorIdentifier => '创作者标识';
+
+  @override
+  String get liveVodClipUrl => '直播、回放或剪辑链接';
+
+  @override
+  String get channelNameOrUrl => '频道名称或链接';
+
+  @override
+  String get channelSearch => '搜索频道';
+
+  @override
+  String get creatorSecUid => '创作者 sec_uid';
+
+  @override
+  String get usernameOrHandle => '用户名或 @账号';
+
+  @override
+  String get videoUrlShortLinkOrId => '视频链接、短链或 ID';
+
+  @override
+  String get liveUrlOrRoomId => '直播链接或房间 ID';
+
+  @override
+  String get noPosts => '暂无作品';
+
+  @override
+  String get noTwitchItems => '暂无 Twitch 内容';
+
+  @override
+  String get schedule => '直播日程';
+
+  @override
+  String get recurring => '定期直播';
+
+  @override
+  String get clip => '剪辑';
+
+  @override
+  String viewsCount(int count) {
+    return '$count 次观看';
+  }
+
+  @override
+  String viewersCount(int count) {
+    return '$count 人观看';
+  }
+
+  @override
+  String get previewSourceFirst => '请先预览来源';
+
+  @override
+  String get embyAccount => 'Emby 账号';
+
+  @override
+  String get listSourceToPreview => '列出来源后可预览内容';
+
+  @override
+  String get acfunUrl => 'AcFun 链接';
+
+  @override
+  String get cctvUrlOrVideoId => 'CCTV 链接或视频 ID';
+
+  @override
+  String get liveRoomOrVideoUrl => '直播间或视频链接';
+
+  @override
+  String get roomIdAliasOrUrl => '房间 ID、别名或链接';
+
+  @override
+  String get embyDiscoveryAndLists => '发现与列表';
+
+  @override
+  String get noPreparedLinks => '暂无已解析链接';
+
+  @override
+  String get fileStation => '文件管理';
+
+  @override
+  String get videoStation => '视频管理';
+
+  @override
+  String get library => '媒体库';
+
+  @override
+  String get selectLibraryFirst => '请先选择资料库';
+
+  @override
+  String unlockLibrary(String name) {
+    return '解锁 $name';
+  }
+
+  @override
+  String get libraryPassword => '资料库密码';
+
+  @override
+  String get unlock => '解锁';
+
+  @override
+  String get enterAtLeastThreeCharacters => '请输入至少 3 个字符';
+
+  @override
+  String get favorite => '收藏';
+
+  @override
+  String get markWatched => '标记为已观看';
+
+  @override
+  String get markUnwatched => '标记为未观看';
+
+  @override
+  String get encrypted => '已加密';
+
+  @override
+  String get openFolder => '打开文件夹';
+
+  @override
+  String get sharedFolders => '共享文件夹';
+
+  @override
+  String get shares => '共享目录';
+
+  @override
+  String get allFiles => '全部文件';
+
+  @override
+  String readyQualities(String qualities) {
+    return '已就绪：$qualities';
+  }
+
+  @override
+  String formatsCount(int count) {
+    return '$count 种格式';
+  }
+
+  @override
+  String subtitlesCount(int count) {
+    return '$count 种字幕';
+  }
+
+  @override
+  String variantsCount(int count) {
+    return '$count 个媒体变体';
+  }
+
+  @override
+  String qualitiesCount(int count) {
+    return '$count 种清晰度';
+  }
+
+  @override
+  String chaptersCount(int count) {
+    return '$count 个章节';
+  }
+
+  @override
+  String watermarkFreeCount(int count) {
+    return '$count 个无水印变体';
+  }
+
+  @override
+  String get storyboard => '故事板';
+
+  @override
+  String get hotLabel => '热门';
+
+  @override
+  String get anime => '番剧';
+
+  @override
+  String get cinema => '影视';
+
+  @override
+  String get guochuang => '国创';
+
+  @override
+  String get documentary => '纪录片';
+
+  @override
+  String get television => '电视剧';
+
+  @override
+  String get variety => '综艺';
+
+  @override
+  String get updated => '最近更新';
+
+  @override
+  String get plays => '播放量';
+
+  @override
+  String get followers => '追番人数';
+
+  @override
+  String get score => '评分';
+
+  @override
+  String get started => '开播时间';
+
+  @override
+  String get released => '上映时间';
+
+  @override
+  String get timeline => '时间表';
+
+  @override
+  String get daysBefore => '向前天数';
+
+  @override
+  String get daysAfter => '向后天数';
+
+  @override
+  String get sortOrder => '排序方式';
+
+  @override
+  String get statusLabel => '状态';
+
+  @override
+  String get area => '地区';
+
+  @override
+  String get yearOrRange => '年份或范围';
+
+  @override
+  String get styleId => '风格 ID';
+
+  @override
+  String get delayed => '延期';
+
+  @override
+  String get published => '已发布';
+
+  @override
+  String get videoBvid => '视频 BV 号';
+
+  @override
+  String get videoAidOptional => '视频 AV 号（可选）';
+
+  @override
+  String get creatorMid => '创作者 UID';
+
+  @override
+  String get seasonId => '季度 ID';
+
+  @override
+  String get collectionSeasonId => '合集 ID';
+
+  @override
+  String get seriesId => '系列 ID';
 
   @override
   String get multipleRoutes => '多线路';
@@ -4004,9 +4518,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noJoinRequests => '当前没有加入申请';
-
-  @override
-  String get mediaLibrary => '媒体库';
 
   @override
   String get clearCurrentLevel => '清空当前层级';

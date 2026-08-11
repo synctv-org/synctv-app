@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
-import 'package:synctv_app/contracts/youtube_source_config.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
     as youtube;
-import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
-    as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/youtube_playlist_preview.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 
 enum YoutubeAddMode {
   video,
@@ -51,6 +51,7 @@ class YoutubeAddMediaForm extends StatefulWidget {
     required this.onDraftChanged,
     this.onSubmit,
     this.onResolve,
+    this.onList,
   });
 
   final String roomId;
@@ -60,6 +61,8 @@ class YoutubeAddMediaForm extends StatefulWidget {
   final Future<void> Function(YoutubeAddRequest request)? onSubmit;
   final Future<youtube.ResolveResponse> Function(YoutubeAddRequest request)?
   onResolve;
+  final Future<youtube.ListResponse> Function(youtube.ListRequest request)?
+  onList;
 
   @override
   State<YoutubeAddMediaForm> createState() => _YoutubeAddMediaFormState();
@@ -69,12 +72,14 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
   final _valueController = TextEditingController();
   final _nameController = TextEditingController();
   YoutubeAddMode _mode = YoutubeAddMode.video;
+  ProviderAddTarget _target = ProviderAddTarget.parse;
   YoutubeChannelMode _channelMode = YoutubeChannelMode.videos;
   bool _shared = false;
   bool _loading = false;
   String _instanceName = '';
+  String _selectedBindId = '';
   youtube.ResolveResponse? _resolved;
-  RoomMediaLibraryPage? _playlistPreview;
+  youtube.ListResponse? _listPreview;
 
   @override
   void dispose() {
@@ -85,7 +90,15 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
 
   void _changed() {
     _resolved = null;
-    _playlistPreview = null;
+    _listPreview = null;
+    widget.onDraftChanged(
+      _valueController.text.trim().isNotEmpty ||
+          _nameController.text.trim().isNotEmpty,
+    );
+    setState(() {});
+  }
+
+  void _nameChanged() {
     widget.onDraftChanged(
       _valueController.text.trim().isNotEmpty ||
           _nameController.text.trim().isNotEmpty,
@@ -95,41 +108,53 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
 
   @override
   Widget build(BuildContext context) {
-    final instances = {
-      '',
-      ...widget.binds.map((bind) => bind.providerInstanceName),
-    }.toList();
-    if (!instances.contains(_instanceName)) _instanceName = '';
+    if (_selectedBindId.isNotEmpty &&
+        !widget.binds.any((bind) => bind.id == _selectedBindId)) {
+      _selectedBindId = '';
+      _instanceName = '';
+    }
     return AppSingleChildScrollView(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DropdownButtonFormField<YoutubeAddMode>(
-            key: const Key('youtube-mode'),
-            initialValue: _mode,
-            decoration: const InputDecoration(
-              labelText: 'Source',
-              prefixIcon: Icon(Icons.video_library_outlined),
-            ),
-            items: YoutubeAddMode.values
-                .map(
-                  (mode) => DropdownMenuItem(
-                    value: mode,
-                    child: Text(_modeLabel(mode)),
-                  ),
-                )
-                .toList(),
-            onChanged: _loading
-                ? null
-                : (mode) {
-                    if (mode == null) return;
-                    if (mode == _mode) return;
-                    _mode = mode;
-                    _valueController.clear();
-                    _changed();
-                  },
+          ProviderAddTargetSelector(
+            value: _target,
+            targets: const [
+              ProviderAddTarget.parse,
+              ProviderAddTarget.media,
+              ProviderAddTarget.playlist,
+            ],
+            enabled: !_loading,
+            onChanged: _selectTarget,
           ),
+          if (_target != ProviderAddTarget.parse) ...[
+            const SizedBox(height: 12),
+            DropdownButtonFormField<YoutubeAddMode>(
+              key: const Key('youtube-mode'),
+              initialValue: _mode,
+              decoration: InputDecoration(
+                labelText: context.l10n.source,
+                prefixIcon: const Icon(Icons.video_library_outlined),
+              ),
+              items: _listModes
+                  .map(
+                    (mode) => DropdownMenuItem(
+                      value: mode,
+                      child: Text(_modeLabel(mode)),
+                    ),
+                  )
+                  .toList(),
+              onChanged: _loading
+                  ? null
+                  : (mode) {
+                      if (mode == null || mode == _mode) return;
+                      _mode = mode;
+                      _valueController.clear();
+                      _changed();
+                    },
+            ),
+          ],
           if (_requiresValue) ...[
             const SizedBox(height: 16),
             AppTextField(
@@ -137,10 +162,10 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
               controller: _valueController,
               enabled: !_loading,
               label: switch (_mode) {
-                YoutubeAddMode.video => 'Video URL or ID',
-                YoutubeAddMode.playlist => 'Playlist URL or ID',
-                YoutubeAddMode.channel => 'Channel URL or ID',
-                YoutubeAddMode.search => 'Search query',
+                YoutubeAddMode.video => context.l10n.videoUrlOrId,
+                YoutubeAddMode.playlist => context.l10n.playlistUrlOrId,
+                YoutubeAddMode.channel => context.l10n.channelUrlOrId,
+                YoutubeAddMode.search => context.l10n.searchQueryLabel,
                 _ => '',
               },
               prefixIcon: switch (_mode) {
@@ -159,21 +184,21 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
           if (_mode == YoutubeAddMode.channel) ...[
             const SizedBox(height: 12),
             SegmentedButton<YoutubeChannelMode>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: YoutubeChannelMode.videos,
-                  icon: Icon(Icons.ondemand_video_outlined),
-                  label: Text('Videos'),
+                  icon: const Icon(Icons.ondemand_video_outlined),
+                  label: Text(context.l10n.videos),
                 ),
                 ButtonSegment(
                   value: YoutubeChannelMode.shorts,
-                  icon: Icon(Icons.smartphone_outlined),
-                  label: Text('Shorts'),
+                  icon: const Icon(Icons.smartphone_outlined),
+                  label: Text(context.l10n.shorts),
                 ),
                 ButtonSegment(
                   value: YoutubeChannelMode.live,
-                  icon: Icon(Icons.live_tv_outlined),
-                  label: Text('Live'),
+                  icon: const Icon(Icons.live_tv_outlined),
+                  label: Text(context.l10n.live),
                 ),
               ],
               selected: {_channelMode},
@@ -185,63 +210,68 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
                     },
             ),
           ],
-          const SizedBox(height: 12),
-          AppTextField(
-            key: const Key('youtube-name'),
-            controller: _nameController,
-            enabled: !_loading,
-            label: 'Name',
-            prefixIcon: Icons.title,
-            onChanged: (_) => _changed(),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _instanceName,
-            decoration: const InputDecoration(
-              labelText: 'Provider instance',
-              prefixIcon: Icon(Icons.dns_outlined),
+          if (_target != ProviderAddTarget.media) ...[
+            const SizedBox(height: 12),
+            AppTextField(
+              key: const Key('youtube-name'),
+              controller: _nameController,
+              enabled: !_loading,
+              label: context.l10n.name,
+              prefixIcon: Icons.title,
+              onChanged: (_) => _nameChanged(),
             ),
-            items: instances
-                .map(
-                  (value) => DropdownMenuItem(
-                    value: value,
-                    child: Text(value.isEmpty ? 'Default' : value),
-                  ),
-                )
-                .toList(),
-            onChanged: _loading
-                ? null
-                : (value) => setState(() {
-                    _instanceName = value ?? '';
-                    _resolved = null;
-                    _playlistPreview = null;
-                  }),
+          ],
+          const SizedBox(height: 12),
+          ProviderAccountSelector<YoutubeBindInfo>(
+            accounts: widget.binds,
+            selectedId: _selectedBindId,
+            idOf: (bind) => bind.id,
+            labelOf: (bind) {
+              final label = bind.label.isEmpty
+                  ? context.l10n.defaultProviderInstance
+                  : bind.label;
+              return bind.providerInstanceName.isEmpty
+                  ? label
+                  : '$label · ${bind.providerInstanceName}';
+            },
+            includeDefault: true,
+            enabled: !_loading,
+            onChanged: (bind) => setState(() {
+              _selectedBindId = bind?.id ?? '';
+              _instanceName = bind?.providerInstanceName ?? '';
+              _resolved = null;
+              _listPreview = null;
+            }),
           ),
-          SwitchListTile(
+          AppSwitchTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Use room owner credential'),
+            title: Text(context.l10n.shareMyCredentials),
+            prefix: const Icon(Icons.key_rounded),
+            semanticsLabel: context.l10n.shareMyCredentials,
             value: _shared,
             onChanged: _loading
                 ? null
                 : (value) => setState(() {
                     _shared = value;
-                    if (_mode != YoutubeAddMode.video) {
-                      _playlistPreview = null;
-                    }
+                    _resolved = null;
+                    _listPreview = null;
                   }),
           ),
           if (_resolved case final resolved?) ...[
             const SizedBox(height: 8),
             _preview(resolved),
           ],
-          if (_playlistPreview case final preview?) ...[
+          if (_listPreview case final preview?) ...[
             const SizedBox(height: 8),
             YoutubePlaylistPreview(
-              items: preview.dynamicItems,
+              items: preview.items,
               loading: _loading,
               hasMore: _playlistPreviewHasMore,
               onLoadMore: () => _loadPreview(loadMore: true),
-              onAddSelected: _addSelectedPreviewItems,
+              selectionEnabled: _target == ProviderAddTarget.media,
+              onAddSelected: _target == ProviderAddTarget.media
+                  ? _addSelectedPreviewItems
+                  : null,
             ),
           ],
           const SizedBox(height: 8),
@@ -254,26 +284,29 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
                 key: const Key('youtube-preview'),
                 onPressed: _loading || !_valid ? null : _loadPreview,
                 icon: const Icon(Icons.preview_outlined),
-                label: const Text('Preview'),
+                label: Text(context.l10n.preview),
               ),
-              FilledButton.icon(
-                key: const Key('youtube-submit'),
-                onPressed: _loading || !_valid ? null : _submit,
-                icon: _loading
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
-                        ),
-                      )
-                    : const Icon(Icons.add),
-                label: Text(
-                  _mode == YoutubeAddMode.video
-                      ? 'Add video'
-                      : 'Create playlist',
+              if (_target != ProviderAddTarget.media)
+                FilledButton.icon(
+                  key: const Key('youtube-submit'),
+                  onPressed: _loading || !_valid || !_previewReady
+                      ? null
+                      : _submit,
+                  icon: _loading
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: AppLoadingIndicator(
+                            size: AppLoadingSize.sm,
+                            centered: false,
+                          ),
+                        )
+                      : const Icon(Icons.add),
+                  label: Text(
+                    _target == ProviderAddTarget.parse
+                        ? context.l10n.addMedia
+                        : context.l10n.addCurrentList,
+                  ),
                 ),
-              ),
             ],
           ),
         ],
@@ -285,9 +318,9 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     final metadata = resolved.metadata;
     final details = <String>[
       if (metadata.channelName.isNotEmpty) metadata.channelName,
-      '${resolved.formats.length} formats',
-      '${resolved.subtitles.length} subtitles',
-      if (metadata.isLive) 'Live',
+      context.l10n.formatsCount(resolved.formats.length),
+      context.l10n.subtitlesCount(resolved.subtitles.length),
+      if (metadata.isLive) context.l10n.live,
     ];
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -333,30 +366,24 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
   }
 
   bool get _playlistPreviewHasMore {
-    final preview = _playlistPreview;
-    if (preview == null) return false;
-    if (preview.usesCursor) return preview.nextCursor.isNotEmpty;
-    if (preview.total case final total?) {
-      return preview.dynamicItems.length < total;
-    }
-    return false;
+    return _listPreview?.hasMore == true;
   }
 
   Future<void> _loadPreview({bool loadMore = false}) async {
-    final normalized = _normalizeValue(_mode, _valueController.text);
-    if (normalized == null) {
-      AppNotifications.showError(context, 'Invalid YouTube source');
+    final value = _inputValue;
+    if (value == null) {
+      AppNotifications.showError(context, context.l10n.completeAllFields);
       return;
     }
     final request = YoutubeAddRequest(
       mode: _mode,
       channelMode: _channelMode,
-      value: normalized,
+      value: value,
       name: _nameController.text.trim(),
       shared: _shared,
       instanceName: _instanceName,
     );
-    final current = _playlistPreview;
+    final current = _listPreview;
     if (loadMore && (current == null || !_playlistPreviewHasMore)) return;
     setState(() => _loading = true);
     try {
@@ -365,39 +392,26 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
         _resolved = resolve != null
             ? await resolve(request)
             : await providerGateway.resolveYoutube(
-                normalized,
+                value,
                 instanceName: _instanceName,
+                shared: _shared,
               );
       } else {
-        final page = await providerGateway.listMediaLibrary(
-          widget.roomId,
-          sourceProvider: 'youtube',
-          typedPreviewSourceConfig: YoutubeSourceConfig.playlist(
-            _playlistSource(normalized),
-            _shared,
-          ),
-          providerInstanceName: _instanceName,
-          pageSize: 24,
-          page: loadMore && current?.usesCursor == false
-              ? current!.page + 1
-              : 1,
-          cursor: loadMore && current?.usesCursor == true
-              ? current!.nextCursor
+        final listRequest = _listRequest(
+          value,
+          cursor: loadMore && current?.hasCursor() == true
+              ? current!.cursor
               : null,
         );
-        _playlistPreview = loadMore && current != null
-            ? RoomMediaLibraryPage(
-                playlists: page.playlists,
-                media: page.media,
-                dynamicItems: [...current.dynamicItems, ...page.dynamicItems],
-                currentPath: page.currentPath,
-                total: page.total,
-                playlistCount: page.playlistCount,
-                fileCount: page.fileCount,
-                version: page.version,
-                usesCursor: page.usesCursor,
-                nextCursor: page.nextCursor,
-                page: page.page,
+        final page =
+            await (widget.onList?.call(listRequest) ??
+                providerGateway.listYoutube(listRequest));
+        _listPreview = loadMore && current != null
+            ? youtube.ListResponse(
+                items: [...current.items, ...page.items],
+                cursor: page.hasCursor() ? page.cursor : null,
+                hasMore: page.hasMore,
+                source: page.hasSource() ? page.source : current.source,
               )
             : page;
       }
@@ -408,17 +422,19 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     }
   }
 
-  source_config.YoutubePlaylistSourceConfig _playlistSource(
-    String normalized,
-  ) => switch (_mode) {
-    YoutubeAddMode.playlist => source_config.YoutubePlaylistSourceConfig(
-      playlist: source_config.YoutubePlaylistSourceConfig_Playlist(
-        playlistId: normalized,
-      ),
+  youtube.ListRequest _listRequest(
+    String value, {
+    String? cursor,
+  }) => switch (_mode) {
+    YoutubeAddMode.playlist => youtube.ListRequest(
+      playlist: youtube.ListRequest_Playlist(resource: value),
+      cursor: cursor,
+      instanceName: _instanceName,
+      shared: _shared,
     ),
-    YoutubeAddMode.channel => source_config.YoutubePlaylistSourceConfig(
-      channel: source_config.YoutubePlaylistSourceConfig_Channel(
-        channelId: normalized,
+    YoutubeAddMode.channel => youtube.ListRequest(
+      channel: youtube.ListRequest_Channel(
+        resource: value,
         content: switch (_channelMode) {
           YoutubeChannelMode.videos =>
             source_enum.YoutubeChannelContent.YOUTUBE_CHANNEL_CONTENT_VIDEOS,
@@ -428,34 +444,47 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
             source_enum.YoutubeChannelContent.YOUTUBE_CHANNEL_CONTENT_LIVE,
         },
       ),
+      cursor: cursor,
+      instanceName: _instanceName,
+      shared: _shared,
     ),
-    YoutubeAddMode.search => source_config.YoutubePlaylistSourceConfig(
-      search: source_config.YoutubePlaylistSourceConfig_Search(
-        query: normalized,
-      ),
+    YoutubeAddMode.search => youtube.ListRequest(
+      search: youtube.ListRequest_Search(query: value),
+      cursor: cursor,
+      instanceName: _instanceName,
+      shared: _shared,
     ),
-    YoutubeAddMode.subscriptions => source_config.YoutubePlaylistSourceConfig(
-      subscriptions: source_config.YoutubePlaylistSourceConfig_Subscriptions(),
+    YoutubeAddMode.subscriptions => youtube.ListRequest(
+      subscriptions: youtube.ListRequest_Subscriptions(),
+      cursor: cursor,
+      instanceName: _instanceName,
+      shared: _shared,
     ),
-    YoutubeAddMode.likedVideos => source_config.YoutubePlaylistSourceConfig(
-      likedVideos: source_config.YoutubePlaylistSourceConfig_LikedVideos(),
+    YoutubeAddMode.likedVideos => youtube.ListRequest(
+      likedVideos: youtube.ListRequest_LikedVideos(),
+      cursor: cursor,
+      instanceName: _instanceName,
+      shared: _shared,
     ),
-    YoutubeAddMode.watchLater => source_config.YoutubePlaylistSourceConfig(
-      watchLater: source_config.YoutubePlaylistSourceConfig_WatchLater(),
+    YoutubeAddMode.watchLater => youtube.ListRequest(
+      watchLater: youtube.ListRequest_WatchLater(),
+      cursor: cursor,
+      instanceName: _instanceName,
+      shared: _shared,
     ),
-    YoutubeAddMode.video => throw StateError('Expected YouTube playlist'),
+    YoutubeAddMode.video => throw StateError('Expected YouTube list'),
   };
 
   Future<void> _submit() async {
-    final normalized = _normalizeValue(_mode, _valueController.text);
-    if (normalized == null) {
-      AppNotifications.showError(context, 'Invalid YouTube source');
+    final value = _inputValue;
+    if (value == null || !_previewReady) {
+      AppNotifications.showError(context, context.l10n.previewSourceFirst);
       return;
     }
     final request = YoutubeAddRequest(
       mode: _mode,
       channelMode: _channelMode,
-      value: normalized,
+      value: value,
       name: _nameController.text.trim(),
       shared: _shared,
       instanceName: _instanceName,
@@ -465,41 +494,28 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
       if (widget.onSubmit case final submit?) {
         await submit(request);
       } else if (_mode == YoutubeAddMode.video) {
-        final resolved =
-            _resolved ??
-            await providerGateway.resolveYoutube(
-              normalized,
-              instanceName: _instanceName,
-            );
-        await providerGateway.addMediaFromSourceConfig(
+        final resolved = _resolved!;
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
           playlistId: widget.playlistId,
-          sourceConfig: YoutubeSourceConfig.media(
-            resolved.sourceConfig,
-            _shared,
-          ),
+          source: resolved.source,
           name: request.name.isEmpty ? resolved.metadata.title : request.name,
-          providerInstanceName: _instanceName,
         );
       } else {
-        await providerGateway.createPlaylistFromSourceConfig(
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
-          sourceConfig: YoutubeSourceConfig.playlist(
-            _playlistSource(normalized),
-            _shared,
-          ),
+          source: _listPreview!.source,
           name: request.name.isEmpty ? _defaultName(request) : request.name,
-          parentId: widget.playlistId,
-          providerInstanceName: _instanceName,
+          playlistId: widget.playlistId,
         );
       }
       if (!mounted) return;
       _valueController.clear();
       _nameController.clear();
       _resolved = null;
-      _playlistPreview = null;
+      _listPreview = null;
       widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, 'YouTube source added');
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
@@ -508,29 +524,25 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     }
   }
 
-  Future<void> _addSelectedPreviewItems(
-    List<RoomDynamicMediaEntry> items,
-  ) async {
+  Future<void> _addSelectedPreviewItems(List<youtube.ListItem> items) async {
     if (items.isEmpty) return;
     setState(() => _loading = true);
     try {
       for (final item in items) {
-        final config = item.mediaSourceConfig;
-        if (config?.hasYoutube() != true) continue;
-        await providerGateway.addMediaFromSourceConfig(
+        if (!item.hasSource()) continue;
+        await providerGateway.addDiscoveredSource(
           widget.roomId,
           playlistId: widget.playlistId,
-          providerInstanceName: _instanceName,
-          sourceConfig: YoutubeSourceConfig.media(config!.youtube, _shared),
-          name: item.name,
+          source: item.source,
+          name: item.title,
         );
       }
       if (!mounted) return;
       _valueController.clear();
       _nameController.clear();
-      _playlistPreview = null;
+      _listPreview = null;
       widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, 'YouTube media added');
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
@@ -540,69 +552,19 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
   }
 
   String _defaultName(YoutubeAddRequest request) => switch (request.mode) {
-    YoutubeAddMode.playlist => 'YouTube Playlist',
-    YoutubeAddMode.channel => 'YouTube Channel',
+    YoutubeAddMode.playlist => 'YouTube ${context.l10n.playlist}',
+    YoutubeAddMode.channel => 'YouTube ${context.l10n.channel}',
     YoutubeAddMode.search => 'YouTube: ${request.value}',
-    YoutubeAddMode.subscriptions => 'YouTube Subscriptions',
-    YoutubeAddMode.likedVideos => 'YouTube Liked Videos',
-    YoutubeAddMode.watchLater => 'YouTube Watch Later',
-    YoutubeAddMode.video => 'YouTube Video',
+    YoutubeAddMode.subscriptions => 'YouTube ${context.l10n.subscriptions}',
+    YoutubeAddMode.likedVideos => 'YouTube ${context.l10n.likedVideos}',
+    YoutubeAddMode.watchLater => 'YouTube ${context.l10n.watchLater}',
+    YoutubeAddMode.video => 'YouTube ${context.l10n.video}',
   };
 
-  static String? _normalizeValue(YoutubeAddMode mode, String raw) {
-    final value = raw.trim();
-    if (mode == YoutubeAddMode.subscriptions) return 'subscriptions';
-    if (mode == YoutubeAddMode.likedVideos) return 'likedVideos';
-    if (mode == YoutubeAddMode.watchLater) return 'watchLater';
-    if (value.isEmpty) return null;
-    if (mode == YoutubeAddMode.search) return value;
-    if (mode == YoutubeAddMode.channel &&
-        RegExp(r'^UC[A-Za-z0-9_-]{20,}$').hasMatch(value)) {
-      return value;
-    }
-    if (mode == YoutubeAddMode.playlist &&
-        RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(value)) {
-      return value;
-    }
-    if (mode == YoutubeAddMode.video &&
-        RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(value)) {
-      return value;
-    }
-    final uri = Uri.tryParse(value);
-    if (uri == null) return null;
-    if (mode == YoutubeAddMode.channel) {
-      final host = uri.host.toLowerCase();
-      final segments = uri.pathSegments;
-      final candidate =
-          (host == 'youtube.com' || host.endsWith('.youtube.com')) &&
-              segments.length >= 2 &&
-              segments.first == 'channel'
-          ? segments[1]
-          : null;
-      return candidate != null &&
-              RegExp(r'^UC[A-Za-z0-9_-]{20,}$').hasMatch(candidate)
-          ? candidate
-          : null;
-    }
-    if (mode == YoutubeAddMode.playlist) return uri.queryParameters['list'];
-    if (mode == YoutubeAddMode.video) {
-      final candidate = uri.host.endsWith('youtu.be')
-          ? uri.pathSegments.firstOrNull
-          : uri.queryParameters['v'] ??
-                (uri.pathSegments.length > 1 &&
-                        {
-                          'shorts',
-                          'live',
-                          'embed',
-                        }.contains(uri.pathSegments.first)
-                    ? uri.pathSegments[1]
-                    : null);
-      return candidate != null &&
-              RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(candidate)
-          ? candidate
-          : null;
-    }
-    return null;
+  String? get _inputValue {
+    if (!_requiresValue) return '';
+    final value = _valueController.text.trim();
+    return value.isEmpty ? null : value;
   }
 
   bool get _requiresValue => switch (_mode) {
@@ -614,8 +576,12 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
   };
 
   bool get _valid =>
-      _normalizeValue(_mode, _valueController.text) != null &&
+      _inputValue != null &&
       (!_requiresCookie || _shared || _selectedInstanceHasCookie);
+
+  bool get _previewReady => _mode == YoutubeAddMode.video
+      ? _resolved?.hasSource() == true
+      : _listPreview?.hasSource() == true;
 
   bool get _selectedInstanceHasCookie => widget.binds.any(
     (bind) => bind.providerInstanceName == _instanceName && bind.hasCookie,
@@ -628,13 +594,33 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     _ => false,
   };
 
-  static String _modeLabel(YoutubeAddMode mode) => switch (mode) {
-    YoutubeAddMode.video => 'Video',
-    YoutubeAddMode.playlist => 'Playlist',
-    YoutubeAddMode.channel => 'Channel',
-    YoutubeAddMode.search => 'Search',
-    YoutubeAddMode.subscriptions => 'Subscriptions',
-    YoutubeAddMode.likedVideos => 'Liked Videos',
-    YoutubeAddMode.watchLater => 'Watch Later',
+  List<YoutubeAddMode> get _listModes => const [
+    YoutubeAddMode.playlist,
+    YoutubeAddMode.channel,
+    YoutubeAddMode.search,
+    YoutubeAddMode.subscriptions,
+    YoutubeAddMode.likedVideos,
+    YoutubeAddMode.watchLater,
+  ];
+
+  void _selectTarget(ProviderAddTarget target) {
+    if (target == _target) return;
+    _target = target;
+    _mode = target == ProviderAddTarget.parse
+        ? YoutubeAddMode.video
+        : YoutubeAddMode.playlist;
+    _valueController.clear();
+    _nameController.clear();
+    _changed();
+  }
+
+  String _modeLabel(YoutubeAddMode mode) => switch (mode) {
+    YoutubeAddMode.video => context.l10n.video,
+    YoutubeAddMode.playlist => context.l10n.playlist,
+    YoutubeAddMode.channel => context.l10n.channel,
+    YoutubeAddMode.search => context.l10n.search,
+    YoutubeAddMode.subscriptions => context.l10n.subscriptions,
+    YoutubeAddMode.likedVideos => context.l10n.likedVideos,
+    YoutubeAddMode.watchLater => context.l10n.watchLater,
   };
 }

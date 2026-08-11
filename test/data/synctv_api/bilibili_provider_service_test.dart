@@ -8,6 +8,8 @@ import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_provider_service.dart';
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pb.dart'
     as bilibili;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart' as source;
 
 void main() {
@@ -25,23 +27,27 @@ void main() {
             partNumber: 2,
             width: Int64(1920),
             height: Int64(1080),
-            media: source.MediaSourceConfig(
-              bilibili: source.BilibiliMediaSourceConfig(
-                video: source.BilibiliVideoSourceConfig(
-                  bvid: 'BV1typed',
-                  aid: Int64(100),
-                  cid: Int64(200),
+            source: provider_common.DiscoveredSource(
+              media: source.MediaSourceConfig(
+                bilibili: source.BilibiliMediaSourceConfig(
+                  video: source.BilibiliVideoSourceConfig(
+                    bvid: 'BV1typed',
+                    aid: Int64(100),
+                    cid: Int64(200),
+                  ),
                 ),
               ),
             ),
           ),
           bilibili.ParseCandidate(
             title: 'All parts',
-            playlist: source.PlaylistSourceConfig(
-              bilibili: source.BilibiliPlaylistSourceConfig(
-                videoParts: source.BilibiliVideoPartsPlaylistSource(
-                  bvid: 'BV1typed',
-                  aid: Int64(100),
+            source: provider_common.DiscoveredSource(
+              playlist: source.PlaylistSourceConfig(
+                bilibili: source.BilibiliPlaylistSourceConfig(
+                  videoParts: source.BilibiliVideoPartsPlaylistSource(
+                    bvid: 'BV1typed',
+                    aid: Int64(100),
+                  ),
                 ),
               ),
             ),
@@ -69,23 +75,20 @@ void main() {
       expect(result.candidates, hasLength(2));
       expect(result.candidates.first.isMedia, isTrue);
       expect(
-        result.candidates.first.mediaSourceConfig!.bilibili.video.bvid,
+        result.candidates.first.source.media.bilibili.video.bvid,
         'BV1typed',
       );
       expect(
-        result.candidates.first.mediaSourceConfig!.bilibili.video.cid,
+        result.candidates.first.source.media.bilibili.video.cid,
         Int64(200),
       );
       expect(result.candidates.first.partNumber, 2);
       expect(result.candidates.last.isPlaylist, isTrue);
       expect(
-        result.candidates.last.playlistSourceConfig!.bilibili.videoParts.bvid,
+        result.candidates.last.source.playlist.bilibili.videoParts.bvid,
         'BV1typed',
       );
-      expect(
-        result.candidates.last.playlistSourceConfig!.bilibili.shared,
-        isFalse,
-      );
+      expect(result.candidates.last.source.playlist.bilibili.shared, isFalse);
 
       expect(capturedRequest.url.path, '/api/providers/bilibili/parse');
       expect(capturedRequest.headers['authorization'], 'Bearer access-token');

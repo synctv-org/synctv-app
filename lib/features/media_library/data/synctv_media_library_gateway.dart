@@ -82,17 +82,11 @@ final class SyncTvMediaLibraryGateway implements MediaLibraryGateway {
     String roomId, {
     required String name,
     String parentId = '',
-    String sourceProvider = '',
-    Map<String, dynamic> sourceConfig = const {},
-    String providerInstanceName = '',
     String description = '',
   }) => SyncTvService.createPlaylist(
     roomId,
     name: name,
     parentId: parentId,
-    sourceProvider: sourceProvider,
-    sourceConfig: sourceConfig,
-    providerInstanceName: providerInstanceName,
     description: description,
   );
   @override

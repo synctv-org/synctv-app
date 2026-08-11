@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 typedef QnapFileLoader =
     Future<QnapFileListPage> Function(
@@ -21,6 +29,7 @@ class QnapAddMediaForm extends StatefulWidget {
     required this.playlistId,
     required this.binds,
     this.onDraftChanged,
+    this.onOpenBinding,
     this.fileLoader,
     this.resourceHeaders,
   });
@@ -29,6 +38,7 @@ class QnapAddMediaForm extends StatefulWidget {
   final String playlistId;
   final List<QnapBindInfo> binds;
   final ValueChanged<bool>? onDraftChanged;
+  final Future<void> Function()? onOpenBinding;
   final QnapFileLoader? fileLoader;
   final Map<String, String> Function()? resourceHeaders;
 
@@ -39,6 +49,7 @@ class QnapAddMediaForm extends StatefulWidget {
 class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
   static const _pageSize = 50;
 
+  final _selection = DiscoverySelectionController();
   final _searchController = TextEditingController();
   QnapBindInfo? _bind;
   String _path = '';
@@ -46,6 +57,9 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
   bool _hasMore = false;
   bool _loading = false;
   List<QnapFileItemInfo> _items = const [];
+  provider_common.DiscoveredSource? _listSource;
+  source_enum.PlaybackProxyMode _proxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
 
   @override
   void initState() {
@@ -58,7 +72,8 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
   @override
   void didUpdateWidget(covariant QnapAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_bind == null && widget.binds.isNotEmpty) {
+    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
+        widget.binds.isNotEmpty) {
       _bind = widget.binds.first;
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
@@ -79,10 +94,22 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
   Widget build(BuildContext context) {
     if (widget.binds.isEmpty) {
       return Center(
-        child: AppEmptyState(
-          icon: Icons.storage_rounded,
-          title: 'QNAP',
-          subtitle: context.l10n.bindAccountToAccessResources,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppEmptyState(
+              icon: Icons.storage_rounded,
+              title: 'QNAP',
+              subtitle: context.l10n.bindAccountToAccessResources,
+            ),
+            const SizedBox(height: 16),
+            ProviderAccountAction(
+              providerType: 'qnap',
+              onPressed: widget.onOpenBinding == null
+                  ? null
+                  : () => widget.onOpenBinding!(),
+            ),
+          ],
         ),
       );
     }
@@ -91,27 +118,25 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
       children: [
         _buildBindSelector(),
         const SizedBox(height: 12),
+        PlaybackProxyModeControl(
+          value: _proxyMode,
+          onChanged: (value) => setState(() => _proxyMode = value),
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: AppTextField(
                 controller: _searchController,
-                label: 'Search',
+                label: context.l10n.search,
                 prefixIcon: Icons.search_rounded,
                 suffix: AppIconButton(
-                  tooltip: 'Search',
+                  tooltip: context.l10n.search,
                   onPressed: _loading ? null : _search,
                   icon: Icons.arrow_forward_rounded,
                 ),
                 onSubmitted: (_) => _search(),
               ),
-            ),
-            const SizedBox(width: 8),
-            AppIconButton(
-              tooltip: context.l10n.dynamicPlaylist,
-              onPressed: _loading ? null : _addCurrentPlaylist,
-              icon: Icons.playlist_add_rounded,
-              style: AppIconButtonStyle.tonal,
             ),
           ],
         ),
@@ -126,33 +151,25 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
   }
 
   Widget _buildBindSelector() {
-    return DropdownButtonFormField<String>(
-      initialValue: _bind?.serverId,
-      decoration: const InputDecoration(
-        labelText: 'QNAP',
-        prefixIcon: Icon(Icons.dns_outlined),
-      ),
-      items: widget.binds
-          .map(
-            (bind) => DropdownMenuItem(
-              value: bind.serverId,
-              child: Text(
-                bind.serverName.isEmpty ? bind.endpoint : bind.serverName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          )
-          .toList(),
-      onChanged: (serverId) {
-        final bind = widget.binds.firstWhere(
-          (candidate) => candidate.serverId == serverId,
-        );
+    return ProviderAccountSelector<QnapBindInfo>(
+      accounts: widget.binds,
+      selectedId: _bind?.id,
+      idOf: (bind) => bind.id,
+      labelOf: (bind) {
+        final title = bind.serverName.isEmpty ? bind.endpoint : bind.serverName;
+        return bind.providerInstanceName.isEmpty
+            ? title
+            : '$title · ${bind.providerInstanceName}';
+      },
+      enabled: !_loading,
+      onChanged: (bind) {
+        if (bind == null) return;
         setState(() {
           _bind = bind;
           _path = '';
           _page = 1;
           _items = const [];
+          _listSource = null;
         });
         _load();
       },
@@ -169,7 +186,7 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
         ),
         Expanded(
           child: Text(
-            _path.isEmpty ? 'Shares' : _path,
+            _path.isEmpty ? context.l10n.shares : _path,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(
@@ -187,39 +204,26 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
   }
 
   Widget _buildList() {
-    if (_items.isEmpty) {
-      return Center(
-        child: AppEmptyState(
-          icon: Icons.video_file_outlined,
-          title: 'No items',
-        ),
-      );
-    }
-    return AppListView.separated(
-      itemCount: _items.length,
-      separatorBuilder: (_, _) => const AppDivider(height: 1),
-      itemBuilder: (context, index) {
-        final item = _items[index];
-        return ListTile(
-          leading: _thumbnail(item),
-          title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            _itemDetails(item),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+    final itemsByKey = {for (final item in _items) item.path: item};
+    return DiscoveryBrowser(
+      selectionController: _selection,
+      selectionScope: _bind?.id,
+      items: [
+        for (final item in _items)
+          DiscoveryBrowserEntry(
+            key: item.path,
+            title: item.name,
+            subtitle: _itemDetails(item),
+            source: item.source.withPlaybackProxyMode(_proxyMode),
+            isContainer: item.isDir,
+            leading: _thumbnail(item),
           ),
-          onTap: item.isDir ? () => _openFolder(item) : null,
-          trailing: AppIconButton(
-            tooltip: item.isDir
-                ? context.l10n.dynamicPlaylist
-                : context.l10n.add,
-            onPressed: () => item.isDir ? _addPlaylist(item) : _addMedia(item),
-            icon: item.isDir
-                ? Icons.playlist_add_rounded
-                : Icons.add_circle_outline_rounded,
-          ),
-        );
-      },
+      ],
+      loading: _loading,
+      emptyIcon: Icons.video_file_outlined,
+      onOpen: (entry) => _openFolder(itemsByKey[entry.key]!),
+      onAddSelected: _addSelected,
+      onAddCurrentList: _listSource == null ? null : _addCurrentPlaylist,
     );
   }
 
@@ -240,11 +244,15 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
   }
 
   String _itemDetails(QnapFileItemInfo item) {
-    if (item.isDir) return 'Folder';
+    if (item.isDir) return context.l10n.folder;
     final details = <String>[_formatBytes(item.size)];
     if (item.preTranscodedHeights.isNotEmpty) {
       final heights = [...item.preTranscodedHeights]..sort();
-      details.add('Ready ${heights.map((height) => '${height}p').join(' / ')}');
+      details.add(
+        context.l10n.readyQualities(
+          heights.map((height) => '${height}p').join(' / '),
+        ),
+      );
     }
     return details.join(' · ');
   }
@@ -322,6 +330,7 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
         _items = result.items;
         _page = result.page;
         _hasMore = result.hasMore;
+        _listSource = result.source;
       });
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
@@ -345,35 +354,27 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
     instanceName: bind.providerInstanceName,
   );
 
-  Future<void> _addMedia(QnapFileItemInfo item) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.addQnapMedia(
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> items) =>
+      _runAdd(() async {
+        for (final item in items) {
+          await providerGateway.addDiscoveredSource(
+            widget.roomId,
+            playlistId: widget.playlistId,
+            source: item.source.withPlaybackProxyMode(_proxyMode),
+            name: item.title,
+          );
+        }
+      });
+
+  Future<void> _addCurrentPlaylist() => _runAdd(() async {
+    final source = _listSource;
+    if (source == null) return;
+    final name = _path.split('/').where((part) => part.isNotEmpty).lastOrNull;
+    await providerGateway.addDiscoveredSource(
       widget.roomId,
       playlistId: widget.playlistId,
-      serverId: bind.serverId,
-      path: item.path,
-      name: item.name,
-      providerInstanceName: bind.providerInstanceName,
-    );
-  });
-
-  Future<void> _addPlaylist(QnapFileItemInfo item) =>
-      _createPlaylist(item.path, item.name);
-
-  Future<void> _addCurrentPlaylist() {
-    final name = _path.split('/').where((part) => part.isNotEmpty).lastOrNull;
-    return _createPlaylist(_path, name ?? 'QNAP Shares');
-  }
-
-  Future<void> _createPlaylist(String path, String name) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.createPlaylist(
-      widget.roomId,
-      parentId: widget.playlistId,
-      sourceProvider: 'qnap',
-      providerInstanceName: bind.providerInstanceName,
-      sourceConfig: {'serverId': bind.serverId, 'path': path},
-      name: name.isEmpty ? 'QNAP' : name,
+      source: source.withPlaybackProxyMode(_proxyMode),
+      name: name ?? 'QNAP Shares',
     );
   });
 

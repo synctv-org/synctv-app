@@ -1692,6 +1692,34 @@ void main() {
     expect(selected, 'updated');
   });
 
+  testWidgets('AppSelect renders an icon for every option', (tester) async {
+    await tester.pumpWidget(
+      _app(
+        AppSelect<String>(
+          value: 'bilibili',
+          options: const {'Bilibili': 'bilibili', 'YouTube': 'youtube'},
+          optionPrefixBuilder: (context, value) => Icon(
+            value == 'bilibili' ? Icons.tv_rounded : Icons.smart_display,
+            key: ValueKey('provider-option-$value'),
+          ),
+          onChanged: (_) {},
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Bilibili'));
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(
+      find.byKey(const ValueKey('provider-option-bilibili')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('provider-option-youtube')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('AppSelect supports nullable option values', (tester) async {
     bool? selected = true;
     final changes = <bool?>[];

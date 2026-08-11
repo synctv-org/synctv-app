@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 typedef TrueNasPageLoader =
     Future<TrueNasFileListPage> Function(
@@ -21,6 +29,7 @@ class TrueNasAddMediaForm extends StatefulWidget {
     required this.playlistId,
     required this.binds,
     this.onDraftChanged,
+    this.onOpenBinding,
     this.pageLoader,
   });
 
@@ -28,6 +37,7 @@ class TrueNasAddMediaForm extends StatefulWidget {
   final String playlistId;
   final List<TrueNasBindInfo> binds;
   final ValueChanged<bool>? onDraftChanged;
+  final Future<void> Function()? onOpenBinding;
   final TrueNasPageLoader? pageLoader;
 
   @override
@@ -36,6 +46,7 @@ class TrueNasAddMediaForm extends StatefulWidget {
 
 class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
   static const _pageSize = 50;
+  final _selection = DiscoverySelectionController();
   final _searchController = TextEditingController();
   TrueNasBindInfo? _bind;
   String _path = '/mnt';
@@ -43,6 +54,9 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
   bool _hasMore = false;
   bool _loading = false;
   List<TrueNasFileItemInfo> _items = const [];
+  provider_common.DiscoveredSource? _listSource;
+  source_enum.PlaybackProxyMode _proxyMode =
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
 
   @override
   void initState() {
@@ -50,6 +64,16 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
     _bind = widget.binds.firstOrNull;
     _searchController.addListener(_draftChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void didUpdateWidget(covariant TrueNasAddMediaForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
+        widget.binds.isNotEmpty) {
+      _bind = widget.binds.first;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    }
   }
 
   @override
@@ -66,53 +90,58 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
   Widget build(BuildContext context) {
     if (widget.binds.isEmpty) {
       return Center(
-        child: AppEmptyState(
-          icon: Icons.storage_outlined,
-          title: 'TrueNAS',
-          subtitle: context.l10n.bindAccountToAccessResources,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppEmptyState(
+              icon: Icons.storage_outlined,
+              title: 'TrueNAS',
+              subtitle: context.l10n.bindAccountToAccessResources,
+            ),
+            const SizedBox(height: 16),
+            ProviderAccountAction(
+              providerType: 'truenas',
+              onPressed: widget.onOpenBinding == null
+                  ? null
+                  : () => widget.onOpenBinding!(),
+            ),
+          ],
         ),
       );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<TrueNasBindInfo>(
-          initialValue: _bind,
-          decoration: const InputDecoration(
-            labelText: 'TrueNAS',
-            prefixIcon: Icon(Icons.dns_outlined),
-          ),
-          items: widget.binds
-              .map(
-                (bind) => DropdownMenuItem(
-                  value: bind,
-                  child: Text(
-                    bind.providerInstanceName.isEmpty
-                        ? bind.hostname
-                        : '${bind.hostname} · ${bind.providerInstanceName}',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              )
-              .toList(),
-          onChanged: _loading
-              ? null
-              : (value) {
-                  setState(() {
-                    _bind = value;
-                    _path = '/mnt';
-                    _page = 1;
-                  });
-                  _load();
-                },
+        ProviderAccountSelector<TrueNasBindInfo>(
+          accounts: widget.binds,
+          selectedId: _bind?.id,
+          idOf: (bind) => bind.id,
+          labelOf: (bind) => bind.providerInstanceName.isEmpty
+              ? bind.hostname
+              : '${bind.hostname} · ${bind.providerInstanceName}',
+          enabled: !_loading,
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() {
+              _bind = value;
+              _path = '/mnt';
+              _page = 1;
+            });
+            _load();
+          },
+        ),
+        const SizedBox(height: 10),
+        PlaybackProxyModeControl(
+          value: _proxyMode,
+          onChanged: (value) => setState(() => _proxyMode = value),
         ),
         const SizedBox(height: 10),
         AppTextField(
           controller: _searchController,
-          label: '搜索',
+          label: context.l10n.search,
           prefixIcon: Icons.search_rounded,
           suffix: AppIconButton(
-            tooltip: '搜索',
+            tooltip: context.l10n.search,
             icon: Icons.arrow_forward_rounded,
             onPressed: _loading ? null : () => _load(page: 1),
           ),
@@ -122,27 +151,14 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
         const SizedBox(height: 10),
         _breadcrumbs(),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: _loading ? null : _addCurrentPlaylist,
-                icon: const Icon(Icons.playlist_add_rounded),
-                label: Text(
-                  _searchController.text.trim().isEmpty
-                      ? '添加当前目录动态列表'
-                      : '添加搜索动态列表',
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            AppIconButton(
-              tooltip: context.l10n.refresh,
-              onPressed: _loading ? null : () => _load(),
-              icon: Icons.refresh_rounded,
-              style: AppIconButtonStyle.tonal,
-            ),
-          ],
+        Align(
+          alignment: Alignment.centerRight,
+          child: AppIconButton(
+            tooltip: context.l10n.refresh,
+            onPressed: _loading ? null : () => _load(),
+            icon: Icons.refresh_rounded,
+            style: AppIconButtonStyle.tonal,
+          ),
         ),
         const SizedBox(height: 8),
         if (_loading) const AppLinearProgress(minHeight: 2),
@@ -151,7 +167,7 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             AppIconButton(
-              tooltip: '上一页',
+              tooltip: MaterialLocalizations.of(context).previousPageTooltip,
               onPressed: _loading || _page <= 1
                   ? null
                   : () => _load(page: _page - 1),
@@ -159,7 +175,7 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
             ),
             Text('$_page'),
             AppIconButton(
-              tooltip: '下一页',
+              tooltip: MaterialLocalizations.of(context).nextPageTooltip,
               onPressed: _loading || !_hasMore
                   ? null
                   : () => _load(page: _page + 1),
@@ -199,51 +215,33 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
   }
 
   Widget _fileList() {
-    if (!_loading && _items.isEmpty) {
-      return const AppEmptyState(
-        icon: Icons.folder_open_outlined,
-        title: '当前目录为空',
-        subtitle: '/mnt 下的可播放文件与目录会显示在这里',
-      );
-    }
-    return AppListView.separated(
-      itemCount: _items.length,
-      separatorBuilder: (_, _) => const AppDivider(height: 1),
-      itemBuilder: (context, index) {
-        final item = _items[index];
-        return ListTile(
-          leading: Icon(
-            item.isDir ? Icons.folder_rounded : Icons.movie_outlined,
+    final itemsByKey = {for (final item in _items) item.path: item};
+    return DiscoveryBrowser(
+      selectionController: _selection,
+      selectionScope: _bind?.id,
+      items: [
+        for (final item in _items)
+          DiscoveryBrowserEntry(
+            key: item.path,
+            title: item.name,
+            subtitle: _itemDetails(item),
+            source: item.source.withPlaybackProxyMode(_proxyMode),
+            isContainer: item.isDir,
           ),
-          title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            _itemDetails(item),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: AppIconButton(
-            tooltip: item.isDir ? '添加目录动态列表' : context.l10n.add,
-            icon: item.isDir ? Icons.playlist_add_rounded : Icons.add_rounded,
-            onPressed: _loading
-                ? null
-                : () => item.isDir
-                      ? _createPlaylist(item.name, {
-                          'type': 'folder',
-                          'path': item.path,
-                        })
-                      : _addMedia(item),
-          ),
-          onTap: item.isDir && !_loading
-              ? () {
-                  setState(() {
-                    _path = item.path;
-                    _searchController.clear();
-                  });
-                  _load(page: 1);
-                }
-              : null,
-        );
+      ],
+      loading: _loading,
+      emptyIcon: Icons.folder_open_outlined,
+      emptyTitle: context.l10n.noFiles,
+      onOpen: (entry) {
+        final item = itemsByKey[entry.key]!;
+        setState(() {
+          _path = item.path;
+          _searchController.clear();
+        });
+        _load(page: 1);
       },
+      onAddSelected: _addSelected,
+      onAddCurrentList: _listSource == null ? null : _addCurrentPlaylist,
     );
   }
 
@@ -281,6 +279,7 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
         _items = result.items;
         _page = result.page;
         _hasMore = result.hasMore;
+        _listSource = result.source;
       });
     } catch (error) {
       if (mounted) {
@@ -306,40 +305,29 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
     instanceName: bind.providerInstanceName,
   );
 
-  Future<void> _addMedia(TrueNasFileItemInfo item) => _runAdd(() async {
-    final bind = _bind!;
-    await providerGateway.addTrueNasMedia(
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> items) =>
+      _runAdd(() async {
+        for (final item in items) {
+          await providerGateway.addDiscoveredSource(
+            widget.roomId,
+            playlistId: widget.playlistId,
+            source: item.source.withPlaybackProxyMode(_proxyMode),
+            name: item.title,
+          );
+        }
+      });
+
+  Future<void> _addCurrentPlaylist() => _runAdd(() async {
+    final source = _listSource;
+    if (source == null) return;
+    final query = _searchController.text.trim();
+    await providerGateway.addDiscoveredSource(
       widget.roomId,
       playlistId: widget.playlistId,
-      serverId: bind.serverId,
-      path: item.path,
-      name: item.name,
-      providerInstanceName: bind.providerInstanceName,
+      source: source.withPlaybackProxyMode(_proxyMode),
+      name: query.isEmpty ? _path.split('/').last : 'TrueNAS: $query',
     );
   });
-
-  Future<void> _addCurrentPlaylist() {
-    final query = _searchController.text.trim();
-    return _createPlaylist(
-      query.isEmpty ? _path.split('/').last : 'TrueNAS: $query',
-      query.isEmpty
-          ? {'type': 'folder', 'path': _path}
-          : {'type': 'search', 'path': _path, 'query': query},
-    );
-  }
-
-  Future<void> _createPlaylist(String name, Map<String, dynamic> source) =>
-      _runAdd(() async {
-        final bind = _bind!;
-        await providerGateway.createPlaylist(
-          widget.roomId,
-          parentId: widget.playlistId,
-          sourceProvider: 'truenas',
-          providerInstanceName: bind.providerInstanceName,
-          sourceConfig: {'serverId': bind.serverId, 'source': source},
-          name: name.isEmpty ? 'TrueNAS' : name,
-        );
-      });
 
   Future<void> _runAdd(Future<void> Function() action) async {
     setState(() => _loading = true);

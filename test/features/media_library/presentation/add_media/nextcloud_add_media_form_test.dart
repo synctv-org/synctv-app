@@ -46,7 +46,7 @@ void main() {
               requestedQuery = query;
               return NextcloudFileListPage(
                 items: mode == NextcloudBrowseMode.folder && path.isEmpty
-                    ? const [
+                    ? [
                         NextcloudFileItemInfo(
                           name: 'Videos',
                           path: '/Videos',
@@ -66,9 +66,10 @@ void main() {
                           height: null,
                           durationMillis: null,
                           previewUrl: '',
+                          source: testDiscoveredPlaylistSource(),
                         ),
                       ]
-                    : const [
+                    : [
                         NextcloudFileItemInfo(
                           name: 'Movie.mkv',
                           path: '/Videos/Movie.mkv',
@@ -88,11 +89,13 @@ void main() {
                           height: 1080,
                           durationMillis: 7200000,
                           previewUrl: '',
+                          source: testDiscoveredMediaSource(name: 'Movie.mkv'),
                         ),
                       ],
                 total: 1,
                 page: page,
                 hasMore: false,
+                source: testDiscoveredPlaylistSource(),
               );
             },
           ),
@@ -101,7 +104,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Videos'));
+    await tester.tap(find.byKey(const ValueKey('discovery-open-/Videos')));
     await tester.pumpAndSettle();
     expect(requestedPath, '/Videos');
     expect(find.text('Movie.mkv'), findsOneWidget);

@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 
@@ -83,62 +85,66 @@ void main() {
       name: 'P2P Format Coverage',
       description: 'Local MP4, HLS, DASH, FLV, subtitle, proxy, and live tests',
     );
-    final vodId = await SyncTvService.addMediaFromSourceConfig(
+    final vodId = await SyncTvService.addDiscoveredSource(
       roomId,
       playlistId: playlist.id,
       name: 'P2P Multi-format VOD',
-      sourceConfig: source_config.MediaSourceConfig(
-        directUrl: source_config.DirectUrlMediaSourceConfig(
-          medias: [
-            source_config.DirectUrlMediaResourceConfig(
-              name: 'MP4 Faststart',
-              url: '$origin/video.mp4',
-              format: 'mp4',
-            ),
-            source_config.DirectUrlMediaResourceConfig(
-              name: 'HLS VOD',
-              url: '$origin/hls/playlist.m3u8',
-              format: 'hls',
-            ),
-            source_config.DirectUrlMediaResourceConfig(
-              name: 'DASH VOD',
-              url: '$origin/dash/manifest.mpd',
-              format: 'dash',
-            ),
-            source_config.DirectUrlMediaResourceConfig(
-              name: 'FLV Archive',
-              url: '$origin/archive.flv',
-              format: 'flv',
-            ),
-          ],
-          defaultMediaIndex: 0,
-          durationSeconds: 30,
-          subtitles: [
-            source_config.DirectUrlSubtitleSourceConfig(
-              name: 'P2P English',
-              language: 'en',
-              url: '$origin/subtitle.vtt',
-              format: 'vtt',
-            ),
-          ],
-          defaultSubtitleIndex: 0,
+      source: provider_common.DiscoveredSource(
+        media: source_config.MediaSourceConfig(
+          directUrl: source_config.DirectUrlMediaSourceConfig(
+            medias: [
+              source_config.DirectUrlMediaResourceConfig(
+                name: 'MP4 Faststart',
+                url: '$origin/video.mp4',
+                format: 'mp4',
+              ),
+              source_config.DirectUrlMediaResourceConfig(
+                name: 'HLS VOD',
+                url: '$origin/hls/playlist.m3u8',
+                format: 'hls',
+              ),
+              source_config.DirectUrlMediaResourceConfig(
+                name: 'DASH VOD',
+                url: '$origin/dash/manifest.mpd',
+                format: 'dash',
+              ),
+              source_config.DirectUrlMediaResourceConfig(
+                name: 'FLV Archive',
+                url: '$origin/archive.flv',
+                format: 'flv',
+              ),
+            ],
+            defaultMediaIndex: 0,
+            durationSeconds: 30,
+            subtitles: [
+              source_config.DirectUrlSubtitleSourceConfig(
+                name: 'P2P English',
+                language: 'en',
+                url: '$origin/subtitle.vtt',
+                format: 'vtt',
+              ),
+            ],
+            defaultSubtitleIndex: 0,
+          ),
         ),
       ),
     );
-    final liveId = await SyncTvService.addMediaFromSourceConfig(
+    final liveId = await SyncTvService.addDiscoveredSource(
       roomId,
       playlistId: playlist.id,
       name: 'P2P Live Exclusion',
-      sourceConfig: source_config.MediaSourceConfig(
-        directUrl: source_config.DirectUrlMediaSourceConfig(
-          medias: [
-            source_config.DirectUrlMediaResourceConfig(
-              name: 'Live HLS',
-              url: '$origin/hls/playlist.m3u8',
-              format: 'hls',
-            ),
-          ],
-          isLive: true,
+      source: provider_common.DiscoveredSource(
+        media: source_config.MediaSourceConfig(
+          directUrl: source_config.DirectUrlMediaSourceConfig(
+            medias: [
+              source_config.DirectUrlMediaResourceConfig(
+                name: 'Live HLS',
+                url: '$origin/hls/playlist.m3u8',
+                format: 'hls',
+              ),
+            ],
+            isLive: true,
+          ),
         ),
       ),
     );

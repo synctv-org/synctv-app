@@ -15,7 +15,7 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../source_config.pb.dart' as $0;
+import 'common.pb.dart' as $0;
 import 'tiktok.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -490,10 +490,12 @@ class ResolveRequest extends $pb.GeneratedMessage {
   factory ResolveRequest({
     $core.String? resource,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (resource != null) result.resource = resource;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -513,6 +515,7 @@ class ResolveRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'resource')
     ..aOS(2, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(3, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -551,6 +554,15 @@ class ResolveRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(1);
   @$pb.TagNumber(2)
   void clearInstanceName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get shared => $_getBF(2);
+  @$pb.TagNumber(3)
+  set shared($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasShared() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearShared() => $_clearField(3);
 }
 
 class Image extends $pb.GeneratedMessage {
@@ -1269,13 +1281,13 @@ class ResolveResponse extends $pb.GeneratedMessage {
     Metadata? metadata,
     $core.String? roomId,
     $core.Iterable<Variant>? variants,
-    $0.TikTokMediaSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (metadata != null) result.metadata = metadata;
     if (roomId != null) result.roomId = roomId;
     if (variants != null) result.variants.addAll(variants);
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1298,8 +1310,8 @@ class ResolveResponse extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'roomId')
     ..pPM<Variant>(3, _omitFieldNames ? '' : 'variants',
         subBuilder: Variant.create)
-    ..aOM<$0.TikTokMediaSourceConfig>(4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TikTokMediaSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1345,25 +1357,27 @@ class ResolveResponse extends $pb.GeneratedMessage {
   $pb.PbList<Variant> get variants => $_getList(2);
 
   @$pb.TagNumber(4)
-  $0.TikTokMediaSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.TikTokMediaSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.TikTokMediaSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class GetUserRequest extends $pb.GeneratedMessage {
   factory GetUserRequest({
-    $core.String? uniqueId,
+    $core.String? resource,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
-    if (uniqueId != null) result.uniqueId = uniqueId;
+    if (resource != null) result.resource = resource;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -1381,8 +1395,9 @@ class GetUserRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.tiktok'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'uniqueId')
+    ..aOS(1, _omitFieldNames ? '' : 'resource')
     ..aOS(2, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(3, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1405,13 +1420,13 @@ class GetUserRequest extends $pb.GeneratedMessage {
   static GetUserRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get uniqueId => $_getSZ(0);
+  $core.String get resource => $_getSZ(0);
   @$pb.TagNumber(1)
-  set uniqueId($core.String value) => $_setString(0, value);
+  set resource($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasUniqueId() => $_has(0);
+  $core.bool hasResource() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUniqueId() => $_clearField(1);
+  void clearResource() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get instanceName => $_getSZ(1);
@@ -1421,16 +1436,25 @@ class GetUserRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(1);
   @$pb.TagNumber(2)
   void clearInstanceName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get shared => $_getBF(2);
+  @$pb.TagNumber(3)
+  set shared($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasShared() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearShared() => $_clearField(3);
 }
 
 class GetUserResponse extends $pb.GeneratedMessage {
   factory GetUserResponse({
     $core.String? secUid,
-    $0.TikTokPlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (secUid != null) result.secUid = secUid;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1449,9 +1473,8 @@ class GetUserResponse extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.provider.tiktok'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'secUid')
-    ..aOM<$0.TikTokPlaylistSourceConfig>(
-        2, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TikTokPlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(2, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1483,15 +1506,15 @@ class GetUserResponse extends $pb.GeneratedMessage {
   void clearSecUid() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $0.TikTokPlaylistSourceConfig get sourceConfig => $_getN(1);
+  $0.DiscoveredSource get source => $_getN(1);
   @$pb.TagNumber(2)
-  set sourceConfig($0.TikTokPlaylistSourceConfig value) => $_setField(2, value);
+  set source($0.DiscoveredSource value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasSourceConfig() => $_has(1);
+  $core.bool hasSource() => $_has(1);
   @$pb.TagNumber(2)
-  void clearSourceConfig() => $_clearField(2);
+  void clearSource() => $_clearField(2);
   @$pb.TagNumber(2)
-  $0.TikTokPlaylistSourceConfig ensureSourceConfig() => $_ensure(1);
+  $0.DiscoveredSource ensureSource() => $_ensure(1);
 }
 
 class ListUserPostsRequest extends $pb.GeneratedMessage {
@@ -1500,12 +1523,14 @@ class ListUserPostsRequest extends $pb.GeneratedMessage {
     $core.String? cursor,
     $core.int? pageSize,
     $core.String? instanceName,
+    $core.bool? shared,
   }) {
     final result = create();
     if (secUid != null) result.secUid = secUid;
     if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (instanceName != null) result.instanceName = instanceName;
+    if (shared != null) result.shared = shared;
     return result;
   }
 
@@ -1527,6 +1552,7 @@ class ListUserPostsRequest extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aI(3, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..aOS(4, _omitFieldNames ? '' : 'instanceName')
+    ..aOB(5, _omitFieldNames ? '' : 'shared')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1583,6 +1609,15 @@ class ListUserPostsRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(3);
   @$pb.TagNumber(4)
   void clearInstanceName() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get shared => $_getBF(4);
+  @$pb.TagNumber(5)
+  set shared($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasShared() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearShared() => $_clearField(5);
 }
 
 class ListItem extends $pb.GeneratedMessage {
@@ -1593,6 +1628,7 @@ class ListItem extends $pb.GeneratedMessage {
     Image? cover,
     $fixnum.Int64? durationMs,
     $fixnum.Int64? createdAt,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (videoId != null) result.videoId = videoId;
@@ -1601,6 +1637,7 @@ class ListItem extends $pb.GeneratedMessage {
     if (cover != null) result.cover = cover;
     if (durationMs != null) result.durationMs = durationMs;
     if (createdAt != null) result.createdAt = createdAt;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1626,6 +1663,8 @@ class ListItem extends $pb.GeneratedMessage {
         5, _omitFieldNames ? '' : 'durationMs', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aInt64(6, _omitFieldNames ? '' : 'createdAt')
+    ..aOM<$0.DiscoveredSource>(7, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1703,6 +1742,17 @@ class ListItem extends $pb.GeneratedMessage {
   $core.bool hasCreatedAt() => $_has(5);
   @$pb.TagNumber(6)
   void clearCreatedAt() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $0.DiscoveredSource get source => $_getN(6);
+  @$pb.TagNumber(7)
+  set source($0.DiscoveredSource value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSource() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSource() => $_clearField(7);
+  @$pb.TagNumber(7)
+  $0.DiscoveredSource ensureSource() => $_ensure(6);
 }
 
 class ListUserPostsResponse extends $pb.GeneratedMessage {
@@ -1710,13 +1760,13 @@ class ListUserPostsResponse extends $pb.GeneratedMessage {
     $core.Iterable<ListItem>? items,
     $core.String? cursor,
     $core.bool? hasMore,
-    $0.TikTokPlaylistSourceConfig? sourceConfig,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (items != null) result.items.addAll(items);
     if (cursor != null) result.cursor = cursor;
     if (hasMore != null) result.hasMore = hasMore;
-    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -1738,9 +1788,8 @@ class ListUserPostsResponse extends $pb.GeneratedMessage {
         subBuilder: ListItem.create)
     ..aOS(2, _omitFieldNames ? '' : 'cursor')
     ..aOB(3, _omitFieldNames ? '' : 'hasMore')
-    ..aOM<$0.TikTokPlaylistSourceConfig>(
-        4, _omitFieldNames ? '' : 'sourceConfig',
-        subBuilder: $0.TikTokPlaylistSourceConfig.create)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1785,15 +1834,15 @@ class ListUserPostsResponse extends $pb.GeneratedMessage {
   void clearHasMore() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $0.TikTokPlaylistSourceConfig get sourceConfig => $_getN(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceConfig($0.TikTokPlaylistSourceConfig value) => $_setField(4, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSourceConfig() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSourceConfig() => $_clearField(4);
+  void clearSource() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.TikTokPlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 const $core.bool _omitFieldNames =

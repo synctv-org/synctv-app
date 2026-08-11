@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
-import 'package:synctv_app/contracts/room_media_models.dart';
-import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
-    as source_config;
 import 'package:synctv_app/features/media_library/presentation/add_media/bilibili_playlist_form.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
+
+import '../../../../test_app.dart';
 
 void main() {
-  testWidgets('builds a live-area playlist from the provider area hierarchy', (
+  testWidgets('shares the media creator credential with discovered sources', (
     tester,
   ) async {
-    Map<String, dynamic>? previewSource;
-    Map<String, dynamic>? createdSource;
-    String? createdName;
-    await tester.binding.setSurfaceSize(const Size(900, 1100));
+    bool? requestedShared;
+    await tester.binding.setSurfaceSize(const Size(900, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -28,7 +26,48 @@ void main() {
             parentId: 'root',
             binds: const [],
             onDraftChanged: (_) {},
-            onLoadLiveAreas: (_) async => const [
+            loader: (intent, page, pageSize, cursor, instance, shared) async {
+              requestedShared = shared;
+              return _emptyPage;
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Share my credentials'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Popular').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Share my credentials'));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('bilibili-playlist-preview')));
+    await tester.pumpAndSettle();
+
+    expect(requestedShared, isTrue);
+  });
+
+  testWidgets('builds a live-area playlist from the provider area hierarchy', (
+    tester,
+  ) async {
+    BilibiliPlaylistListIntent? requestedIntent;
+    await tester.binding.setSurfaceSize(const Size(900, 1100));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: BilibiliPlaylistForm(
+            roomId: 'room',
+            parentId: 'root',
+            binds: const [],
+            target: ProviderAddTarget.playlist,
+            onDraftChanged: (_) {},
+            onLoadLiveAreas: (_) async => [
               BilibiliLiveAreaInfo(
                 id: 10,
                 parentId: 1,
@@ -36,6 +75,7 @@ void main() {
                 parentName: 'Games',
                 picture: 'https://example.com/indie.jpg',
                 hot: true,
+                source: testDiscoveredPlaylistSource(),
               ),
               BilibiliLiveAreaInfo(
                 id: 20,
@@ -44,15 +84,12 @@ void main() {
                 parentName: 'Music',
                 picture: 'https://example.com/rock.jpg',
                 hot: false,
+                source: testDiscoveredPlaylistSource(),
               ),
             ],
-            onPreview: (sourceConfig, _) async {
-              previewSource = sourceConfig;
-              return _emptyPreview;
-            },
-            onCreate: (name, sourceConfig, _) async {
-              createdName = name;
-              createdSource = sourceConfig;
+            loader: (intent, page, pageSize, cursor, instance, shared) async {
+              requestedIntent = intent;
+              return _emptyPage;
             },
           ),
         ),
@@ -61,7 +98,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Live Area').last);
+    await tester.tap(find.text('Live category').last);
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('bilibili-live-parent-area')), findsOneWidget);
@@ -78,33 +115,29 @@ void main() {
     await tester.tap(find.byKey(const Key('bilibili-playlist-preview')));
     await tester.pumpAndSettle();
 
-    expect(previewSource?['source'], {
-      'type': 'liveArea',
-      'parentAreaId': 2,
-      'areaId': 20,
-    });
-
-    await tester.enterText(
-      find.byKey(const Key('bilibili-playlist-name')),
-      'Music Live',
+    expect(requestedIntent?.mode, BilibiliPlaylistListMode.liveArea);
+    expect(requestedIntent?.parentAreaId, 2);
+    expect(requestedIntent?.areaId, 20);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const Key('discovery-add-current-list')),
+          )
+          .onPressed,
+      isNotNull,
     );
-    await tester.tap(find.byKey(const Key('bilibili-playlist-create')));
-    await tester.pumpAndSettle();
-
-    expect(createdName, 'Music Live');
-    expect(createdSource, previewSource);
-    await tester.pump(const Duration(seconds: 4));
   });
 
   testWidgets('selects an authenticated favorite folder for preview', (
     tester,
   ) async {
-    Map<String, dynamic>? previewSource;
+    BilibiliPlaylistListIntent? requestedIntent;
     await tester.binding.setSurfaceSize(const Size(900, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -120,19 +153,12 @@ void main() {
                 mediaCount: 12,
                 isPrivate: true,
                 isDefault: false,
-                sourceConfig: source_config.PlaylistSourceConfig(
-                  bilibili: source_config.BilibiliPlaylistSourceConfig(
-                    favoriteVideos:
-                        source_config.BilibiliFavoriteVideosPlaylistSource(
-                          mediaId: Int64(99),
-                        ),
-                  ),
-                ),
+                source: testDiscoveredPlaylistSource(),
               ),
             ],
-            onPreview: (source, _) async {
-              previewSource = source;
-              return _emptyPreview;
+            loader: (intent, page, pageSize, cursor, instance, shared) async {
+              requestedIntent = intent;
+              return _emptyPage;
             },
           ),
         ),
@@ -141,7 +167,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Favorite Videos').last);
+    await tester.tap(find.text('Favorite videos').last);
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('bilibili-favorite-folder')), findsOneWidget);
@@ -149,13 +175,14 @@ void main() {
 
     await tester.tap(find.byKey(const Key('bilibili-playlist-preview')));
     await tester.pumpAndSettle();
-    expect(previewSource?['source'], {'type': 'favoriteVideos', 'mediaId': 99});
+    expect(requestedIntent?.mode, BilibiliPlaylistListMode.favoriteVideos);
+    expect(requestedIntent?.mediaId, 99);
   });
 
   testWidgets('loads followed anime pages and builds a season playlist', (
     tester,
   ) async {
-    Map<String, dynamic>? previewSource;
+    BilibiliPlaylistListIntent? requestedIntent;
     await tester.binding.setSurfaceSize(const Size(900, 1050));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -166,18 +193,13 @@ void main() {
         cover: '',
         description: '',
         latestEpisode: 'Updated',
-        sourceConfig: source_config.PlaylistSourceConfig(
-          bilibili: source_config.BilibiliPlaylistSourceConfig(
-            pgcSeason: source_config.BilibiliPgcSeasonPlaylistSource(
-              seasonId: Int64(id),
-            ),
-          ),
-        ),
+        source: testDiscoveredPlaylistSource(),
       );
     }
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -194,9 +216,9 @@ void main() {
               total: 2,
               hasMore: page == 1,
             ),
-            onPreview: (source, _) async {
-              previewSource = source;
-              return _emptyPreview;
+            loader: (intent, page, pageSize, cursor, instance, shared) async {
+              requestedIntent = intent;
+              return _emptyPage;
             },
           ),
         ),
@@ -205,7 +227,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Followed Anime').last);
+    await tester.tap(find.text('Followed anime').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Season one · Updated'), findsOneWidget);
@@ -219,18 +241,20 @@ void main() {
 
     await tester.tap(find.byKey(const Key('bilibili-playlist-preview')));
     await tester.pumpAndSettle();
-    expect(previewSource?['source'], {'type': 'pgcSeason', 'seasonId': 41});
+    expect(requestedIntent?.mode, BilibiliPlaylistListMode.pgcSeason);
+    expect(requestedIntent?.seasonId, 41);
   });
 
   testWidgets('previews playback history with a native history filter', (
     tester,
   ) async {
-    Map<String, dynamic>? previewSource;
+    BilibiliPlaylistListIntent? requestedIntent;
     await tester.binding.setSurfaceSize(const Size(900, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -239,9 +263,9 @@ void main() {
             parentId: 'root',
             binds: const [],
             onDraftChanged: (_) {},
-            onPreview: (source, _) async {
-              previewSource = source;
-              return _emptyPreview;
+            loader: (intent, page, pageSize, cursor, instance, shared) async {
+              requestedIntent = intent;
+              return _emptyPage;
             },
           ),
         ),
@@ -250,40 +274,27 @@ void main() {
 
     await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Playback History').last);
+    await tester.tap(find.text('History').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Videos'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('bilibili-playlist-preview')));
     await tester.pumpAndSettle();
 
-    expect(previewSource?['source'], {
-      'type': 'history',
-      'historyType': 'archive',
-    });
+    expect(requestedIntent?.mode, BilibiliPlaylistListMode.history);
+    expect(requestedIntent?.historyType, BilibiliPlaylistHistoryType.archive);
   });
 
-  testWidgets('previews PGC timeline status and creates its typed source', (
+  testWidgets('previews PGC timeline status and lists its typed intent', (
     tester,
   ) async {
-    Map<String, dynamic>? createdSource;
+    BilibiliPlaylistListIntent? requestedIntent;
     await tester.binding.setSurfaceSize(const Size(900, 1100));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final timelineSource = source_config.PlaylistSourceConfig(
-      bilibili: source_config.BilibiliPlaylistSourceConfig(
-        pgcTimeline: source_config.BilibiliPgcTimelinePlaylistSource(
-          type: source_config
-              .BilibiliPgcTimelineType
-              .BILIBILI_PGC_TIMELINE_TYPE_ANIME,
-          beforeDays: 3,
-          afterDays: 7,
-        ),
-      ),
-    );
-
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -297,7 +308,7 @@ void main() {
               expect(before, 3);
               expect(after, 7);
               return BilibiliPgcTimelineInfo(
-                sourceConfig: timelineSource,
+                source: testDiscoveredPlaylistSource(),
                 items: const [
                   BilibiliPgcTimelineItemInfo(
                     episodeId: 101,
@@ -312,7 +323,7 @@ void main() {
                     dayOfWeek: 2,
                     delayed: false,
                     delayReason: '',
-                    sourceConfig: null,
+                    source: null,
                   ),
                   BilibiliPgcTimelineItemInfo(
                     episodeId: 102,
@@ -327,12 +338,15 @@ void main() {
                     dayOfWeek: 3,
                     delayed: true,
                     delayReason: 'Delayed until Friday',
-                    sourceConfig: null,
+                    source: null,
                   ),
                 ],
               );
             },
-            onCreate: (_, source, _) async => createdSource = source,
+            loader: (intent, page, pageSize, cursor, instance, shared) async {
+              requestedIntent = intent;
+              return _emptyPage;
+            },
           ),
         ),
       ),
@@ -340,38 +354,29 @@ void main() {
 
     await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('PGC Timeline').last);
+    await tester.tap(find.text('PGC timeline').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Published show · Episode 1'), findsOneWidget);
     expect(find.text('Published'), findsOneWidget);
     expect(find.text('Delayed until Friday'), findsOneWidget);
 
-    await tester.enterText(
-      find.byKey(const Key('bilibili-playlist-name')),
-      'Anime schedule',
-    );
     await tester.ensureVisible(
-      find.byKey(const Key('bilibili-playlist-create')),
+      find.byKey(const Key('bilibili-playlist-preview')),
     );
-    await tester.tap(find.byKey(const Key('bilibili-playlist-create')));
+    await tester.tap(find.byKey(const Key('bilibili-playlist-preview')));
     await tester.pumpAndSettle();
 
-    expect(createdSource, {
-      'source': {
-        'type': 'pgcTimeline',
-        'timelineType': 'anime',
-        'beforeDays': 3,
-        'afterDays': 7,
-      },
-    });
-    await tester.pump(const Duration(seconds: 4));
+    expect(requestedIntent?.mode, BilibiliPlaylistListMode.pgcTimeline);
+    expect(requestedIntent?.timelineType, BilibiliPgcTimelineKind.anime);
+    expect(requestedIntent?.beforeDays, 3);
+    expect(requestedIntent?.afterDays, 7);
   });
 
   testWidgets('filters PGC index and previews a selected season source', (
     tester,
   ) async {
-    Map<String, dynamic>? previewSource;
+    BilibiliPlaylistListIntent? requestedIntent;
     BilibiliPgcSeasonKind? requestedKind;
     BilibiliPgcSeasonOrder? requestedOrder;
     String? requestedYear;
@@ -392,18 +397,13 @@ void main() {
         score: '9.8',
         finished: true,
         type: BilibiliPgcSeasonKind.anime,
-        sourceConfig: source_config.PlaylistSourceConfig(
-          bilibili: source_config.BilibiliPlaylistSourceConfig(
-            pgcSeason: source_config.BilibiliPgcSeasonPlaylistSource(
-              seasonId: Int64(id),
-            ),
-          ),
-        ),
+        source: testDiscoveredPlaylistSource(),
       );
     }
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -436,9 +436,9 @@ void main() {
                     hasMore: page == 1,
                   );
                 },
-            onPreview: (source, _) async {
-              previewSource = source;
-              return _emptyPreview;
+            loader: (intent, page, pageSize, cursor, instance, shared) async {
+              requestedIntent = intent;
+              return _emptyPage;
             },
           ),
         ),
@@ -447,7 +447,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('PGC Index').last);
+    await tester.tap(find.text('PGC index').last);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('bilibili-pgc-index-kind')));
@@ -483,20 +483,15 @@ void main() {
     await tester.tap(find.byKey(const Key('bilibili-playlist-preview')));
     await tester.pumpAndSettle();
 
-    expect(previewSource?['source'], {'type': 'pgcSeason', 'seasonId': 52});
+    expect(requestedIntent?.mode, BilibiliPlaylistListMode.pgcSeason);
+    expect(requestedIntent?.seasonId, 52);
   });
 }
 
-const _emptyPreview = RoomMediaLibraryPage(
-  playlists: [],
-  media: [],
-  dynamicItems: [],
-  currentPath: [],
-  total: 0,
-  playlistCount: 0,
-  fileCount: 0,
-  version: '',
-  usesCursor: false,
-  nextCursor: '',
+final _emptyPage = BilibiliPlaylistListPage(
+  items: const [],
+  hasMore: false,
   page: 1,
+  cursor: null,
+  source: testDiscoveredPlaylistSource(),
 );

@@ -6,32 +6,9 @@ import 'package:synctv_app/src/generated/proto/providers/cctv.pbenum.dart'
     as cctv_enum;
 import 'package:synctv_app/features/media_library/presentation/add_media/cctv_add_media_form.dart';
 
+import '../../../../test_app.dart';
+
 void main() {
-  group('parseCctvResource', () {
-    test('parses and normalizes direct video IDs', () {
-      final resource = parseCctvResource('5C846C0518444308BA32C4159DF3B3E0');
-
-      expect(resource?.resource, '5c846c0518444308ba32c4159df3b3e0');
-      expect(resource?.defaultName, '5c846c0518444308ba32c4159df3b3e0');
-    });
-
-    test('accepts CCTV, CNTV, and NCPA page URLs', () {
-      for (final url in [
-        'https://news.cctv.com/2024/02/21/ARTIexample.shtml',
-        'http://tv.cntv.cn/video/C39296/example',
-        'https://www.ncpa-classic.com/2013/05/22/VIDEexample.shtml',
-      ]) {
-        expect(parseCctvResource(url)?.resource, url);
-      }
-    });
-
-    test('rejects unrelated hosts and malformed IDs', () {
-      expect(parseCctvResource('https://example.com/video.shtml'), isNull);
-      expect(parseCctvResource('5c846c'), isNull);
-      expect(parseCctvResource('ftp://news.cctv.com/video.shtml'), isNull);
-    });
-  });
-
   testWidgets('CCTV preview exposes native streams, chapters, and metadata', (
     tester,
   ) async {
@@ -70,6 +47,7 @@ void main() {
                   kind: cctv_enum.StreamKind.STREAM_KIND_HTTP,
                 ),
               ],
+              source: testDiscoveredMediaSource(),
             ),
           ),
         ),
@@ -105,6 +83,10 @@ void main() {
             roomId: 'room',
             playlistId: '',
             instances: const ['cctv-edge'],
+            onResolve: (_) async => cctv.ResolveResponse(
+              metadata: cctv.Metadata(title: 'CCTV Programme'),
+              source: testDiscoveredMediaSource(),
+            ),
             onSubmit: (request) async => submitted = request,
           ),
         ),
@@ -118,10 +100,18 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('cctv-edge').last);
     await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('cctv-submit')))
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(const Key('cctv-preview')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('cctv-submit')));
     await tester.pumpAndSettle();
 
-    expect(submitted?.resource, '5c846c0518444308ba32c4159df3b3e0');
+    expect(submitted?.resource, '5C846C0518444308BA32C4159DF3B3E0');
     expect(submitted?.instanceName, 'cctv-edge');
     await tester.pump(const Duration(seconds: 4));
   });

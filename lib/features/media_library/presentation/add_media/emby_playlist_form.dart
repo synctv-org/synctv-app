@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
-import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
+import 'package:synctv_app/core/presentation/media_variant_label.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
+import 'package:synctv_app/l10n/l10n.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 enum EmbyCollectionMode {
   continueWatching,
@@ -15,6 +24,17 @@ enum EmbyCollectionMode {
   genres,
 }
 
+typedef EmbyDiscoveryLoader =
+    Future<EmbyListPage> Function(
+      EmbyBindInfo bind,
+      EmbyListMode mode,
+      String targetId,
+      List<String> itemTypes,
+      String search,
+      int page,
+      int pageSize,
+    );
+
 class EmbyPlaylistForm extends StatefulWidget {
   const EmbyPlaylistForm({
     super.key,
@@ -22,443 +42,408 @@ class EmbyPlaylistForm extends StatefulWidget {
     required this.parentId,
     required this.binds,
     required this.onDraftChanged,
-    this.onPreview,
-    this.onCreate,
+    this.proxyMode = source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+    this.onOpenBinding,
+    this.loader,
   });
 
   final String roomId;
   final String parentId;
   final List<EmbyBindInfo> binds;
   final ValueChanged<bool> onDraftChanged;
-  final Future<RoomMediaLibraryPage> Function(
-    Map<String, dynamic> sourceConfig,
-    String instanceName,
-    String? target,
-  )?
-  onPreview;
-  final Future<void> Function(
-    String name,
-    Map<String, dynamic> sourceConfig,
-    String instanceName,
-  )?
-  onCreate;
+  final source_enum.PlaybackProxyMode proxyMode;
+  final Future<void> Function()? onOpenBinding;
+  final EmbyDiscoveryLoader? loader;
 
   @override
   State<EmbyPlaylistForm> createState() => _EmbyPlaylistFormState();
 }
 
+class _EmbyBrowseLocation {
+  const _EmbyBrowseLocation({
+    required this.mode,
+    required this.targetId,
+    required this.title,
+  });
+
+  final EmbyListMode mode;
+  final String targetId;
+  final String title;
+}
+
 class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
+  static const _pageSize = 30;
+  static const _twoColumnMinWidth = 400.0;
+
+  final _selection = DiscoverySelectionController();
   final _nameController = TextEditingController();
+  final _searchController = TextEditingController();
+  final _itemTypes = <String>{'Movie', 'Episode', 'Video'};
+  final _locations = <_EmbyBrowseLocation>[];
   EmbyCollectionMode _mode = EmbyCollectionMode.continueWatching;
-  final Set<String> _itemTypes = {'Movie', 'Episode', 'Video'};
-  String _serverId = '';
-  String _instanceName = '';
+  EmbyBindInfo? _bind;
+  List<EmbyItemInfo> _items = const [];
+  provider_common.DiscoveredSource? _listSource;
+  String _activeSearch = '';
+  int _page = 1;
+  bool _hasMore = false;
   bool _loading = false;
-  List<RoomDynamicMediaEntry> _items = const [];
-  String _personId = '';
-  String _personName = '';
-  String _personTarget = '';
-  String _genreId = '';
-  String _genreName = '';
-  String _genreTarget = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _bind = widget.binds.firstOrNull;
+    _nameController.addListener(_notifyDraftChanged);
+    _searchController.addListener(_notifyDraftChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant EmbyPlaylistForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final current = _bind;
+    if (current == null || !widget.binds.any((bind) => bind.id == current.id)) {
+      _bind = widget.binds.firstOrNull;
+      _resetDiscovery();
+    }
+  }
 
   @override
   void dispose() {
+    _nameController.removeListener(_notifyDraftChanged);
+    _searchController.removeListener(_notifyDraftChanged);
     _nameController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  void _changed() {
-    _items = const [];
-    _clearPerson();
-    _clearGenre();
-    widget.onDraftChanged(_nameController.text.trim().isNotEmpty);
-    setState(() {});
-  }
-
-  void _clearPerson() {
-    _personId = '';
-    _personName = '';
-    _personTarget = '';
-  }
-
-  void _clearGenre() {
-    _genreId = '';
-    _genreName = '';
-    _genreTarget = '';
+  void _notifyDraftChanged() {
+    widget.onDraftChanged(
+      _nameController.text.trim().isNotEmpty ||
+          _searchController.text.trim().isNotEmpty,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.binds.isNotEmpty &&
-        !widget.binds.any(
-          (bind) =>
-              '${bind.serverId}@${bind.providerInstanceName}' ==
-              '$_serverId@$_instanceName',
-        )) {
-      final bind = widget.binds.first;
-      _serverId = bind.serverId;
-      _instanceName = bind.providerInstanceName;
+    if (widget.binds.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppEmptyState(
+              icon: Icons.video_library_outlined,
+              title: 'Emby',
+              subtitle: context.l10n.bindAccountToAccessResources,
+            ),
+            const SizedBox(height: 16),
+            ProviderAccountAction(
+              providerType: 'emby',
+              onPressed: widget.onOpenBinding == null
+                  ? null
+                  : () => widget.onOpenBinding!(),
+            ),
+          ],
+        ),
+      );
     }
-    final selectedKey = '$_serverId@$_instanceName';
-    return AppSingleChildScrollView(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DropdownButtonFormField<EmbyCollectionMode>(
-            key: const Key('emby-collection-mode'),
-            initialValue: _mode,
-            decoration: const InputDecoration(
-              labelText: 'Source',
-              prefixIcon: Icon(Icons.video_library_outlined),
-            ),
-            items: EmbyCollectionMode.values
-                .map(
-                  (mode) => DropdownMenuItem(
-                    value: mode,
-                    child: Text(_modeLabel(mode)),
-                  ),
-                )
-                .toList(),
-            onChanged: _loading
-                ? null
-                : (mode) {
-                    if (mode == null) return;
-                    _mode = mode;
-                    _changed();
-                  },
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: selectedKey,
-            decoration: const InputDecoration(
-              labelText: 'Emby account',
-              prefixIcon: Icon(Icons.dns_outlined),
-            ),
-            items: widget.binds
-                .map(
-                  (bind) => DropdownMenuItem(
-                    value: '${bind.serverId}@${bind.providerInstanceName}',
-                    child: Text(
-                      bind.providerInstanceName.isEmpty
-                          ? bind.host
-                          : '${bind.host} · ${bind.providerInstanceName}',
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: _loading
-                ? null
-                : (value) {
-                    final bind = widget.binds.cast<EmbyBindInfo?>().firstWhere(
-                      (bind) =>
-                          bind != null &&
-                          '${bind.serverId}@${bind.providerInstanceName}' ==
-                              value,
-                      orElse: () => null,
-                    );
-                    if (bind == null) return;
-                    _serverId = bind.serverId;
-                    _instanceName = bind.providerInstanceName;
-                    _changed();
-                  },
-          ),
-          if (_mode == EmbyCollectionMode.favoriteItems ||
-              _mode == EmbyCollectionMode.recentlyAdded ||
-              _mode == EmbyCollectionMode.genres ||
-              _personId.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: ['Movie', 'Episode', 'Video'].map((type) {
-                return FilterChip(
-                  label: Text(type),
-                  selected: _itemTypes.contains(type),
-                  onSelected: _loading
-                      ? null
-                      : (selected) {
-                          setState(() {
-                            if (selected) {
-                              _itemTypes.add(type);
-                            } else if (_itemTypes.length > 1) {
-                              _itemTypes.remove(type);
-                            }
-                            _items = const [];
-                          });
-                        },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final mode = _buildModeSelector();
+                final account = _buildAccountSelector();
+                if (constraints.maxWidth >= _twoColumnMinWidth) {
+                  return Row(
+                    children: [
+                      Expanded(child: mode),
+                      const SizedBox(width: 12),
+                      Expanded(child: account),
+                    ],
+                  );
+                }
+                return Column(
+                  children: [mode, const SizedBox(height: 10), account],
                 );
-              }).toList(),
+              },
             ),
-          ],
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _nameController,
-            enabled: !_loading,
-            label: 'Playlist name',
-            prefixIcon: Icons.title,
-            onChanged: (_) =>
-                widget.onDraftChanged(_nameController.text.trim().isNotEmpty),
-          ),
-          if (_personId.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.person),
-              title: Text(_personName),
-              trailing: AppIconButton(
-                tooltip: 'Back to people',
-                icon: Icons.close,
-                onPressed: _loading
-                    ? null
-                    : () {
-                        setState(() {
-                          _clearPerson();
-                          _items = const [];
-                        });
-                        _preview();
-                      },
-              ),
-            ),
-          ],
-          if (_genreId.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.category_outlined),
-              title: Text(_genreName),
-              trailing: AppIconButton(
-                tooltip: 'Back to genres',
-                icon: Icons.close,
-                onPressed: _loading
-                    ? null
-                    : () {
-                        setState(() {
-                          _clearGenre();
-                          _items = const [];
-                        });
-                        _preview();
-                      },
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton.icon(
-                key: const Key('emby-preview'),
-                onPressed: _loading || _serverId.isEmpty ? null : _preview,
-                icon: const Icon(Icons.preview_outlined),
-                label: const Text('Preview'),
-              ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                key: const Key('emby-create'),
-                onPressed: _loading || _serverId.isEmpty || _items.isEmpty
-                    ? null
-                    : _create,
-                icon: _loading
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
-                        ),
-                      )
-                    : const Icon(Icons.playlist_add),
-                label: const Text('Create'),
+            if (_supportsItemTypes) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  for (final type in const ['Movie', 'Episode', 'Video'])
+                    FilterChip(
+                      label: Text(localizedMediaVariant(context, type)),
+                      selected: _itemTypes.contains(type),
+                      onSelected: _loading
+                          ? null
+                          : (selected) {
+                              if (!selected && _itemTypes.length == 1) {
+                                return;
+                              }
+                              setState(() {
+                                if (selected) {
+                                  _itemTypes.add(type);
+                                } else {
+                                  _itemTypes.remove(type);
+                                }
+                                _resetDiscovery(keepLocation: true);
+                              });
+                            },
+                    ),
+                ],
               ),
             ],
-          ),
-          if (_items.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            ..._items.map(_itemTile),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _itemTile(RoomDynamicMediaEntry item) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-      onTap:
-          item.isPlaylist &&
-              (_mode == EmbyCollectionMode.favoritePeople ||
-                  _mode == EmbyCollectionMode.genres)
-          ? () => _openFolder(item)
-          : null,
-      leading: item.coverUrl.isEmpty
-          ? Icon(item.isPlaylist ? Icons.person_outline : Icons.movie_outlined)
-          : AppImageThumbnail(
-              url: item.coverUrl,
-              width: 56,
-              height: 56,
-              borderRadius: BorderRadius.circular(4),
+            const SizedBox(height: 10),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final search = AppTextField(
+                  controller: _searchController,
+                  enabled: !_loading,
+                  label: context.l10n.search,
+                  prefixIcon: Icons.search_rounded,
+                  onChanged: (_) => setState(() => _listSource = null),
+                  onSubmitted: (_) => _list(),
+                );
+                final name = AppTextField(
+                  controller: _nameController,
+                  enabled: !_loading,
+                  label: context.l10n.playlistName,
+                  prefixIcon: Icons.title_rounded,
+                );
+                if (constraints.maxWidth >= _twoColumnMinWidth) {
+                  return Row(
+                    children: [
+                      Expanded(child: search),
+                      const SizedBox(width: 12),
+                      Expanded(child: name),
+                    ],
+                  );
+                }
+                return Column(
+                  children: [search, const SizedBox(height: 10), name],
+                );
+              },
             ),
-      title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-      trailing: item.isPlaylist ? const Icon(Icons.chevron_right) : null,
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                AppIconButton(
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: _loading || _locations.isEmpty ? null : _goBack,
+                  icon: Icons.arrow_back_rounded,
+                ),
+                Expanded(
+                  child: Text(
+                    _locations.lastOrNull?.title ?? _modeLabel(_mode),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ),
+                FilledButton.tonalIcon(
+                  key: const Key('emby-preview'),
+                  onPressed: _loading || _bind == null ? null : _list,
+                  icon: const Icon(Icons.manage_search_rounded),
+                  label: Text(context.l10n.list),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+          ],
+        ),
+        Expanded(
+          child: _loading && _items.isEmpty
+              ? const AppLoadingIndicator()
+              : DiscoveryBrowser(
+                  key: ValueKey(
+                    'emby-discovery:${_bind?.serverId}:${_requestMode.name}:'
+                    '$_targetId:$_activeSearch:${_itemTypes.join(',')}',
+                  ),
+                  items: [
+                    for (final item in _items)
+                      DiscoveryBrowserEntry(
+                        key: item.id,
+                        title: item.name,
+                        subtitle: item.description.isEmpty
+                            ? localizedMediaVariant(context, item.type)
+                            : item.description,
+                        source: item.source,
+                        isContainer: item.source.isPlaylist,
+                        leading: item.thumbnail.isEmpty
+                            ? Icon(
+                                item.source.isPlaylist
+                                    ? Icons.folder_rounded
+                                    : Icons.movie_outlined,
+                              )
+                            : AppImageThumbnail(
+                                url: item.thumbnail,
+                                width: 48,
+                                height: 48,
+                                borderRadius: BorderRadius.circular(4),
+                                errorIcon: Icons.movie_outlined,
+                              ),
+                      ),
+                  ],
+                  selectionController: _selection,
+                  selectionScope: _bind?.id,
+                  loading: _loading,
+                  hasMore: _hasMore,
+                  onLoadMore: () => _load(loadMore: true),
+                  onOpen: _open,
+                  onAddSelected: _addSelected,
+                  onAddCurrentList: _listSource == null
+                      ? null
+                      : _addCurrentList,
+                  emptyIcon: Icons.video_library_outlined,
+                  emptyTitle: context.l10n.listSourceToPreview,
+                ),
+        ),
+      ],
     );
   }
 
-  void _openPerson(RoomDynamicMediaEntry item) {
-    final target = item.metadata['target_json'];
-    if (target is! Map || target['personId'] == null) return;
-    setState(() {
-      _personId = target['personId'].toString();
-      _personName = item.name;
-      _personTarget = item.id;
-      _items = const [];
-    });
-    _preview();
-  }
+  Widget _buildModeSelector() => DropdownButtonFormField<EmbyCollectionMode>(
+    key: const Key('emby-collection-mode'),
+    isExpanded: true,
+    initialValue: _mode,
+    decoration: InputDecoration(
+      labelText: context.l10n.source,
+      prefixIcon: const Icon(Icons.video_library_outlined),
+    ),
+    items: [
+      for (final mode in EmbyCollectionMode.values)
+        DropdownMenuItem(value: mode, child: Text(_modeLabel(mode))),
+    ],
+    onChanged: _loading
+        ? null
+        : (mode) {
+            if (mode == null) return;
+            setState(() {
+              _mode = mode;
+              _locations.clear();
+              _resetDiscovery(keepLocation: true);
+            });
+          },
+  );
 
-  void _openFolder(RoomDynamicMediaEntry item) {
-    if (_mode == EmbyCollectionMode.favoritePeople) {
-      _openPerson(item);
-      return;
-    }
-    setState(() {
-      final config = item.playlistSourceConfig;
-      _genreId = config?.hasEmby() == true && config!.emby.hasGenreItems()
-          ? config.emby.genreItems.genreId
-          : _targetValue(item, 'itemId');
-      _genreName = item.name;
-      _genreTarget = item.id;
-      _items = const [];
-    });
-    if (_genreId.isNotEmpty) _preview();
-  }
+  Widget _buildAccountSelector() => DropdownButtonFormField<String>(
+    isExpanded: true,
+    initialValue: _bind?.id,
+    decoration: InputDecoration(
+      labelText: context.l10n.mediaSourceAccount,
+      prefixIcon: const Icon(Icons.account_circle_outlined),
+    ),
+    items: [
+      for (final bind in widget.binds)
+        DropdownMenuItem(
+          value: bind.id,
+          child: Text(
+            bind.providerInstanceName.isEmpty
+                ? bind.host
+                : '${bind.host} · ${bind.providerInstanceName}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+    ],
+    onChanged: _loading
+        ? null
+        : (value) {
+            setState(() {
+              _bind = widget.binds.firstWhere((bind) => bind.id == value);
+              _locations.clear();
+              _resetDiscovery(keepLocation: true);
+            });
+          },
+  );
 
-  static String _targetValue(RoomDynamicMediaEntry item, String key) {
-    final target = item.metadata['target_json'];
-    if (target is Map && target[key] != null) return target[key].toString();
-    return item.id;
-  }
+  bool get _supportsItemTypes => switch (_requestMode) {
+    EmbyListMode.favoriteItems ||
+    EmbyListMode.favoritePeople ||
+    EmbyListMode.personItems ||
+    EmbyListMode.recentlyAdded ||
+    EmbyListMode.genres ||
+    EmbyListMode.genreItems => true,
+    _ => false,
+  };
 
-  Map<String, dynamic> get _sourceConfig {
-    final source = switch ((
-      _mode,
-      _personId.isNotEmpty || _genreId.isNotEmpty,
-    )) {
-      (EmbyCollectionMode.continueWatching, _) => <String, dynamic>{
-        'type': 'continueWatching',
-      },
-      (EmbyCollectionMode.nextUp, _) => <String, dynamic>{'type': 'nextUp'},
-      (EmbyCollectionMode.recentlyAdded, _) => <String, dynamic>{
-        'type': 'recentlyAdded',
-        'itemTypes': _itemTypes.toList(),
-      },
-      (EmbyCollectionMode.favoriteItems, _) => <String, dynamic>{
-        'type': 'favoriteItems',
-        'itemTypes': _itemTypes.toList(),
-      },
-      (EmbyCollectionMode.favoritePeople, false) => <String, dynamic>{
-        'type': 'favoritePeople',
-      },
-      (EmbyCollectionMode.favoritePeople, true) => <String, dynamic>{
-        'type': 'personItems',
-        'personId': _personId,
-        'itemTypes': _itemTypes.toList(),
-      },
-      (EmbyCollectionMode.playlists, _) => <String, dynamic>{
-        'type': 'playlists',
-      },
-      (EmbyCollectionMode.collections, _) => <String, dynamic>{
-        'type': 'collections',
-      },
-      (EmbyCollectionMode.genres, false) => <String, dynamic>{
-        'type': 'genres',
-        'itemTypes': _itemTypes.toList(),
-      },
-      (EmbyCollectionMode.genres, true) => <String, dynamic>{
-        'type': 'genreItems',
-        'genreId': _genreId,
-        'itemTypes': _itemTypes.toList(),
-      },
-    };
-    return {'serverId': _serverId, 'source': source};
-  }
-
-  Map<String, dynamic> get _previewSourceConfig {
-    if (_mode == EmbyCollectionMode.favoritePeople && _personId.isNotEmpty) {
-      return {
-        'serverId': _serverId,
-        'source': {'type': 'favoritePeople'},
+  EmbyListMode get _requestMode =>
+      _locations.lastOrNull?.mode ??
+      switch (_mode) {
+        EmbyCollectionMode.continueWatching => EmbyListMode.continueWatching,
+        EmbyCollectionMode.nextUp => EmbyListMode.nextUp,
+        EmbyCollectionMode.recentlyAdded => EmbyListMode.recentlyAdded,
+        EmbyCollectionMode.favoriteItems => EmbyListMode.favoriteItems,
+        EmbyCollectionMode.favoritePeople => EmbyListMode.favoritePeople,
+        EmbyCollectionMode.playlists => EmbyListMode.playlists,
+        EmbyCollectionMode.collections => EmbyListMode.collections,
+        EmbyCollectionMode.genres => EmbyListMode.genres,
       };
-    }
-    if (_mode == EmbyCollectionMode.genres && _genreId.isNotEmpty) {
-      return {
-        'serverId': _serverId,
-        'source': {'type': 'genres', 'itemTypes': _itemTypes.toList()},
-      };
-    }
-    return _sourceConfig;
+
+  String get _targetId => _locations.lastOrNull?.targetId ?? '';
+
+  void _resetDiscovery({bool keepLocation = false}) {
+    _items = const [];
+    _listSource = null;
+    _page = 1;
+    _hasMore = false;
+    _activeSearch = '';
+    if (!keepLocation) _locations.clear();
   }
 
-  Future<void> _preview() async {
+  void _list() {
+    setState(() {
+      _activeSearch = _searchController.text.trim();
+      _page = 1;
+      _items = const [];
+      _listSource = null;
+    });
+    _load();
+  }
+
+  Future<void> _load({bool loadMore = false}) async {
+    final bind = _bind;
+    if (bind == null || _loading) return;
+    final nextPage = loadMore ? _page + 1 : 1;
     setState(() => _loading = true);
     try {
-      final target = _personTarget.isNotEmpty
-          ? _personTarget
-          : _genreTarget.isNotEmpty
-          ? _genreTarget
-          : null;
-      final page = switch (widget.onPreview) {
-        final callback? => await callback(
-          _previewSourceConfig,
-          _instanceName,
-          target,
-        ),
-        null => await providerGateway.listMediaLibrary(
-          widget.roomId,
-          pageSize: 20,
-          target: target,
-          sourceProvider: 'emby',
-          previewSourceConfig: _previewSourceConfig,
-          providerInstanceName: _instanceName,
-        ),
-      };
-      if (mounted) setState(() => _items = page.dynamicItems);
-    } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _create() async {
-    setState(() => _loading = true);
-    try {
-      final defaultName = _personId.isNotEmpty
-          ? _personName
-          : _genreId.isNotEmpty
-          ? _genreName
-          : _modeLabel(_mode);
-      final name = _nameController.text.trim().isEmpty
-          ? defaultName
-          : _nameController.text.trim();
-      switch (widget.onCreate) {
-        case final callback?:
-          await callback(name, _sourceConfig, _instanceName);
-        case null:
-          await providerGateway.createPlaylist(
-            widget.roomId,
-            name: name,
-            parentId: widget.parentId,
-            sourceProvider: 'emby',
-            sourceConfig: _sourceConfig,
-            providerInstanceName: _instanceName,
-          );
-      }
+      final page =
+          await (widget.loader?.call(
+                bind,
+                _requestMode,
+                _targetId,
+                _itemTypes.toList(),
+                _activeSearch,
+                nextPage,
+                _pageSize,
+              ) ??
+              providerGateway.listEmbyPage(
+                _requestMode,
+                targetId: _targetId,
+                itemTypes: _itemTypes.toList(),
+                keyword: _activeSearch,
+                page: nextPage,
+                max: _pageSize,
+                serverId: bind.serverId,
+                instanceName: bind.providerInstanceName,
+              ));
       if (!mounted) return;
-      _nameController.clear();
-      _items = const [];
-      widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, 'Emby playlist created');
-      setState(() {});
+      setState(() {
+        if (loadMore) {
+          _items = [..._items, ...page.items];
+        } else {
+          _items = page.items;
+        }
+        _page = nextPage;
+        _hasMore = _items.length < page.total;
+        _listSource = page.source;
+      });
     } catch (error) {
       if (mounted) AppNotifications.showError(context, '$error');
     } finally {
@@ -466,14 +451,81 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
     }
   }
 
-  static String _modeLabel(EmbyCollectionMode mode) => switch (mode) {
-    EmbyCollectionMode.continueWatching => 'Continue Watching',
-    EmbyCollectionMode.nextUp => 'Next Up',
-    EmbyCollectionMode.recentlyAdded => 'Recently Added',
-    EmbyCollectionMode.favoriteItems => 'Favorite Videos',
-    EmbyCollectionMode.favoritePeople => 'Favorite People',
-    EmbyCollectionMode.playlists => 'Server Playlists',
-    EmbyCollectionMode.collections => 'Collections',
-    EmbyCollectionMode.genres => 'Genres',
+  void _open(DiscoveryBrowserEntry entry) {
+    final nextMode = switch (_requestMode) {
+      EmbyListMode.favoritePeople => EmbyListMode.personItems,
+      EmbyListMode.genres => EmbyListMode.genreItems,
+      _ => EmbyListMode.folder,
+    };
+    setState(() {
+      _locations.add(
+        _EmbyBrowseLocation(
+          mode: nextMode,
+          targetId: entry.key,
+          title: entry.title,
+        ),
+      );
+      _resetDiscovery(keepLocation: true);
+    });
+    _load();
+  }
+
+  void _goBack() {
+    setState(() {
+      _locations.removeLast();
+      _resetDiscovery(keepLocation: true);
+    });
+    _load();
+  }
+
+  Future<void> _addSelected(List<DiscoveryBrowserEntry> entries) =>
+      _runAdd(() async {
+        for (final entry in entries) {
+          await providerGateway.addDiscoveredSource(
+            widget.roomId,
+            playlistId: widget.parentId,
+            source: entry.source.withPlaybackProxyMode(widget.proxyMode),
+            name: entry.title,
+          );
+        }
+      });
+
+  Future<void> _addCurrentList() => _runAdd(() async {
+    final defaultName = _locations.lastOrNull?.title ?? _modeLabel(_mode);
+    await providerGateway.addDiscoveredSource(
+      widget.roomId,
+      playlistId: widget.parentId,
+      source: _listSource!.withPlaybackProxyMode(widget.proxyMode),
+      name: _nameController.text.trim().isEmpty
+          ? defaultName
+          : _nameController.text.trim(),
+    );
+  });
+
+  Future<void> _runAdd(Future<void> Function() action) async {
+    setState(() => _loading = true);
+    try {
+      await action();
+      if (!mounted) return;
+      Navigator.pop(context);
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
+    } catch (error) {
+      if (mounted) {
+        AppNotifications.showError(context, context.l10n.addFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _modeLabel(EmbyCollectionMode mode) => switch (mode) {
+    EmbyCollectionMode.continueWatching => context.l10n.continueWatching,
+    EmbyCollectionMode.nextUp => context.l10n.nextUp,
+    EmbyCollectionMode.recentlyAdded => context.l10n.recentlyAdded,
+    EmbyCollectionMode.favoriteItems => context.l10n.favoriteVideos,
+    EmbyCollectionMode.favoritePeople => context.l10n.favoritePeople,
+    EmbyCollectionMode.playlists => context.l10n.serverPlaylists,
+    EmbyCollectionMode.collections => context.l10n.collections,
+    EmbyCollectionMode.genres => context.l10n.genres,
   };
 }

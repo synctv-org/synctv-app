@@ -1,5 +1,5 @@
-import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
-    as source_config;
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 
 class AlistBindInfo {
   final String id;
@@ -205,6 +205,7 @@ class FnosFileItemInfo {
   final int? createdAt;
   final bool isDir;
   final int? storageId;
+  final provider_common.DiscoveredSource source;
 
   const FnosFileItemInfo({
     required this.name,
@@ -214,6 +215,7 @@ class FnosFileItemInfo {
     required this.createdAt,
     required this.isDir,
     required this.storageId,
+    required this.source,
   });
 }
 
@@ -222,12 +224,14 @@ class FnosFileListPage {
   final int total;
   final int page;
   final bool hasMore;
+  final provider_common.DiscoveredSource? source;
 
   const FnosFileListPage({
     required this.items,
     required this.total,
     required this.page,
     required this.hasMore,
+    required this.source,
   });
 }
 
@@ -269,6 +273,7 @@ class FnosMediaItemInfo {
   final bool isFolder;
   final bool isPlayable;
   final bool favorite;
+  final provider_common.DiscoveredSource source;
 
   const FnosMediaItemInfo({
     required this.guid,
@@ -286,6 +291,7 @@ class FnosMediaItemInfo {
     required this.isFolder,
     required this.isPlayable,
     required this.favorite,
+    required this.source,
   });
 }
 
@@ -294,12 +300,14 @@ class FnosMediaListPage {
   final int total;
   final int page;
   final bool hasMore;
+  final provider_common.DiscoveredSource? source;
 
   const FnosMediaListPage({
     required this.items,
     required this.total,
     required this.page,
     required this.hasMore,
+    required this.source,
   });
 }
 
@@ -352,6 +360,7 @@ class QnapFileItemInfo {
   final int fileType;
   final List<int> preTranscodedHeights;
   final String thumbnailUrl;
+  final provider_common.DiscoveredSource source;
 
   const QnapFileItemInfo({
     required this.name,
@@ -362,6 +371,7 @@ class QnapFileItemInfo {
     required this.fileType,
     required this.preTranscodedHeights,
     required this.thumbnailUrl,
+    required this.source,
   });
 }
 
@@ -371,6 +381,7 @@ class QnapFileListPage {
   final int page;
   final bool hasMore;
   final bool realtimeTranscode;
+  final provider_common.DiscoveredSource? source;
 
   const QnapFileListPage({
     required this.items,
@@ -378,6 +389,7 @@ class QnapFileListPage {
     required this.page,
     required this.hasMore,
     required this.realtimeTranscode,
+    required this.source,
   });
 }
 
@@ -458,6 +470,7 @@ class NextcloudFileItemInfo {
   final int? height;
   final int? durationMillis;
   final String previewUrl;
+  final provider_common.DiscoveredSource source;
 
   const NextcloudFileItemInfo({
     required this.name,
@@ -478,6 +491,7 @@ class NextcloudFileItemInfo {
     required this.height,
     required this.durationMillis,
     required this.previewUrl,
+    required this.source,
   });
 }
 
@@ -486,12 +500,14 @@ class NextcloudFileListPage {
   final int? total;
   final int page;
   final bool hasMore;
+  final provider_common.DiscoveredSource? source;
 
   const NextcloudFileListPage({
     required this.items,
     required this.total,
     required this.page,
     required this.hasMore,
+    required this.source,
   });
 }
 
@@ -533,6 +549,7 @@ class SeafileFileItemInfo {
   final bool repositoryEncrypted;
   final bool passwordRequired;
   final String thumbnailUrl;
+  final provider_common.DiscoveredSource source;
 
   const SeafileFileItemInfo({
     required this.repositoryId,
@@ -550,6 +567,7 @@ class SeafileFileItemInfo {
     required this.repositoryEncrypted,
     required this.passwordRequired,
     required this.thumbnailUrl,
+    required this.source,
   });
 }
 
@@ -558,12 +576,14 @@ class SeafileFileListPage {
   final int total;
   final int page;
   final bool hasMore;
+  final provider_common.DiscoveredSource? source;
 
   const SeafileFileListPage({
     required this.items,
     required this.total,
     required this.page,
     required this.hasMore,
+    required this.source,
   });
 }
 
@@ -606,6 +626,7 @@ class TrueNasFileItemInfo {
   final List<String> attributes;
   final List<String> extendedAttributes;
   final List<String> zfsAttributes;
+  final provider_common.DiscoveredSource source;
 
   const TrueNasFileItemInfo({
     required this.name,
@@ -624,6 +645,7 @@ class TrueNasFileItemInfo {
     required this.attributes,
     required this.extendedAttributes,
     required this.zfsAttributes,
+    required this.source,
   });
 }
 
@@ -632,12 +654,14 @@ class TrueNasFileListPage {
   final int total;
   final int page;
   final bool hasMore;
+  final provider_common.DiscoveredSource? source;
 
   const TrueNasFileListPage({
     required this.items,
     required this.total,
     required this.page,
     required this.hasMore,
+    required this.source,
   });
 }
 
@@ -650,6 +674,7 @@ class SynologyFileItemInfo {
   final int createdAt;
   final String fileType;
   final String thumbnailUrl;
+  final provider_common.DiscoveredSource source;
 
   const SynologyFileItemInfo({
     required this.name,
@@ -660,6 +685,7 @@ class SynologyFileItemInfo {
     required this.createdAt,
     required this.fileType,
     required this.thumbnailUrl,
+    required this.source,
   });
 }
 
@@ -668,12 +694,14 @@ class SynologyFileListPage {
   final int total;
   final int page;
   final bool hasMore;
+  final provider_common.DiscoveredSource? source;
 
   const SynologyFileListPage({
     required this.items,
     required this.total,
     required this.page,
     required this.hasMore,
+    required this.source,
   });
 }
 
@@ -767,6 +795,7 @@ class SynologyVideoItemInfo {
   final int? tvShowId;
   final List<SynologyVideoFileInfo> files;
   final String posterUrl;
+  final provider_common.DiscoveredSource source;
 
   const SynologyVideoItemInfo({
     required this.id,
@@ -792,6 +821,7 @@ class SynologyVideoItemInfo {
     required this.tvShowId,
     required this.files,
     required this.posterUrl,
+    required this.source,
   });
 
   bool get isPlayable =>
@@ -803,12 +833,14 @@ class SynologyVideoListPage {
   final int total;
   final int page;
   final bool hasMore;
+  final provider_common.DiscoveredSource? source;
 
   const SynologyVideoListPage({
     required this.items,
     required this.total,
     required this.page,
     required this.hasMore,
+    required this.source,
   });
 }
 
@@ -832,6 +864,7 @@ class CloudreveItemInfo {
   final bool isDir;
   final int modified;
   final String thumbnail;
+  final provider_common.DiscoveredSource source;
 
   const CloudreveItemInfo({
     required this.id,
@@ -841,6 +874,7 @@ class CloudreveItemInfo {
     required this.isDir,
     required this.modified,
     required this.thumbnail,
+    required this.source,
   });
 }
 
@@ -851,6 +885,7 @@ class CloudreveListPage {
   final int total;
   final bool usesCursor;
   final String nextCursor;
+  final provider_common.DiscoveredSource? source;
 
   const CloudreveListPage({
     required this.serverId,
@@ -859,6 +894,7 @@ class CloudreveListPage {
     required this.total,
     required this.usesCursor,
     required this.nextCursor,
+    required this.source,
   });
 }
 
@@ -899,13 +935,102 @@ class BilibiliAccountInfo {
   });
 }
 
+enum BilibiliPlaylistListMode {
+  popular,
+  recommended,
+  videoParts,
+  upVideos,
+  favoriteVideos,
+  collectionVideos,
+  seriesVideos,
+  watchLater,
+  pgcSeason,
+  liveRecommended,
+  liveFollowed,
+  liveArea,
+  history,
+  pgcTimeline,
+}
+
+enum BilibiliPlaylistHistoryType { all, archive, live }
+
+class BilibiliPlaylistListIntent {
+  const BilibiliPlaylistListIntent({
+    required this.mode,
+    this.bvid = '',
+    this.aid,
+    this.mid = 0,
+    this.keyword = '',
+    this.mediaId = 0,
+    this.seasonId = 0,
+    this.seriesId = 0,
+    this.parentAreaId = 0,
+    this.areaId = 0,
+    this.historyType = BilibiliPlaylistHistoryType.all,
+    this.timelineType = BilibiliPgcTimelineKind.anime,
+    this.beforeDays = 0,
+    this.afterDays = 0,
+  });
+
+  final BilibiliPlaylistListMode mode;
+  final String bvid;
+  final int? aid;
+  final int mid;
+  final String keyword;
+  final int mediaId;
+  final int seasonId;
+  final int seriesId;
+  final int parentAreaId;
+  final int areaId;
+  final BilibiliPlaylistHistoryType historyType;
+  final BilibiliPgcTimelineKind timelineType;
+  final int beforeDays;
+  final int afterDays;
+}
+
+class BilibiliPlaylistListItemInfo {
+  const BilibiliPlaylistListItemInfo({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.cover,
+    required this.isContainer,
+    required this.source,
+    required this.browse,
+  });
+
+  final String id;
+  final String title;
+  final String description;
+  final String cover;
+  final bool isContainer;
+  final provider_common.DiscoveredSource source;
+  final BilibiliPlaylistListIntent? browse;
+}
+
+class BilibiliPlaylistListPage {
+  const BilibiliPlaylistListPage({
+    required this.items,
+    required this.hasMore,
+    required this.page,
+    required this.cursor,
+    required this.source,
+  });
+
+  final List<BilibiliPlaylistListItemInfo> items;
+  final bool hasMore;
+  final int page;
+  final String? cursor;
+  final provider_common.DiscoveredSource source;
+}
+
 class BilibiliFavoriteFolderInfo {
   final int mediaId;
   final String title;
   final int mediaCount;
   final bool isPrivate;
   final bool isDefault;
-  final source_config.PlaylistSourceConfig sourceConfig;
+  final provider_common.DiscoveredSource source;
 
   const BilibiliFavoriteFolderInfo({
     required this.mediaId,
@@ -913,7 +1038,7 @@ class BilibiliFavoriteFolderInfo {
     required this.mediaCount,
     required this.isPrivate,
     required this.isDefault,
-    required this.sourceConfig,
+    required this.source,
   });
 }
 
@@ -923,7 +1048,7 @@ class BilibiliFollowedPgcInfo {
   final String cover;
   final String description;
   final String latestEpisode;
-  final source_config.PlaylistSourceConfig sourceConfig;
+  final provider_common.DiscoveredSource source;
 
   const BilibiliFollowedPgcInfo({
     required this.seasonId,
@@ -931,7 +1056,7 @@ class BilibiliFollowedPgcInfo {
     required this.cover,
     required this.description,
     required this.latestEpisode,
-    required this.sourceConfig,
+    required this.source,
   });
 }
 
@@ -962,7 +1087,7 @@ class BilibiliPgcTimelineItemInfo {
   final int dayOfWeek;
   final bool delayed;
   final String delayReason;
-  final source_config.MediaSourceConfig? sourceConfig;
+  final provider_common.DiscoveredSource? source;
 
   const BilibiliPgcTimelineItemInfo({
     required this.episodeId,
@@ -977,18 +1102,15 @@ class BilibiliPgcTimelineItemInfo {
     required this.dayOfWeek,
     required this.delayed,
     required this.delayReason,
-    required this.sourceConfig,
+    required this.source,
   });
 }
 
 class BilibiliPgcTimelineInfo {
   final List<BilibiliPgcTimelineItemInfo> items;
-  final source_config.PlaylistSourceConfig sourceConfig;
+  final provider_common.DiscoveredSource source;
 
-  const BilibiliPgcTimelineInfo({
-    required this.items,
-    required this.sourceConfig,
-  });
+  const BilibiliPgcTimelineInfo({required this.items, required this.source});
 }
 
 enum BilibiliPgcSeasonKind { anime, movie, documentary, guochuang, tv, variety }
@@ -1016,7 +1138,7 @@ class BilibiliPgcSeasonInfo {
   final String score;
   final bool finished;
   final BilibiliPgcSeasonKind type;
-  final source_config.PlaylistSourceConfig sourceConfig;
+  final provider_common.DiscoveredSource source;
 
   const BilibiliPgcSeasonInfo({
     required this.seasonId,
@@ -1031,7 +1153,7 @@ class BilibiliPgcSeasonInfo {
     required this.score,
     required this.finished,
     required this.type,
-    required this.sourceConfig,
+    required this.source,
   });
 }
 
@@ -1091,8 +1213,8 @@ class BilibiliParseCandidateInfo {
   final int? partNumber;
   final int? width;
   final int? height;
-  final source_config.MediaSourceConfig? mediaSourceConfig;
-  final source_config.PlaylistSourceConfig? playlistSourceConfig;
+  final provider_common.DiscoveredSource source;
+  final BilibiliPlaylistListIntent? browse;
 
   const BilibiliParseCandidateInfo({
     required this.title,
@@ -1103,12 +1225,12 @@ class BilibiliParseCandidateInfo {
     required this.partNumber,
     required this.width,
     required this.height,
-    required this.mediaSourceConfig,
-    required this.playlistSourceConfig,
+    required this.source,
+    required this.browse,
   });
 
-  bool get isMedia => mediaSourceConfig != null;
-  bool get isPlaylist => playlistSourceConfig != null;
+  bool get isMedia => source.hasMedia();
+  bool get isPlaylist => source.hasPlaylist();
 }
 
 class BilibiliParseInfo {
@@ -1128,6 +1250,7 @@ class BilibiliLiveAreaInfo {
   final String parentName;
   final String picture;
   final bool hot;
+  final provider_common.DiscoveredSource source;
 
   const BilibiliLiveAreaInfo({
     required this.id,
@@ -1136,6 +1259,7 @@ class BilibiliLiveAreaInfo {
     required this.parentName,
     required this.picture,
     required this.hot,
+    required this.source,
   });
 }
 
@@ -1148,6 +1272,7 @@ class AlistItemInfo {
   final String thumb;
   final int type;
   final String sign;
+  final provider_common.DiscoveredSource source;
 
   const AlistItemInfo({
     required this.name,
@@ -1158,6 +1283,7 @@ class AlistItemInfo {
     required this.thumb,
     required this.type,
     this.sign = '',
+    required this.source,
   });
 }
 
@@ -1166,12 +1292,14 @@ class AlistListPage {
   final String providerInstanceName;
   final List<AlistItemInfo> items;
   final int total;
+  final provider_common.DiscoveredSource? source;
 
   const AlistListPage({
     required this.serverId,
     required this.providerInstanceName,
     required this.items,
     required this.total,
+    required this.source,
   });
 }
 
@@ -1200,6 +1328,7 @@ class EmbyItemInfo {
   final String seasonName;
   final String thumbnail;
   final String description;
+  final provider_common.DiscoveredSource source;
 
   const EmbyItemInfo({
     required this.id,
@@ -1212,7 +1341,22 @@ class EmbyItemInfo {
     required this.seasonName,
     required this.thumbnail,
     this.description = '',
+    required this.source,
   });
+}
+
+enum EmbyListMode {
+  folder,
+  favoriteItems,
+  favoritePeople,
+  personItems,
+  continueWatching,
+  nextUp,
+  recentlyAdded,
+  playlists,
+  collections,
+  genres,
+  genreItems,
 }
 
 class EmbyListPage {
@@ -1220,11 +1364,13 @@ class EmbyListPage {
   final String providerInstanceName;
   final List<EmbyItemInfo> items;
   final int total;
+  final provider_common.DiscoveredSource? source;
 
   const EmbyListPage({
     required this.serverId,
     required this.providerInstanceName,
     required this.items,
     required this.total,
+    required this.source,
   });
 }

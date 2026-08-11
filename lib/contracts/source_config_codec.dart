@@ -179,6 +179,7 @@ class SourceConfigCodec {
             serverId: _string(config['serverId']),
             path: _string(config['path']),
             password: _optionalString(config['password']),
+            proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_EMBY =>
@@ -186,6 +187,7 @@ class SourceConfigCodec {
           emby: source_config.EmbyMediaSourceConfig(
             serverId: _string(config['serverId']),
             itemId: _string(config['itemId']),
+            proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_RTMP =>
@@ -203,6 +205,7 @@ class SourceConfigCodec {
           cloudreve: source_config.CloudreveMediaSourceConfig(
             serverId: _string(config['serverId']),
             path: _string(config['path']),
+            proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_TWITCH =>
@@ -240,6 +243,7 @@ class SourceConfigCodec {
           qnap: source_config.QnapMediaSourceConfig(
             serverId: _string(config['serverId']),
             path: _string(config['path']),
+            proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_SYNOLOGY =>
@@ -252,6 +256,7 @@ class SourceConfigCodec {
             serverId: _string(config['serverId']),
             path: _string(config['path']),
             fileId: Int64(_int(config['fileId'])),
+            proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_SEAFILE =>
@@ -262,6 +267,7 @@ class SourceConfigCodec {
             path: _string(config['path']),
             objectId: _string(config['objectId']),
             hasThumbnail: config['hasThumbnail'] == true,
+            proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_TRUENAS =>
@@ -269,6 +275,7 @@ class SourceConfigCodec {
           truenas: source_config.TrueNasMediaSourceConfig(
             serverId: _string(config['serverId']),
             path: _string(config['path']),
+            proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE =>
@@ -305,6 +312,7 @@ class SourceConfigCodec {
             serverId: _string(config['serverId']),
             path: _string(config['path']),
             password: _optionalString(config['password']),
+            proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_EMBY =>
@@ -316,6 +324,7 @@ class SourceConfigCodec {
           cloudreve: source_config.CloudrevePlaylistSourceConfig(
             serverId: _string(config['serverId']),
             path: _string(config['path']),
+            proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_TWITCH =>
@@ -383,10 +392,12 @@ class SourceConfigCodec {
         if (config.alist.serverId.isNotEmpty) 'serverId': config.alist.serverId,
         'path': config.alist.path,
         if (config.alist.hasPassword()) 'password': config.alist.password,
+        ..._playbackProxyModeMap(config.alist.proxyMode),
       },
       source_config.MediaSourceConfig_Provider.emby => {
         if (config.emby.serverId.isNotEmpty) 'serverId': config.emby.serverId,
         'itemId': config.emby.itemId,
+        ..._playbackProxyModeMap(config.emby.proxyMode),
       },
       source_config.MediaSourceConfig_Provider.rtmp => {
         'mode': _rtmpStreamModeToString(config.rtmp.mode),
@@ -397,6 +408,7 @@ class SourceConfigCodec {
         if (config.cloudreve.serverId.isNotEmpty)
           'serverId': config.cloudreve.serverId,
         'path': config.cloudreve.path,
+        ..._playbackProxyModeMap(config.cloudreve.proxyMode),
       },
       source_config.MediaSourceConfig_Provider.twitch =>
         _twitchMediaSourceConfigToMap(config.twitch),
@@ -419,6 +431,7 @@ class SourceConfigCodec {
       source_config.MediaSourceConfig_Provider.qnap => {
         'serverId': config.qnap.serverId,
         'path': config.qnap.path,
+        ..._playbackProxyModeMap(config.qnap.proxyMode),
       },
       source_config.MediaSourceConfig_Provider.synology =>
         _synologyMediaSourceConfigToMap(config.synology),
@@ -426,6 +439,7 @@ class SourceConfigCodec {
         'serverId': config.nextcloud.serverId,
         'path': config.nextcloud.path,
         'fileId': config.nextcloud.fileId.toInt(),
+        ..._playbackProxyModeMap(config.nextcloud.proxyMode),
       },
       source_config.MediaSourceConfig_Provider.seafile => {
         'serverId': config.seafile.serverId,
@@ -433,10 +447,12 @@ class SourceConfigCodec {
         'path': config.seafile.path,
         'objectId': config.seafile.objectId,
         if (config.seafile.hasThumbnail) 'hasThumbnail': true,
+        ..._playbackProxyModeMap(config.seafile.proxyMode),
       },
       source_config.MediaSourceConfig_Provider.truenas => {
         'serverId': config.truenas.serverId,
         'path': config.truenas.path,
+        ..._playbackProxyModeMap(config.truenas.proxyMode),
       },
       source_config.MediaSourceConfig_Provider.youtube => {
         'videoId': config.youtube.videoId,
@@ -487,6 +503,7 @@ class SourceConfigCodec {
         if (config.alist.serverId.isNotEmpty) 'serverId': config.alist.serverId,
         'path': config.alist.path,
         if (config.alist.hasPassword()) 'password': config.alist.password,
+        ..._playbackProxyModeMap(config.alist.proxyMode),
       },
       source_config.PlaylistSourceConfig_Provider.emby => {
         ..._embyPlaylistSourceConfigToMap(config.emby),
@@ -495,6 +512,7 @@ class SourceConfigCodec {
         if (config.cloudreve.serverId.isNotEmpty)
           'serverId': config.cloudreve.serverId,
         'path': config.cloudreve.path,
+        ..._playbackProxyModeMap(config.cloudreve.proxyMode),
       },
       source_config.PlaylistSourceConfig_Provider.twitch =>
         _twitchPlaylistSourceConfigToMap(config.twitch),
@@ -511,15 +529,22 @@ class SourceConfigCodec {
       source_config.PlaylistSourceConfig_Provider.qnap => {
         'serverId': config.qnap.serverId,
         'path': config.qnap.path,
+        ..._playbackProxyModeMap(config.qnap.proxyMode),
       },
       source_config.PlaylistSourceConfig_Provider.synology =>
         _synologyPlaylistSourceConfigToMap(config.synology),
-      source_config.PlaylistSourceConfig_Provider.nextcloud =>
-        _nextcloudPlaylistSourceConfigToMap(config.nextcloud),
-      source_config.PlaylistSourceConfig_Provider.seafile =>
-        _seafilePlaylistSourceConfigToMap(config.seafile),
-      source_config.PlaylistSourceConfig_Provider.truenas =>
-        _trueNasPlaylistSourceConfigToMap(config.truenas),
+      source_config.PlaylistSourceConfig_Provider.nextcloud => {
+        ..._nextcloudPlaylistSourceConfigToMap(config.nextcloud),
+        ..._playbackProxyModeMap(config.nextcloud.proxyMode),
+      },
+      source_config.PlaylistSourceConfig_Provider.seafile => {
+        ..._seafilePlaylistSourceConfigToMap(config.seafile),
+        ..._playbackProxyModeMap(config.seafile.proxyMode),
+      },
+      source_config.PlaylistSourceConfig_Provider.truenas => {
+        ..._trueNasPlaylistSourceConfigToMap(config.truenas),
+        ..._playbackProxyModeMap(config.truenas.proxyMode),
+      },
       source_config.PlaylistSourceConfig_Provider.youtube =>
         _youtubePlaylistSourceConfigToMap(config.youtube),
       source_config.PlaylistSourceConfig_Provider.notSet => <String, dynamic>{},
@@ -545,12 +570,14 @@ class SourceConfigCodec {
     return switch (_string(config['type'])) {
       'file' => source_config.SynologyMediaSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         file: source_config.SynologyFileSourceConfig(
           path: _string(config['path']),
         ),
       ),
       'libraryItem' => source_config.SynologyMediaSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         libraryItem: source_config.SynologyLibraryItemSourceConfig(
           kind: _synologyLibraryItemKind(config['kind']),
           itemId: Int64(_int(config['itemId'])),
@@ -565,7 +592,7 @@ class SourceConfigCodec {
   _bilibiliPlaylistSourceConfig(Map<String, dynamic> config) {
     final source = _dynamicMap(config['source']);
     final shared = config['shared'] == true;
-    return switch (_string(source['type']).toLowerCase()) {
+    final result = switch (_string(source['type']).toLowerCase()) {
       'videoparts' => source_config.BilibiliPlaylistSourceConfig(
         shared: shared,
         videoParts: source_config.BilibiliVideoPartsPlaylistSource(
@@ -668,6 +695,8 @@ class SourceConfigCodec {
       ),
       _ => source_config.BilibiliPlaylistSourceConfig(shared: shared),
     };
+    result.proxyMode = _playbackProxyModeFromValue(config['proxyMode']);
+    return result;
   }
 
   static Map<String, dynamic> _bilibiliPlaylistSourceConfigToMap(
@@ -751,7 +780,11 @@ class SourceConfigCodec {
       source_config.BilibiliPlaylistSourceConfig_Source.notSet =>
         <String, dynamic>{},
     };
-    return {'source': source, if (config.shared) 'shared': true};
+    return {
+      'source': source,
+      if (config.shared) 'shared': true,
+      ..._playbackProxyModeMap(config.proxyMode),
+    };
   }
 
   static source_config.EmbyPlaylistSourceConfig _embyPlaylistSourceConfig(
@@ -759,7 +792,7 @@ class SourceConfigCodec {
   ) {
     final serverId = _string(config['serverId']);
     final source = _dynamicMap(config['source']);
-    return switch (_string(source['type']).toLowerCase()) {
+    final result = switch (_string(source['type']).toLowerCase()) {
       'folder' => source_config.EmbyPlaylistSourceConfig(
         serverId: serverId,
         folder: source_config.EmbyFolderPlaylistSource(
@@ -820,6 +853,8 @@ class SourceConfigCodec {
       ),
       _ => source_config.EmbyPlaylistSourceConfig(serverId: serverId),
     };
+    result.proxyMode = _playbackProxyModeFromValue(config['proxyMode']);
+    return result;
   }
 
   static Map<String, dynamic> _embyPlaylistSourceConfigToMap(
@@ -870,7 +905,11 @@ class SourceConfigCodec {
       source_config.EmbyPlaylistSourceConfig_Source.notSet =>
         <String, dynamic>{},
     };
-    return {'serverId': config.serverId, 'source': source};
+    return {
+      'serverId': config.serverId,
+      'source': source,
+      ..._playbackProxyModeMap(config.proxyMode),
+    };
   }
 
   static source_config.NextcloudPlaylistSourceConfig
@@ -880,22 +919,28 @@ class SourceConfigCodec {
     return switch (_string(source['type']).toLowerCase()) {
       'folder' => source_config.NextcloudPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         folder: source_config.NextcloudFolderPlaylistSourceConfig(
           path: _string(source['path']),
         ),
       ),
       'favorites' => source_config.NextcloudPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         favorites: source_config.NextcloudFavoritesPlaylistSourceConfig(),
       ),
       'search' => source_config.NextcloudPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         search: source_config.NextcloudSearchPlaylistSourceConfig(
           path: _string(source['path']),
           query: _string(source['query']),
         ),
       ),
-      _ => source_config.NextcloudPlaylistSourceConfig(serverId: serverId),
+      _ => source_config.NextcloudPlaylistSourceConfig(
+        serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
+      ),
     };
   }
 
@@ -918,7 +963,11 @@ class SourceConfigCodec {
       source_config.NextcloudPlaylistSourceConfig_Source.notSet =>
         <String, dynamic>{},
     };
-    return {'serverId': config.serverId, 'source': source};
+    return {
+      'serverId': config.serverId,
+      'source': source,
+      ..._playbackProxyModeMap(config.proxyMode),
+    };
   }
 
   static source_config.SeafilePlaylistSourceConfig _seafilePlaylistSourceConfig(
@@ -929,6 +978,7 @@ class SourceConfigCodec {
     return switch (_string(source['type']).toLowerCase()) {
       'folder' => source_config.SeafilePlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         folder: source_config.SeafileFolderPlaylistSourceConfig(
           repositoryId: _string(source['repositoryId']),
           path: _string(source['path']),
@@ -936,16 +986,21 @@ class SourceConfigCodec {
       ),
       'starred' => source_config.SeafilePlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         starred: source_config.SeafileStarredPlaylistSourceConfig(),
       ),
       'search' => source_config.SeafilePlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         search: source_config.SeafileSearchPlaylistSourceConfig(
           repositoryId: _string(source['repositoryId']),
           query: _string(source['query']),
         ),
       ),
-      _ => source_config.SeafilePlaylistSourceConfig(serverId: serverId),
+      _ => source_config.SeafilePlaylistSourceConfig(
+        serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
+      ),
     };
   }
 
@@ -969,7 +1024,11 @@ class SourceConfigCodec {
       source_config.SeafilePlaylistSourceConfig_Source.notSet =>
         <String, dynamic>{},
     };
-    return {'serverId': config.serverId, 'source': source};
+    return {
+      'serverId': config.serverId,
+      'source': source,
+      ..._playbackProxyModeMap(config.proxyMode),
+    };
   }
 
   static source_config.TrueNasPlaylistSourceConfig _trueNasPlaylistSourceConfig(
@@ -980,18 +1039,23 @@ class SourceConfigCodec {
     return switch (_string(source['type']).toLowerCase()) {
       'folder' => source_config.TrueNasPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         folder: source_config.TrueNasFolderPlaylistSourceConfig(
           path: _string(source['path']),
         ),
       ),
       'search' => source_config.TrueNasPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         search: source_config.TrueNasSearchPlaylistSourceConfig(
           path: _string(source['path']),
           query: _string(source['query']),
         ),
       ),
-      _ => source_config.TrueNasPlaylistSourceConfig(serverId: serverId),
+      _ => source_config.TrueNasPlaylistSourceConfig(
+        serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
+      ),
     };
   }
 
@@ -1011,7 +1075,11 @@ class SourceConfigCodec {
       source_config.TrueNasPlaylistSourceConfig_Source.notSet =>
         <String, dynamic>{},
     };
-    return {'serverId': config.serverId, 'source': source};
+    return {
+      'serverId': config.serverId,
+      'source': source,
+      ..._playbackProxyModeMap(config.proxyMode),
+    };
   }
 
   static source_config.YoutubePlaylistSourceConfig _youtubePlaylistSourceConfig(
@@ -1190,6 +1258,7 @@ class SourceConfigCodec {
         'serverId': config.serverId,
         'type': 'file',
         'path': config.file.path,
+        ..._playbackProxyModeMap(config.proxyMode),
       },
       source_config.SynologyMediaSourceConfig_Source.libraryItem => {
         'serverId': config.serverId,
@@ -1197,6 +1266,7 @@ class SourceConfigCodec {
         'kind': _synologyLibraryItemKindName(config.libraryItem.kind),
         'itemId': config.libraryItem.itemId.toInt(),
         'fileId': config.libraryItem.fileId.toInt(),
+        ..._playbackProxyModeMap(config.proxyMode),
       },
       source_config.SynologyMediaSourceConfig_Source.notSet => {
         'serverId': config.serverId,
@@ -1211,24 +1281,28 @@ class SourceConfigCodec {
     return switch (_string(config['type'])) {
       'files' => source_config.SynologyPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         files: source_config.SynologyFilesPlaylistSourceConfig(
           path: _string(config['path']),
         ),
       ),
       'movies' => source_config.SynologyPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         movies: source_config.SynologyMoviesPlaylistSourceConfig(
           libraryId: libraryId,
         ),
       ),
       'tvShows' => source_config.SynologyPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         tvShows: source_config.SynologyTvShowsPlaylistSourceConfig(
           libraryId: libraryId,
         ),
       ),
       'episodes' => source_config.SynologyPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         episodes: source_config.SynologyEpisodesPlaylistSourceConfig(
           libraryId: libraryId,
           tvShowId: Int64(_int(config['tvShowId'])),
@@ -1236,24 +1310,32 @@ class SourceConfigCodec {
       ),
       'homeVideos' => source_config.SynologyPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         homeVideos: source_config.SynologyHomeVideosPlaylistSourceConfig(
           libraryId: libraryId,
         ),
       ),
       'tvRecordings' => source_config.SynologyPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         tvRecordings: source_config.SynologyTvRecordingsPlaylistSourceConfig(
           libraryId: libraryId,
         ),
       ),
-      _ => source_config.SynologyPlaylistSourceConfig(serverId: serverId),
+      _ => source_config.SynologyPlaylistSourceConfig(
+        serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
+      ),
     };
   }
 
   static Map<String, dynamic> _synologyPlaylistSourceConfigToMap(
     source_config.SynologyPlaylistSourceConfig config,
   ) {
-    final base = <String, dynamic>{'serverId': config.serverId};
+    final base = <String, dynamic>{
+      'serverId': config.serverId,
+      ..._playbackProxyModeMap(config.proxyMode),
+    };
     return switch (config.whichSource()) {
       source_config.SynologyPlaylistSourceConfig_Source.files => {
         ...base,
@@ -1545,10 +1627,12 @@ class SourceConfigCodec {
     return switch (_string(config['type'])) {
       'file' => source_config.FnosMediaSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         file: source_config.FnosFileSourceConfig(path: _string(config['path'])),
       ),
       'libraryItem' => source_config.FnosMediaSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         libraryItem: source_config.FnosLibraryItemSourceConfig(
           itemGuid: _string(config['itemGuid']),
           mediaGuid: _optionalString(config['mediaGuid']),
@@ -1566,6 +1650,7 @@ class SourceConfigCodec {
         'serverId': config.serverId,
         'type': 'file',
         'path': config.file.path,
+        ..._playbackProxyModeMap(config.proxyMode),
       },
       source_config.FnosMediaSourceConfig_Source.libraryItem => {
         'serverId': config.serverId,
@@ -1573,6 +1658,7 @@ class SourceConfigCodec {
         'itemGuid': config.libraryItem.itemGuid,
         if (config.libraryItem.hasMediaGuid())
           'mediaGuid': config.libraryItem.mediaGuid,
+        ..._playbackProxyModeMap(config.proxyMode),
       },
       source_config.FnosMediaSourceConfig_Source.notSet => {
         'serverId': config.serverId,
@@ -1587,12 +1673,14 @@ class SourceConfigCodec {
     return switch (_string(config['type'])) {
       'files' => source_config.FnosPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         files: source_config.FnosFilesPlaylistSourceConfig(
           path: _string(config['path']),
         ),
       ),
       'mediaLibrary' => source_config.FnosPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         mediaLibrary: source_config.FnosMediaLibraryPlaylistSourceConfig(
           ancestorGuid: _optionalString(config['ancestorGuid']),
           mediaTypes: _stringList(config['mediaTypes']),
@@ -1600,12 +1688,14 @@ class SourceConfigCodec {
       ),
       'favorites' => source_config.FnosPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         favorites: source_config.FnosFavoritesPlaylistSourceConfig(
           mediaTypes: _stringList(config['mediaTypes']),
         ),
       ),
       'history' => source_config.FnosPlaylistSourceConfig(
         serverId: serverId,
+        proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         history: source_config.FnosHistoryPlaylistSourceConfig(),
       ),
       _ => source_config.FnosPlaylistSourceConfig(serverId: serverId),
@@ -1620,6 +1710,7 @@ class SourceConfigCodec {
         'serverId': config.serverId,
         'type': 'files',
         'path': config.files.path,
+        ..._playbackProxyModeMap(config.proxyMode),
       },
       source_config.FnosPlaylistSourceConfig_Source.mediaLibrary => {
         'serverId': config.serverId,
@@ -1628,16 +1719,19 @@ class SourceConfigCodec {
           'ancestorGuid': config.mediaLibrary.ancestorGuid,
         if (config.mediaLibrary.mediaTypes.isNotEmpty)
           'mediaTypes': config.mediaLibrary.mediaTypes.toList(),
+        ..._playbackProxyModeMap(config.proxyMode),
       },
       source_config.FnosPlaylistSourceConfig_Source.favorites => {
         'serverId': config.serverId,
         'type': 'favorites',
         if (config.favorites.mediaTypes.isNotEmpty)
           'mediaTypes': config.favorites.mediaTypes.toList(),
+        ..._playbackProxyModeMap(config.proxyMode),
       },
       source_config.FnosPlaylistSourceConfig_Source.history => {
         'serverId': config.serverId,
         'type': 'history',
+        ..._playbackProxyModeMap(config.proxyMode),
       },
       source_config.FnosPlaylistSourceConfig_Source.notSet => {
         'serverId': config.serverId,
@@ -1678,6 +1772,34 @@ class SourceConfigCodec {
       source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR => 'regular',
       source_enum.PlaybackKind.PLAYBACK_KIND_LIVE => 'live',
       _ => '',
+    };
+  }
+
+  static source_enum.PlaybackProxyMode _playbackProxyModeFromValue(
+    Object? value,
+  ) {
+    return switch (_string(value).trim().toLowerCase()) {
+      'prefer' ||
+      'playback_proxy_mode_prefer' ||
+      '1' => source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_PREFER,
+      'only' ||
+      'playback_proxy_mode_only' ||
+      '2' => source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+      _ => source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+    };
+  }
+
+  static Map<String, dynamic> _playbackProxyModeMap(
+    source_enum.PlaybackProxyMode value,
+  ) {
+    return switch (value) {
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_PREFER => const {
+        'proxyMode': 'prefer',
+      },
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY => const {
+        'proxyMode': 'only',
+      },
+      _ => const <String, dynamic>{},
     };
   }
 
@@ -1825,8 +1947,7 @@ class SourceConfigCodec {
       defaultDanmakuIndex: _optionalInt(config['defaultDanmakuIndex']),
       playbackKind: _playbackKindFromValue(config['playbackKind']),
       durationSeconds: _optionalDouble(config['durationSeconds']),
-      preferProxy: _optionalBool(config['preferProxy']),
-      proxyOnly: _optionalBool(config['proxyOnly']),
+      proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
     );
   }
 
@@ -1870,7 +1991,7 @@ class SourceConfigCodec {
     final kind = _string(config['kind']).isEmpty
         ? _string(config['type'])
         : _string(config['kind']);
-    return switch (kind) {
+    final result = switch (kind) {
       'live' => source_config.BilibiliMediaSourceConfig(
         live: source_config.BilibiliLiveSourceConfig(
           roomId: Int64(_int(config['roomId'])),
@@ -1893,6 +2014,8 @@ class SourceConfigCodec {
         ),
       ),
     };
+    result.proxyMode = _playbackProxyModeFromValue(config['proxyMode']);
+    return result;
   }
 
   static Map<String, dynamic> _directUrlMediaSourceConfigToMap(
@@ -1915,8 +2038,7 @@ class SourceConfigCodec {
         'playbackKind': _playbackKindToString(config.playbackKind),
       if (config.hasDurationSeconds())
         'durationSeconds': config.durationSeconds,
-      if (config.hasPreferProxy()) 'preferProxy': config.preferProxy,
-      if (config.hasProxyOnly()) 'proxyOnly': config.proxyOnly,
+      ..._playbackProxyModeMap(config.proxyMode),
     };
     if (config.medias.length == 1) {
       final media = config.medias.single;
@@ -1942,7 +2064,8 @@ class SourceConfigCodec {
         config.hasDefaultDanmakuIndex() ||
         config.hasPlaybackKind() ||
         config.hasDurationSeconds() ||
-        config.hasPreferProxy();
+        config.proxyMode !=
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
   }
 
   static Map<String, dynamic> _mediaResourceToMap(
@@ -1988,31 +2111,35 @@ class SourceConfigCodec {
   static Map<String, dynamic> _bilibiliMediaSourceConfigToMap(
     source_config.BilibiliMediaSourceConfig config,
   ) {
-    return switch (config.whichSource()) {
-      source_config.BilibiliMediaSourceConfig_Source.video => {
-        'kind': 'video',
-        'type': 'video',
-        if (config.video.hasBvid()) 'bvid': config.video.bvid,
-        if (config.video.hasAid()) 'aid': config.video.aid.toInt(),
-        'cid': config.video.cid.toInt(),
-        'shared': config.video.shared,
+    final result = <String, dynamic>{
+      ...switch (config.whichSource()) {
+        source_config.BilibiliMediaSourceConfig_Source.video => {
+          'kind': 'video',
+          'type': 'video',
+          if (config.video.hasBvid()) 'bvid': config.video.bvid,
+          if (config.video.hasAid()) 'aid': config.video.aid.toInt(),
+          'cid': config.video.cid.toInt(),
+          'shared': config.video.shared,
+        },
+        source_config.BilibiliMediaSourceConfig_Source.pgc => {
+          'kind': 'pgc',
+          'type': 'pgc',
+          'epid': config.pgc.epid.toInt(),
+          'cid': config.pgc.cid.toInt(),
+          'shared': config.pgc.shared,
+        },
+        source_config.BilibiliMediaSourceConfig_Source.live => {
+          'kind': 'live',
+          'type': 'live',
+          'roomId': config.live.roomId.toInt(),
+          'shared': config.live.shared,
+        },
+        source_config.BilibiliMediaSourceConfig_Source.notSet =>
+          <String, dynamic>{},
       },
-      source_config.BilibiliMediaSourceConfig_Source.pgc => {
-        'kind': 'pgc',
-        'type': 'pgc',
-        'epid': config.pgc.epid.toInt(),
-        'cid': config.pgc.cid.toInt(),
-        'shared': config.pgc.shared,
-      },
-      source_config.BilibiliMediaSourceConfig_Source.live => {
-        'kind': 'live',
-        'type': 'live',
-        'roomId': config.live.roomId.toInt(),
-        'shared': config.live.shared,
-      },
-      source_config.BilibiliMediaSourceConfig_Source.notSet =>
-        <String, dynamic>{},
     };
+    result.addAll(_playbackProxyModeMap(config.proxyMode));
+    return result;
   }
 
   static List<Map<String, dynamic>> _listMaps(Object? value) {

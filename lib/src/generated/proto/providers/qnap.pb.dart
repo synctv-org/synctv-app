@@ -15,6 +15,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $0;
+
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 class LoginRequest extends $pb.GeneratedMessage {
@@ -324,6 +326,7 @@ class FileItem extends $pb.GeneratedMessage {
     $fixnum.Int64? modifiedAt,
     $fixnum.Int64? fileType,
     $core.Iterable<$core.int>? preTranscodedHeights,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -334,6 +337,7 @@ class FileItem extends $pb.GeneratedMessage {
     if (fileType != null) result.fileType = fileType;
     if (preTranscodedHeights != null)
       result.preTranscodedHeights.addAll(preTranscodedHeights);
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -364,6 +368,8 @@ class FileItem extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..p<$core.int>(
         7, _omitFieldNames ? '' : 'preTranscodedHeights', $pb.PbFieldType.KU3)
+    ..aOM<$0.DiscoveredSource>(8, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -440,6 +446,17 @@ class FileItem extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(7)
   $pb.PbList<$core.int> get preTranscodedHeights => $_getList(6);
+
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource get source => $_getN(7);
+  @$pb.TagNumber(8)
+  set source($0.DiscoveredSource value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSource() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSource() => $_clearField(8);
+  @$pb.TagNumber(8)
+  $0.DiscoveredSource ensureSource() => $_ensure(7);
 }
 
 class ListResponse extends $pb.GeneratedMessage {
@@ -449,6 +466,7 @@ class ListResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? page,
     $core.bool? hasMore,
     $core.bool? realtimeTranscode,
+    $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (content != null) result.content.addAll(content);
@@ -456,6 +474,7 @@ class ListResponse extends $pb.GeneratedMessage {
     if (page != null) result.page = page;
     if (hasMore != null) result.hasMore = hasMore;
     if (realtimeTranscode != null) result.realtimeTranscode = realtimeTranscode;
+    if (source != null) result.source = source;
     return result;
   }
 
@@ -481,6 +500,8 @@ class ListResponse extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOB(4, _omitFieldNames ? '' : 'hasMore')
     ..aOB(5, _omitFieldNames ? '' : 'realtimeTranscode')
+    ..aOM<$0.DiscoveredSource>(6, _omitFieldNames ? '' : 'source',
+        subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -540,6 +561,17 @@ class ListResponse extends $pb.GeneratedMessage {
   $core.bool hasRealtimeTranscode() => $_has(4);
   @$pb.TagNumber(5)
   void clearRealtimeTranscode() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $0.DiscoveredSource get source => $_getN(5);
+  @$pb.TagNumber(6)
+  set source($0.DiscoveredSource value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSource() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSource() => $_clearField(6);
+  @$pb.TagNumber(6)
+  $0.DiscoveredSource ensureSource() => $_ensure(5);
 }
 
 class GetCapabilitiesRequest extends $pb.GeneratedMessage {

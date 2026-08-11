@@ -132,6 +132,14 @@ const FileItem$json = {
     {'1': 'modified_at', '3': 5, '4': 1, '5': 4, '10': 'modifiedAt'},
     {'1': 'created_at', '3': 6, '4': 1, '5': 4, '10': 'createdAt'},
     {'1': 'file_type', '3': 7, '4': 1, '5': 9, '10': 'fileType'},
+    {
+      '1': 'source',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -140,7 +148,8 @@ final $typed_data.Uint8List fileItemDescriptor = $convert.base64Decode(
     'CghGaWxlSXRlbRISCgRuYW1lGAEgASgJUgRuYW1lEhIKBHBhdGgYAiABKAlSBHBhdGgSFQoGaX'
     'NfZGlyGAMgASgIUgVpc0RpchISCgRzaXplGAQgASgEUgRzaXplEh8KC21vZGlmaWVkX2F0GAUg'
     'ASgEUgptb2RpZmllZEF0Eh0KCmNyZWF0ZWRfYXQYBiABKARSCWNyZWF0ZWRBdBIbCglmaWxlX3'
-    'R5cGUYByABKAlSCGZpbGVUeXBl');
+    'R5cGUYByABKAlSCGZpbGVUeXBlEkAKBnNvdXJjZRgIIAEoCzIoLnN5bmN0di5wcm92aWRlci5j'
+    'b21tb24uRGlzY292ZXJlZFNvdXJjZVIGc291cmNl');
 
 @$core.Deprecated('Use listFilesResponseDescriptor instead')
 const ListFilesResponse$json = {
@@ -157,6 +166,14 @@ const ListFilesResponse$json = {
     {'1': 'total', '3': 2, '4': 1, '5': 4, '10': 'total'},
     {'1': 'page', '3': 3, '4': 1, '5': 4, '10': 'page'},
     {'1': 'has_more', '3': 4, '4': 1, '5': 8, '10': 'hasMore'},
+    {
+      '1': 'source',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -164,7 +181,8 @@ const ListFilesResponse$json = {
 final $typed_data.Uint8List listFilesResponseDescriptor = $convert.base64Decode(
     'ChFMaXN0RmlsZXNSZXNwb25zZRI4CgVpdGVtcxgBIAMoCzIiLnN5bmN0di5wcm92aWRlci5zeW'
     '5vbG9neS5GaWxlSXRlbVIFaXRlbXMSFAoFdG90YWwYAiABKARSBXRvdGFsEhIKBHBhZ2UYAyAB'
-    'KARSBHBhZ2USGQoIaGFzX21vcmUYBCABKAhSB2hhc01vcmU=');
+    'KARSBHBhZ2USGQoIaGFzX21vcmUYBCABKAhSB2hhc01vcmUSQAoGc291cmNlGAUgASgLMiguc3'
+    'luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use listLibrariesRequestDescriptor instead')
 const ListLibrariesRequest$json = {
@@ -498,6 +516,14 @@ const VideoItem$json = {
       '6': '.synctv.provider.synology.VideoFile',
       '10': 'files'
     },
+    {
+      '1': 'source',
+      '3': 25,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
   '8': [
     {'1': '_original_available'},
@@ -526,8 +552,10 @@ final $typed_data.Uint8List videoItemDescriptor = $convert.base64Decode(
     'dl9zaG93X2lkGBUgASgDSANSCHR2U2hvd0lkiAEBEiYKDHBvc3Rlcl9tdGltZRgWIAEoCUgEUg'
     'twb3N0ZXJNdGltZYgBARIqCg5iYWNrZHJvcF9tdGltZRgXIAEoCUgFUg1iYWNrZHJvcE10aW1l'
     'iAEBEjkKBWZpbGVzGBggAygLMiMuc3luY3R2LnByb3ZpZGVyLnN5bm9sb2d5LlZpZGVvRmlsZV'
-    'IFZmlsZXNCFQoTX29yaWdpbmFsX2F2YWlsYWJsZUIJCgdfc2Vhc29uQgoKCF9lcGlzb2RlQg0K'
-    'C190dl9zaG93X2lkQg8KDV9wb3N0ZXJfbXRpbWVCEQoPX2JhY2tkcm9wX210aW1l');
+    'IFZmlsZXMSQAoGc291cmNlGBkgASgLMiguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3Zl'
+    'cmVkU291cmNlUgZzb3VyY2VCFQoTX29yaWdpbmFsX2F2YWlsYWJsZUIJCgdfc2Vhc29uQgoKCF'
+    '9lcGlzb2RlQg0KC190dl9zaG93X2lkQg8KDV9wb3N0ZXJfbXRpbWVCEQoPX2JhY2tkcm9wX210'
+    'aW1l');
 
 @$core.Deprecated('Use listVideoItemsResponseDescriptor instead')
 const ListVideoItemsResponse$json = {
@@ -544,6 +572,14 @@ const ListVideoItemsResponse$json = {
     {'1': 'total', '3': 2, '4': 1, '5': 4, '10': 'total'},
     {'1': 'page', '3': 3, '4': 1, '5': 4, '10': 'page'},
     {'1': 'has_more', '3': 4, '4': 1, '5': 8, '10': 'hasMore'},
+    {
+      '1': 'source',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '10': 'source'
+    },
   ],
 };
 
@@ -551,7 +587,8 @@ const ListVideoItemsResponse$json = {
 final $typed_data.Uint8List listVideoItemsResponseDescriptor = $convert.base64Decode(
     'ChZMaXN0VmlkZW9JdGVtc1Jlc3BvbnNlEjkKBWl0ZW1zGAEgAygLMiMuc3luY3R2LnByb3ZpZG'
     'VyLnN5bm9sb2d5LlZpZGVvSXRlbVIFaXRlbXMSFAoFdG90YWwYAiABKARSBXRvdGFsEhIKBHBh'
-    'Z2UYAyABKARSBHBhZ2USGQoIaGFzX21vcmUYBCABKAhSB2hhc01vcmU=');
+    'Z2UYAyABKARSBHBhZ2USGQoIaGFzX21vcmUYBCABKAhSB2hhc01vcmUSQAoGc291cmNlGAUgAS'
+    'gLMiguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use logoutRequestDescriptor instead')
 const LogoutRequest$json = {

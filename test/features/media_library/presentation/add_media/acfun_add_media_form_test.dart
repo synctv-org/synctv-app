@@ -7,6 +7,8 @@ import 'package:synctv_app/src/generated/proto/providers/acfun.pbenum.dart'
     as acfun_enum;
 import 'package:synctv_app/features/media_library/presentation/add_media/acfun_add_media_form.dart';
 
+import '../../../../test_app.dart';
+
 void main() {
   testWidgets('AcFun preview exposes formats, tags, and danmaku capabilities', (
     tester,
@@ -43,6 +45,7 @@ void main() {
                   format: acfun_enum.StreamFormat.STREAM_FORMAT_FLV,
                 ),
               ],
+              source: testDiscoveredMediaSource(),
             ),
           ),
         ),
@@ -76,6 +79,11 @@ void main() {
             playlistId: '',
             instances: const ['acfun-edge'],
             onDraftChanged: (_) {},
+            onResolve: (_) async => acfun.ResolveResponse(
+              kind: acfun_enum.ResourceKind.RESOURCE_KIND_BANGUMI,
+              metadata: acfun.Metadata(title: 'Bangumi'),
+              source: testDiscoveredMediaSource(),
+            ),
             onSubmit: (request) async => submitted = request,
           ),
         ),
@@ -88,6 +96,14 @@ void main() {
     await tester.tap(find.text('Local instance'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('acfun-edge').last);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('acfun-submit')))
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(const Key('acfun-preview')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('acfun-submit')));
     await tester.pumpAndSettle();
