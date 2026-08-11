@@ -103,4 +103,32 @@ void main() {
     expect((providers as List).single, containsPair('enableSignup', false));
     expect(providers.single, containsPair('signupNeedReview', false));
   });
+
+  test('keeps editable settings when optional sections are absent', () {
+    final settings = admin.RuntimeSettings();
+
+    expect(
+      runtimeSettingsSectionToJson(settings, 'rtmp'),
+      containsPair('customPublishHost', isNull),
+    );
+    expect(
+      runtimeSettingsSectionToJson(settings, 'rtmp'),
+      containsPair('tsDisguisedAsPng', false),
+    );
+    expect(
+      runtimeSettingsSectionToJson(settings, 'email').keys,
+      containsAll(<String>[
+        'enabled',
+        'smtpHost',
+        'smtpPort',
+        'smtpCredentials',
+        'smtpProxy',
+        'useTls',
+        'fromEmail',
+        'fromName',
+        'whitelistEnabled',
+        'whitelistDomains',
+      ]),
+    );
+  });
 }

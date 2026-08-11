@@ -841,37 +841,39 @@ Map<String, dynamic> _oauth2RuntimeSettingsToJson(
 Map<String, dynamic> _rtmpRuntimeSettingsToJson(
   admin.RuntimeSettings settings,
 ) {
-  if (!settings.hasRtmp()) return <String, dynamic>{};
-  return _runtimeSettingsWithDefaults(settings.rtmp, {
-    'customPublishHost': settings.rtmp.hasCustomPublishHost()
-        ? settings.rtmp.customPublishHost
+  final rtmp = settings.hasRtmp() ? settings.rtmp : admin.RtmpSettings();
+  final defaults = <String, dynamic>{
+    'customPublishHost': rtmp.hasCustomPublishHost()
+        ? rtmp.customPublishHost
         : null,
-    'tsDisguisedAsPng': settings.rtmp.tsDisguisedAsPng,
-  });
+    'tsDisguisedAsPng': rtmp.tsDisguisedAsPng,
+  };
+  if (!settings.hasRtmp()) return defaults;
+  return _runtimeSettingsWithDefaults(rtmp, defaults);
 }
 
 Map<String, dynamic> _emailRuntimeSettingsToJson(
   admin.RuntimeSettings settings,
 ) {
-  if (!settings.hasEmail()) return <String, dynamic>{};
-  return _runtimeSettingsWithDefaults(settings.email, {
-    'enabled': settings.email.enabled,
-    'smtpHost': settings.email.hasSmtpHost() ? settings.email.smtpHost : null,
-    'smtpPort': settings.email.smtpPort,
-    'smtpCredentials': settings.email.hasSmtpCredentials()
-        ? protoMessageToJsonMap(settings.email.smtpCredentials)
+  final email = settings.hasEmail() ? settings.email : admin.EmailSettings();
+  final defaults = <String, dynamic>{
+    'enabled': email.enabled,
+    'smtpHost': email.hasSmtpHost() ? email.smtpHost : null,
+    'smtpPort': email.smtpPort,
+    'smtpCredentials': email.hasSmtpCredentials()
+        ? protoMessageToJsonMap(email.smtpCredentials)
         : null,
-    'smtpProxy': settings.email.hasSmtpProxy()
-        ? protoMessageToJsonMap(settings.email.smtpProxy)
+    'smtpProxy': email.hasSmtpProxy()
+        ? protoMessageToJsonMap(email.smtpProxy)
         : null,
-    'useTls': settings.email.useTls,
-    'fromEmail': settings.email.hasFromEmail()
-        ? settings.email.fromEmail
-        : null,
-    'fromName': settings.email.fromName,
-    'whitelistEnabled': settings.email.whitelistEnabled,
-    'whitelistDomains': List<String>.from(settings.email.whitelistDomains),
-  });
+    'useTls': email.useTls,
+    'fromEmail': email.hasFromEmail() ? email.fromEmail : null,
+    'fromName': email.fromName,
+    'whitelistEnabled': email.whitelistEnabled,
+    'whitelistDomains': List<String>.from(email.whitelistDomains),
+  };
+  if (!settings.hasEmail()) return defaults;
+  return _runtimeSettingsWithDefaults(email, defaults);
 }
 
 String oauth2ProviderTypeToString(oauth2_enum.OAuth2ProviderType provider) {
