@@ -711,71 +711,167 @@ Map<String, dynamic> runtimeSettingsSectionToJson(
   return switch (section) {
     'server' =>
       settings.hasServer()
-          ? protoMessageToJsonMap(settings.server)
+          ? _runtimeSettingsWithDefaults(settings.server, {
+              'name': settings.server.name,
+            })
           : <String, dynamic>{},
     'roomDefaults' =>
       settings.hasRoomDefaults()
-          ? protoMessageToJsonMap(settings.roomDefaults)
+          ? _runtimeSettingsWithDefaults(settings.roomDefaults, {
+              'defaultMaxMembers': settings.roomDefaults.defaultMaxMembers
+                  .toString(),
+              'defaultMaxChatMessages': settings
+                  .roomDefaults
+                  .defaultMaxChatMessages
+                  .toString(),
+            })
           : <String, dynamic>{},
     'permissions' =>
       settings.hasPermissions()
-          ? protoMessageToJsonMap(settings.permissions)
+          ? _runtimeSettingsWithDefaults(settings.permissions, {
+              'adminDefaultPermissions': settings
+                  .permissions
+                  .adminDefaultPermissions
+                  .toString(),
+              'memberDefaultPermissions': settings
+                  .permissions
+                  .memberDefaultPermissions
+                  .toString(),
+              'guestDefaultPermissions': settings
+                  .permissions
+                  .guestDefaultPermissions
+                  .toString(),
+            })
           : <String, dynamic>{},
     'roomCreation' =>
       settings.hasRoomCreation()
-          ? protoMessageToJsonMap(settings.roomCreation)
+          ? _runtimeSettingsWithDefaults(settings.roomCreation, {
+              'enabled': settings.roomCreation.enabled,
+              'approvalRequired': settings.roomCreation.approvalRequired,
+              'maxRoomsPerUser': settings.roomCreation.maxRoomsPerUser
+                  .toString(),
+            })
           : <String, dynamic>{},
     'user' =>
       settings.hasUser()
-          ? protoMessageToJsonMap(settings.user)
+          ? _runtimeSettingsWithDefaults(settings.user, {
+              'enablePasswordSignup': settings.user.enablePasswordSignup,
+              'passwordSignupNeedReview':
+                  settings.user.passwordSignupNeedReview,
+              'enableEmailSignup': settings.user.enableEmailSignup,
+              'emailSignupNeedReview': settings.user.emailSignupNeedReview,
+              'enableWebauthnSignup': settings.user.enableWebauthnSignup,
+              'webauthnSignupNeedReview':
+                  settings.user.webauthnSignupNeedReview,
+              'enableGuest': settings.user.enableGuest,
+            })
           : <String, dynamic>{},
     'oauth2' =>
       settings.hasOauth2()
-          ? protoMessageToJsonMap(settings.oauth2)
+          ? _oauth2RuntimeSettingsToJson(settings.oauth2)
           : <String, dynamic>{},
     'rtmp' => _rtmpRuntimeSettingsToJson(settings),
     'email' => _emailRuntimeSettingsToJson(settings),
     'webrtc' =>
       settings.hasWebrtc()
-          ? protoMessageToJsonMap(settings.webrtc)
+          ? _runtimeSettingsWithDefaults(settings.webrtc, {
+              'externalIceServers': [
+                for (final server in settings.webrtc.externalIceServers)
+                  protoMessageToJsonMap(server),
+              ],
+              'maxVoiceParticipantsPerRoom':
+                  settings.webrtc.maxVoiceParticipantsPerRoom,
+            })
           : <String, dynamic>{},
     'chat' =>
       settings.hasChat()
-          ? protoMessageToJsonMap(settings.chat)
+          ? _runtimeSettingsWithDefaults(settings.chat, {
+              'maxMessagesPerRoom': settings.chat.maxMessagesPerRoom.toString(),
+              'maxPinnedMessagesPerRoom': settings.chat.maxPinnedMessagesPerRoom
+                  .toString(),
+              'messageRetentionDays': settings.chat.messageRetentionDays
+                  .toString(),
+            })
           : <String, dynamic>{},
     'playbackHistory' =>
       settings.hasPlaybackHistory()
-          ? protoMessageToJsonMap(settings.playbackHistory)
+          ? _runtimeSettingsWithDefaults(settings.playbackHistory, {
+              'retentionDays': settings.playbackHistory.retentionDays,
+              'maxEntriesPerRoom': settings.playbackHistory.maxEntriesPerRoom
+                  .toString(),
+            })
           : <String, dynamic>{},
     'cors' =>
       settings.hasCors()
-          ? protoMessageToJsonMap(settings.cors)
+          ? _runtimeSettingsWithDefaults(settings.cors, {
+              'allowedOrigins': List<String>.from(settings.cors.allowedOrigins),
+            })
           : <String, dynamic>{},
     _ => <String, dynamic>{},
   };
 }
 
+Map<String, dynamic> _runtimeSettingsWithDefaults(
+  pb.GeneratedMessage message,
+  Map<String, dynamic> defaults,
+) {
+  final json = protoMessageToJsonMap(message);
+  for (final entry in defaults.entries) {
+    json.putIfAbsent(entry.key, () => entry.value);
+  }
+  return json;
+}
+
+Map<String, dynamic> _oauth2RuntimeSettingsToJson(
+  admin.OAuth2Settings settings,
+) {
+  final json = _runtimeSettingsWithDefaults(settings, {
+    'allowedRedirectUrls': List<String>.from(settings.allowedRedirectUrls),
+  });
+  json['providers'] = [
+    for (final provider in settings.providers)
+      _runtimeSettingsWithDefaults(provider, {
+        'enableSignup': provider.enableSignup,
+        'signupNeedReview': provider.signupNeedReview,
+      }),
+  ];
+  return json;
+}
+
 Map<String, dynamic> _rtmpRuntimeSettingsToJson(
   admin.RuntimeSettings settings,
 ) {
-  final json = settings.hasRtmp()
-      ? protoMessageToJsonMap(settings.rtmp)
-      : <String, dynamic>{};
-  json.putIfAbsent('customPublishHost', () => null);
-  return json;
+  if (!settings.hasRtmp()) return <String, dynamic>{};
+  return _runtimeSettingsWithDefaults(settings.rtmp, {
+    'customPublishHost': settings.rtmp.hasCustomPublishHost()
+        ? settings.rtmp.customPublishHost
+        : null,
+    'tsDisguisedAsPng': settings.rtmp.tsDisguisedAsPng,
+  });
 }
 
 Map<String, dynamic> _emailRuntimeSettingsToJson(
   admin.RuntimeSettings settings,
 ) {
-  final json = settings.hasEmail()
-      ? protoMessageToJsonMap(settings.email)
-      : <String, dynamic>{};
-  json.putIfAbsent('smtpHost', () => null);
-  json.putIfAbsent('smtpCredentials', () => null);
-  json.putIfAbsent('smtpProxy', () => null);
-  json.putIfAbsent('fromEmail', () => null);
-  return json;
+  if (!settings.hasEmail()) return <String, dynamic>{};
+  return _runtimeSettingsWithDefaults(settings.email, {
+    'enabled': settings.email.enabled,
+    'smtpHost': settings.email.hasSmtpHost() ? settings.email.smtpHost : null,
+    'smtpPort': settings.email.smtpPort,
+    'smtpCredentials': settings.email.hasSmtpCredentials()
+        ? protoMessageToJsonMap(settings.email.smtpCredentials)
+        : null,
+    'smtpProxy': settings.email.hasSmtpProxy()
+        ? protoMessageToJsonMap(settings.email.smtpProxy)
+        : null,
+    'useTls': settings.email.useTls,
+    'fromEmail': settings.email.hasFromEmail()
+        ? settings.email.fromEmail
+        : null,
+    'fromName': settings.email.fromName,
+    'whitelistEnabled': settings.email.whitelistEnabled,
+    'whitelistDomains': List<String>.from(settings.email.whitelistDomains),
+  });
 }
 
 String oauth2ProviderTypeToString(oauth2_enum.OAuth2ProviderType provider) {

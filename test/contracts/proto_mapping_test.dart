@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/proto_mapping.dart';
+import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/src/generated/proto/oauth2.pbenum.dart';
 
 void main() {
@@ -37,5 +38,69 @@ void main() {
         isEmpty,
       );
     });
+  });
+
+  test('keeps proto3 default-valued runtime settings in section maps', () {
+    final settings = admin.RuntimeSettings(
+      user: admin.UserSettings()..mergeFromProto3Json(<String, dynamic>{}),
+      roomCreation: admin.RoomCreationSettings()
+        ..mergeFromProto3Json(<String, dynamic>{}),
+      email: admin.EmailSettings()..mergeFromProto3Json(<String, dynamic>{}),
+      rtmp: admin.RtmpSettings()..mergeFromProto3Json(<String, dynamic>{}),
+    );
+
+    expect(
+      runtimeSettingsSectionToJson(settings, 'user').keys,
+      containsAll(<String>[
+        'enablePasswordSignup',
+        'passwordSignupNeedReview',
+        'enableEmailSignup',
+        'emailSignupNeedReview',
+        'enableWebauthnSignup',
+        'webauthnSignupNeedReview',
+        'enableGuest',
+      ]),
+    );
+    expect(
+      runtimeSettingsSectionToJson(settings, 'user')['enableGuest'],
+      isFalse,
+    );
+    expect(
+      runtimeSettingsSectionToJson(settings, 'roomCreation').keys,
+      containsAll(<String>['enabled', 'approvalRequired']),
+    );
+    expect(
+      runtimeSettingsSectionToJson(settings, 'email').keys,
+      containsAll(<String>[
+        'enabled',
+        'smtpPort',
+        'useTls',
+        'fromName',
+        'whitelistEnabled',
+        'whitelistDomains',
+      ]),
+    );
+    expect(
+      runtimeSettingsSectionToJson(settings, 'rtmp').keys,
+      contains('tsDisguisedAsPng'),
+    );
+
+    final oauth2Settings = admin.OAuth2Settings()
+      ..mergeFromProto3Json({
+        'providers': [
+          {
+            'name': 'github',
+            'github': {'clientId': 'id'},
+          },
+        ],
+      });
+    final oauth2 = admin.RuntimeSettings(oauth2: oauth2Settings);
+    final providers = runtimeSettingsSectionToJson(
+      oauth2,
+      'oauth2',
+    )['providers'];
+    expect(providers, isA<List<dynamic>>());
+    expect((providers as List).single, containsPair('enableSignup', false));
+    expect(providers.single, containsPair('signupNeedReview', false));
   });
 }
