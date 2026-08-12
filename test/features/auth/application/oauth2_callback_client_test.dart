@@ -15,6 +15,7 @@ void main() {
 
       expect(result, 'complete');
       expect(client.createCount, 1);
+      expect(session.closeCount, 1);
     });
 
     test('preserves ordinary operation failures without retrying', () async {
@@ -29,6 +30,7 @@ void main() {
         throwsStateError,
       );
       expect(client.createCount, 1);
+      expect(session.closeCount, 1);
     });
 
     test('creates a fresh session after a callback bind failure', () async {
@@ -47,6 +49,8 @@ void main() {
 
       expect(result, contains('second'));
       expect(client.createCount, 2);
+      expect(first.closeCount, 1);
+      expect(second.closeCount, 1);
     });
 
     test('stops retrying after the configured bind attempt limit', () async {
@@ -65,6 +69,9 @@ void main() {
         throwsA(isA<OAuth2CallbackBindFailed>()),
       );
       expect(client.createCount, 2);
+      for (final session in sessions) {
+        expect(session.closeCount, 1);
+      }
     });
 
     test('rejects an empty bind attempt budget', () async {
@@ -104,6 +111,7 @@ final class _FakeOAuth2CallbackSession implements OAuth2CallbackSession {
   _FakeOAuth2CallbackSession(this.name);
 
   final String name;
+  int closeCount = 0;
 
   @override
   String get redirectUrl => 'https://syncs.tv/oauth2/callback?session=$name';
@@ -113,4 +121,9 @@ final class _FakeOAuth2CallbackSession implements OAuth2CallbackSession {
     required Uri authorizationUrl,
     required String expectedState,
   }) async => OAuth2CallbackPayload(code: 'code', state: expectedState);
+
+  @override
+  Future<void> close() async {
+    closeCount++;
+  }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -8,9 +9,11 @@ import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart
 import 'package:synctv_app/features/auth/application/native_apple_sign_in_client.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_config.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_parser.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 enum OAuth2CallbackTransport {
   flutterWebAuth2,
+  loopbackHttpServer,
   darwinAuthenticationSession,
   unsupported,
 }
@@ -38,7 +41,9 @@ class OAuth2CallbackService {
     hasMobileOrigin: OAuth2CallbackConfig.hasMobileOrigin,
   );
 
-  static Future<OAuth2CallbackSession> createSession() async {
+  static Future<OAuth2CallbackSession> createSession({
+    Future<bool> Function(Uri authorizationUrl)? launchExternalUrl,
+  }) async {
     final platform = defaultTargetPlatform;
     final transport = callbackTransportFor(platform);
     if (transport == OAuth2CallbackTransport.unsupported) {
@@ -48,15 +53,21 @@ class OAuth2CallbackService {
     }
 
     late final Uri redirectUri;
-    if (usesLoopbackCallback(platform)) {
+    HttpServer? loopbackServer;
+    if (transport == OAuth2CallbackTransport.loopbackHttpServer) {
+      try {
+        loopbackServer = await HttpServer.bind(
+          InternetAddress.loopbackIPv4,
+          0,
+        );
+        redirectUri = loopbackRedirectUriForPort(loopbackServer.port);
+      } on SocketException catch (error) {
+        throw OAuth2CallbackBindFailed(error);
+      }
+    } else if (usesLoopbackCallback(platform)) {
       try {
         final port = await _findAvailableLoopbackPort();
-        redirectUri = Uri(
-          scheme: 'http',
-          host: InternetAddress.loopbackIPv4.address,
-          port: port,
-          path: '/oauth2/callback',
-        );
+        redirectUri = loopbackRedirectUriForPort(port);
       } on SocketException catch (error) {
         throw OAuth2CallbackBindFailed(error);
       }
@@ -72,6 +83,12 @@ class OAuth2CallbackService {
           callbackUrlScheme: callbackUrlSchemeFor(platform, redirectUri),
           options: optionsFor(platform, redirectUri),
         ),
+      OAuth2CallbackTransport.loopbackHttpServer =>
+        _LoopbackHttpCallbackSession(
+          server: loopbackServer!,
+          redirectUri: redirectUri,
+          launchExternalUrl: launchExternalUrl ?? _launchExternalUrl,
+        ),
       OAuth2CallbackTransport.darwinAuthenticationSession =>
         _DarwinOAuth2CallbackSession(redirectUri),
       OAuth2CallbackTransport.unsupported => throw StateError(
@@ -83,9 +100,9 @@ class OAuth2CallbackService {
   @visibleForTesting
   static OAuth2CallbackTransport callbackTransportFor(TargetPlatform platform) {
     return switch (platform) {
-      TargetPlatform.android ||
-      TargetPlatform.linux ||
-      TargetPlatform.windows => OAuth2CallbackTransport.flutterWebAuth2,
+      TargetPlatform.android || TargetPlatform.linux =>
+        OAuth2CallbackTransport.flutterWebAuth2,
+      TargetPlatform.windows => OAuth2CallbackTransport.loopbackHttpServer,
       TargetPlatform.iOS || TargetPlatform.macOS =>
         OAuth2CallbackTransport.darwinAuthenticationSession,
       TargetPlatform.fuchsia => OAuth2CallbackTransport.unsupported,
@@ -107,6 +124,16 @@ class OAuth2CallbackService {
   static bool usesLoopbackCallback(TargetPlatform platform) {
     return platform == TargetPlatform.windows ||
         platform == TargetPlatform.linux;
+  }
+
+  @visibleForTesting
+  static Uri loopbackRedirectUriForPort(int port) {
+    return Uri(
+      scheme: 'http',
+      host: InternetAddress.loopbackIPv4.address,
+      port: port,
+      path: '/oauth2/callback',
+    );
   }
 
   @visibleForTesting
@@ -141,6 +168,90 @@ class OAuth2CallbackService {
     } finally {
       await server.close(force: true);
     }
+  }
+
+  static Future<bool> _launchExternalUrl(Uri authorizationUrl) {
+    return launchUrl(
+      authorizationUrl,
+      mode: LaunchMode.externalApplication,
+    );
+  }
+}
+
+final class _LoopbackHttpCallbackSession implements OAuth2CallbackSession {
+  _LoopbackHttpCallbackSession({
+    required HttpServer server,
+    required this.redirectUri,
+    required this.launchExternalUrl,
+  }) : _server = server;
+
+  final HttpServer _server;
+  final Uri redirectUri;
+  final Future<bool> Function(Uri authorizationUrl) launchExternalUrl;
+  bool _closed = false;
+
+  @override
+  String get redirectUrl => redirectUri.toString();
+
+  @override
+  Future<OAuth2CallbackPayload> authorize({
+    required Uri authorizationUrl,
+    required String expectedState,
+  }) async {
+    try {
+      final callbackRequest = _server.first;
+      if (!await launchExternalUrl(authorizationUrl)) {
+        callbackRequest.ignore();
+        throw PlatformException(
+          code: 'LAUNCH_FAILED',
+          message: 'The system browser could not be opened',
+        );
+      }
+
+      late final HttpRequest request;
+      try {
+        request = await callbackRequest.timeout(oauth2AuthorizationTimeout);
+      } on TimeoutException {
+        throw const OAuth2AuthorizationTimedOut();
+      }
+
+      if (request.uri.path != redirectUri.path) {
+        request.response.statusCode = HttpStatus.notFound;
+        await request.response.close();
+        throw ArgumentError.value(
+          request.uri.path,
+          'callbackPath',
+          'Unexpected OAuth2 callback path',
+        );
+      }
+
+      late final OAuth2CallbackPayload payload;
+      try {
+        payload = OAuth2CallbackParser.parse(
+          request.requestedUri,
+          expectedState: expectedState,
+        );
+      } catch (_) {
+        request.response.statusCode = HttpStatus.badRequest;
+        request.response.write('Invalid OAuth2 callback.');
+        await request.response.close();
+        rethrow;
+      }
+
+      request.response.headers.contentType = ContentType.html;
+      request.response.write(OAuth2CallbackService._loopbackLandingPage);
+      await request.response.close();
+      return payload;
+    } finally {
+      await close();
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    if (_closed) return;
+    _closed = true;
+    await _server.close(force: true);
   }
 }
 
@@ -191,6 +302,9 @@ final class _FlutterWebAuth2CallbackSession implements OAuth2CallbackSession {
       rethrow;
     }
   }
+
+  @override
+  Future<void> close() async {}
 }
 
 final class _DarwinOAuth2CallbackSession implements OAuth2CallbackSession {
@@ -238,6 +352,9 @@ final class _DarwinOAuth2CallbackSession implements OAuth2CallbackSession {
       }
     }
   }
+
+  @override
+  Future<void> close() async {}
 }
 
 /// Starts Apple's first-party Authentication Services flow. The native

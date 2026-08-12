@@ -13,6 +13,8 @@ abstract interface class OAuth2CallbackSession {
     required Uri authorizationUrl,
     required String expectedState,
   });
+
+  Future<void> close();
 }
 
 Future<T> withOAuth2CallbackSession<T>(
@@ -27,11 +29,14 @@ Future<T> withOAuth2CallbackSession<T>(
   var attempt = 0;
   while (true) {
     attempt++;
+    OAuth2CallbackSession? session;
     try {
-      final session = await client.createSession();
+      session = await client.createSession();
       return await operation(session);
     } on OAuth2CallbackBindFailed {
       if (attempt >= maxBindAttempts) rethrow;
+    } finally {
+      await session?.close();
     }
   }
 }
