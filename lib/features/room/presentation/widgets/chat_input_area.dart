@@ -13,7 +13,7 @@ class ChatInputArea extends StatefulWidget {
   final bool isVoiceInputMode;
   final bool isLoading;
   final String conversationType;
-  final VoidCallback onSendMessage;
+  final FutureOr<void> Function() onSendMessage;
   final VoidCallback onSwitchToVoiceMode;
   final VoidCallback onShowImagePicker;
   final Function onStartRecording;
@@ -250,7 +250,7 @@ class TextInputArea extends StatefulWidget {
   final bool hasText;
   final bool isLoading;
   final String conversationType;
-  final VoidCallback onSendMessage;
+  final FutureOr<void> Function() onSendMessage;
   final VoidCallback onShowImagePicker;
   final VoidCallback? onSwitchToVoiceMode;
   final Uint8List? selectedImageBytes;
@@ -458,6 +458,18 @@ class _TextInputAreaState extends State<TextInputArea> {
     return codeUnitOffset;
   }
 
+  Future<void> _sendMessage() async {
+    try {
+      await widget.onSendMessage();
+    } finally {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _focusNode.requestFocus();
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -568,9 +580,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                       keyboardType: TextInputType.multiline,
                       textInputAction: TextInputAction.send,
                       showClearButton: false,
-                      onSubmitted: canSend
-                          ? (_) => widget.onSendMessage()
-                          : null,
+                      onSubmitted: canSend ? (_) => _sendMessage() : null,
                       onChanged: (_) => _refreshInputState(),
                       onTap: widget.onInputFocused,
                       enabled: !widget.isLoading,
@@ -600,7 +610,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                   SizedBox.square(
                     dimension: 44,
                     child: AppIconButton(
-                      onPressed: canSend ? widget.onSendMessage : null,
+                      onPressed: canSend ? _sendMessage : null,
                       icon: Icons.send_rounded,
                       tooltip: context.l10n.send,
                       loading: widget.isLoading,
