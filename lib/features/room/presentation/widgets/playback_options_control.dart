@@ -112,47 +112,40 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
   }
 
   Future<void> _openMenu(BuildContext anchorContext) async {
-    final qualityItems = _buildQualityMenu();
-    var position = _menuPosition(
-      anchorContext,
-      menuHeight: _menuHeight(qualityItems),
-    );
-    if (position == null) return;
-    var action = await showMenu<_PlaybackMenuAction>(
-      context: context,
-      useRootNavigator: true,
-      popUpAnimationStyle: playerControlPopupAnimationStyle,
-      color: const Color(0xF21A1D21),
-      constraints: const BoxConstraints(minWidth: 240, maxWidth: 320),
-      position: position,
-      items: qualityItems,
-    );
-    if (!mounted || !anchorContext.mounted || action == null) return;
-    if (action.kind == _PlaybackMenuActionKind.routes) {
-      final routeItems = _buildRouteMenu();
-      position = _menuPosition(
+    var page = _PlaybackMenuPage.quality;
+    while (true) {
+      if (!mounted || !anchorContext.mounted) return;
+      final items = switch (page) {
+        _PlaybackMenuPage.quality => _buildQualityMenu(),
+        _PlaybackMenuPage.routes => _buildRouteMenu(),
+      };
+      final position = _menuPosition(
         anchorContext,
-        menuHeight: _menuHeight(routeItems),
+        menuHeight: _menuHeight(items),
       );
       if (position == null) return;
-      action = await showMenu<_PlaybackMenuAction>(
+      final action = await showMenu<_PlaybackMenuAction>(
         context: context,
         useRootNavigator: true,
         popUpAnimationStyle: playerControlPopupAnimationStyle,
         color: const Color(0xF21A1D21),
         constraints: const BoxConstraints(minWidth: 240, maxWidth: 320),
         position: position,
-        items: routeItems,
+        items: items,
       );
-      if (!mounted || action == null) return;
-    }
-    switch (action.kind) {
-      case _PlaybackMenuActionKind.routes:
-        return;
-      case _PlaybackMenuActionKind.media:
-        await widget.onMediaSelected(action.mode!, action.mediaIndex!);
-      case _PlaybackMenuActionKind.track:
-        await widget.onAdaptiveTrackSelected(action.trackId!);
+      if (!mounted || !anchorContext.mounted || action == null) return;
+      switch (action.kind) {
+        case _PlaybackMenuActionKind.quality:
+          page = _PlaybackMenuPage.quality;
+        case _PlaybackMenuActionKind.routes:
+          page = _PlaybackMenuPage.routes;
+        case _PlaybackMenuActionKind.media:
+          await widget.onMediaSelected(action.mode!, action.mediaIndex!);
+          return;
+        case _PlaybackMenuActionKind.track:
+          await widget.onAdaptiveTrackSelected(action.trackId!);
+          return;
+      }
     }
   }
 
@@ -294,10 +287,11 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
   List<PopupMenuEntry<_PlaybackMenuAction>> _buildRouteMenu() {
     return <PopupMenuEntry<_PlaybackMenuAction>>[
       PopupMenuItem<_PlaybackMenuAction>(
-        enabled: false,
+        key: const Key('playback_route_back_button'),
+        value: const _PlaybackMenuAction.quality(),
         child: Row(
           children: [
-            const Icon(Icons.route_rounded, color: Colors.white70),
+            const Icon(Icons.arrow_back_rounded, color: Colors.white70),
             const SizedBox(width: 10),
             Text(
               context.l10n.selectPlaybackRoute,
@@ -506,9 +500,17 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
   }
 }
 
-enum _PlaybackMenuActionKind { routes, media, track }
+enum _PlaybackMenuPage { quality, routes }
+
+enum _PlaybackMenuActionKind { quality, routes, media, track }
 
 class _PlaybackMenuAction {
+  const _PlaybackMenuAction.quality()
+    : kind = _PlaybackMenuActionKind.quality,
+      mode = null,
+      mediaIndex = null,
+      trackId = null;
+
   const _PlaybackMenuAction.routes()
     : kind = _PlaybackMenuActionKind.routes,
       mode = null,

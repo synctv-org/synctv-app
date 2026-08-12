@@ -110,10 +110,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Choose route'), findsOneWidget);
     expect(
+      find.descendant(
+        of: find.byKey(const Key('playback_route_back_button')),
+        matching: find.byIcon(Icons.arrow_back_rounded),
+      ),
+      findsOneWidget,
+    );
+    expect(
       find.byKey(const Key('playback_route_option_backup_1')),
       findsOneWidget,
     );
 
+    await tester.tap(find.byKey(const Key('playback_route_back_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Route'), findsOneWidget);
+    expect(find.text('Quality and media links'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('playback_route_selector')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('playback_route_option_backup_1')));
     await tester.pumpAndSettle();
     expect(selectedMode?.key, 'backup_1');
