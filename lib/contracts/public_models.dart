@@ -1,4 +1,5 @@
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
 
 class ServerInfo {
   final String serverId;
@@ -12,7 +13,7 @@ class PublicSettingsInfo {
   final int maxRoomsPerUser;
   final int defaultMaxMembers;
   final bool roomCreationApprovalRequired;
-  final String roomPasswordPolicy;
+  final common.RoomPasswordPolicy roomPasswordPolicy;
   final bool enablePasswordSignup;
   final bool passwordSignupNeedReview;
   final bool enableEmailSignup;

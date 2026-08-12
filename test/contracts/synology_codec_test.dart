@@ -2,11 +2,11 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
-import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
-    as source_enum;
 
 void main() {
   group('Synology source config codec', () {
@@ -25,11 +25,11 @@ void main() {
       };
 
       final file = SourceConfigCodec.mediaSourceConfigFromMap(
-        sourceProvider: 'synology',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_SYNOLOGY,
         sourceConfig: fileJson,
       )!;
       final video = SourceConfigCodec.mediaSourceConfigFromMap(
-        sourceProvider: 'synology',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_SYNOLOGY,
         sourceConfig: videoJson,
       )!;
 
@@ -57,7 +57,7 @@ void main() {
 
       for (final source in sources) {
         final config = SourceConfigCodec.playlistSourceConfigFromMap(
-          sourceProvider: 'synology',
+          sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_SYNOLOGY,
           sourceConfig: source,
         )!;
         expect(

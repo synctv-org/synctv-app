@@ -912,71 +912,98 @@ class _StatTile extends StatelessWidget {
   }
 }
 
-String _reviewStatusText(BuildContext context, int status) {
+String _reviewStatusText(
+  BuildContext context,
+  common_enum.ReviewStatus status,
+) {
   return switch (status) {
-    1 => context.l10n.pendingReview,
-    2 => context.l10n.approved,
-    3 => context.l10n.rejected,
+    common_enum.ReviewStatus.REVIEW_STATUS_PENDING =>
+      context.l10n.pendingReview,
+    common_enum.ReviewStatus.REVIEW_STATUS_APPROVED => context.l10n.approved,
+    common_enum.ReviewStatus.REVIEW_STATUS_REJECTED => context.l10n.rejected,
     _ => context.l10n.unknown,
   };
 }
 
-String _providerStatusText(BuildContext context, int status) {
+String _providerStatusText(
+  BuildContext context,
+  provider_common_enum.ProviderInstanceStatus status,
+) {
   return switch (status) {
-    1 => context.l10n.connected,
-    2 => context.l10n.disconnected,
-    3 => context.l10n.error,
+    provider_common_enum
+        .ProviderInstanceStatus
+        .PROVIDER_INSTANCE_STATUS_CONNECTED =>
+      context.l10n.connected,
+    provider_common_enum
+        .ProviderInstanceStatus
+        .PROVIDER_INSTANCE_STATUS_DISCONNECTED =>
+      context.l10n.disconnected,
+    provider_common_enum
+        .ProviderInstanceStatus
+        .PROVIDER_INSTANCE_STATUS_ERROR =>
+      context.l10n.error,
     _ => context.l10n.unknown,
   };
 }
 
-String _systemRoleText(BuildContext context, int role) {
+String _systemRoleText(BuildContext context, SyncTvUserRole role) {
   return switch (role) {
-    1 => 'Root',
-    2 => context.l10n.administrator,
-    3 => context.l10n.user,
+    AccountUserRole(value: common_enum.UserRole.USER_ROLE_ROOT) => 'Root',
+    AccountUserRole(value: common_enum.UserRole.USER_ROLE_ADMIN) =>
+      context.l10n.administrator,
+    AccountUserRole(value: common_enum.UserRole.USER_ROLE_USER) =>
+      context.l10n.user,
     _ => context.l10n.unknown,
   };
 }
 
-String _userStatusText(BuildContext context, int status) {
+String _userStatusText(BuildContext context, common_enum.UserStatus status) {
   return switch (status) {
-    1 => context.l10n.active,
-    2 => context.l10n.banned,
+    common_enum.UserStatus.USER_STATUS_ACTIVE => context.l10n.active,
+    common_enum.UserStatus.USER_STATUS_BANNED => context.l10n.banned,
     _ => context.l10n.unknown,
   };
 }
 
-String _roomStatusText(BuildContext context, int status) {
+String _roomStatusText(BuildContext context, common_enum.RoomStatus status) {
   return switch (status) {
-    1 => context.l10n.active,
-    2 => context.l10n.closed,
+    common_enum.RoomStatus.ROOM_STATUS_ACTIVE => context.l10n.active,
+    common_enum.RoomStatus.ROOM_STATUS_CLOSED => context.l10n.closed,
     _ => context.l10n.unknown,
   };
 }
 
-String _resourceAvailabilityText(BuildContext context, int availability) {
+String _resourceAvailabilityText(
+  BuildContext context,
+  client_enum.ResourceAvailability availability,
+) {
   return switch (availability) {
-    1 => context.l10n.available,
-    2 => context.l10n.creatorUnavailable,
+    client_enum.ResourceAvailability.RESOURCE_AVAILABILITY_AVAILABLE =>
+      context.l10n.available,
+    client_enum.ResourceAvailability.RESOURCE_AVAILABILITY_CREATOR_INACTIVE =>
+      context.l10n.creatorUnavailable,
     _ => context.l10n.unknown,
   };
 }
 
-Color _roomStatusColor(int status) {
+Color _roomStatusColor(common_enum.RoomStatus status) {
   return switch (status) {
-    1 => Colors.green,
-    2 => Colors.grey,
+    common_enum.RoomStatus.ROOM_STATUS_ACTIVE => Colors.green,
+    common_enum.RoomStatus.ROOM_STATUS_CLOSED => Colors.grey,
     _ => Colors.grey,
   };
 }
 
-String _roomMemberRoleText(BuildContext context, int role) {
+String _roomMemberRoleText(
+  BuildContext context,
+  common_enum.RoomMemberRole role,
+) {
   return switch (role) {
-    1 => context.l10n.creator,
-    2 => context.l10n.administrator,
-    3 => context.l10n.member,
-    4 => context.l10n.guest,
+    common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR => context.l10n.creator,
+    common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN =>
+      context.l10n.administrator,
+    common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER => context.l10n.member,
+    common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST => context.l10n.guest,
     _ => context.l10n.unknown,
   };
 }

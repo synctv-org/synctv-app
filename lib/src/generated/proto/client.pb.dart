@@ -44997,7 +44997,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? maxRoomsPerUser,
     $fixnum.Int64? defaultMaxMembers,
     $core.bool? roomCreationApprovalRequired,
-    $core.String? roomPasswordPolicy,
+    $0.RoomPasswordPolicy? roomPasswordPolicy,
     $core.bool? enablePasswordSignup,
     $core.bool? passwordSignupNeedReview,
     $core.bool? enableEmailSignup,
@@ -45068,7 +45068,8 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     ..aInt64(3, _omitFieldNames ? '' : 'maxRoomsPerUser')
     ..aInt64(4, _omitFieldNames ? '' : 'defaultMaxMembers')
     ..aOB(5, _omitFieldNames ? '' : 'roomCreationApprovalRequired')
-    ..aOS(6, _omitFieldNames ? '' : 'roomPasswordPolicy')
+    ..aE<$0.RoomPasswordPolicy>(6, _omitFieldNames ? '' : 'roomPasswordPolicy',
+        enumValues: $0.RoomPasswordPolicy.values)
     ..aOB(7, _omitFieldNames ? '' : 'enablePasswordSignup')
     ..aOB(8, _omitFieldNames ? '' : 'passwordSignupNeedReview')
     ..aOB(9, _omitFieldNames ? '' : 'enableEmailSignup')
@@ -45157,9 +45158,9 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   void clearRoomCreationApprovalRequired() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.String get roomPasswordPolicy => $_getSZ(5);
+  $0.RoomPasswordPolicy get roomPasswordPolicy => $_getN(5);
   @$pb.TagNumber(6)
-  set roomPasswordPolicy($core.String value) => $_setString(5, value);
+  set roomPasswordPolicy($0.RoomPasswordPolicy value) => $_setField(6, value);
   @$pb.TagNumber(6)
   $core.bool hasRoomPasswordPolicy() => $_has(5);
   @$pb.TagNumber(6)

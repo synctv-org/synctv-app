@@ -152,25 +152,23 @@ class SyncTvRoomManagementDomainService {
     String version = '',
   }) {
     return watchRoomMembers(roomId, version: version).map((event) {
-      switch (event.kind) {
-        case RoomResourceWatchKind.observed:
-          return RoomResourceWatchEvent<List<SyncTvUser>>.observed(
-            version: event.version,
-            changed: event.changed,
-          );
-        case RoomResourceWatchKind.changed:
-          return RoomResourceWatchEvent<List<SyncTvUser>>.changed(
-            version: event.version,
-            snapshot: event.snapshot
-                ?.map(roomMemberToUser)
-                .toList(growable: false),
-          );
-        case RoomResourceWatchKind.error:
-          return RoomResourceWatchEvent<List<SyncTvUser>>.error(
-            message: event.errorMessage,
-            code: event.errorCode,
-          );
-      }
+      return switch (event) {
+        RoomResourceObserved(:final version, :final changed) =>
+          RoomResourceWatchEvent<List<SyncTvUser>>.observed(
+            version: version,
+            changed: changed,
+          ),
+        RoomResourceChanged(:final version, :final snapshot) =>
+          RoomResourceWatchEvent<List<SyncTvUser>>.changed(
+            version: version,
+            snapshot: snapshot?.map(roomMemberToUser).toList(growable: false),
+          ),
+        RoomResourceWatchFailed(:final message, :final code) =>
+          RoomResourceWatchEvent<List<SyncTvUser>>.error(
+            message: message,
+            code: code,
+          ),
+      };
     });
   }
 
@@ -408,16 +406,13 @@ class SyncTvRoomManagementDomainService {
   Future<void> addRoomMember(
     String roomId,
     String userId, {
-    int role = 3,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
     bool notify = true,
   }) async {
     await _api.room.addMember(
       roomId,
-      client.AddMemberRequest(
-        userId: userId,
-        role: roomMemberRoleFromValue(role),
-        notify: notify,
-      ),
+      client.AddMemberRequest(userId: userId, role: role, notify: notify),
     );
   }
 
@@ -452,14 +447,11 @@ class SyncTvRoomManagementDomainService {
   Future<AdminRoomMember> setRoomMemberRole(
     String roomId,
     String userId,
-    int role,
+    common_enum.RoomMemberRole role,
   ) async {
     final member = await _api.room.updateMemberPermissions(
       roomId,
-      client.UpdateMemberPermissionsRequest(
-        userId: userId,
-        role: roomMemberRoleFromValue(role),
-      ),
+      client.UpdateMemberPermissionsRequest(userId: userId, role: role),
     );
     return roomMemberFromProto(member);
   }
@@ -531,7 +523,7 @@ AdminRoomMember roomMemberFromProto(common.RoomMember member) {
     username: member.username,
     remarkName: member.remarkName,
     displayTag: member.displayTag,
-    role: member.role.value,
+    role: member.role,
     permissions: member.permissions.toInt(),
     addedPermissions: member.addedPermissions.toInt(),
     removedPermissions: member.removedPermissions.toInt(),
@@ -547,9 +539,9 @@ SyncTvUser roomMemberToUser(AdminRoomMember member) {
   return SyncTvUser(
     id: member.userId,
     username: member.username,
-    role: member.role,
+    role: RoomMembershipRole(member.role),
     createdAt: member.joinedAt,
-    status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
+    status: common_enum.UserStatus.USER_STATUS_ACTIVE,
     onlineCount: member.isOnline ? 1 : 0,
     connectionCount: member.connectionCount,
   );
@@ -573,8 +565,8 @@ RoomJoinReviewInfo roomJoinReviewFromProto(client.RoomJoinReview review) {
     roomId: review.roomId,
     userId: review.userId,
     username: review.username,
-    requestedRole: review.requestedRole.value,
-    status: review.status.value,
+    requestedRole: review.requestedRole,
+    status: review.status,
     requestedAt: review.requestedAt.toInt(),
     reviewedAt: review.reviewedAt.toInt(),
     reviewedBy: review.reviewedBy,
@@ -588,9 +580,4 @@ IceServerInfo iceServerFromProto(client.IceServer server) {
     username: server.username,
     credential: server.credential,
   );
-}
-
-common_enum.RoomMemberRole roomMemberRoleFromValue(int value) {
-  return common_enum.RoomMemberRole.valueOf(value) ??
-      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER;
 }

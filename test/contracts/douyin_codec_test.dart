@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/src/generated/proto/providers/douyin.pb.dart'
     as douyin;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 void main() {
   group('Douyin protobuf and source config', () {
@@ -23,23 +25,23 @@ void main() {
         {'kind': 'live', 'webRid': '654321', 'shared': true},
       ]) {
         final config = SourceConfigCodec.mediaSourceConfigFromMap(
-          sourceProvider: 'douyin',
+          sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_DOUYIN,
           sourceConfig: source,
         )!;
         expect(
           SourceConfigCodec.providerForMediaSourceConfig(config),
-          'douyin',
+          source_enum.SourceProvider.SOURCE_PROVIDER_DOUYIN,
         );
         expect(SourceConfigCodec.mediaSourceConfigToMap(config), source);
       }
 
       final playlist = SourceConfigCodec.playlistSourceConfigFromMap(
-        sourceProvider: 'douyin',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_DOUYIN,
         sourceConfig: const {'secUid': 'MS4wLjABAAAAexample', 'shared': true},
       )!;
       expect(
         SourceConfigCodec.providerForPlaylistSourceConfig(playlist),
-        'douyin',
+        source_enum.SourceProvider.SOURCE_PROVIDER_DOUYIN,
       );
       expect(SourceConfigCodec.playlistSourceConfigToMap(playlist), {
         'secUid': 'MS4wLjABAAAAexample',

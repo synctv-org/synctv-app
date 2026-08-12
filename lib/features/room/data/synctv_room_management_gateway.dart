@@ -123,7 +123,7 @@ final class SyncTvRoomManagementGateway implements RoomManagementGateway {
   Future<void> addRoomMember(
     String roomId,
     String userId, {
-    int role = 3,
+    common.RoomMemberRole role = common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
     bool notify = true,
   }) => SyncTvService.addRoomMember(roomId, userId, role: role, notify: notify);
   @override
@@ -142,7 +142,7 @@ final class SyncTvRoomManagementGateway implements RoomManagementGateway {
   Future<AdminRoomMember> setRoomMemberRole(
     String roomId,
     String userId,
-    int role,
+    common.RoomMemberRole role,
   ) => SyncTvService.setRoomMemberRole(roomId, userId, role);
   @override
   Future<void> updateRoomMemberPermissionOverrides(

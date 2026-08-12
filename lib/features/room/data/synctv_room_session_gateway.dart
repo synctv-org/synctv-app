@@ -1,6 +1,7 @@
 import 'package:synctv_app/features/room/application/room_session_gateway.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/contracts/account_models.dart';
 
 final class SyncTvRoomSessionGateway implements RoomSessionGateway {
   const SyncTvRoomSessionGateway();
@@ -9,7 +10,7 @@ final class SyncTvRoomSessionGateway implements RoomSessionGateway {
   String get serverBaseUrl => SyncTvService.baseUrl;
 
   @override
-  bool get isGuestSession => SyncTvService.isGuestSession;
+  SyncTvSessionIdentity get sessionIdentity => SyncTvService.sessionIdentity;
 
   @override
   bool get allowInsecureTls => SyncTvService.allowInsecureTls;

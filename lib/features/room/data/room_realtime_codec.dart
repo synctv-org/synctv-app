@@ -17,6 +17,8 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 import 'package:synctv_app/contracts/synctv_models.dart';
 
 class RoomRealtimeCodec {
@@ -359,7 +361,8 @@ class RoomRealtimeCodec {
     int page = 1,
     int pageSize = 100,
     String search = '',
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     String providerInstanceName = '',
     client_enum.MediaListSortBy sortBy =
         client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
@@ -383,7 +386,7 @@ class RoomRealtimeCodec {
           page: client.PagePagination(page: page),
           pageSize: pageSize,
           search: search,
-          sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
+          sourceProvider: sourceProvider,
           providerInstanceName: providerInstanceName,
           sortBy: sortBy,
           sortDirection: sortDirection,
@@ -754,8 +757,8 @@ class RoomRealtimeCodec {
       chatVersion: chat.version.toInt(),
       chatEditedAt: chat.editedAt.toInt(),
       chatDeletedAt: chat.deletedAt.toInt(),
-      chatStatus: chat.status.value,
-      chatMessageType: chat.messageType.value,
+      chatStatus: chat.status,
+      chatMessageType: chat.messageType,
       chatReplyToMessageId: chat.replyToMessageId,
       chatDisplayPosition: chat.displayPosition,
       chatDisplayColor: chat.displayColor,
@@ -1008,7 +1011,7 @@ class RoomRealtimeCodec {
       chatPinEvent: ChatPinEventInfo(
         eventId: event.eventId,
         roomId: event.roomId,
-        kind: event.kind.value,
+        kind: event.kind,
         message: _chatMessageInfoFromProto(event.message),
         pin: event.hasPin() ? _chatPinFromProto(event.pin) : null,
         occurredAt: event.occurredAt.toInt(),
@@ -1029,13 +1032,13 @@ class RoomRealtimeCodec {
       username: message.hasUsername() ? message.username : null,
       content: message.content,
       timestamp: message.timestamp.toInt(),
-      messageType: message.messageType.value,
+      messageType: message.messageType,
       displayPosition: message.displayPosition,
       displayColor: message.displayColor,
       version: message.version.toInt(),
       editedAt: message.editedAt.toInt(),
       deletedAt: message.deletedAt.toInt(),
-      status: message.status.value,
+      status: message.status,
       replyToMessageId: message.replyToMessageId,
       images: message.attachments
           .map(
@@ -1225,7 +1228,7 @@ class RoomRealtimeCodec {
         ? SourceConfigCodec.mediaSourceConfigToMap(media.sourceConfig)
         : <String, dynamic>{};
     final sourceProvider = media.hasSourceProvider()
-        ? SourceConfigCodec.providerToString(media.sourceProvider)
+        ? media.sourceProvider
         : SourceConfigCodec.providerForMediaSourceConfig(media.sourceConfig);
     final liveState = resourceMetadataLiveState(
       media.hasMetadata() ? media.metadata : null,
@@ -1241,9 +1244,9 @@ class RoomRealtimeCodec {
       roomId: media.roomId,
       position: media.position,
       addedAt: media.addedAt.toInt(),
-      availability: media.availability.value,
+      availability: media.availability,
       version: media.version.toInt(),
-      type: sourceProvider,
+      type: SourceConfigCodec.providerToString(sourceProvider),
       headers: _stringMap(metadata['headers']),
       proxy: metadata['proxy'] == true,
       live:
@@ -1267,7 +1270,7 @@ class RoomRealtimeCodec {
 
   static RoomPlaylistItem _playlistFromProto(client.Playlist playlist) {
     final sourceProvider = playlist.hasSourceProvider()
-        ? SourceConfigCodec.providerToString(playlist.sourceProvider)
+        ? playlist.sourceProvider
         : SourceConfigCodec.providerForPlaylistSourceConfig(
             playlist.sourceConfig,
           );
@@ -1290,11 +1293,13 @@ class RoomRealtimeCodec {
       createdAt: playlist.createdAt.toInt(),
       updatedAt: playlist.updatedAt.toInt(),
       itemCount: playlist.itemCount,
-      availability: playlist.availability.value,
+      availability: playlist.availability,
       version: playlist.version.toInt(),
       description: playlist.description,
       coverUrl: playlist.hasCover() ? playlist.cover.url : '',
-      type: playlist.isDynamic ? sourceProvider : 'playlist',
+      type: playlist.isDynamic
+          ? SourceConfigCodec.providerToString(sourceProvider)
+          : 'playlist',
       sourceProvider: sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
       sourceConfig: sourceConfig,
@@ -1344,9 +1349,9 @@ class RoomRealtimeCodec {
     return SyncTvUser(
       id: member.userId,
       username: member.username,
-      role: member.role.value,
+      role: RoomMembershipRole(member.role),
       createdAt: member.joinedAt.toInt(),
-      status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
+      status: common_enum.UserStatus.USER_STATUS_ACTIVE,
       onlineCount: member.isOnline ? 1 : 0,
     );
   }
@@ -1358,7 +1363,7 @@ class RoomRealtimeCodec {
       username: member.username,
       remarkName: member.remarkName,
       displayTag: member.displayTag,
-      role: member.role.value,
+      role: member.role,
       permissions: member.permissions.toInt(),
       addedPermissions: member.addedPermissions.toInt(),
       removedPermissions: member.removedPermissions.toInt(),

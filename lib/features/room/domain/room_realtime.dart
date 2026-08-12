@@ -289,8 +289,9 @@ class RoomRealtimeMessage {
     this.chatVersion = 0,
     this.chatEditedAt = 0,
     this.chatDeletedAt = 0,
-    this.chatStatus = 0,
-    this.chatMessageType = 1,
+    this.chatStatus =
+        client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_UNSPECIFIED,
+    this.chatMessageType = client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
     this.chatDisplayPosition = '',
     this.chatDisplayColor = '',
     this.chatReplyToMessageId = '',
@@ -329,8 +330,8 @@ class RoomRealtimeMessage {
   final int chatVersion;
   final int chatEditedAt;
   final int chatDeletedAt;
-  final int chatStatus;
-  final int chatMessageType;
+  final client_enum.ChatMessageStatus chatStatus;
+  final client_enum.ChatMessageType chatMessageType;
   final String chatDisplayPosition;
   final String chatDisplayColor;
   final String chatReplyToMessageId;
@@ -513,14 +514,13 @@ class RoomRealtimeChatEntry {
 }
 
 String chatMessageDisplayUsername({
-  required int messageType,
+  required client_enum.ChatMessageType messageType,
   String? username,
   String missingUsername = 'Deleted user',
 }) {
-  final type = client_enum.ChatMessageType.valueOf(messageType);
-  if (type ==
+  if (messageType ==
           client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED ||
-      type ==
+      messageType ==
           client_enum
               .ChatMessageType
               .CHAT_MESSAGE_TYPE_SYSTEM_PLAYBACK_CHANGED) {

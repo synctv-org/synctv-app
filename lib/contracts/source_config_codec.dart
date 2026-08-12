@@ -77,54 +77,91 @@ class SourceConfigCodec {
     };
   }
 
-  static String providerForMediaSourceConfig(
+  static source_enum.SourceProvider providerForMediaSourceConfig(
     source_config.MediaSourceConfig config,
   ) {
     return switch (config.whichProvider()) {
-      source_config.MediaSourceConfig_Provider.directUrl => 'directUrl',
-      source_config.MediaSourceConfig_Provider.bilibili => 'bilibili',
-      source_config.MediaSourceConfig_Provider.alist => 'alist',
-      source_config.MediaSourceConfig_Provider.emby => 'emby',
-      source_config.MediaSourceConfig_Provider.rtmp => 'rtmp',
-      source_config.MediaSourceConfig_Provider.liveProxy => 'liveProxy',
-      source_config.MediaSourceConfig_Provider.cloudreve => 'cloudreve',
-      source_config.MediaSourceConfig_Provider.twitch => 'twitch',
-      source_config.MediaSourceConfig_Provider.huya => 'huya',
-      source_config.MediaSourceConfig_Provider.douyu => 'douyu',
-      source_config.MediaSourceConfig_Provider.douyin => 'douyin',
-      source_config.MediaSourceConfig_Provider.acFun => 'acfun',
-      source_config.MediaSourceConfig_Provider.cctv => 'cctv',
-      source_config.MediaSourceConfig_Provider.fnos => 'fnos',
-      source_config.MediaSourceConfig_Provider.qnap => 'qnap',
-      source_config.MediaSourceConfig_Provider.synology => 'synology',
-      source_config.MediaSourceConfig_Provider.nextcloud => 'nextcloud',
-      source_config.MediaSourceConfig_Provider.seafile => 'seafile',
-      source_config.MediaSourceConfig_Provider.truenas => 'truenas',
-      source_config.MediaSourceConfig_Provider.youtube => 'youtube',
-      source_config.MediaSourceConfig_Provider.tiktok => 'tiktok',
-      source_config.MediaSourceConfig_Provider.notSet => '',
+      source_config.MediaSourceConfig_Provider.directUrl =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL,
+      source_config.MediaSourceConfig_Provider.bilibili =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
+      source_config.MediaSourceConfig_Provider.alist =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
+      source_config.MediaSourceConfig_Provider.emby =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
+      source_config.MediaSourceConfig_Provider.rtmp =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_RTMP,
+      source_config.MediaSourceConfig_Provider.liveProxy =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY,
+      source_config.MediaSourceConfig_Provider.cloudreve =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE,
+      source_config.MediaSourceConfig_Provider.twitch =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_TWITCH,
+      source_config.MediaSourceConfig_Provider.huya =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_HUYA,
+      source_config.MediaSourceConfig_Provider.douyu =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_DOUYU,
+      source_config.MediaSourceConfig_Provider.douyin =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_DOUYIN,
+      source_config.MediaSourceConfig_Provider.acFun =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_ACFUN,
+      source_config.MediaSourceConfig_Provider.cctv =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_CCTV,
+      source_config.MediaSourceConfig_Provider.fnos =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_FNOS,
+      source_config.MediaSourceConfig_Provider.qnap =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_QNAP,
+      source_config.MediaSourceConfig_Provider.synology =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_SYNOLOGY,
+      source_config.MediaSourceConfig_Provider.nextcloud =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_NEXTCLOUD,
+      source_config.MediaSourceConfig_Provider.seafile =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_SEAFILE,
+      source_config.MediaSourceConfig_Provider.truenas =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_TRUENAS,
+      source_config.MediaSourceConfig_Provider.youtube =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE,
+      source_config.MediaSourceConfig_Provider.tiktok =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_TIKTOK,
+      source_config.MediaSourceConfig_Provider.notSet =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     };
   }
 
-  static String providerForPlaylistSourceConfig(
+  static source_enum.SourceProvider providerForPlaylistSourceConfig(
     source_config.PlaylistSourceConfig config,
   ) {
     return switch (config.whichProvider()) {
-      source_config.PlaylistSourceConfig_Provider.bilibili => 'bilibili',
-      source_config.PlaylistSourceConfig_Provider.alist => 'alist',
-      source_config.PlaylistSourceConfig_Provider.emby => 'emby',
-      source_config.PlaylistSourceConfig_Provider.cloudreve => 'cloudreve',
-      source_config.PlaylistSourceConfig_Provider.twitch => 'twitch',
-      source_config.PlaylistSourceConfig_Provider.douyin => 'douyin',
-      source_config.PlaylistSourceConfig_Provider.fnos => 'fnos',
-      source_config.PlaylistSourceConfig_Provider.qnap => 'qnap',
-      source_config.PlaylistSourceConfig_Provider.synology => 'synology',
-      source_config.PlaylistSourceConfig_Provider.nextcloud => 'nextcloud',
-      source_config.PlaylistSourceConfig_Provider.seafile => 'seafile',
-      source_config.PlaylistSourceConfig_Provider.truenas => 'truenas',
-      source_config.PlaylistSourceConfig_Provider.youtube => 'youtube',
-      source_config.PlaylistSourceConfig_Provider.tiktok => 'tiktok',
-      source_config.PlaylistSourceConfig_Provider.notSet => '',
+      source_config.PlaylistSourceConfig_Provider.bilibili =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
+      source_config.PlaylistSourceConfig_Provider.alist =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
+      source_config.PlaylistSourceConfig_Provider.emby =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
+      source_config.PlaylistSourceConfig_Provider.cloudreve =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE,
+      source_config.PlaylistSourceConfig_Provider.twitch =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_TWITCH,
+      source_config.PlaylistSourceConfig_Provider.douyin =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_DOUYIN,
+      source_config.PlaylistSourceConfig_Provider.fnos =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_FNOS,
+      source_config.PlaylistSourceConfig_Provider.qnap =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_QNAP,
+      source_config.PlaylistSourceConfig_Provider.synology =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_SYNOLOGY,
+      source_config.PlaylistSourceConfig_Provider.nextcloud =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_NEXTCLOUD,
+      source_config.PlaylistSourceConfig_Provider.seafile =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_SEAFILE,
+      source_config.PlaylistSourceConfig_Provider.truenas =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_TRUENAS,
+      source_config.PlaylistSourceConfig_Provider.youtube =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE,
+      source_config.PlaylistSourceConfig_Provider.tiktok =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_TIKTOK,
+      source_config.PlaylistSourceConfig_Provider.notSet =>
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     };
   }
 
@@ -153,11 +190,10 @@ class SourceConfigCodec {
   }
 
   static source_config.MediaSourceConfig? mediaSourceConfigFromMap({
-    required String sourceProvider,
+    required source_enum.SourceProvider sourceProvider,
     required Map<String, dynamic> sourceConfig,
   }) {
-    final provider = providerFromString(sourceProvider);
-    return mediaSourceConfigForProvider(provider, sourceConfig);
+    return mediaSourceConfigForProvider(sourceProvider, sourceConfig);
   }
 
   static source_config.MediaSourceConfig? mediaSourceConfigForProvider(
@@ -290,11 +326,10 @@ class SourceConfigCodec {
   }
 
   static source_config.PlaylistSourceConfig? playlistSourceConfigFromMap({
-    required String sourceProvider,
+    required source_enum.SourceProvider sourceProvider,
     required Map<String, dynamic> sourceConfig,
   }) {
-    final provider = providerFromString(sourceProvider);
-    return playlistSourceConfigForProvider(provider, sourceConfig);
+    return playlistSourceConfigForProvider(sourceProvider, sourceConfig);
   }
 
   static source_config.PlaylistSourceConfig? playlistSourceConfigForProvider(

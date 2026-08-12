@@ -63,7 +63,7 @@ class SyncTvAdminDomainService {
   Future<void> addUser(
     String username,
     String password,
-    int role, {
+    common_enum.UserRole role, {
     String email = '',
     common_enum.UserStatus status = common_enum.UserStatus.USER_STATUS_ACTIVE,
   }) async {
@@ -72,9 +72,7 @@ class SyncTvAdminDomainService {
         username: username,
         password: password,
         email: email,
-        role:
-            common_enum.UserRole.valueOf(role) ??
-            common_enum.UserRole.USER_ROLE_USER,
+        role: role,
         status: status,
       ),
     );
@@ -166,17 +164,6 @@ class SyncTvAdminDomainService {
         userId: userId,
         password: password,
         reason: reason,
-      ),
-    );
-  }
-
-  Future<void> setAdmin(String userId, bool isAdmin) async {
-    await _api.adminService.updateUserRole(
-      admin.UpdateUserRoleRequest(
-        userId: userId,
-        role: isAdmin
-            ? common_enum.UserRole.USER_ROLE_ADMIN
-            : common_enum.UserRole.USER_ROLE_USER,
       ),
     );
   }
@@ -703,14 +690,15 @@ class SyncTvAdminDomainService {
   Future<void> addRoomMember(
     String roomId,
     String userId, {
-    int role = 2,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
     bool notify = true,
   }) async {
     await _api.adminService.addMember(
       admin.AddMemberRequest(
         roomId: roomId,
         userId: userId,
-        role: roomMemberRoleFromValue(role),
+        role: role,
         notify: notify,
       ),
     );
@@ -744,12 +732,16 @@ class SyncTvAdminDomainService {
     );
   }
 
-  Future<void> setRoomMemberRole(String roomId, String userId, int role) async {
+  Future<void> setRoomMemberRole(
+    String roomId,
+    String userId,
+    common_enum.RoomMemberRole role,
+  ) async {
     await _api.adminService.updateMemberPermissions(
       admin.UpdateMemberPermissionsRequest(
         roomId: roomId,
         userId: userId,
-        role: roomMemberRoleFromValue(role),
+        role: role,
       ),
     );
   }
@@ -757,7 +749,8 @@ class SyncTvAdminDomainService {
   Future<void> updateRoomMemberPermissionOverrides(
     String roomId,
     String userId, {
-    int role = 3,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
     int addedPermissions = 0,
     int removedPermissions = 0,
     int adminAddedPermissions = 0,
@@ -767,7 +760,7 @@ class SyncTvAdminDomainService {
       admin.UpdateMemberPermissionsRequest(
         roomId: roomId,
         userId: userId,
-        role: roomMemberRoleFromValue(role),
+        role: role,
         addedPermissions: Int64(addedPermissions),
         removedPermissions: Int64(removedPermissions),
         adminAddedPermissions: Int64(adminAddedPermissions),
@@ -1019,7 +1012,8 @@ class SyncTvAdminDomainService {
   Future<AdminBanRecordsPage> listBanRecordsPage({
     int page = 1,
     int pageSize = 50,
-    int targetType = 0,
+    admin.BanTargetType targetType =
+        admin.BanTargetType.BAN_TARGET_TYPE_UNSPECIFIED,
     bool? active,
     String userId = '',
     String roomId = '',
@@ -1028,7 +1022,7 @@ class SyncTvAdminDomainService {
       admin.ListBanRecordsRequest(
         page: page,
         pageSize: pageSize,
-        targetType: _banTargetTypeFromValue(targetType),
+        targetType: targetType,
         active: active,
         userId: userId,
         roomId: roomId,
@@ -1045,8 +1039,10 @@ class SyncTvAdminDomainService {
   Future<AdminContentReportsPage> listContentReportsPage({
     int page = 1,
     int pageSize = 50,
-    int status = 0,
-    int targetType = 0,
+    admin.ContentReportStatus status =
+        admin.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED,
+    admin.ContentReportTargetType targetType =
+        admin.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
     String reporterUserId = '',
     String roomId = '',
     String targetRoomId = '',
@@ -1054,15 +1050,16 @@ class SyncTvAdminDomainService {
     String targetMemberRoomId = '',
     String targetMemberUserId = '',
     int targetChatMessageId = 0,
-    int scope = 0,
+    admin.ContentReportScope scope =
+        admin.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED,
     String search = '',
   }) async {
     final response = await _api.adminService.listContentReports(
       admin.ListContentReportsRequest(
         page: page,
         pageSize: pageSize,
-        status: _contentReportStatusFromValue(status),
-        targetType: _contentReportTargetTypeFromValue(targetType),
+        status: status,
+        targetType: targetType,
         reporterUserId: reporterUserId,
         roomId: roomId,
         targetRoomId: targetRoomId,
@@ -1070,7 +1067,7 @@ class SyncTvAdminDomainService {
         targetMemberRoomId: targetMemberRoomId,
         targetMemberUserId: targetMemberUserId,
         targetChatMessageId: Int64(targetChatMessageId),
-        scope: _contentReportScopeFromValue(scope),
+        scope: scope,
         search: search,
       ),
     );
@@ -1091,13 +1088,13 @@ class SyncTvAdminDomainService {
 
   Future<AdminContentReport> updateContentReportStatus(
     String reportId,
-    int status, {
+    admin.ContentReportStatus status, {
     String resolutionNote = '',
   }) async {
     final response = await _api.adminService.updateContentReportStatus(
       admin.UpdateContentReportStatusRequest(
         reportId: reportId,
-        status: _requiredContentReportStatusFromValue(status),
+        status: _requiredContentReportStatus(status),
         resolutionNote: resolutionNote,
       ),
     );
@@ -1108,8 +1105,10 @@ class SyncTvAdminDomainService {
     String roomId, {
     int page = 1,
     int pageSize = 50,
-    int status = 0,
-    int targetType = 0,
+    admin.ContentReportStatus status =
+        admin.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED,
+    admin.ContentReportTargetType targetType =
+        admin.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
     String targetMemberUserId = '',
     int targetChatMessageId = 0,
     String search = '',
@@ -1119,14 +1118,8 @@ class SyncTvAdminDomainService {
       client.ListRoomContentReportsRequest(
         page: page,
         pageSize: pageSize,
-        status:
-            client.ContentReportStatus.valueOf(status) ??
-            client.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED,
-        targetType:
-            client.ContentReportTargetType.valueOf(targetType) ??
-            client
-                .ContentReportTargetType
-                .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
+        status: _clientContentReportStatus(status),
+        targetType: _clientContentReportTargetType(targetType),
         targetMemberUserId: targetMemberUserId,
         targetChatMessageId: Int64(targetChatMessageId),
         search: search,
@@ -1154,16 +1147,16 @@ class SyncTvAdminDomainService {
   Future<AdminContentReport> updateRoomContentReportStatus(
     String roomId,
     String reportId,
-    int status, {
+    admin.ContentReportStatus status, {
     String resolutionNote = '',
   }) async {
     final response = await _api.room.updateRoomContentReportStatus(
       roomId,
       client.UpdateRoomContentReportStatusRequest(
         reportId: reportId,
-        status:
-            client.ContentReportStatus.valueOf(status) ??
-            client.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN,
+        status: _clientContentReportStatus(
+          _requiredContentReportStatus(status),
+        ),
         resolutionNote: resolutionNote,
       ),
     );
@@ -1171,23 +1164,23 @@ class SyncTvAdminDomainService {
   }
 
   Future<AdminReviewsPage> listReviewsPage({
-    required String kind,
+    required AdminReviewKind kind,
     int page = 1,
     int pageSize = 50,
-    int status = 1,
+    common_enum.ReviewStatus status =
+        common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
     String search = '',
     String requestedBy = '',
     String roomId = '',
     String userId = '',
   }) async {
-    final reviewStatus = _reviewStatusFromValue(status);
     switch (kind) {
-      case 'user':
+      case AdminReviewKind.userRegistration:
         final response = await _api.adminService.listUserRegistrationReviews(
           admin.ListUserRegistrationReviewsRequest(
             page: page,
             pageSize: pageSize,
-            status: reviewStatus,
+            status: status,
             search: search,
           ),
         );
@@ -1197,12 +1190,12 @@ class SyncTvAdminDomainService {
           page: page,
           pageSize: pageSize,
         );
-      case 'room':
+      case AdminReviewKind.roomCreation:
         final response = await _api.adminService.listRoomCreationReviews(
           admin.ListRoomCreationReviewsRequest(
             page: page,
             pageSize: pageSize,
-            status: reviewStatus,
+            status: status,
             requestedBy: requestedBy,
             search: search,
           ),
@@ -1213,12 +1206,12 @@ class SyncTvAdminDomainService {
           page: page,
           pageSize: pageSize,
         );
-      case 'join':
+      case AdminReviewKind.roomJoin:
         final response = await _api.adminService.listRoomJoinReviews(
           admin.ListRoomJoinReviewsRequest(
             page: page,
             pageSize: pageSize,
-            status: reviewStatus,
+            status: status,
             roomId: roomId.isNotEmpty
                 ? roomId
                 : search.startsWith('room_')
@@ -1237,40 +1230,36 @@ class SyncTvAdminDomainService {
           page: page,
           pageSize: pageSize,
         );
-      default:
-        throw ArgumentError.value(kind, 'kind', '未知审核类型');
     }
   }
 
-  Future<void> approveReview(String kind, String requestId) async {
+  Future<void> approveReview(AdminReviewKind kind, String requestId) async {
     switch (kind) {
-      case 'user':
+      case AdminReviewKind.userRegistration:
         await _api.adminService.approveUserRegistrationReview(
           admin.ApproveUserRegistrationReviewRequest(requestId: requestId),
         );
         return;
-      case 'room':
+      case AdminReviewKind.roomCreation:
         await _api.adminService.approveRoomCreationReview(
           admin.ApproveRoomCreationReviewRequest(requestId: requestId),
         );
         return;
-      case 'join':
+      case AdminReviewKind.roomJoin:
         await _api.adminService.approveRoomJoinReview(
           admin.ApproveRoomJoinReviewRequest(requestId: requestId),
         );
         return;
-      default:
-        throw ArgumentError.value(kind, 'kind', '未知审核类型');
     }
   }
 
   Future<void> rejectReview(
-    String kind,
+    AdminReviewKind kind,
     String requestId, {
     String reason = '',
   }) async {
     switch (kind) {
-      case 'user':
+      case AdminReviewKind.userRegistration:
         await _api.adminService.rejectUserRegistrationReview(
           admin.RejectUserRegistrationReviewRequest(
             requestId: requestId,
@@ -1278,7 +1267,7 @@ class SyncTvAdminDomainService {
           ),
         );
         return;
-      case 'room':
+      case AdminReviewKind.roomCreation:
         await _api.adminService.rejectRoomCreationReview(
           admin.RejectRoomCreationReviewRequest(
             requestId: requestId,
@@ -1286,7 +1275,7 @@ class SyncTvAdminDomainService {
           ),
         );
         return;
-      case 'join':
+      case AdminReviewKind.roomJoin:
         await _api.adminService.rejectRoomJoinReview(
           admin.RejectRoomJoinReviewRequest(
             requestId: requestId,
@@ -1294,8 +1283,6 @@ class SyncTvAdminDomainService {
           ),
         );
         return;
-      default:
-        throw ArgumentError.value(kind, 'kind', '未知审核类型');
     }
   }
 
@@ -1311,37 +1298,27 @@ class SyncTvAdminDomainService {
     );
   }
 
-  common_enum.ReviewStatus _reviewStatusFromValue(int value) {
-    return common_enum.ReviewStatus.valueOf(value) ??
-        common_enum.ReviewStatus.REVIEW_STATUS_PENDING;
-  }
-
-  admin.BanTargetType _banTargetTypeFromValue(int value) {
-    return admin.BanTargetType.valueOf(value) ??
-        admin.BanTargetType.BAN_TARGET_TYPE_UNSPECIFIED;
-  }
-
-  admin.ContentReportStatus _contentReportStatusFromValue(int value) {
-    return admin.ContentReportStatus.valueOf(value) ??
-        admin.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED;
-  }
-
-  admin.ContentReportStatus _requiredContentReportStatusFromValue(int value) {
-    final status = _contentReportStatusFromValue(value);
+  admin.ContentReportStatus _requiredContentReportStatus(
+    admin.ContentReportStatus status,
+  ) {
     if (status == admin.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED) {
-      throw ArgumentError.value(value, 'status', '请选择举报处置状态');
+      throw ArgumentError.value(status, 'status', '请选择举报处置状态');
     }
     return status;
   }
 
-  admin.ContentReportTargetType _contentReportTargetTypeFromValue(int value) {
-    return admin.ContentReportTargetType.valueOf(value) ??
-        admin.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED;
+  client.ContentReportStatus _clientContentReportStatus(
+    admin.ContentReportStatus status,
+  ) {
+    return client.ContentReportStatus.valueOf(status.value) ??
+        client.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED;
   }
 
-  admin.ContentReportScope _contentReportScopeFromValue(int value) {
-    return admin.ContentReportScope.valueOf(value) ??
-        admin.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED;
+  client.ContentReportTargetType _clientContentReportTargetType(
+    admin.ContentReportTargetType targetType,
+  ) {
+    return client.ContentReportTargetType.valueOf(targetType.value) ??
+        client.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED;
   }
 
   admin.UpdateSettingsRequest _settingsUpdateRequest(
@@ -1479,7 +1456,7 @@ class SyncTvAdminDomainService {
       insecureTls: instance.insecureTls,
       providers: SourceConfigCodec.providersToStrings(instance.providers),
       enabled: instance.enabled,
-      status: instance.status.value,
+      status: instance.status,
       createdAt: instance.createdAt.toInt(),
       updatedAt: instance.updatedAt.toInt(),
     );
@@ -1531,7 +1508,7 @@ class SyncTvAdminDomainService {
   AdminBanRecord _banRecordFromProto(admin.BanRecord record) {
     return AdminBanRecord(
       id: record.id,
-      targetType: record.targetType.value,
+      targetType: record.targetType,
       userId: record.userId,
       username: record.username,
       roomId: record.roomId,
@@ -1554,7 +1531,7 @@ class SyncTvAdminDomainService {
       reporterUsername: report.reporterUsername,
       roomId: report.roomId,
       roomName: report.roomName,
-      targetType: report.targetType.value,
+      targetType: report.targetType,
       targetRoomId: report.targetRoomId,
       targetRoomName: report.targetRoomName,
       targetUserId: report.targetUserId,
@@ -1569,7 +1546,7 @@ class SyncTvAdminDomainService {
       reasonCode: report.reasonCode,
       reason: report.reason,
       metadata: protoMessageToJsonMap(report.metadata),
-      status: report.status.value,
+      status: report.status,
       reviewedBy: report.reviewedBy,
       reviewedByUsername: report.reviewedByUsername,
       reviewedAt: report.reviewedAt.toInt(),
@@ -1588,7 +1565,9 @@ class SyncTvAdminDomainService {
       reporterUsername: report.reporterUsername,
       roomId: report.roomId,
       roomName: report.roomName,
-      targetType: report.targetType.value,
+      targetType:
+          admin.ContentReportTargetType.valueOf(report.targetType.value) ??
+          admin.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
       targetRoomId: report.targetRoomId,
       targetRoomName: report.targetRoomName,
       targetUserId: report.targetUserId,
@@ -1603,7 +1582,9 @@ class SyncTvAdminDomainService {
       reasonCode: report.reasonCode,
       reason: report.reason,
       metadata: protoMessageToJsonMap(report.metadata),
-      status: report.status.value,
+      status:
+          admin.ContentReportStatus.valueOf(report.status.value) ??
+          admin.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED,
       reviewedBy: report.reviewedBy,
       reviewedByUsername: report.reviewedByUsername,
       reviewedAt: report.reviewedAt.toInt(),
@@ -1641,43 +1622,45 @@ class SyncTvAdminDomainService {
       if (review.webauthnCredentialId.isNotEmpty)
         'Credential ${review.webauthnCredentialId}',
     ];
-    return AdminReviewItem(
-      kind: 'user',
+    return AdminUserRegistrationReview(
       id: review.id,
       title: review.username,
       subtitle: review.email,
-      status: review.status.value,
+      status: review.status,
       requestedAt: review.requestedAt.toInt(),
-      reviewedAt: review.reviewedAt.toInt(),
-      reviewedBy: review.reviewedBy,
-      rejectionReason: review.rejectionReason,
+      reviewedAt: _optionalTimestamp(review.reviewedAt.toInt()),
+      reviewedBy: _optionalText(review.reviewedBy),
+      rejectionReason: _optionalText(review.rejectionReason),
       detail: details.join(' · '),
       details: details,
       signupMethod: review.signupMethod,
-      oauth2Provider: oauth2ProviderTypeToString(review.oauth2Provider),
-      oauth2ProviderInstanceName: review.oauth2ProviderInstanceName,
-      oauth2ProviderIssuer: review.oauth2ProviderIssuer,
-      oauth2ProviderUserId: review.oauth2ProviderUserId,
-      oauth2ProviderUsername: review.oauth2ProviderUsername,
-      oauth2AvatarUrl: review.oauth2AvatarUrl,
-      webauthnCredentialId: review.webauthnCredentialId,
-      webauthnCredentialName: review.webauthnCredentialName,
+      oauth2Provider: _optionalText(
+        oauth2ProviderTypeToString(review.oauth2Provider),
+      ),
+      oauth2ProviderInstanceName: _optionalText(
+        review.oauth2ProviderInstanceName,
+      ),
+      oauth2ProviderIssuer: _optionalText(review.oauth2ProviderIssuer),
+      oauth2ProviderUserId: _optionalText(review.oauth2ProviderUserId),
+      oauth2ProviderUsername: _optionalText(review.oauth2ProviderUsername),
+      oauth2AvatarUrl: _optionalText(review.oauth2AvatarUrl),
+      webauthnCredentialId: _optionalText(review.webauthnCredentialId),
+      webauthnCredentialName: _optionalText(review.webauthnCredentialName),
     );
   }
 
   AdminReviewItem _roomCreationReviewFromProto(
     admin.RoomCreationReview review,
   ) {
-    return AdminReviewItem(
-      kind: 'room',
+    return AdminRoomCreationReview(
       id: review.id,
       title: review.name,
       subtitle: review.requestedByUsername,
-      status: review.status.value,
+      status: review.status,
       requestedAt: review.requestedAt.toInt(),
-      reviewedAt: review.reviewedAt.toInt(),
-      reviewedBy: review.reviewedBy,
-      rejectionReason: review.rejectionReason,
+      reviewedAt: _optionalTimestamp(review.reviewedAt.toInt()),
+      reviewedBy: _optionalText(review.reviewedBy),
+      rejectionReason: _optionalText(review.rejectionReason),
       detail: review.description,
       details: [
         if (review.description.isNotEmpty) review.description,
@@ -1687,16 +1670,16 @@ class SyncTvAdminDomainService {
   }
 
   AdminReviewItem _adminRoomJoinReviewFromProto(admin.RoomJoinReview review) {
-    return AdminReviewItem(
-      kind: 'join',
+    return AdminRoomJoinReview(
       id: review.id,
       title: review.roomName,
       subtitle: review.username,
-      status: review.status.value,
+      status: review.status,
       requestedAt: review.requestedAt.toInt(),
-      reviewedAt: review.reviewedAt.toInt(),
-      reviewedBy: review.reviewedBy,
-      rejectionReason: review.rejectionReason,
+      reviewedAt: _optionalTimestamp(review.reviewedAt.toInt()),
+      reviewedBy: _optionalText(review.reviewedBy),
+      rejectionReason: _optionalText(review.rejectionReason),
+      requestedRole: review.requestedRole,
       detail: '${review.roomId} · ${review.userId}',
       details: [
         '房间 ${review.roomId}',
@@ -1706,14 +1689,18 @@ class SyncTvAdminDomainService {
     );
   }
 
-  String _signupMethodLabel(int method) {
+  String _signupMethodLabel(admin.SignupMethod method) {
     return switch (method) {
-      1 => '邮箱',
-      2 => '密码',
-      3 => 'OAuth2',
-      4 => '管理员创建',
-      5 => 'Passkey',
+      admin.SignupMethod.SIGNUP_METHOD_EMAIL => '邮箱',
+      admin.SignupMethod.SIGNUP_METHOD_PASSWORD => '密码',
+      admin.SignupMethod.SIGNUP_METHOD_OAUTH2 => 'OAuth2',
+      admin.SignupMethod.SIGNUP_METHOD_ADMIN_CREATED => '管理员创建',
+      admin.SignupMethod.SIGNUP_METHOD_WEBAUTHN => 'Passkey',
       _ => '未知',
     };
   }
+
+  String? _optionalText(String value) => value.isEmpty ? null : value;
+
+  int? _optionalTimestamp(int value) => value == 0 ? null : value;
 }

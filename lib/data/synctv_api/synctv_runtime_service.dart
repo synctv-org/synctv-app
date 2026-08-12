@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/core/network/server_endpoint_identity.dart';
 import 'package:synctv_app/data/synctv_api/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -22,17 +23,13 @@ class SyncTvRuntimeService {
   SyncTvApiClient get api => _api;
   Stream<void> get onAuthError => _authErrorController.stream;
   String get baseUrl => sessionStore.baseUrl;
-  bool get hasRecoverableSession =>
-      session.hasAccessToken ||
-      (!session.isGuest &&
-          session.refreshToken != null &&
-          session.refreshToken!.isNotEmpty);
+  bool get hasRecoverableSession => session.hasRecoverableCredentials;
   List<SyncTvServerProfile> get servers =>
       List.unmodifiable(sessionStore.servers);
   SyncTvServerProfile? get activeServer => sessionStore.activeServer;
   bool get allowInsecureTls => activeServer?.allowInsecureTls == true;
-  String? get guestRoomId => sessionStore.guestRoomId;
-  bool get isGuestSession => sessionStore.isGuestSession;
+  String? get guestRoomId => sessionStore.guestSession?.roomId;
+  SyncTvSessionIdentity get sessionIdentity => session.identity;
 
   Future<void> init() async {
     await sessionStore.load();
@@ -129,16 +126,24 @@ class SyncTvRuntimeService {
   }
 
   Future<bool> ensureAuthenticated() async {
-    if (session.isGuest) return session.hasAccessToken;
-    if (session.hasAccessToken) return true;
-    if (session.refreshToken != null && session.refreshToken!.isNotEmpty) {
-      final refreshed = await _api.refreshAccessTokenIfPossible();
-      if (refreshed) {
-        return true;
-      }
-      _handleCurrentAuthError();
-      return false;
-    }
+    return switch (session.identity) {
+      GuestSessionIdentity() => true,
+      AccountSessionIdentity(:final accessToken) when accessToken != null =>
+        true,
+      AccountSessionIdentity(:final refreshToken) when refreshToken != null =>
+        await _refreshAccountSession(),
+      AccountSessionIdentity() ||
+      AnonymousSessionIdentity() => _expireCurrentSession(),
+    };
+  }
+
+  Future<bool> _refreshAccountSession() async {
+    final refreshed = await _api.refreshAccessTokenIfPossible();
+    if (refreshed) return true;
+    return _expireCurrentSession();
+  }
+
+  bool _expireCurrentSession() {
     _handleCurrentAuthError();
     return false;
   }
@@ -151,7 +156,7 @@ class SyncTvRuntimeService {
     if (!_api.isEndpointGenerationCurrent(generation)) {
       throw const SyncTvStaleEndpointException();
     }
-    await sessionStore.clearGuestContextAndPersist();
+    await sessionStore.persistSession();
   }
 
   Future<void> closeAccount() async {
@@ -160,7 +165,7 @@ class SyncTvRuntimeService {
     if (!_api.isEndpointGenerationCurrent(generation)) {
       throw const SyncTvStaleEndpointException();
     }
-    await sessionStore.clearGuestContextAndPersist();
+    await sessionStore.persistSession();
   }
 
   SyncTvApiClient _createClient(
@@ -178,7 +183,7 @@ class SyncTvRuntimeService {
             !api.isEndpointGenerationCurrent(generation)) {
           throw const SyncTvStaleEndpointException();
         }
-        await sessionStore.persistTokens();
+        await sessionStore.persistSession();
       },
     );
     return api;

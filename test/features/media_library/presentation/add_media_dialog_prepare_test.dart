@@ -11,6 +11,7 @@ import 'package:synctv_app/core/presentation/dependency_scope.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media_dialog.dart';
 import 'package:synctv_app/features/providers/application/provider_gateway.dart';
 import 'package:synctv_app/l10n/l10n.dart';
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
@@ -469,7 +470,8 @@ class _PrepareGateway implements ProviderGateway {
         maxRoomsPerUser: 10,
         defaultMaxMembers: 10,
         roomCreationApprovalRequired: false,
-        roomPasswordPolicy: '',
+        roomPasswordPolicy:
+            common.RoomPasswordPolicy.ROOM_PASSWORD_POLICY_OPTIONAL,
         enablePasswordSignup: true,
         passwordSignupNeedReview: false,
         enableEmailSignup: false,

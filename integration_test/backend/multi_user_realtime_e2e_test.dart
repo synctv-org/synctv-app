@@ -71,7 +71,7 @@ void main() {
         await SyncTvService.addRoomMember(
           roomId,
           rootId,
-          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
           notify: false,
         );
         await SyncTvService.addRoomMember(roomId, memberId, notify: false);
@@ -133,7 +133,7 @@ void main() {
         await SyncTvService.adminUpdateRoomMemberPermissionOverrides(
           roomId,
           memberId,
-          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
           addedPermissions: RoomMemberPermissions.all,
         );
         final memberBaseline = await memberProbe.waitFor(
@@ -151,7 +151,7 @@ void main() {
         await SyncTvService.adminUpdateRoomMemberPermissionOverrides(
           roomId,
           memberId,
-          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
           removedPermissions: removedPermissions,
         );
         final restricted = await memberProbe.waitFor(
@@ -171,7 +171,7 @@ void main() {
         await SyncTvService.adminUpdateRoomMemberPermissionOverrides(
           roomId,
           memberId,
-          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
           addedPermissions: RoomMemberPermissions.all,
         );
         final restored = await memberProbe.waitFor(
@@ -194,13 +194,11 @@ void main() {
             RoomAdminPermissions.manageMemberPermissions |
             RoomAdminPermissions.manageRoomSettings |
             RoomAdminPermissions.viewPlaybackHistory;
-        final dynamicAdminPermissions =
-            removedAdminPermissions & ~RoomAdminPermissions.viewPlaybackHistory;
         final beforeAdminRestriction = memberProbe.messages.length;
         await SyncTvService.adminUpdateRoomMemberPermissionOverrides(
           roomId,
           memberId,
-          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
           adminRemovedPermissions: removedAdminPermissions,
         );
         final restrictedAdmin = await memberProbe.waitFor(
@@ -212,7 +210,7 @@ void main() {
         );
         expect(
           restrictedAdmin.selfMember!.role,
-          common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+          common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
         );
         expect(
           restrictedAdmin.selfMember!.permissions & removedAdminPermissions,
@@ -226,7 +224,7 @@ void main() {
         await SyncTvService.adminUpdateRoomMemberPermissionOverrides(
           roomId,
           memberId,
-          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+          role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
           adminAddedPermissions: removedAdminPermissions,
         );
         final restoredAdmin = await memberProbe.waitFor(
@@ -238,11 +236,11 @@ void main() {
         );
         expect(
           restoredAdmin.selfMember!.role,
-          common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+          common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
         );
         expect(
           restoredAdmin.selfMember!.permissions & removedAdminPermissions,
-          dynamicAdminPermissions,
+          removedAdminPermissions,
         );
         print(
           'restored_admin_permissions=${restoredAdmin.selfMember!.permissions}',
@@ -264,7 +262,7 @@ void main() {
           await SyncTvService.adminUpdateRoomMemberPermissionOverrides(
             roomId,
             memberId,
-            role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+            role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
             addedPermissions: RoomMemberPermissions.all,
           );
           print('E2E_FIXTURE_ROOM_ID=$roomId');
@@ -369,7 +367,7 @@ Future<String> _createUser(_UserSeed seed) async {
   await SyncTvService.adminAddUser(
     seed.username,
     seed.password,
-    common_enum.UserRole.USER_ROLE_USER.value,
+    common_enum.UserRole.USER_ROLE_USER,
   );
   final page = await SyncTvService.adminListUsersPage(
     pageSize: 20,

@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/features/room/presentation/models/playlist_source_presentation.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 void main() {
   group('playlistSourceFacts', () {
@@ -8,7 +10,7 @@ void main() {
       final entry = RoomPlaylistItem(
         id: 'pl_1',
         name: 'Studio picks',
-        sourceProvider: 'youtube',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE,
         providerInstanceName: 'media-lab',
         sourceConfig: const {
           'kind': 'channel',
@@ -34,7 +36,7 @@ void main() {
       final entry = RoomPlaylistItem(
         id: 'pl_2',
         name: 'Archive',
-        sourceProvider: 'alist',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
         sourceConfig: const {
           'serverId': 'srv_demo',
           'path': '/Films/Archive',

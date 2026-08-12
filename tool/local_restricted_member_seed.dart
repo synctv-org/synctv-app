@@ -35,7 +35,7 @@ void main() {
       await SyncTvService.adminAddUser(
         username,
         password,
-        common_enum.UserRole.USER_ROLE_USER.value,
+        common_enum.UserRole.USER_ROLE_USER,
       );
     }
 
@@ -50,13 +50,21 @@ void main() {
       search: username,
     );
     if (!existing.members.any((item) => item.userId == member.id)) {
-      await SyncTvService.addRoomMember(roomId, member.id, role: 3);
+      await SyncTvService.addRoomMember(
+        roomId,
+        member.id,
+        role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+      );
     }
-    await SyncTvService.adminSetRoomMemberRole(roomId, member.id, 2);
+    await SyncTvService.adminSetRoomMemberRole(
+      roomId,
+      member.id,
+      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+    );
     await SyncTvService.adminUpdateRoomMemberPermissionOverrides(
       roomId,
       member.id,
-      role: 2,
+      role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
       adminRemovedPermissions:
           RoomEffectivePermissions.viewPlaybackHistory |
           RoomEffectivePermissions.useVoiceChat |

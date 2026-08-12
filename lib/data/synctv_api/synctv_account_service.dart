@@ -7,7 +7,6 @@ import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_memory_cache.dart';
-import 'package:synctv_app/data/synctv_api/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -15,30 +14,31 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 
 class SyncTvAccountDomainService {
-  SyncTvAccountDomainService({
-    required this._api,
-    required this._sessionStore,
-    SyncTvMemoryCache? cache,
-  }) : _cache = cache ?? SyncTvMemoryCache();
+  SyncTvAccountDomainService({required this._api, SyncTvMemoryCache? cache})
+    : _cache = cache ?? SyncTvMemoryCache();
 
   final SyncTvApiClient _api;
-  final SyncTvSessionStore _sessionStore;
   final SyncTvMemoryCache _cache;
 
   Future<SyncTvUser> getMe({bool refresh = false}) async {
-    if (_api.session.isGuest) {
-      return SyncTvUser(
-        id: _sessionStore.guestRoomId ?? 'guest',
-        username: _sessionStore.guestDisplayName ?? 'Guest',
-        role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST.value,
-      );
-    }
-    return _cache.get<SyncTvUser>(
-      'account:me',
-      ttl: const Duration(minutes: 2),
-      refresh: refresh,
-      loader: _fetchMe,
-    );
+    return switch (_api.session.identity) {
+      GuestSessionIdentity(:final roomId, :final displayName) => SyncTvUser(
+        id: roomId,
+        username: displayName,
+        role: const RoomMembershipRole(
+          common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
+        ),
+      ),
+      AccountSessionIdentity() => _cache.get<SyncTvUser>(
+        'account:me',
+        ttl: const Duration(minutes: 2),
+        refresh: refresh,
+        loader: _fetchMe,
+      ),
+      AnonymousSessionIdentity() => throw StateError(
+        'Current session is anonymous',
+      ),
+    };
   }
 
   Future<SyncTvUser> _fetchMe() async {
@@ -185,16 +185,15 @@ class SyncTvAccountDomainService {
   Future<OpaquePasswordUpdateStart> startOpaquePasswordUpdate({
     List<int> credentialRequest = const [],
     required List<int> registrationRequest,
-    required int verificationMethod,
+    required client_enum.OpaquePasswordUpdateVerificationMethod
+    verificationMethod,
     String emailToken = '',
   }) async {
     final response = await _api.user.startOpaquePasswordUpdate(
       client.StartOpaquePasswordUpdateRequest(
         credentialRequest: credentialRequest,
         registrationRequest: registrationRequest,
-        verificationMethod: _opaquePasswordUpdateVerificationMethodFromValue(
-          verificationMethod,
-        ),
+        verificationMethod: verificationMethod,
         emailToken: emailToken,
       ),
     );
@@ -296,14 +295,6 @@ class SyncTvAccountDomainService {
       client.DeleteTotpRequest(verificationId: verificationId),
     );
     _cache.invalidate('account:preferences');
-  }
-
-  client_enum.OpaquePasswordUpdateVerificationMethod
-  _opaquePasswordUpdateVerificationMethodFromValue(int value) {
-    return client_enum.OpaquePasswordUpdateVerificationMethod.valueOf(value) ??
-        client_enum
-            .OpaquePasswordUpdateVerificationMethod
-            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_UNSPECIFIED;
   }
 }
 
@@ -432,7 +423,7 @@ UserNotificationItem notificationFromProto(
   return UserNotificationItem(
     numericId: int.tryParse(notification.id) ?? 0,
     id: notification.id,
-    type: notification.notificationType.value,
+    type: notification.notificationType,
     title: notification.title,
     content: notification.content,
     data: notificationDataToJson(notification.data),

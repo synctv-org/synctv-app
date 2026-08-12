@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
-import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
-    as youtube;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
+import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
+    as youtube;
 
 void main() {
   group('YouTube source config codec', () {
@@ -24,10 +24,13 @@ void main() {
 
     test('round trips video config', () {
       final config = SourceConfigCodec.mediaSourceConfigFromMap(
-        sourceProvider: 'youtube',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE,
         sourceConfig: const {'videoId': 'dQw4w9WgXcQ', 'shared': true},
       )!;
-      expect(SourceConfigCodec.providerForMediaSourceConfig(config), 'youtube');
+      expect(
+        SourceConfigCodec.providerForMediaSourceConfig(config),
+        source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE,
+      );
       expect(SourceConfigCodec.mediaSourceConfigToMap(config), {
         'videoId': 'dQw4w9WgXcQ',
         'shared': true,
@@ -45,12 +48,12 @@ void main() {
     ]) {
       test('round trips ${source['kind']} playlist config', () {
         final config = SourceConfigCodec.playlistSourceConfigFromMap(
-          sourceProvider: 'youtube',
+          sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE,
           sourceConfig: source,
         )!;
         expect(
           SourceConfigCodec.providerForPlaylistSourceConfig(config),
-          'youtube',
+          source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE,
         );
         expect(SourceConfigCodec.playlistSourceConfigToMap(config), source);
       });
@@ -58,7 +61,7 @@ void main() {
 
     test('encodes nested channel content enum as an integer', () {
       final config = SourceConfigCodec.playlistSourceConfigFromMap(
-        sourceProvider: 'youtube',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE,
         sourceConfig: const {
           'kind': 'channel',
           'channelId': 'UCuAXFkgsw1L7xaCfnd5JJOw',

@@ -4,6 +4,8 @@ import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 void main() {
   group('FNOS source config codec', () {
@@ -15,7 +17,7 @@ void main() {
       };
 
       final config = SourceConfigCodec.mediaSourceConfigFromMap(
-        sourceProvider: 'fnos',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_FNOS,
         sourceConfig: json,
       )!;
 
@@ -36,7 +38,7 @@ void main() {
       };
 
       final config = SourceConfigCodec.mediaSourceConfigFromMap(
-        sourceProvider: 'fnos',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_FNOS,
         sourceConfig: json,
       )!;
 
@@ -54,7 +56,7 @@ void main() {
       };
 
       final config = SourceConfigCodec.playlistSourceConfigFromMap(
-        sourceProvider: 'fnos',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_FNOS,
         sourceConfig: json,
       )!;
 
@@ -72,7 +74,7 @@ void main() {
         {'serverId': 'nas-home', 'type': 'history'},
       ]) {
         final config = SourceConfigCodec.playlistSourceConfigFromMap(
-          sourceProvider: 'fnos',
+          sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_FNOS,
           sourceConfig: json,
         )!;
         expect(SourceConfigCodec.playlistSourceConfigToMap(config), json);

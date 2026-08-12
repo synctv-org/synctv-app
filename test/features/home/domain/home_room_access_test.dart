@@ -1,21 +1,30 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/features/home/domain/home_room_access.dart';
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart' as client;
 
 void main() {
+  const guestIdentity = GuestSessionIdentity(
+    accessToken: 'guest-token',
+    roomId: 'room_1',
+    displayName: 'Guest',
+  );
+
   test('anonymous users use the room-supported authentication mode', () {
     expect(
       roomAuthenticationMode(
-        identity: HomeIdentityKind.anonymous,
-        guestAccess: true,
-        guestBoundToRoom: false,
+        identity: const AnonymousSessionIdentity(),
+        roomId: 'room_1',
+        discoveryAccess: client.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST,
       ),
       RoomAuthenticationMode.guest,
     );
     expect(
       roomAuthenticationMode(
-        identity: HomeIdentityKind.anonymous,
-        guestAccess: false,
-        guestBoundToRoom: false,
+        identity: const AnonymousSessionIdentity(),
+        roomId: 'room_1',
+        discoveryAccess:
+            client.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_SIGN_IN,
       ),
       RoomAuthenticationMode.account,
     );
@@ -24,17 +33,17 @@ void main() {
   test('guests can reuse only the token bound to the selected room', () {
     expect(
       roomAuthenticationMode(
-        identity: HomeIdentityKind.guest,
-        guestAccess: true,
-        guestBoundToRoom: true,
+        identity: guestIdentity,
+        roomId: 'room_1',
+        discoveryAccess: client.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST,
       ),
-      RoomAuthenticationMode.none,
+      RoomAuthenticationMode.ready,
     );
     expect(
       roomAuthenticationMode(
-        identity: HomeIdentityKind.guest,
-        guestAccess: true,
-        guestBoundToRoom: false,
+        identity: guestIdentity,
+        roomId: 'room_2',
+        discoveryAccess: client.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST,
       ),
       RoomAuthenticationMode.guest,
     );
@@ -43,9 +52,10 @@ void main() {
   test('guests use account authentication for sign-in rooms', () {
     expect(
       roomAuthenticationMode(
-        identity: HomeIdentityKind.guest,
-        guestAccess: false,
-        guestBoundToRoom: false,
+        identity: guestIdentity,
+        roomId: 'room_1',
+        discoveryAccess:
+            client.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_SIGN_IN,
       ),
       RoomAuthenticationMode.account,
     );
@@ -54,11 +64,12 @@ void main() {
   test('account users enter without another authentication prompt', () {
     expect(
       roomAuthenticationMode(
-        identity: HomeIdentityKind.account,
-        guestAccess: false,
-        guestBoundToRoom: false,
+        identity: const AccountSessionIdentity(),
+        roomId: 'room_1',
+        discoveryAccess:
+            client.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_SIGN_IN,
       ),
-      RoomAuthenticationMode.none,
+      RoomAuthenticationMode.ready,
     );
   });
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_runtime_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_session_store.dart';
@@ -24,6 +25,13 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+  });
+
+  test('account session requires a token', () {
+    final session = SyncTvSession();
+
+    expect(session.updateAccountTokens, throwsArgumentError);
+    expect(session.identity, isA<AnonymousSessionIdentity>());
   });
 
   test('server profile preserves its built-in identity', () {
@@ -176,9 +184,9 @@ void main() {
       endpoint: 'https://first.example.com',
     );
     session
-      ..accessToken = 'first-access'
-      ..refreshToken = 'first-refresh';
-    await store.persistTokens();
+      ..updateAccountTokens(accessToken: 'first-access')
+      ..updateAccountTokens(refreshToken: 'first-refresh');
+    await store.persistSession();
 
     await store.addOrUpdateServer(
       declaredServerId: 'srv_claimed',
@@ -187,8 +195,8 @@ void main() {
     );
     expect(session.accessToken, isNull);
     expect(session.refreshToken, isNull);
-    session.accessToken = 'imitator-access';
-    await store.persistTokens();
+    session.updateAccountTokens(accessToken: 'imitator-access');
+    await store.persistSession();
 
     await store.activateServer('https://first.example.com');
     expect(session.accessToken, 'first-access');
@@ -214,8 +222,8 @@ void main() {
       name: 'Second',
       endpoint: 'https://second.example.com',
     );
-    session.accessToken = 'second-token';
-    await store.persistTokens();
+    session.updateAccountTokens(accessToken: 'second-token');
+    await store.persistSession();
 
     final restoredSession = SyncTvSession();
     final restored = SyncTvSessionStore(restoredSession, builtInServerUrl: '');

@@ -10,6 +10,7 @@ import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart'
     as field_mask;
 
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/core/network/server_endpoint_identity.dart';
 import 'package:synctv_app/core/network/server_http_client.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -135,11 +136,68 @@ class SyncTvStaleEndpointException implements Exception {
 }
 
 class SyncTvSession {
-  String? accessToken;
-  String? refreshToken;
-  bool isGuest = false;
+  SyncTvSessionIdentity _identity = const AnonymousSessionIdentity();
 
-  bool get hasAccessToken => accessToken != null && accessToken!.isNotEmpty;
+  SyncTvSessionIdentity get identity => _identity;
+  String? get accessToken => switch (_identity) {
+    AccountSessionIdentity(:final accessToken) => accessToken,
+    GuestSessionIdentity(:final accessToken) => accessToken,
+    AnonymousSessionIdentity() => null,
+  };
+  String? get refreshToken => switch (_identity) {
+    AccountSessionIdentity(:final refreshToken) => refreshToken,
+    AnonymousSessionIdentity() || GuestSessionIdentity() => null,
+  };
+
+  bool get hasAccessToken => accessToken != null;
+  bool get hasRefreshToken => refreshToken != null;
+  bool get hasRecoverableCredentials => hasAccessToken || hasRefreshToken;
+
+  void updateAccountTokens({String? accessToken, String? refreshToken}) {
+    final current = _identity;
+    final currentAccess = current is AccountSessionIdentity
+        ? current.accessToken
+        : null;
+    final currentRefresh = current is AccountSessionIdentity
+        ? current.refreshToken
+        : null;
+    final nextAccess = _nonEmpty(accessToken) ?? currentAccess;
+    final nextRefresh = _nonEmpty(refreshToken) ?? currentRefresh;
+    if (nextAccess == null && nextRefresh == null) {
+      throw ArgumentError('Account session requires at least one token');
+    }
+    _identity = AccountSessionIdentity(
+      accessToken: nextAccess,
+      refreshToken: nextRefresh,
+    );
+  }
+
+  void activateGuest({
+    required String accessToken,
+    required String roomId,
+    required String displayName,
+  }) {
+    final token = _nonEmpty(accessToken);
+    final guestRoomId = _nonEmpty(roomId);
+    final guestDisplayName = _nonEmpty(displayName);
+    if (token == null || guestRoomId == null || guestDisplayName == null) {
+      throw ArgumentError('Guest session fields must be non-empty');
+    }
+    _identity = GuestSessionIdentity(
+      accessToken: token,
+      roomId: guestRoomId,
+      displayName: guestDisplayName,
+    );
+  }
+
+  void clear() {
+    _identity = const AnonymousSessionIdentity();
+  }
+
+  static String? _nonEmpty(String? value) {
+    final trimmed = value?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
+  }
 }
 
 class SyncTvApiClient {
@@ -555,11 +613,13 @@ class SyncTvApiClient {
     required bool auth,
     required String path,
   }) {
+    final hasAccountRefreshToken = switch (session.identity) {
+      AccountSessionIdentity(:final refreshToken) => refreshToken != null,
+      AnonymousSessionIdentity() || GuestSessionIdentity() => false,
+    };
     return response.statusCode == 401 &&
         auth &&
-        !session.isGuest &&
-        session.refreshToken != null &&
-        session.refreshToken!.isNotEmpty &&
+        hasAccountRefreshToken &&
         path != '/api/auth/refresh';
   }
 
@@ -1304,9 +1364,10 @@ class SyncTvApiClient {
     }
     _ensureCurrentEndpoint(generation);
     if (accessToken.isEmpty && refreshToken.isEmpty) return;
-    if (accessToken.isNotEmpty) session.accessToken = accessToken;
-    if (refreshToken.isNotEmpty) session.refreshToken = refreshToken;
-    session.isGuest = false;
+    session.updateAccountTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
   }
 
   Future<T> runForCurrentEndpointResponse<T>(
@@ -1327,9 +1388,7 @@ class SyncTvApiClient {
 
   void _clearSessionForGeneration(int generation) {
     _ensureCurrentEndpoint(generation);
-    session.accessToken = null;
-    session.refreshToken = null;
-    session.isGuest = false;
+    session.clear();
   }
 }
 
@@ -1346,8 +1405,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
             ? user.avatar.url
             : '',
       ),
-      role: user.role.value,
-      status: user.status.value,
+      role: AccountUserRole(user.role),
+      status: user.status,
       createdAt: user.createdAt.toInt(),
       isBanned: user.isBanned,
     );
@@ -1364,7 +1423,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
             ? user.avatar.url
             : '',
       ),
-      role: user.role.value,
+      role: AccountUserRole(user.role),
       createdAt: user.createdAt.toInt(),
     );
   }
@@ -1373,9 +1432,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
     return SyncTvUser(
       id: member.userId,
       username: member.username,
-      role: member.role.value,
+      role: RoomMembershipRole(member.role),
       createdAt: member.joinedAt.toInt(),
-      status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
+      status: common_enum.UserStatus.USER_STATUS_ACTIVE,
       onlineCount: member.isOnline ? 1 : 0,
       connectionCount: member.connectionCount,
     );
@@ -1386,12 +1445,12 @@ extension SyncTvModelMapping on SyncTvApiClient {
       id: user.id,
       username: user.username,
       email: user.email.isEmpty ? null : user.email,
-      role: user.role.value,
+      role: AccountUserRole(user.role),
       createdAt: user.createdAt.toInt(),
       updatedAt: user.updatedAt.toInt(),
       status: user.isBanned
-          ? common_enum.UserStatus.USER_STATUS_BANNED.value
-          : user.status.value,
+          ? common_enum.UserStatus.USER_STATUS_BANNED
+          : user.status,
       onlineCount: user.hasPresence() && user.presence.connectionCount > 0
           ? 1
           : 0,
@@ -1419,10 +1478,10 @@ extension SyncTvModelMapping on SyncTvApiClient {
       creatorAvatarUrl: resolveResourceUrl(room.creatorAvatarUrl),
       createdAt: room.createdAt.toInt(),
       updatedAt: room.updatedAt.toInt(),
-      status: room.status.value,
+      status: room.status,
       isBanned: room.isBanned,
       version: room.version.toInt(),
-      creatorStatus: room.creatorStatus.value,
+      creatorStatus: room.creatorStatus,
       coverUrl: resolveResourceUrl(room.hasCover() ? room.cover.url : ''),
       needPassword: settings['requirePassword'] == true,
       needVerify: settings['requireApproval'] == true,
@@ -1452,9 +1511,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
       coverUrl: resolveResourceUrl(room.hasCover() ? room.cover.url : ''),
       createdAt: room.createdAt.toInt(),
       updatedAt: room.updatedAt.toInt(),
-      status: room.status.value,
+      status: room.status,
       isBanned: room.isBanned,
-      availability: room.availability.value,
+      availability: room.availability,
       version: room.version.toInt(),
       needPassword: settings['requirePassword'] == true,
       needVerify: settings['requireApproval'] == true,
@@ -1470,13 +1529,13 @@ extension SyncTvModelMapping on SyncTvApiClient {
         joined: item.joined,
         isFavorite: item.favorited,
         canJoin: item.canJoin,
-        discoveryAccess: item.access.value,
+        discoveryAccess: item.access,
       );
 
   SyncTvRoom mapMyRoom(client.MyRoom myRoom) => mapRoom(myRoom.room).copyWith(
     myPermissions: myRoom.permissions.toInt(),
-    myRole: myRoom.role.value,
-    myRelation: myRoom.relation.value,
+    myRole: myRoom.role,
+    myRelation: myRoom.relation,
     joined: true,
     canJoin: false,
     isFavorite: myRoom.favorited,
@@ -1514,7 +1573,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
         ? SourceConfigCodec.mediaSourceConfigToMap(media.sourceConfig)
         : <String, dynamic>{};
     final sourceProvider = media.hasSourceProvider()
-        ? SourceConfigCodec.providerToString(media.sourceProvider)
+        ? media.sourceProvider
         : SourceConfigCodec.providerForMediaSourceConfig(media.sourceConfig);
     final url = resolveResourceUrl(
       RoomMediaEntry.playbackUrlFromResource(
@@ -1537,9 +1596,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
       roomId: media.roomId,
       position: media.position,
       addedAt: media.addedAt.toInt(),
-      availability: media.availability.value,
+      availability: media.availability,
       version: media.version.toInt(),
-      type: sourceProvider,
+      type: SourceConfigCodec.providerToString(sourceProvider),
       headers: _stringMap(metadata['headers']),
       proxy: metadata['proxy'] == true,
       live: isLive,
@@ -1562,7 +1621,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
 
   RoomPlaylistItem mapPlaylist(client.Playlist playlist) {
     final sourceProvider = playlist.hasSourceProvider()
-        ? SourceConfigCodec.providerToString(playlist.sourceProvider)
+        ? playlist.sourceProvider
         : SourceConfigCodec.providerForPlaylistSourceConfig(
             playlist.sourceConfig,
           );
@@ -1585,13 +1644,15 @@ extension SyncTvModelMapping on SyncTvApiClient {
       createdAt: playlist.createdAt.toInt(),
       updatedAt: playlist.updatedAt.toInt(),
       itemCount: playlist.itemCount,
-      availability: playlist.availability.value,
+      availability: playlist.availability,
       version: playlist.version.toInt(),
       description: playlist.description,
       coverUrl: resolveResourceUrl(
         playlist.hasCover() ? playlist.cover.url : '',
       ),
-      type: playlist.isDynamic ? sourceProvider : 'playlist',
+      type: playlist.isDynamic
+          ? SourceConfigCodec.providerToString(sourceProvider)
+          : 'playlist',
       sourceProvider: sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
       sourceConfig: sourceConfig,

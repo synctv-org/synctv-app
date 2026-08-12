@@ -60,18 +60,15 @@ class SyncTvOpaqueAuthGateway implements OpaqueAuthGateway {
       OpaquePasswordVerification.currentPassword =>
         client_enum
             .OpaquePasswordUpdateVerificationMethod
-            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD
-            .value,
+            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD,
       OpaquePasswordVerification.emailToken =>
         client_enum
             .OpaquePasswordUpdateVerificationMethod
-            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_EMAIL_TOKEN
-            .value,
+            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_EMAIL_TOKEN,
       OpaquePasswordVerification.passkey =>
         client_enum
             .OpaquePasswordUpdateVerificationMethod
-            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_PASSKEY
-            .value,
+            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_PASSKEY,
     },
     emailToken: emailToken,
   );

@@ -183,6 +183,35 @@ class ListSortDirection extends $pb.ProtobufEnum {
   const ListSortDirection._(super.value, super.name);
 }
 
+class RoomPasswordPolicy extends $pb.ProtobufEnum {
+  static const RoomPasswordPolicy ROOM_PASSWORD_POLICY_UNSPECIFIED =
+      RoomPasswordPolicy._(
+          0, _omitEnumNames ? '' : 'ROOM_PASSWORD_POLICY_UNSPECIFIED');
+  static const RoomPasswordPolicy ROOM_PASSWORD_POLICY_OPTIONAL =
+      RoomPasswordPolicy._(
+          1, _omitEnumNames ? '' : 'ROOM_PASSWORD_POLICY_OPTIONAL');
+  static const RoomPasswordPolicy ROOM_PASSWORD_POLICY_REQUIRED =
+      RoomPasswordPolicy._(
+          2, _omitEnumNames ? '' : 'ROOM_PASSWORD_POLICY_REQUIRED');
+  static const RoomPasswordPolicy ROOM_PASSWORD_POLICY_FORBIDDEN =
+      RoomPasswordPolicy._(
+          3, _omitEnumNames ? '' : 'ROOM_PASSWORD_POLICY_FORBIDDEN');
+
+  static const $core.List<RoomPasswordPolicy> values = <RoomPasswordPolicy>[
+    ROOM_PASSWORD_POLICY_UNSPECIFIED,
+    ROOM_PASSWORD_POLICY_OPTIONAL,
+    ROOM_PASSWORD_POLICY_REQUIRED,
+    ROOM_PASSWORD_POLICY_FORBIDDEN,
+  ];
+
+  static final $core.List<RoomPasswordPolicy?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static RoomPasswordPolicy? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RoomPasswordPolicy._(super.value, super.name);
+}
+
 /// Error codes for ErrorMessage
 class ErrorCode extends $pb.ProtobufEnum {
   static const ErrorCode ERROR_CODE_UNSPECIFIED =

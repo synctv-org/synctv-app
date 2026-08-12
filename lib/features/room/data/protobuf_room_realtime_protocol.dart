@@ -10,6 +10,8 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 final class ProtobufRoomRealtimeProtocol implements RoomRealtimeProtocol {
   const ProtobufRoomRealtimeProtocol();
@@ -75,7 +77,8 @@ final class ProtobufRoomRealtimeProtocol implements RoomRealtimeProtocol {
     int page = 1,
     int pageSize = 100,
     String search = '',
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     String providerInstanceName = '',
     client_enum.MediaListSortBy sortBy =
         client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,

@@ -13,7 +13,7 @@ import 'package:synctv_app/core/presentation/notifications/app_notifications.dar
 class ContentReportsView extends StatefulWidget {
   final ContentReportsGateway? gateway;
   final String? title;
-  final int initialTargetType;
+  final admin_enum.ContentReportTargetType initialTargetType;
   final String initialReporterUserId;
   final String initialRoomId;
   final String initialTargetRoomId;
@@ -21,7 +21,7 @@ class ContentReportsView extends StatefulWidget {
   final String initialTargetMemberRoomId;
   final String initialTargetMemberUserId;
   final int initialTargetChatMessageId;
-  final int initialScope;
+  final admin_enum.ContentReportScope initialScope;
   final String initialSearch;
   final bool showTargetTypeTabs;
   final String roomScopedRoomId;
@@ -30,7 +30,9 @@ class ContentReportsView extends StatefulWidget {
     super.key,
     this.gateway,
     this.title,
-    this.initialTargetType = 0,
+    this.initialTargetType = admin_enum
+        .ContentReportTargetType
+        .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
     this.initialReporterUserId = '',
     this.initialRoomId = '',
     this.initialTargetRoomId = '',
@@ -38,7 +40,8 @@ class ContentReportsView extends StatefulWidget {
     this.initialTargetMemberRoomId = '',
     this.initialTargetMemberUserId = '',
     this.initialTargetChatMessageId = 0,
-    this.initialScope = 0,
+    this.initialScope =
+        admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED,
     this.initialSearch = '',
     this.showTargetTypeTabs = true,
     this.roomScopedRoomId = '',
@@ -51,8 +54,10 @@ class ContentReportsView extends StatefulWidget {
 class _ContentReportsViewState extends State<ContentReportsView>
     with SingleTickerProviderStateMixin {
   bool _isLoading = true;
-  int _status = admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN.value;
-  int _targetType = 0;
+  admin_enum.ContentReportStatus _status =
+      admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN;
+  admin_enum.ContentReportTargetType _targetType =
+      admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED;
   String _search = '';
   String _reporterUserId = '';
   String _roomId = '';
@@ -61,7 +66,8 @@ class _ContentReportsViewState extends State<ContentReportsView>
   String _targetMemberRoomId = '';
   String _targetMemberUserId = '';
   int _targetChatMessageId = 0;
-  int _scope = 0;
+  admin_enum.ContentReportScope _scope =
+      admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED;
   int _page = 1;
   int _pageSize = 50;
   int _total = 0;
@@ -70,11 +76,23 @@ class _ContentReportsViewState extends State<ContentReportsView>
   TabController? _targetTypeTabController;
 
   static const _targetTypeTabs = <_ReportTargetTypeTab>[
-    _ReportTargetTypeTab(0),
-    _ReportTargetTypeTab(1),
-    _ReportTargetTypeTab(2),
-    _ReportTargetTypeTab(3),
-    _ReportTargetTypeTab(4),
+    _ReportTargetTypeTab(
+      admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
+    ),
+    _ReportTargetTypeTab(
+      admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_ROOM,
+    ),
+    _ReportTargetTypeTab(
+      admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_USER,
+    ),
+    _ReportTargetTypeTab(
+      admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER,
+    ),
+    _ReportTargetTypeTab(
+      admin_enum
+          .ContentReportTargetType
+          .CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE,
+    ),
   ];
 
   bool get _isRoomScoped => widget.roomScopedRoomId.isNotEmpty;
@@ -98,7 +116,10 @@ class _ContentReportsViewState extends State<ContentReportsView>
     _searchController.text = _search;
     if (widget.showTargetTypeTabs) {
       final visibleTabs = _visibleTargetTypeTabs;
-      if (_targetType == 0) {
+      if (_targetType ==
+          admin_enum
+              .ContentReportTargetType
+              .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED) {
         _targetType = visibleTabs.first.targetType;
       }
       final initialIndex = visibleTabs.indexWhere(
@@ -292,10 +313,10 @@ class _ContentReportsViewState extends State<ContentReportsView>
   }
 
   Future<void> _openDisposition(AdminContentReport report) async {
-    int nextStatus =
+    admin_enum.ContentReportStatus nextStatus =
         report.status ==
-            admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN.value
-        ? admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_REVIEWING.value
+            admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN
+        ? admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_REVIEWING
         : report.status;
     final noteController = TextEditingController(text: report.resolutionNote);
     final updated = await AppDialogs.showStyledDialog<AdminContentReport>(
@@ -312,13 +333,21 @@ class _ContentReportsViewState extends State<ContentReportsView>
               children: [
                 Text(_reportTargetText(context, report)),
                 const SizedBox(height: 12),
-                AppSelect<int>(
+                AppSelect<admin_enum.ContentReportStatus>(
                   value: nextStatus,
                   options: {
-                    context.l10n.reviewing: 2,
-                    context.l10n.resolved: 3,
-                    context.l10n.dismissed: 4,
-                    context.l10n.reportOpenStatus: 1,
+                    context.l10n.reviewing: admin_enum
+                        .ContentReportStatus
+                        .CONTENT_REPORT_STATUS_REVIEWING,
+                    context.l10n.resolved: admin_enum
+                        .ContentReportStatus
+                        .CONTENT_REPORT_STATUS_RESOLVED,
+                    context.l10n.dismissed: admin_enum
+                        .ContentReportStatus
+                        .CONTENT_REPORT_STATUS_DISMISSED,
+                    context.l10n.reportOpenStatus: admin_enum
+                        .ContentReportStatus
+                        .CONTENT_REPORT_STATUS_OPEN,
                   },
                   onChanged: (value) {
                     if (value == null) return;
@@ -431,14 +460,23 @@ class _ContentReportsViewState extends State<ContentReportsView>
             spacing: 12,
             runSpacing: 12,
             children: [
-              AppSelect<int>(
+              AppSelect<admin_enum.ContentReportStatus>(
                 value: _status,
                 options: {
-                  context.l10n.allStatuses: 0,
-                  context.l10n.reportOpenStatus: 1,
-                  context.l10n.reviewing: 2,
-                  context.l10n.resolved: 3,
-                  context.l10n.dismissed: 4,
+                  context.l10n.allStatuses: admin_enum
+                      .ContentReportStatus
+                      .CONTENT_REPORT_STATUS_UNSPECIFIED,
+                  context.l10n.reportOpenStatus:
+                      admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN,
+                  context.l10n.reviewing: admin_enum
+                      .ContentReportStatus
+                      .CONTENT_REPORT_STATUS_REVIEWING,
+                  context.l10n.resolved: admin_enum
+                      .ContentReportStatus
+                      .CONTENT_REPORT_STATUS_RESOLVED,
+                  context.l10n.dismissed: admin_enum
+                      .ContentReportStatus
+                      .CONTENT_REPORT_STATUS_DISMISSED,
                 },
                 onChanged: (value) {
                   if (value == null) return;
@@ -450,16 +488,33 @@ class _ContentReportsViewState extends State<ContentReportsView>
                 },
               ),
               if (!widget.showTargetTypeTabs)
-                AppSelect<int>(
+                AppSelect<admin_enum.ContentReportTargetType>(
                   value: _targetType,
                   options: _isRoomScoped
-                      ? {context.l10n.members: 3, context.l10n.messages: 4}
+                      ? {
+                          context.l10n.members: admin_enum
+                              .ContentReportTargetType
+                              .CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER,
+                          context.l10n.messages: admin_enum
+                              .ContentReportTargetType
+                              .CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE,
+                        }
                       : {
-                          context.l10n.allTargets: 0,
-                          context.l10n.rooms: 1,
-                          context.l10n.users: 2,
-                          context.l10n.members: 3,
-                          context.l10n.messages: 4,
+                          context.l10n.allTargets: admin_enum
+                              .ContentReportTargetType
+                              .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
+                          context.l10n.rooms: admin_enum
+                              .ContentReportTargetType
+                              .CONTENT_REPORT_TARGET_TYPE_ROOM,
+                          context.l10n.users: admin_enum
+                              .ContentReportTargetType
+                              .CONTENT_REPORT_TARGET_TYPE_USER,
+                          context.l10n.members: admin_enum
+                              .ContentReportTargetType
+                              .CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER,
+                          context.l10n.messages: admin_enum
+                              .ContentReportTargetType
+                              .CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE,
                         },
                   onChanged: (value) {
                     if (value == null) return;
@@ -642,10 +697,23 @@ class _ContentReportsViewState extends State<ContentReportsView>
   List<_ReportTargetTypeTab> get _visibleTargetTypeTabs {
     if (_isRoomScoped) {
       return _targetTypeTabs
-          .where((tab) => tab.targetType == 3 || tab.targetType == 4)
+          .where(
+            (tab) =>
+                tab.targetType ==
+                    admin_enum
+                        .ContentReportTargetType
+                        .CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER ||
+                tab.targetType ==
+                    admin_enum
+                        .ContentReportTargetType
+                        .CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE,
+          )
           .toList(growable: false);
     }
-    if (widget.initialTargetType == 0 &&
+    if (widget.initialTargetType ==
+            admin_enum
+                .ContentReportTargetType
+                .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED &&
         widget.initialReporterUserId.isEmpty &&
         widget.initialRoomId.isEmpty &&
         widget.initialTargetRoomId.isEmpty &&
@@ -653,14 +721,25 @@ class _ContentReportsViewState extends State<ContentReportsView>
         widget.initialTargetMemberRoomId.isEmpty &&
         widget.initialTargetMemberUserId.isEmpty &&
         widget.initialTargetChatMessageId <= 0 &&
-        widget.initialScope == 0 &&
+        widget.initialScope ==
+            admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED &&
         widget.initialSearch.isEmpty) {
       return _targetTypeTabs.skip(1).toList(growable: false);
     }
     if (widget.initialScope ==
-        admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_ROOM_CONTEXT.value) {
+        admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_ROOM_CONTEXT) {
       return _targetTypeTabs
-          .where((tab) => tab.targetType == 3 || tab.targetType == 4)
+          .where(
+            (tab) =>
+                tab.targetType ==
+                    admin_enum
+                        .ContentReportTargetType
+                        .CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER ||
+                tab.targetType ==
+                    admin_enum
+                        .ContentReportTargetType
+                        .CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE,
+          )
           .toList(growable: false);
     }
     return _targetTypeTabs;
@@ -668,7 +747,7 @@ class _ContentReportsViewState extends State<ContentReportsView>
 }
 
 class _ReportTargetTypeTab {
-  final int targetType;
+  final admin_enum.ContentReportTargetType targetType;
 
   const _ReportTargetTypeTab(this.targetType);
 }
@@ -696,28 +775,40 @@ class _ReportDetailRow extends StatelessWidget {
   }
 }
 
-String _reportTargetTypeLabel(BuildContext context, int targetType) {
+String _reportTargetTypeLabel(
+  BuildContext context,
+  admin_enum.ContentReportTargetType targetType,
+) {
   return switch (targetType) {
-    0 => context.l10n.allTargets,
-    1 => context.l10n.rooms,
-    2 => context.l10n.users,
-    3 => context.l10n.members,
-    4 => context.l10n.messages,
+    admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED =>
+      context.l10n.allTargets,
+    admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_ROOM =>
+      context.l10n.rooms,
+    admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_USER =>
+      context.l10n.users,
+    admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER =>
+      context.l10n.members,
+    admin_enum
+        .ContentReportTargetType
+        .CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE =>
+      context.l10n.messages,
     _ => context.l10n.unknown,
   };
 }
 
 String _reportTargetText(BuildContext context, AdminContentReport report) {
   switch (report.targetType) {
-    case 1:
+    case admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_ROOM:
       return context.l10n.roomTarget(
         _nameOrId(report.targetRoomName, report.targetRoomId),
       );
-    case 2:
+    case admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_USER:
       return context.l10n.userTarget(
         _nameOrId(report.targetUsername, report.targetUserId),
       );
-    case 3:
+    case admin_enum
+        .ContentReportTargetType
+        .CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER:
       final room = _nameOrId(
         report.targetMemberRoomName,
         report.targetMemberRoomId,
@@ -727,7 +818,9 @@ String _reportTargetText(BuildContext context, AdminContentReport report) {
         report.targetMemberUserId,
       );
       return context.l10n.memberTarget(user, room);
-    case 4:
+    case admin_enum
+        .ContentReportTargetType
+        .CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE:
       final room = _nameOrId(report.roomName, report.roomId);
       return context.l10n.chatMessageTarget(report.targetChatMessageId, room);
     default:
@@ -751,45 +844,48 @@ String _nameOrId(String name, String id) {
   return '$name ($id)';
 }
 
-String _reportStatusText(BuildContext context, int status) {
+String _reportStatusText(
+  BuildContext context,
+  admin_enum.ContentReportStatus status,
+) {
   switch (status) {
-    case 1:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN:
       return context.l10n.reportOpenStatus;
-    case 2:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_REVIEWING:
       return context.l10n.reviewing;
-    case 3:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_RESOLVED:
       return context.l10n.resolved;
-    case 4:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_DISMISSED:
       return context.l10n.dismissed;
     default:
       return context.l10n.unknown;
   }
 }
 
-IconData _reportStatusIcon(int status) {
+IconData _reportStatusIcon(admin_enum.ContentReportStatus status) {
   switch (status) {
-    case 1:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN:
       return Icons.error_outline_rounded;
-    case 2:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_REVIEWING:
       return Icons.pending_actions_rounded;
-    case 3:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_RESOLVED:
       return Icons.check_circle_outline_rounded;
-    case 4:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_DISMISSED:
       return Icons.cancel_outlined;
     default:
       return Icons.help_outline_rounded;
   }
 }
 
-Color _reportStatusColor(int status) {
+Color _reportStatusColor(admin_enum.ContentReportStatus status) {
   switch (status) {
-    case 1:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN:
       return Colors.red;
-    case 2:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_REVIEWING:
       return Colors.orange;
-    case 3:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_RESOLVED:
       return Colors.green;
-    case 4:
+    case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_DISMISSED:
       return Colors.grey;
     default:
       return Colors.blueGrey;

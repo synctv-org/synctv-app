@@ -126,6 +126,23 @@ final $typed_data.Uint8List listSortDirectionDescriptor = $convert.base64Decode(
     'ASGwoXTElTVF9TT1JUX0RJUkVDVElPTl9BU0MQARIcChhMSVNUX1NPUlRfRElSRUNUSU9OX0RF'
     'U0MQAg==');
 
+@$core.Deprecated('Use roomPasswordPolicyDescriptor instead')
+const RoomPasswordPolicy$json = {
+  '1': 'RoomPasswordPolicy',
+  '2': [
+    {'1': 'ROOM_PASSWORD_POLICY_UNSPECIFIED', '2': 0},
+    {'1': 'ROOM_PASSWORD_POLICY_OPTIONAL', '2': 1},
+    {'1': 'ROOM_PASSWORD_POLICY_REQUIRED', '2': 2},
+    {'1': 'ROOM_PASSWORD_POLICY_FORBIDDEN', '2': 3},
+  ],
+};
+
+/// Descriptor for `RoomPasswordPolicy`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List roomPasswordPolicyDescriptor = $convert.base64Decode(
+    'ChJSb29tUGFzc3dvcmRQb2xpY3kSJAogUk9PTV9QQVNTV09SRF9QT0xJQ1lfVU5TUEVDSUZJRU'
+    'QQABIhCh1ST09NX1BBU1NXT1JEX1BPTElDWV9PUFRJT05BTBABEiEKHVJPT01fUEFTU1dPUkRf'
+    'UE9MSUNZX1JFUVVJUkVEEAISIgoeUk9PTV9QQVNTV09SRF9QT0xJQ1lfRk9SQklEREVOEAM=');
+
 @$core.Deprecated('Use errorCodeDescriptor instead')
 const ErrorCode$json = {
   '1': 'ErrorCode',

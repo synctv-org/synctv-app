@@ -42,7 +42,7 @@ void main() {
   test('only active user messages are editable by their sender', () {
     RoomChatMessageInfo message({
       required String userId,
-      required int messageType,
+      required client_enum.ChatMessageType messageType,
       int deletedAt = 0,
     }) => RoomChatMessageInfo(
       id: '1',
@@ -57,14 +57,12 @@ void main() {
 
     final userMessage = message(
       userId: 'usr_1',
-      messageType: client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER.value,
+      messageType: client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
     );
     final systemMessage = message(
       userId: 'usr_1',
-      messageType: client_enum
-          .ChatMessageType
-          .CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED
-          .value,
+      messageType:
+          client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED,
     );
 
     expect(userMessage.canEditBy('usr_1'), isTrue);
@@ -73,7 +71,7 @@ void main() {
     expect(
       message(
         userId: 'usr_1',
-        messageType: client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER.value,
+        messageType: client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
         deletedAt: 2,
       ).canEditBy('usr_1'),
       isFalse,

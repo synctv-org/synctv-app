@@ -8,8 +8,9 @@ class AdminReviewTab extends StatefulWidget {
 }
 
 class _AdminReviewTabState extends State<AdminReviewTab> {
-  String _kind = 'user';
-  int _status = common_enum.ReviewStatus.REVIEW_STATUS_PENDING.value;
+  AdminReviewKind _kind = AdminReviewKind.userRegistration;
+  common_enum.ReviewStatus _status =
+      common_enum.ReviewStatus.REVIEW_STATUS_PENDING;
   String _search = '';
   String _requestedBy = '';
   String _roomId = '';
@@ -68,7 +69,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
 
   Future<void> _approve(AdminReviewItem review) async {
     try {
-      await adminGateway.adminApproveReview(_kind, review.id);
+      await adminGateway.adminApproveReview(review.kind, review.id);
       if (!mounted) return;
       AppNotifications.showSuccess(context, context.l10n.reviewApproved);
       _loadReviews(silent: true);
@@ -105,7 +106,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
     if (confirmed != true) return;
     try {
       await adminGateway.adminRejectReview(
-        _kind,
+        review.kind,
         review.id,
         reason: controller.text.trim(),
       );
@@ -122,13 +123,16 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
     final normalized = value.trim();
     setState(() {
       _search = normalized;
-      _requestedBy = _kind == 'room' && normalized.startsWith('usr_')
+      _requestedBy =
+          _kind == AdminReviewKind.roomCreation && normalized.startsWith('usr_')
           ? normalized
           : '';
-      _roomId = _kind == 'join' && normalized.startsWith('room_')
+      _roomId =
+          _kind == AdminReviewKind.roomJoin && normalized.startsWith('room_')
           ? normalized
           : '';
-      _userId = _kind == 'join' && normalized.startsWith('usr_')
+      _userId =
+          _kind == AdminReviewKind.roomJoin && normalized.startsWith('usr_')
           ? normalized
           : '';
       _page = 1;
@@ -154,18 +158,18 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
             runSpacing: 12,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              AppSegmentedControl<String>(
+              AppSegmentedControl<AdminReviewKind>(
                 segments: [
                   ButtonSegment(
-                    value: 'user',
+                    value: AdminReviewKind.userRegistration,
                     label: Text(context.l10n.registration),
                   ),
                   ButtonSegment(
-                    value: 'room',
+                    value: AdminReviewKind.roomCreation,
                     label: Text(context.l10n.roomCreation),
                   ),
                   ButtonSegment(
-                    value: 'join',
+                    value: AdminReviewKind.roomJoin,
                     label: Text(context.l10n.joinRequest),
                   ),
                 ],
@@ -181,15 +185,15 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
                   _loadReviews();
                 },
               ),
-              AppSelect<int>(
+              AppSelect<common_enum.ReviewStatus>(
                 value: _status,
                 options: {
                   context.l10n.pendingReview:
-                      common_enum.ReviewStatus.REVIEW_STATUS_PENDING.value,
+                      common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
                   context.l10n.approved:
-                      common_enum.ReviewStatus.REVIEW_STATUS_APPROVED.value,
+                      common_enum.ReviewStatus.REVIEW_STATUS_APPROVED,
                   context.l10n.rejected:
-                      common_enum.ReviewStatus.REVIEW_STATUS_REJECTED.value,
+                      common_enum.ReviewStatus.REVIEW_STATUS_REJECTED,
                 },
                 onChanged: (value) {
                   if (value == null) return;
@@ -269,7 +273,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
                     final review = _reviews[index];
                     final pending =
                         review.status ==
-                        common_enum.ReviewStatus.REVIEW_STATUS_PENDING.value;
+                        common_enum.ReviewStatus.REVIEW_STATUS_PENDING;
                     return _AdminPanelCard(
                       isDark: isDark,
                       child: Padding(
@@ -320,10 +324,10 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
     final meta = [
       review.id,
       _formatTimestamp(review.requestedAt),
-      if (review.reviewedBy.isNotEmpty)
-        context.l10n.reviewedBy(review.reviewedBy),
-      if (review.reviewedAt > 0)
-        context.l10n.reviewedAt(_formatTimestamp(review.reviewedAt)),
+      if (review.reviewedBy case final reviewedBy?)
+        context.l10n.reviewedBy(reviewedBy),
+      if (review.reviewedAt case final reviewedAt?)
+        context.l10n.reviewedAt(_formatTimestamp(reviewedAt)),
     ];
     final details = review.details.isEmpty
         ? [review.subtitle, review.detail]
@@ -355,10 +359,10 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
             ],
           ),
         ],
-        if (review.rejectionReason.isNotEmpty) ...[
+        if (review.rejectionReason case final rejectionReason?) ...[
           const SizedBox(height: 8),
           Text(
-            review.rejectionReason,
+            rejectionReason,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(color: theme.colorScheme.error),

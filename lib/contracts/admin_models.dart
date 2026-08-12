@@ -1,4 +1,9 @@
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
+    as common_enum;
+import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
+    as provider_common_enum;
 
 class AdminProviderInstance {
   final String name;
@@ -9,7 +14,7 @@ class AdminProviderInstance {
   final bool insecureTls;
   final List<String> providers;
   final bool enabled;
-  final int status;
+  final provider_common_enum.ProviderInstanceStatus status;
   final int createdAt;
   final int updatedAt;
 
@@ -227,7 +232,7 @@ class AdminProviderInstancesPage {
 
 class AdminBanRecord {
   final String id;
-  final int targetType;
+  final admin_enum.BanTargetType targetType;
   final String userId;
   final String username;
   final String roomId;
@@ -300,7 +305,7 @@ class AdminContentReport {
   final String reporterUsername;
   final String roomId;
   final String roomName;
-  final int targetType;
+  final admin_enum.ContentReportTargetType targetType;
   final String targetRoomId;
   final String targetRoomName;
   final String targetUserId;
@@ -315,7 +320,7 @@ class AdminContentReport {
   final String reasonCode;
   final String reason;
   final Map<String, dynamic> metadata;
-  final int status;
+  final admin_enum.ContentReportStatus status;
   final String reviewedBy;
   final String reviewedByUsername;
   final int reviewedAt;
@@ -368,30 +373,21 @@ class AdminContentReportsPage {
   });
 }
 
-class AdminReviewItem {
-  final String kind;
+enum AdminReviewKind { userRegistration, roomCreation, roomJoin }
+
+sealed class AdminReviewItem {
   final String id;
   final String title;
   final String subtitle;
   final String detail;
   final List<String> details;
-  final int status;
+  final common_enum.ReviewStatus status;
   final int requestedAt;
-  final int reviewedAt;
-  final String reviewedBy;
-  final String rejectionReason;
-  final int signupMethod;
-  final String oauth2Provider;
-  final String oauth2ProviderInstanceName;
-  final String oauth2ProviderIssuer;
-  final String oauth2ProviderUserId;
-  final String oauth2ProviderUsername;
-  final String oauth2AvatarUrl;
-  final String webauthnCredentialId;
-  final String webauthnCredentialName;
+  final int? reviewedAt;
+  final String? reviewedBy;
+  final String? rejectionReason;
 
   const AdminReviewItem({
-    required this.kind,
     required this.id,
     required this.title,
     required this.subtitle,
@@ -402,16 +398,85 @@ class AdminReviewItem {
     required this.reviewedAt,
     required this.reviewedBy,
     required this.rejectionReason,
-    this.signupMethod = 0,
-    this.oauth2Provider = '',
-    this.oauth2ProviderInstanceName = '',
-    this.oauth2ProviderIssuer = '',
-    this.oauth2ProviderUserId = '',
-    this.oauth2ProviderUsername = '',
-    this.oauth2AvatarUrl = '',
-    this.webauthnCredentialId = '',
-    this.webauthnCredentialName = '',
   });
+
+  AdminReviewKind get kind;
+}
+
+final class AdminUserRegistrationReview extends AdminReviewItem {
+  final admin_enum.SignupMethod signupMethod;
+  final String? oauth2Provider;
+  final String? oauth2ProviderInstanceName;
+  final String? oauth2ProviderIssuer;
+  final String? oauth2ProviderUserId;
+  final String? oauth2ProviderUsername;
+  final String? oauth2AvatarUrl;
+  final String? webauthnCredentialId;
+  final String? webauthnCredentialName;
+
+  const AdminUserRegistrationReview({
+    required super.id,
+    required super.title,
+    required super.subtitle,
+    required super.detail,
+    super.details,
+    required super.status,
+    required super.requestedAt,
+    required super.reviewedAt,
+    required super.reviewedBy,
+    required super.rejectionReason,
+    required this.signupMethod,
+    required this.oauth2Provider,
+    required this.oauth2ProviderInstanceName,
+    required this.oauth2ProviderIssuer,
+    required this.oauth2ProviderUserId,
+    required this.oauth2ProviderUsername,
+    required this.oauth2AvatarUrl,
+    required this.webauthnCredentialId,
+    required this.webauthnCredentialName,
+  });
+
+  @override
+  AdminReviewKind get kind => AdminReviewKind.userRegistration;
+}
+
+final class AdminRoomCreationReview extends AdminReviewItem {
+  const AdminRoomCreationReview({
+    required super.id,
+    required super.title,
+    required super.subtitle,
+    required super.detail,
+    super.details,
+    required super.status,
+    required super.requestedAt,
+    required super.reviewedAt,
+    required super.reviewedBy,
+    required super.rejectionReason,
+  });
+
+  @override
+  AdminReviewKind get kind => AdminReviewKind.roomCreation;
+}
+
+final class AdminRoomJoinReview extends AdminReviewItem {
+  final common_enum.RoomMemberRole requestedRole;
+
+  const AdminRoomJoinReview({
+    required super.id,
+    required super.title,
+    required super.subtitle,
+    required super.detail,
+    super.details,
+    required super.status,
+    required super.requestedAt,
+    required super.reviewedAt,
+    required super.reviewedBy,
+    required super.rejectionReason,
+    required this.requestedRole,
+  });
+
+  @override
+  AdminReviewKind get kind => AdminReviewKind.roomJoin;
 }
 
 class AdminReviewsPage {

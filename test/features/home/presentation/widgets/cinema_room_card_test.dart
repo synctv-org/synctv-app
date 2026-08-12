@@ -22,7 +22,8 @@ Widget _app(Widget child) {
 }
 
 CinemaRoomCard _card({
-  int access = 0,
+  client_enum.RoomDiscoveryAccess access =
+      client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNSPECIFIED,
   bool isOwner = false,
   bool joined = false,
   bool canJoin = false,
@@ -51,8 +52,7 @@ void main() {
     await tester.pumpWidget(
       _app(
         _card(
-          access:
-              client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST.value,
+          access: client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST,
           canJoin: true,
           onTap: () {},
         ),
@@ -73,10 +73,8 @@ void main() {
     await tester.pumpWidget(
       _app(
         _card(
-          access: client_enum
-              .RoomDiscoveryAccess
-              .ROOM_DISCOVERY_ACCESS_UNAVAILABLE
-              .value,
+          access:
+              client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNAVAILABLE,
           joined: true,
         ),
       ),

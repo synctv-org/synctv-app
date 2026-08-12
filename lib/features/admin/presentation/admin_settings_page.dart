@@ -10,6 +10,8 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/content_reports/presentation/content_reports_view.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
@@ -108,7 +110,8 @@ void _disposeControllersAfterRouteClose(
 Future<void> _openContentReportsViewer(
   BuildContext context, {
   required String title,
-  int targetType = 0,
+  admin_enum.ContentReportTargetType targetType =
+      admin_enum.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
   String reporterUserId = '',
   String roomId = '',
   String targetRoomId = '',
@@ -116,7 +119,8 @@ Future<void> _openContentReportsViewer(
   String targetMemberRoomId = '',
   String targetMemberUserId = '',
   int targetChatMessageId = 0,
-  int scope = 0,
+  admin_enum.ContentReportScope scope =
+      admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED,
   String search = '',
 }) {
   return AppDialogs.showStyledDialog<void>(
@@ -138,7 +142,11 @@ Future<void> _openContentReportsViewer(
         initialTargetChatMessageId: targetChatMessageId,
         initialScope: scope,
         initialSearch: search,
-        showTargetTypeTabs: targetType == 0,
+        showTargetTypeTabs:
+            targetType ==
+            admin_enum
+                .ContentReportTargetType
+                .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
       ),
     ),
     actions: [_closeButton(context)],

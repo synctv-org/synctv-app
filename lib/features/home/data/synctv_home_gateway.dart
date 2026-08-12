@@ -1,6 +1,7 @@
 import 'package:synctv_app/features/home/application/home_gateway.dart';
 import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 
 class SyncTvHomeGateway implements HomeGateway {
@@ -13,10 +14,7 @@ class SyncTvHomeGateway implements HomeGateway {
   bool get hasServer => SyncTvService.activeServer != null;
 
   @override
-  bool get hasRecoverableSession => SyncTvService.hasRecoverableSession;
-
-  @override
-  bool get isGuestSession => SyncTvService.isGuestSession;
+  SyncTvSessionIdentity get sessionIdentity => SyncTvService.sessionIdentity;
 
   @override
   String? get guestRoomId => SyncTvService.guestRoomId;

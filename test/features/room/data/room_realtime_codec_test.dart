@@ -37,15 +37,14 @@ void main() {
       chatMessageDisplayUsername(
         messageType: client_enum
             .ChatMessageType
-            .CHAT_MESSAGE_TYPE_SYSTEM_PLAYBACK_CHANGED
-            .value,
+            .CHAT_MESSAGE_TYPE_SYSTEM_PLAYBACK_CHANGED,
         username: null,
       ),
       'SyncTV',
     );
     expect(
       chatMessageDisplayUsername(
-        messageType: client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER.value,
+        messageType: client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
         username: null,
         missingUsername: 'Deleted user',
       ),
@@ -151,9 +150,18 @@ void main() {
       Uint8List.fromList(message.writeToBuffer()),
     );
 
-    expect(decoded.mediaLibrary?.playlists.single.sourceProvider, 'bilibili');
-    expect(decoded.mediaLibrary?.media.first.sourceProvider, 'directUrl');
-    expect(decoded.mediaLibrary?.media.last.sourceProvider, 'tiktok');
+    expect(
+      decoded.mediaLibrary?.playlists.single.sourceProvider,
+      source_config.SourceProvider.SOURCE_PROVIDER_BILIBILI,
+    );
+    expect(
+      decoded.mediaLibrary?.media.first.sourceProvider,
+      source_config.SourceProvider.SOURCE_PROVIDER_DIRECT_URL,
+    );
+    expect(
+      decoded.mediaLibrary?.media.last.sourceProvider,
+      source_config.SourceProvider.SOURCE_PROVIDER_TIKTOK,
+    );
     expect(decoded.mediaLibrary?.media.last.live, isTrue);
     expect(decoded.mediaLibrary?.dynamicItems.single.live, isTrue);
     expect(
@@ -239,7 +247,13 @@ void main() {
       Uint8List.fromList(decodedMessage.writeToBuffer()),
     );
 
-    expect(decoded.mediaLibrary?.playlists.single.sourceProvider, 'bilibili');
-    expect(decoded.mediaLibrary?.media.single.sourceProvider, 'directUrl');
+    expect(
+      decoded.mediaLibrary?.playlists.single.sourceProvider,
+      source_config.SourceProvider.SOURCE_PROVIDER_BILIBILI,
+    );
+    expect(
+      decoded.mediaLibrary?.media.single.sourceProvider,
+      source_config.SourceProvider.SOURCE_PROVIDER_DIRECT_URL,
+    );
   });
 }

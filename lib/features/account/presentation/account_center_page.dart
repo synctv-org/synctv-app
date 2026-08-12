@@ -3294,53 +3294,55 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   bool _isMyCreatedRoom(SyncTvRoom room) {
     return room.myRelation ==
-            client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED.value ||
-        room.myRole ==
-            common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value ||
+            client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED ||
+        room.myRole == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR ||
         room.creatorId == _user.id;
   }
 
   bool _canManageRoomFromListEntry(SyncTvRoom room) {
     return _isMyCreatedRoom(room) ||
-        room.myRole ==
-            common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value ||
-        _user.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
-        _user.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
+        room.myRole == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN ||
+        _user.role.hasSystemAdminPrivileges;
   }
 
-  String _userRoleLabel(int role) {
+  String _userRoleLabel(SyncTvUserRole role) {
     return switch (role) {
-      1 => 'Root',
-      2 => context.l10n.administrator,
-      3 => context.l10n.user,
-      _ => context.l10n.user,
+      AccountUserRole(value: common_enum.UserRole.USER_ROLE_ROOT) => 'Root',
+      AccountUserRole(value: common_enum.UserRole.USER_ROLE_ADMIN) =>
+        context.l10n.administrator,
+      AccountUserRole(value: common_enum.UserRole.USER_ROLE_USER) =>
+        context.l10n.user,
+      RoomMembershipRole(value: final value) => _roomRoleLabel(value),
+      AccountUserRole() => context.l10n.unknown,
     };
   }
 
-  String _userStatusLabel(int status) {
+  String _userStatusLabel(common_enum.UserStatus status) {
     return switch (status) {
-      1 => context.l10n.normal,
-      2 => context.l10n.pendingReview,
-      3 => context.l10n.banned,
-      4 => context.l10n.closed,
-      _ => context.l10n.normal,
+      common_enum.UserStatus.USER_STATUS_ACTIVE => context.l10n.normal,
+      common_enum.UserStatus.USER_STATUS_BANNED => context.l10n.banned,
+      _ => context.l10n.unknown,
     };
   }
 
-  String _roomRoleLabel(int role) {
+  String _roomRoleLabel(common_enum.RoomMemberRole role) {
     return switch (role) {
-      1 => context.l10n.creator,
-      2 => context.l10n.roomAdministrator,
-      3 => context.l10n.member,
-      4 => context.l10n.guest,
-      _ => context.l10n.member,
+      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR =>
+        context.l10n.creator,
+      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN =>
+        context.l10n.roomAdministrator,
+      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER => context.l10n.member,
+      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST => context.l10n.guest,
+      _ => context.l10n.unknown,
     };
   }
 
-  String _roomRelationLabel(int relation) {
+  String _roomRelationLabel(client_enum.MyRoomRelation relation) {
     return switch (relation) {
-      2 => context.l10n.createdByMe,
-      3 => context.l10n.joinedByMe,
+      client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED =>
+        context.l10n.createdByMe,
+      client_enum.MyRoomRelation.MY_ROOM_RELATION_PARTICIPATING =>
+        context.l10n.joinedByMe,
       _ => context.l10n.myRooms,
     };
   }
@@ -3357,13 +3359,18 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     return labels;
   }
 
-  String _notificationType(int type) {
+  String _notificationType(client_enum.NotificationType type) {
     return switch (type) {
-      1 => context.l10n.roomInvitation,
-      2 => context.l10n.systemAnnouncement,
-      3 => context.l10n.roomEvent,
-      4 => context.l10n.passwordResetNotification,
-      5 => context.l10n.emailBinding,
+      client_enum.NotificationType.NOTIFICATION_TYPE_ROOM_INVITATION =>
+        context.l10n.roomInvitation,
+      client_enum.NotificationType.NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT =>
+        context.l10n.systemAnnouncement,
+      client_enum.NotificationType.NOTIFICATION_TYPE_ROOM_EVENT =>
+        context.l10n.roomEvent,
+      client_enum.NotificationType.NOTIFICATION_TYPE_PASSWORD_RESET =>
+        context.l10n.passwordResetNotification,
+      client_enum.NotificationType.NOTIFICATION_TYPE_EMAIL_BIND =>
+        context.l10n.emailBinding,
       _ => context.l10n.notifications,
     };
   }

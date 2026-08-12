@@ -1174,7 +1174,7 @@ class RoomCreationSettings extends $pb.GeneratedMessage {
   factory RoomCreationSettings({
     $core.bool? enabled,
     $core.bool? approvalRequired,
-    RoomPasswordPolicy? passwordPolicy,
+    $0.RoomPasswordPolicy? passwordPolicy,
     $fixnum.Int64? maxRoomsPerUser,
   }) {
     final result = create();
@@ -1200,8 +1200,8 @@ class RoomCreationSettings extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'enabled')
     ..aOB(2, _omitFieldNames ? '' : 'approvalRequired')
-    ..aE<RoomPasswordPolicy>(3, _omitFieldNames ? '' : 'passwordPolicy',
-        enumValues: RoomPasswordPolicy.values)
+    ..aE<$0.RoomPasswordPolicy>(3, _omitFieldNames ? '' : 'passwordPolicy',
+        enumValues: $0.RoomPasswordPolicy.values)
     ..aInt64(4, _omitFieldNames ? '' : 'maxRoomsPerUser')
     ..hasRequiredFields = false;
 
@@ -1243,9 +1243,9 @@ class RoomCreationSettings extends $pb.GeneratedMessage {
   void clearApprovalRequired() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  RoomPasswordPolicy get passwordPolicy => $_getN(2);
+  $0.RoomPasswordPolicy get passwordPolicy => $_getN(2);
   @$pb.TagNumber(3)
-  set passwordPolicy(RoomPasswordPolicy value) => $_setField(3, value);
+  set passwordPolicy($0.RoomPasswordPolicy value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasPasswordPolicy() => $_has(2);
   @$pb.TagNumber(3)
@@ -3824,7 +3824,7 @@ class RoomCreationSettingsPatch extends $pb.GeneratedMessage {
   factory RoomCreationSettingsPatch({
     $core.bool? enabled,
     $core.bool? approvalRequired,
-    RoomPasswordPolicy? passwordPolicy,
+    $0.RoomPasswordPolicy? passwordPolicy,
     $fixnum.Int64? maxRoomsPerUser,
   }) {
     final result = create();
@@ -3850,8 +3850,8 @@ class RoomCreationSettingsPatch extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'enabled')
     ..aOB(2, _omitFieldNames ? '' : 'approvalRequired')
-    ..aE<RoomPasswordPolicy>(3, _omitFieldNames ? '' : 'passwordPolicy',
-        enumValues: RoomPasswordPolicy.values)
+    ..aE<$0.RoomPasswordPolicy>(3, _omitFieldNames ? '' : 'passwordPolicy',
+        enumValues: $0.RoomPasswordPolicy.values)
     ..aInt64(4, _omitFieldNames ? '' : 'maxRoomsPerUser')
     ..hasRequiredFields = false;
 
@@ -3894,9 +3894,9 @@ class RoomCreationSettingsPatch extends $pb.GeneratedMessage {
   void clearApprovalRequired() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  RoomPasswordPolicy get passwordPolicy => $_getN(2);
+  $0.RoomPasswordPolicy get passwordPolicy => $_getN(2);
   @$pb.TagNumber(3)
-  set passwordPolicy(RoomPasswordPolicy value) => $_setField(3, value);
+  set passwordPolicy($0.RoomPasswordPolicy value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasPasswordPolicy() => $_has(2);
   @$pb.TagNumber(3)
@@ -4601,7 +4601,7 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     $core.String? id,
     $core.String? username,
     $core.String? email,
-    $core.int? signupMethod,
+    SignupMethod? signupMethod,
     $0.ReviewStatus? status,
     $fixnum.Int64? requestedAt,
     $fixnum.Int64? reviewedAt,
@@ -4659,7 +4659,8 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..aOS(2, _omitFieldNames ? '' : 'username')
     ..aOS(3, _omitFieldNames ? '' : 'email')
-    ..aI(4, _omitFieldNames ? '' : 'signupMethod')
+    ..aE<SignupMethod>(4, _omitFieldNames ? '' : 'signupMethod',
+        enumValues: SignupMethod.values)
     ..aE<$0.ReviewStatus>(5, _omitFieldNames ? '' : 'status',
         enumValues: $0.ReviewStatus.values)
     ..aInt64(6, _omitFieldNames ? '' : 'requestedAt')
@@ -4725,9 +4726,9 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
   void clearEmail() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.int get signupMethod => $_getIZ(3);
+  SignupMethod get signupMethod => $_getN(3);
   @$pb.TagNumber(4)
-  set signupMethod($core.int value) => $_setSignedInt32(3, value);
+  set signupMethod(SignupMethod value) => $_setField(4, value);
   @$pb.TagNumber(4)
   $core.bool hasSignupMethod() => $_has(3);
   @$pb.TagNumber(4)

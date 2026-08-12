@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
 import 'package:synctv_app/features/room/data/room_realtime_connection.dart';
@@ -190,6 +191,7 @@ Future<_RealtimeSmokeProbe> _verifyRealtime(String roomId) async {
     'playlist_items',
     'self_room_member',
     'online_count',
+    'chat_events',
   });
   await probe.expectPlaybackPosition(2);
   await SyncTvService.updatePlaybackState(
@@ -317,7 +319,14 @@ Future<void> _ensureSmokeUser({
       username: username,
       password: password,
     );
-    print('registered user=${auth.user?.id}');
+    switch (auth) {
+      case Authenticated(:final user):
+        print('registered user=${user.id}');
+      case MfaRequired():
+        throw StateError('registration unexpectedly requires MFA');
+      case RegistrationReviewPending(:final reviewId):
+        print('registration review pending=$reviewId');
+    }
     return;
   }
 
@@ -331,7 +340,7 @@ Future<void> _ensureSmokeUser({
   await SyncTvService.adminAddUser(
     username,
     password,
-    common_enum.UserRole.USER_ROLE_USER.value,
+    common_enum.UserRole.USER_ROLE_USER,
   );
   await SyncTvService.logout();
   await loginLocalPasswordUser(username, password);

@@ -95,7 +95,7 @@ void main() {
     test('system administrator retains room capabilities', () {
       final capabilities = RoomUiCapabilities(
         room: _room(),
-        currentUser: _user(role: common_enum.UserRole.USER_ROLE_ADMIN.value),
+        currentUser: _user(role: common_enum.UserRole.USER_ROLE_ADMIN),
         selfMember: _member(permissions: 0),
       );
 
@@ -125,11 +125,11 @@ SyncTvRoom _room({String creatorId = 'creator', int myPermissions = 0}) {
   );
 }
 
-SyncTvUser _user({String id = 'user-1', int? role}) {
+SyncTvUser _user({String id = 'user-1', common_enum.UserRole? role}) {
   return SyncTvUser(
     id: id,
     username: 'member',
-    role: role ?? common_enum.UserRole.USER_ROLE_USER.value,
+    role: AccountUserRole(role ?? common_enum.UserRole.USER_ROLE_USER),
   );
 }
 
@@ -138,7 +138,7 @@ AdminRoomMember _member({required int permissions}) {
     roomId: 'room-1',
     userId: 'user-1',
     username: 'member',
-    role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+    role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
     permissions: permissions,
     addedPermissions: 0,
     removedPermissions: 0,

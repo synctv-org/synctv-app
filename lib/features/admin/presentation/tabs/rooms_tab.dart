@@ -696,12 +696,13 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               _openContentReportsViewer(
                 context,
                 title: context.l10n.roomReports(detail.roomName),
-                targetType: 1,
+                targetType: admin_enum
+                    .ContentReportTargetType
+                    .CONTENT_REPORT_TARGET_TYPE_ROOM,
                 targetRoomId: detail.roomId,
                 scope: admin_enum
                     .ContentReportScope
-                    .CONTENT_REPORT_SCOPE_TARGET_ROOM
-                    .value,
+                    .CONTENT_REPORT_SCOPE_TARGET_ROOM,
               );
             },
             icon: Icons.report_gmailerrorred_outlined,
@@ -1264,15 +1265,12 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                                                 common_enum
                                                     .RoomMemberRole
                                                     .ROOM_MEMBER_ROLE_ADMIN
-                                                    .value
                                             ? common_enum
                                                   .RoomMemberRole
                                                   .ROOM_MEMBER_ROLE_MEMBER
-                                                  .value
                                             : common_enum
                                                   .RoomMemberRole
-                                                  .ROOM_MEMBER_ROLE_ADMIN
-                                                  .value;
+                                                  .ROOM_MEMBER_ROLE_ADMIN;
                                         await adminGateway
                                             .adminSetRoomMemberRole(
                                               room.roomId,
@@ -1351,7 +1349,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
 
   Future<void> _addRoomMember(SyncTvRoom room) async {
     final controller = TextEditingController();
-    int role = common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value;
+    var role = common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER;
     var notify = true;
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
@@ -1370,19 +1368,19 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 prefixIcon: Icons.person_outline,
               ),
               const SizedBox(height: 12),
-              AppSelect<int>(
+              AppSelect<common_enum.RoomMemberRole>(
                 value: role,
                 label: context.l10n.roomRole,
                 options: {
                   context.l10n.member:
-                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
                   context.l10n.administrator:
-                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
                 },
                 onChanged: (value) => setDialogState(
                   () => role =
                       value ??
-                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
                 ),
               ),
               const SizedBox(height: 12),
@@ -1529,7 +1527,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     AdminRoomMember member,
   ) {
     final isAdmin =
-        member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
+        member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN;
     var added = isAdmin
         ? member.adminAddedPermissions
         : member.addedPermissions;
@@ -1771,22 +1769,22 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     }
   }
 
-  String _getStatusText(int status) {
+  String _getStatusText(common_enum.RoomStatus status) {
     switch (status) {
-      case 1:
+      case common_enum.RoomStatus.ROOM_STATUS_ACTIVE:
         return context.l10n.active;
-      case 2:
+      case common_enum.RoomStatus.ROOM_STATUS_CLOSED:
         return context.l10n.closed;
       default:
         return context.l10n.unknown;
     }
   }
 
-  Color _getStatusColor(int status) {
+  Color _getStatusColor(common_enum.RoomStatus status) {
     switch (status) {
-      case 1:
+      case common_enum.RoomStatus.ROOM_STATUS_ACTIVE:
         return Colors.green;
-      case 2:
+      case common_enum.RoomStatus.ROOM_STATUS_CLOSED:
         return Colors.grey;
       default:
         return Colors.grey;
@@ -2149,12 +2147,13 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                               onPressed: () => _openContentReportsViewer(
                                 context,
                                 title: context.l10n.roomReports(room.roomName),
-                                targetType: 1,
+                                targetType: admin_enum
+                                    .ContentReportTargetType
+                                    .CONTENT_REPORT_TARGET_TYPE_ROOM,
                                 targetRoomId: room.roomId,
                                 scope: admin_enum
                                     .ContentReportScope
-                                    .CONTENT_REPORT_SCOPE_TARGET_ROOM
-                                    .value,
+                                    .CONTENT_REPORT_SCOPE_TARGET_ROOM,
                               ),
                             ),
                             AppIconButton(

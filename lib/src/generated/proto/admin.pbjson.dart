@@ -21,23 +21,6 @@ import 'package:protobuf/well_known_types/google/protobuf/field_mask.pbjson.dart
 import 'client.pbjson.dart' as $1;
 import 'common.pbjson.dart' as $0;
 
-@$core.Deprecated('Use roomPasswordPolicyDescriptor instead')
-const RoomPasswordPolicy$json = {
-  '1': 'RoomPasswordPolicy',
-  '2': [
-    {'1': 'ROOM_PASSWORD_POLICY_UNSPECIFIED', '2': 0},
-    {'1': 'ROOM_PASSWORD_POLICY_OPTIONAL', '2': 1},
-    {'1': 'ROOM_PASSWORD_POLICY_REQUIRED', '2': 2},
-    {'1': 'ROOM_PASSWORD_POLICY_FORBIDDEN', '2': 3},
-  ],
-};
-
-/// Descriptor for `RoomPasswordPolicy`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List roomPasswordPolicyDescriptor = $convert.base64Decode(
-    'ChJSb29tUGFzc3dvcmRQb2xpY3kSJAogUk9PTV9QQVNTV09SRF9QT0xJQ1lfVU5TUEVDSUZJRU'
-    'QQABIhCh1ST09NX1BBU1NXT1JEX1BPTElDWV9PUFRJT05BTBABEiEKHVJPT01fUEFTU1dPUkRf'
-    'UE9MSUNZX1JFUVVJUkVEEAISIgoeUk9PTV9QQVNTV09SRF9QT0xJQ1lfRk9SQklEREVOEAM=');
-
 @$core.Deprecated('Use banTargetTypeDescriptor instead')
 const BanTargetType$json = {
   '1': 'BanTargetType',
@@ -114,6 +97,26 @@ final $typed_data.Uint8List contentReportScopeDescriptor = $convert.base64Decode
     '9ST09NEAMSJAogQ09OVEVOVF9SRVBPUlRfU0NPUEVfVEFSR0VUX1VTRVIQBBImCiJDT05URU5U'
     'X1JFUE9SVF9TQ09QRV9UQVJHRVRfTUVNQkVSEAUSLAooQ09OVEVOVF9SRVBPUlRfU0NPUEVfVE'
     'FSR0VUX0NIQVRfTUVTU0FHRRAG');
+
+@$core.Deprecated('Use signupMethodDescriptor instead')
+const SignupMethod$json = {
+  '1': 'SignupMethod',
+  '2': [
+    {'1': 'SIGNUP_METHOD_UNSPECIFIED', '2': 0},
+    {'1': 'SIGNUP_METHOD_EMAIL', '2': 1},
+    {'1': 'SIGNUP_METHOD_PASSWORD', '2': 2},
+    {'1': 'SIGNUP_METHOD_OAUTH2', '2': 3},
+    {'1': 'SIGNUP_METHOD_ADMIN_CREATED', '2': 4},
+    {'1': 'SIGNUP_METHOD_WEBAUTHN', '2': 5},
+  ],
+};
+
+/// Descriptor for `SignupMethod`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List signupMethodDescriptor = $convert.base64Decode(
+    'CgxTaWdudXBNZXRob2QSHQoZU0lHTlVQX01FVEhPRF9VTlNQRUNJRklFRBAAEhcKE1NJR05VUF'
+    '9NRVRIT0RfRU1BSUwQARIaChZTSUdOVVBfTUVUSE9EX1BBU1NXT1JEEAISGAoUU0lHTlVQX01F'
+    'VEhPRF9PQVVUSDIQAxIfChtTSUdOVVBfTUVUSE9EX0FETUlOX0NSRUFURUQQBBIaChZTSUdOVV'
+    'BfTUVUSE9EX1dFQkFVVEhOEAU=');
 
 @$core.Deprecated('Use sortDirectionDescriptor instead')
 const SortDirection$json = {
@@ -661,7 +664,7 @@ const RoomCreationSettings$json = {
       '3': 3,
       '4': 1,
       '5': 14,
-      '6': '.synctv.admin.RoomPasswordPolicy',
+      '6': '.synctv.common.RoomPasswordPolicy',
       '8': {},
       '10': 'passwordPolicy'
     },
@@ -678,10 +681,10 @@ const RoomCreationSettings$json = {
 /// Descriptor for `RoomCreationSettings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List roomCreationSettingsDescriptor = $convert.base64Decode(
     'ChRSb29tQ3JlYXRpb25TZXR0aW5ncxIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkEisKEWFwcH'
-    'JvdmFsX3JlcXVpcmVkGAIgASgIUhBhcHByb3ZhbFJlcXVpcmVkElMKD3Bhc3N3b3JkX3BvbGlj'
-    'eRgDIAEoDjIgLnN5bmN0di5hZG1pbi5Sb29tUGFzc3dvcmRQb2xpY3lCCLpIBYIBAhABUg5wYX'
-    'Nzd29yZFBvbGljeRIrChJtYXhfcm9vbXNfcGVyX3VzZXIYBCABKANSD21heFJvb21zUGVyVXNl'
-    'cg==');
+    'JvdmFsX3JlcXVpcmVkGAIgASgIUhBhcHByb3ZhbFJlcXVpcmVkElQKD3Bhc3N3b3JkX3BvbGlj'
+    'eRgDIAEoDjIhLnN5bmN0di5jb21tb24uUm9vbVBhc3N3b3JkUG9saWN5Qgi6SAWCAQIQAVIOcG'
+    'Fzc3dvcmRQb2xpY3kSKwoSbWF4X3Jvb21zX3Blcl91c2VyGAQgASgDUg9tYXhSb29tc1BlclVz'
+    'ZXI=');
 
 @$core.Deprecated('Use userSettingsDescriptor instead')
 const UserSettings$json = {
@@ -1845,7 +1848,7 @@ const RoomCreationSettingsPatch$json = {
       '3': 3,
       '4': 1,
       '5': 14,
-      '6': '.synctv.admin.RoomPasswordPolicy',
+      '6': '.synctv.common.RoomPasswordPolicy',
       '8': {},
       '9': 2,
       '10': 'passwordPolicy',
@@ -1872,11 +1875,11 @@ const RoomCreationSettingsPatch$json = {
 /// Descriptor for `RoomCreationSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List roomCreationSettingsPatchDescriptor = $convert.base64Decode(
     'ChlSb29tQ3JlYXRpb25TZXR0aW5nc1BhdGNoEh0KB2VuYWJsZWQYASABKAhIAFIHZW5hYmxlZI'
-    'gBARIwChFhcHByb3ZhbF9yZXF1aXJlZBgCIAEoCEgBUhBhcHByb3ZhbFJlcXVpcmVkiAEBElgK'
-    'D3Bhc3N3b3JkX3BvbGljeRgDIAEoDjIgLnN5bmN0di5hZG1pbi5Sb29tUGFzc3dvcmRQb2xpY3'
-    'lCCLpIBYIBAhABSAJSDnBhc3N3b3JkUG9saWN5iAEBEjAKEm1heF9yb29tc19wZXJfdXNlchgE'
-    'IAEoA0gDUg9tYXhSb29tc1BlclVzZXKIAQFCCgoIX2VuYWJsZWRCFAoSX2FwcHJvdmFsX3JlcX'
-    'VpcmVkQhIKEF9wYXNzd29yZF9wb2xpY3lCFQoTX21heF9yb29tc19wZXJfdXNlcg==');
+    'gBARIwChFhcHByb3ZhbF9yZXF1aXJlZBgCIAEoCEgBUhBhcHByb3ZhbFJlcXVpcmVkiAEBElkK'
+    'D3Bhc3N3b3JkX3BvbGljeRgDIAEoDjIhLnN5bmN0di5jb21tb24uUm9vbVBhc3N3b3JkUG9saW'
+    'N5Qgi6SAWCAQIQAUgCUg5wYXNzd29yZFBvbGljeYgBARIwChJtYXhfcm9vbXNfcGVyX3VzZXIY'
+    'BCABKANIA1IPbWF4Um9vbXNQZXJVc2VyiAEBQgoKCF9lbmFibGVkQhQKEl9hcHByb3ZhbF9yZX'
+    'F1aXJlZEISChBfcGFzc3dvcmRfcG9saWN5QhUKE19tYXhfcm9vbXNfcGVyX3VzZXI=');
 
 @$core.Deprecated('Use userSettingsPatchDescriptor instead')
 const UserSettingsPatch$json = {
@@ -2289,7 +2292,14 @@ const UserRegistrationReview$json = {
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'username', '3': 2, '4': 1, '5': 9, '10': 'username'},
     {'1': 'email', '3': 3, '4': 1, '5': 9, '10': 'email'},
-    {'1': 'signup_method', '3': 4, '4': 1, '5': 5, '10': 'signupMethod'},
+    {
+      '1': 'signup_method',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.admin.SignupMethod',
+      '10': 'signupMethod'
+    },
     {
       '1': 'status',
       '3': 5,
@@ -2409,25 +2419,26 @@ const UserRegistrationReview$json = {
 /// Descriptor for `UserRegistrationReview`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List userRegistrationReviewDescriptor = $convert.base64Decode(
     'ChZVc2VyUmVnaXN0cmF0aW9uUmV2aWV3Eg4KAmlkGAEgASgJUgJpZBIaCgh1c2VybmFtZRgCIA'
-    'EoCVIIdXNlcm5hbWUSFAoFZW1haWwYAyABKAlSBWVtYWlsEiMKDXNpZ251cF9tZXRob2QYBCAB'
-    'KAVSDHNpZ251cE1ldGhvZBIzCgZzdGF0dXMYBSABKA4yGy5zeW5jdHYuY29tbW9uLlJldmlld1'
-    'N0YXR1c1IGc3RhdHVzEiEKDHJlcXVlc3RlZF9hdBgGIAEoA1ILcmVxdWVzdGVkQXQSHwoLcmV2'
-    'aWV3ZWRfYXQYByABKANSCnJldmlld2VkQXQSJAoLcmV2aWV3ZWRfYnkYCCABKAlIAFIKcmV2aW'
-    'V3ZWRCeYgBARIuChByZWplY3Rpb25fcmVhc29uGAkgASgJSAFSD3JlamVjdGlvblJlYXNvbogB'
-    'ARJPCg9vYXV0aDJfcHJvdmlkZXIYCiABKA4yIS5zeW5jdHYuY2xpZW50Lk9BdXRoMlByb3ZpZG'
-    'VyVHlwZUgCUg5vYXV0aDJQcm92aWRlcogBARI6ChdvYXV0aDJfcHJvdmlkZXJfdXNlcl9pZBgL'
-    'IAEoCUgDUhRvYXV0aDJQcm92aWRlclVzZXJJZIgBARI9ChhvYXV0aDJfcHJvdmlkZXJfdXNlcm'
-    '5hbWUYDCABKAlIBFIWb2F1dGgyUHJvdmlkZXJVc2VybmFtZYgBARIvChFvYXV0aDJfYXZhdGFy'
-    'X3VybBgNIAEoCUgFUg9vYXV0aDJBdmF0YXJVcmyIAQESRgodb2F1dGgyX3Byb3ZpZGVyX2luc3'
-    'RhbmNlX25hbWUYDiABKAlIBlIab2F1dGgyUHJvdmlkZXJJbnN0YW5jZU5hbWWIAQESOQoWb2F1'
-    'dGgyX3Byb3ZpZGVyX2lzc3VlchgPIAEoCUgHUhRvYXV0aDJQcm92aWRlcklzc3VlcogBARI5Ch'
-    'Z3ZWJhdXRobl9jcmVkZW50aWFsX2lkGBAgASgJSAhSFHdlYmF1dGhuQ3JlZGVudGlhbElkiAEB'
-    'Ej0KGHdlYmF1dGhuX2NyZWRlbnRpYWxfbmFtZRgRIAEoCUgJUhZ3ZWJhdXRobkNyZWRlbnRpYW'
-    'xOYW1liAEBQg4KDF9yZXZpZXdlZF9ieUITChFfcmVqZWN0aW9uX3JlYXNvbkISChBfb2F1dGgy'
-    'X3Byb3ZpZGVyQhoKGF9vYXV0aDJfcHJvdmlkZXJfdXNlcl9pZEIbChlfb2F1dGgyX3Byb3ZpZG'
-    'VyX3VzZXJuYW1lQhQKEl9vYXV0aDJfYXZhdGFyX3VybEIgCh5fb2F1dGgyX3Byb3ZpZGVyX2lu'
-    'c3RhbmNlX25hbWVCGQoXX29hdXRoMl9wcm92aWRlcl9pc3N1ZXJCGQoXX3dlYmF1dGhuX2NyZW'
-    'RlbnRpYWxfaWRCGwoZX3dlYmF1dGhuX2NyZWRlbnRpYWxfbmFtZQ==');
+    'EoCVIIdXNlcm5hbWUSFAoFZW1haWwYAyABKAlSBWVtYWlsEj8KDXNpZ251cF9tZXRob2QYBCAB'
+    'KA4yGi5zeW5jdHYuYWRtaW4uU2lnbnVwTWV0aG9kUgxzaWdudXBNZXRob2QSMwoGc3RhdHVzGA'
+    'UgASgOMhsuc3luY3R2LmNvbW1vbi5SZXZpZXdTdGF0dXNSBnN0YXR1cxIhCgxyZXF1ZXN0ZWRf'
+    'YXQYBiABKANSC3JlcXVlc3RlZEF0Eh8KC3Jldmlld2VkX2F0GAcgASgDUgpyZXZpZXdlZEF0Ei'
+    'QKC3Jldmlld2VkX2J5GAggASgJSABSCnJldmlld2VkQnmIAQESLgoQcmVqZWN0aW9uX3JlYXNv'
+    'bhgJIAEoCUgBUg9yZWplY3Rpb25SZWFzb26IAQESTwoPb2F1dGgyX3Byb3ZpZGVyGAogASgOMi'
+    'Euc3luY3R2LmNsaWVudC5PQXV0aDJQcm92aWRlclR5cGVIAlIOb2F1dGgyUHJvdmlkZXKIAQES'
+    'OgoXb2F1dGgyX3Byb3ZpZGVyX3VzZXJfaWQYCyABKAlIA1IUb2F1dGgyUHJvdmlkZXJVc2VySW'
+    'SIAQESPQoYb2F1dGgyX3Byb3ZpZGVyX3VzZXJuYW1lGAwgASgJSARSFm9hdXRoMlByb3ZpZGVy'
+    'VXNlcm5hbWWIAQESLwoRb2F1dGgyX2F2YXRhcl91cmwYDSABKAlIBVIPb2F1dGgyQXZhdGFyVX'
+    'JsiAEBEkYKHW9hdXRoMl9wcm92aWRlcl9pbnN0YW5jZV9uYW1lGA4gASgJSAZSGm9hdXRoMlBy'
+    'b3ZpZGVySW5zdGFuY2VOYW1liAEBEjkKFm9hdXRoMl9wcm92aWRlcl9pc3N1ZXIYDyABKAlIB1'
+    'IUb2F1dGgyUHJvdmlkZXJJc3N1ZXKIAQESOQoWd2ViYXV0aG5fY3JlZGVudGlhbF9pZBgQIAEo'
+    'CUgIUhR3ZWJhdXRobkNyZWRlbnRpYWxJZIgBARI9Chh3ZWJhdXRobl9jcmVkZW50aWFsX25hbW'
+    'UYESABKAlICVIWd2ViYXV0aG5DcmVkZW50aWFsTmFtZYgBAUIOCgxfcmV2aWV3ZWRfYnlCEwoR'
+    'X3JlamVjdGlvbl9yZWFzb25CEgoQX29hdXRoMl9wcm92aWRlckIaChhfb2F1dGgyX3Byb3ZpZG'
+    'VyX3VzZXJfaWRCGwoZX29hdXRoMl9wcm92aWRlcl91c2VybmFtZUIUChJfb2F1dGgyX2F2YXRh'
+    'cl91cmxCIAoeX29hdXRoMl9wcm92aWRlcl9pbnN0YW5jZV9uYW1lQhkKF19vYXV0aDJfcHJvdm'
+    'lkZXJfaXNzdWVyQhkKF193ZWJhdXRobl9jcmVkZW50aWFsX2lkQhsKGV93ZWJhdXRobl9jcmVk'
+    'ZW50aWFsX25hbWU=');
 
 @$core.Deprecated('Use roomCreationReviewDescriptor instead')
 const RoomCreationReview$json = {

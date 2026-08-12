@@ -1,12 +1,12 @@
 import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 
 abstract interface class HomeGateway {
   Stream<void> get authErrors;
 
   bool get hasServer;
-  bool get hasRecoverableSession;
-  bool get isGuestSession;
+  SyncTvSessionIdentity get sessionIdentity;
   String? get guestRoomId;
 
   Future<SyncTvUser> getCurrentUser();

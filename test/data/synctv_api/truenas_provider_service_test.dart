@@ -11,7 +11,7 @@ void main() {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
       baseUrl: 'https://synctv.example',
-      session: SyncTvSession()..accessToken = 'token',
+      session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
         if (request.url.path == '/api/providers/truenas/binds') {

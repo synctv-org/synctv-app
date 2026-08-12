@@ -4,9 +4,9 @@ import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/data/synctv_api/synctv_auth_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_memory_cache.dart';
-import 'package:synctv_app/data/synctv_api/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -17,7 +17,6 @@ import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
 class SyncTvPublicRoomDomainService {
   SyncTvPublicRoomDomainService({
     required this._api,
-    required this._sessionStore,
     required this._authService,
     SyncTvMemoryCache? cache,
     opaque.SyncTvOpaqueClient? opaqueClient,
@@ -25,17 +24,19 @@ class SyncTvPublicRoomDomainService {
        _opaqueClient = opaqueClient ?? opaque.SyncTvOpaqueClient();
 
   final SyncTvApiClient _api;
-  final SyncTvSessionStore _sessionStore;
   final SyncTvAuthDomainService _authService;
   final SyncTvMemoryCache _cache;
   final opaque.SyncTvOpaqueClient _opaqueClient;
 
   Future<bool> _hasAuthenticatedUserSession() async {
-    if (_api.session.isGuest) return false;
-    if (_api.session.hasAccessToken) return true;
-    final refreshToken = _api.session.refreshToken;
-    if (refreshToken == null || refreshToken.isEmpty) return false;
-    return _api.refreshAccessTokenIfPossible();
+    return switch (_api.session.identity) {
+      AnonymousSessionIdentity() || GuestSessionIdentity() => false,
+      AccountSessionIdentity(:final accessToken) when accessToken != null =>
+        true,
+      AccountSessionIdentity(:final refreshToken) when refreshToken != null =>
+        _api.refreshAccessTokenIfPossible(),
+      AccountSessionIdentity() => false,
+    };
   }
 
   Future<PublicSettingsInfo> getPublicSettings({bool refresh = false}) async {
@@ -201,16 +202,7 @@ class SyncTvPublicRoomDomainService {
     client_enum.SortDirection sortDirection =
         client_enum.SortDirection.SORT_DIRECTION_DESC,
   }) async {
-    if (_api.session.isGuest) {
-      final roomId = _sessionStore.guestRoomId;
-      if (roomId == null || roomId.isEmpty) {
-        return RoomsPage(
-          rooms: const <SyncTvRoom>[],
-          total: 0,
-          page: page,
-          pageSize: pageSize,
-        );
-      }
+    if (_api.session.identity case GuestSessionIdentity(:final roomId)) {
       final response = await _api.user.getRoom(
         client.GetRoomRequest(roomId: roomId),
       );
@@ -254,7 +246,7 @@ class SyncTvPublicRoomDomainService {
     int pageSize = 100,
     String? search,
   }) async {
-    if (_api.session.isGuest) {
+    if (_api.session.identity is GuestSessionIdentity) {
       return RoomsPage(
         rooms: const <SyncTvRoom>[],
         total: 0,
@@ -320,7 +312,7 @@ class SyncTvPublicRoomDomainService {
     String categoryId = '',
     List<String> labelIds = const [],
   }) async {
-    if (_api.session.isGuest) {
+    if (_api.session.identity is GuestSessionIdentity) {
       throw AuthException('访客 token 只能访问对应房间，不能创建房间。');
     }
     final request = client.CreateRoomRequest(name: name);
@@ -341,8 +333,8 @@ class SyncTvPublicRoomDomainService {
           joined: true,
           canJoin: false,
           discoveryAccess:
-              client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_ENTER.value,
-          myRelation: client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED.value,
+              client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_ENTER,
+          myRelation: client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED,
         );
   }
 
@@ -351,14 +343,16 @@ class SyncTvPublicRoomDomainService {
   }
 
   Future<JoinRoomResult> joinRoom(String roomId, String password) async {
-    if (_api.session.isGuest) {
+    if (_api.session.identity case GuestSessionIdentity(
+      roomId: final guestRoomId,
+    )) {
       if (password.isNotEmpty) {
         throw AuthException('访客 token 不能进入带密码房间，请使用用户账号加入。');
       }
-      if (_sessionStore.guestRoomId != roomId) {
+      if (guestRoomId != roomId) {
         await _authService.createGuestToken(roomId);
       }
-      return const JoinRoomResult(requiresApproval: false);
+      return const RoomJoined();
     }
     if (password.isNotEmpty) {
       return _joinRoomWithOpaquePassword(roomId, password);
@@ -366,7 +360,9 @@ class SyncTvPublicRoomDomainService {
     final response = await _api.user.joinRoom(
       client.JoinRoomRequest(roomId: roomId),
     );
-    return JoinRoomResult(requiresApproval: response.requiresApproval);
+    return response.requiresApproval
+        ? const RoomJoinReviewPending()
+        : const RoomJoined();
   }
 
   Future<JoinRoomResult> _joinRoomWithOpaquePassword(
@@ -401,7 +397,9 @@ class SyncTvPublicRoomDomainService {
         credentialFinalization: finish.credentialFinalization,
       ),
     );
-    return JoinRoomResult(requiresApproval: response.requiresApproval);
+    return response.requiresApproval
+        ? const RoomJoinReviewPending()
+        : const RoomJoined();
   }
 
   Future<SyncTvRoom> getRoomInfo(String roomId) async {

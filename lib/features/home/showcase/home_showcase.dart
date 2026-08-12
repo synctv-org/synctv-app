@@ -3,7 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:synctv_app/features/home/presentation/home_view.dart';
 import 'package:synctv_app/l10n/l10n.dart';
-import 'package:synctv_app/features/home/domain/home_room_access.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -56,7 +56,8 @@ SyncTvRoom _room({
   required int members,
   bool joined = false,
   bool favorite = false,
-  int discoveryAccess = 0,
+  client_enum.RoomDiscoveryAccess discoveryAccess =
+      client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNSPECIFIED,
 }) => SyncTvRoom(
   roomId: id,
   roomName: name,
@@ -107,7 +108,7 @@ final homeShowcaseRooms = <SyncTvRoom>[
     viewers: 215,
     members: 1204,
     discoveryAccess:
-        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST.value,
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST,
   ),
   _room(
     id: 'classic-film-archive',
@@ -131,7 +132,7 @@ HomeViewState homeShowcaseState({
   List<SyncTvRoom>? rooms,
   String selectedCategoryId = '',
 }) => HomeViewState(
-  identityKind: HomeIdentityKind.account,
+  identity: const AccountSessionIdentity(),
   hasServer: true,
   isLoading: false,
   isLoadingTaxonomy: false,
@@ -151,7 +152,7 @@ HomeViewState homeShowcaseState({
     id: 'showcase-user',
     username: 'Alex Morgan',
     email: 'alex@example.com',
-    role: common_enum.UserRole.USER_ROLE_USER.value,
+    role: const AccountUserRole(common_enum.UserRole.USER_ROLE_USER),
   ),
 );
 

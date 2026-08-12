@@ -77,9 +77,7 @@ class SyncTvAuthDomainService {
     final response = await _api.auth.startLogin(request);
     return LoginStart(
       sessionId: response.loginSessionId,
-      availableMethods: response.availableMethods
-          .map((method) => method.value)
-          .toList(growable: false),
+      availableMethods: List.unmodifiable(response.availableMethods),
       expiresAt: DateTime.fromMillisecondsSinceEpoch(
         response.expiresAt.toInt() * 1000,
         isUtc: true,
@@ -409,7 +407,9 @@ class SyncTvAuthDomainService {
     return SyncTvUser(
       id: response.guestId,
       username: response.displayName.isEmpty ? 'Guest' : response.displayName,
-      role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST.value,
+      role: const RoomMembershipRole(
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
+      ),
     );
   }
 
@@ -462,29 +462,20 @@ class SyncTvAuthDomainService {
     );
     await _api.runForCurrentEndpointResponse(
       response,
-      _sessionStore.persistTokens,
+      _sessionStore.persistSession,
     );
     if (response.registrationReviewRequired) {
-      return AuthResult(
-        registrationReviewRequired: true,
-        registrationReviewId: response.registrationReviewId,
-        redirectUrl: response.hasRedirectUrl() ? response.redirectUrl : null,
-        expiresIn: response.expiresIn.toInt(),
-        oauth2Operation: response.operation,
-      );
+      return RegistrationReviewPending(reviewId: response.registrationReviewId);
     }
-    return AuthResult(
-      user: SyncTvUser(
+    return Authenticated(
+      SyncTvUser(
         id: response.userInfo.userId,
         username: response.userInfo.username,
         email: null,
-        role: response.userInfo.role.value,
+        role: AccountUserRole(response.userInfo.role),
         createdAt: response.userInfo.createdAt.toInt(),
-        status: response.userInfo.status.value,
+        status: response.userInfo.status,
       ),
-      redirectUrl: response.hasRedirectUrl() ? response.redirectUrl : null,
-      expiresIn: response.expiresIn.toInt(),
-      oauth2Operation: response.operation,
     );
   }
 
@@ -540,7 +531,7 @@ class SyncTvAuthDomainService {
     );
     await _api.runForCurrentEndpointResponse(
       response,
-      _sessionStore.persistTokens,
+      _sessionStore.persistSession,
     );
   }
 
@@ -562,13 +553,13 @@ class SyncTvAuthDomainService {
     client.LoginResponse response,
   ) async {
     if (response.hasMfa() && response.mfa.required) {
-      return AuthResult(mfa: _mfaChallengeFromProto(response.mfa));
+      return MfaRequired(_mfaChallengeFromProto(response.mfa));
     }
     await _api.runForCurrentEndpointResponse(
       response,
-      _sessionStore.persistTokens,
+      _sessionStore.persistSession,
     );
-    return AuthResult(user: _api.mapUser(response.user));
+    return Authenticated(_api.mapUser(response.user));
   }
 
   Future<AuthResult> _registerResponseToAuthResult(
@@ -577,16 +568,15 @@ class SyncTvAuthDomainService {
     if (response.status ==
             client_enum.RegistrationStatus.REGISTRATION_STATUS_PENDING_REVIEW ||
         response.hasPendingReview()) {
-      return AuthResult(
-        registrationReviewRequired: true,
-        registrationReviewId: response.pendingReview.reviewRequestId,
+      return RegistrationReviewPending(
+        reviewId: response.pendingReview.reviewRequestId,
       );
     }
     await _api.runForCurrentEndpointResponse(
       response,
-      _sessionStore.persistTokens,
+      _sessionStore.persistSession,
     );
-    return AuthResult(user: _api.mapUser(response.user));
+    return Authenticated(_api.mapUser(response.user));
   }
 
   SensitiveOperationVerificationInfo _sensitiveOperationVerificationInfo(
@@ -614,15 +604,9 @@ class SyncTvAuthDomainService {
     return SensitiveOperationVerificationChallengeInfo(
       sessionId: challenge.sessionId,
       requiredCount: challenge.requiredCount,
-      requiredMethods: challenge.requiredMethods
-          .map((method) => method.value)
-          .toList(),
-      completedMethods: challenge.completedMethods
-          .map((method) => method.value)
-          .toList(),
-      availableMethods: challenge.availableMethods
-          .map((method) => method.value)
-          .toList(),
+      requiredMethods: List.unmodifiable(challenge.requiredMethods),
+      completedMethods: List.unmodifiable(challenge.completedMethods),
+      availableMethods: List.unmodifiable(challenge.availableMethods),
       expiresAt: DateTime.fromMillisecondsSinceEpoch(
         challenge.expiresAt.toInt() * 1000,
       ),
@@ -632,9 +616,7 @@ class SyncTvAuthDomainService {
   MfaChallengeInfo _mfaChallengeFromProto(client.MfaChallenge mfa) {
     return MfaChallengeInfo(
       sessionId: mfa.sessionId,
-      availableMethods: mfa.availableMethods
-          .map((method) => method.value)
-          .toList(),
+      availableMethods: List.unmodifiable(mfa.availableMethods),
       maskedEmail: mfa.maskedEmail,
       expiresAt: DateTime.fromMillisecondsSinceEpoch(
         mfa.expiresAt.toInt() * 1000,

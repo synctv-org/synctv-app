@@ -178,7 +178,7 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
       await adminGateway.adminAddUser(
         username,
         password,
-        common_enum.UserRole.USER_ROLE_ADMIN.value,
+        common_enum.UserRole.USER_ROLE_ADMIN,
       );
       if (!mounted) return;
       AppNotifications.showSuccess(context, context.l10n.administratorAdded);

@@ -1,3 +1,5 @@
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
+
 class RoomStreamEntryInfo {
   final String mediaId;
   final bool active;
@@ -31,8 +33,8 @@ class RoomJoinReviewInfo {
   final String roomId;
   final String userId;
   final String username;
-  final int requestedRole;
-  final int status;
+  final common.RoomMemberRole requestedRole;
+  final common.ReviewStatus status;
   final int requestedAt;
   final int reviewedAt;
   final String reviewedBy;
@@ -86,60 +88,44 @@ class RoomMembersPage {
   });
 }
 
-enum RoomResourceWatchKind { observed, changed, error }
-
-class RoomResourceWatchEvent<T> {
-  final RoomResourceWatchKind kind;
-  final String version;
-  final bool changed;
-  final T? snapshot;
-  final String errorMessage;
-  final int errorCode;
-
-  const RoomResourceWatchEvent._({
-    required this.kind,
-    required this.version,
-    required this.changed,
-    this.snapshot,
-    this.errorMessage = '',
-    this.errorCode = 0,
-  });
+sealed class RoomResourceWatchEvent<T> {
+  const RoomResourceWatchEvent();
 
   factory RoomResourceWatchEvent.observed({
     required String version,
     required bool changed,
-  }) {
-    return RoomResourceWatchEvent._(
-      kind: RoomResourceWatchKind.observed,
-      version: version,
-      changed: changed,
-    );
-  }
+  }) => RoomResourceObserved<T>(version: version, changed: changed);
 
   factory RoomResourceWatchEvent.changed({
     required String version,
     T? snapshot,
-  }) {
-    return RoomResourceWatchEvent._(
-      kind: RoomResourceWatchKind.changed,
-      version: version,
-      changed: true,
-      snapshot: snapshot,
-    );
-  }
+  }) => RoomResourceChanged<T>(version: version, snapshot: snapshot);
 
   factory RoomResourceWatchEvent.error({
     required String message,
     required int code,
-  }) {
-    return RoomResourceWatchEvent._(
-      kind: RoomResourceWatchKind.error,
-      version: '',
-      changed: false,
-      errorMessage: message,
-      errorCode: code,
-    );
-  }
+  }) => RoomResourceWatchFailed<T>(message: message, code: code);
+}
+
+final class RoomResourceObserved<T> extends RoomResourceWatchEvent<T> {
+  const RoomResourceObserved({required this.version, required this.changed});
+
+  final String version;
+  final bool changed;
+}
+
+final class RoomResourceChanged<T> extends RoomResourceWatchEvent<T> {
+  const RoomResourceChanged({required this.version, this.snapshot});
+
+  final String version;
+  final T? snapshot;
+}
+
+final class RoomResourceWatchFailed<T> extends RoomResourceWatchEvent<T> {
+  const RoomResourceWatchFailed({required this.message, required this.code});
+
+  final String message;
+  final int code;
 }
 
 class IceServerInfo {
@@ -160,7 +146,7 @@ class AdminRoomMember {
   final String username;
   final String remarkName;
   final String displayTag;
-  final int role;
+  final common.RoomMemberRole role;
   final int permissions;
   final int addedPermissions;
   final int removedPermissions;
@@ -193,7 +179,7 @@ class AdminRoomMember {
     String? username,
     String? remarkName,
     String? displayTag,
-    int? role,
+    common.RoomMemberRole? role,
     int? permissions,
     int? addedPermissions,
     int? removedPermissions,

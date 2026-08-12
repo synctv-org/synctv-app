@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 import 'package:synctv_app/src/generated/proto/providers/tiktok.pb.dart'
     as tiktok;
 
@@ -23,23 +25,23 @@ void main() {
         {'kind': 'live', 'uniqueId': 'creator_name', 'shared': true},
       ]) {
         final config = SourceConfigCodec.mediaSourceConfigFromMap(
-          sourceProvider: 'tiktok',
+          sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_TIKTOK,
           sourceConfig: source,
         )!;
         expect(
           SourceConfigCodec.providerForMediaSourceConfig(config),
-          'tiktok',
+          source_enum.SourceProvider.SOURCE_PROVIDER_TIKTOK,
         );
         expect(SourceConfigCodec.mediaSourceConfigToMap(config), source);
       }
 
       final playlist = SourceConfigCodec.playlistSourceConfigFromMap(
-        sourceProvider: 'tiktok',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_TIKTOK,
         sourceConfig: const {'secUid': 'MS4wLjABAAAAexample', 'shared': true},
       )!;
       expect(
         SourceConfigCodec.providerForPlaylistSourceConfig(playlist),
-        'tiktok',
+        source_enum.SourceProvider.SOURCE_PROVIDER_TIKTOK,
       );
       expect(SourceConfigCodec.playlistSourceConfigToMap(playlist), {
         'secUid': 'MS4wLjABAAAAexample',

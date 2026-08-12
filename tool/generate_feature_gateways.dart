@@ -317,7 +317,6 @@ const _adminMethods = <String>{
   'adminRemoveAdmin',
   'adminResetRoomSettings',
   'adminSendTestEmail',
-  'adminSetAdmin',
   'adminSetProviderInstanceEnabled',
   'adminSetRoomMemberRole',
   'adminUpdatePassword',

@@ -33,7 +33,7 @@ void main() {
                         StateError('credential validation failed'),
                       );
                     }
-                    return const JoinRoomResult(requiresApproval: false);
+                    return const RoomJoined();
                   },
                 );
               },
@@ -61,6 +61,6 @@ void main() {
 
     expect(find.text('Enter room password'), findsNothing);
     expect(attempts, 2);
-    expect(completed?.requiresApproval, isFalse);
+    expect(completed, isA<RoomJoined>());
   });
 }

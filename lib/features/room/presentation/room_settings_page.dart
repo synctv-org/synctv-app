@@ -23,10 +23,13 @@ import 'package:synctv_app/features/room/application/playback_history_controller
 import 'package:synctv_app/features/room/application/playback_mode_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/room_management_gateway.dart';
 import 'package:synctv_app/features/media_library/application/media_library_gateway.dart';
+import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
 import 'package:synctv_app/core/presentation/image/local_image_picker.dart';
@@ -55,19 +58,19 @@ const Set<String> _managementObserveIds = {
   _playbackHistoryObserveId,
 };
 
-const Set<String> _mediaSourcesWithProviderInstances = {
-  'alist',
-  'emby',
-  'bilibili',
-  'cloudreve',
-  'twitch',
-  'youtube',
-  'douyin',
-  'tiktok',
-  'huya',
-  'douyu',
-  'acfun',
-  'cctv',
+const Set<source_enum.SourceProvider> _mediaSourcesWithProviderInstances = {
+  source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
+  source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
+  source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
+  source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE,
+  source_enum.SourceProvider.SOURCE_PROVIDER_TWITCH,
+  source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE,
+  source_enum.SourceProvider.SOURCE_PROVIDER_DOUYIN,
+  source_enum.SourceProvider.SOURCE_PROVIDER_TIKTOK,
+  source_enum.SourceProvider.SOURCE_PROVIDER_HUYA,
+  source_enum.SourceProvider.SOURCE_PROVIDER_DOUYU,
+  source_enum.SourceProvider.SOURCE_PROVIDER_ACFUN,
+  source_enum.SourceProvider.SOURCE_PROVIDER_CCTV,
 };
 
 class _RoomSettingsSection {
@@ -103,22 +106,19 @@ class _RealtimeWatchStats {
 
   void record<T>(RoomResourceWatchEvent<T> event) {
     lastSeenAt = DateTime.now();
-    switch (event.kind) {
-      case RoomResourceWatchKind.observed:
+    switch (event) {
+      case RoomResourceObserved(:final changed):
         observed += 1;
-        lastKind = event.changed ? 'observed_changed' : 'observed_unchanged';
+        lastKind = changed ? 'observed_changed' : 'observed_unchanged';
         lastError = '';
-        break;
-      case RoomResourceWatchKind.changed:
+      case RoomResourceChanged():
         changed += 1;
         lastKind = 'snapshot';
         lastError = '';
-        break;
-      case RoomResourceWatchKind.error:
+      case RoomResourceWatchFailed(:final message):
         errors += 1;
         lastKind = 'error';
-        lastError = event.errorMessage;
-        break;
+        lastError = message;
     }
   }
 }
@@ -244,7 +244,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       client_enum.SortDirection.SORT_DIRECTION_ASC;
   client_enum.ResourceAvailabilityFilter _mediaAvailability =
       client_enum.ResourceAvailabilityFilter.RESOURCE_AVAILABILITY_FILTER_ALL;
-  String _mediaSourceProvider = '';
+  source_enum.SourceProvider _mediaSourceProvider =
+      source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED;
   String _mediaProviderInstanceName = '';
   List<String> _mediaProviderInstances = const [''];
   client_enum.SortDirection _streamSortDirection =
@@ -900,13 +901,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     if (!mounted) return;
     _settingsWatchStats.record(event);
-    if (event.version.isNotEmpty) _settingsWatchVersion = event.version;
-    switch (event.kind) {
-      case RoomResourceWatchKind.observed:
+    switch (event) {
+      case RoomResourceObserved(:final version):
+        if (version.isNotEmpty) _settingsWatchVersion = version;
         setState(() {});
-        break;
-      case RoomResourceWatchKind.changed:
-        final snapshot = event.snapshot;
+      case RoomResourceChanged(:final version, :final snapshot):
+        if (version.isNotEmpty) _settingsWatchVersion = version;
         if (snapshot == null) {
           AppNotifications.showError(
             context,
@@ -918,15 +918,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           _settings = snapshot;
           _applySettings(snapshot);
         });
-        break;
-      case RoomResourceWatchKind.error:
+      case RoomResourceWatchFailed(:final message):
         AppNotifications.showError(
           context,
-          event.errorMessage.isEmpty
-              ? context.l10n.roomSettingsWatchFailed
-              : event.errorMessage,
+          message.isEmpty ? context.l10n.roomSettingsWatchFailed : message,
         );
-        break;
     }
   }
 
@@ -936,13 +932,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }) {
     if (!mounted) return;
     _membersWatchStats.record(event);
-    if (event.version.isNotEmpty) _membersWatchVersion = event.version;
-    switch (event.kind) {
-      case RoomResourceWatchKind.observed:
+    switch (event) {
+      case RoomResourceObserved(:final version):
+        if (version.isNotEmpty) _membersWatchVersion = version;
         setState(() {});
-        break;
-      case RoomResourceWatchKind.changed:
-        final snapshot = event.snapshot;
+      case RoomResourceChanged(:final version, :final snapshot):
+        if (version.isNotEmpty) _membersWatchVersion = version;
         if (snapshot == null) {
           setState(() {});
           return;
@@ -957,15 +952,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               .length;
         });
         _startMembersOnlineWatches();
-        break;
-      case RoomResourceWatchKind.error:
+      case RoomResourceWatchFailed(:final message):
         AppNotifications.showError(
           context,
-          event.errorMessage.isEmpty
-              ? context.l10n.memberWatchFailed
-              : event.errorMessage,
+          message.isEmpty ? context.l10n.memberWatchFailed : message,
         );
-        break;
     }
   }
 
@@ -993,54 +984,44 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     if (!mounted) return;
     _mediaWatchStats.record(event);
-    if (event.version.isNotEmpty) _mediaWatchVersion = event.version;
-    switch (event.kind) {
-      case RoomResourceWatchKind.observed:
+    switch (event) {
+      case RoomResourceObserved(:final version):
+        if (version.isNotEmpty) _mediaWatchVersion = version;
         setState(() {});
-        break;
-      case RoomResourceWatchKind.changed:
-        final snapshot = event.snapshot;
+      case RoomResourceChanged(:final version, :final snapshot):
+        if (version.isNotEmpty) _mediaWatchVersion = version;
         if (snapshot == null) {
           AppNotifications.showError(context, context.l10n.mediaSnapshotEmpty);
           return;
         }
         setState(() => _mediaPage = snapshot);
-        break;
-      case RoomResourceWatchKind.error:
+      case RoomResourceWatchFailed(:final message):
         AppNotifications.showError(
           context,
-          event.errorMessage.isEmpty
-              ? context.l10n.mediaLibraryWatchFailed
-              : event.errorMessage,
+          message.isEmpty ? context.l10n.mediaLibraryWatchFailed : message,
         );
-        break;
     }
   }
 
   void _handleChatWatchEvent<T>(RoomResourceWatchEvent<T> event) {
     if (!mounted) return;
     _chatWatchStats.record(event);
-    if (event.version.isNotEmpty) _chatWatchVersion = event.version;
-    switch (event.kind) {
-      case RoomResourceWatchKind.observed:
+    switch (event) {
+      case RoomResourceObserved(:final version):
+        if (version.isNotEmpty) _chatWatchVersion = version;
         setState(() {});
-        break;
-      case RoomResourceWatchKind.changed:
-        final snapshot = event.snapshot;
+      case RoomResourceChanged(:final version, :final snapshot):
+        if (version.isNotEmpty) _chatWatchVersion = version;
         if (snapshot is RoomRealtimeMessage) {
           setState(() => _applyChatRealtimeMessage(snapshot));
         } else {
           setState(() {});
         }
-        break;
-      case RoomResourceWatchKind.error:
+      case RoomResourceWatchFailed(:final message):
         AppNotifications.showError(
           context,
-          event.errorMessage.isEmpty
-              ? context.l10n.chatWatchFailed
-              : event.errorMessage,
+          message.isEmpty ? context.l10n.chatWatchFailed : message,
         );
-        break;
     }
   }
 
@@ -1321,7 +1302,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     setState(() => _mediaProviderInstancesLoading = true);
     try {
       final instances = await _mediaLibraryGateway
-          .listAvailableProviderInstances(providerType: provider);
+          .listAvailableProviderInstances(
+            providerType: SourceConfigCodec.providerToString(provider),
+          );
       if (!mounted || provider != _mediaSourceProvider) return;
       final normalized = _mergeMediaProviderInstances(instances);
       setState(() {
@@ -1355,7 +1338,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     return names;
   }
 
-  Future<void> _selectMediaSourceProvider(String provider) async {
+  Future<void> _selectMediaSourceProvider(
+    source_enum.SourceProvider provider,
+  ) async {
     if (provider == _mediaSourceProvider) return;
     setState(() {
       _mediaSourceProvider = provider;
@@ -1534,12 +1519,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   void _applyChatPinEvent(ChatPinEventInfo event) {
     final clearPin =
         event.kind ==
-            client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED.value ||
+            client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED ||
         event.kind ==
-            client_enum
-                .ChatPinEventKind
-                .CHAT_PIN_EVENT_KIND_MESSAGE_DELETED
-                .value;
+            client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_MESSAGE_DELETED;
     final index = _chatMessages.indexWhere(
       (item) => item.id == event.message.id,
     );
@@ -1683,10 +1665,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             playTooltip: context.l10n.playHistoryEntry,
             sourceDetailsBuilder: (entry) {
               if (!entry.hasSourceProvider()) return '';
-              final providerKey = SourceConfigCodec.providerToString(
-                entry.sourceProvider,
-              );
-              final provider = _mediaSourceLabels[providerKey] ?? providerKey;
+              final provider =
+                  _mediaSourceLabels[entry.sourceProvider] ??
+                  SourceConfigCodec.providerToString(entry.sourceProvider);
               final instance = entry.providerInstanceName.trim();
               return instance.isEmpty ? provider : '$provider · $instance';
             },
@@ -1699,24 +1680,26 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
-  Map<String, String> get _mediaSourceLabels => {
-    '': context.l10n.allSources,
-    'directUrl': context.l10n.directLink,
-    'bilibili': 'Bilibili',
-    'alist': 'AList',
-    'emby': 'Emby',
-    'rtmp': 'RTMP',
-    'cloudreve': 'Cloudreve',
-    'twitch': 'Twitch',
-    'youtube': 'YouTube',
-    'douyin': 'Douyin',
-    'tiktok': 'TikTok',
-    'huya': 'Huya',
-    'douyu': 'Douyu',
-    'acfun': 'AcFun',
-    'cctv': 'CCTV',
-    'fnos': 'FNOS',
-    'qnap': 'QNAP',
+  Map<source_enum.SourceProvider, String> get _mediaSourceLabels => {
+    source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED:
+        context.l10n.allSources,
+    source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL:
+        context.l10n.directLink,
+    source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI: 'Bilibili',
+    source_enum.SourceProvider.SOURCE_PROVIDER_ALIST: 'AList',
+    source_enum.SourceProvider.SOURCE_PROVIDER_EMBY: 'Emby',
+    source_enum.SourceProvider.SOURCE_PROVIDER_RTMP: 'RTMP',
+    source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE: 'Cloudreve',
+    source_enum.SourceProvider.SOURCE_PROVIDER_TWITCH: 'Twitch',
+    source_enum.SourceProvider.SOURCE_PROVIDER_YOUTUBE: 'YouTube',
+    source_enum.SourceProvider.SOURCE_PROVIDER_DOUYIN: 'Douyin',
+    source_enum.SourceProvider.SOURCE_PROVIDER_TIKTOK: 'TikTok',
+    source_enum.SourceProvider.SOURCE_PROVIDER_HUYA: 'Huya',
+    source_enum.SourceProvider.SOURCE_PROVIDER_DOUYU: 'Douyu',
+    source_enum.SourceProvider.SOURCE_PROVIDER_ACFUN: 'AcFun',
+    source_enum.SourceProvider.SOURCE_PROVIDER_CCTV: 'CCTV',
+    source_enum.SourceProvider.SOURCE_PROVIDER_FNOS: 'FNOS',
+    source_enum.SourceProvider.SOURCE_PROVIDER_QNAP: 'QNAP',
   };
 
   String _providerInstanceLabel(String instanceName) =>
@@ -2618,9 +2601,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     ),
                     _buildDetailLine(
                       'Provider',
-                      detail.sourceProvider.isEmpty
+                      !SourceConfigCodec.isSpecified(detail.sourceProvider)
                           ? '-'
-                          : detail.sourceProvider,
+                          : SourceConfigCodec.providerToString(
+                              detail.sourceProvider,
+                            ),
                     ),
                     _buildDetailLine(
                       context.l10n.instance,
@@ -2941,7 +2926,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _openRoomScopedReportsViewer({
     required String title,
-    int targetType = 0,
+    admin_enum.ContentReportTargetType targetType = admin_enum
+        .ContentReportTargetType
+        .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
     String targetMemberUserId = '',
     int targetChatMessageId = 0,
   }) {
@@ -2958,7 +2945,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           roomScopedRoomId: widget.roomId,
           initialTargetMemberUserId: targetMemberUserId,
           initialTargetChatMessageId: targetChatMessageId,
-          showTargetTypeTabs: targetType == 0,
+          showTargetTypeTabs:
+              targetType ==
+              admin_enum
+                  .ContentReportTargetType
+                  .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
         ),
       ),
       actions: [AppDialogs.createCancelButton(context)],
@@ -3379,7 +3370,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<_MemberEditResult?> _showMemberEditDialog() {
     final userIdController = TextEditingController();
-    var role = 3;
+    var role = common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER;
     var notify = true;
     return AppDialogs.showStyledDialog<_MemberEditResult>(
       context: context,
@@ -3397,14 +3388,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 autofocus: true,
               ),
               const SizedBox(height: 16),
-              AppSelect<int>(
+              AppSelect<common_enum.RoomMemberRole>(
                 value: role,
                 label: context.l10n.role,
                 prefixIcon: Icons.admin_panel_settings_outlined,
                 options: {
-                  context.l10n.administrator: 2,
-                  context.l10n.member: 3,
-                  context.l10n.guest: 4,
+                  context.l10n.administrator:
+                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+                  context.l10n.member:
+                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+                  context.l10n.guest:
+                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
                 },
                 onChanged: (value) {
                   if (value != null) setDialogState(() => role = value);
@@ -3443,22 +3437,30 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     });
   }
 
-  Future<int?> _showMemberRoleDialog(int currentRole) {
-    var role = currentRole == 1 ? 3 : currentRole;
-    return AppDialogs.showStyledDialog<int>(
+  Future<common_enum.RoomMemberRole?> _showMemberRoleDialog(
+    common_enum.RoomMemberRole currentRole,
+  ) {
+    var role =
+        currentRole == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR
+        ? common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER
+        : currentRole;
+    return AppDialogs.showStyledDialog<common_enum.RoomMemberRole>(
       context: context,
       title: context.l10n.changeRole,
       icon: const Icon(Icons.admin_panel_settings_outlined),
       content: StatefulBuilder(
         builder: (context, setDialogState) {
-          return AppSelect<int>(
+          return AppSelect<common_enum.RoomMemberRole>(
             value: role,
             label: context.l10n.role,
             prefixIcon: Icons.admin_panel_settings_outlined,
             options: {
-              context.l10n.administrator: 2,
-              context.l10n.member: 3,
-              context.l10n.guest: 4,
+              context.l10n.administrator:
+                  common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+              context.l10n.member:
+                  common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+              context.l10n.guest:
+                  common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
             },
             onChanged: (value) {
               if (value != null) setDialogState(() => role = value);
@@ -3515,7 +3517,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     AdminRoomMember member,
   ) {
     final isAdmin =
-        member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
+        member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN;
     var added = isAdmin
         ? member.adminAddedPermissions
         : member.addedPermissions;
@@ -4387,7 +4389,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 Row(
                   children: [
                     Expanded(
-                      child: AppSelect<String>(
+                      child: AppSelect<source_enum.SourceProvider>(
                         key: ValueKey('media-source-$_mediaSourceProvider'),
                         value: _mediaSourceProvider,
                         label: context.l10n.source,
@@ -4740,7 +4742,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           'fileCount': mediaPage?.fileCount ?? 0,
           'playlistId': _currentPlaylistId,
           'target': _mediaTarget,
-          'sourceProvider': _mediaSourceProvider,
+          'sourceProvider': SourceConfigCodec.providerToString(
+            _mediaSourceProvider,
+          ),
           'providerInstanceName': _mediaProviderInstanceName,
           'availability': _mediaAvailability.name,
           'sortBy': _mediaSortBy.name,
@@ -5621,7 +5625,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     bool isDark,
   ) {
     final isPending =
-        review.status == common_enum.ReviewStatus.REVIEW_STATUS_PENDING.value;
+        review.status == common_enum.ReviewStatus.REVIEW_STATUS_PENDING;
     return _buildManagementTileSurface(
       theme,
       isDark,
@@ -6031,7 +6035,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         icon: Icons.report_gmailerrorred_outlined,
                         onPressed: () => _openRoomScopedReportsViewer(
                           title: context.l10n.messageReports(message.id),
-                          targetType: 4,
+                          targetType: admin_enum
+                              .ContentReportTargetType
+                              .CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE,
                           targetChatMessageId: int.tryParse(message.id) ?? 0,
                         ),
                       ),
@@ -6278,7 +6284,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       users[mention.userId] = SyncTvUser(
         id: mention.userId,
         username: mention.username,
-        role: 0,
+        role: const RoomMembershipRole(
+          common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_UNSPECIFIED,
+        ),
       );
     }
     if (receipt != null) {
@@ -6293,7 +6301,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         users[member.userId] = SyncTvUser(
           id: member.userId,
           username: member.username,
-          role: member.role,
+          role: RoomMembershipRole(member.role),
           onlineCount: member.isOnline ? 1 : 0,
           connectionCount: member.connectionCount,
         );
@@ -6448,10 +6456,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       if (entry.isDynamicPlaylist && !_canOpenMediaEntry(entry)) {
         return context.l10n.creatorOnlyMode(mode);
       }
-      return '$mode · ${entry.sourceProvider.isEmpty ? 'static' : entry.sourceProvider}';
+      final provider = SourceConfigCodec.providerToString(entry.sourceProvider);
+      return '$mode · ${provider.isEmpty ? 'static' : provider}';
     }
     if (entry.id.startsWith('med_')) {
-      return '${entry.sourceProvider} · ${entry.providerInstanceName.isEmpty ? 'default' : entry.providerInstanceName}';
+      final provider = SourceConfigCodec.providerToString(entry.sourceProvider);
+      return '$provider · ${entry.providerInstanceName.isEmpty ? 'default' : entry.providerInstanceName}';
     }
     final size = entry.metadata['size'];
     return entry.isPlaylist
@@ -6489,8 +6499,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     bool isDark,
   ) {
     final isCreator =
-        member.role ==
-        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value;
+        member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR;
     final isCurrentUser =
         _currentUserId.isNotEmpty && member.userId == _currentUserId;
     final canManageMember = !isCreator && !isCurrentUser;
@@ -6658,7 +6667,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     title: context.l10n.memberReports(
                       member.username.isEmpty ? member.userId : member.username,
                     ),
-                    targetType: 3,
+                    targetType: admin_enum
+                        .ContentReportTargetType
+                        .CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER,
                     targetMemberUserId: member.userId,
                   ),
                 ),
@@ -6744,7 +6755,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     title: context.l10n.memberReports(
                       member.username.isEmpty ? member.userId : member.username,
                     ),
-                    targetType: 3,
+                    targetType: admin_enum
+                        .ContentReportTargetType
+                        .CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER,
                     targetMemberUserId: member.userId,
                   ),
                 ),
@@ -7065,21 +7078,24 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _ => context.l10n.waiting,
   };
 
-  String _roleLabel(int role) {
+  String _roleLabel(common_enum.RoomMemberRole role) {
     return switch (role) {
-      1 => context.l10n.creator,
-      2 => context.l10n.administrator,
-      3 => context.l10n.member,
-      4 => context.l10n.guest,
+      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR =>
+        context.l10n.creator,
+      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN =>
+        context.l10n.administrator,
+      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER => context.l10n.member,
+      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST => context.l10n.guest,
       _ => context.l10n.unspecified,
     };
   }
 
-  String _reviewStatusLabel(int status) {
+  String _reviewStatusLabel(common_enum.ReviewStatus status) {
     return switch (status) {
-      1 => context.l10n.pendingReview,
-      2 => context.l10n.approved,
-      3 => context.l10n.rejected,
+      common_enum.ReviewStatus.REVIEW_STATUS_PENDING =>
+        context.l10n.pendingReview,
+      common_enum.ReviewStatus.REVIEW_STATUS_APPROVED => context.l10n.approved,
+      common_enum.ReviewStatus.REVIEW_STATUS_REJECTED => context.l10n.rejected,
       _ => context.l10n.unspecified,
     };
   }
@@ -7428,7 +7444,7 @@ class _MediaMoveTarget {
 
 class _MemberEditResult {
   final String userId;
-  final int role;
+  final common_enum.RoomMemberRole role;
   final bool notify;
 
   const _MemberEditResult(this.userId, this.role, this.notify);

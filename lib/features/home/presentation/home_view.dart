@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
-import 'package:synctv_app/features/home/domain/home_room_access.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -13,7 +13,7 @@ import 'package:synctv_app/core/presentation/widgets/synctv_brand_mark.dart';
 @immutable
 class HomeViewState {
   const HomeViewState({
-    required this.identityKind,
+    required this.identity,
     required this.hasServer,
     required this.isLoading,
     required this.isLoadingTaxonomy,
@@ -31,7 +31,7 @@ class HomeViewState {
     this.isAdmin = false,
   });
 
-  final HomeIdentityKind identityKind;
+  final SyncTvSessionIdentity identity;
   final bool hasServer;
   final bool isLoading;
   final bool isLoadingTaxonomy;
@@ -48,7 +48,7 @@ class HomeViewState {
   final SyncTvUser? currentUser;
   final bool isAdmin;
 
-  bool get isAccount => identityKind == HomeIdentityKind.account;
+  bool get isAccount => identity is AccountSessionIdentity;
 }
 
 @immutable
@@ -810,25 +810,22 @@ class _RoomCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isOwner =
         room.myRelation ==
-            client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED.value ||
+            client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED ||
         state.currentUser?.id == room.creatorId;
     final unavailable =
         room.isBanned ||
-        room.availability == 2 ||
-        room.discoveryAccess ==
+        room.availability ==
             client_enum
-                .RoomDiscoveryAccess
-                .ROOM_DISCOVERY_ACCESS_UNAVAILABLE
-                .value;
+                .ResourceAvailability
+                .RESOURCE_AVAILABILITY_CREATOR_INACTIVE ||
+        room.discoveryAccess ==
+            client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNAVAILABLE;
     final canOpen =
         !unavailable &&
         (room.joined ||
             room.canJoin ||
             room.discoveryAccess ==
-                client_enum
-                    .RoomDiscoveryAccess
-                    .ROOM_DISCOVERY_ACCESS_SIGN_IN
-                    .value);
+                client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_SIGN_IN);
     return CinemaRoomCard(
       roomName: room.roomName,
       description: room.description,

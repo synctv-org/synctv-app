@@ -1,5 +1,6 @@
 import 'package:synctv_app/features/content_reports/application/content_reports_gateway.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
+import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 
 final class SyncTvContentReportsGateway implements ContentReportsGateway {
   const SyncTvContentReportsGateway();
@@ -49,7 +50,7 @@ final class SyncTvContentReportsGateway implements ContentReportsGateway {
   @override
   Future<AdminContentReport> updateStatus({
     required String reportId,
-    required int status,
+    required admin_enum.ContentReportStatus status,
     required String resolutionNote,
     String roomScopeId = '',
   }) {

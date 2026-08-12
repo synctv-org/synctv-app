@@ -1330,26 +1330,43 @@ class _ProviderEditorFooter extends StatelessWidget {
   }
 }
 
-IconData _providerStatusIcon(int status) {
+IconData _providerStatusIcon(
+  provider_common_enum.ProviderInstanceStatus status,
+) {
   switch (status) {
-    case 1:
+    case provider_common_enum
+        .ProviderInstanceStatus
+        .PROVIDER_INSTANCE_STATUS_CONNECTED:
       return Icons.cloud_done_outlined;
-    case 2:
+    case provider_common_enum
+        .ProviderInstanceStatus
+        .PROVIDER_INSTANCE_STATUS_DISCONNECTED:
       return Icons.cloud_off_outlined;
-    case 3:
+    case provider_common_enum
+        .ProviderInstanceStatus
+        .PROVIDER_INSTANCE_STATUS_ERROR:
       return Icons.error_outline_rounded;
     default:
       return Icons.help_outline_rounded;
   }
 }
 
-Color _providerStatusColor(ThemeData theme, int status) {
+Color _providerStatusColor(
+  ThemeData theme,
+  provider_common_enum.ProviderInstanceStatus status,
+) {
   switch (status) {
-    case 1:
+    case provider_common_enum
+        .ProviderInstanceStatus
+        .PROVIDER_INSTANCE_STATUS_CONNECTED:
       return Colors.green;
-    case 2:
+    case provider_common_enum
+        .ProviderInstanceStatus
+        .PROVIDER_INSTANCE_STATUS_DISCONNECTED:
       return theme.hintColor;
-    case 3:
+    case provider_common_enum
+        .ProviderInstanceStatus
+        .PROVIDER_INSTANCE_STATUS_ERROR:
       return Colors.redAccent;
     default:
       return theme.colorScheme.primary;

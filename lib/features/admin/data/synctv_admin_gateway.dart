@@ -44,7 +44,8 @@ final class SyncTvAdminGateway implements AdminGateway {
   Future<void> adminAddRoomMember(
     String roomId,
     String userId, {
-    int role = 2,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
     bool notify = true,
   }) => SyncTvService.adminAddRoomMember(
     roomId,
@@ -57,7 +58,7 @@ final class SyncTvAdminGateway implements AdminGateway {
   Future<void> adminAddUser(
     String username,
     String password,
-    int role, {
+    common_enum.UserRole role, {
     String email = '',
     common_enum.UserStatus status = common_enum.UserStatus.USER_STATUS_ACTIVE,
   }) => SyncTvService.adminAddUser(
@@ -69,7 +70,7 @@ final class SyncTvAdminGateway implements AdminGateway {
   );
 
   @override
-  Future<void> adminApproveReview(String kind, String requestId) =>
+  Future<void> adminApproveReview(AdminReviewKind kind, String requestId) =>
       SyncTvService.adminApproveReview(kind, requestId);
 
   @override
@@ -219,7 +220,8 @@ final class SyncTvAdminGateway implements AdminGateway {
   Future<AdminBanRecordsPage> adminListBanRecordsPage({
     int page = 1,
     int pageSize = 50,
-    int targetType = 0,
+    admin_enum.BanTargetType targetType =
+        admin_enum.BanTargetType.BAN_TARGET_TYPE_UNSPECIFIED,
     bool? active,
     String userId = '',
     String roomId = '',
@@ -259,10 +261,11 @@ final class SyncTvAdminGateway implements AdminGateway {
 
   @override
   Future<AdminReviewsPage> adminListReviewsPage({
-    required String kind,
+    required AdminReviewKind kind,
     int page = 1,
     int pageSize = 50,
-    int status = 1,
+    common_enum.ReviewStatus status =
+        common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
     String search = '',
     String requestedBy = '',
     String roomId = '',
@@ -405,7 +408,7 @@ final class SyncTvAdminGateway implements AdminGateway {
 
   @override
   Future<void> adminRejectReview(
-    String kind,
+    AdminReviewKind kind,
     String requestId, {
     String reason = '',
   }) => SyncTvService.adminRejectReview(kind, requestId, reason: reason);
@@ -423,16 +426,15 @@ final class SyncTvAdminGateway implements AdminGateway {
       SyncTvService.adminSendTestEmail(to);
 
   @override
-  Future<void> adminSetAdmin(String userId, bool isAdmin) =>
-      SyncTvService.adminSetAdmin(userId, isAdmin);
-
-  @override
   Future<void> adminSetProviderInstanceEnabled(String name, bool enabled) =>
       SyncTvService.adminSetProviderInstanceEnabled(name, enabled);
 
   @override
-  Future<void> adminSetRoomMemberRole(String roomId, String userId, int role) =>
-      SyncTvService.adminSetRoomMemberRole(roomId, userId, role);
+  Future<void> adminSetRoomMemberRole(
+    String roomId,
+    String userId,
+    common_enum.RoomMemberRole role,
+  ) => SyncTvService.adminSetRoomMemberRole(roomId, userId, role);
 
   @override
   Future<void> adminUpdatePassword(
@@ -482,7 +484,8 @@ final class SyncTvAdminGateway implements AdminGateway {
   Future<void> adminUpdateRoomMemberPermissionOverrides(
     String roomId,
     String userId, {
-    int role = 3,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
     int addedPermissions = 0,
     int removedPermissions = 0,
     int adminAddedPermissions = 0,

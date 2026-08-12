@@ -22,7 +22,7 @@ void main() {
         requiredCount: 1,
         requiredMethods: const [],
         completedMethods: const [],
-        availableMethods: methods.map((method) => method.value).toList(),
+        availableMethods: methods,
         expiresAt: DateTime.utc(2100),
       );
     }

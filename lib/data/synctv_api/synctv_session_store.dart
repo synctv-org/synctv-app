@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/core/network/server_endpoint_identity.dart';
 
 class SyncTvServerProfile {
@@ -14,7 +15,7 @@ class SyncTvServerProfile {
     this.isBuiltIn = false,
     this.allowInsecureTls = false,
     this.lastSeenAt,
-    this.sessionData = const SyncTvServerSessionData(),
+    this.sessionData = const AnonymousServerSessionData(),
   });
 
   final String endpoint;
@@ -118,12 +119,13 @@ class SyncTvSessionStore {
   final String _builtInServerUrl;
 
   late String baseUrl;
-  String? guestRoomId;
-  String? guestDisplayName;
   List<SyncTvServerProfile> servers = [];
   String? activeServerEndpoint;
 
-  bool get isGuestSession => session.isGuest;
+  GuestSessionIdentity? get guestSession => switch (session.identity) {
+    final GuestSessionIdentity identity => identity,
+    AnonymousSessionIdentity() || AccountSessionIdentity() => null,
+  };
   SyncTvServerProfile? get activeServer =>
       _serverByEndpoint(activeServerEndpoint);
 
@@ -175,7 +177,7 @@ class SyncTvSessionStore {
       lastSeenAt: DateTime.now().toUtc(),
       sessionData: carryCurrentSession
           ? _currentSessionData()
-          : existing?.sessionData ?? const SyncTvServerSessionData(),
+          : existing?.sessionData ?? const AnonymousServerSessionData(),
     );
 
     if (activate && current?.endpoint != normalizedEndpoint) {
@@ -255,25 +257,15 @@ class SyncTvSessionStore {
     await _persistServers(prefs);
   }
 
-  Future<void> persistTokens() async {
+  Future<void> persistSession() async {
     _captureSessionToActiveServer();
     final prefs = await SharedPreferences.getInstance();
     await _persistServers(prefs);
   }
 
-  Future<void> clearGuestContextAndPersist() async {
-    guestRoomId = null;
-    guestDisplayName = null;
-    await persistTokens();
-  }
-
   Future<void> clearSessionAndPersist() async {
-    session.accessToken = null;
-    session.refreshToken = null;
-    session.isGuest = false;
-    guestRoomId = null;
-    guestDisplayName = null;
-    await persistTokens();
+    session.clear();
+    await persistSession();
   }
 
   Future<void> activateGuest({
@@ -281,12 +273,12 @@ class SyncTvSessionStore {
     required String roomId,
     required String displayName,
   }) async {
-    session.accessToken = accessToken;
-    session.refreshToken = null;
-    session.isGuest = true;
-    guestRoomId = roomId;
-    guestDisplayName = displayName;
-    await persistTokens();
+    session.activateGuest(
+      accessToken: accessToken,
+      roomId: roomId,
+      displayName: displayName,
+    );
+    await persistSession();
   }
 
   SyncTvServerProfile? _serverByEndpoint(String? endpoint) {
@@ -376,20 +368,31 @@ class SyncTvSessionStore {
   }
 
   void _clearInMemorySession() {
-    session.accessToken = null;
-    session.refreshToken = null;
-    session.isGuest = false;
-    guestRoomId = null;
-    guestDisplayName = null;
+    session.clear();
   }
 
   void _loadProfileSession(SyncTvServerProfile profile) {
     final data = profile.sessionData;
-    session.accessToken = data.accessToken;
-    session.refreshToken = data.refreshToken;
-    session.isGuest = data.isGuest;
-    guestRoomId = data.guestRoomId;
-    guestDisplayName = data.guestDisplayName;
+    switch (data) {
+      case AnonymousServerSessionData():
+        session.clear();
+      case AccountServerSessionData(:final accessToken, :final refreshToken):
+        session.clear();
+        session.updateAccountTokens(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
+      case GuestServerSessionData(
+        :final accessToken,
+        :final roomId,
+        :final displayName,
+      ):
+        session.activateGuest(
+          accessToken: accessToken,
+          roomId: roomId,
+          displayName: displayName,
+        );
+    }
   }
 
   void _captureSessionToActiveServer() {
@@ -402,44 +405,122 @@ class SyncTvSessionStore {
     );
   }
 
-  SyncTvServerSessionData _currentSessionData() => SyncTvServerSessionData(
-    accessToken: session.accessToken,
-    refreshToken: session.refreshToken,
-    isGuest: session.isGuest,
-    guestRoomId: guestRoomId,
-    guestDisplayName: guestDisplayName,
-  );
+  SyncTvServerSessionData _currentSessionData() => switch (session.identity) {
+    AnonymousSessionIdentity() => const AnonymousServerSessionData(),
+    AccountSessionIdentity(:final accessToken, :final refreshToken) =>
+      SyncTvServerSessionData.account(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      ),
+    GuestSessionIdentity(
+      :final accessToken,
+      :final roomId,
+      :final displayName,
+    ) =>
+      SyncTvServerSessionData.guest(
+        accessToken: accessToken,
+        roomId: roomId,
+        displayName: displayName,
+      ),
+  };
 }
 
-class SyncTvServerSessionData {
-  const SyncTvServerSessionData({
-    this.accessToken,
-    this.refreshToken,
-    this.isGuest = false,
-    this.guestRoomId,
-    this.guestDisplayName,
-  });
+sealed class SyncTvServerSessionData {
+  const SyncTvServerSessionData();
+
+  factory SyncTvServerSessionData.account({
+    String? accessToken,
+    String? refreshToken,
+  }) {
+    final access = _nonEmptySessionValue(accessToken);
+    final refresh = _nonEmptySessionValue(refreshToken);
+    if (access == null && refresh == null) {
+      return const AnonymousServerSessionData();
+    }
+    return AccountServerSessionData._(
+      accessToken: access,
+      refreshToken: refresh,
+    );
+  }
+
+  factory SyncTvServerSessionData.guest({
+    required String accessToken,
+    required String roomId,
+    required String displayName,
+  }) {
+    final token = _nonEmptySessionValue(accessToken);
+    final guestRoomId = _nonEmptySessionValue(roomId);
+    final guestDisplayName = _nonEmptySessionValue(displayName);
+    if (token == null || guestRoomId == null || guestDisplayName == null) {
+      return const AnonymousServerSessionData();
+    }
+    return GuestServerSessionData._(
+      accessToken: token,
+      roomId: guestRoomId,
+      displayName: guestDisplayName,
+    );
+  }
+
+  factory SyncTvServerSessionData.fromJson(Map<dynamic, dynamic> json) {
+    return switch (json['kind']?.toString()) {
+      'account' => SyncTvServerSessionData.account(
+        accessToken: json['access_token']?.toString(),
+        refreshToken: json['refresh_token']?.toString(),
+      ),
+      'guest' => SyncTvServerSessionData.guest(
+        accessToken: json['access_token']?.toString() ?? '',
+        roomId: json['room_id']?.toString() ?? '',
+        displayName: json['display_name']?.toString() ?? '',
+      ),
+      _ => const AnonymousServerSessionData(),
+    };
+  }
+
+  Map<String, dynamic> toJson();
+}
+
+final class AnonymousServerSessionData extends SyncTvServerSessionData {
+  const AnonymousServerSessionData();
+
+  @override
+  Map<String, dynamic> toJson() => const {'kind': 'anonymous'};
+}
+
+final class AccountServerSessionData extends SyncTvServerSessionData {
+  const AccountServerSessionData._({this.accessToken, this.refreshToken});
 
   final String? accessToken;
   final String? refreshToken;
-  final bool isGuest;
-  final String? guestRoomId;
-  final String? guestDisplayName;
 
+  @override
   Map<String, dynamic> toJson() => {
+    'kind': 'account',
     if (accessToken != null) 'access_token': accessToken,
     if (refreshToken != null) 'refresh_token': refreshToken,
-    'is_guest': isGuest,
-    if (guestRoomId != null) 'guest_room_id': guestRoomId,
-    if (guestDisplayName != null) 'guest_display_name': guestDisplayName,
   };
+}
 
-  static SyncTvServerSessionData fromJson(Map<dynamic, dynamic> json) =>
-      SyncTvServerSessionData(
-        accessToken: json['access_token']?.toString(),
-        refreshToken: json['refresh_token']?.toString(),
-        isGuest: json['is_guest'] == true,
-        guestRoomId: json['guest_room_id']?.toString(),
-        guestDisplayName: json['guest_display_name']?.toString(),
-      );
+final class GuestServerSessionData extends SyncTvServerSessionData {
+  const GuestServerSessionData._({
+    required this.accessToken,
+    required this.roomId,
+    required this.displayName,
+  });
+
+  final String accessToken;
+  final String roomId;
+  final String displayName;
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'kind': 'guest',
+    'access_token': accessToken,
+    'room_id': roomId,
+    'display_name': displayName,
+  };
+}
+
+String? _nonEmptySessionValue(String? value) {
+  final trimmed = value?.trim() ?? '';
+  return trimmed.isEmpty ? null : trimmed;
 }

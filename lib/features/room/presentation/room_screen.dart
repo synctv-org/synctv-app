@@ -10,6 +10,7 @@ import 'package:synctv_app/features/room/presentation/room_shell_view.dart';
 import 'package:synctv_app/core/time/synced_clock.dart';
 import 'package:synctv_app/core/async/async_operation_coordinator.dart';
 import 'package:synctv_app/contracts/chat_message_selection.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/features/room/presentation/models/chat_context_menu_layout.dart';
 import 'package:synctv_app/features/room/presentation/playback_control_reporter.dart';
 import 'package:synctv_app/features/room/domain/playback_operation_tracker.dart';
@@ -23,6 +24,7 @@ import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart
 import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
+import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/application/room_realtime_protocol.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
@@ -938,7 +940,9 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _joinRoom() async {
     _connectRealtime();
-    if (!_sessionGateway.isGuestSession) unawaited(_fetchCurrentUser());
+    if (_sessionGateway.sessionIdentity is AccountSessionIdentity) {
+      unawaited(_fetchCurrentUser());
+    }
   }
 
   void _syncPermissionScopedRoomData() {
@@ -1115,10 +1119,8 @@ class _RoomScreenState extends State<RoomScreen>
     members.sort((a, b) {
       if (a.id == widget.room.creatorId) return -1;
       if (b.id == widget.room.creatorId) return 1;
-      final aAdmin =
-          a.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
-      final bAdmin =
-          b.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
+      final aAdmin = a.role.isRoomAdministrator;
+      final bAdmin = b.role.isRoomAdministrator;
       if (aAdmin && !bAdmin) return -1;
       if (!aAdmin && bAdmin) return 1;
       return 0;
@@ -1380,9 +1382,7 @@ class _RoomScreenState extends State<RoomScreen>
       }
 
       if (message.isChatCreated &&
-          chatDanmakuMessageTypes.any(
-            (type) => type.value == message.chatMessageType,
-          ) &&
+          chatDanmakuMessageTypes.contains(message.chatMessageType) &&
           _videoPlayerController != null &&
           _videoPlayerController!.value.isInitialized) {
         final currentPos = _videoPlayerController!.value.position;
@@ -1664,12 +1664,9 @@ class _RoomScreenState extends State<RoomScreen>
   void _applyChatPinEvent(ChatPinEventInfo event) {
     final clearPin =
         event.kind ==
-            client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED.value ||
+            client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED ||
         event.kind ==
-            client_enum
-                .ChatPinEventKind
-                .CHAT_PIN_EVENT_KIND_MESSAGE_DELETED
-                .value;
+            client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_MESSAGE_DELETED;
     final pin = clearPin ? null : event.pin;
     final eventEntry = RoomRealtimeChatEntry.fromHistory(
       event.message.copyWith(pin: pin, clearPin: clearPin),
@@ -2329,7 +2326,9 @@ class _RoomScreenState extends State<RoomScreen>
           ? status!.playingPlaylistId
           : entry?.playbackPlaylistId ?? '',
       targetHash: status?.targetHash ?? '',
-      provider: entry?.sourceProvider ?? '',
+      provider: entry == null
+          ? ''
+          : SourceConfigCodec.providerToString(entry.sourceProvider),
       providerInstance: entry?.providerInstanceName ?? '',
       resourceType: selectedUrl?.format.isNotEmpty == true
           ? selectedUrl!.format
@@ -3876,9 +3875,9 @@ class _RoomScreenState extends State<RoomScreen>
     return SyncTvUser(
       id: member.userId,
       username: member.username,
-      role: member.role,
+      role: RoomMembershipRole(member.role),
       createdAt: member.joinedAt,
-      status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
+      status: common_enum.UserStatus.USER_STATUS_ACTIVE,
       onlineCount: member.isOnline ? 1 : 0,
       connectionCount: member.connectionCount,
     );
@@ -4663,7 +4662,9 @@ class _RoomScreenState extends State<RoomScreen>
       users[mention.userId] = SyncTvUser(
         id: mention.userId,
         username: mention.username,
-        role: 0,
+        role: const RoomMembershipRole(
+          common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_UNSPECIFIED,
+        ),
       );
     }
     if (receipt != null) {
@@ -6389,7 +6390,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   IconData? _playlistProviderIcon(RoomMediaEntry entry) {
-    final provider = entry.sourceProvider.trim();
+    final provider = SourceConfigCodec.providerToString(entry.sourceProvider);
     if (provider.isEmpty) return null;
     final brand = mediaProviderBrand(provider);
     return brand.known ? brand.icon : null;
@@ -6401,7 +6402,7 @@ class _RoomScreenState extends State<RoomScreen>
     Color primaryColor,
   ) {
     if (isCurrent) return primaryColor;
-    final provider = entry.sourceProvider.trim();
+    final provider = SourceConfigCodec.providerToString(entry.sourceProvider);
     if (provider.isNotEmpty) {
       final brand = mediaProviderBrand(provider);
       if (brand.known) return brand.color;
@@ -6489,8 +6490,11 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   String _playlistProviderLabel(RoomMediaEntry entry) {
-    final provider = entry.sourceProvider.trim().isNotEmpty
-        ? entry.sourceProvider.trim()
+    final sourceProvider = SourceConfigCodec.providerToString(
+      entry.sourceProvider,
+    );
+    final provider = sourceProvider.isNotEmpty
+        ? sourceProvider
         : entry.providerInstanceName.trim();
     if (provider.isEmpty) return '';
     final brand = mediaProviderBrand(provider);
@@ -6547,7 +6551,7 @@ class _RoomScreenState extends State<RoomScreen>
                 final viewerIsCreator = _isRoomCreator;
                 final viewerIsRoomAdmin =
                     _selfMember?.role ==
-                    common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
+                    common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN;
                 final viewerIsSysAdmin = _capabilities.isSystemAdmin;
                 int viewerLevel = 1;
                 if (viewerIsCreator) {
@@ -6560,15 +6564,9 @@ class _RoomScreenState extends State<RoomScreen>
                 }
 
                 final isTargetCreator =
-                    member.role ==
-                        common_enum
-                            .RoomMemberRole
-                            .ROOM_MEMBER_ROLE_CREATOR
-                            .value ||
+                    member.role.isRoomCreator ||
                     member.username == widget.room.creator;
-                final isTargetAdmin =
-                    member.role ==
-                    common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
+                final isTargetAdmin = member.role.isRoomAdministrator;
                 final isMe = _currentUser?.id == member.id;
                 final targetLevel = isTargetCreator
                     ? 3
@@ -6579,12 +6577,7 @@ class _RoomScreenState extends State<RoomScreen>
 
                 final memberActions = <Widget>[
                   if (!isMe && !isTargetCreator) ...[
-                    if (canManageRole &&
-                        member.role ==
-                            common_enum
-                                .RoomMemberRole
-                                .ROOM_MEMBER_ROLE_MEMBER
-                                .value)
+                    if (canManageRole && member.role.isRoomMember)
                       AppIconButton(
                         icon: Icons.admin_panel_settings_outlined,
                         tooltip: context.l10n.makeAdmin,

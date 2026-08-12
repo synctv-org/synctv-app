@@ -46,7 +46,7 @@ Future<void> runExtendedSmoke(String baseUrl, String rootPassword) async {
   await SyncTvService.adminAddUser(
     username,
     password,
-    common_enum.UserRole.USER_ROLE_USER.value,
+    common_enum.UserRole.USER_ROLE_USER,
   );
   await SyncTvService.logout();
   await loginLocalPasswordUser(username, password);

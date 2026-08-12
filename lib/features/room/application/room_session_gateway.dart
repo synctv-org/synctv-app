@@ -1,9 +1,10 @@
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/contracts/account_models.dart';
 
 abstract interface class RoomSessionGateway {
   String get serverBaseUrl;
 
-  bool get isGuestSession;
+  SyncTvSessionIdentity get sessionIdentity;
 
   bool get allowInsecureTls;
 

@@ -61,13 +61,12 @@ class SyncTvService {
   static List<SyncTvServerProfile> get servers => _runtime.servers;
   static SyncTvServerProfile? get activeServer => _runtime.activeServer;
   static bool get allowInsecureTls => _runtime.allowInsecureTls;
-  static bool get hasRecoverableSession => _runtime.hasRecoverableSession;
   static String resolveResourceUrl(String url) =>
       _runtime.resolveResourceUrl(url);
   static Map<String, String> get authenticatedResourceHeaders =>
       _api.authenticatedResourceHeaders;
   static String? get guestRoomId => _runtime.guestRoomId;
-  static bool get isGuestSession => _runtime.isGuestSession;
+  static SyncTvSessionIdentity get sessionIdentity => _runtime.sessionIdentity;
 
   static final SyncTvRuntimeService _runtime = SyncTvRuntimeService();
   static SyncTvApiClient get _api => _runtime.api;
@@ -590,7 +589,8 @@ class SyncTvService {
   static Future<OpaquePasswordUpdateStart> startOpaquePasswordUpdate({
     List<int> credentialRequest = const [],
     required List<int> registrationRequest,
-    required int verificationMethod,
+    required client_enum.OpaquePasswordUpdateVerificationMethod
+    verificationMethod,
     String emailToken = '',
   }) async {
     return _domains.account.startOpaquePasswordUpdate(
@@ -933,7 +933,8 @@ class SyncTvService {
     int page = 1,
     int pageSize = 100,
     String search = '',
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     String providerInstanceName = '',
     client_enum.MediaListSortBy sortBy =
         client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
@@ -980,7 +981,8 @@ class SyncTvService {
     String playlistId = '',
     String? target,
     String search = '',
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     Map<String, dynamic>? previewSourceConfig,
     source_config.PlaylistSourceConfig? typedPreviewSourceConfig,
     String providerInstanceName = '',
@@ -1024,7 +1026,8 @@ class SyncTvService {
     int page = 1,
     int pageSize = 100,
     String? search,
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     String providerInstanceName = '',
     bool? dynamicOnly,
     client_enum.PlaylistListSortBy sortBy =
@@ -2779,7 +2782,8 @@ class SyncTvService {
   static Future<void> addRoomMember(
     String roomId,
     String userId, {
-    int role = 3,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
     bool notify = true,
   }) async {
     await _domains.roomManagement.addRoomMember(
@@ -2817,7 +2821,7 @@ class SyncTvService {
   static Future<AdminRoomMember> setRoomMemberRole(
     String roomId,
     String userId,
-    int role,
+    common_enum.RoomMemberRole role,
   ) => _domains.roomManagement.setRoomMemberRole(roomId, userId, role);
 
   static Future<void> updateRoomMemberPermissionOverrides(
@@ -2889,7 +2893,7 @@ class SyncTvService {
   static Future<void> adminAddUser(
     String username,
     String password,
-    int role, {
+    common_enum.UserRole role, {
     String email = '',
     common_enum.UserStatus status = common_enum.UserStatus.USER_STATUS_ACTIVE,
   }) {
@@ -2961,10 +2965,6 @@ class SyncTvService {
     String reason = '',
   }) {
     return _domains.admin.updatePassword(userId, password, reason: reason);
-  }
-
-  static Future<void> adminSetAdmin(String userId, bool isAdmin) {
-    return _domains.admin.setAdmin(userId, isAdmin);
   }
 
   static Future<RuntimeSettingsModel> runtimeGetSettings({
@@ -3250,7 +3250,8 @@ class SyncTvService {
   static Future<void> adminAddRoomMember(
     String roomId,
     String userId, {
-    int role = 2,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
     bool notify = true,
   }) {
     return _domains.admin.addRoomMember(
@@ -3288,7 +3289,7 @@ class SyncTvService {
   static Future<void> adminSetRoomMemberRole(
     String roomId,
     String userId,
-    int role,
+    common_enum.RoomMemberRole role,
   ) {
     return _domains.admin.setRoomMemberRole(roomId, userId, role);
   }
@@ -3296,7 +3297,8 @@ class SyncTvService {
   static Future<void> adminUpdateRoomMemberPermissionOverrides(
     String roomId,
     String userId, {
-    int role = 3,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
     int addedPermissions = 0,
     int removedPermissions = 0,
     int adminAddedPermissions = 0,
@@ -3509,7 +3511,8 @@ class SyncTvService {
   static Future<AdminBanRecordsPage> adminListBanRecordsPage({
     int page = 1,
     int pageSize = 50,
-    int targetType = 0,
+    admin_enum.BanTargetType targetType =
+        admin_enum.BanTargetType.BAN_TARGET_TYPE_UNSPECIFIED,
     bool? active,
     String userId = '',
     String roomId = '',
@@ -3527,8 +3530,11 @@ class SyncTvService {
   static Future<AdminContentReportsPage> adminListContentReportsPage({
     int page = 1,
     int pageSize = 50,
-    int status = 0,
-    int targetType = 0,
+    admin_enum.ContentReportStatus status =
+        admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED,
+    admin_enum.ContentReportTargetType targetType = admin_enum
+        .ContentReportTargetType
+        .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
     String reporterUserId = '',
     String roomId = '',
     String targetRoomId = '',
@@ -3536,7 +3542,8 @@ class SyncTvService {
     String targetMemberRoomId = '',
     String targetMemberUserId = '',
     int targetChatMessageId = 0,
-    int scope = 0,
+    admin_enum.ContentReportScope scope =
+        admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED,
     String search = '',
   }) {
     return _domains.admin.listContentReportsPage(
@@ -3562,7 +3569,7 @@ class SyncTvService {
 
   static Future<AdminContentReport> adminUpdateContentReportStatus(
     String reportId,
-    int status, {
+    admin_enum.ContentReportStatus status, {
     String resolutionNote = '',
   }) {
     return _domains.admin.updateContentReportStatus(
@@ -3576,8 +3583,11 @@ class SyncTvService {
     String roomId, {
     int page = 1,
     int pageSize = 50,
-    int status = 0,
-    int targetType = 0,
+    admin_enum.ContentReportStatus status =
+        admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED,
+    admin_enum.ContentReportTargetType targetType = admin_enum
+        .ContentReportTargetType
+        .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
     String targetMemberUserId = '',
     int targetChatMessageId = 0,
     String search = '',
@@ -3604,7 +3614,7 @@ class SyncTvService {
   static Future<AdminContentReport> updateRoomContentReportStatus(
     String roomId,
     String reportId,
-    int status, {
+    admin_enum.ContentReportStatus status, {
     String resolutionNote = '',
   }) {
     return _domains.admin.updateRoomContentReportStatus(
@@ -3616,10 +3626,11 @@ class SyncTvService {
   }
 
   static Future<AdminReviewsPage> adminListReviewsPage({
-    required String kind,
+    required AdminReviewKind kind,
     int page = 1,
     int pageSize = 50,
-    int status = 1,
+    common_enum.ReviewStatus status =
+        common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
     String search = '',
     String requestedBy = '',
     String roomId = '',
@@ -3637,12 +3648,15 @@ class SyncTvService {
     );
   }
 
-  static Future<void> adminApproveReview(String kind, String requestId) {
+  static Future<void> adminApproveReview(
+    AdminReviewKind kind,
+    String requestId,
+  ) {
     return _domains.admin.approveReview(kind, requestId);
   }
 
   static Future<void> adminRejectReview(
-    String kind,
+    AdminReviewKind kind,
     String requestId, {
     String reason = '',
   }) {

@@ -11,7 +11,8 @@ void main() {
     late http.Request capturedRequest;
     final api = SyncTvApiClient(
       baseUrl: 'https://synctv.example',
-      session: SyncTvSession()..accessToken = 'access-token',
+      session: SyncTvSession()
+        ..updateAccountTokens(accessToken: 'access-token'),
       httpClient: MockClient((request) async {
         capturedRequest = request;
         return http.Response(

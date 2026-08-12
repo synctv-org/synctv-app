@@ -1,10 +1,11 @@
 import 'package:synctv_app/contracts/proto_mapping.dart';
-import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 class RoomCategoryInfo {
   final String id;
@@ -46,15 +47,69 @@ class RoomLabelInfo {
   });
 }
 
+sealed class SyncTvUserRole {
+  const SyncTvUserRole();
+
+  bool get hasSystemAdminPrivileges => switch (this) {
+    AccountUserRole(
+      value: common_enum.UserRole.USER_ROLE_ROOT ||
+          common_enum.UserRole.USER_ROLE_ADMIN,
+    ) =>
+      true,
+    AccountUserRole() || RoomMembershipRole() => false,
+  };
+
+  bool get isSystemRoot => switch (this) {
+    AccountUserRole(value: common_enum.UserRole.USER_ROLE_ROOT) => true,
+    AccountUserRole() || RoomMembershipRole() => false,
+  };
+
+  bool get isRoomAdministrator => switch (this) {
+    RoomMembershipRole(
+      value: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+    ) =>
+      true,
+    AccountUserRole() || RoomMembershipRole() => false,
+  };
+
+  bool get isRoomCreator => switch (this) {
+    RoomMembershipRole(
+      value: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR,
+    ) =>
+      true,
+    AccountUserRole() || RoomMembershipRole() => false,
+  };
+
+  bool get isRoomMember => switch (this) {
+    RoomMembershipRole(
+      value: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+    ) =>
+      true,
+    AccountUserRole() || RoomMembershipRole() => false,
+  };
+}
+
+final class AccountUserRole extends SyncTvUserRole {
+  const AccountUserRole(this.value);
+
+  final common_enum.UserRole value;
+}
+
+final class RoomMembershipRole extends SyncTvUserRole {
+  const RoomMembershipRole(this.value);
+
+  final common_enum.RoomMemberRole value;
+}
+
 class SyncTvUser {
   final String id;
   final String username;
   final String? email;
   final String avatarUrl;
-  final int role;
+  final SyncTvUserRole role;
   final int createdAt;
   final int updatedAt;
-  final int status;
+  final common_enum.UserStatus status;
   final int onlineCount;
   final int connectionCount;
   final bool isBanned;
@@ -70,7 +125,7 @@ class SyncTvUser {
     required this.role,
     this.createdAt = 0,
     this.updatedAt = 0,
-    this.status = 0,
+    this.status = common_enum.UserStatus.USER_STATUS_UNSPECIFIED,
     this.onlineCount = 0,
     this.connectionCount = 0,
     this.isBanned = false,
@@ -86,10 +141,10 @@ class SyncTvUser {
     String? username,
     String? email,
     String? avatarUrl,
-    int? role,
+    SyncTvUserRole? role,
     int? createdAt,
     int? updatedAt,
-    int? status,
+    common_enum.UserStatus? status,
     int? onlineCount,
     int? connectionCount,
     bool? isBanned,
@@ -129,28 +184,27 @@ class SyncTvRoom {
   final String creatorAvatarUrl;
   final int createdAt;
   final int updatedAt;
-  final int status;
+  final common_enum.RoomStatus status;
   final bool isBanned;
-  final int availability;
+  final client.ResourceAvailability availability;
   final int version;
-  final int creatorStatus;
+  final common_enum.UserStatus creatorStatus;
   final bool hidden;
   final bool needVerify;
   final bool guestCanPause;
   final bool guestCanAdd;
   final int myPermissions;
-  final int myRole;
-  final int myRelation;
+  final common_enum.RoomMemberRole myRole;
+  final client.MyRoomRelation myRelation;
   final String coverUrl;
   final RoomCategoryInfo? category;
   final List<RoomLabelInfo> labels;
   final bool isFavorite;
   final bool joined;
   final bool canJoin;
-  final int discoveryAccess;
+  final client.RoomDiscoveryAccess discoveryAccess;
 
-  bool get isActive =>
-      status == common_enum.RoomStatus.ROOM_STATUS_ACTIVE.value;
+  bool get isActive => status == common_enum.RoomStatus.ROOM_STATUS_ACTIVE;
 
   SyncTvRoom({
     required this.roomId,
@@ -165,25 +219,27 @@ class SyncTvRoom {
     this.creatorAvatarUrl = '',
     this.createdAt = 0,
     this.updatedAt = 0,
-    this.status = 0,
+    this.status = common_enum.RoomStatus.ROOM_STATUS_UNSPECIFIED,
     this.isBanned = false,
-    this.availability = 0,
+    this.availability =
+        client.ResourceAvailability.RESOURCE_AVAILABILITY_UNSPECIFIED,
     this.version = 0,
-    this.creatorStatus = 0,
+    this.creatorStatus = common_enum.UserStatus.USER_STATUS_UNSPECIFIED,
     this.hidden = false,
     this.needVerify = false,
     this.guestCanPause = true,
     this.guestCanAdd = true,
     this.myPermissions = 0,
-    this.myRole = 0,
-    this.myRelation = 0,
+    this.myRole = common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_UNSPECIFIED,
+    this.myRelation = client.MyRoomRelation.MY_ROOM_RELATION_UNSPECIFIED,
     this.coverUrl = '',
     this.category,
     this.labels = const [],
     this.isFavorite = false,
     this.joined = false,
     this.canJoin = false,
-    this.discoveryAccess = 0,
+    this.discoveryAccess =
+        client.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNSPECIFIED,
   });
 
   SyncTvRoom copyWith({
@@ -199,25 +255,25 @@ class SyncTvRoom {
     String? creatorAvatarUrl,
     int? createdAt,
     int? updatedAt,
-    int? status,
+    common_enum.RoomStatus? status,
     bool? isBanned,
-    int? availability,
+    client.ResourceAvailability? availability,
     int? version,
-    int? creatorStatus,
+    common_enum.UserStatus? creatorStatus,
     bool? hidden,
     bool? needVerify,
     bool? guestCanPause,
     bool? guestCanAdd,
     int? myPermissions,
-    int? myRole,
-    int? myRelation,
+    common_enum.RoomMemberRole? myRole,
+    client.MyRoomRelation? myRelation,
     String? coverUrl,
     RoomCategoryInfo? category,
     List<RoomLabelInfo>? labels,
     bool? isFavorite,
     bool? joined,
     bool? canJoin,
-    int? discoveryAccess,
+    client.RoomDiscoveryAccess? discoveryAccess,
   }) {
     return SyncTvRoom(
       roomId: roomId ?? this.roomId,
@@ -405,7 +461,7 @@ class RoomMediaEntry {
   final int createdAt;
   final int updatedAt;
   final int itemCount;
-  final int availability;
+  final client.ResourceAvailability availability;
   final int version;
   final Map<String, String> headers;
   final bool isPlaylist;
@@ -416,7 +472,7 @@ class RoomMediaEntry {
   final P2pResourceDelivery? danmuP2pDelivery;
   final String? streamDanmu;
   final Map<String, String> streamDanmuHeaders;
-  final String sourceProvider;
+  final source_enum.SourceProvider sourceProvider;
   final String providerInstanceName;
   final Map<String, dynamic> sourceConfig;
   final Map<String, dynamic> metadata;
@@ -446,7 +502,8 @@ class RoomMediaEntry {
     this.createdAt = 0,
     this.updatedAt = 0,
     this.itemCount = 0,
-    this.availability = 0,
+    this.availability =
+        client.ResourceAvailability.RESOURCE_AVAILABILITY_UNSPECIFIED,
     this.version = 0,
     this.headers = const {},
     this.isPlaylist = false,
@@ -457,7 +514,8 @@ class RoomMediaEntry {
     this.danmuP2pDelivery,
     this.streamDanmu,
     this.streamDanmuHeaders = const {},
-    this.sourceProvider = '',
+    this.sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     this.providerInstanceName = '',
     this.sourceConfig = const {},
     this.metadata = const {},
@@ -650,7 +708,7 @@ class RoomMediaEntry {
     int? createdAt,
     int? updatedAt,
     int? itemCount,
-    int? availability,
+    client.ResourceAvailability? availability,
     int? version,
     Map<String, String>? headers,
     bool? isPlaylist,
@@ -664,7 +722,7 @@ class RoomMediaEntry {
     bool clearSubtitles = false,
     bool clearDanmu = false,
     bool clearStreamDanmu = false,
-    String? sourceProvider,
+    source_enum.SourceProvider? sourceProvider,
     String? providerInstanceName,
     Map<String, dynamic>? sourceConfig,
     Map<String, dynamic>? metadata,
@@ -807,7 +865,7 @@ class RoomMediaEntry {
       danmuP2pDelivery: selectedMode.danmuP2pDelivery,
       streamDanmu: selectedMode.streamDanmu,
       streamDanmuHeaders: selectedMode.streamDanmuHeaders,
-      sourceProvider: SourceConfigCodec.providerToString(playback.provider),
+      sourceProvider: playback.provider,
       providerInstanceName: playback.providerInstanceName,
       playbackModes: modes,
       selectedPlaybackMode: selectedMode.key,
@@ -1090,10 +1148,16 @@ class RoomPlaybackEntry extends RoomMediaEntry {
   });
 }
 
-class JoinRoomResult {
-  final bool requiresApproval;
+sealed class JoinRoomResult {
+  const JoinRoomResult();
+}
 
-  const JoinRoomResult({required this.requiresApproval});
+final class RoomJoined extends JoinRoomResult {
+  const RoomJoined();
+}
+
+final class RoomJoinReviewPending extends JoinRoomResult {
+  const RoomJoinReviewPending();
 }
 
 final class RoomPasswordRejectedException implements Exception {

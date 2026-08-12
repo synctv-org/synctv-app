@@ -14,7 +14,8 @@ void main() {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
         baseUrl: 'https://synctv.example',
-        session: SyncTvSession()..accessToken = 'access-token',
+        session: SyncTvSession()
+          ..updateAccountTokens(accessToken: 'access-token'),
         httpClient: MockClient((request) async {
           requests.add(request);
           final response = switch (request.url.path) {

@@ -12,7 +12,7 @@ class CinemaRoomCard extends StatelessWidget {
   final int memberCount;
   final String creatorName;
   final String creatorAvatarUrl;
-  final int availability;
+  final client_enum.ResourceAvailability availability;
   final bool isBanned;
   final VoidCallback? onTap;
   final VoidCallback? onFavoritePressed;
@@ -22,7 +22,7 @@ class CinemaRoomCard extends StatelessWidget {
   final bool isOwner;
   final bool joined;
   final bool canJoin;
-  final int discoveryAccess;
+  final client_enum.RoomDiscoveryAccess discoveryAccess;
   final bool showScaleAnimation;
 
   const CinemaRoomCard({
@@ -34,7 +34,8 @@ class CinemaRoomCard extends StatelessWidget {
     this.memberCount = 0,
     this.creatorName = '',
     this.creatorAvatarUrl = '',
-    this.availability = 0,
+    this.availability =
+        client_enum.ResourceAvailability.RESOURCE_AVAILABILITY_UNSPECIFIED,
     this.isBanned = false,
     required this.onTap,
     this.onFavoritePressed,
@@ -44,7 +45,8 @@ class CinemaRoomCard extends StatelessWidget {
     this.isOwner = false,
     this.joined = false,
     this.canJoin = false,
-    this.discoveryAccess = 0,
+    this.discoveryAccess =
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNSPECIFIED,
     this.showScaleAnimation = false,
   });
 
@@ -54,16 +56,16 @@ class CinemaRoomCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isUnavailable =
         isBanned ||
-        availability == 2 ||
-        discoveryAccess ==
+        availability ==
             client_enum
-                .RoomDiscoveryAccess
-                .ROOM_DISCOVERY_ACCESS_UNAVAILABLE
-                .value;
+                .ResourceAvailability
+                .RESOURCE_AVAILABILITY_CREATOR_INACTIVE ||
+        discoveryAccess ==
+            client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNAVAILABLE;
     final statusLabel = isBanned ? l10n.roomBanned : _accessLabel(context);
     final isGuestAccess =
         discoveryAccess ==
-        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST.value;
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST;
     final statusColor = isUnavailable
         ? theme.colorScheme.error
         : isGuestAccess
@@ -236,55 +238,50 @@ class CinemaRoomCard extends StatelessWidget {
   String _accessLabel(BuildContext context) {
     final l10n = context.l10n;
     if (isBanned ||
-        availability == 2 ||
-        discoveryAccess ==
+        availability ==
             client_enum
-                .RoomDiscoveryAccess
-                .ROOM_DISCOVERY_ACCESS_UNAVAILABLE
-                .value) {
+                .ResourceAvailability
+                .RESOURCE_AVAILABILITY_CREATOR_INACTIVE ||
+        discoveryAccess ==
+            client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNAVAILABLE) {
       return l10n.roomUnavailableShort;
     }
     if (isOwner) return l10n.createdByMe;
     if (joined) return l10n.roomJoined;
     if (discoveryAccess ==
-        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST.value) {
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST) {
       return l10n.roomGuestAccess;
     }
     if (discoveryAccess ==
-        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_PASSWORD.value) {
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_PASSWORD) {
       return l10n.passwordRequiredShort;
     }
     if (discoveryAccess ==
         client_enum
             .RoomDiscoveryAccess
-            .ROOM_DISCOVERY_ACCESS_REQUEST_APPROVAL
-            .value) {
+            .ROOM_DISCOVERY_ACCESS_REQUEST_APPROVAL) {
       return l10n.roomApprovalRequired;
     }
     if (discoveryAccess ==
         client_enum
             .RoomDiscoveryAccess
-            .ROOM_DISCOVERY_ACCESS_PENDING_APPROVAL
-            .value) {
+            .ROOM_DISCOVERY_ACCESS_PENDING_APPROVAL) {
       return l10n.roomApprovalPending;
     }
     if (discoveryAccess ==
-        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_SIGN_IN.value) {
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_SIGN_IN) {
       return l10n.signInToJoin;
     }
     if (discoveryAccess ==
-        client_enum
-            .RoomDiscoveryAccess
-            .ROOM_DISCOVERY_ACCESS_INVITATION
-            .value) {
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_INVITATION) {
       return l10n.roomInvitationOnly;
     }
     if (discoveryAccess ==
-        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_FULL.value) {
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_FULL) {
       return l10n.roomFull;
     }
     if (discoveryAccess ==
-        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_COOLDOWN.value) {
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_COOLDOWN) {
       return l10n.roomJoinCooldown;
     }
     return canJoin ? l10n.roomJoinable : l10n.roomUnavailableShort;

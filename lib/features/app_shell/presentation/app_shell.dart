@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/core/async/async_operation_coordinator.dart';
 import 'package:synctv_app/features/home/domain/home_room_access.dart';
@@ -24,8 +25,6 @@ import 'package:synctv_app/features/providers/presentation/binding/platform_bind
 import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
-import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
-    as common_enum;
 
 import 'package:synctv_app/features/auth/presentation/auth_panel.dart';
 import 'package:synctv_app/features/app_shell/presentation/app_shell_dependencies.dart';
@@ -99,17 +98,10 @@ class _AppShellState extends State<AppShell> {
     super.dispose();
   }
 
-  HomeIdentityKind get _identityKind {
-    if (!_gateway.hasRecoverableSession) {
-      return HomeIdentityKind.anonymous;
-    }
-    return _gateway.isGuestSession
-        ? HomeIdentityKind.guest
-        : HomeIdentityKind.account;
-  }
+  SyncTvSessionIdentity get _sessionIdentity => _gateway.sessionIdentity;
 
-  bool get _isGuestSession => _identityKind == HomeIdentityKind.guest;
-  bool get _isAccountSession => _identityKind == HomeIdentityKind.account;
+  bool get _isGuestSession => _sessionIdentity is GuestSessionIdentity;
+  bool get _isAccountSession => _sessionIdentity is AccountSessionIdentity;
 
   void _clearRoomSessionState({bool clearTaxonomy = false}) {
     _homeStateEpoch.advance();
@@ -703,15 +695,12 @@ class _AppShellState extends State<AppShell> {
     JoinRoomResult? completedJoin;
 
     try {
-      final guestAccess =
-          room.discoveryAccess ==
-          client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST.value;
       final authenticationMode = roomAuthenticationMode(
-        identity: _identityKind,
-        guestAccess: guestAccess,
-        guestBoundToRoom: _gateway.guestRoomId == room.roomId,
+        identity: _sessionIdentity,
+        roomId: room.roomId,
+        discoveryAccess: room.discoveryAccess,
       );
-      if (authenticationMode != RoomAuthenticationMode.none) {
+      if (authenticationMode != RoomAuthenticationMode.ready) {
         final authenticated = await _showLoginDialog(
           guestRoomId: room.roomId,
           startWithGuest: authenticationMode == RoomAuthenticationMode.guest,
@@ -725,7 +714,9 @@ class _AppShellState extends State<AppShell> {
         if (!mounted || !_homeStateEpoch.isCurrent(epoch)) return;
       }
 
-      if (_isGuestSession && !guestAccess) {
+      if (_isGuestSession &&
+          room.discoveryAccess !=
+              client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST) {
         AppNotifications.showWarning(context, context.l10n.roomUnavailable);
         return;
       }
@@ -742,10 +733,7 @@ class _AppShellState extends State<AppShell> {
       }
 
       if (targetRoom.discoveryAccess ==
-          client_enum
-              .RoomDiscoveryAccess
-              .ROOM_DISCOVERY_ACCESS_PASSWORD
-              .value) {
+          client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_PASSWORD) {
         completedJoin = await showRoomPasswordDialog(
           context: context,
           roomName: targetRoom.roomName,
@@ -760,25 +748,24 @@ class _AppShellState extends State<AppShell> {
       final result =
           completedJoin ?? await _gateway.joinRoom(targetRoom.roomId, '');
       if (!mounted || !_homeStateEpoch.isCurrent(epoch)) return;
-      if (result.requiresApproval) {
-        if (mounted) {
+      switch (result) {
+        case RoomJoinReviewPending():
           AppNotifications.showSuccess(
             context,
             context.l10n.roomJoinRequestSubmitted,
           );
           await _loadRooms(silent: true);
-        }
-        return;
+          return;
+        case RoomJoined():
+          break;
       }
       if (mounted) {
         await _navigateToRoom(
           targetRoom.copyWith(
             joined: true,
             canJoin: false,
-            discoveryAccess: client_enum
-                .RoomDiscoveryAccess
-                .ROOM_DISCOVERY_ACCESS_ENTER
-                .value,
+            discoveryAccess:
+                client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_ENTER,
           ),
         );
       }
@@ -906,12 +893,10 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin =
-        _currentUser?.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
-        _currentUser?.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
+    final isAdmin = _currentUser?.role.hasSystemAdminPrivileges ?? false;
     return HomeView(
       state: HomeViewState(
-        identityKind: _identityKind,
+        identity: _sessionIdentity,
         hasServer: _gateway.hasServer,
         isLoading: _isLoading,
         isLoadingTaxonomy: _isLoadingTaxonomy,

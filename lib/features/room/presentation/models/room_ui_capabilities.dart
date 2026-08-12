@@ -1,7 +1,5 @@
 import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
-import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
-    as common_enum;
 
 final class RoomUiCapabilities {
   RoomUiCapabilities({
@@ -15,9 +13,7 @@ final class RoomUiCapabilities {
        isRoomCreator =
            currentUser?.id.isNotEmpty == true &&
            currentUser!.id == room.creatorId,
-       isSystemAdmin =
-           currentUser?.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
-           currentUser?.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
+       isSystemAdmin = currentUser?.role.hasSystemAdminPrivileges ?? false;
 
   final int _permissions;
   final bool isRoomCreator;

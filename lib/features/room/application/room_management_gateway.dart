@@ -68,7 +68,7 @@ abstract interface class RoomManagementGateway {
   Future<void> addRoomMember(
     String roomId,
     String userId, {
-    int role = 3,
+    common.RoomMemberRole role = common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
     bool notify = true,
   });
   Future<void> updateRoomMemberRemarkName(
@@ -84,7 +84,7 @@ abstract interface class RoomManagementGateway {
   Future<AdminRoomMember> setRoomMemberRole(
     String roomId,
     String userId,
-    int role,
+    common.RoomMemberRole role,
   );
   Future<void> updateRoomMemberPermissionOverrides(
     String roomId,

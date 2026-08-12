@@ -268,30 +268,26 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   void _finishAuth(AuthResult result) {
     if (!mounted) return;
-    if (result.requiresMfa) {
-      final challenge = result.mfa!;
-      final methods = _availableMfaMethods(challenge);
-      setState(() {
-        _resetLoginDiscovery();
-        _resetMfaCredentials();
-        _mfaChallenge = challenge;
-        _mfaRecoveryCodeActive = false;
-        if (methods.isNotEmpty) _mfaMethod = methods.first;
-      });
-      _scheduleMfaSessionExpiry(challenge);
-      return;
+    switch (result) {
+      case MfaRequired(:final challenge):
+        final methods = _availableMfaMethods(challenge);
+        setState(() {
+          _resetLoginDiscovery();
+          _resetMfaCredentials();
+          _mfaChallenge = challenge;
+          _mfaRecoveryCodeActive = false;
+          if (methods.isNotEmpty) _mfaMethod = methods.first;
+        });
+        _scheduleMfaSessionExpiry(challenge);
+      case RegistrationReviewPending(:final reviewId):
+        final message = reviewId.isEmpty
+            ? context.l10n.registrationSubmitted
+            : context.l10n.registrationSubmittedWithId(reviewId);
+        AppNotifications.showInfo(context, message);
+      case Authenticated():
+        AppNotifications.dismissAll();
+        Navigator.pop(context, true);
     }
-    if (result.registrationReviewRequired) {
-      final message = result.registrationReviewId.isEmpty
-          ? context.l10n.registrationSubmitted
-          : context.l10n.registrationSubmittedWithId(
-              result.registrationReviewId,
-            );
-      AppNotifications.showInfo(context, message);
-      return;
-    }
-    AppNotifications.dismissAll();
-    Navigator.pop(context, true);
   }
 
   Future<void> _submitPasswordLogin() async {

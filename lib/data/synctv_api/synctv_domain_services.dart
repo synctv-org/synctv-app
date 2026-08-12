@@ -17,15 +17,10 @@ class SyncTvDomainServices {
   }) {
     cache = SyncTvMemoryCache();
     auth = SyncTvAuthDomainService(api: api, sessionStore: sessionStore);
-    account = SyncTvAccountDomainService(
-      api: api,
-      sessionStore: sessionStore,
-      cache: cache,
-    );
+    account = SyncTvAccountDomainService(api: api, cache: cache);
     notifications = SyncTvNotificationDomainService(api, cache: cache);
     publicRooms = SyncTvPublicRoomDomainService(
       api: api,
-      sessionStore: sessionStore,
       authService: auth,
       cache: cache,
     );

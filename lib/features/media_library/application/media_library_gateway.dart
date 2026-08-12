@@ -3,6 +3,8 @@ import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart' as client;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart' as source;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 abstract interface class MediaLibraryGateway {
   Future<RoomMediaLibraryPage> listMediaLibrary(
@@ -13,7 +15,8 @@ abstract interface class MediaLibraryGateway {
     String playlistId = '',
     String? target,
     String search = '',
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     Map<String, dynamic>? previewSourceConfig,
     source.PlaylistSourceConfig? typedPreviewSourceConfig,
     String providerInstanceName = '',
@@ -32,7 +35,8 @@ abstract interface class MediaLibraryGateway {
     int page = 1,
     int pageSize = 100,
     String? search,
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     String providerInstanceName = '',
     bool? dynamicOnly,
     client.PlaylistListSortBy sortBy =

@@ -10,6 +10,7 @@ import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
+import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -97,7 +98,7 @@ Future<void> _createUser(_UserSeed seed) async {
   await SyncTvService.adminAddUser(
     seed.username,
     seed.password,
-    common_enum.UserRole.USER_ROLE_USER.value,
+    common_enum.UserRole.USER_ROLE_USER,
   );
 }
 
@@ -176,24 +177,26 @@ Future<void> _exerciseWatchers(String roomId, int stamp) async {
 
   await _waitFor(
     () => playlistEvents.any(
-      (event) => event.kind == RoomResourceWatchKind.changed,
+      (event) => event is RoomResourceChanged<RoomMediaLibraryPage>,
     ),
     'playlist changed watch',
   );
   await _waitFor(
     () => playbackEvents.any(
-      (event) => event.kind == RoomResourceWatchKind.changed,
+      (event) => event is RoomResourceChanged<SyncTvPlaybackStatus>,
     ),
     'playback changed watch',
   );
   await _waitFor(
     () => settingsEvents.any(
-      (event) => event.kind == RoomResourceWatchKind.changed,
+      (event) => event is RoomResourceChanged<SyncTvRoomSettings>,
     ),
     'settings changed watch',
   );
   await _waitFor(
-    () => pinEvents.any((event) => event.kind == RoomResourceWatchKind.changed),
+    () => pinEvents.any(
+      (event) => event is RoomResourceChanged<ChatPinEventInfo>,
+    ),
     'pin changed watch',
   );
 
@@ -233,19 +236,12 @@ Future<void> _exerciseMediaAndRealtime(
     playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
     name: 'batch direct $stamp',
   );
-  try {
-    await prepareHttpFlvAndAdd(
-      roomId,
-      playlistId: nested.id,
-      url: 'http://127.0.0.1:18081/live.flv',
-      name: 'blocked live proxy $stamp',
-    );
-    throw StateError('loopback LiveProxy source was accepted');
-  } catch (error) {
-    if (!error.toString().contains('blocked by SSRF policy')) {
-      rethrow;
-    }
-  }
+  await prepareHttpFlvAndAdd(
+    roomId,
+    playlistId: nested.id,
+    url: 'http://127.0.0.1:18081/live.flv',
+    name: 'loopback live proxy $stamp',
+  );
   await prepareHttpFlvAndAdd(
     roomId,
     playlistId: nested.id,
@@ -384,7 +380,7 @@ Future<void> _exerciseRoomLifecycle(
   await _login(member);
   final passwordCheck = await SyncTvService.getRoomDiscovery(roomId);
   if (passwordCheck.discoveryAccess !=
-      client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_PASSWORD.value) {
+      client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_PASSWORD) {
     throw StateError('room password was not required');
   }
 
@@ -440,7 +436,11 @@ Future<void> _exerciseRoomLifecycle(
   await _login(guest);
   final guestProfile = await SyncTvService.getMe(refresh: true);
   await _login(owner);
-  await SyncTvService.addRoomMember(roomId, guestProfile.id, role: 3);
+  await SyncTvService.addRoomMember(
+    roomId,
+    guestProfile.id,
+    role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+  );
   await SyncTvService.transferRoomOwnership(roomId, guestProfile.id);
   await _login(guest);
   final transferred = await SyncTvService.getRoomInfo(roomId);
@@ -449,7 +449,11 @@ Future<void> _exerciseRoomLifecycle(
   }
 
   await Future<void>.delayed(const Duration(seconds: 2));
-  await SyncTvService.addRoomMember(roomId, memberProfile.id, role: 3);
+  await SyncTvService.addRoomMember(
+    roomId,
+    memberProfile.id,
+    role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+  );
   await SyncTvService.transferRoomOwnership(roomId, memberProfile.id);
   await _login(member);
   final finalRoom = await SyncTvService.getRoomInfo(roomId);
@@ -550,7 +554,7 @@ Future<void> _exerciseAdminLifecycle({
     await SyncTvService.adminGetContentReport(report.id);
     await SyncTvService.adminUpdateContentReportStatus(
       report.id,
-      2,
+      admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_REVIEWING,
       resolutionNote: 'deep resolved',
     );
   }

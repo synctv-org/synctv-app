@@ -5,6 +5,7 @@ import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
 import 'package:synctv_app/features/room/application/room_creation_gateway.dart';
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/features/room/presentation/room_taxonomy.dart';
@@ -165,12 +166,13 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
     return settings != null && !settings.roomCreationEnabled;
   }
 
-  String get _passwordPolicy =>
-      _settings?.roomPasswordPolicy.toLowerCase() ?? '';
+  bool get _passwordRequired =>
+      _settings?.roomPasswordPolicy ==
+      common.RoomPasswordPolicy.ROOM_PASSWORD_POLICY_REQUIRED;
 
-  bool get _passwordRequired => _passwordPolicy == 'required';
-
-  bool get _passwordForbidden => _passwordPolicy == 'forbidden';
+  bool get _passwordForbidden =>
+      _settings?.roomPasswordPolicy ==
+      common.RoomPasswordPolicy.ROOM_PASSWORD_POLICY_FORBIDDEN;
 
   bool get _needPassword => _accessMode == _RoomAccessMode.password;
 

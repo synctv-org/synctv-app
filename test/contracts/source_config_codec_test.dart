@@ -1,35 +1,55 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart' as source;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 void main() {
   group('Playback proxy mode source config', () {
-    final mediaCases = <(String, Map<String, dynamic>)>[
-      ('directUrl', {'url': 'https://example.test/video.mp4'}),
-      ('alist', {'serverId': 'alist-main', 'path': '/movies/video.mp4'}),
-      ('bilibili', {'kind': 'video', 'bvid': 'BV1test', 'cid': 42}),
-      ('emby', {'serverId': 'emby-main', 'itemId': 'item-42'}),
+    final mediaCases = <(source_enum.SourceProvider, Map<String, dynamic>)>[
       (
-        'cloudreve',
+        source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL,
+        {'url': 'https://example.test/video.mp4'},
+      ),
+      (
+        source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
+        {'serverId': 'alist-main', 'path': '/movies/video.mp4'},
+      ),
+      (
+        source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
+        {'kind': 'video', 'bvid': 'BV1test', 'cid': 42},
+      ),
+      (
+        source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
+        {'serverId': 'emby-main', 'itemId': 'item-42'},
+      ),
+      (
+        source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE,
         {'serverId': 'cloudreve-main', 'path': '/movies/video.mp4'},
       ),
     ];
-    final playlistCases = <(String, Map<String, dynamic>)>[
-      ('alist', {'serverId': 'alist-main', 'path': '/movies'}),
+    final playlistCases = <(source_enum.SourceProvider, Map<String, dynamic>)>[
       (
-        'bilibili',
+        source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
+        {'serverId': 'alist-main', 'path': '/movies'},
+      ),
+      (
+        source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
         {
           'source': {'type': 'popular'},
         },
       ),
       (
-        'emby',
+        source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
         {
           'serverId': 'emby-main',
           'source': {'type': 'folder', 'itemId': 'folder-42'},
         },
       ),
-      ('cloudreve', {'serverId': 'cloudreve-main', 'path': '/movies'}),
+      (
+        source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE,
+        {'serverId': 'cloudreve-main', 'path': '/movies'},
+      ),
     ];
 
     test('round trips proxy preferences for supported media sources', () {
@@ -151,7 +171,8 @@ void main() {
       final variants = cases
           .map(
             (config) => SourceConfigCodec.playlistSourceConfigFromMap(
-              sourceProvider: 'bilibili',
+              sourceProvider:
+                  source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
               sourceConfig: config,
             ),
           )
@@ -172,7 +193,7 @@ void main() {
 
     test('round trips collection identifiers and shared credential mode', () {
       final encoded = SourceConfigCodec.playlistSourceConfigFromMap(
-        sourceProvider: 'bilibili',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
         sourceConfig: {
           'source': {'type': 'collectionVideos', 'mid': 123, 'seasonId': 789},
           'shared': true,
@@ -187,7 +208,7 @@ void main() {
 
     test('round trips a multi-part video source', () {
       final encoded = SourceConfigCodec.playlistSourceConfigFromMap(
-        sourceProvider: 'bilibili',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
         sourceConfig: {
           'source': {'type': 'videoParts', 'bvid': 'BV1test', 'aid': 123},
         },
@@ -200,7 +221,7 @@ void main() {
 
     test('round trips a cursor-backed playback history source', () {
       final encoded = SourceConfigCodec.playlistSourceConfigFromMap(
-        sourceProvider: 'bilibili',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
         sourceConfig: {
           'source': {'type': 'history', 'historyType': 'live'},
           'shared': true,
@@ -217,14 +238,14 @@ void main() {
   group('Emby playlist source config', () {
     test('round trips favorite people and person item sources', () {
       final favoritePeople = SourceConfigCodec.playlistSourceConfigFromMap(
-        sourceProvider: 'emby',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
         sourceConfig: {
           'serverId': 'emby-main',
           'source': {'type': 'favoritePeople'},
         },
       )!;
       final personItems = SourceConfigCodec.playlistSourceConfigFromMap(
-        sourceProvider: 'emby',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
         sourceConfig: {
           'serverId': 'emby-main',
           'source': {
@@ -253,14 +274,14 @@ void main() {
   group('Live source config', () {
     test('round trips explicit playback kind and RTMP publish mode', () {
       final direct = SourceConfigCodec.mediaSourceConfigFromMap(
-        sourceProvider: 'directUrl',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL,
         sourceConfig: {
           'url': 'https://example.test/live.m3u8',
           'playbackKind': 'live',
         },
       )!;
       final rtmp = SourceConfigCodec.mediaSourceConfigFromMap(
-        sourceProvider: 'rtmp',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_RTMP,
         sourceConfig: {'mode': 'audioOnly'},
       )!;
 
@@ -308,7 +329,7 @@ void main() {
 
       for (final sourceConfig in cases) {
         final encoded = SourceConfigCodec.mediaSourceConfigFromMap(
-          sourceProvider: 'liveProxy',
+          sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY,
           sourceConfig: sourceConfig,
         )!;
         expect(SourceConfigCodec.mediaSourceConfigToMap(encoded), sourceConfig);

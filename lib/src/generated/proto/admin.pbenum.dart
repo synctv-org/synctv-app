@@ -14,35 +14,6 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-class RoomPasswordPolicy extends $pb.ProtobufEnum {
-  static const RoomPasswordPolicy ROOM_PASSWORD_POLICY_UNSPECIFIED =
-      RoomPasswordPolicy._(
-          0, _omitEnumNames ? '' : 'ROOM_PASSWORD_POLICY_UNSPECIFIED');
-  static const RoomPasswordPolicy ROOM_PASSWORD_POLICY_OPTIONAL =
-      RoomPasswordPolicy._(
-          1, _omitEnumNames ? '' : 'ROOM_PASSWORD_POLICY_OPTIONAL');
-  static const RoomPasswordPolicy ROOM_PASSWORD_POLICY_REQUIRED =
-      RoomPasswordPolicy._(
-          2, _omitEnumNames ? '' : 'ROOM_PASSWORD_POLICY_REQUIRED');
-  static const RoomPasswordPolicy ROOM_PASSWORD_POLICY_FORBIDDEN =
-      RoomPasswordPolicy._(
-          3, _omitEnumNames ? '' : 'ROOM_PASSWORD_POLICY_FORBIDDEN');
-
-  static const $core.List<RoomPasswordPolicy> values = <RoomPasswordPolicy>[
-    ROOM_PASSWORD_POLICY_UNSPECIFIED,
-    ROOM_PASSWORD_POLICY_OPTIONAL,
-    ROOM_PASSWORD_POLICY_REQUIRED,
-    ROOM_PASSWORD_POLICY_FORBIDDEN,
-  ];
-
-  static final $core.List<RoomPasswordPolicy?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 3);
-  static RoomPasswordPolicy? valueOf($core.int value) =>
-      value < 0 || value >= _byValue.length ? null : _byValue[value];
-
-  const RoomPasswordPolicy._(super.value, super.name);
-}
-
 class BanTargetType extends $pb.ProtobufEnum {
   static const BanTargetType BAN_TARGET_TYPE_UNSPECIFIED =
       BanTargetType._(0, _omitEnumNames ? '' : 'BAN_TARGET_TYPE_UNSPECIFIED');
@@ -171,6 +142,37 @@ class ContentReportScope extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const ContentReportScope._(super.value, super.name);
+}
+
+class SignupMethod extends $pb.ProtobufEnum {
+  static const SignupMethod SIGNUP_METHOD_UNSPECIFIED =
+      SignupMethod._(0, _omitEnumNames ? '' : 'SIGNUP_METHOD_UNSPECIFIED');
+  static const SignupMethod SIGNUP_METHOD_EMAIL =
+      SignupMethod._(1, _omitEnumNames ? '' : 'SIGNUP_METHOD_EMAIL');
+  static const SignupMethod SIGNUP_METHOD_PASSWORD =
+      SignupMethod._(2, _omitEnumNames ? '' : 'SIGNUP_METHOD_PASSWORD');
+  static const SignupMethod SIGNUP_METHOD_OAUTH2 =
+      SignupMethod._(3, _omitEnumNames ? '' : 'SIGNUP_METHOD_OAUTH2');
+  static const SignupMethod SIGNUP_METHOD_ADMIN_CREATED =
+      SignupMethod._(4, _omitEnumNames ? '' : 'SIGNUP_METHOD_ADMIN_CREATED');
+  static const SignupMethod SIGNUP_METHOD_WEBAUTHN =
+      SignupMethod._(5, _omitEnumNames ? '' : 'SIGNUP_METHOD_WEBAUTHN');
+
+  static const $core.List<SignupMethod> values = <SignupMethod>[
+    SIGNUP_METHOD_UNSPECIFIED,
+    SIGNUP_METHOD_EMAIL,
+    SIGNUP_METHOD_PASSWORD,
+    SIGNUP_METHOD_OAUTH2,
+    SIGNUP_METHOD_ADMIN_CREATED,
+    SIGNUP_METHOD_WEBAUTHN,
+  ];
+
+  static final $core.List<SignupMethod?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
+  static SignupMethod? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const SignupMethod._(super.value, super.name);
 }
 
 class SortDirection extends $pb.ProtobufEnum {

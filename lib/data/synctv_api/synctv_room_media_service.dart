@@ -17,6 +17,8 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 import 'package:synctv_app/core/identifiers/client_operation_id.dart';
 
 class SyncTvRoomMediaDomainService {
@@ -145,7 +147,8 @@ class SyncTvRoomMediaDomainService {
     int page = 1,
     int pageSize = 100,
     String search = '',
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     String providerInstanceName = '',
     client_enum.MediaListSortBy sortBy =
         client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
@@ -167,9 +170,7 @@ class SyncTvRoomMediaDomainService {
                 page: client.PagePagination(page: page),
                 pageSize: pageSize,
                 search: search,
-                sourceProvider: SourceConfigCodec.providerFromString(
-                  sourceProvider,
-                ),
+                sourceProvider: sourceProvider,
                 providerInstanceName: providerInstanceName,
                 sortBy: sortBy,
                 sortDirection: sortDirection,
@@ -209,7 +210,8 @@ class SyncTvRoomMediaDomainService {
     String playlistId = '',
     String? target,
     String search = '',
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     Map<String, dynamic>? previewSourceConfig,
     source_config.PlaylistSourceConfig? typedPreviewSourceConfig,
     String providerInstanceName = '',
@@ -230,7 +232,7 @@ class SyncTvRoomMediaDomainService {
         cursor: cursor == null ? null : client.CursorPagination(cursor: cursor),
         pageSize: pageSize,
         search: search,
-        sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
+        sourceProvider: sourceProvider,
         providerInstanceName: providerInstanceName,
         sortBy: sortBy,
         sortDirection: sortDirection,
@@ -270,7 +272,8 @@ class SyncTvRoomMediaDomainService {
     int page = 1,
     int pageSize = 100,
     String? search,
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     String providerInstanceName = '',
     bool? dynamicOnly,
     client_enum.PlaylistListSortBy sortBy =
@@ -287,7 +290,7 @@ class SyncTvRoomMediaDomainService {
         page: page,
         pageSize: pageSize,
         search: search,
-        sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
+        sourceProvider: sourceProvider,
         providerInstanceName: providerInstanceName,
         dynamicOnly: dynamicOnly,
         sortBy: sortBy,
@@ -336,7 +339,7 @@ class SyncTvRoomMediaDomainService {
       client.CreatePlaylistRequest(
         name: name,
         parentId: parentId,
-        sourceProvider: SourceConfigCodec.providerFromString(provider),
+        sourceProvider: provider,
         sourceConfig: sourceConfig,
         providerInstanceName: providerInstanceName,
         description: description,
@@ -813,7 +816,7 @@ class SyncTvRoomMediaDomainService {
         includeMessageTypes: includeMessageTypes,
       ),
     );
-    final allowedTypes = includeMessageTypes.map((type) => type.value).toSet();
+    final allowedTypes = includeMessageTypes.toSet();
     return response.messages
         .map(_chatMessageFromProto)
         .where(
@@ -1119,13 +1122,13 @@ class SyncTvRoomMediaDomainService {
       username: message.hasUsername() ? message.username : null,
       content: message.content,
       timestamp: message.timestamp.toInt(),
-      messageType: message.messageType.value,
+      messageType: message.messageType,
       displayPosition: message.displayPosition,
       displayColor: message.displayColor,
       version: message.version.toInt(),
       editedAt: message.editedAt.toInt(),
       deletedAt: message.deletedAt.toInt(),
-      status: message.status.value,
+      status: message.status,
       replyToMessageId: message.replyToMessageId,
       images: message.attachments.map(storedImageFromChatAttachment).toList(),
       reactions: message.reactions.map(_chatReactionSummaryFromProto).toList(),
@@ -1162,7 +1165,7 @@ class SyncTvRoomMediaDomainService {
     return ChatPinEventInfo(
       eventId: event.eventId,
       roomId: event.roomId,
-      kind: event.kind.value,
+      kind: event.kind,
       message: _chatMessageFromProto(event.message),
       pin: event.hasPin() ? _chatPinFromProto(event.pin) : null,
       occurredAt: event.occurredAt.toInt(),

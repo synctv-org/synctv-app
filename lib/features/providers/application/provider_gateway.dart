@@ -260,7 +260,8 @@ abstract interface class ProviderGateway {
     String playlistId = '',
     String? target,
     String search = '',
-    String sourceProvider = '',
+    source_enum.SourceProvider sourceProvider =
+        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     Map<String, dynamic>? previewSourceConfig,
     source_config.PlaylistSourceConfig? typedPreviewSourceConfig,
     String providerInstanceName = '',

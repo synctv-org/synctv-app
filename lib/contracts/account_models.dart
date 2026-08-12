@@ -5,6 +5,33 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/oauth2.pbenum.dart'
     as oauth2_enum;
 
+sealed class SyncTvSessionIdentity {
+  const SyncTvSessionIdentity();
+}
+
+final class AnonymousSessionIdentity extends SyncTvSessionIdentity {
+  const AnonymousSessionIdentity();
+}
+
+final class AccountSessionIdentity extends SyncTvSessionIdentity {
+  const AccountSessionIdentity({this.accessToken, this.refreshToken});
+
+  final String? accessToken;
+  final String? refreshToken;
+}
+
+final class GuestSessionIdentity extends SyncTvSessionIdentity {
+  const GuestSessionIdentity({
+    required this.accessToken,
+    required this.roomId,
+    required this.displayName,
+  });
+
+  final String accessToken;
+  final String roomId;
+  final String displayName;
+}
+
 class OAuth2ProviderOption {
   final String name;
   final String type;
@@ -80,44 +107,40 @@ List<OAuth2ProviderOption> oauth2BindableProviders(
   return List.unmodifiable(providers);
 }
 
-class AuthResult {
-  final SyncTvUser? user;
-  final MfaChallengeInfo? mfa;
-  final bool registrationReviewRequired;
-  final String registrationReviewId;
-  final String? redirectUrl;
-  final int expiresIn;
-  final oauth2_enum.OAuth2Operation oauth2Operation;
+sealed class AuthResult {
+  const AuthResult();
+}
 
-  const AuthResult({
-    this.user,
-    this.mfa,
-    this.registrationReviewRequired = false,
-    this.registrationReviewId = '',
-    this.redirectUrl,
-    this.expiresIn = 0,
-    this.oauth2Operation =
-        oauth2_enum.OAuth2Operation.OAUTH2_OPERATION_UNSPECIFIED,
-  });
+final class Authenticated extends AuthResult {
+  const Authenticated(this.user);
 
-  bool get authenticated => user != null;
-  bool get requiresMfa => mfa != null;
-  bool get oauth2Bind =>
-      oauth2Operation == oauth2_enum.OAuth2Operation.OAUTH2_OPERATION_BIND;
+  final SyncTvUser user;
+}
+
+final class MfaRequired extends AuthResult {
+  const MfaRequired(this.challenge);
+
+  final MfaChallengeInfo challenge;
+}
+
+final class RegistrationReviewPending extends AuthResult {
+  const RegistrationReviewPending({required this.reviewId});
+
+  final String reviewId;
 }
 
 sealed class SensitiveOperationVerificationInfo {
   const SensitiveOperationVerificationInfo();
 }
 
-class SensitiveOperationVerificationComplete
+final class SensitiveOperationVerificationComplete
     extends SensitiveOperationVerificationInfo {
   final String verificationId;
 
   const SensitiveOperationVerificationComplete({required this.verificationId});
 }
 
-class SensitiveOperationVerificationPending
+final class SensitiveOperationVerificationPending
     extends SensitiveOperationVerificationInfo {
   final SensitiveOperationVerificationChallengeInfo challenge;
 
@@ -127,9 +150,9 @@ class SensitiveOperationVerificationPending
 class SensitiveOperationVerificationChallengeInfo {
   final String sessionId;
   final int requiredCount;
-  final List<int> requiredMethods;
-  final List<int> completedMethods;
-  final List<int> availableMethods;
+  final List<client_enum.SensitiveOperationVerificationMethod> requiredMethods;
+  final List<client_enum.SensitiveOperationVerificationMethod> completedMethods;
+  final List<client_enum.SensitiveOperationVerificationMethod> availableMethods;
   final DateTime expiresAt;
 
   const SensitiveOperationVerificationChallengeInfo({
@@ -146,22 +169,19 @@ class SensitiveOperationVerificationChallengeInfo {
   bool get requiresPassword => requiredMethods.contains(
     client_enum
         .SensitiveOperationVerificationMethod
-        .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD
-        .value,
+        .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD,
   );
 
   bool get requiresPasskey => requiredMethods.contains(
     client_enum
         .SensitiveOperationVerificationMethod
-        .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN
-        .value,
+        .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
   );
 
   bool get requiresEmail => requiredMethods.contains(
     client_enum
         .SensitiveOperationVerificationMethod
-        .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL
-        .value,
+        .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL,
   );
 
   bool supportsMethodOnDevice(
@@ -175,7 +195,7 @@ class SensitiveOperationVerificationChallengeInfo {
         !passkeyAvailable) {
       return false;
     }
-    return availableMethods.contains(method.value);
+    return availableMethods.contains(method);
   }
 
   client_enum.SensitiveOperationVerificationMethod? preferredMethodOnDevice({
@@ -226,7 +246,7 @@ class SensitiveOperationEmailCodeInfo {
 
 class MfaChallengeInfo {
   final String sessionId;
-  final List<int> availableMethods;
+  final List<client_enum.MfaMethod> availableMethods;
   final String maskedEmail;
   final DateTime expiresAt;
 
@@ -238,18 +258,16 @@ class MfaChallengeInfo {
   });
 
   bool get supportsEmail =>
-      availableMethods.contains(client_enum.MfaMethod.MFA_METHOD_EMAIL.value);
+      availableMethods.contains(client_enum.MfaMethod.MFA_METHOD_EMAIL);
 
-  bool get supportsPasskey => availableMethods.contains(
-    client_enum.MfaMethod.MFA_METHOD_WEBAUTHN.value,
-  );
+  bool get supportsPasskey =>
+      availableMethods.contains(client_enum.MfaMethod.MFA_METHOD_WEBAUTHN);
 
   bool get supportsTotp =>
-      availableMethods.contains(client_enum.MfaMethod.MFA_METHOD_TOTP.value);
+      availableMethods.contains(client_enum.MfaMethod.MFA_METHOD_TOTP);
 
-  bool get supportsRecoveryCode => availableMethods.contains(
-    client_enum.MfaMethod.MFA_METHOD_RECOVERY_CODE.value,
-  );
+  bool get supportsRecoveryCode =>
+      availableMethods.contains(client_enum.MfaMethod.MFA_METHOD_RECOVERY_CODE);
 }
 
 class OpaqueRegistrationStart {
@@ -274,7 +292,7 @@ class OpaqueLoginStart {
 
 class LoginStart {
   final String sessionId;
-  final List<int> availableMethods;
+  final List<client_enum.LoginMethod> availableMethods;
   final DateTime expiresAt;
 
   const LoginStart({
@@ -283,16 +301,14 @@ class LoginStart {
     required this.expiresAt,
   });
 
-  bool get supportsPassword => availableMethods.contains(
-    client_enum.LoginMethod.LOGIN_METHOD_PASSWORD.value,
-  );
+  bool get supportsPassword =>
+      availableMethods.contains(client_enum.LoginMethod.LOGIN_METHOD_PASSWORD);
 
-  bool get supportsPasskey => availableMethods.contains(
-    client_enum.LoginMethod.LOGIN_METHOD_PASSKEY.value,
-  );
+  bool get supportsPasskey =>
+      availableMethods.contains(client_enum.LoginMethod.LOGIN_METHOD_PASSKEY);
 
   bool get supportsEmailCode => availableMethods.contains(
-    client_enum.LoginMethod.LOGIN_METHOD_EMAIL_CODE.value,
+    client_enum.LoginMethod.LOGIN_METHOD_EMAIL_CODE,
   );
 }
 
@@ -453,7 +469,7 @@ class TotpSetupInfo {
 class UserNotificationItem {
   final int numericId;
   final String id;
-  final int type;
+  final client_enum.NotificationType type;
   final String title;
   final String content;
   final Map<String, dynamic> data;

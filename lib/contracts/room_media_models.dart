@@ -263,7 +263,7 @@ class ChatPinEventInfo {
 
   final String eventId;
   final String roomId;
-  final int kind;
+  final client_enum.ChatPinEventKind kind;
   final RoomChatMessageInfo message;
   final ChatPinInfo? pin;
   final int occurredAt;
@@ -277,13 +277,13 @@ class RoomChatMessageInfo {
   final String? username;
   final String content;
   final int timestamp;
-  final int messageType;
+  final client_enum.ChatMessageType messageType;
   final String displayPosition;
   final String displayColor;
   final int version;
   final int editedAt;
   final int deletedAt;
-  final int status;
+  final client_enum.ChatMessageStatus status;
   final String replyToMessageId;
   final List<StoredImageInfo> images;
   final List<ChatReactionSummaryInfo> reactions;
@@ -298,13 +298,13 @@ class RoomChatMessageInfo {
     this.username,
     required this.content,
     required this.timestamp,
-    this.messageType = 1,
+    this.messageType = client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
     this.displayPosition = '',
     this.displayColor = '',
     this.version = 0,
     this.editedAt = 0,
     this.deletedAt = 0,
-    this.status = 0,
+    this.status = client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_UNSPECIFIED,
     this.replyToMessageId = '',
     this.images = const [],
     this.reactions = const [],
@@ -315,11 +315,15 @@ class RoomChatMessageInfo {
 
   double? get position => double.tryParse(displayPosition);
   String? get color => displayColor.isEmpty ? null : displayColor;
-  bool get isDeleted => deletedAt > 0 || status == 3;
-  bool get isEdited => editedAt > 0 || status == 2;
+  bool get isDeleted =>
+      deletedAt > 0 ||
+      status == client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_DELETED;
+  bool get isEdited =>
+      editedAt > 0 ||
+      status == client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_EDITED;
   bool get isPinned => pin != null;
   bool get isUserMessage =>
-      messageType == client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER.value;
+      messageType == client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER;
   bool get isSystemMessage => !isUserMessage;
   bool canEditBy(String currentUserId) =>
       currentUserId.isNotEmpty &&
@@ -334,13 +338,13 @@ class RoomChatMessageInfo {
     String? username,
     String? content,
     int? timestamp,
-    int? messageType,
+    client_enum.ChatMessageType? messageType,
     String? displayPosition,
     String? displayColor,
     int? version,
     int? editedAt,
     int? deletedAt,
-    int? status,
+    client_enum.ChatMessageStatus? status,
     String? replyToMessageId,
     List<StoredImageInfo>? images,
     List<ChatReactionSummaryInfo>? reactions,

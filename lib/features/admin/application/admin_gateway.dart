@@ -26,19 +26,20 @@ abstract interface class AdminGateway {
   Future<void> adminAddRoomMember(
     String roomId,
     String userId, {
-    int role = 2,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
     bool notify = true,
   });
 
   Future<void> adminAddUser(
     String username,
     String password,
-    int role, {
+    common_enum.UserRole role, {
     String email = '',
     common_enum.UserStatus status = common_enum.UserStatus.USER_STATUS_ACTIVE,
   });
 
-  Future<void> adminApproveReview(String kind, String requestId);
+  Future<void> adminApproveReview(AdminReviewKind kind, String requestId);
 
   Future<void> adminBanRoom(String roomId, bool ban, {String reason = ''});
 
@@ -125,7 +126,8 @@ abstract interface class AdminGateway {
   Future<AdminBanRecordsPage> adminListBanRecordsPage({
     int page = 1,
     int pageSize = 50,
-    int targetType = 0,
+    admin_enum.BanTargetType targetType =
+        admin_enum.BanTargetType.BAN_TARGET_TYPE_UNSPECIFIED,
     bool? active,
     String userId = '',
     String roomId = '',
@@ -147,10 +149,11 @@ abstract interface class AdminGateway {
   });
 
   Future<AdminReviewsPage> adminListReviewsPage({
-    required String kind,
+    required AdminReviewKind kind,
     int page = 1,
     int pageSize = 50,
-    int status = 1,
+    common_enum.ReviewStatus status =
+        common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
     String search = '',
     String requestedBy = '',
     String roomId = '',
@@ -231,7 +234,7 @@ abstract interface class AdminGateway {
   Future<void> adminReconnectProviderInstance(String name);
 
   Future<void> adminRejectReview(
-    String kind,
+    AdminReviewKind kind,
     String requestId, {
     String reason = '',
   });
@@ -242,11 +245,13 @@ abstract interface class AdminGateway {
 
   Future<String> adminSendTestEmail(String to);
 
-  Future<void> adminSetAdmin(String userId, bool isAdmin);
-
   Future<void> adminSetProviderInstanceEnabled(String name, bool enabled);
 
-  Future<void> adminSetRoomMemberRole(String roomId, String userId, int role);
+  Future<void> adminSetRoomMemberRole(
+    String roomId,
+    String userId,
+    common_enum.RoomMemberRole role,
+  );
 
   Future<void> adminUpdatePassword(
     String userId,
@@ -278,7 +283,8 @@ abstract interface class AdminGateway {
   Future<void> adminUpdateRoomMemberPermissionOverrides(
     String roomId,
     String userId, {
-    int role = 3,
+    common_enum.RoomMemberRole role =
+        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
     int addedPermissions = 0,
     int removedPermissions = 0,
     int adminAddedPermissions = 0,

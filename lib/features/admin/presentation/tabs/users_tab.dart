@@ -84,7 +84,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     final usernameController = TextEditingController();
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
-    int role = common_enum.UserRole.USER_ROLE_USER.value;
+    var role = common_enum.UserRole.USER_ROLE_USER;
     var status = common_enum.UserStatus.USER_STATUS_ACTIVE;
 
     await AppDialogs.showStyledDialog(
@@ -120,12 +120,12 @@ class _UserManagementTabState extends State<UserManagementTab> {
             obscureText: true,
           ),
           const SizedBox(height: 12),
-          AppSelect<int>(
+          AppSelect<common_enum.UserRole>(
             value: role,
             label: l10n.role,
             options: {
-              l10n.user: common_enum.UserRole.USER_ROLE_USER.value,
-              l10n.administrator: common_enum.UserRole.USER_ROLE_ADMIN.value,
+              l10n.user: common_enum.UserRole.USER_ROLE_USER,
+              l10n.administrator: common_enum.UserRole.USER_ROLE_ADMIN,
             },
             onChanged: (value) {
               if (value != null) role = value;
@@ -215,10 +215,8 @@ class _UserManagementTabState extends State<UserManagementTab> {
 
   Future<void> _toggleAdmin(SyncTvUser user) async {
     final l10n = context.l10n;
-    final isAdmin =
-        user.role == common_enum.UserRole.USER_ROLE_ADMIN.value ||
-        user.role == common_enum.UserRole.USER_ROLE_ROOT.value;
-    if (user.role == common_enum.UserRole.USER_ROLE_ROOT.value) {
+    final isAdmin = user.role.hasSystemAdminPrivileges;
+    if (user.role.isSystemRoot) {
       AppNotifications.showWarning(context, l10n.rootUserCannotBeDemoted);
       return;
     }
@@ -244,7 +242,11 @@ class _UserManagementTabState extends State<UserManagementTab> {
 
     if (confirm == true) {
       try {
-        await adminGateway.adminSetAdmin(user.id, !isAdmin);
+        if (isAdmin) {
+          await adminGateway.adminRemoveAdmin(user.id);
+        } else {
+          await adminGateway.adminAddAdmin(user.id);
+        }
         if (!mounted) return;
         AppNotifications.showSuccess(context, l10n.operationSucceeded);
         _loadUsers(silent: true);
@@ -529,12 +531,13 @@ class _UserManagementTabState extends State<UserManagementTab> {
               children: [
                 ContentReportsView(
                   title: '',
-                  initialTargetType: 2,
+                  initialTargetType: admin_enum
+                      .ContentReportTargetType
+                      .CONTENT_REPORT_TARGET_TYPE_USER,
                   initialTargetUserId: user.id,
                   initialScope: admin_enum
                       .ContentReportScope
-                      .CONTENT_REPORT_SCOPE_TARGET_USER
-                      .value,
+                      .CONTENT_REPORT_SCOPE_TARGET_USER,
                   showTargetTypeTabs: false,
                 ),
                 ContentReportsView(
@@ -1273,13 +1276,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   itemCount: _users.length,
                   itemBuilder: (context, index) {
                     final user = _users[index];
-                    final isAdmin =
-                        user.role ==
-                            common_enum.UserRole.USER_ROLE_ADMIN.value ||
-                        user.role == common_enum.UserRole.USER_ROLE_ROOT.value;
+                    final isAdmin = user.role.hasSystemAdminPrivileges;
                     final isBanned =
                         user.status ==
-                        common_enum.UserStatus.USER_STATUS_BANNED.value;
+                        common_enum.UserStatus.USER_STATUS_BANNED;
 
                     return _AdminPanelCard(
                       isDark: isDark,
@@ -1362,12 +1362,13 @@ class _UserManagementTabState extends State<UserManagementTab> {
                                   title: context.l10n.userReports(
                                     user.username,
                                   ),
-                                  targetType: 2,
+                                  targetType: admin_enum
+                                      .ContentReportTargetType
+                                      .CONTENT_REPORT_TARGET_TYPE_USER,
                                   targetUserId: user.id,
                                   scope: admin_enum
                                       .ContentReportScope
-                                      .CONTENT_REPORT_SCOPE_TARGET_USER
-                                      .value,
+                                      .CONTENT_REPORT_SCOPE_TARGET_USER,
                                 ),
                               ),
                               AppIconButton(

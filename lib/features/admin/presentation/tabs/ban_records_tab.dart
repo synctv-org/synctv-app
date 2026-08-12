@@ -9,7 +9,8 @@ class AdminBanRecordsTab extends StatefulWidget {
 
 class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
   bool _isLoading = true;
-  int _targetType = 0;
+  admin_enum.BanTargetType _targetType =
+      admin_enum.BanTargetType.BAN_TARGET_TYPE_UNSPECIFIED;
   bool? _active = true;
   String _search = '';
   String _userId = '';
@@ -78,7 +79,8 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
   }
 
   Future<void> _unbanRecord(AdminBanRecord record) async {
-    final isUserBan = record.targetType == 1;
+    final isUserBan =
+        record.targetType == admin_enum.BanTargetType.BAN_TARGET_TYPE_USER;
     final targetName = isUserBan
         ? (record.username.isEmpty ? record.userId : record.username)
         : (record.roomName.isEmpty ? record.roomId : record.roomName);
@@ -140,12 +142,15 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
             spacing: 12,
             runSpacing: 12,
             children: [
-              AppSelect<int>(
+              AppSelect<admin_enum.BanTargetType>(
                 value: _targetType,
                 options: {
-                  context.l10n.allTargets: 0,
-                  context.l10n.users: 1,
-                  context.l10n.rooms: 2,
+                  context.l10n.allTargets:
+                      admin_enum.BanTargetType.BAN_TARGET_TYPE_UNSPECIFIED,
+                  context.l10n.users:
+                      admin_enum.BanTargetType.BAN_TARGET_TYPE_USER,
+                  context.l10n.rooms:
+                      admin_enum.BanTargetType.BAN_TARGET_TYPE_ROOM,
                 },
                 onChanged: (value) {
                   if (value == null) return;
@@ -249,7 +254,9 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
                   itemCount: _records.length,
                   itemBuilder: (context, index) {
                     final record = _records[index];
-                    final target = record.targetType == 1
+                    final target =
+                        record.targetType ==
+                            admin_enum.BanTargetType.BAN_TARGET_TYPE_USER
                         ? '${record.username} (${record.userId})'
                         : '${record.roomName} (${record.roomId})';
                     return _AdminPanelCard(

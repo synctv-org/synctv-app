@@ -2,6 +2,8 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
@@ -16,7 +18,7 @@ void main() {
       };
 
       final config = SourceConfigCodec.mediaSourceConfigFromMap(
-        sourceProvider: 'nextcloud',
+        sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_NEXTCLOUD,
         sourceConfig: json,
       )!;
 
@@ -46,7 +48,7 @@ void main() {
 
       for (final source in sources) {
         final config = SourceConfigCodec.playlistSourceConfigFromMap(
-          sourceProvider: 'nextcloud',
+          sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_NEXTCLOUD,
           sourceConfig: source,
         )!;
         expect(
