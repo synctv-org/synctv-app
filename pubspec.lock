@@ -1391,7 +1391,7 @@ packages:
     source: hosted
     version: "0.5.2"
   window_to_front:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: window_to_front
       sha256: "14fad8984db4415e2eeb30b04bb77140b180e260d6cb66b26de126a8657a9241"

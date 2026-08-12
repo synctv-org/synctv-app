@@ -1,9 +1,10 @@
 # OAuth2 callback configuration
 
-Android, Windows, and Linux run OAuth2 sessions through `flutter_web_auth_2`.
-iOS and macOS use a small app-owned bridge to AuthenticationServices so the
-app can cancel an `ASWebAuthenticationSession` when its three-minute deadline
-expires.
+Android runs OAuth2 sessions through `flutter_web_auth_2`. iOS and macOS use a
+small app-owned bridge to AuthenticationServices so the app can cancel an
+`ASWebAuthenticationSession` when its three-minute deadline expires.
+AuthenticationServices retains the Apple-platform browser session and delivers
+the matching HTTPS callback directly to the app.
 
 Windows and Linux open the system browser and use a temporary loopback
 callback URL:
@@ -12,10 +13,11 @@ callback URL:
 http://127.0.0.1:{port}/oauth2/callback
 ```
 
-The package owns the loopback HTTP listener. SyncTV probes an available port,
-passes the resulting redirect URL to the backend, and retries the complete
-authorization start when another process claims that port before the listener
-starts.
+SyncTV binds the loopback HTTP listener before requesting the provider's
+authorization URL and retains it for the complete authorization flow. This
+removes the port race between choosing a callback URL and receiving the browser
+redirect. SyncTV closes the listener on completion or failure and brings the
+desktop window to the foreground after a valid callback.
 
 Browser-based OAuth authorization on Android, iOS, and macOS uses an HTTPS
 callback. Android opens an AndroidX Auth Tab. iOS and macOS open
