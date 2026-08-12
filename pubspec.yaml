@@ -97,10 +97,6 @@ dependency_overrides:
 flutter_launcher_icons:
   android: true
   image_path: "assets/icon/logo-notext.png"
-  adaptive_icon_background: "#8788FE"
-  adaptive_icon_foreground: "assets/icon/logo-adaptive-foreground.png"
-  adaptive_icon_monochrome: "assets/icon/logo-adaptive-foreground.png"
-  adaptive_icon_foreground_inset: 12
   min_sdk_android: 21
   windows:
     generate: true

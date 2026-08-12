@@ -123,7 +123,7 @@ void main() {
     }
   });
 
-  test('Android launcher uses adaptive and monochrome icon resources', () {
+  test('Android launcher uses the designer-provided SyncTV icon directly', () {
     const androidNamespace = 'http://schemas.android.com/apk/res/android';
     final manifest = XmlDocument.parse(
       File('android/app/src/main/AndroidManifest.xml').readAsStringSync(),
@@ -138,35 +138,22 @@ void main() {
       '@mipmap/ic_launcher',
     );
 
-    final adaptiveIcon = XmlDocument.parse(
+    final launcherConfig = File('pubspec.yaml').readAsStringSync();
+    expect(
+      launcherConfig,
+      contains('image_path: "assets/icon/logo-notext.png"'),
+    );
+    expect(launcherConfig, isNot(contains('adaptive_icon_')));
+    expect(
       File(
         'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
-      ).readAsStringSync(),
+      ).existsSync(),
+      isFalse,
     );
-    expect(adaptiveIcon.rootElement.name.local, 'adaptive-icon');
     expect(
-      adaptiveIcon
-          .findAllElements('background')
-          .single
-          .getAttribute('drawable', namespaceUri: androidNamespace),
-      '@color/ic_launcher_background',
+      File('assets/icon/logo-adaptive-foreground.png').existsSync(),
+      isFalse,
     );
-
-    for (final layer in ['foreground', 'monochrome']) {
-      final inset = adaptiveIcon
-          .findAllElements(layer)
-          .single
-          .findElements('inset')
-          .single;
-      expect(
-        inset.getAttribute('drawable', namespaceUri: androidNamespace),
-        '@drawable/ic_launcher_$layer',
-      );
-      expect(
-        inset.getAttribute('inset', namespaceUri: androidNamespace),
-        '12%',
-      );
-    }
 
     for (final density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) {
       for (final layer in ['foreground', 'monochrome']) {
@@ -175,7 +162,7 @@ void main() {
             'android/app/src/main/res/drawable-$density/'
             'ic_launcher_$layer.png',
           ).existsSync(),
-          isTrue,
+          isFalse,
         );
       }
       expect(
