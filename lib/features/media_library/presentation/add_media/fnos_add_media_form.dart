@@ -29,7 +29,8 @@ typedef FnosMediaItemLoader =
     Future<FnosMediaListPage> Function(
       FnosBindInfo bind,
       FnosMediaCollection collection,
-      String ancestorGuid,
+      String libraryGuid,
+      String parentGuid,
       int page,
       int pageSize,
       String search,
@@ -76,7 +77,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   List<FnosMediaLibraryInfo> _libraries = const [];
   FnosMediaLibraryInfo? _library;
   FnosMediaCollection _collection = FnosMediaCollection.library;
-  final List<(String, String)> _mediaPath = [];
+  final List<(String, String, String)> _mediaPath = [];
   List<FnosMediaItemInfo> _mediaItems = const [];
   final Set<String> _mutatingItems = {};
   provider_common.DiscoveredSource? _listSource;
@@ -533,13 +534,15 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
               _listSource = null;
             });
           } else {
-            final ancestorGuid =
-                _mediaPath.lastOrNull?.$1 ?? _library?.guid ?? '';
+            final libraryGuid =
+                _mediaPath.lastOrNull?.$3 ?? _library?.guid ?? '';
+            final parentGuid = _mediaPath.lastOrNull?.$1 ?? '';
             final result =
                 await (widget.mediaItemLoader?.call(
                       bind,
                       _collection,
-                      ancestorGuid,
+                      libraryGuid,
+                      parentGuid,
                       _page,
                       _pageSize,
                       _searchController.text,
@@ -547,7 +550,8 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
                     providerGateway.listFnosMediaItems(
                       bind.serverId,
                       collection: _collection,
-                      ancestorGuid: ancestorGuid,
+                      libraryGuid: libraryGuid,
+                      parentGuid: parentGuid,
                       page: _page,
                       pageSize: _pageSize,
                       search: _searchController.text,
@@ -601,7 +605,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
 
   void _openMediaFolder(FnosMediaItemInfo item) {
     setState(() {
-      _mediaPath.add((item.guid, item.title));
+      _mediaPath.add((item.guid, item.title, item.libraryGuid));
       _page = 1;
     });
     _load();

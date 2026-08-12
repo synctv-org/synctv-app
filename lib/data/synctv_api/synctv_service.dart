@@ -1757,16 +1757,18 @@ class SyncTvService {
   static Future<FnosMediaListPage> listFnosMediaItems(
     String serverId, {
     FnosMediaCollection collection = FnosMediaCollection.library,
-    String ancestorGuid = '',
+    String libraryGuid = '',
+    String parentGuid = '',
     int page = 1,
     int pageSize = 50,
-    List<String> mediaTypes = const ['Movie', 'TV', 'Directory', 'Video'],
+    List<String> mediaTypes = const [],
     String search = '',
     String instanceName = '',
   }) => _domains.providers.listFnosMediaItems(
     serverId,
     collection: collection,
-    ancestorGuid: ancestorGuid,
+    libraryGuid: libraryGuid,
+    parentGuid: parentGuid,
     page: page,
     pageSize: pageSize,
     mediaTypes: mediaTypes,

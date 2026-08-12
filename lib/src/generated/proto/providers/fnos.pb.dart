@@ -859,22 +859,24 @@ class ListMediaItemsRequest extends $pb.GeneratedMessage {
   factory ListMediaItemsRequest({
     $core.String? serverId,
     MediaCollection? collection,
-    $core.String? ancestorGuid,
+    $core.String? libraryGuid,
     $core.int? page,
     $core.int? pageSize,
     $core.Iterable<$core.String>? mediaTypes,
     $core.String? search,
     $core.String? instanceName,
+    $core.String? parentGuid,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (collection != null) result.collection = collection;
-    if (ancestorGuid != null) result.ancestorGuid = ancestorGuid;
+    if (libraryGuid != null) result.libraryGuid = libraryGuid;
     if (page != null) result.page = page;
     if (pageSize != null) result.pageSize = pageSize;
     if (mediaTypes != null) result.mediaTypes.addAll(mediaTypes);
     if (search != null) result.search = search;
     if (instanceName != null) result.instanceName = instanceName;
+    if (parentGuid != null) result.parentGuid = parentGuid;
     return result;
   }
 
@@ -895,12 +897,13 @@ class ListMediaItemsRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aE<MediaCollection>(2, _omitFieldNames ? '' : 'collection',
         enumValues: MediaCollection.values)
-    ..aOS(3, _omitFieldNames ? '' : 'ancestorGuid')
+    ..aOS(3, _omitFieldNames ? '' : 'libraryGuid')
     ..aI(4, _omitFieldNames ? '' : 'page', fieldType: $pb.PbFieldType.OU3)
     ..aI(5, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
     ..pPS(6, _omitFieldNames ? '' : 'mediaTypes')
     ..aOS(7, _omitFieldNames ? '' : 'search')
     ..aOS(8, _omitFieldNames ? '' : 'instanceName')
+    ..aOS(9, _omitFieldNames ? '' : 'parentGuid')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -942,13 +945,13 @@ class ListMediaItemsRequest extends $pb.GeneratedMessage {
   void clearCollection() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get ancestorGuid => $_getSZ(2);
+  $core.String get libraryGuid => $_getSZ(2);
   @$pb.TagNumber(3)
-  set ancestorGuid($core.String value) => $_setString(2, value);
+  set libraryGuid($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasAncestorGuid() => $_has(2);
+  $core.bool hasLibraryGuid() => $_has(2);
   @$pb.TagNumber(3)
-  void clearAncestorGuid() => $_clearField(3);
+  void clearLibraryGuid() => $_clearField(3);
 
   @$pb.TagNumber(4)
   $core.int get page => $_getIZ(3);
@@ -988,6 +991,15 @@ class ListMediaItemsRequest extends $pb.GeneratedMessage {
   $core.bool hasInstanceName() => $_has(7);
   @$pb.TagNumber(8)
   void clearInstanceName() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get parentGuid => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set parentGuid($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasParentGuid() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearParentGuid() => $_clearField(9);
 }
 
 class ListMediaItemsResponse extends $pb.GeneratedMessage {
@@ -1111,6 +1123,7 @@ class MediaItem extends $pb.GeneratedMessage {
     $core.bool? isPlayable,
     $core.bool? favorite,
     $0.DiscoveredSource? source,
+    $core.String? libraryGuid,
   }) {
     final result = create();
     if (guid != null) result.guid = guid;
@@ -1129,6 +1142,7 @@ class MediaItem extends $pb.GeneratedMessage {
     if (isPlayable != null) result.isPlayable = isPlayable;
     if (favorite != null) result.favorite = favorite;
     if (source != null) result.source = source;
+    if (libraryGuid != null) result.libraryGuid = libraryGuid;
     return result;
   }
 
@@ -1169,6 +1183,7 @@ class MediaItem extends $pb.GeneratedMessage {
     ..aOB(15, _omitFieldNames ? '' : 'favorite')
     ..aOM<$0.DiscoveredSource>(16, _omitFieldNames ? '' : 'source',
         subBuilder: $0.DiscoveredSource.create)
+    ..aOS(17, _omitFieldNames ? '' : 'libraryGuid')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1334,6 +1349,15 @@ class MediaItem extends $pb.GeneratedMessage {
   void clearSource() => $_clearField(16);
   @$pb.TagNumber(16)
   $0.DiscoveredSource ensureSource() => $_ensure(15);
+
+  @$pb.TagNumber(17)
+  $core.String get libraryGuid => $_getSZ(16);
+  @$pb.TagNumber(17)
+  set libraryGuid($core.String value) => $_setString(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasLibraryGuid() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearLibraryGuid() => $_clearField(17);
 }
 
 class SetFavoriteRequest extends $pb.GeneratedMessage {

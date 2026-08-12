@@ -264,6 +264,7 @@ class FnosMediaItemInfo {
   final String poster;
   final String mediaGuid;
   final String parentGuid;
+  final String libraryGuid;
   final String overview;
   final int durationSeconds;
   final int progressSeconds;
@@ -282,6 +283,7 @@ class FnosMediaItemInfo {
     required this.poster,
     required this.mediaGuid,
     required this.parentGuid,
+    required this.libraryGuid,
     required this.overview,
     required this.durationSeconds,
     required this.progressSeconds,

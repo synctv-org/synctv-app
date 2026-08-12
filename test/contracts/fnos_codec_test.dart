@@ -51,7 +51,8 @@ void main() {
       const json = {
         'serverId': 'nas-home',
         'type': 'mediaLibrary',
-        'ancestorGuid': 'library-guid',
+        'libraryGuid': 'library-guid',
+        'parentGuid': 'folder-guid',
         'mediaTypes': ['Movie', 'TV'],
       };
 
@@ -95,6 +96,7 @@ void main() {
             mediaItem: client.FnosMediaItemTarget(
               itemGuid: 'item-guid',
               mediaGuid: 'media-guid',
+              libraryGuid: 'library-guid',
             ),
           ),
         ),

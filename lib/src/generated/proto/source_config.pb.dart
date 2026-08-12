@@ -6356,12 +6356,14 @@ class FnosFilesPlaylistSourceConfig extends $pb.GeneratedMessage {
 
 class FnosMediaLibraryPlaylistSourceConfig extends $pb.GeneratedMessage {
   factory FnosMediaLibraryPlaylistSourceConfig({
-    $core.String? ancestorGuid,
+    $core.String? libraryGuid,
     $core.Iterable<$core.String>? mediaTypes,
+    $core.String? parentGuid,
   }) {
     final result = create();
-    if (ancestorGuid != null) result.ancestorGuid = ancestorGuid;
+    if (libraryGuid != null) result.libraryGuid = libraryGuid;
     if (mediaTypes != null) result.mediaTypes.addAll(mediaTypes);
+    if (parentGuid != null) result.parentGuid = parentGuid;
     return result;
   }
 
@@ -6380,8 +6382,9 @@ class FnosMediaLibraryPlaylistSourceConfig extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.source_config'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'ancestorGuid')
+    ..aOS(1, _omitFieldNames ? '' : 'libraryGuid')
     ..pPS(2, _omitFieldNames ? '' : 'mediaTypes')
+    ..aOS(3, _omitFieldNames ? '' : 'parentGuid')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6408,16 +6411,25 @@ class FnosMediaLibraryPlaylistSourceConfig extends $pb.GeneratedMessage {
   static FnosMediaLibraryPlaylistSourceConfig? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get ancestorGuid => $_getSZ(0);
+  $core.String get libraryGuid => $_getSZ(0);
   @$pb.TagNumber(1)
-  set ancestorGuid($core.String value) => $_setString(0, value);
+  set libraryGuid($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasAncestorGuid() => $_has(0);
+  $core.bool hasLibraryGuid() => $_has(0);
   @$pb.TagNumber(1)
-  void clearAncestorGuid() => $_clearField(1);
+  void clearLibraryGuid() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $pb.PbList<$core.String> get mediaTypes => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.String get parentGuid => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set parentGuid($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasParentGuid() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearParentGuid() => $_clearField(3);
 }
 
 class FnosFavoritesPlaylistSourceConfig extends $pb.GeneratedMessage {

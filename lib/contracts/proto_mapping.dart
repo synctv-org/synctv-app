@@ -367,6 +367,7 @@ client.ProviderTarget providerTargetFromJson(Map<String, dynamic> json) {
             mediaItem: client.FnosMediaItemTarget(
               itemGuid: itemGuid,
               mediaGuid: json['mediaGuid']?.toString(),
+              libraryGuid: json['libraryGuid']?.toString(),
             ),
           );
         }
@@ -497,6 +498,8 @@ Map<String, dynamic> providerTargetToJson(client.ProviderTarget target) {
         'itemGuid': target.fnos.mediaItem.itemGuid,
         if (target.fnos.mediaItem.hasMediaGuid())
           'mediaGuid': target.fnos.mediaItem.mediaGuid,
+        if (target.fnos.mediaItem.hasLibraryGuid())
+          'libraryGuid': target.fnos.mediaItem.libraryGuid,
       },
       client.FnosTarget_Target.notSet => <String, dynamic>{},
     },

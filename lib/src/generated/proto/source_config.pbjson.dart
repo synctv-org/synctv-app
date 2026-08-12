@@ -2264,28 +2264,30 @@ final $typed_data.Uint8List fnosFilesPlaylistSourceConfigDescriptor =
 const FnosMediaLibraryPlaylistSourceConfig$json = {
   '1': 'FnosMediaLibraryPlaylistSourceConfig',
   '2': [
+    {'1': 'library_guid', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'libraryGuid'},
+    {'1': 'media_types', '3': 2, '4': 3, '5': 9, '10': 'mediaTypes'},
     {
-      '1': 'ancestor_guid',
-      '3': 1,
+      '1': 'parent_guid',
+      '3': 3,
       '4': 1,
       '5': 9,
       '9': 0,
-      '10': 'ancestorGuid',
+      '10': 'parentGuid',
       '17': true
     },
-    {'1': 'media_types', '3': 2, '4': 3, '5': 9, '10': 'mediaTypes'},
   ],
   '8': [
-    {'1': '_ancestor_guid'},
+    {'1': '_parent_guid'},
   ],
 };
 
 /// Descriptor for `FnosMediaLibraryPlaylistSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List fnosMediaLibraryPlaylistSourceConfigDescriptor =
     $convert.base64Decode(
-        'CiRGbm9zTWVkaWFMaWJyYXJ5UGxheWxpc3RTb3VyY2VDb25maWcSKAoNYW5jZXN0b3JfZ3VpZB'
-        'gBIAEoCUgAUgxhbmNlc3Rvckd1aWSIAQESHwoLbWVkaWFfdHlwZXMYAiADKAlSCm1lZGlhVHlw'
-        'ZXNCEAoOX2FuY2VzdG9yX2d1aWQ=');
+        'CiRGbm9zTWVkaWFMaWJyYXJ5UGxheWxpc3RTb3VyY2VDb25maWcSKgoMbGlicmFyeV9ndWlkGA'
+        'EgASgJQge6SARyAhABUgtsaWJyYXJ5R3VpZBIfCgttZWRpYV90eXBlcxgCIAMoCVIKbWVkaWFU'
+        'eXBlcxIkCgtwYXJlbnRfZ3VpZBgDIAEoCUgAUgpwYXJlbnRHdWlkiAEBQg4KDF9wYXJlbnRfZ3'
+        'VpZA==');
 
 @$core.Deprecated('Use fnosFavoritesPlaylistSourceConfigDescriptor instead')
 const FnosFavoritesPlaylistSourceConfig$json = {

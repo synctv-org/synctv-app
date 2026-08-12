@@ -66,7 +66,7 @@ void main() {
                 posterType: 0,
               ),
             ],
-            mediaItemLoader: (_, collection, _, page, _, search) async {
+            mediaItemLoader: (_, collection, _, _, page, _, search) async {
               loadedCollection = collection;
               mediaSearch = search;
               return FnosMediaListPage(
@@ -78,6 +78,7 @@ void main() {
                     poster: '',
                     mediaGuid: 'media',
                     parentGuid: 'library',
+                    libraryGuid: 'library',
                     overview: '',
                     durationSeconds: 100,
                     progressSeconds: 100,

@@ -1170,10 +1170,12 @@ class FnosMediaItemTarget extends $pb.GeneratedMessage {
   factory FnosMediaItemTarget({
     $core.String? itemGuid,
     $core.String? mediaGuid,
+    $core.String? libraryGuid,
   }) {
     final result = create();
     if (itemGuid != null) result.itemGuid = itemGuid;
     if (mediaGuid != null) result.mediaGuid = mediaGuid;
+    if (libraryGuid != null) result.libraryGuid = libraryGuid;
     return result;
   }
 
@@ -1192,6 +1194,7 @@ class FnosMediaItemTarget extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'itemGuid')
     ..aOS(2, _omitFieldNames ? '' : 'mediaGuid')
+    ..aOS(3, _omitFieldNames ? '' : 'libraryGuid')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1230,6 +1233,15 @@ class FnosMediaItemTarget extends $pb.GeneratedMessage {
   $core.bool hasMediaGuid() => $_has(1);
   @$pb.TagNumber(2)
   void clearMediaGuid() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get libraryGuid => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set libraryGuid($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLibraryGuid() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLibraryGuid() => $_clearField(3);
 }
 
 enum FnosTarget_Target { file, mediaItem, notSet }
@@ -27489,6 +27501,7 @@ enum ServerMessage_Message {
   resourceObserved,
   resourceEvent,
   resourceObserveError,
+  termination,
   notSet
 }
 
@@ -27500,6 +27513,7 @@ class ServerMessage extends $pb.GeneratedMessage {
     ResourceObserved? resourceObserved,
     ResourceEvent? resourceEvent,
     ResourceObserveError? resourceObserveError,
+    RealtimeTermination? termination,
   }) {
     final result = create();
     if (heartbeatAck != null) result.heartbeatAck = heartbeatAck;
@@ -27509,6 +27523,7 @@ class ServerMessage extends $pb.GeneratedMessage {
     if (resourceEvent != null) result.resourceEvent = resourceEvent;
     if (resourceObserveError != null)
       result.resourceObserveError = resourceObserveError;
+    if (termination != null) result.termination = termination;
     return result;
   }
 
@@ -27529,13 +27544,14 @@ class ServerMessage extends $pb.GeneratedMessage {
     29: ServerMessage_Message.resourceObserved,
     30: ServerMessage_Message.resourceEvent,
     31: ServerMessage_Message.resourceObserveError,
+    32: ServerMessage_Message.termination,
     0: ServerMessage_Message.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ServerMessage',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [6, 7, 24, 29, 30, 31])
+    ..oo(0, [6, 7, 24, 29, 30, 31, 32])
     ..aOM<HeartbeatAck>(6, _omitFieldNames ? '' : 'heartbeatAck',
         subBuilder: HeartbeatAck.create)
     ..aOM<ErrorMessage>(7, _omitFieldNames ? '' : 'error',
@@ -27549,6 +27565,8 @@ class ServerMessage extends $pb.GeneratedMessage {
     ..aOM<ResourceObserveError>(
         31, _omitFieldNames ? '' : 'resourceObserveError',
         subBuilder: ResourceObserveError.create)
+    ..aOM<RealtimeTermination>(32, _omitFieldNames ? '' : 'termination',
+        subBuilder: RealtimeTermination.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -27576,6 +27594,7 @@ class ServerMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(29)
   @$pb.TagNumber(30)
   @$pb.TagNumber(31)
+  @$pb.TagNumber(32)
   ServerMessage_Message whichMessage() =>
       _ServerMessage_MessageByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(6)
@@ -27584,6 +27603,7 @@ class ServerMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(29)
   @$pb.TagNumber(30)
   @$pb.TagNumber(31)
+  @$pb.TagNumber(32)
   void clearMessage() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(6)
@@ -27652,6 +27672,89 @@ class ServerMessage extends $pb.GeneratedMessage {
   void clearResourceObserveError() => $_clearField(31);
   @$pb.TagNumber(31)
   ResourceObserveError ensureResourceObserveError() => $_ensure(5);
+
+  /// Terminal realtime state change sent immediately before the stream closes.
+  /// Clients can classify an intentional server-side disconnect without
+  /// relying on the transport close frame or a localized error string.
+  @$pb.TagNumber(32)
+  RealtimeTermination get termination => $_getN(6);
+  @$pb.TagNumber(32)
+  set termination(RealtimeTermination value) => $_setField(32, value);
+  @$pb.TagNumber(32)
+  $core.bool hasTermination() => $_has(6);
+  @$pb.TagNumber(32)
+  void clearTermination() => $_clearField(32);
+  @$pb.TagNumber(32)
+  RealtimeTermination ensureTermination() => $_ensure(6);
+}
+
+class RealtimeTermination extends $pb.GeneratedMessage {
+  factory RealtimeTermination({
+    $core.String? message,
+    RealtimeTerminationCode? code,
+  }) {
+    final result = create();
+    if (message != null) result.message = message;
+    if (code != null) result.code = code;
+    return result;
+  }
+
+  RealtimeTermination._();
+
+  factory RealtimeTermination.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RealtimeTermination.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RealtimeTermination',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'message')
+    ..aE<RealtimeTerminationCode>(2, _omitFieldNames ? '' : 'code',
+        enumValues: RealtimeTerminationCode.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RealtimeTermination clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RealtimeTermination copyWith(void Function(RealtimeTermination) updates) =>
+      super.copyWith((message) => updates(message as RealtimeTermination))
+          as RealtimeTermination;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RealtimeTermination create() => RealtimeTermination._();
+  @$core.override
+  RealtimeTermination createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RealtimeTermination getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RealtimeTermination>(create);
+  static RealtimeTermination? _defaultInstance;
+
+  /// User-facing explanation of why the realtime stream is ending.
+  @$pb.TagNumber(1)
+  $core.String get message => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set message($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMessage() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMessage() => $_clearField(1);
+
+  /// Stable machine-readable realtime termination category.
+  @$pb.TagNumber(2)
+  RealtimeTerminationCode get code => $_getN(1);
+  @$pb.TagNumber(2)
+  set code(RealtimeTerminationCode value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCode() => $_clearField(2);
 }
 
 class ResourceObserved extends $pb.GeneratedMessage {

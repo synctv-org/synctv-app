@@ -614,6 +614,34 @@ final $typed_data.Uint8List resourceDeliveryModeDescriptor = $convert.base64Deco
     'lGSUVEEAASJgoiUkVTT1VSQ0VfREVMSVZFUllfTU9ERV9OT1RJRllfT05MWRABEigKJFJFU09V'
     'UkNFX0RFTElWRVJZX01PREVfUFVTSF9TTkFQU0hPVBAC');
 
+@$core.Deprecated('Use realtimeTerminationCodeDescriptor instead')
+const RealtimeTerminationCode$json = {
+  '1': 'RealtimeTerminationCode',
+  '2': [
+    {'1': 'REALTIME_TERMINATION_CODE_UNSPECIFIED', '2': 0},
+    {'1': 'REALTIME_TERMINATION_CODE_CONNECTION_REVOKED', '2': 1},
+    {'1': 'REALTIME_TERMINATION_CODE_USER_ACCESS_REVOKED', '2': 2},
+    {'1': 'REALTIME_TERMINATION_CODE_ROOM_ACCESS_REVOKED', '2': 3},
+    {'1': 'REALTIME_TERMINATION_CODE_ROOM_MEMBERSHIP_REVOKED', '2': 4},
+    {'1': 'REALTIME_TERMINATION_CODE_GUEST_ACCESS_REVOKED', '2': 5},
+    {'1': 'REALTIME_TERMINATION_CODE_ROOM_DELETED', '2': 6},
+    {'1': 'REALTIME_TERMINATION_CODE_ROOM_BANNED', '2': 7},
+    {'1': 'REALTIME_TERMINATION_CODE_ROOM_OWNER_INACTIVE', '2': 8},
+  ],
+};
+
+/// Descriptor for `RealtimeTerminationCode`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List realtimeTerminationCodeDescriptor = $convert.base64Decode(
+    'ChdSZWFsdGltZVRlcm1pbmF0aW9uQ29kZRIpCiVSRUFMVElNRV9URVJNSU5BVElPTl9DT0RFX1'
+    'VOU1BFQ0lGSUVEEAASMAosUkVBTFRJTUVfVEVSTUlOQVRJT05fQ09ERV9DT05ORUNUSU9OX1JF'
+    'Vk9LRUQQARIxCi1SRUFMVElNRV9URVJNSU5BVElPTl9DT0RFX1VTRVJfQUNDRVNTX1JFVk9LRU'
+    'QQAhIxCi1SRUFMVElNRV9URVJNSU5BVElPTl9DT0RFX1JPT01fQUNDRVNTX1JFVk9LRUQQAxI1'
+    'CjFSRUFMVElNRV9URVJNSU5BVElPTl9DT0RFX1JPT01fTUVNQkVSU0hJUF9SRVZPS0VEEAQSMg'
+    'ouUkVBTFRJTUVfVEVSTUlOQVRJT05fQ09ERV9HVUVTVF9BQ0NFU1NfUkVWT0tFRBAFEioKJlJF'
+    'QUxUSU1FX1RFUk1JTkFUSU9OX0NPREVfUk9PTV9ERUxFVEVEEAYSKQolUkVBTFRJTUVfVEVSTU'
+    'lOQVRJT05fQ09ERV9ST09NX0JBTk5FRBAHEjEKLVJFQUxUSU1FX1RFUk1JTkFUSU9OX0NPREVf'
+    'Uk9PTV9PV05FUl9JTkFDVElWRRAI');
+
 @$core.Deprecated('Use chatMessageStatusDescriptor instead')
 const ChatMessageStatus$json = {
   '1': 'ChatMessageStatus',
@@ -1225,16 +1253,27 @@ const FnosMediaItemTarget$json = {
       '10': 'mediaGuid',
       '17': true
     },
+    {
+      '1': 'library_guid',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'libraryGuid',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_media_guid'},
+    {'1': '_library_guid'},
   ],
 };
 
 /// Descriptor for `FnosMediaItemTarget`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List fnosMediaItemTargetDescriptor = $convert.base64Decode(
     'ChNGbm9zTWVkaWFJdGVtVGFyZ2V0EhsKCWl0ZW1fZ3VpZBgBIAEoCVIIaXRlbUd1aWQSIgoKbW'
-    'VkaWFfZ3VpZBgCIAEoCUgAUgltZWRpYUd1aWSIAQFCDQoLX21lZGlhX2d1aWQ=');
+    'VkaWFfZ3VpZBgCIAEoCUgAUgltZWRpYUd1aWSIAQESJgoMbGlicmFyeV9ndWlkGAMgASgJSAFS'
+    'C2xpYnJhcnlHdWlkiAEBQg0KC19tZWRpYV9ndWlkQg8KDV9saWJyYXJ5X2d1aWQ=');
 
 @$core.Deprecated('Use fnosTargetDescriptor instead')
 const FnosTarget$json = {
@@ -11253,6 +11292,15 @@ const ServerMessage$json = {
       '9': 0,
       '10': 'resourceObserveError'
     },
+    {
+      '1': 'termination',
+      '3': 32,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.RealtimeTermination',
+      '9': 0,
+      '10': 'termination'
+    },
   ],
   '8': [
     {'1': 'message'},
@@ -11269,7 +11317,31 @@ final $typed_data.Uint8List serverMessageDescriptor = $convert.base64Decode(
     'NlT2JzZXJ2ZWQSRQoOcmVzb3VyY2VfZXZlbnQYHiABKAsyHC5zeW5jdHYuY2xpZW50LlJlc291'
     'cmNlRXZlbnRIAFINcmVzb3VyY2VFdmVudBJbChZyZXNvdXJjZV9vYnNlcnZlX2Vycm9yGB8gAS'
     'gLMiMuc3luY3R2LmNsaWVudC5SZXNvdXJjZU9ic2VydmVFcnJvckgAUhRyZXNvdXJjZU9ic2Vy'
-    'dmVFcnJvckIJCgdtZXNzYWdl');
+    'dmVFcnJvchJGCgt0ZXJtaW5hdGlvbhggIAEoCzIiLnN5bmN0di5jbGllbnQuUmVhbHRpbWVUZX'
+    'JtaW5hdGlvbkgAUgt0ZXJtaW5hdGlvbkIJCgdtZXNzYWdl');
+
+@$core.Deprecated('Use realtimeTerminationDescriptor instead')
+const RealtimeTermination$json = {
+  '1': 'RealtimeTermination',
+  '2': [
+    {'1': 'message', '3': 1, '4': 1, '5': 9, '10': 'message'},
+    {
+      '1': 'code',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.RealtimeTerminationCode',
+      '8': {},
+      '10': 'code'
+    },
+  ],
+};
+
+/// Descriptor for `RealtimeTermination`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List realtimeTerminationDescriptor = $convert.base64Decode(
+    'ChNSZWFsdGltZVRlcm1pbmF0aW9uEhgKB21lc3NhZ2UYASABKAlSB21lc3NhZ2USRAoEY29kZR'
+    'gCIAEoDjImLnN5bmN0di5jbGllbnQuUmVhbHRpbWVUZXJtaW5hdGlvbkNvZGVCCLpIBYIBAhAB'
+    'UgRjb2Rl');
 
 @$core.Deprecated('Use resourceObservedDescriptor instead')
 const ResourceObserved$json = {
@@ -20563,6 +20635,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       ListPlaybackHistoryResponse$json,
   '.synctv.client.PlaybackHistoryEntry': PlaybackHistoryEntry$json,
   '.synctv.client.ResourceObserveError': ResourceObserveError$json,
+  '.synctv.client.RealtimeTermination': RealtimeTermination$json,
   '.synctv.client.WatchPlaybackStateRequest': WatchPlaybackStateRequest$json,
   '.synctv.client.WatchPlaybackStateEvent': WatchPlaybackStateEvent$json,
   '.synctv.client.WatchPlaybackRequest': WatchPlaybackRequest$json,

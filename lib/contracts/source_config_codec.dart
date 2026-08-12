@@ -1717,8 +1717,9 @@ class SourceConfigCodec {
         serverId: serverId,
         proxyMode: _playbackProxyModeFromValue(config['proxyMode']),
         mediaLibrary: source_config.FnosMediaLibraryPlaylistSourceConfig(
-          ancestorGuid: _optionalString(config['ancestorGuid']),
+          libraryGuid: _string(config['libraryGuid']),
           mediaTypes: _stringList(config['mediaTypes']),
+          parentGuid: _optionalString(config['parentGuid']),
         ),
       ),
       'favorites' => source_config.FnosPlaylistSourceConfig(
@@ -1750,8 +1751,9 @@ class SourceConfigCodec {
       source_config.FnosPlaylistSourceConfig_Source.mediaLibrary => {
         'serverId': config.serverId,
         'type': 'mediaLibrary',
-        if (config.mediaLibrary.hasAncestorGuid())
-          'ancestorGuid': config.mediaLibrary.ancestorGuid,
+        'libraryGuid': config.mediaLibrary.libraryGuid,
+        if (config.mediaLibrary.hasParentGuid())
+          'parentGuid': config.mediaLibrary.parentGuid,
         if (config.mediaLibrary.mediaTypes.isNotEmpty)
           'mediaTypes': config.mediaLibrary.mediaTypes.toList(),
         ..._playbackProxyModeMap(config.proxyMode),

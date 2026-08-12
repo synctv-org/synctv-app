@@ -1017,6 +1017,74 @@ class ResourceDeliveryMode extends $pb.ProtobufEnum {
   const ResourceDeliveryMode._(super.value, super.name);
 }
 
+class RealtimeTerminationCode extends $pb.ProtobufEnum {
+  static const RealtimeTerminationCode REALTIME_TERMINATION_CODE_UNSPECIFIED =
+      RealtimeTerminationCode._(
+          0, _omitEnumNames ? '' : 'REALTIME_TERMINATION_CODE_UNSPECIFIED');
+  static const RealtimeTerminationCode
+      REALTIME_TERMINATION_CODE_CONNECTION_REVOKED = RealtimeTerminationCode._(
+          1,
+          _omitEnumNames ? '' : 'REALTIME_TERMINATION_CODE_CONNECTION_REVOKED');
+  static const RealtimeTerminationCode
+      REALTIME_TERMINATION_CODE_USER_ACCESS_REVOKED = RealtimeTerminationCode._(
+          2,
+          _omitEnumNames
+              ? ''
+              : 'REALTIME_TERMINATION_CODE_USER_ACCESS_REVOKED');
+  static const RealtimeTerminationCode
+      REALTIME_TERMINATION_CODE_ROOM_ACCESS_REVOKED = RealtimeTerminationCode._(
+          3,
+          _omitEnumNames
+              ? ''
+              : 'REALTIME_TERMINATION_CODE_ROOM_ACCESS_REVOKED');
+  static const RealtimeTerminationCode
+      REALTIME_TERMINATION_CODE_ROOM_MEMBERSHIP_REVOKED =
+      RealtimeTerminationCode._(
+          4,
+          _omitEnumNames
+              ? ''
+              : 'REALTIME_TERMINATION_CODE_ROOM_MEMBERSHIP_REVOKED');
+  static const RealtimeTerminationCode
+      REALTIME_TERMINATION_CODE_GUEST_ACCESS_REVOKED =
+      RealtimeTerminationCode._(
+          5,
+          _omitEnumNames
+              ? ''
+              : 'REALTIME_TERMINATION_CODE_GUEST_ACCESS_REVOKED');
+  static const RealtimeTerminationCode REALTIME_TERMINATION_CODE_ROOM_DELETED =
+      RealtimeTerminationCode._(
+          6, _omitEnumNames ? '' : 'REALTIME_TERMINATION_CODE_ROOM_DELETED');
+  static const RealtimeTerminationCode REALTIME_TERMINATION_CODE_ROOM_BANNED =
+      RealtimeTerminationCode._(
+          7, _omitEnumNames ? '' : 'REALTIME_TERMINATION_CODE_ROOM_BANNED');
+  static const RealtimeTerminationCode
+      REALTIME_TERMINATION_CODE_ROOM_OWNER_INACTIVE = RealtimeTerminationCode._(
+          8,
+          _omitEnumNames
+              ? ''
+              : 'REALTIME_TERMINATION_CODE_ROOM_OWNER_INACTIVE');
+
+  static const $core.List<RealtimeTerminationCode> values =
+      <RealtimeTerminationCode>[
+    REALTIME_TERMINATION_CODE_UNSPECIFIED,
+    REALTIME_TERMINATION_CODE_CONNECTION_REVOKED,
+    REALTIME_TERMINATION_CODE_USER_ACCESS_REVOKED,
+    REALTIME_TERMINATION_CODE_ROOM_ACCESS_REVOKED,
+    REALTIME_TERMINATION_CODE_ROOM_MEMBERSHIP_REVOKED,
+    REALTIME_TERMINATION_CODE_GUEST_ACCESS_REVOKED,
+    REALTIME_TERMINATION_CODE_ROOM_DELETED,
+    REALTIME_TERMINATION_CODE_ROOM_BANNED,
+    REALTIME_TERMINATION_CODE_ROOM_OWNER_INACTIVE,
+  ];
+
+  static final $core.List<RealtimeTerminationCode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 8);
+  static RealtimeTerminationCode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RealtimeTerminationCode._(super.value, super.name);
+}
+
 class ChatMessageStatus extends $pb.ProtobufEnum {
   static const ChatMessageStatus CHAT_MESSAGE_STATUS_UNSPECIFIED =
       ChatMessageStatus._(

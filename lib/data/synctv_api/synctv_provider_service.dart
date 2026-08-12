@@ -594,10 +594,11 @@ class SyncTvProviderDomainService {
   Future<FnosMediaListPage> listFnosMediaItems(
     String serverId, {
     FnosMediaCollection collection = FnosMediaCollection.library,
-    String ancestorGuid = '',
+    String libraryGuid = '',
+    String parentGuid = '',
     int page = 1,
     int pageSize = 50,
-    List<String> mediaTypes = const ['Movie', 'TV', 'Directory', 'Video'],
+    List<String> mediaTypes = const [],
     String search = '',
     String instanceName = '',
   }) async {
@@ -612,7 +613,8 @@ class SyncTvProviderDomainService {
           FnosMediaCollection.history =>
             fnos_enum.MediaCollection.MEDIA_COLLECTION_HISTORY,
         },
-        ancestorGuid: ancestorGuid.isEmpty ? null : ancestorGuid,
+        libraryGuid: libraryGuid.isEmpty ? null : libraryGuid,
+        parentGuid: parentGuid.isEmpty ? null : parentGuid,
         page: page,
         pageSize: pageSize,
         mediaTypes: mediaTypes,
@@ -632,6 +634,7 @@ class SyncTvProviderDomainService {
                   : _api.resolveResourceUrl(item.poster),
               mediaGuid: item.mediaGuid,
               parentGuid: item.parentGuid,
+              libraryGuid: item.libraryGuid,
               overview: item.overview,
               durationSeconds: item.durationSeconds.toInt(),
               progressSeconds: item.progressSeconds.toInt(),

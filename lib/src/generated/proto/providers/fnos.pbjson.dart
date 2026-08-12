@@ -305,12 +305,12 @@ const ListMediaItemsRequest$json = {
       '10': 'collection'
     },
     {
-      '1': 'ancestor_guid',
+      '1': 'library_guid',
       '3': 3,
       '4': 1,
       '5': 9,
       '9': 0,
-      '10': 'ancestorGuid',
+      '10': 'libraryGuid',
       '17': true
     },
     {'1': 'page', '3': 4, '4': 1, '5': 13, '8': {}, '10': 'page'},
@@ -318,10 +318,20 @@ const ListMediaItemsRequest$json = {
     {'1': 'media_types', '3': 6, '4': 3, '5': 9, '10': 'mediaTypes'},
     {'1': 'search', '3': 7, '4': 1, '5': 9, '9': 1, '10': 'search', '17': true},
     {'1': 'instance_name', '3': 8, '4': 1, '5': 9, '10': 'instanceName'},
+    {
+      '1': 'parent_guid',
+      '3': 9,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'parentGuid',
+      '17': true
+    },
   ],
   '8': [
-    {'1': '_ancestor_guid'},
+    {'1': '_library_guid'},
     {'1': '_search'},
+    {'1': '_parent_guid'},
   ],
 };
 
@@ -329,11 +339,12 @@ const ListMediaItemsRequest$json = {
 final $typed_data.Uint8List listMediaItemsRequestDescriptor = $convert.base64Decode(
     'ChVMaXN0TWVkaWFJdGVtc1JlcXVlc3QSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUghzZX'
     'J2ZXJJZBJTCgpjb2xsZWN0aW9uGAIgASgOMiUuc3luY3R2LnByb3ZpZGVyLmZub3MuTWVkaWFD'
-    'b2xsZWN0aW9uQgy6SAmCAQYYARgCGANSCmNvbGxlY3Rpb24SKAoNYW5jZXN0b3JfZ3VpZBgDIA'
-    'EoCUgAUgxhbmNlc3Rvckd1aWSIAQESGwoEcGFnZRgEIAEoDUIHukgEKgIoAVIEcGFnZRInCglw'
-    'YWdlX3NpemUYBSABKA1CCrpIByoFGMgBKAFSCHBhZ2VTaXplEh8KC21lZGlhX3R5cGVzGAYgAy'
-    'gJUgptZWRpYVR5cGVzEhsKBnNlYXJjaBgHIAEoCUgBUgZzZWFyY2iIAQESIwoNaW5zdGFuY2Vf'
-    'bmFtZRgIIAEoCVIMaW5zdGFuY2VOYW1lQhAKDl9hbmNlc3Rvcl9ndWlkQgkKB19zZWFyY2g=');
+    'b2xsZWN0aW9uQgy6SAmCAQYYARgCGANSCmNvbGxlY3Rpb24SJgoMbGlicmFyeV9ndWlkGAMgAS'
+    'gJSABSC2xpYnJhcnlHdWlkiAEBEhsKBHBhZ2UYBCABKA1CB7pIBCoCKAFSBHBhZ2USJwoJcGFn'
+    'ZV9zaXplGAUgASgNQgq6SAcqBRjIASgBUghwYWdlU2l6ZRIfCgttZWRpYV90eXBlcxgGIAMoCV'
+    'IKbWVkaWFUeXBlcxIbCgZzZWFyY2gYByABKAlIAVIGc2VhcmNoiAEBEiMKDWluc3RhbmNlX25h'
+    'bWUYCCABKAlSDGluc3RhbmNlTmFtZRIkCgtwYXJlbnRfZ3VpZBgJIAEoCUgCUgpwYXJlbnRHdW'
+    'lkiAEBQg8KDV9saWJyYXJ5X2d1aWRCCQoHX3NlYXJjaEIOCgxfcGFyZW50X2d1aWQ=');
 
 @$core.Deprecated('Use listMediaItemsResponseDescriptor instead')
 const ListMediaItemsResponse$json = {
@@ -419,12 +430,22 @@ const MediaItem$json = {
       '6': '.synctv.provider.common.DiscoveredSource',
       '10': 'source'
     },
+    {
+      '1': 'library_guid',
+      '3': 17,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'libraryGuid',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_poster'},
     {'1': '_media_guid'},
     {'1': '_parent_guid'},
     {'1': '_overview'},
+    {'1': '_library_guid'},
   ],
 };
 
@@ -440,8 +461,9 @@ final $typed_data.Uint8List mediaItemDescriptor = $convert.base64Decode(
     'EoDVINZXBpc29kZU51bWJlchIbCglpc19mb2xkZXIYDSABKAhSCGlzRm9sZGVyEh8KC2lzX3Bs'
     'YXlhYmxlGA4gASgIUgppc1BsYXlhYmxlEhoKCGZhdm9yaXRlGA8gASgIUghmYXZvcml0ZRJACg'
     'Zzb3VyY2UYECABKAsyKC5zeW5jdHYucHJvdmlkZXIuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VS'
-    'BnNvdXJjZUIJCgdfcG9zdGVyQg0KC19tZWRpYV9ndWlkQg4KDF9wYXJlbnRfZ3VpZEILCglfb3'
-    'ZlcnZpZXc=');
+    'BnNvdXJjZRImCgxsaWJyYXJ5X2d1aWQYESABKAlIBFILbGlicmFyeUd1aWSIAQFCCQoHX3Bvc3'
+    'RlckINCgtfbWVkaWFfZ3VpZEIOCgxfcGFyZW50X2d1aWRCCwoJX292ZXJ2aWV3Qg8KDV9saWJy'
+    'YXJ5X2d1aWQ=');
 
 @$core.Deprecated('Use setFavoriteRequestDescriptor instead')
 const SetFavoriteRequest$json = {
