@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/fnos_add_media_form.dart';
 
 import '../../../../test_app.dart';
@@ -130,5 +131,60 @@ void main() {
     await tester.tap(byAppTooltip('Search'));
     await tester.pumpAndSettle();
     expect(mediaSearch, 'space');
+  });
+
+  testWidgets('adds selected FNOS folders alongside files', (tester) async {
+    final selection = DiscoverySelectionController();
+    List<DiscoveryBrowserEntry> added = const [];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            height: 500,
+            child: DiscoveryBrowser(
+              selectionController: selection,
+              selectionScope: 'fnos-server',
+              loading: false,
+              onAddSelected: (items) async => added = items,
+              items: [
+                DiscoveryBrowserEntry(
+                  key: 'vol1/@team/Movies',
+                  title: '团队影片',
+                  source: testDiscoveredPlaylistSource(),
+                  isContainer: true,
+                ),
+                DiscoveryBrowserEntry(
+                  key: 'vol1/1000/Media/Movie.mkv',
+                  title: 'Movie.mkv',
+                  source: testDiscoveredMediaSource(name: 'Movie.mkv'),
+                  isContainer: false,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('discovery-item-vol1/@team/Movies')),
+    );
+    await tester.pump();
+    await tester.tap(
+      find.byKey(const ValueKey('discovery-item-vol1/1000/Media/Movie.mkv')),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('discovery-add-selected')));
+    await tester.pumpAndSettle();
+
+    expect(added.map((item) => item.key), [
+      'vol1/@team/Movies',
+      'vol1/1000/Media/Movie.mkv',
+    ]);
   });
 }

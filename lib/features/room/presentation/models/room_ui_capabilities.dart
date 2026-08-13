@@ -7,9 +7,7 @@ final class RoomUiCapabilities {
     required SyncTvUser? currentUser,
     required AdminRoomMember? selfMember,
     bool allowDiscoveryFallback = true,
-  }) : _permissions =
-           selfMember?.permissions ??
-           (allowDiscoveryFallback ? room.myPermissions : 0),
+  }) : _permissions = selfMember?.permissions ?? room.myPermissions,
        isRoomCreator =
            currentUser?.id.isNotEmpty == true &&
            currentUser!.id == room.creatorId,

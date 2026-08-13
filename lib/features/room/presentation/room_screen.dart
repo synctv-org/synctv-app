@@ -389,6 +389,7 @@ class _RoomScreenState extends State<RoomScreen>
   late final PictureInPictureController _pictureInPicture;
   bool _pictureInPictureAvailable = false;
   bool _fullScreenRouteOpen = false;
+  final ValueNotifier<int> _videoPresentationRevision = ValueNotifier<int>(0);
   String? _videoError;
   String? _roomSessionError;
 
@@ -3004,6 +3005,7 @@ class _RoomScreenState extends State<RoomScreen>
       }
 
       _videoPlayerController = newController;
+      _videoPresentationRevision.value++;
       _videoPlayerSourceKey = sourceKey;
       _videoPlayerSourceExpireAt = sourceExpireAt;
       _videoPlaybackHasProgress = false;
@@ -3233,6 +3235,7 @@ class _RoomScreenState extends State<RoomScreen>
     _adaptiveVideoTracksSubscription = null;
     _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
     _videoPlayerController = null;
+    _videoPresentationRevision.value++;
     _videoPlayerSourceKey = null;
     _videoPlayerSourceExpireAt = null;
     _videoPlaybackHasProgress = false;
@@ -3267,6 +3270,7 @@ class _RoomScreenState extends State<RoomScreen>
     _adaptiveVideoTracksSubscription = null;
     _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
     _videoPlayerController = null;
+    _videoPresentationRevision.value++;
     _videoPlayerSourceKey = null;
     _videoPlayerSourceExpireAt = null;
     _videoPlaybackHasProgress = false;
@@ -3308,6 +3312,7 @@ class _RoomScreenState extends State<RoomScreen>
       unawaited(_p2pEngineOperations.run(p2pEngine.dispose));
     }
     _danmakuController.dispose();
+    _videoPresentationRevision.dispose();
     _playbackController.dispose();
     _channel = null;
     _realtimeMessageBus.close();
@@ -3939,80 +3944,94 @@ class _RoomScreenState extends State<RoomScreen>
     _fullScreenRouteOpen = true;
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => CustomVideoPlayer(
-          volumePreferences: _playerVolumePreferences,
-          overlayPreferences: _playbackOverlayPreferences,
-          p2pMediaPreferences: _canUseP2pMedia
-              ? widget.p2pMediaPreferences
-              : null,
-          subtitleSource: DependencyScope.read<SubtitleSource>(context),
-          resourceUrlResolver: _resourceUrlResolver,
-          controller: _videoPlayerController!,
-          title: _currentStatus?.entry?.name ?? context.l10n.unknownVideo,
-          danmakuController: _danmakuController,
-          subtitles: _currentStatus?.entry?.subtitles,
-          playbackResourceIdentity:
-              _currentStatus?.entry?.playbackAttachmentIdentity ?? '',
-          resolveSubtitleResource: _resolveSubtitlePlaybackResource,
-          onSubtitleP2pDeactivated: _deactivateP2pSubtitle,
-          isLive: _currentStatus?.entry?.live == true,
-          liveStartedAt: _currentStatus?.entry?.liveStartedAt,
-          onToggleFullScreen: () => Navigator.of(context).pop(),
-          onSync: _handleSync,
-          onPrevious: _canNavigatePlayback
-              ? () => unawaited(_navigatePlayback(previous: true))
-              : null,
-          onNext: _canNavigatePlayback
-              ? () => unawaited(_navigatePlayback(previous: false))
-              : null,
-          onEnterPictureInPicture: _pictureInPictureAvailable
-              ? () => unawaited(_enterPictureInPicture())
-              : null,
-          freeModeEnabled: _playbackModeConfig.freeModeEnabled,
-          onFreeModeChanged: (enabled) =>
-              unawaited(_setFreeModeEnabled(enabled)),
-          canControlPlayback: _canControlPlaybackState,
-          isPlaybackExpectedToBePlaying: () =>
-              _currentStatus?.isPlaying == true,
-          onUserPlaybackStateChanged: _canControlPlaybackState
-              ? _handleUserPlaybackStateChanged
-              : null,
-          onUserSeek: _canControlPlaybackState ? _handleUserSeek : null,
-          onUserPlaybackSpeedChanged: _canControlPlaybackState
-              ? _handleUserPlaybackSpeedChanged
-              : null,
-          diagnosticsProvider: _playbackDiagnosticsContext,
-          loopPlayback:
-              _roomSettings.autoPlayEnabled &&
-              _roomSettings.autoPlayMode ==
-                  client_enum.PlayMode.PLAY_MODE_REPEAT_ONE,
-          shufflePlayback:
-              _roomSettings.autoPlayEnabled &&
-              _roomSettings.autoPlayMode ==
-                  client_enum.PlayMode.PLAY_MODE_SHUFFLE,
-          canChangePlayMode: _canManagePlaybackMode && !_playModeUpdateInFlight,
-          onLoopPlaybackChanged: (enabled) => _updateRoomPlaybackMode(
-            enabled
-                ? client_enum.PlayMode.PLAY_MODE_REPEAT_ONE
-                : client_enum.PlayMode.PLAY_MODE_SEQUENTIAL,
-          ),
-          onShufflePlaybackChanged: (enabled) => _updateRoomPlaybackMode(
-            enabled
-                ? client_enum.PlayMode.PLAY_MODE_SHUFFLE
-                : client_enum.PlayMode.PLAY_MODE_SEQUENTIAL,
-          ),
-          onReloadPlayback: () => unawaited(_reloadCurrentPlaybackUrl()),
-          onSendDanmaku: _sendDanmaku,
-          isFullScreen: true,
-          interactionMode: videoPlayerInteractionModeForPlatform(
-            defaultTargetPlatform,
-          ),
-          diagnosticsBuilder: (_) => _buildPlaybackDiagnosticsBadges(
-            compact: true,
-            includeLatency: true,
-            videoStyle: true,
-          ),
-          extraBottomWidget: _buildPlaybackOptionButton(compact: true),
+        builder: (context) => ValueListenableBuilder<int>(
+          valueListenable: _videoPresentationRevision,
+          builder: (context, _, child) {
+            final controller = _videoPlayerController;
+            if (controller == null || !controller.value.isInitialized) {
+              return Scaffold(
+                backgroundColor: Colors.black,
+                body: Center(child: _buildVideoEmptyState()),
+              );
+            }
+            return CustomVideoPlayer(
+              key: ValueKey(controller),
+              volumePreferences: _playerVolumePreferences,
+              overlayPreferences: _playbackOverlayPreferences,
+              p2pMediaPreferences: _canUseP2pMedia
+                  ? widget.p2pMediaPreferences
+                  : null,
+              subtitleSource: DependencyScope.read<SubtitleSource>(context),
+              resourceUrlResolver: _resourceUrlResolver,
+              controller: controller,
+              title: _currentStatus?.entry?.name ?? context.l10n.unknownVideo,
+              danmakuController: _danmakuController,
+              subtitles: _currentStatus?.entry?.subtitles,
+              playbackResourceIdentity:
+                  _currentStatus?.entry?.playbackAttachmentIdentity ?? '',
+              resolveSubtitleResource: _resolveSubtitlePlaybackResource,
+              onSubtitleP2pDeactivated: _deactivateP2pSubtitle,
+              isLive: _currentStatus?.entry?.live == true,
+              liveStartedAt: _currentStatus?.entry?.liveStartedAt,
+              onToggleFullScreen: () => Navigator.of(context).pop(),
+              onSync: _handleSync,
+              onPrevious: _canNavigatePlayback
+                  ? () => unawaited(_navigatePlayback(previous: true))
+                  : null,
+              onNext: _canNavigatePlayback
+                  ? () => unawaited(_navigatePlayback(previous: false))
+                  : null,
+              onEnterPictureInPicture: _pictureInPictureAvailable
+                  ? () => unawaited(_enterPictureInPicture())
+                  : null,
+              freeModeEnabled: _playbackModeConfig.freeModeEnabled,
+              onFreeModeChanged: (enabled) =>
+                  unawaited(_setFreeModeEnabled(enabled)),
+              canControlPlayback: _canControlPlaybackState,
+              isPlaybackExpectedToBePlaying: () =>
+                  _currentStatus?.isPlaying == true,
+              onUserPlaybackStateChanged: _canControlPlaybackState
+                  ? _handleUserPlaybackStateChanged
+                  : null,
+              onUserSeek: _canControlPlaybackState ? _handleUserSeek : null,
+              onUserPlaybackSpeedChanged: _canControlPlaybackState
+                  ? _handleUserPlaybackSpeedChanged
+                  : null,
+              diagnosticsProvider: _playbackDiagnosticsContext,
+              loopPlayback:
+                  _roomSettings.autoPlayEnabled &&
+                  _roomSettings.autoPlayMode ==
+                      client_enum.PlayMode.PLAY_MODE_REPEAT_ONE,
+              shufflePlayback:
+                  _roomSettings.autoPlayEnabled &&
+                  _roomSettings.autoPlayMode ==
+                      client_enum.PlayMode.PLAY_MODE_SHUFFLE,
+              canChangePlayMode:
+                  _canManagePlaybackMode && !_playModeUpdateInFlight,
+              onLoopPlaybackChanged: (enabled) => _updateRoomPlaybackMode(
+                enabled
+                    ? client_enum.PlayMode.PLAY_MODE_REPEAT_ONE
+                    : client_enum.PlayMode.PLAY_MODE_SEQUENTIAL,
+              ),
+              onShufflePlaybackChanged: (enabled) => _updateRoomPlaybackMode(
+                enabled
+                    ? client_enum.PlayMode.PLAY_MODE_SHUFFLE
+                    : client_enum.PlayMode.PLAY_MODE_SEQUENTIAL,
+              ),
+              onReloadPlayback: () => unawaited(_reloadCurrentPlaybackUrl()),
+              onSendDanmaku: _sendDanmaku,
+              isFullScreen: true,
+              interactionMode: videoPlayerInteractionModeForPlatform(
+                defaultTargetPlatform,
+              ),
+              diagnosticsBuilder: (_) => _buildPlaybackDiagnosticsBadges(
+                compact: true,
+                includeLatency: true,
+                videoStyle: true,
+              ),
+              extraBottomWidget: _buildPlaybackOptionButton(compact: true),
+            );
+          },
         ),
       ),
     );

@@ -64,19 +64,22 @@ void main() {
       expect(capabilities.canSendChatMessages, isFalse);
     });
 
-    test('drops discovery permissions while refreshing the self snapshot', () {
-      final capabilities = RoomUiCapabilities(
-        room: _room(myPermissions: RoomAdminPermissions.all),
-        currentUser: _user(),
-        selfMember: null,
-        allowDiscoveryFallback: false,
-      );
+    test(
+      'retains discovery permissions while refreshing the self snapshot',
+      () {
+        final capabilities = RoomUiCapabilities(
+          room: _room(myPermissions: RoomAdminPermissions.all),
+          currentUser: _user(),
+          selfMember: null,
+          allowDiscoveryFallback: false,
+        );
 
-      expect(capabilities.canBrowseLibrary, isFalse);
-      expect(capabilities.canViewMembers, isFalse);
-      expect(capabilities.canControlPlaybackState, isFalse);
-      expect(capabilities.canManageRoomSettings, isFalse);
-    });
+        expect(capabilities.canBrowseLibrary, isTrue);
+        expect(capabilities.canViewMembers, isTrue);
+        expect(capabilities.canControlPlaybackState, isTrue);
+        expect(capabilities.canManageRoomSettings, isTrue);
+      },
+    );
 
     test('room creator retains room capabilities', () {
       final capabilities = RoomUiCapabilities(
