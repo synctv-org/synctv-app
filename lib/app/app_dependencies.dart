@@ -21,6 +21,7 @@ import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/application/subtitle_source.dart';
 import 'package:synctv_app/features/room/application/picture_in_picture_controller.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/playback_overlay_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/realtime_event_log_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/room_realtime_channel.dart';
 import 'package:synctv_app/features/room/application/room_realtime_protocol.dart';
@@ -54,6 +55,7 @@ final class AppDependencies {
     required this.subtitleSource,
     required this.pictureInPicture,
     required this.playerVolumePreferences,
+    required this.playbackOverlayPreferences,
     required this.realtimeEventLogPreferences,
     required this.roomRealtimeChannelFactory,
     required this.roomRealtimeProtocol,
@@ -86,6 +88,7 @@ final class AppDependencies {
   final SubtitleSource subtitleSource;
   final PictureInPictureController pictureInPicture;
   final PlayerVolumePreferencesController playerVolumePreferences;
+  final PlaybackOverlayPreferencesController playbackOverlayPreferences;
   final RealtimeEventLogPreferencesController realtimeEventLogPreferences;
   final RoomRealtimeChannelFactory roomRealtimeChannelFactory;
   final RoomRealtimeProtocol roomRealtimeProtocol;
@@ -127,6 +130,7 @@ final class AppDependencies {
         RoomChatGateway: roomChatGateway,
         PictureInPictureController: pictureInPicture,
         PlayerVolumePreferencesController: playerVolumePreferences,
+        PlaybackOverlayPreferencesController: playbackOverlayPreferences,
         RealtimeEventLogPreferencesController: realtimeEventLogPreferences,
         RoomRealtimeChannelFactory: roomRealtimeChannelFactory,
         RoomRealtimeProtocol: roomRealtimeProtocol,

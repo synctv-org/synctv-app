@@ -1050,7 +1050,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get disableSubtitles => '关闭字幕';
 
   @override
-  String get danmaku => '弹幕数';
+  String get danmaku => '弹幕';
 
   @override
   String get danmakuHint => '发个弹幕见证当下...';
@@ -1078,6 +1078,72 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get enableDanmaku => '开启弹幕';
+
+  @override
+  String get overlaySettings => '字幕与弹幕设置';
+
+  @override
+  String get subtitleSettings => '字幕设置';
+
+  @override
+  String get danmakuSettings => '弹幕设置';
+
+  @override
+  String get subtitleStyle => '字幕样式';
+
+  @override
+  String get subtitleSize => '字幕大小';
+
+  @override
+  String get subtitleOpacity => '字幕透明度';
+
+  @override
+  String get subtitleBackground => '字幕背景';
+
+  @override
+  String get subtitlePosition => '字幕位置';
+
+  @override
+  String get subtitleColor => '字幕颜色';
+
+  @override
+  String get subtitleBackgroundColor => '字幕背景颜色';
+
+  @override
+  String get subtitleOutline => '字幕描边';
+
+  @override
+  String get danmakuStyle => '弹幕样式';
+
+  @override
+  String get danmakuSize => '弹幕大小';
+
+  @override
+  String get danmakuOpacity => '弹幕透明度';
+
+  @override
+  String get danmakuSpeed => '弹幕速度';
+
+  @override
+  String get danmakuArea => '弹幕区域';
+
+  @override
+  String get danmakuOutline => '弹幕描边';
+
+  @override
+  String get danmakuMassiveMode => '海量弹幕';
+
+  @override
+  String get danmakuTop => '顶部弹幕';
+
+  @override
+  String get danmakuBottom => '底部弹幕';
+
+  @override
+  String get danmakuScroll => '滚动弹幕';
+
+  @override
+  String get resetOverlaySettings => '恢复默认样式';
 
   @override
   String get reload => '重新加载';

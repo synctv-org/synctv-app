@@ -2054,6 +2054,138 @@ abstract class AppLocalizations {
   /// **'Turn on danmaku'**
   String get enableDanmaku;
 
+  /// No description provided for @overlaySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle and danmaku settings'**
+  String get overlaySettings;
+
+  /// No description provided for @subtitleSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle settings'**
+  String get subtitleSettings;
+
+  /// No description provided for @danmakuSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Danmaku settings'**
+  String get danmakuSettings;
+
+  /// No description provided for @subtitleStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle style'**
+  String get subtitleStyle;
+
+  /// No description provided for @subtitleSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle size'**
+  String get subtitleSize;
+
+  /// No description provided for @subtitleOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle opacity'**
+  String get subtitleOpacity;
+
+  /// No description provided for @subtitleBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle background'**
+  String get subtitleBackground;
+
+  /// No description provided for @subtitlePosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle position'**
+  String get subtitlePosition;
+
+  /// No description provided for @subtitleColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle color'**
+  String get subtitleColor;
+
+  /// No description provided for @subtitleBackgroundColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle background color'**
+  String get subtitleBackgroundColor;
+
+  /// No description provided for @subtitleOutline.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle outline'**
+  String get subtitleOutline;
+
+  /// No description provided for @danmakuStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Danmaku style'**
+  String get danmakuStyle;
+
+  /// No description provided for @danmakuSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Danmaku size'**
+  String get danmakuSize;
+
+  /// No description provided for @danmakuOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Danmaku opacity'**
+  String get danmakuOpacity;
+
+  /// No description provided for @danmakuSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Danmaku speed'**
+  String get danmakuSpeed;
+
+  /// No description provided for @danmakuArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Danmaku area'**
+  String get danmakuArea;
+
+  /// No description provided for @danmakuOutline.
+  ///
+  /// In en, this message translates to:
+  /// **'Danmaku outline'**
+  String get danmakuOutline;
+
+  /// No description provided for @danmakuMassiveMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Massive danmaku'**
+  String get danmakuMassiveMode;
+
+  /// No description provided for @danmakuTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Top danmaku'**
+  String get danmakuTop;
+
+  /// No description provided for @danmakuBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottom danmaku'**
+  String get danmakuBottom;
+
+  /// No description provided for @danmakuScroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Scrolling danmaku'**
+  String get danmakuScroll;
+
+  /// No description provided for @resetOverlaySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset overlay style'**
+  String get resetOverlaySettings;
+
   /// No description provided for @reload.
   ///
   /// In en, this message translates to:

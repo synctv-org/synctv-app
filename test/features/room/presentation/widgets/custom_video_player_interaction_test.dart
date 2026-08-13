@@ -9,6 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/features/room/presentation/widgets/custom_video_player.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/playback_overlay_preferences_controller.dart';
+import 'package:synctv_app/features/media_p2p/application/p2p_media_preferences_controller.dart';
+import 'package:synctv_app/features/media_p2p/domain/p2p_media_preferences.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/application/subtitle_source.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
@@ -86,6 +89,40 @@ final class _MemoryPlayerVolumeStore implements PlayerVolumePreferencesStore {
 
 PlayerVolumePreferencesController _volumePreferences() =>
     PlayerVolumePreferencesController(store: _MemoryPlayerVolumeStore());
+
+final class _MemoryP2pPreferencesStore implements P2pMediaPreferencesStore {
+  P2pMediaPreferenceValues value = const P2pMediaPreferenceValues();
+
+  @override
+  Future<P2pMediaPreferenceValues> load() async => value;
+
+  @override
+  Future<void> save(P2pMediaPreferenceValues values) async {
+    value = values;
+  }
+}
+
+final class _MemoryOverlayPreferencesStore
+    implements PlaybackOverlayPreferencesStore {
+  PlaybackOverlayPreferenceValues value =
+      const PlaybackOverlayPreferenceValues();
+
+  @override
+  Future<PlaybackOverlayPreferenceValues> load() async => value;
+
+  @override
+  Future<void> save(PlaybackOverlayPreferenceValues values) async {
+    value = values;
+  }
+}
+
+P2pMediaPreferencesController _p2pPreferences() =>
+    P2pMediaPreferencesController(store: _MemoryP2pPreferencesStore());
+
+PlaybackOverlayPreferencesController _overlayPreferences() =>
+    PlaybackOverlayPreferencesController(
+      store: _MemoryOverlayPreferencesStore(),
+    );
 
 class _RecordingVideoPlayerController extends VideoPlayerController {
   _RecordingVideoPlayerController(VideoPlayerValue initialValue)
@@ -962,9 +999,244 @@ void main() {
     expect(rows.map((row) => row.left).toSet(), hasLength(1));
     expect(rows[2].height, 52);
     expect(rows[3].height, 52);
+    final iconLefts = [
+      for (var index = 0; index < rows.length; index++)
+        tester
+            .getRect(
+              find
+                  .descendant(
+                    of: find.byKey(
+                      ValueKey('playback_overflow_control_slot_$index'),
+                    ),
+                    matching: find.byType(Icon),
+                  )
+                  .first,
+            )
+            .left,
+    ];
+    expect(iconLefts.toSet(), hasLength(1));
     for (var index = 1; index < rows.length; index++) {
       expect(rows[index].top, greaterThan(rows[index - 1].bottom));
     }
+  });
+
+  testWidgets('subtitle selection and subtitle style are separate controls', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+    final overlay = _overlayPreferences();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            height: 400,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              overlayPreferences: overlay,
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              subtitles: const {
+                'en': {'name': 'English'},
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('playback_overflow_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Subtitles'), findsOneWidget);
+    expect(find.text('Subtitle settings'), findsOneWidget);
+    expect(find.text('Danmaku settings'), findsNothing);
+
+    await tester.tap(find.text('Subtitle settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Subtitle style'), findsOneWidget);
+    expect(find.text('Danmaku style'), findsNothing);
+  });
+
+  testWidgets('danmaku settings expose independent controls', (tester) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+    final overlay = _overlayPreferences();
+    final danmaku = DanmakuController(const _EmptyDanmakuSource())
+      ..videoController = controller;
+    addTearDown(danmaku.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            height: 400,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              overlayPreferences: overlay,
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              danmakuController: danmaku,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('playback_overflow_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Danmaku settings'), findsOneWidget);
+    await tester.tap(find.text('Danmaku settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Danmaku style'), findsOneWidget);
+    expect(find.text('Danmaku size'), findsOneWidget);
+    expect(find.text('Danmaku opacity'), findsOneWidget);
+    expect(find.text('Danmaku speed'), findsOneWidget);
+    expect(find.text('Danmaku area'), findsOneWidget);
+    expect(find.text('Massive danmaku'), findsOneWidget);
+  });
+
+  testWidgets('P2P media toggle lives in more actions and persists changes', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+    final p2p = _p2pPreferences();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            height: 400,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              p2pMediaPreferences: p2p,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('playback_p2p_media_button')), findsNothing);
+    await tester.tap(find.byKey(const Key('playback_overflow_button')));
+    await tester.pumpAndSettle();
+
+    final row = find.byKey(const ValueKey('playback_overflow_control_slot_3'));
+    expect(find.text('P2P media delivery'), findsOneWidget);
+    expect(
+      find.descendant(of: row, matching: find.byType(Switch)),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<Switch>(
+            find.descendant(of: row, matching: find.byType(Switch)),
+          )
+          .value,
+      isFalse,
+    );
+
+    await tester.tap(find.text('P2P media delivery'));
+    await tester.pumpAndSettle();
+    expect(p2p.enabled, isTrue);
+    expect(find.byKey(const Key('playback_overflow_controls')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('P2P toggle closes more actions before the player is removed', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+    final p2p = _p2pPreferences();
+    final showPlayer = ValueNotifier(true);
+    p2p.addListener(() => showPlayer.value = false);
+    addTearDown(showPlayer.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: ValueListenableBuilder<bool>(
+            valueListenable: showPlayer,
+            builder: (context, visible, _) => SizedBox(
+              width: 300,
+              height: 400,
+              child: visible
+                  ? CustomVideoPlayer(
+                      volumePreferences: _volumePreferences(),
+                      subtitleSource: const _EmptySubtitleSource(),
+                      controller: controller,
+                      title: 'Video',
+                      interactionMode: VideoPlayerInteractionMode.desktop,
+                      p2pMediaPreferences: p2p,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('playback_overflow_button')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('P2P media delivery'));
+    await tester.pumpAndSettle();
+
+    expect(p2p.enabled, isTrue);
+    expect(find.byKey(const Key('playback_overflow_controls')), findsNothing);
+    expect(find.byKey(const Key('playback_overflow_button')), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('playback route and more actions use shared control spacing', (

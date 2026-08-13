@@ -1174,6 +1174,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enableDanmaku => 'Turn on danmaku';
 
   @override
+  String get overlaySettings => 'Subtitle and danmaku settings';
+
+  @override
+  String get subtitleSettings => 'Subtitle settings';
+
+  @override
+  String get danmakuSettings => 'Danmaku settings';
+
+  @override
+  String get subtitleStyle => 'Subtitle style';
+
+  @override
+  String get subtitleSize => 'Subtitle size';
+
+  @override
+  String get subtitleOpacity => 'Subtitle opacity';
+
+  @override
+  String get subtitleBackground => 'Subtitle background';
+
+  @override
+  String get subtitlePosition => 'Subtitle position';
+
+  @override
+  String get subtitleColor => 'Subtitle color';
+
+  @override
+  String get subtitleBackgroundColor => 'Subtitle background color';
+
+  @override
+  String get subtitleOutline => 'Subtitle outline';
+
+  @override
+  String get danmakuStyle => 'Danmaku style';
+
+  @override
+  String get danmakuSize => 'Danmaku size';
+
+  @override
+  String get danmakuOpacity => 'Danmaku opacity';
+
+  @override
+  String get danmakuSpeed => 'Danmaku speed';
+
+  @override
+  String get danmakuArea => 'Danmaku area';
+
+  @override
+  String get danmakuOutline => 'Danmaku outline';
+
+  @override
+  String get danmakuMassiveMode => 'Massive danmaku';
+
+  @override
+  String get danmakuTop => 'Top danmaku';
+
+  @override
+  String get danmakuBottom => 'Bottom danmaku';
+
+  @override
+  String get danmakuScroll => 'Scrolling danmaku';
+
+  @override
+  String get resetOverlaySettings => 'Reset overlay style';
+
+  @override
   String get reload => 'Reload';
 
   @override

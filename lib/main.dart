@@ -22,12 +22,14 @@ import 'package:synctv_app/features/room/data/synctv_room_chat_gateway.dart';
 import 'package:synctv_app/features/room/data/synctv_room_playback_gateway.dart';
 import 'package:synctv_app/features/room/application/playback_mode_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/playback_overlay_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/realtime_event_log_preferences_controller.dart';
 import 'package:synctv_app/features/room/data/shared_preferences_realtime_event_log_store.dart';
 import 'package:synctv_app/features/room/data/protobuf_room_realtime_protocol.dart';
 import 'package:synctv_app/features/room/data/room_realtime_connection.dart';
 import 'package:synctv_app/features/room/data/shared_preferences_playback_mode_store.dart';
 import 'package:synctv_app/features/room/data/shared_preferences_player_volume_store.dart';
+import 'package:synctv_app/features/room/data/shared_preferences_playback_overlay_store.dart';
 import 'package:synctv_app/features/room/data/synctv_room_session_gateway.dart';
 import 'package:synctv_app/features/room/data/synctv_room_management_gateway.dart';
 import 'package:synctv_app/features/app_shell/data/synctv_resource_url_resolver.dart';
@@ -71,6 +73,10 @@ void main(List<String> args) async {
     store: const SharedPreferencesPlayerVolumeStore(),
   );
   await playerVolumePreferences.load();
+  final playbackOverlayPreferences = PlaybackOverlayPreferencesController(
+    store: const SharedPreferencesPlaybackOverlayStore(),
+  );
+  await playbackOverlayPreferences.load();
   final realtimeEventLogPreferences = RealtimeEventLogPreferencesController(
     store: const SharedPreferencesRealtimeEventLogStore(),
   );
@@ -132,6 +138,7 @@ void main(List<String> args) async {
     subtitleSource: const HttpSubtitleSource(),
     pictureInPicture: PictureInPictureService.instance,
     playerVolumePreferences: playerVolumePreferences,
+    playbackOverlayPreferences: playbackOverlayPreferences,
     realtimeEventLogPreferences: realtimeEventLogPreferences,
     roomRealtimeChannelFactory: const IoRoomRealtimeChannelFactory(
       sessionGateway: roomSessionGateway,
