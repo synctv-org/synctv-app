@@ -93,6 +93,7 @@ class DiscoveryBrowser extends StatefulWidget {
     this.target,
     this.selectionController,
     this.selectionScope,
+    this.onSelectionChanged,
   });
 
   final List<DiscoveryBrowserEntry> items;
@@ -109,6 +110,7 @@ class DiscoveryBrowser extends StatefulWidget {
   final ProviderAddTarget? target;
   final DiscoverySelectionController? selectionController;
   final Object? selectionScope;
+  final VoidCallback? onSelectionChanged;
 
   @override
   State<DiscoveryBrowser> createState() => _DiscoveryBrowserState();
@@ -146,10 +148,6 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (widget.items.isNotEmpty || widget.onAddCurrentList != null) ...[
-          _selectionBar(context, target),
-          const AppDivider(height: 1),
-        ],
         Expanded(
           child: widget.items.isEmpty
               ? LayoutBuilder(
@@ -199,6 +197,10 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                   ),
                 ),
         ),
+        if (widget.items.isNotEmpty || widget.onAddCurrentList != null) ...[
+          const AppDivider(height: 1),
+          _selectionBar(context, target),
+        ],
       ],
     );
   }
@@ -277,6 +279,7 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
               ? null
               : () => setState(() {
                   _selection.selectAll(widget.items);
+                  widget.onSelectionChanged?.call();
                 }),
           icon: const Icon(Icons.select_all_rounded),
           label: Text(context.l10n.selectAll),
@@ -285,7 +288,10 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
           key: const Key('discovery-clear-selection'),
           onPressed: widget.loading || _selection.isEmpty
               ? null
-              : () => setState(_selection.clear),
+              : () => setState(() {
+                  _selection.clear();
+                  widget.onSelectionChanged?.call();
+                }),
           icon: const Icon(Icons.deselect_rounded),
           label: Text(context.l10n.clear),
         ),
@@ -405,6 +411,9 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
   }
 
   void _toggle(DiscoveryBrowserEntry item) {
-    setState(() => _selection.toggle(item));
+    setState(() {
+      _selection.toggle(item);
+      widget.onSelectionChanged?.call();
+    });
   }
 }

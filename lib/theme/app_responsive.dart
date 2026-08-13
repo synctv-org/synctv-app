@@ -155,15 +155,27 @@ class AppMetrics {
     return double.infinity;
   }
 
-  static double dialogMaxWidth(BuildContext context, double requestedMaxWidth) {
+  static double dialogMaxWidth(
+    BuildContext context,
+    double requestedMaxWidth, {
+    bool allowWide = false,
+  }) {
     final width = AppBreakpoints.widthOf(context);
-    final cap = switch (width) {
-      >= AppBreakpoints.wideStart => 760.0,
-      >= AppBreakpoints.desktopStart => 680.0,
-      >= AppBreakpoints.expandedStart => 620.0,
-      >= AppBreakpoints.mediumStart => 560.0,
-      _ => math.max(280.0, width - 24),
-    };
+    final cap = allowWide
+        ? switch (width) {
+            >= AppBreakpoints.wideStart => 1320.0,
+            >= AppBreakpoints.desktopStart => 1160.0,
+            >= AppBreakpoints.expandedStart => 980.0,
+            >= AppBreakpoints.mediumStart => 820.0,
+            _ => math.max(280.0, width - 24),
+          }
+        : switch (width) {
+            >= AppBreakpoints.wideStart => 760.0,
+            >= AppBreakpoints.desktopStart => 680.0,
+            >= AppBreakpoints.expandedStart => 620.0,
+            >= AppBreakpoints.mediumStart => 560.0,
+            _ => math.max(280.0, width - 24),
+          };
     return math.min(requestedMaxWidth, cap);
   }
 

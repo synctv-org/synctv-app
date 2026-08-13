@@ -62,22 +62,26 @@ class AddMediaDialog extends StatefulWidget {
       barrierDismissible: false,
       builder: (context) {
         return AppDialogFrame(
-          maxWidth: 920,
+          maxWidth: 1180,
+          allowWide: true,
           borderRadius: const BorderRadius.all(Radius.circular(16)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _AddMediaDialogHeader(
-                onClose: () => dialogKey.currentState?._requestClose(),
-              ),
-              Flexible(
-                child: AddMediaDialog(
-                  key: dialogKey,
-                  roomId: roomId,
-                  parentId: parentId,
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _AddMediaDialogHeader(
+                  onClose: () => dialogKey.currentState?._requestClose(),
                 ),
-              ),
-            ],
+                Flexible(
+                  child: AddMediaDialog(
+                    key: dialogKey,
+                    roomId: roomId,
+                    parentId: parentId,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -187,6 +191,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   final _alistPasswordController = TextEditingController();
   final _embySearchController = TextEditingController();
   final _cloudreveSearchController = TextEditingController();
+  final _sourceSearchController = TextEditingController();
   final _bilibiliSelection = DiscoverySelectionController();
   final _alistSelection = DiscoverySelectionController();
   final _embySelection = DiscoverySelectionController();
@@ -514,17 +519,15 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     _alistPasswordController.dispose();
     _embySearchController.dispose();
     _cloudreveSearchController.dispose();
+    _sourceSearchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final compact = AppBreakpoints.widthOf(context) < 720;
     final availableHeight = AppMetrics.dialogMaxHeight(context, null);
-    final contentHeight = compact
-        ? (availableHeight - 64).clamp(420.0, 820.0)
-        : (availableHeight - 64).clamp(420.0, 820.0);
+    final contentHeight = (availableHeight - 64).clamp(420.0, 820.0);
 
     return PopScope(
       canPop: !_hasUnsavedDraft,
@@ -537,26 +540,32 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       },
       child: SizedBox(
         height: contentHeight,
-        child: compact
-            ? Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 720;
+            if (compact) {
+              return Column(
                 children: [
                   _buildCompactSourceRail(theme),
                   Expanded(child: _buildSourcePanel(theme, compact: true)),
                 ],
-              )
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(width: 236, child: _buildSourceRail(theme)),
-                  AppVerticalDivider(
-                    width: 1,
-                    color: theme.colorScheme.outlineVariant.withValues(
-                      alpha: 0.7,
-                    ),
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(width: 236, child: _buildSourceRail(theme)),
+                AppVerticalDivider(
+                  width: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.7,
                   ),
-                  Expanded(child: _buildSourcePanel(theme)),
-                ],
-              ),
+                ),
+                Expanded(child: _buildSourcePanel(theme)),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -779,6 +788,18 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           })
           .toList(growable: false);
 
+  List<_MediaSourceSpec> get _filteredSourceSpecs {
+    final keyword = _sourceSearchController.text.trim().toLowerCase();
+    if (keyword.isEmpty) return _sourceSpecs;
+    return _sourceSpecs
+        .where(
+          (spec) =>
+              spec.title.toLowerCase().contains(keyword) ||
+              spec.subtitle.toLowerCase().contains(keyword),
+        )
+        .toList(growable: false);
+  }
+
   void _selectSource(int index) {
     final providerType = _providerTypeForSourceIndex(index);
     if (providerType != null &&
@@ -821,13 +842,20 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             ),
           ),
           const SizedBox(height: 8),
+          AppSearchField(
+            controller: _sourceSearchController,
+            hintText: context.l10n.search,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) {},
+          ),
+          const SizedBox(height: 8),
           Expanded(
             child: AppListView.separated(
               padding: EdgeInsets.zero,
-              itemCount: _sourceSpecs.length,
+              itemCount: _filteredSourceSpecs.length,
               separatorBuilder: (_, _) => const SizedBox(height: 6),
               itemBuilder: (context, index) =>
-                  _buildSourceTile(theme, _sourceSpecs[index]),
+                  _buildSourceTile(theme, _filteredSourceSpecs[index]),
             ),
           ),
           const SizedBox(height: 8),
@@ -917,6 +945,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }) {
     final selected = _selectedIndex == spec.index;
     return AppInkSurface(
+      key: ValueKey('add-media-source-tile-${spec.index}'),
       color: selected
           ? spec.color.withValues(alpha: 0.13)
           : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
@@ -1014,15 +1043,37 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   ),
                 ),
               ),
-              if (_providerBindingType(_selectedIndex) != null)
-                AppActionButton(
-                  onPressed: () => _openProviderBinding(
-                    _providerBindingType(_selectedIndex)!,
+              if (_selectedSourceSelectionCount > 0) ...[
+                const SizedBox(width: 8),
+                AppChip(
+                  avatar: const Icon(Icons.check_circle_outline_rounded),
+                  label: Text(
+                    compact
+                        ? '$_selectedSourceSelectionCount'
+                        : context.l10n.selectedCount(
+                            _selectedSourceSelectionCount,
+                          ),
                   ),
-                  icon: Icons.link_rounded,
-                  label: context.l10n.manageConnections,
-                  style: AppActionButtonStyle.text,
+                  style: AppChipStyle.outlined,
                 ),
+              ],
+              if (_providerBindingType(_selectedIndex) != null)
+                compact
+                    ? AppIconButton(
+                        onPressed: () => _openProviderBinding(
+                          _providerBindingType(_selectedIndex)!,
+                        ),
+                        icon: Icons.link_rounded,
+                        tooltip: context.l10n.manageConnections,
+                      )
+                    : AppActionButton(
+                        onPressed: () => _openProviderBinding(
+                          _providerBindingType(_selectedIndex)!,
+                        ),
+                        icon: Icons.link_rounded,
+                        label: context.l10n.manageConnections,
+                        style: AppActionButtonStyle.text,
+                      ),
             ],
           ),
         ),
@@ -1037,6 +1088,14 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       ],
     );
   }
+
+  int get _selectedSourceSelectionCount => switch (_selectedIndex) {
+    3 => _bilibiliSelection.length,
+    4 => _alistSelection.length,
+    5 => _embySelection.length,
+    6 => _cloudreveSelection.length,
+    _ => 0,
+  };
 
   Widget _buildContent(ThemeData theme) {
     switch (_selectedIndex) {
@@ -2058,6 +2117,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                             selectionController: _bilibiliSelection,
                             selectionScope:
                                 '$_bilibiliInstanceName:$selectedIndex:$title',
+                            onSelectionChanged: () => setState(() {}),
                             loading: _isLoading,
                             hasMore: _bilibiliPreviewHasMore,
                             onLoadMore: () =>
@@ -2147,6 +2207,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                     _alistServerId,
                     _alistInstanceName,
                   ),
+                  onSelectionChanged: () => setState(() {}),
                   loading: _alistLoading || _isLoading,
                   hasMore: _alistHasMore,
                   onLoadMore: () => _loadAlist(_alistPath, loadMore: true),
@@ -2298,6 +2359,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                     _embyServerId,
                     _embyInstanceName,
                   ),
+                  onSelectionChanged: () => setState(() {}),
                   loading: _embyLoading || _isLoading,
                   hasMore: _embyHasMore,
                   onLoadMore: () => _loadEmby(_embyPath, loadMore: true),
@@ -2414,6 +2476,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                     _cloudreveServerId,
                     _cloudreveInstanceName,
                   ),
+                  onSelectionChanged: () => setState(() {}),
                   loading: _cloudreveLoading || _isLoading,
                   hasMore: _cloudreveHasMore,
                   onLoadMore: () =>

@@ -180,4 +180,40 @@ void main() {
     expect(find.byKey(const Key('discovery-clear-selection')), findsOneWidget);
     expect(find.byKey(const Key('discovery-add-selected')), findsOneWidget);
   });
+
+  testWidgets('keeps selection actions below the media list', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            height: 420,
+            child: DiscoveryBrowser(
+              loading: false,
+              items: [
+                DiscoveryBrowserEntry(
+                  key: 'movie',
+                  title: 'Movie',
+                  source: testDiscoveredMediaSource(name: 'Movie'),
+                  isContainer: false,
+                ),
+              ],
+              onAddSelected: (_) async {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getRect(find.byKey(const Key('discovery-item-movie'))).top,
+      lessThan(
+        tester.getRect(find.byKey(const Key('discovery-add-selected'))).top,
+      ),
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

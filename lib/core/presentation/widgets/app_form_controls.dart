@@ -3876,6 +3876,7 @@ class AppDialogFrame extends StatelessWidget {
   final Color? backgroundColor;
   final BorderRadius borderRadius;
   final Clip clipBehavior;
+  final bool allowWide;
 
   const AppDialogFrame({
     super.key,
@@ -3886,6 +3887,7 @@ class AppDialogFrame extends StatelessWidget {
     this.backgroundColor,
     this.borderRadius = const BorderRadius.all(Radius.circular(20)),
     this.clipBehavior = Clip.antiAlias,
+    this.allowWide = false,
   });
 
   @override
@@ -3897,7 +3899,11 @@ class AppDialogFrame extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: borderRadius),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: AppMetrics.dialogMaxWidth(context, maxWidth),
+          maxWidth: AppMetrics.dialogMaxWidth(
+            context,
+            maxWidth,
+            allowWide: allowWide,
+          ),
           maxHeight: AppMetrics.dialogMaxHeight(context, maxHeight),
         ),
         child: child,

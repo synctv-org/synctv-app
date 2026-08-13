@@ -114,6 +114,69 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
   });
 
+  testWidgets('desktop workspace filters media sources', (tester) async {
+    tester.view.physicalSize = const ui.Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: buildThemedTestApp,
+        home: const Scaffold(body: AddMediaDialog(roomId: 'room_layout_test')),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Bilibili'), findsWidgets);
+    await tester.enterText(find.byType(TextField).first, 'FNOS');
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('add-media-source-tile-12')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('add-media-source-tile-3')), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('keeps a direct-link draft while switching sources', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const ui.Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: buildThemedTestApp,
+        home: const Scaffold(body: AddMediaDialog(roomId: 'room_layout_test')),
+      ),
+    );
+    await tester.pump();
+
+    await tester.enterText(
+      find.byType(TextField).at(1),
+      'https://media.test/a',
+    );
+    await tester.tap(find.byKey(const ValueKey('add-media-source-tile-1')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('add-media-source-tile-0')));
+    await tester.pump();
+
+    expect(find.text('https://media.test/a'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pump(const Duration(seconds: 4));
+  });
+
   testWidgets('compact source selector keeps provider form usable', (
     tester,
   ) async {
