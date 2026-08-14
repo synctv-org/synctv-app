@@ -63,6 +63,7 @@ import 'package:synctv_app/features/room/presentation/widgets/playback_diagnosti
 import 'package:synctv_app/features/room/presentation/widgets/playback_empty_state.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_options_control.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playlist_empty_state.dart';
+import 'package:synctv_app/features/room/presentation/widgets/playlist_search_field.dart';
 import 'package:synctv_app/features/room/presentation/widgets/free_mode_settings_fields.dart';
 import 'package:synctv_app/features/media_p2p/presentation/p2p_media_settings_fields.dart';
 import 'package:synctv_app/features/room_invite/presentation/room_invite_actions.dart';
@@ -403,6 +404,7 @@ class _RoomScreenState extends State<RoomScreen>
   bool _hasMoreMediaEntries = true;
   bool _isLoadingMoreMediaEntries = false;
   bool _isRefreshingMediaEntries = false;
+  final AsyncStateEpoch _mediaLibraryStateEpoch = AsyncStateEpoch();
   final ScrollController _mediaEntryScrollController = ScrollController();
 
   // Playlist navigation
@@ -1001,6 +1003,7 @@ class _RoomScreenState extends State<RoomScreen>
         );
       }
     } else {
+      _invalidateMediaLibraryRequests();
       if (_playlistItemsObserved) {
         _sendRealtimeMessage(
           _realtimeProtocol.encodeUnobserveResource('playlist_items'),
@@ -1170,62 +1173,73 @@ class _RoomScreenState extends State<RoomScreen>
   void _onMediaEntryScroll() {
     if (_mediaEntryScrollController.position.pixels >=
         _mediaEntryScrollController.position.maxScrollExtent - 200) {
-      if (!_isLoadingMoreMediaEntries && _hasMoreMediaEntries) {
+      if (!_isLoadingMediaEntries &&
+          !_isLoadingMoreMediaEntries &&
+          !_isRefreshingMediaEntries &&
+          _hasMoreMediaEntries) {
         _loadMoreMediaEntries();
       }
     }
   }
 
   Future<void> _loadMoreMediaEntries() async {
-    if (_isLoadingMoreMediaEntries) return;
+    if (_isLoadingMediaEntries ||
+        _isLoadingMoreMediaEntries ||
+        _isRefreshingMediaEntries ||
+        !_hasMoreMediaEntries) {
+      return;
+    }
+
+    final requestEpoch = _mediaLibraryStateEpoch.capture();
+    final parentPlaylist = _playlistStack.isNotEmpty
+        ? _playlistStack.last
+        : null;
+    final requestedPage = _currentPage + 1;
+    final requestedCursor = _usesCursorPagination ? _nextCursor : null;
+    final requestedSearch = _mediaSearchController.text.trim();
 
     setState(() {
       _isLoadingMoreMediaEntries = true;
     });
 
     try {
-      final parentPlaylist = _playlistStack.isNotEmpty
-          ? _playlistStack.last
-          : null;
       final result = await _mediaLibraryGateway.listMediaLibrary(
         widget.room.roomId,
         playlistId: parentPlaylist?.playbackPlaylistId ?? '',
         target: parentPlaylist?.playbackTarget,
-        page: _currentPage + 1,
-        cursor: _usesCursorPagination ? _nextCursor : null,
+        page: requestedPage,
+        cursor: requestedCursor,
         pageSize: _pageSize,
-        search: _mediaSearchController.text.trim(),
+        search: requestedSearch,
       );
 
       final entries = result.entries;
       final total = result.total;
 
-      if (mounted) {
-        setState(() {
-          if (entries.isNotEmpty) {
-            _mediaEntries.addAll(entries);
-            _usesCursorPagination = result.usesCursor;
-            _nextCursor = result.nextCursor;
-            _currentPage = result.page;
-            _mediaSupportsSearch = result.supportsSearch;
-            _hasMoreMediaEntries = result.usesCursor
-                ? result.nextCursor.isNotEmpty
-                : total != null && _mediaEntries.length < total;
-          } else {
-            _hasMoreMediaEntries = false;
-          }
-          _isLoadingMoreMediaEntries = false;
-        });
-      }
+      if (!mounted || !_mediaLibraryStateEpoch.isCurrent(requestEpoch)) return;
+      setState(() {
+        if (entries.isNotEmpty) {
+          _mediaEntries.addAll(entries);
+          _usesCursorPagination = result.usesCursor;
+          _nextCursor = result.nextCursor;
+          _currentPage = result.page;
+          _mediaSupportsSearch = result.supportsSearch;
+          _hasMoreMediaEntries = result.usesCursor
+              ? result.nextCursor.isNotEmpty
+              : total != null && _mediaEntries.length < total;
+        } else {
+          _hasMoreMediaEntries = false;
+        }
+        _isLoadingMoreMediaEntries = false;
+      });
     } catch (e) {
       debugPrint('Load more media entries error: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingMoreMediaEntries = false;
-          _hasMoreMediaEntries = false;
-        });
-        AppNotifications.showError(context, context.l10n.errorMessage('$e'));
-      }
+      if (!mounted || !_mediaLibraryStateEpoch.isCurrent(requestEpoch)) return;
+      setState(() {
+        _isLoadingMoreMediaEntries = false;
+        _hasMoreMediaEntries = false;
+      });
+      AppNotifications.showError(context, context.l10n.errorMessage('$e'));
     }
   }
 
@@ -1592,6 +1606,7 @@ class _RoomScreenState extends State<RoomScreen>
         return;
       }
       if (message.resourceObserveId == 'playlist_items' && mounted) {
+        _invalidateMediaLibraryRequests();
         setState(() {
           _mediaEntries = const [];
           _currentPage = 1;
@@ -3298,9 +3313,8 @@ class _RoomScreenState extends State<RoomScreen>
     _tabController.removeListener(_handleRoomTabChanged);
     _authErrorSubscription?.cancel();
     _realtimeSubscription?.cancel();
-    unawaited(_adaptiveVideoTracksSubscription?.cancel());
+    _disposeVideoControllerImmediately();
     _tabController.dispose();
-    unawaited(_disposeVideoController());
     unawaited(_pictureInPicture.exit());
     _syncTimer?.cancel();
     _diagnosticsTimer?.cancel();
@@ -5870,12 +5884,11 @@ class _RoomScreenState extends State<RoomScreen>
               _buildPlaylistBreadcrumbs(),
               if (_mediaSupportsSearch || !_isInsideProviderTargetScope) ...[
                 const SizedBox(height: 8),
-                AppTextField(
+                PlaylistSearchField(
+                  key: const Key('playlist-search-field'),
                   controller: _mediaSearchController,
                   label: context.l10n.searchMediaOrPlaylist,
-                  prefixIcon: Icons.search_rounded,
-                  showClearButton: true,
-                  onSubmitted: (_) => _submitMediaSearch(),
+                  onSearch: _submitMediaSearch,
                 ),
               ],
             ],
@@ -6845,6 +6858,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _enterPlaylist(RoomMediaEntry playlist) {
+    _invalidateMediaLibraryRequests();
     setState(() {
       _playlistStack.add(playlist);
       _playlistNameStack.add(playlist.name);
@@ -6856,6 +6870,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _exitPlaylist() {
     if (_playlistStack.isEmpty) return;
+    _invalidateMediaLibraryRequests();
     setState(() {
       _playlistStack.removeLast();
       _playlistNameStack.removeLast();
@@ -6869,6 +6884,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (depth < 0 || depth >= _playlistStack.length) {
       if (depth != 0 || _playlistStack.isEmpty) return;
     }
+    _invalidateMediaLibraryRequests();
     setState(() {
       _playlistStack.removeRange(depth, _playlistStack.length);
       _playlistNameStack.removeRange(depth + 1, _playlistNameStack.length);
@@ -6908,6 +6924,8 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _refreshCurrentPlaylist() async {
     if (_isRefreshingMediaEntries) return;
+    _invalidateMediaLibraryRequests();
+    final requestEpoch = _mediaLibraryStateEpoch.capture();
     final playlist = _playlistStack.isEmpty ? null : _playlistStack.last;
     setState(() => _isRefreshingMediaEntries = true);
     try {
@@ -6919,25 +6937,25 @@ class _RoomScreenState extends State<RoomScreen>
         pageSize: _pageSize,
         refresh: _isInsideProviderTargetScope,
       );
+      if (!mounted || !_mediaLibraryStateEpoch.isCurrent(requestEpoch)) return;
       _applyMediaLibrary(mediaLibrary);
     } catch (error) {
-      if (mounted) {
-        AppNotifications.showError(
-          context,
-          context.l10n.errorMessage('$error'),
-        );
-      }
+      if (!mounted || !_mediaLibraryStateEpoch.isCurrent(requestEpoch)) return;
+      AppNotifications.showError(context, context.l10n.errorMessage('$error'));
     } finally {
-      if (mounted) setState(() => _isRefreshingMediaEntries = false);
+      if (mounted && _mediaLibraryStateEpoch.isCurrent(requestEpoch)) {
+        setState(() => _isRefreshingMediaEntries = false);
+      }
     }
   }
 
   void _submitMediaSearch() {
+    _invalidateMediaLibraryRequests();
     setState(() {
       _currentPage = 1;
       _nextCursor = '';
       _usesCursorPagination = false;
-      _hasMoreMediaEntries = true;
+      _hasMoreMediaEntries = false;
       _mediaEntries = const [];
       _isLoadingMediaEntries = true;
     });
@@ -6954,6 +6972,12 @@ class _RoomScreenState extends State<RoomScreen>
         search: _mediaSearchController.text.trim(),
       ),
     );
+  }
+
+  void _invalidateMediaLibraryRequests() {
+    _mediaLibraryStateEpoch.advance();
+    _isLoadingMoreMediaEntries = false;
+    _isRefreshingMediaEntries = false;
   }
 
   Future<void> _switchMedia(RoomMediaEntry entry) async {
