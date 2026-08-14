@@ -1745,8 +1745,21 @@ segment.ts?token=secret
           secondPieceAttempts++;
           if (secondPieceAttempts == 1) {
             await secondHalfAllowed.future;
-            request.response.statusCode = HttpStatus.serviceUnavailable;
-            await request.response.close();
+            final bytes = Uint8List.sublistView(
+              media,
+              start,
+              min(start + 128, end + 1),
+            );
+            request.response.statusCode = HttpStatus.partialContent;
+            request.response.headers.contentLength = end - start + 1;
+            request.response.headers.set(
+              HttpHeaders.contentRangeHeader,
+              'bytes $start-$end/${media.length}',
+            );
+            final socket = await request.response.detachSocket();
+            socket.add(bytes);
+            await socket.flush();
+            socket.destroy();
             return;
           }
         }
@@ -1770,6 +1783,8 @@ segment.ts?token=secret
       });
       final engine = P2pMediaEngine(
         requestPeerPiece: (swarm, key, cancellation) async => null,
+        peerMissingRetryDelay: const Duration(milliseconds: 10),
+        progressiveOriginPeerRecoveryTimeout: const Duration(milliseconds: 80),
       );
       addTearDown(() async {
         if (!secondHalfAllowed.isCompleted) secondHalfAllowed.complete();
@@ -1933,6 +1948,71 @@ segment.ts?token=secret
       await responseFinished.future.timeout(const Duration(seconds: 2)),
       isA<HttpException>(),
     );
+  });
+
+  test('DASH open ranges return 502 when the first piece fails', () async {
+    final mediaLength = P2pMediaEngine.progressivePieceSize * 2;
+    var originAttempts = 0;
+    final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    origin.listen((request) async {
+      if (request.uri.path == '/manifest.mpd') {
+        request.response.write(
+          '<MPD><Period><AdaptationSet><Representation>'
+          '<BaseURL>http://${origin.address.address}:${origin.port}/video.mp4'
+          '</BaseURL>'
+          '<SegmentBase indexRange="100-199">'
+          '<Initialization range="0-99"/>'
+          '</SegmentBase></Representation></AdaptationSet></Period></MPD>',
+        );
+        await request.response.close();
+        return;
+      }
+      if (request.uri.path != '/video.mp4') {
+        request.response.statusCode = HttpStatus.notFound;
+        await request.response.close();
+        return;
+      }
+      request.response.headers.set(HttpHeaders.acceptRangesHeader, 'bytes');
+      if (request.method == 'HEAD') {
+        request.response.headers.contentLength = mediaLength;
+        await request.response.close();
+        return;
+      }
+      originAttempts++;
+      request.response.statusCode = HttpStatus.serviceUnavailable;
+      await request.response.close();
+    });
+    final engine = P2pMediaEngine(
+      requestPeerPiece: (swarm, key, cancellation) async => null,
+    );
+    addTearDown(() async {
+      await engine.dispose();
+      await origin.close(force: true);
+    });
+    final local = await engine.localize(
+      upstream: Uri.parse(
+        'http://${origin.address.address}:${origin.port}/manifest.mpd',
+      ),
+      headers: const {},
+      swarmId: 'sm2_dash_first_piece_failure',
+      format: 'dash',
+    );
+    final document = XmlDocument.parse(await _getText(local));
+    final mediaUri = Uri.parse(
+      document
+          .findAllElements('Representation')
+          .single
+          .childElements
+          .singleWhere((element) => element.name.local == 'BaseURL')
+          .innerText,
+    );
+
+    final response = await _getResponse(mediaUri, range: 'bytes=0-');
+
+    expect(response.statusCode, HttpStatus.badGateway);
+    expect(response.contentRange, isNull);
+    expect(response.bytes, isEmpty);
+    expect(originAttempts, 3);
   });
 
   test('DASH gateway rewrites every external MPD URI form', () async {

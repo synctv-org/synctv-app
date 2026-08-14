@@ -59,6 +59,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     this.originBodySlowObservation = const Duration(seconds: 2),
     this.originBodyHedgeDelay = const Duration(seconds: 5),
     this.originBodyMinimumRateBytesPerSecond = 256 * 1024,
+    this.progressiveOriginPeerRecoveryTimeout = const Duration(seconds: 2),
     this.securityMode = P2pMediaSecurityMode.standard,
     this.originSampleRate = 0.10,
   }) : cacheTtl =
@@ -72,6 +73,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     assert(this.cacheTtl > Duration.zero);
     assert(originHeaderTimeout > Duration.zero);
     assert(originHeaderPeerRecoveryTimeout > Duration.zero);
+    assert(progressiveOriginPeerRecoveryTimeout > Duration.zero);
     assert(originSampleRate >= 0 && originSampleRate <= 1);
     assert(originBodyMinimumRateBytesPerSecond > 0);
     _httpClient.connectionTimeout = const Duration(seconds: 10);
@@ -104,6 +106,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   final Duration originBodySlowObservation;
   final Duration originBodyHedgeDelay;
   final int originBodyMinimumRateBytesPerSecond;
+  final Duration progressiveOriginPeerRecoveryTimeout;
   @override
   final P2pMediaSecurityMode securityMode;
   final double originSampleRate;
@@ -700,19 +703,36 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       );
       return;
     }
-    request.response.statusCode = range == null
-        ? HttpStatus.ok
-        : HttpStatus.partialContent;
-    request.response.headers.contentLength = outputRange.length;
-    request.response.headers.contentType = _contentTypeFor(resource.upstream);
-    request.response.headers.set(HttpHeaders.acceptRangesHeader, 'bytes');
-    if (range != null) {
-      request.response.headers.set(
-        HttpHeaders.contentRangeHeader,
-        'bytes ${outputRange.start}-${outputRange.end}/$totalLength',
-      );
+    var successResponseConfigured = false;
+    void configureSuccessResponse() {
+      if (successResponseConfigured) return;
+      successResponseConfigured = true;
+      request.response.statusCode = range == null
+          ? HttpStatus.ok
+          : HttpStatus.partialContent;
+      request.response.headers.contentLength = outputRange.length;
+      request.response.headers.contentType = _contentTypeFor(resource.upstream);
+      request.response.headers.set(HttpHeaders.acceptRangesHeader, 'bytes');
+      if (range != null) {
+        request.response.headers.set(
+          HttpHeaders.contentRangeHeader,
+          'bytes ${outputRange.start}-${outputRange.end}/$totalLength',
+        );
+      }
     }
+
+    Future<void> closeFailedResponse() async {
+      if (successResponseConfigured) {
+        await _closeResponseIgnoringContentLengthShortfall(request.response);
+        return;
+      }
+      request.response.statusCode = HttpStatus.badGateway;
+      request.response.headers.contentLength = 0;
+      await request.response.close();
+    }
+
     if (request.method == 'HEAD') {
+      configureSuccessResponse();
       await request.response.close();
       return;
     }
@@ -772,15 +792,20 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
             bytes = peerBytes;
           } else if (opened?.origin case final origin?) {
             if (origin.statusCode == HttpStatus.ok) {
-              await _streamCompleteOriginFromOffset(
+              final wroteOutput = await _streamCompleteOriginFromOffset(
                 request,
                 resource,
                 origin,
                 outputOffset: max(start, outputRange.start),
+                beforeFirstOutput: configureSuccessResponse,
               );
-              await _closeResponseIgnoringContentLengthShortfall(
-                request.response,
-              );
+              if (wroteOutput) {
+                await _closeResponseIgnoringContentLengthShortfall(
+                  request.response,
+                );
+              } else {
+                await closeFailedResponse();
+              }
               return;
             }
             if (origin.statusCode == HttpStatus.partialContent) {
@@ -791,6 +816,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
                 rangeHeader: rangeHeader,
                 expectedPeerLength: end - start + 1,
                 requestedRange: _ByteRange(start, end),
+                peerRecoveryTimeout: progressiveOriginPeerRecoveryTimeout,
               );
               if (bytes != null && resource.shareable) {
                 _putCache(resource.swarmId, pieceKey, bytes);
@@ -809,13 +835,14 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
           }
         }
         if (bytes == null) {
-          await _closeResponseIgnoringContentLengthShortfall(request.response);
+          await closeFailedResponse();
           return;
         }
       }
       final outputStart = max(0, outputRange.start - start);
       final outputEnd = min(bytes.length, outputRange.end - start + 1);
       if (outputStart < outputEnd) {
+        configureSuccessResponse();
         request.response.add(
           Uint8List.sublistView(bytes, outputStart, outputEnd),
         );
@@ -826,6 +853,10 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         start: start + progressivePieceSize,
         totalLength: totalLength,
       );
+    }
+    if (!successResponseConfigured) {
+      await closeFailedResponse();
+      return;
     }
     await request.response.close();
   }
@@ -929,14 +960,16 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     }
   }
 
-  Future<void> _streamCompleteOriginFromOffset(
+  Future<bool> _streamCompleteOriginFromOffset(
     HttpRequest request,
     _GatewayResource resource,
     HttpClientResponse origin, {
     required int outputOffset,
+    required void Function() beforeFirstOutput,
   }) async {
     var absoluteOffset = 0;
     var pieceIndex = 0;
+    var wroteOutput = false;
     var pieceBuilder = BytesBuilder(copy: false);
     await for (final chunk in origin) {
       _recordHttp(chunk.length);
@@ -959,7 +992,9 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       final chunkEnd = absoluteOffset + chunk.length;
       if (chunkEnd > outputOffset) {
         final startInChunk = max(0, outputOffset - absoluteOffset);
+        if (!wroteOutput) beforeFirstOutput();
         request.response.add(chunk.sublist(startInChunk));
+        wroteOutput = true;
       }
       absoluteOffset = chunkEnd;
     }
@@ -970,6 +1005,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         pieceBuilder.takeBytes(),
       );
     }
+    return wroteOutput;
   }
 
   Future<Uint8List?> _loadPiece(
@@ -1126,6 +1162,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     String? rangeHeader,
     int? expectedPeerLength,
     _ByteRange? requestedRange,
+    Duration? peerRecoveryTimeout,
   }) async {
     final maxOriginBytes =
         origin.statusCode == HttpStatus.ok && requestedRange != null
@@ -1175,15 +1212,20 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         if (!startPeer.isCompleted) startPeer.complete(bytes == null);
       }),
     );
-    final peerFuture = startPeer.future.then((start) {
+    final peerFuture = startPeer.future.then((start) async {
       if (!start) return null;
-      return _retryPeerPiece(
+      final retry = _retryPeerPiece(
         resource,
         pieceKey,
         cancellation,
         rangeHeader: rangeHeader,
         expectedLength: expectedPeerLength,
       );
+      if (peerRecoveryTimeout == null) return retry;
+      return Future.any<Uint8List?>([
+        retry,
+        Future<Uint8List?>.delayed(peerRecoveryTimeout, () => null),
+      ]);
     });
     final winner = Completer<_PieceReadWinner?>();
     var finished = 0;
