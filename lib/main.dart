@@ -2,7 +2,6 @@ import 'package:accessibility_tools/accessibility_tools.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/app_shell/presentation/app_shell.dart';
@@ -177,7 +176,6 @@ class MyApp extends StatelessWidget {
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           ...AppLocalizations.localizationsDelegates,
-          FLocalizations.delegate,
         ],
         builder: (context, child) {
           final mediaQueryData = MediaQuery.of(context);
@@ -187,9 +185,6 @@ class MyApp extends StatelessWidget {
               maxScaleFactor: 1.3,
             ),
           );
-          final foruiTheme = Theme.of(context).brightness == Brightness.dark
-              ? FTheme.neutral.dark.desktop
-              : FTheme.neutral.light.desktop;
           Widget appChild = MediaQuery(data: newMediaQueryData, child: child!);
           appChild = ResponsiveBreakpoints.builder(
             breakpoints: AppBreakpoints.values,
@@ -203,9 +198,7 @@ class MyApp extends StatelessWidget {
             );
           }
 
-          return dependencies.scope(
-            child: FTheme(data: foruiTheme, child: appChild),
-          );
+          return dependencies.scope(child: appChild);
         },
         home: AppShell(dependencies: dependencies.appShell),
       ),

@@ -92,57 +92,67 @@ class _YoutubePlaylistPreviewState extends State<YoutubePlaylistPreview> {
               ),
             ],
           ),
-        ...media.entries.map(
-          (entry) => ListTile(
-            key: Key('youtube-preview-item-${entry.key}'),
-            contentPadding: EdgeInsets.zero,
-            onTap: !widget.selectionEnabled || widget.loading
-                ? null
-                : () => setState(() {
-                    if (_selected.contains(entry.key)) {
-                      _selected.remove(entry.key);
-                    } else {
-                      _selected.add(entry.key);
-                    }
-                  }),
-            leading: !entry.value.hasThumbnailUrl()
-                ? const Icon(Icons.play_circle_outline)
-                : AppImageThumbnail(
-                    url: entry.value.thumbnailUrl,
-                    width: 72,
-                    height: 44,
-                    borderRadius: BorderRadius.circular(4),
+        Expanded(
+          child: AppListView.separated(
+            itemCount: media.length + (widget.hasMore ? 1 : 0),
+            separatorBuilder: (_, _) => const AppDivider(height: 1),
+            itemBuilder: (context, index) {
+              if (index == media.length) {
+                return Align(
+                  child: TextButton.icon(
+                    key: const Key('youtube-preview-load-more'),
+                    onPressed: widget.loading ? null : widget.onLoadMore,
+                    icon: const Icon(Icons.expand_more),
+                    label: Text(context.l10n.loadMore),
                   ),
-            title: Text(
-              entry.value.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: widget.selectionEnabled
-                ? AppCheckbox(
-                    value: _selected.contains(entry.key),
-                    enabled: !widget.loading,
-                    semanticsLabel: context.l10n.selectItem(entry.value.title),
-                    onChanged: (_) => setState(() {
-                      if (_selected.contains(entry.key)) {
-                        _selected.remove(entry.key);
-                      } else {
-                        _selected.add(entry.key);
-                      }
-                    }),
-                  )
-                : null,
+                );
+              }
+              final entry = media.entries.elementAt(index);
+              return ListTile(
+                key: Key('youtube-preview-item-${entry.key}'),
+                contentPadding: EdgeInsets.zero,
+                onTap: !widget.selectionEnabled || widget.loading
+                    ? null
+                    : () => setState(() {
+                        if (_selected.contains(entry.key)) {
+                          _selected.remove(entry.key);
+                        } else {
+                          _selected.add(entry.key);
+                        }
+                      }),
+                leading: !entry.value.hasThumbnailUrl()
+                    ? const Icon(Icons.play_circle_outline)
+                    : AppImageThumbnail(
+                        url: entry.value.thumbnailUrl,
+                        width: 72,
+                        height: 44,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                title: Text(
+                  entry.value.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: widget.selectionEnabled
+                    ? AppCheckbox(
+                        value: _selected.contains(entry.key),
+                        enabled: !widget.loading,
+                        semanticsLabel: context.l10n.selectItem(
+                          entry.value.title,
+                        ),
+                        onChanged: (_) => setState(() {
+                          if (_selected.contains(entry.key)) {
+                            _selected.remove(entry.key);
+                          } else {
+                            _selected.add(entry.key);
+                          }
+                        }),
+                      )
+                    : null,
+              );
+            },
           ),
         ),
-        if (widget.hasMore)
-          Align(
-            child: TextButton.icon(
-              key: const Key('youtube-preview-load-more'),
-              onPressed: widget.loading ? null : widget.onLoadMore,
-              icon: const Icon(Icons.expand_more),
-              label: Text(context.l10n.loadMore),
-            ),
-          ),
         if (widget.selectionEnabled)
           Align(
             alignment: Alignment.centerRight,

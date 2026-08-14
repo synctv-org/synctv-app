@@ -1747,6 +1747,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       } else {
         _mediaTargetStack.add(target);
       }
+      _mediaSearchController.clear();
       _mediaPage = null;
       _mediaWatchVersion = '';
     });
@@ -4380,11 +4381,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Column(
               children: [
-                _buildSearchField(
-                  controller: _mediaSearchController,
-                  label: context.l10n.searchMediaOrPlaylist,
-                  onSearch: _reloadMediaLibrary,
-                ),
+                if (page == null ||
+                    page.supportsSearch ||
+                    !_isInsideDynamicMediaPlaylist)
+                  _buildSearchField(
+                    controller: _mediaSearchController,
+                    label: context.l10n.searchMediaOrPlaylist,
+                    onSearch: _reloadMediaLibrary,
+                  ),
                 const SizedBox(height: 8),
                 Row(
                   children: [

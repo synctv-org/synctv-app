@@ -8,6 +8,7 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -127,7 +128,7 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
         ),
       );
     }
-    return Column(
+    final controls = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _bindSelector(),
@@ -193,11 +194,15 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
           const SizedBox(height: 10),
         ],
         _locationBar(),
-        const SizedBox(height: 8),
+      ],
+    );
+    final results = Column(
+      children: [
         Expanded(child: _loading ? const AppLoadingIndicator() : _list()),
         _pagination(),
       ],
     );
+    return ProviderWorkspace(controls: controls, results: results);
   }
 
   Widget _bindSelector() => ProviderAccountSelector<SeafileBindInfo>(

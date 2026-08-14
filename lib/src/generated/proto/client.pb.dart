@@ -17166,6 +17166,7 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
     $core.String? version,
     PagePagination? page,
     CursorPagination? cursor,
+    $core.bool? supportsSearch,
   }) {
     final result = create();
     if (playlists != null) result.playlists.addAll(playlists);
@@ -17178,6 +17179,7 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
     if (version != null) result.version = version;
     if (page != null) result.page = page;
     if (cursor != null) result.cursor = cursor;
+    if (supportsSearch != null) result.supportsSearch = supportsSearch;
     return result;
   }
 
@@ -17221,6 +17223,7 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
         subBuilder: PagePagination.create)
     ..aOM<CursorPagination>(10, _omitFieldNames ? '' : 'cursor',
         subBuilder: CursorPagination.create)
+    ..aOB(11, _omitFieldNames ? '' : 'supportsSearch')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -17321,6 +17324,17 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
   void clearCursor() => $_clearField(10);
   @$pb.TagNumber(10)
   CursorPagination ensureCursor() => $_ensure(9);
+
+  /// Whether the current playlist scope accepts the request search field.
+  /// Static playlists always support search; dynamic playlists report the provider capability.
+  @$pb.TagNumber(11)
+  $core.bool get supportsSearch => $_getBF(10);
+  @$pb.TagNumber(11)
+  set supportsSearch($core.bool value) => $_setBool(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasSupportsSearch() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearSupportsSearch() => $_clearField(11);
 }
 
 enum PlaylistItem_SourceConfig {

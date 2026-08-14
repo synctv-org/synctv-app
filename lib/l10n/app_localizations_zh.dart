@@ -1356,6 +1356,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playbackProxyOnly => '仅代理';
 
   @override
+  String get playbackProxyDirectPrefer => '优先直连';
+
+  @override
+  String get playbackProxyDirectOnly => '仅直连';
+
+  @override
   String get playbackProxyAutoDescription => '沿用媒体源的默认播放线路';
 
   @override
@@ -1363,6 +1369,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playbackProxyOnlyDescription => '仅保留可由 SyncTV 服务端代理的播放线路';
+
+  @override
+  String get playbackProxyDirectPreferDescription => '同时保留直连与代理线路，默认使用直连';
+
+  @override
+  String get playbackProxyDirectOnlyDescription => '仅保留直连播放线路';
 
   @override
   String get playbackProxyDirectRisk =>

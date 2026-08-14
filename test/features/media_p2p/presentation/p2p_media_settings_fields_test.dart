@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_preferences_controller.dart';
@@ -33,7 +32,6 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           ...AppLocalizations.localizationsDelegates,
-          FLocalizations.delegate,
         ],
         builder: buildThemedTestApp,
         home: Scaffold(body: P2pMediaSettingsFields(preferences: preferences)),

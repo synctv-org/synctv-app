@@ -7,8 +7,10 @@ import 'package:synctv_app/features/providers/presentation/provider_gateway_scop
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
@@ -74,6 +76,8 @@ class BilibiliPlaylistForm extends StatefulWidget {
     required this.binds,
     required this.onDraftChanged,
     this.proxyMode = source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+    this.onProxyModeChanged,
+    this.leadingControls,
     this.target = ProviderAddTarget.media,
     this.onLoadLiveAreas,
     this.onLoadFavoriteFolders,
@@ -88,6 +92,8 @@ class BilibiliPlaylistForm extends StatefulWidget {
   final List<BilibiliBindInfo> binds;
   final ValueChanged<bool> onDraftChanged;
   final source_enum.PlaybackProxyMode proxyMode;
+  final ValueChanged<source_enum.PlaybackProxyMode>? onProxyModeChanged;
+  final Widget? leadingControls;
   final ProviderAddTarget target;
   final Future<List<BilibiliLiveAreaInfo>> Function(String instanceName)?
   onLoadLiveAreas;
@@ -127,6 +133,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
   String _instanceName = '';
   String _selectedBindId = '';
   bool _shared = false;
+  bool _showSettings = false;
   bool _loading = false;
   bool _areasLoading = false;
   List<BilibiliLiveAreaInfo> _liveAreas = const [];
@@ -157,6 +164,15 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
   bool _pgcSeasonsHasMore = false;
   BilibiliPlaylistListPage? _preview;
   final List<_BilibiliBrowseLocation> _browsePath = [];
+  int _previewRequestVersion = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _isInstantPreviewMode) unawaited(_loadPreview());
+    });
+  }
 
   @override
   void dispose() {
@@ -171,6 +187,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
   }
 
   void _changed() {
+    _previewRequestVersion += 1;
     _preview = null;
     _browsePath.clear();
     widget.onDraftChanged(
@@ -200,423 +217,556 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
       _instanceName = '';
     }
     final items = _preview?.items ?? const <BilibiliPlaylistListItemInfo>[];
-    return AppSingleChildScrollView(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DropdownButtonFormField<BilibiliPlaylistMode>(
-            key: const Key('bilibili-playlist-mode'),
-            initialValue: _mode,
+    final controls = <Widget>[
+      ?widget.leadingControls,
+      _buildBrowseToolbar(context),
+      if (_primaryLabel case final label?) ...[
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('bilibili-playlist-primary'),
+          controller: _primaryController,
+          enabled: !_loading,
+          label: label,
+          prefixIcon: Icons.tag,
+          keyboardType: _mode == BilibiliPlaylistMode.videoParts
+              ? TextInputType.text
+              : TextInputType.number,
+          onChanged: (_) => _changed(),
+        ),
+      ],
+      if (_secondaryLabel case final label?) ...[
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('bilibili-playlist-secondary'),
+          controller: _secondaryController,
+          enabled: !_loading,
+          label: label,
+          prefixIcon: Icons.numbers,
+          keyboardType: TextInputType.number,
+          onChanged: (_) => _changed(),
+        ),
+      ],
+      if (_mode == BilibiliPlaylistMode.upVideos) ...[
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('bilibili-playlist-keyword'),
+          controller: _keywordController,
+          enabled: !_loading,
+          label: context.l10n.keyword,
+          prefixIcon: Icons.search,
+          onChanged: (_) => _changed(),
+        ),
+      ],
+      if (_mode == BilibiliPlaylistMode.liveArea) ...[
+        const SizedBox(height: 12),
+        if (_areasLoading)
+          const AppLoadingIndicator(size: AppLoadingSize.sm)
+        else ...[
+          DropdownButtonFormField<int>(
+            key: const Key('bilibili-live-parent-area'),
+            initialValue: _parentAreaId,
+            isExpanded: true,
             decoration: InputDecoration(
-              labelText: context.l10n.source,
-              prefixIcon: const Icon(Icons.video_collection_outlined),
+              labelText: context.l10n.liveCategory,
+              prefixIcon: const Icon(Icons.category_outlined),
             ),
-            items: BilibiliPlaylistMode.values
+            items: _parentAreas
                 .map(
-                  (mode) => DropdownMenuItem(
-                    value: mode,
-                    child: Text(_modeLabel(mode)),
+                  (entry) => DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value, overflow: TextOverflow.ellipsis),
                   ),
                 )
                 .toList(),
             onChanged: _loading
                 ? null
-                : (mode) {
-                    if (mode == null) return;
-                    setState(() {
-                      _mode = mode;
-                      _preview = null;
-                      _primaryController.clear();
-                      _secondaryController.clear();
-                      _keywordController.clear();
-                    });
+                : (value) {
+                    final children = _childrenFor(value);
+                    _parentAreaId = value;
+                    _areaId = children.firstOrNull?.id;
                     _changed();
-                    if (mode == BilibiliPlaylistMode.liveArea) {
-                      unawaited(_loadLiveAreas());
-                    }
-                    if (mode == BilibiliPlaylistMode.favoriteVideos) {
-                      unawaited(_loadFavoriteFolders());
-                    }
-                    if (mode == BilibiliPlaylistMode.followedAnime ||
-                        mode == BilibiliPlaylistMode.followedCinema) {
-                      unawaited(_loadFollowedPgc(reset: true));
-                    }
-                    if (mode == BilibiliPlaylistMode.pgcTimeline) {
-                      unawaited(_loadPgcTimeline());
-                    }
-                    if (mode == BilibiliPlaylistMode.pgcIndex) {
-                      unawaited(_loadPgcSeasons(reset: true));
-                    }
                   },
           ),
-          if (_primaryLabel case final label?) ...[
-            const SizedBox(height: 12),
-            AppTextField(
-              key: const Key('bilibili-playlist-primary'),
-              controller: _primaryController,
-              enabled: !_loading,
-              label: label,
-              prefixIcon: Icons.tag,
-              keyboardType: _mode == BilibiliPlaylistMode.videoParts
-                  ? TextInputType.text
-                  : TextInputType.number,
-              onChanged: (_) => _changed(),
-            ),
-          ],
-          if (_secondaryLabel case final label?) ...[
-            const SizedBox(height: 12),
-            AppTextField(
-              key: const Key('bilibili-playlist-secondary'),
-              controller: _secondaryController,
-              enabled: !_loading,
-              label: label,
-              prefixIcon: Icons.numbers,
-              keyboardType: TextInputType.number,
-              onChanged: (_) => _changed(),
-            ),
-          ],
-          if (_mode == BilibiliPlaylistMode.upVideos) ...[
-            const SizedBox(height: 12),
-            AppTextField(
-              key: const Key('bilibili-playlist-keyword'),
-              controller: _keywordController,
-              enabled: !_loading,
-              label: context.l10n.keyword,
-              prefixIcon: Icons.search,
-              onChanged: (_) => _changed(),
-            ),
-          ],
-          if (_mode == BilibiliPlaylistMode.liveArea) ...[
-            const SizedBox(height: 12),
-            if (_areasLoading)
-              const AppLoadingIndicator(size: AppLoadingSize.sm)
-            else ...[
-              DropdownButtonFormField<int>(
-                key: const Key('bilibili-live-parent-area'),
-                initialValue: _parentAreaId,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: context.l10n.liveCategory,
-                  prefixIcon: const Icon(Icons.category_outlined),
-                ),
-                items: _parentAreas
-                    .map(
-                      (entry) => DropdownMenuItem(
-                        value: entry.key,
-                        child: Text(
-                          entry.value,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: _loading
-                    ? null
-                    : (value) {
-                        final children = _childrenFor(value);
-                        _parentAreaId = value;
-                        _areaId = children.firstOrNull?.id;
-                        _changed();
-                      },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<int>(
-                key: const Key('bilibili-live-area'),
-                initialValue: _areaId,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: context.l10n.liveSubcategory,
-                  prefixIcon: const Icon(Icons.live_tv_outlined),
-                ),
-                items: _childrenFor(_parentAreaId)
-                    .map(
-                      (area) => DropdownMenuItem(
-                        value: area.id,
-                        child: Text(
-                          area.hot
-                              ? '${area.name} · ${context.l10n.hotLabel}'
-                              : area.name,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: _loading
-                    ? null
-                    : (value) {
-                        _areaId = value;
-                        _changed();
-                      },
-              ),
-            ],
-          ],
-          if (_mode == BilibiliPlaylistMode.history) ...[
-            const SizedBox(height: 12),
-            SegmentedButton<BilibiliHistoryFilter>(
-              segments: [
-                ButtonSegment(
-                  value: BilibiliHistoryFilter.all,
-                  label: Text(context.l10n.all),
-                ),
-                ButtonSegment(
-                  value: BilibiliHistoryFilter.archive,
-                  label: Text(context.l10n.videos),
-                ),
-                ButtonSegment(
-                  value: BilibiliHistoryFilter.live,
-                  label: Text(context.l10n.live),
-                ),
-              ],
-              selected: {_historyFilter},
-              onSelectionChanged: _loading
-                  ? null
-                  : (value) {
-                      _historyFilter = value.first;
-                      _changed();
-                    },
-            ),
-          ],
-          if (_mode == BilibiliPlaylistMode.pgcTimeline)
-            ..._buildPgcTimelineControls(),
-          if (_mode == BilibiliPlaylistMode.pgcIndex)
-            ..._buildPgcIndexControls(),
-          if (_mode == BilibiliPlaylistMode.favoriteVideos) ...[
-            const SizedBox(height: 12),
-            if (_favoritesLoading)
-              const AppLoadingIndicator(size: AppLoadingSize.sm)
-            else
-              DropdownButtonFormField<int>(
-                key: const Key('bilibili-favorite-folder'),
-                initialValue: _favoriteMediaId,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: context.l10n.favoriteFolder,
-                  prefixIcon: const Icon(Icons.favorite_outline),
-                ),
-                items: _favoriteFolders
-                    .map(
-                      (folder) => DropdownMenuItem(
-                        value: folder.mediaId,
-                        child: Text(
-                          '${folder.title} (${folder.mediaCount})'
-                          '${folder.isPrivate ? ' · ${context.l10n.privateLabel}' : ''}',
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: _loading
-                    ? null
-                    : (value) {
-                        _favoriteMediaId = value;
-                        _changed();
-                      },
-              ),
-          ],
-          if (_mode == BilibiliPlaylistMode.followedAnime ||
-              _mode == BilibiliPlaylistMode.followedCinema) ...[
-            const SizedBox(height: 12),
-            if (_followedPgcLoading && _followedPgc.isEmpty)
-              const AppLoadingIndicator(size: AppLoadingSize.sm)
-            else ...[
-              DropdownButtonFormField<int>(
-                key: const Key('bilibili-followed-pgc'),
-                initialValue: _followedSeasonId,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: _mode == BilibiliPlaylistMode.followedCinema
-                      ? context.l10n.followedCinema
-                      : context.l10n.followedAnime,
-                  prefixIcon: const Icon(Icons.subscriptions_outlined),
-                ),
-                items: _followedPgc
-                    .map(
-                      (season) => DropdownMenuItem(
-                        value: season.seasonId,
-                        child: Text(
-                          season.latestEpisode.isEmpty
-                              ? season.title
-                              : '${season.title} · ${season.latestEpisode}',
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: _loading
-                    ? null
-                    : (value) {
-                        _followedSeasonId = value;
-                        _changed();
-                      },
-              ),
-              if (_followedPgcHasMore)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    key: const Key('bilibili-followed-load-more'),
-                    onPressed: _followedPgcLoading
-                        ? null
-                        : () => _loadFollowedPgc(reset: false),
-                    icon: _followedPgcLoading
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: AppLoadingIndicator(
-                              size: AppLoadingSize.sm,
-                              centered: false,
-                            ),
-                          )
-                        : const Icon(Icons.expand_more),
-                    label: Text(context.l10n.loadMore),
-                  ),
-                ),
-            ],
-          ],
-          if (widget.target == ProviderAddTarget.playlist) ...[
-            const SizedBox(height: 12),
-            AppTextField(
-              key: const Key('bilibili-playlist-name'),
-              controller: _nameController,
-              enabled: !_loading,
-              label: context.l10n.playlistName,
-              prefixIcon: Icons.title,
-              onChanged: (_) => _nameChanged(),
-            ),
-          ],
           const SizedBox(height: 12),
-          ProviderAccountSelector<BilibiliBindInfo>(
-            accounts: widget.binds,
-            selectedId: _selectedBindId,
-            idOf: (bind) => bind.id,
-            labelOf: (bind) => bind.providerInstanceName.isEmpty
-                ? context.l10n.bilibiliAccount
-                : '${context.l10n.bilibiliAccount} · ${bind.providerInstanceName}',
-            includeDefault: true,
-            enabled: !_loading,
-            onChanged: (bind) {
-              _selectedBindId = bind?.id ?? '';
-              _instanceName = bind?.providerInstanceName ?? '';
-              _changed();
-              if (_mode == BilibiliPlaylistMode.liveArea) {
-                unawaited(_loadLiveAreas());
-              }
-              if (_mode == BilibiliPlaylistMode.favoriteVideos) {
-                unawaited(_loadFavoriteFolders());
-              }
-              if (_mode == BilibiliPlaylistMode.followedAnime ||
-                  _mode == BilibiliPlaylistMode.followedCinema) {
-                unawaited(_loadFollowedPgc(reset: true));
-              }
-              if (_mode == BilibiliPlaylistMode.pgcTimeline) {
-                unawaited(_loadPgcTimeline());
-              }
-              if (_mode == BilibiliPlaylistMode.pgcIndex) {
-                unawaited(_loadPgcSeasons(reset: true));
-              }
-            },
-          ),
-          AppSwitchTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(context.l10n.shareMyCredentials),
-            prefix: const Icon(Icons.key_rounded),
-            semanticsLabel: context.l10n.shareMyCredentials,
-            value: _shared,
+          DropdownButtonFormField<int>(
+            key: const Key('bilibili-live-area'),
+            initialValue: _areaId,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: context.l10n.liveSubcategory,
+              prefixIcon: const Icon(Icons.live_tv_outlined),
+            ),
+            items: _childrenFor(_parentAreaId)
+                .map(
+                  (area) => DropdownMenuItem(
+                    value: area.id,
+                    child: Text(
+                      area.hot
+                          ? '${area.name} · ${context.l10n.hotLabel}'
+                          : area.name,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                .toList(),
             onChanged: _loading
                 ? null
                 : (value) {
-                    _shared = value;
+                    _areaId = value;
                     _changed();
                   },
           ),
-          const SizedBox(height: 8),
+        ],
+      ],
+      if (_mode == BilibiliPlaylistMode.history) ...[
+        const SizedBox(height: 12),
+        SegmentedButton<BilibiliHistoryFilter>(
+          segments: [
+            ButtonSegment(
+              value: BilibiliHistoryFilter.all,
+              label: Text(context.l10n.all),
+            ),
+            ButtonSegment(
+              value: BilibiliHistoryFilter.archive,
+              label: Text(context.l10n.videos),
+            ),
+            ButtonSegment(
+              value: BilibiliHistoryFilter.live,
+              label: Text(context.l10n.live),
+            ),
+          ],
+          selected: {_historyFilter},
+          onSelectionChanged: _loading
+              ? null
+              : (value) {
+                  _historyFilter = value.first;
+                  _changed();
+                },
+        ),
+      ],
+      if (_mode == BilibiliPlaylistMode.pgcTimeline)
+        ..._buildPgcTimelineControls(),
+      if (_mode == BilibiliPlaylistMode.pgcIndex) ..._buildPgcIndexControls(),
+      if (_mode == BilibiliPlaylistMode.favoriteVideos) ...[
+        const SizedBox(height: 12),
+        if (_favoritesLoading)
+          const AppLoadingIndicator(size: AppLoadingSize.sm)
+        else
+          DropdownButtonFormField<int>(
+            key: const Key('bilibili-favorite-folder'),
+            initialValue: _favoriteMediaId,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: context.l10n.favoriteFolder,
+              prefixIcon: const Icon(Icons.favorite_outline),
+            ),
+            items: _favoriteFolders
+                .map(
+                  (folder) => DropdownMenuItem(
+                    value: folder.mediaId,
+                    child: Text(
+                      '${folder.title} (${folder.mediaCount})'
+                      '${folder.isPrivate ? ' · ${context.l10n.privateLabel}' : ''}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: _loading
+                ? null
+                : (value) {
+                    _favoriteMediaId = value;
+                    _changed();
+                  },
+          ),
+      ],
+      if (_mode == BilibiliPlaylistMode.followedAnime ||
+          _mode == BilibiliPlaylistMode.followedCinema) ...[
+        const SizedBox(height: 12),
+        if (_followedPgcLoading && _followedPgc.isEmpty)
+          const AppLoadingIndicator(size: AppLoadingSize.sm)
+        else ...[
+          DropdownButtonFormField<int>(
+            key: const Key('bilibili-followed-pgc'),
+            initialValue: _followedSeasonId,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: _mode == BilibiliPlaylistMode.followedCinema
+                  ? context.l10n.followedCinema
+                  : context.l10n.followedAnime,
+              prefixIcon: const Icon(Icons.subscriptions_outlined),
+            ),
+            items: _followedPgc
+                .map(
+                  (season) => DropdownMenuItem(
+                    value: season.seasonId,
+                    child: Text(
+                      season.latestEpisode.isEmpty
+                          ? season.title
+                          : '${season.title} · ${season.latestEpisode}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: _loading
+                ? null
+                : (value) {
+                    _followedSeasonId = value;
+                    _changed();
+                  },
+          ),
+          if (_followedPgcHasMore)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const Key('bilibili-followed-load-more'),
+                onPressed: _followedPgcLoading
+                    ? null
+                    : () => _loadFollowedPgc(reset: false),
+                icon: _followedPgcLoading
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: AppLoadingIndicator(
+                          size: AppLoadingSize.sm,
+                          centered: false,
+                        ),
+                      )
+                    : const Icon(Icons.expand_more),
+                label: Text(context.l10n.loadMore),
+              ),
+            ),
+        ],
+      ],
+      if (_showSettings) ...[
+        const SizedBox(height: 10),
+        _buildSettings(context),
+      ],
+    ];
+    return ProviderWorkspace(
+      controls: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: controls,
+      ),
+      results: _shouldShowBrowser
+          ? _buildDiscoveryBrowser(context, items)
+          : const SizedBox(),
+      hasResults: _shouldShowBrowser,
+    );
+  }
+
+  Widget _buildDiscoveryBrowser(
+    BuildContext context,
+    List<BilibiliPlaylistListItemInfo> items,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_browsePath.isNotEmpty) ...[
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              OutlinedButton.icon(
-                key: const Key('bilibili-playlist-preview'),
-                onPressed: _loading || !_valid ? null : _loadPreview,
-                icon: const Icon(Icons.preview_outlined),
-                label: Text(context.l10n.preview),
+              AppIconButton(
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: _loading ? null : _goBack,
+                icon: Icons.arrow_back_rounded,
+                size: AppIconButtonSize.sm,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  _browsePath.last.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
               ),
             ],
           ),
-          if (_preview != null || _browsePath.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                AppIconButton(
-                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                  onPressed: _loading || _browsePath.isEmpty ? null : _goBack,
-                  icon: Icons.arrow_back_rounded,
-                ),
-                Expanded(
-                  child: Text(
-                    _browsePath.lastOrNull?.title ?? _modeLabel(_mode),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 6),
+        ],
+        Expanded(
+          child: DiscoveryBrowser(
+            key: ValueKey(
+              'bilibili-discovery:${_currentIntent.mode.name}:'
+              '${_browsePath.length}:${_shared ? 1 : 0}',
             ),
-            const SizedBox(height: 6),
-            SizedBox(
-              height: 380,
-              child: DiscoveryBrowser(
-                key: ValueKey(
-                  'bilibili-discovery:${_currentIntent.mode.name}:'
-                  '${_browsePath.length}:${_shared ? 1 : 0}',
+            items: [
+              for (final item in items)
+                DiscoveryBrowserEntry(
+                  key: item.id,
+                  title: item.title,
+                  subtitle: item.description,
+                  source: item.source,
+                  isContainer: item.isContainer,
+                  leading: item.cover.isEmpty
+                      ? Icon(
+                          item.isContainer
+                              ? Icons.video_library_outlined
+                              : Icons.play_circle_outline,
+                        )
+                      : AppImageThumbnail(
+                          url: item.cover,
+                          width: 48,
+                          height: 48,
+                          borderRadius: BorderRadius.circular(4),
+                          errorIcon: Icons.play_circle_outline,
+                        ),
                 ),
-                items: [
-                  for (final item in items)
-                    DiscoveryBrowserEntry(
-                      key: item.id,
-                      title: item.title,
-                      subtitle: item.description,
-                      source: item.source,
-                      isContainer: item.isContainer,
-                      leading: item.cover.isEmpty
-                          ? Icon(
-                              item.isContainer
-                                  ? Icons.video_library_outlined
-                                  : Icons.play_circle_outline,
-                            )
-                          : AppImageThumbnail(
-                              url: item.cover,
-                              width: 48,
-                              height: 48,
-                              borderRadius: BorderRadius.circular(4),
-                              errorIcon: Icons.play_circle_outline,
-                            ),
+            ],
+            selectionController: _selection,
+            selectionScope:
+                '${_selectedBindId.isEmpty ? 'default' : _selectedBindId}:'
+                '${widget.target.name}',
+            loading: _loading,
+            hasMore: _preview?.hasMore ?? false,
+            onLoadMore: () => _loadPreview(loadMore: true),
+            onOpen: (entry) =>
+                _openBrowse(items.firstWhere((item) => item.id == entry.key)),
+            target: widget.target,
+            onAddSelected: widget.target == ProviderAddTarget.media
+                ? _addSelected
+                : null,
+            onAddCurrentList:
+                widget.target == ProviderAddTarget.playlist && _previewReady
+                ? _create
+                : null,
+            playlistActionLeading: widget.target == ProviderAddTarget.playlist
+                ? AppTextField(
+                    key: const Key('bilibili-playlist-name'),
+                    controller: _nameController,
+                    enabled: !_loading,
+                    label: context.l10n.playlistName,
+                    prefixIcon: Icons.title,
+                    onChanged: (_) => _nameChanged(),
+                  )
+                : null,
+            currentListLabel: context.l10n.addCurrentList,
+            emptyIcon: Icons.video_collection_outlined,
+            emptyTitle: context.l10n.noItems,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBrowseToolbar(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: AppPopupMenuButton<BilibiliPlaylistMode>(
+            key: const Key('bilibili-playlist-mode'),
+            tooltip: context.l10n.source,
+            initialValue: _mode,
+            onSelected: _selectMode,
+            itemBuilder: (context) => [
+              _modeMenuLabel(context, '浏览'),
+              ..._modeMenuItems(const [
+                BilibiliPlaylistMode.popular,
+                BilibiliPlaylistMode.recommended,
+                BilibiliPlaylistMode.watchLater,
+                BilibiliPlaylistMode.history,
+                BilibiliPlaylistMode.liveRecommended,
+                BilibiliPlaylistMode.liveFollowed,
+              ]),
+              const PopupMenuDivider(),
+              _modeMenuLabel(context, '视频'),
+              ..._modeMenuItems(const [
+                BilibiliPlaylistMode.videoParts,
+                BilibiliPlaylistMode.upVideos,
+                BilibiliPlaylistMode.favoriteVideos,
+                BilibiliPlaylistMode.collectionVideos,
+                BilibiliPlaylistMode.seriesVideos,
+              ]),
+              const PopupMenuDivider(),
+              _modeMenuLabel(context, '番剧与影视'),
+              ..._modeMenuItems(const [
+                BilibiliPlaylistMode.pgcSeason,
+                BilibiliPlaylistMode.pgcTimeline,
+                BilibiliPlaylistMode.pgcIndex,
+                BilibiliPlaylistMode.followedAnime,
+                BilibiliPlaylistMode.followedCinema,
+                BilibiliPlaylistMode.liveArea,
+              ]),
+            ],
+            child: Semantics(
+              button: true,
+              label: '${context.l10n.source}: ${_modeLabel(_mode)}',
+              child: Container(
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.72,
                     ),
-                ],
-                selectionController: _selection,
-                selectionScope:
-                    '${_selectedBindId.isEmpty ? 'default' : _selectedBindId}:'
-                    '${widget.target.name}',
-                loading: _loading,
-                hasMore: _preview?.hasMore ?? false,
-                onLoadMore: () => _loadPreview(loadMore: true),
-                onOpen: (entry) => _openBrowse(
-                  items.firstWhere((item) => item.id == entry.key),
+                  ),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                target: widget.target,
-                onAddSelected: widget.target == ProviderAddTarget.media
-                    ? _addSelected
-                    : null,
-                onAddCurrentList:
-                    widget.target == ProviderAddTarget.playlist && _previewReady
-                    ? _create
-                    : null,
-                currentListLabel: context.l10n.addCurrentList,
-                emptyIcon: Icons.video_collection_outlined,
-                emptyTitle: context.l10n.noItems,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.video_collection_outlined,
+                      size: 20,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _modeLabel(_mode),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ],
+          ),
+        ),
+        const SizedBox(width: 4),
+        AppIconButton(
+          key: const Key('bilibili-playlist-preview'),
+          tooltip: context.l10n.refresh,
+          onPressed: _loading || !_valid ? null : _loadPreview,
+          loading: _loading,
+          icon: Icons.refresh_rounded,
+          size: AppIconButtonSize.sm,
+        ),
+        AppIconButton(
+          key: const Key('bilibili-playlist-settings'),
+          tooltip: context.l10n.settings,
+          onPressed: () => setState(() => _showSettings = !_showSettings),
+          icon: Icons.tune_rounded,
+          selectedIcon: Icons.tune_rounded,
+          selected: _showSettings,
+          style: _showSettings
+              ? AppIconButtonStyle.tonal
+              : AppIconButtonStyle.ghost,
+          size: AppIconButtonSize.sm,
+        ),
+      ],
+    );
+  }
+
+  PopupMenuItem<BilibiliPlaylistMode> _modeMenuLabel(
+    BuildContext context,
+    String label,
+  ) {
+    return PopupMenuItem<BilibiliPlaylistMode>(
+      enabled: false,
+      height: 32,
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
+  }
+
+  List<PopupMenuItem<BilibiliPlaylistMode>> _modeMenuItems(
+    List<BilibiliPlaylistMode> modes,
+  ) {
+    return [
+      for (final mode in modes)
+        PopupMenuItem<BilibiliPlaylistMode>(
+          value: mode,
+          height: 40,
+          child: Text(_modeLabel(mode)),
+        ),
+    ];
+  }
+
+  Widget _buildSettings(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppPanelSurface(
+      padding: const EdgeInsets.all(12),
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(
+        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ProviderAccountSelector<BilibiliBindInfo>(
+              accounts: widget.binds,
+              selectedId: _selectedBindId,
+              idOf: (bind) => bind.id,
+              labelOf: (bind) => bind.providerInstanceName.isEmpty
+                  ? context.l10n.bilibiliAccount
+                  : '${context.l10n.bilibiliAccount} · ${bind.providerInstanceName}',
+              includeDefault: true,
+              enabled: !_loading,
+              onChanged: _changeAccount,
+            ),
+            AppSwitchTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(context.l10n.shareMyCredentials),
+              prefix: const Icon(Icons.key_rounded),
+              semanticsLabel: context.l10n.shareMyCredentials,
+              value: _shared,
+              onChanged: _loading
+                  ? null
+                  : (value) {
+                      _shared = value;
+                      _changed();
+                      _reloadPreviewWhenReady();
+                    },
+            ),
+            if (widget.onProxyModeChanged case final onProxyModeChanged?) ...[
+              const SizedBox(height: 8),
+              PlaybackProxyModeControl(
+                value: widget.proxyMode,
+                enabled: !_loading,
+                onChanged: onProxyModeChanged,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _selectMode(BilibiliPlaylistMode mode) {
+    if (mode == _mode) return;
+    setState(() {
+      _mode = mode;
+      _preview = null;
+      _primaryController.clear();
+      _secondaryController.clear();
+      _keywordController.clear();
+    });
+    _changed();
+    if (mode == BilibiliPlaylistMode.liveArea) {
+      unawaited(_loadLiveAreas());
+    }
+    if (mode == BilibiliPlaylistMode.favoriteVideos) {
+      unawaited(_loadFavoriteFolders());
+    }
+    if (mode == BilibiliPlaylistMode.followedAnime ||
+        mode == BilibiliPlaylistMode.followedCinema) {
+      unawaited(_loadFollowedPgc(reset: true));
+    }
+    if (mode == BilibiliPlaylistMode.pgcTimeline) {
+      unawaited(_loadPgcTimeline());
+    }
+    if (mode == BilibiliPlaylistMode.pgcIndex) {
+      unawaited(_loadPgcSeasons(reset: true));
+    }
+    _reloadPreviewWhenReady();
   }
 
   List<Widget> _buildPgcTimelineControls() {
@@ -976,6 +1126,46 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
     );
   }
 
+  bool get _isInstantPreviewMode => switch (_mode) {
+    BilibiliPlaylistMode.popular ||
+    BilibiliPlaylistMode.recommended ||
+    BilibiliPlaylistMode.watchLater ||
+    BilibiliPlaylistMode.liveRecommended ||
+    BilibiliPlaylistMode.liveFollowed ||
+    BilibiliPlaylistMode.history => true,
+    _ => false,
+  };
+
+  bool get _shouldShowBrowser =>
+      _isInstantPreviewMode || _preview != null || _browsePath.isNotEmpty;
+
+  void _reloadPreviewWhenReady() {
+    if (_isInstantPreviewMode && _valid) unawaited(_loadPreview());
+  }
+
+  void _changeAccount(BilibiliBindInfo? bind) {
+    _selectedBindId = bind?.id ?? '';
+    _instanceName = bind?.providerInstanceName ?? '';
+    _changed();
+    if (_mode == BilibiliPlaylistMode.liveArea) {
+      unawaited(_loadLiveAreas());
+    }
+    if (_mode == BilibiliPlaylistMode.favoriteVideos) {
+      unawaited(_loadFavoriteFolders());
+    }
+    if (_mode == BilibiliPlaylistMode.followedAnime ||
+        _mode == BilibiliPlaylistMode.followedCinema) {
+      unawaited(_loadFollowedPgc(reset: true));
+    }
+    if (_mode == BilibiliPlaylistMode.pgcTimeline) {
+      unawaited(_loadPgcTimeline());
+    }
+    if (_mode == BilibiliPlaylistMode.pgcIndex) {
+      unawaited(_loadPgcSeasons(reset: true));
+    }
+    _reloadPreviewWhenReady();
+  }
+
   bool get _valid {
     int positive(String value) => int.tryParse(value.trim()) ?? 0;
     return switch (_mode) {
@@ -1103,31 +1293,35 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
       _browsePath.lastOrNull?.intent ?? _rootIntent;
 
   Future<void> _loadPreview({bool loadMore = false}) async {
-    if (_loading) return;
+    if (_loading && loadMore) return;
+    final requestVersion = ++_previewRequestVersion;
     final current = _preview;
+    final intent = _currentIntent;
+    final instanceName = _instanceName;
+    final shared = _shared;
     setState(() => _loading = true);
     try {
       final page = loadMore ? (current?.page ?? 1) + 1 : 1;
       final cursor = loadMore ? current?.cursor : null;
       final preview = switch (widget.loader) {
         final loader? => await loader(
-          _currentIntent,
+          intent,
           page,
           30,
           cursor,
-          _instanceName,
-          _shared,
+          instanceName,
+          shared,
         ),
         null => await providerGateway.listBilibiliPlaylist(
-          _currentIntent,
+          intent,
           page: page,
           pageSize: 30,
           cursor: cursor,
-          instanceName: _instanceName,
-          shared: _shared,
+          instanceName: instanceName,
+          shared: shared,
         ),
       };
-      if (!mounted) return;
+      if (!mounted || requestVersion != _previewRequestVersion) return;
       setState(() {
         _preview = loadMore && current != null
             ? BilibiliPlaylistListPage(
@@ -1140,9 +1334,13 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
             : preview;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted && requestVersion == _previewRequestVersion) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && requestVersion == _previewRequestVersion) {
+        setState(() => _loading = false);
+      }
     }
   }
 

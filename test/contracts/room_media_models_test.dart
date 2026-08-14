@@ -33,6 +33,7 @@ void main() {
       usesCursor: false,
       nextCursor: '',
       page: 1,
+      supportsSearch: true,
     );
 
     expect(page.effectivePlaylistCount, 2);

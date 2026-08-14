@@ -81,13 +81,17 @@ const PlaybackProxyMode$json = {
     {'1': 'PLAYBACK_PROXY_MODE_AUTO', '2': 0},
     {'1': 'PLAYBACK_PROXY_MODE_PREFER', '2': 1},
     {'1': 'PLAYBACK_PROXY_MODE_ONLY', '2': 2},
+    {'1': 'PLAYBACK_PROXY_MODE_DIRECT_PREFER', '2': 3},
+    {'1': 'PLAYBACK_PROXY_MODE_DIRECT_ONLY', '2': 4},
   ],
 };
 
 /// Descriptor for `PlaybackProxyMode`. Decode as a `google.protobuf.EnumDescriptorProto`.
 final $typed_data.Uint8List playbackProxyModeDescriptor = $convert.base64Decode(
     'ChFQbGF5YmFja1Byb3h5TW9kZRIcChhQTEFZQkFDS19QUk9YWV9NT0RFX0FVVE8QABIeChpQTE'
-    'FZQkFDS19QUk9YWV9NT0RFX1BSRUZFUhABEhwKGFBMQVlCQUNLX1BST1hZX01PREVfT05MWRAC');
+    'FZQkFDS19QUk9YWV9NT0RFX1BSRUZFUhABEhwKGFBMQVlCQUNLX1BST1hZX01PREVfT05MWRAC'
+    'EiUKIVBMQVlCQUNLX1BST1hZX01PREVfRElSRUNUX1BSRUZFUhADEiMKH1BMQVlCQUNLX1BST1'
+    'hZX01PREVfRElSRUNUX09OTFkQBA==');
 
 @$core.Deprecated('Use rtmpStreamModeDescriptor instead')
 const RtmpStreamMode$json = {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:synctv_app/features/home/presentation/home_view.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -207,16 +206,13 @@ class _HomeShowcaseAppState extends State<HomeShowcaseApp> {
     themeMode: ThemeMode.light,
     locale: const Locale('en'),
     supportedLocales: AppLocalizations.supportedLocales,
-    localizationsDelegates: const [
-      ...AppLocalizations.localizationsDelegates,
-      FLocalizations.delegate,
-    ],
+    localizationsDelegates: const [...AppLocalizations.localizationsDelegates],
     builder: (context, child) {
       final app = ResponsiveBreakpoints.builder(
         breakpoints: AppBreakpoints.values,
         child: child!,
       );
-      return FTheme(data: FTheme.neutral.light.desktop, child: app);
+      return app;
     },
     home: HomeView(
       state: widget.state ?? homeShowcaseState(),

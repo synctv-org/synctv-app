@@ -6,6 +6,7 @@ import 'package:synctv_app/core/presentation/media_variant_label.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
@@ -42,6 +43,7 @@ class EmbyPlaylistForm extends StatefulWidget {
     required this.parentId,
     required this.binds,
     required this.onDraftChanged,
+    this.leadingControls,
     this.proxyMode = source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
     this.onOpenBinding,
     this.loader,
@@ -51,6 +53,7 @@ class EmbyPlaylistForm extends StatefulWidget {
   final String parentId;
   final List<EmbyBindInfo> binds;
   final ValueChanged<bool> onDraftChanged;
+  final Widget? leadingControls;
   final source_enum.PlaybackProxyMode proxyMode;
   final Future<void> Function()? onOpenBinding;
   final EmbyDiscoveryLoader? loader;
@@ -146,166 +149,157 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
         ),
       );
     }
-    return Column(
+    final controls = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final mode = _buildModeSelector();
-                final account = _buildAccountSelector();
-                if (constraints.maxWidth >= _twoColumnMinWidth) {
-                  return Row(
-                    children: [
-                      Expanded(child: mode),
-                      const SizedBox(width: 12),
-                      Expanded(child: account),
-                    ],
-                  );
-                }
-                return Column(
-                  children: [mode, const SizedBox(height: 10), account],
-                );
-              },
-            ),
-            if (_supportsItemTypes) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
+        ?widget.leadingControls,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final mode = _buildModeSelector();
+            final account = _buildAccountSelector();
+            if (constraints.maxWidth >= _twoColumnMinWidth) {
+              return Row(
                 children: [
-                  for (final type in const ['Movie', 'Episode', 'Video'])
-                    FilterChip(
-                      label: Text(localizedMediaVariant(context, type)),
-                      selected: _itemTypes.contains(type),
-                      onSelected: _loading
-                          ? null
-                          : (selected) {
-                              if (!selected && _itemTypes.length == 1) {
-                                return;
-                              }
-                              setState(() {
-                                if (selected) {
-                                  _itemTypes.add(type);
-                                } else {
-                                  _itemTypes.remove(type);
-                                }
-                                _resetDiscovery(keepLocation: true);
-                              });
-                            },
-                    ),
+                  Expanded(child: mode),
+                  const SizedBox(width: 12),
+                  Expanded(child: account),
                 ],
-              ),
+              );
+            }
+            return Column(
+              children: [mode, const SizedBox(height: 10), account],
+            );
+          },
+        ),
+        if (_supportsItemTypes) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              for (final type in const ['Movie', 'Episode', 'Video'])
+                FilterChip(
+                  label: Text(localizedMediaVariant(context, type)),
+                  selected: _itemTypes.contains(type),
+                  onSelected: _loading
+                      ? null
+                      : (selected) {
+                          if (!selected && _itemTypes.length == 1) {
+                            return;
+                          }
+                          setState(() {
+                            if (selected) {
+                              _itemTypes.add(type);
+                            } else {
+                              _itemTypes.remove(type);
+                            }
+                            _resetDiscovery(keepLocation: true);
+                          });
+                        },
+                ),
             ],
-            const SizedBox(height: 10),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final search = AppTextField(
-                  controller: _searchController,
-                  enabled: !_loading,
-                  label: context.l10n.search,
-                  prefixIcon: Icons.search_rounded,
-                  onChanged: (_) => setState(() => _listSource = null),
-                  onSubmitted: (_) => _list(),
-                );
-                final name = AppTextField(
-                  controller: _nameController,
-                  enabled: !_loading,
-                  label: context.l10n.playlistName,
-                  prefixIcon: Icons.title_rounded,
-                );
-                if (constraints.maxWidth >= _twoColumnMinWidth) {
-                  return Row(
-                    children: [
-                      Expanded(child: search),
-                      const SizedBox(width: 12),
-                      Expanded(child: name),
-                    ],
-                  );
-                }
-                return Column(
-                  children: [search, const SizedBox(height: 10), name],
-                );
-              },
+          ),
+        ],
+        const SizedBox(height: 10),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final search = AppTextField(
+              controller: _searchController,
+              enabled: !_loading,
+              label: context.l10n.search,
+              prefixIcon: Icons.search_rounded,
+              onChanged: (_) => setState(() => _listSource = null),
+              onSubmitted: (_) => _list(),
+            );
+            final name = AppTextField(
+              controller: _nameController,
+              enabled: !_loading,
+              label: context.l10n.playlistName,
+              prefixIcon: Icons.title_rounded,
+            );
+            if (constraints.maxWidth >= _twoColumnMinWidth) {
+              return Row(
+                children: [
+                  Expanded(child: search),
+                  const SizedBox(width: 12),
+                  Expanded(child: name),
+                ],
+              );
+            }
+            return Column(children: [search, const SizedBox(height: 10), name]);
+          },
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            AppIconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              onPressed: _loading || _locations.isEmpty ? null : _goBack,
+              icon: Icons.arrow_back_rounded,
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                AppIconButton(
-                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                  onPressed: _loading || _locations.isEmpty ? null : _goBack,
-                  icon: Icons.arrow_back_rounded,
-                ),
-                Expanded(
-                  child: Text(
-                    _locations.lastOrNull?.title ?? _modeLabel(_mode),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                ),
-                FilledButton.tonalIcon(
-                  key: const Key('emby-preview'),
-                  onPressed: _loading || _bind == null ? null : _list,
-                  icon: const Icon(Icons.manage_search_rounded),
-                  label: Text(context.l10n.list),
-                ),
-              ],
+            Expanded(
+              child: Text(
+                _locations.lastOrNull?.title ?? _modeLabel(_mode),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
             ),
-            const SizedBox(height: 6),
+            FilledButton.tonalIcon(
+              key: const Key('emby-preview'),
+              onPressed: _loading || _bind == null ? null : _list,
+              icon: const Icon(Icons.manage_search_rounded),
+              label: Text(context.l10n.list),
+            ),
           ],
         ),
-        Expanded(
-          child: _loading && _items.isEmpty
-              ? const AppLoadingIndicator()
-              : DiscoveryBrowser(
-                  key: ValueKey(
-                    'emby-discovery:${_bind?.serverId}:${_requestMode.name}:'
-                    '$_targetId:$_activeSearch:${_itemTypes.join(',')}',
-                  ),
-                  items: [
-                    for (final item in _items)
-                      DiscoveryBrowserEntry(
-                        key: item.id,
-                        title: item.name,
-                        subtitle: item.description.isEmpty
-                            ? localizedMediaVariant(context, item.type)
-                            : item.description,
-                        source: item.source,
-                        isContainer: item.source.isPlaylist,
-                        leading: item.thumbnail.isEmpty
-                            ? Icon(
-                                item.source.isPlaylist
-                                    ? Icons.folder_rounded
-                                    : Icons.movie_outlined,
-                              )
-                            : AppImageThumbnail(
-                                url: item.thumbnail,
-                                width: 48,
-                                height: 48,
-                                borderRadius: BorderRadius.circular(4),
-                                errorIcon: Icons.movie_outlined,
-                              ),
-                      ),
-                  ],
-                  selectionController: _selection,
-                  selectionScope: _bind?.id,
-                  loading: _loading,
-                  hasMore: _hasMore,
-                  onLoadMore: () => _load(loadMore: true),
-                  onOpen: _open,
-                  onAddSelected: _addSelected,
-                  onAddCurrentList: _listSource == null
-                      ? null
-                      : _addCurrentList,
-                  emptyIcon: Icons.video_library_outlined,
-                  emptyTitle: context.l10n.listSourceToPreview,
-                ),
-        ),
+        const SizedBox(height: 6),
       ],
     );
+    final results = _loading && _items.isEmpty
+        ? const AppLoadingIndicator()
+        : DiscoveryBrowser(
+            key: ValueKey(
+              'emby-discovery:${_bind?.serverId}:${_requestMode.name}:'
+              '$_targetId:$_activeSearch:${_itemTypes.join(',')}',
+            ),
+            items: [
+              for (final item in _items)
+                DiscoveryBrowserEntry(
+                  key: item.id,
+                  title: item.name,
+                  subtitle: item.description.isEmpty
+                      ? localizedMediaVariant(context, item.type)
+                      : item.description,
+                  source: item.source,
+                  isContainer: item.source.isPlaylist,
+                  leading: item.thumbnail.isEmpty
+                      ? Icon(
+                          item.source.isPlaylist
+                              ? Icons.folder_rounded
+                              : Icons.movie_outlined,
+                        )
+                      : AppImageThumbnail(
+                          url: item.thumbnail,
+                          width: 48,
+                          height: 48,
+                          borderRadius: BorderRadius.circular(4),
+                          errorIcon: Icons.movie_outlined,
+                        ),
+                ),
+            ],
+            selectionController: _selection,
+            selectionScope: _bind?.id,
+            loading: _loading,
+            hasMore: _hasMore,
+            onLoadMore: () => _load(loadMore: true),
+            onOpen: _open,
+            onAddSelected: _addSelected,
+            onAddCurrentList: _listSource == null ? null : _addCurrentList,
+            emptyIcon: Icons.video_library_outlined,
+            emptyTitle: context.l10n.listSourceToPreview,
+          );
+    return ProviderWorkspace(controls: controls, results: results);
   }
 
   Widget _buildModeSelector() => DropdownButtonFormField<EmbyCollectionMode>(

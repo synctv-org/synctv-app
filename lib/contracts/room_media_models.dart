@@ -28,6 +28,7 @@ class RoomMediaLibraryPage {
   final bool usesCursor;
   final String nextCursor;
   final int page;
+  final bool supportsSearch;
 
   const RoomMediaLibraryPage({
     required this.playlists,
@@ -41,6 +42,7 @@ class RoomMediaLibraryPage {
     required this.usesCursor,
     required this.nextCursor,
     required this.page,
+    required this.supportsSearch,
   });
 
   List<RoomMediaEntry> get entries => [...playlists, ...media, ...dynamicItems];

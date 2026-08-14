@@ -8,6 +8,7 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -136,7 +137,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
       );
     }
     final canUseVideo = _bind?.videoStationAvailable ?? false;
-    return Column(
+    final controls = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildBindSelector(),
@@ -144,6 +145,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
         PlaybackProxyModeControl(
           value: _proxyMode,
           onChanged: (value) => setState(() => _proxyMode = value),
+          supportsDirectPlayback: _mode == _SynologyBrowseMode.files,
         ),
         const SizedBox(height: 10),
         SegmentedButton<_SynologyBrowseMode>(
@@ -169,6 +171,12 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
                     _page = 1;
                     _searchController.clear();
                     _tvShow = null;
+                    if (_mode == _SynologyBrowseMode.videoStation &&
+                        _isDirectPlaybackMode(_proxyMode)) {
+                      _proxyMode = source_enum
+                          .PlaybackProxyMode
+                          .PLAYBACK_PROXY_MODE_AUTO;
+                    }
                   });
                   _load();
                 },
@@ -197,7 +205,10 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
           _buildFileLocationBar()
         else
           _buildVideoFilters(),
-        const SizedBox(height: 8),
+      ],
+    );
+    final results = Column(
+      children: [
         Expanded(
           child: _loading
               ? const AppLoadingIndicator()
@@ -209,6 +220,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
         _buildPagination(),
       ],
     );
+    return ProviderWorkspace(controls: controls, results: results);
   }
 
   Widget _buildBindSelector() {
@@ -484,6 +496,10 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
     setState(() => _page = 1);
     _load();
   }
+
+  bool _isDirectPlaybackMode(source_enum.PlaybackProxyMode mode) =>
+      mode == source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_PREFER ||
+      mode == source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY;
 
   Future<void> _load() {
     return _mode == _SynologyBrowseMode.files ? _loadFiles() : _loadVideoMode();

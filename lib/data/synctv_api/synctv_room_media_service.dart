@@ -1101,6 +1101,7 @@ class SyncTvRoomMediaDomainService {
           client.ListPlaylistItemsResponse_Pagination.cursor,
       nextCursor: response.hasCursor() ? response.cursor.cursor : '',
       page: response.hasPage() ? response.page.page : 1,
+      supportsSearch: response.supportsSearch,
     );
   }
 

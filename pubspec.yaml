@@ -68,7 +68,6 @@ dependencies:
   media_kit_libs_macos_video: ^1.1.4
   window_manager: ^0.5.2
   window_to_front: ^1.0.0
-  forui: ^0.25.0
   flex_color_scheme: ^8.4.0
   responsive_framework: ^1.5.1
   flutter_layout_grid: ^2.0.8

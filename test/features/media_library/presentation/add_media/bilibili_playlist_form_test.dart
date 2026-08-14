@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/bilibili_playlist_form.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
 
 import '../../../../test_app.dart';
@@ -35,10 +38,11 @@ void main() {
       ),
     );
 
-    expect(find.text('Share my credentials'), findsOneWidget);
     await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Popular').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('bilibili-playlist-settings')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Share my credentials'));
     await tester.pump();
@@ -46,6 +50,150 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(requestedShared, isTrue);
+  });
+
+  testWidgets(
+    'loads popular results on entry and gives browsing primary space',
+    (tester) async {
+      BilibiliPlaylistListIntent? requestedIntent;
+      await tester.binding.setSurfaceSize(const Size(900, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: buildThemedTestApp,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: BilibiliPlaylistForm(
+              roomId: 'room',
+              parentId: 'root',
+              binds: const [],
+              onDraftChanged: (_) {},
+              loader: (intent, page, pageSize, cursor, instance, shared) async {
+                requestedIntent = intent;
+                return _pageWithItem('Popular result');
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(requestedIntent?.mode, BilibiliPlaylistListMode.popular);
+      expect(find.text('Popular result'), findsOneWidget);
+      expect(
+        tester.getRect(find.byType(DiscoveryBrowser)).height,
+        greaterThan(400),
+      );
+    },
+  );
+
+  testWidgets('switching to recommended refreshes the browsing results', (
+    tester,
+  ) async {
+    final requestedModes = <BilibiliPlaylistListMode>[];
+    await tester.binding.setSurfaceSize(const Size(900, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: BilibiliPlaylistForm(
+            roomId: 'room',
+            parentId: 'root',
+            binds: const [],
+            onDraftChanged: (_) {},
+            loader: (intent, page, pageSize, cursor, instance, shared) async {
+              requestedModes.add(intent.mode);
+              return _pageWithItem('${intent.mode.name} result');
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Recommended').last);
+    await tester.pumpAndSettle();
+
+    expect(requestedModes.last, BilibiliPlaylistListMode.recommended);
+    expect(find.text('recommended result'), findsOneWidget);
+  });
+
+  testWidgets('switches back to popular while recommended is loading', (
+    tester,
+  ) async {
+    final requestedModes = <BilibiliPlaylistListMode>[];
+    final recommended = Completer<BilibiliPlaylistListPage>();
+    await tester.binding.setSurfaceSize(const Size(900, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 260),
+              child: SizedBox(
+                width: 450,
+                height: 700,
+                child: BilibiliPlaylistForm(
+                  roomId: 'room',
+                  parentId: 'root',
+                  binds: const [],
+                  onDraftChanged: (_) {},
+                  loader: (intent, page, pageSize, cursor, instance, shared) {
+                    requestedModes.add(intent.mode);
+                    if (intent.mode == BilibiliPlaylistListMode.recommended) {
+                      return recommended.future;
+                    }
+                    return Future.value(
+                      _pageWithItem('${intent.mode.name} result'),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Recommended').last);
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('bilibili-playlist-mode')));
+    await tester.pump();
+    final popularMenuItem = find.ancestor(
+      of: find.text('Popular').last,
+      matching: find.byType(PopupMenuItem<BilibiliPlaylistMode>),
+    );
+    Navigator.of(
+      tester.element(popularMenuItem),
+    ).pop(BilibiliPlaylistMode.popular);
+    await tester.pumpAndSettle();
+
+    expect(requestedModes.last, BilibiliPlaylistListMode.popular);
+    expect(find.text('popular result'), findsOneWidget);
+
+    recommended.complete(_pageWithItem('recommended result'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('popular result'), findsOneWidget);
+    expect(find.text('recommended result'), findsNothing);
   });
 
   testWidgets('builds a live-area playlist from the provider area hierarchy', (
@@ -495,3 +643,22 @@ final _emptyPage = BilibiliPlaylistListPage(
   cursor: null,
   source: testDiscoveredPlaylistSource(),
 );
+
+BilibiliPlaylistListPage _pageWithItem(String title) =>
+    BilibiliPlaylistListPage(
+      items: [
+        BilibiliPlaylistListItemInfo(
+          id: title,
+          title: title,
+          description: 'Description',
+          cover: '',
+          isContainer: false,
+          source: testDiscoveredPlaylistSource(),
+          browse: null,
+        ),
+      ],
+      hasMore: false,
+      page: 1,
+      cursor: null,
+      source: testDiscoveredPlaylistSource(),
+    );

@@ -8,6 +8,7 @@ import 'package:synctv_app/src/generated/proto/providers/acfun.pbenum.dart'
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/media_variant_label.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 
 class AcFunAddRequest {
   const AcFunAddRequest({
@@ -85,91 +86,90 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
   Widget build(BuildContext context) {
     final instances = {'', ...widget.instances}.toList();
     if (!instances.contains(_instanceName)) _instanceName = '';
-    return AppSingleChildScrollView(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AppTextField(
-            key: const Key('acfun-resource'),
-            label: context.l10n.acfunUrl,
-            controller: _urlController,
-            prefixIcon: Icons.link_rounded,
-            keyboardType: TextInputType.url,
-            enableSuggestions: false,
-            autocorrect: false,
-            enabled: !_loading,
+    final controls = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(
+          key: const Key('acfun-resource'),
+          label: context.l10n.acfunUrl,
+          controller: _urlController,
+          prefixIcon: Icons.link_rounded,
+          keyboardType: TextInputType.url,
+          enableSuggestions: false,
+          autocorrect: false,
+          enabled: !_loading,
+        ),
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('acfun-name'),
+          label: context.l10n.name,
+          controller: _nameController,
+          prefixIcon: Icons.title_rounded,
+          enabled: !_loading,
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _instanceName,
+          decoration: InputDecoration(
+            labelText: context.l10n.instance,
+            prefixIcon: const Icon(Icons.account_tree_outlined),
           ),
-          const SizedBox(height: 12),
-          AppTextField(
-            key: const Key('acfun-name'),
-            label: context.l10n.name,
-            controller: _nameController,
-            prefixIcon: Icons.title_rounded,
-            enabled: !_loading,
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _instanceName,
-            decoration: InputDecoration(
-              labelText: context.l10n.instance,
-              prefixIcon: const Icon(Icons.account_tree_outlined),
+          items: instances
+              .map(
+                (name) => DropdownMenuItem(
+                  value: name,
+                  child: Text(name.isEmpty ? context.l10n.localInstance : name),
+                ),
+              )
+              .toList(),
+          onChanged: _loading
+              ? null
+              : (value) => setState(() {
+                  _instanceName = value ?? '';
+                  _resolved = null;
+                }),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('acfun-preview'),
+              onPressed: _loading || _urlController.text.trim().isEmpty
+                  ? null
+                  : _loadPreview,
+              icon: const Icon(Icons.preview_outlined),
+              label: Text(context.l10n.preview),
             ),
-            items: instances
-                .map(
-                  (name) => DropdownMenuItem(
-                    value: name,
-                    child: Text(
-                      name.isEmpty ? context.l10n.localInstance : name,
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: _loading
-                ? null
-                : (value) => setState(() {
-                    _instanceName = value ?? '';
-                    _resolved = null;
-                  }),
-          ),
-          if (_preview() case final preview?) ...[
-            const SizedBox(height: 12),
-            preview,
+            const SizedBox(width: 10),
+            FilledButton.icon(
+              key: const Key('acfun-submit'),
+              onPressed: _loading || _resolved?.hasSource() != true
+                  ? null
+                  : _submit,
+              icon: _loading
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: AppLoadingIndicator(
+                        size: AppLoadingSize.sm,
+                        centered: false,
+                      ),
+                    )
+                  : const Icon(Icons.add),
+              label: Text(context.l10n.addMedia),
+            ),
           ],
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton.icon(
-                key: const Key('acfun-preview'),
-                onPressed: _loading || _urlController.text.trim().isEmpty
-                    ? null
-                    : _loadPreview,
-                icon: const Icon(Icons.preview_outlined),
-                label: Text(context.l10n.preview),
-              ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                key: const Key('acfun-submit'),
-                onPressed: _loading || _resolved?.hasSource() != true
-                    ? null
-                    : _submit,
-                icon: _loading
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
-                        ),
-                      )
-                    : const Icon(Icons.add),
-                label: Text(context.l10n.addMedia),
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+      ],
     );
+    return ProviderWorkspace(controls: controls, results: _buildResults());
+  }
+
+  Widget _buildResults() {
+    final preview = _preview();
+    return preview == null
+        ? const SizedBox()
+        : AppSingleChildScrollView(padding: EdgeInsets.zero, child: preview);
   }
 
   Widget? _preview() {

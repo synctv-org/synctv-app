@@ -5,6 +5,7 @@ import 'package:synctv_app/src/generated/proto/providers/huya.pbenum.dart'
     as huya_enum;
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 
 class HuyaAddRequest {
@@ -82,91 +83,92 @@ class _HuyaAddMediaFormState extends State<HuyaAddMediaForm> {
   Widget build(BuildContext context) {
     final instances = {'', ...widget.instances}.toList();
     if (!instances.contains(_instanceName)) _instanceName = '';
-    return AppSingleChildScrollView(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AppTextField(
-            key: const Key('huya-resource'),
-            controller: _resourceController,
-            enabled: !_loading,
-            label: context.l10n.liveRoomOrVideoUrl,
-            prefixIcon: Icons.link_outlined,
-            keyboardType: TextInputType.url,
-            enableSuggestions: false,
-            autocorrect: false,
-            onChanged: (_) => _changed(),
+    final controls = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(
+          key: const Key('huya-resource'),
+          controller: _resourceController,
+          enabled: !_loading,
+          label: context.l10n.liveRoomOrVideoUrl,
+          prefixIcon: Icons.link_outlined,
+          keyboardType: TextInputType.url,
+          enableSuggestions: false,
+          autocorrect: false,
+          onChanged: (_) => _changed(),
+        ),
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('huya-name'),
+          controller: _nameController,
+          enabled: !_loading,
+          label: context.l10n.name,
+          prefixIcon: Icons.title,
+          onChanged: (_) => _nameChanged(),
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _instanceName,
+          decoration: InputDecoration(
+            labelText: context.l10n.providerInstance,
+            prefixIcon: const Icon(Icons.dns_outlined),
           ),
-          const SizedBox(height: 12),
-          AppTextField(
-            key: const Key('huya-name'),
-            controller: _nameController,
-            enabled: !_loading,
-            label: context.l10n.name,
-            prefixIcon: Icons.title,
-            onChanged: (_) => _nameChanged(),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _instanceName,
-            decoration: InputDecoration(
-              labelText: context.l10n.providerInstance,
-              prefixIcon: const Icon(Icons.dns_outlined),
+          items: instances
+              .map(
+                (value) => DropdownMenuItem(
+                  value: value,
+                  child: Text(value.isEmpty ? 'Default' : value),
+                ),
+              )
+              .toList(),
+          onChanged: _loading
+              ? null
+              : (value) => setState(() {
+                  _instanceName = value ?? '';
+                  _resolved = null;
+                }),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('huya-preview'),
+              onPressed: _loading || _resourceController.text.trim().isEmpty
+                  ? null
+                  : _loadPreview,
+              icon: const Icon(Icons.preview_outlined),
+              label: Text(context.l10n.preview),
             ),
-            items: instances
-                .map(
-                  (value) => DropdownMenuItem(
-                    value: value,
-                    child: Text(value.isEmpty ? 'Default' : value),
-                  ),
-                )
-                .toList(),
-            onChanged: _loading
-                ? null
-                : (value) => setState(() {
-                    _instanceName = value ?? '';
-                    _resolved = null;
-                  }),
-          ),
-          if (_preview() case final preview?) ...[
-            const SizedBox(height: 12),
-            preview,
+            const SizedBox(width: 10),
+            FilledButton.icon(
+              key: const Key('huya-submit'),
+              onPressed: _loading || _resolved?.hasSource() != true
+                  ? null
+                  : _submit,
+              icon: _loading
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: AppLoadingIndicator(
+                        size: AppLoadingSize.sm,
+                        centered: false,
+                      ),
+                    )
+                  : const Icon(Icons.add),
+              label: Text(context.l10n.addMedia),
+            ),
           ],
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton.icon(
-                key: const Key('huya-preview'),
-                onPressed: _loading || _resourceController.text.trim().isEmpty
-                    ? null
-                    : _loadPreview,
-                icon: const Icon(Icons.preview_outlined),
-                label: Text(context.l10n.preview),
-              ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                key: const Key('huya-submit'),
-                onPressed: _loading || _resolved?.hasSource() != true
-                    ? null
-                    : _submit,
-                icon: _loading
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
-                        ),
-                      )
-                    : const Icon(Icons.add),
-                label: Text(context.l10n.addMedia),
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+      ],
     );
+    return ProviderWorkspace(controls: controls, results: _buildResults());
+  }
+
+  Widget _buildResults() {
+    final preview = _preview();
+    return preview == null
+        ? const SizedBox()
+        : AppSingleChildScrollView(padding: EdgeInsets.zero, child: preview);
   }
 
   Widget? _preview() {

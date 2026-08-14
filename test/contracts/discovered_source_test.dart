@@ -5,7 +5,7 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart' as source;
 
 void main() {
-  const only = source.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY;
+  const only = source.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY;
 
   test('applies proxy mode to every supported media provider', () {
     final cases =

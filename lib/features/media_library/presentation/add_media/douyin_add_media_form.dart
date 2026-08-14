@@ -8,6 +8,7 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 
 enum DouyinAddMode { video, live, userPosts }
@@ -112,156 +113,155 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
       _selectedBindId = '';
       _instanceName = '';
     }
-    return AppSingleChildScrollView(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ProviderAddTargetSelector(
-            value: _target,
-            targets: const [
-              ProviderAddTarget.parse,
-              ProviderAddTarget.media,
-              ProviderAddTarget.playlist,
-            ],
-            enabled: !_loading,
-            onChanged: _selectTarget,
-          ),
-          if (_target == ProviderAddTarget.parse) ...[
-            const SizedBox(height: 12),
-            SegmentedButton<DouyinAddMode>(
-              segments: [
-                ButtonSegment(
-                  value: DouyinAddMode.video,
-                  icon: const Icon(Icons.play_circle_outline),
-                  label: Text(context.l10n.video),
-                ),
-                ButtonSegment(
-                  value: DouyinAddMode.live,
-                  icon: const Icon(Icons.live_tv_outlined),
-                  label: Text(context.l10n.live),
-                ),
-              ],
-              selected: {_mode},
-              onSelectionChanged: _loading
-                  ? null
-                  : (values) {
-                      final mode = values.first;
-                      if (mode == _mode) return;
-                      _mode = mode;
-                      _valueController.clear();
-                      _changed();
-                    },
-            ),
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ProviderAddTargetSelector(
+          value: _target,
+          targets: const [
+            ProviderAddTarget.parse,
+            ProviderAddTarget.media,
+            ProviderAddTarget.playlist,
           ],
-          const SizedBox(height: 16),
-          AppTextField(
-            key: const Key('douyin-value'),
-            controller: _valueController,
-            enabled: !_loading,
-            label: switch (_mode) {
-              DouyinAddMode.video => context.l10n.videoUrlShortLinkOrId,
-              DouyinAddMode.live => context.l10n.liveUrlOrRoomId,
-              DouyinAddMode.userPosts => context.l10n.creatorSecUid,
-            },
-            prefixIcon: switch (_mode) {
-              DouyinAddMode.video => Icons.music_video_outlined,
-              DouyinAddMode.live => Icons.live_tv_outlined,
-              DouyinAddMode.userPosts => Icons.person_search_outlined,
-            },
-            keyboardType: _mode == DouyinAddMode.userPosts
-                ? TextInputType.text
-                : TextInputType.url,
-            onChanged: (_) => _changed(),
-          ),
-          if (_target != ProviderAddTarget.media) ...[
-            const SizedBox(height: 12),
-            AppTextField(
-              key: const Key('douyin-name'),
-              controller: _nameController,
-              enabled: !_loading,
-              label: context.l10n.name,
-              prefixIcon: Icons.title,
-              onChanged: (_) => _nameChanged(),
-            ),
-          ],
+          enabled: !_loading,
+          onChanged: _selectTarget,
+        ),
+        if (_target == ProviderAddTarget.parse) ...[
           const SizedBox(height: 12),
-          ProviderAccountSelector<DouyinBindInfo>(
-            accounts: widget.binds,
-            selectedId: _selectedBindId,
-            idOf: (bind) => bind.id,
-            labelOf: (bind) {
-              final label = bind.label.isEmpty
-                  ? context.l10n.defaultProviderInstance
-                  : bind.label;
-              return bind.providerInstanceName.isEmpty
-                  ? label
-                  : '$label · ${bind.providerInstanceName}';
-            },
-            includeDefault: true,
-            enabled: !_loading,
-            onChanged: (bind) => setState(() {
-              _selectedBindId = bind?.id ?? '';
-              _instanceName = bind?.providerInstanceName ?? '';
-              _resolved = null;
-              _posts = null;
-            }),
-          ),
-          AppSwitchTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(context.l10n.shareMyCredentials),
-            prefix: const Icon(Icons.key_rounded),
-            semanticsLabel: context.l10n.shareMyCredentials,
-            value: _shared,
-            onChanged: _loading
-                ? null
-                : (value) => setState(() {
-                    _shared = value;
-                    _resolved = null;
-                    _posts = null;
-                  }),
-          ),
-          if (_target != ProviderAddTarget.parse && _posts != null) ...[
-            const SizedBox(height: 8),
-            SizedBox(height: 380, child: _postsBrowser()),
-          ] else if (_preview() case final preview?) ...[
-            const SizedBox(height: 8),
-            preview,
-          ],
-          const SizedBox(height: 12),
-          Wrap(
-            alignment: WrapAlignment.end,
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              OutlinedButton.icon(
-                key: const Key('douyin-preview'),
-                onPressed: _loading || _valueController.text.trim().isEmpty
-                    ? null
-                    : _loadPreview,
-                icon: const Icon(Icons.preview_outlined),
-                label: Text(context.l10n.preview),
+          SegmentedButton<DouyinAddMode>(
+            segments: [
+              ButtonSegment(
+                value: DouyinAddMode.video,
+                icon: const Icon(Icons.play_circle_outline),
+                label: Text(context.l10n.video),
               ),
-              if (_target == ProviderAddTarget.parse)
-                FilledButton.icon(
-                  key: const Key('douyin-submit'),
-                  onPressed: _loading || !_previewReady ? null : _submit,
-                  icon: _loading
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: AppLoadingIndicator(
-                            size: AppLoadingSize.sm,
-                            centered: false,
-                          ),
-                        )
-                      : const Icon(Icons.add),
-                  label: Text(context.l10n.addMedia),
-                ),
+              ButtonSegment(
+                value: DouyinAddMode.live,
+                icon: const Icon(Icons.live_tv_outlined),
+                label: Text(context.l10n.live),
+              ),
             ],
+            selected: {_mode},
+            onSelectionChanged: _loading
+                ? null
+                : (values) {
+                    final mode = values.first;
+                    if (mode == _mode) return;
+                    _mode = mode;
+                    _valueController.clear();
+                    _changed();
+                  },
           ),
         ],
-      ),
+        const SizedBox(height: 16),
+        AppTextField(
+          key: const Key('douyin-value'),
+          controller: _valueController,
+          enabled: !_loading,
+          label: switch (_mode) {
+            DouyinAddMode.video => context.l10n.videoUrlShortLinkOrId,
+            DouyinAddMode.live => context.l10n.liveUrlOrRoomId,
+            DouyinAddMode.userPosts => context.l10n.creatorSecUid,
+          },
+          prefixIcon: switch (_mode) {
+            DouyinAddMode.video => Icons.music_video_outlined,
+            DouyinAddMode.live => Icons.live_tv_outlined,
+            DouyinAddMode.userPosts => Icons.person_search_outlined,
+          },
+          keyboardType: _mode == DouyinAddMode.userPosts
+              ? TextInputType.text
+              : TextInputType.url,
+          onChanged: (_) => _changed(),
+        ),
+        if (_target != ProviderAddTarget.media) ...[
+          const SizedBox(height: 12),
+          AppTextField(
+            key: const Key('douyin-name'),
+            controller: _nameController,
+            enabled: !_loading,
+            label: context.l10n.name,
+            prefixIcon: Icons.title,
+            onChanged: (_) => _nameChanged(),
+          ),
+        ],
+        const SizedBox(height: 12),
+        ProviderAccountSelector<DouyinBindInfo>(
+          accounts: widget.binds,
+          selectedId: _selectedBindId,
+          idOf: (bind) => bind.id,
+          labelOf: (bind) {
+            final label = bind.label.isEmpty
+                ? context.l10n.defaultProviderInstance
+                : bind.label;
+            return bind.providerInstanceName.isEmpty
+                ? label
+                : '$label · ${bind.providerInstanceName}';
+          },
+          includeDefault: true,
+          enabled: !_loading,
+          onChanged: (bind) => setState(() {
+            _selectedBindId = bind?.id ?? '';
+            _instanceName = bind?.providerInstanceName ?? '';
+            _resolved = null;
+            _posts = null;
+          }),
+        ),
+        AppSwitchTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.l10n.shareMyCredentials),
+          prefix: const Icon(Icons.key_rounded),
+          semanticsLabel: context.l10n.shareMyCredentials,
+          value: _shared,
+          onChanged: _loading
+              ? null
+              : (value) => setState(() {
+                  _shared = value;
+                  _resolved = null;
+                  _posts = null;
+                }),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('douyin-preview'),
+              onPressed: _loading || _valueController.text.trim().isEmpty
+                  ? null
+                  : _loadPreview,
+              icon: const Icon(Icons.preview_outlined),
+              label: Text(context.l10n.preview),
+            ),
+            if (_target == ProviderAddTarget.parse)
+              FilledButton.icon(
+                key: const Key('douyin-submit'),
+                onPressed: _loading || !_previewReady ? null : _submit,
+                icon: _loading
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: AppLoadingIndicator(
+                          size: AppLoadingSize.sm,
+                          centered: false,
+                        ),
+                      )
+                    : const Icon(Icons.add),
+                label: Text(context.l10n.addMedia),
+              ),
+          ],
+        ),
+      ],
     );
+    return ProviderWorkspace(controls: content, results: _buildResults());
+  }
+
+  Widget _buildResults() {
+    if (_posts != null) return _postsBrowser();
+    final preview = _preview();
+    return preview == null
+        ? const SizedBox()
+        : AppSingleChildScrollView(padding: EdgeInsets.zero, child: preview);
   }
 
   Widget? _preview() {

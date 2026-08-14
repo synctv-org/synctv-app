@@ -54,7 +54,7 @@ void main() {
 
     test('round trips proxy preferences for supported media sources', () {
       for (final (provider, baseConfig) in mediaCases) {
-        for (final mode in ['prefer', 'only']) {
+        for (final mode in ['prefer', 'only', 'directPrefer', 'directOnly']) {
           final config = {...baseConfig, 'proxyMode': mode};
           final encoded = SourceConfigCodec.mediaSourceConfigFromMap(
             sourceProvider: provider,
@@ -72,7 +72,7 @@ void main() {
 
     test('round trips proxy preferences for supported playlists', () {
       for (final (provider, baseConfig) in playlistCases) {
-        for (final mode in ['prefer', 'only']) {
+        for (final mode in ['prefer', 'only', 'directPrefer', 'directOnly']) {
           final config = {...baseConfig, 'proxyMode': mode};
           final encoded = SourceConfigCodec.playlistSourceConfigFromMap(
             sourceProvider: provider,

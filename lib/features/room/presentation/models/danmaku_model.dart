@@ -64,7 +64,9 @@ enum DanmakuType {
 class DanmakuStyle {
   final Color defaultColor;
   final double defaultFontSize;
-  final String fontFamily;
+
+  /// Null delegates font selection to Flutter and the host platform.
+  final String? fontFamily;
   final bool bold;
   final double outlineWidth;
   final Color outlineColor;
@@ -74,7 +76,7 @@ class DanmakuStyle {
   const DanmakuStyle({
     this.defaultColor = const Color(0xFFFFFFFF),
     this.defaultFontSize = 25.0,
-    this.fontFamily = '黑体',
+    this.fontFamily,
     this.bold = true,
     this.outlineWidth = 0.8,
     this.outlineColor = const Color(0xFF000000),

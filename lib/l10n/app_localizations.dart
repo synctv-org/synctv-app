@@ -2570,6 +2570,18 @@ abstract class AppLocalizations {
   /// **'Proxy only'**
   String get playbackProxyOnly;
 
+  /// No description provided for @playbackProxyDirectPrefer.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer direct'**
+  String get playbackProxyDirectPrefer;
+
+  /// No description provided for @playbackProxyDirectOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct only'**
+  String get playbackProxyDirectOnly;
+
   /// No description provided for @playbackProxyAutoDescription.
   ///
   /// In en, this message translates to:
@@ -2587,6 +2599,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep routes that the SyncTV server can proxy'**
   String get playbackProxyOnlyDescription;
+
+  /// No description provided for @playbackProxyDirectPreferDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep direct and proxy routes, selecting direct by default'**
+  String get playbackProxyDirectPreferDescription;
+
+  /// No description provided for @playbackProxyDirectOnlyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep direct playback routes only'**
+  String get playbackProxyDirectOnlyDescription;
 
   /// No description provided for @playbackProxyDirectRisk.
   ///

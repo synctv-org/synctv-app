@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/server_settings/presentation/server_settings_dialog.dart';
@@ -22,7 +21,6 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           ...AppLocalizations.localizationsDelegates,
-          FLocalizations.delegate,
         ],
         builder: (context, child) => DependencyScope<ServerConnectionGateway>(
           value: gateway,
@@ -78,7 +76,6 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           ...AppLocalizations.localizationsDelegates,
-          FLocalizations.delegate,
         ],
         builder: (context, child) => DependencyScope<ServerConnectionGateway>(
           value: const _EmptyServerConnectionGateway(),
@@ -134,7 +131,6 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           ...AppLocalizations.localizationsDelegates,
-          FLocalizations.delegate,
         ],
         builder: (context, child) => DependencyScope<ServerConnectionGateway>(
           value: const _EmptyServerConnectionGateway(),
@@ -179,7 +175,6 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           ...AppLocalizations.localizationsDelegates,
-          FLocalizations.delegate,
         ],
         builder: (context, child) => DependencyScope<ServerConnectionGateway>(
           value: const _EmptyServerConnectionGateway(),

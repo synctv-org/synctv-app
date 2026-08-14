@@ -6749,6 +6749,7 @@ const ListPlaylistItemsResponse$json = {
       '9': 0,
       '10': 'cursor'
     },
+    {'1': 'supports_search', '3': 11, '4': 1, '5': 8, '10': 'supportsSearch'},
   ],
   '8': [
     {'1': 'pagination'},
@@ -6767,7 +6768,8 @@ final $typed_data.Uint8List listPlaylistItemsResponseDescriptor = $convert.base6
     'aXN0QnJvd3NlUGF0aE5vZGVSC2N1cnJlbnRQYXRoEhgKB3ZlcnNpb24YCCABKAlSB3ZlcnNpb2'
     '4SMwoEcGFnZRgJIAEoCzIdLnN5bmN0di5jbGllbnQuUGFnZVBhZ2luYXRpb25IAFIEcGFnZRI5'
     'CgZjdXJzb3IYCiABKAsyHy5zeW5jdHYuY2xpZW50LkN1cnNvclBhZ2luYXRpb25IAFIGY3Vyc2'
-    '9yQgwKCnBhZ2luYXRpb25CCAoGX3RvdGFs');
+    '9yEicKD3N1cHBvcnRzX3NlYXJjaBgLIAEoCFIOc3VwcG9ydHNTZWFyY2hCDAoKcGFnaW5hdGlv'
+    'bkIICgZfdG90YWw=');
 
 @$core.Deprecated('Use playlistItemDescriptor instead')
 const PlaylistItem$json = {

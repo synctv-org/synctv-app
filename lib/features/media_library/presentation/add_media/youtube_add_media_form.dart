@@ -9,6 +9,7 @@ import 'package:synctv_app/core/presentation/notifications/app_notifications.dar
 import 'package:synctv_app/features/media_library/presentation/add_media/youtube_playlist_preview.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 
@@ -113,205 +114,206 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
       _selectedBindId = '';
       _instanceName = '';
     }
-    return AppSingleChildScrollView(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    final controls = <Widget>[
+      ProviderAddTargetSelector(
+        value: _target,
+        targets: const [
+          ProviderAddTarget.parse,
+          ProviderAddTarget.media,
+          ProviderAddTarget.playlist,
+        ],
+        enabled: !_loading,
+        onChanged: _selectTarget,
+      ),
+      if (_target != ProviderAddTarget.parse) ...[
+        const SizedBox(height: 12),
+        DropdownButtonFormField<YoutubeAddMode>(
+          key: const Key('youtube-mode'),
+          initialValue: _mode,
+          decoration: InputDecoration(
+            labelText: context.l10n.source,
+            prefixIcon: const Icon(Icons.video_library_outlined),
+          ),
+          items: _listModes
+              .map(
+                (mode) => DropdownMenuItem(
+                  value: mode,
+                  child: Text(_modeLabel(mode)),
+                ),
+              )
+              .toList(),
+          onChanged: _loading
+              ? null
+              : (mode) {
+                  if (mode == null || mode == _mode) return;
+                  _mode = mode;
+                  _valueController.clear();
+                  _changed();
+                },
+        ),
+      ],
+      if (_requiresValue) ...[
+        const SizedBox(height: 16),
+        AppTextField(
+          key: const Key('youtube-value'),
+          controller: _valueController,
+          enabled: !_loading,
+          label: switch (_mode) {
+            YoutubeAddMode.video => context.l10n.videoUrlOrId,
+            YoutubeAddMode.playlist => context.l10n.playlistUrlOrId,
+            YoutubeAddMode.channel => context.l10n.channelUrlOrId,
+            YoutubeAddMode.search => context.l10n.searchQueryLabel,
+            _ => '',
+          },
+          prefixIcon: switch (_mode) {
+            YoutubeAddMode.video => Icons.smart_display_outlined,
+            YoutubeAddMode.playlist => Icons.playlist_play,
+            YoutubeAddMode.channel => Icons.video_library_outlined,
+            YoutubeAddMode.search => Icons.search,
+            _ => Icons.video_library_outlined,
+          },
+          keyboardType: _mode == YoutubeAddMode.search
+              ? TextInputType.text
+              : TextInputType.url,
+          onChanged: (_) => _changed(),
+        ),
+      ],
+      if (_mode == YoutubeAddMode.channel) ...[
+        const SizedBox(height: 12),
+        SegmentedButton<YoutubeChannelMode>(
+          segments: [
+            ButtonSegment(
+              value: YoutubeChannelMode.videos,
+              icon: const Icon(Icons.ondemand_video_outlined),
+              label: Text(context.l10n.videos),
+            ),
+            ButtonSegment(
+              value: YoutubeChannelMode.shorts,
+              icon: const Icon(Icons.smartphone_outlined),
+              label: Text(context.l10n.shorts),
+            ),
+            ButtonSegment(
+              value: YoutubeChannelMode.live,
+              icon: const Icon(Icons.live_tv_outlined),
+              label: Text(context.l10n.live),
+            ),
+          ],
+          selected: {_channelMode},
+          onSelectionChanged: _loading
+              ? null
+              : (values) {
+                  _channelMode = values.first;
+                  _changed();
+                },
+        ),
+      ],
+      if (_target != ProviderAddTarget.media) ...[
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('youtube-name'),
+          controller: _nameController,
+          enabled: !_loading,
+          label: context.l10n.name,
+          prefixIcon: Icons.title,
+          onChanged: (_) => _nameChanged(),
+        ),
+      ],
+      const SizedBox(height: 12),
+      ProviderAccountSelector<YoutubeBindInfo>(
+        accounts: widget.binds,
+        selectedId: _selectedBindId,
+        idOf: (bind) => bind.id,
+        labelOf: (bind) {
+          final label = bind.label.isEmpty
+              ? context.l10n.defaultProviderInstance
+              : bind.label;
+          return bind.providerInstanceName.isEmpty
+              ? label
+              : '$label · ${bind.providerInstanceName}';
+        },
+        includeDefault: true,
+        enabled: !_loading,
+        onChanged: (bind) => setState(() {
+          _selectedBindId = bind?.id ?? '';
+          _instanceName = bind?.providerInstanceName ?? '';
+          _resolved = null;
+          _listPreview = null;
+        }),
+      ),
+      AppSwitchTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(context.l10n.shareMyCredentials),
+        prefix: const Icon(Icons.key_rounded),
+        semanticsLabel: context.l10n.shareMyCredentials,
+        value: _shared,
+        onChanged: _loading
+            ? null
+            : (value) => setState(() {
+                _shared = value;
+                _resolved = null;
+                _listPreview = null;
+              }),
+      ),
+      const SizedBox(height: 8),
+      Wrap(
+        alignment: WrapAlignment.end,
+        spacing: 10,
+        runSpacing: 10,
         children: [
-          ProviderAddTargetSelector(
-            value: _target,
-            targets: const [
-              ProviderAddTarget.parse,
-              ProviderAddTarget.media,
-              ProviderAddTarget.playlist,
-            ],
-            enabled: !_loading,
-            onChanged: _selectTarget,
+          OutlinedButton.icon(
+            key: const Key('youtube-preview'),
+            onPressed: _loading || !_valid ? null : _loadPreview,
+            icon: const Icon(Icons.preview_outlined),
+            label: Text(context.l10n.preview),
           ),
-          if (_target != ProviderAddTarget.parse) ...[
-            const SizedBox(height: 12),
-            DropdownButtonFormField<YoutubeAddMode>(
-              key: const Key('youtube-mode'),
-              initialValue: _mode,
-              decoration: InputDecoration(
-                labelText: context.l10n.source,
-                prefixIcon: const Icon(Icons.video_library_outlined),
+          if (_target != ProviderAddTarget.media)
+            FilledButton.icon(
+              key: const Key('youtube-submit'),
+              onPressed: _loading || !_valid || !_previewReady ? null : _submit,
+              icon: _loading
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: AppLoadingIndicator(
+                        size: AppLoadingSize.sm,
+                        centered: false,
+                      ),
+                    )
+                  : const Icon(Icons.add),
+              label: Text(
+                _target == ProviderAddTarget.parse
+                    ? context.l10n.addMedia
+                    : context.l10n.addCurrentList,
               ),
-              items: _listModes
-                  .map(
-                    (mode) => DropdownMenuItem(
-                      value: mode,
-                      child: Text(_modeLabel(mode)),
-                    ),
-                  )
-                  .toList(),
-              onChanged: _loading
-                  ? null
-                  : (mode) {
-                      if (mode == null || mode == _mode) return;
-                      _mode = mode;
-                      _valueController.clear();
-                      _changed();
-                    },
             ),
-          ],
-          if (_requiresValue) ...[
-            const SizedBox(height: 16),
-            AppTextField(
-              key: const Key('youtube-value'),
-              controller: _valueController,
-              enabled: !_loading,
-              label: switch (_mode) {
-                YoutubeAddMode.video => context.l10n.videoUrlOrId,
-                YoutubeAddMode.playlist => context.l10n.playlistUrlOrId,
-                YoutubeAddMode.channel => context.l10n.channelUrlOrId,
-                YoutubeAddMode.search => context.l10n.searchQueryLabel,
-                _ => '',
-              },
-              prefixIcon: switch (_mode) {
-                YoutubeAddMode.video => Icons.smart_display_outlined,
-                YoutubeAddMode.playlist => Icons.playlist_play,
-                YoutubeAddMode.channel => Icons.video_library_outlined,
-                YoutubeAddMode.search => Icons.search,
-                _ => Icons.video_library_outlined,
-              },
-              keyboardType: _mode == YoutubeAddMode.search
-                  ? TextInputType.text
-                  : TextInputType.url,
-              onChanged: (_) => _changed(),
-            ),
-          ],
-          if (_mode == YoutubeAddMode.channel) ...[
-            const SizedBox(height: 12),
-            SegmentedButton<YoutubeChannelMode>(
-              segments: [
-                ButtonSegment(
-                  value: YoutubeChannelMode.videos,
-                  icon: const Icon(Icons.ondemand_video_outlined),
-                  label: Text(context.l10n.videos),
-                ),
-                ButtonSegment(
-                  value: YoutubeChannelMode.shorts,
-                  icon: const Icon(Icons.smartphone_outlined),
-                  label: Text(context.l10n.shorts),
-                ),
-                ButtonSegment(
-                  value: YoutubeChannelMode.live,
-                  icon: const Icon(Icons.live_tv_outlined),
-                  label: Text(context.l10n.live),
-                ),
-              ],
-              selected: {_channelMode},
-              onSelectionChanged: _loading
-                  ? null
-                  : (values) {
-                      _channelMode = values.first;
-                      _changed();
-                    },
-            ),
-          ],
-          if (_target != ProviderAddTarget.media) ...[
-            const SizedBox(height: 12),
-            AppTextField(
-              key: const Key('youtube-name'),
-              controller: _nameController,
-              enabled: !_loading,
-              label: context.l10n.name,
-              prefixIcon: Icons.title,
-              onChanged: (_) => _nameChanged(),
-            ),
-          ],
-          const SizedBox(height: 12),
-          ProviderAccountSelector<YoutubeBindInfo>(
-            accounts: widget.binds,
-            selectedId: _selectedBindId,
-            idOf: (bind) => bind.id,
-            labelOf: (bind) {
-              final label = bind.label.isEmpty
-                  ? context.l10n.defaultProviderInstance
-                  : bind.label;
-              return bind.providerInstanceName.isEmpty
-                  ? label
-                  : '$label · ${bind.providerInstanceName}';
-            },
-            includeDefault: true,
-            enabled: !_loading,
-            onChanged: (bind) => setState(() {
-              _selectedBindId = bind?.id ?? '';
-              _instanceName = bind?.providerInstanceName ?? '';
-              _resolved = null;
-              _listPreview = null;
-            }),
-          ),
-          AppSwitchTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(context.l10n.shareMyCredentials),
-            prefix: const Icon(Icons.key_rounded),
-            semanticsLabel: context.l10n.shareMyCredentials,
-            value: _shared,
-            onChanged: _loading
-                ? null
-                : (value) => setState(() {
-                    _shared = value;
-                    _resolved = null;
-                    _listPreview = null;
-                  }),
-          ),
-          if (_resolved case final resolved?) ...[
-            const SizedBox(height: 8),
-            _preview(resolved),
-          ],
-          if (_listPreview case final preview?) ...[
-            const SizedBox(height: 8),
-            YoutubePlaylistPreview(
-              items: preview.items,
-              loading: _loading,
-              hasMore: _playlistPreviewHasMore,
-              onLoadMore: () => _loadPreview(loadMore: true),
-              selectionEnabled: _target == ProviderAddTarget.media,
-              onAddSelected: _target == ProviderAddTarget.media
-                  ? _addSelectedPreviewItems
-                  : null,
-            ),
-          ],
-          const SizedBox(height: 8),
-          Wrap(
-            alignment: WrapAlignment.end,
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              OutlinedButton.icon(
-                key: const Key('youtube-preview'),
-                onPressed: _loading || !_valid ? null : _loadPreview,
-                icon: const Icon(Icons.preview_outlined),
-                label: Text(context.l10n.preview),
-              ),
-              if (_target != ProviderAddTarget.media)
-                FilledButton.icon(
-                  key: const Key('youtube-submit'),
-                  onPressed: _loading || !_valid || !_previewReady
-                      ? null
-                      : _submit,
-                  icon: _loading
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: AppLoadingIndicator(
-                            size: AppLoadingSize.sm,
-                            centered: false,
-                          ),
-                        )
-                      : const Icon(Icons.add),
-                  label: Text(
-                    _target == ProviderAddTarget.parse
-                        ? context.l10n.addMedia
-                        : context.l10n.addCurrentList,
-                  ),
-                ),
-            ],
-          ),
         ],
       ),
+    ];
+    return ProviderWorkspace(
+      controls: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: controls,
+      ),
+      results: _buildResults(context),
     );
+  }
+
+  Widget _buildResults(BuildContext context) {
+    if (_listPreview case final preview?) {
+      return YoutubePlaylistPreview(
+        items: preview.items,
+        loading: _loading,
+        hasMore: _playlistPreviewHasMore,
+        onLoadMore: () => _loadPreview(loadMore: true),
+        selectionEnabled: _target == ProviderAddTarget.media,
+        onAddSelected: _target == ProviderAddTarget.media
+            ? _addSelectedPreviewItems
+            : null,
+      );
+    }
+    if (_resolved case final resolved?) {
+      return AppSingleChildScrollView(child: _preview(resolved));
+    }
+    return const SizedBox();
   }
 
   Widget _preview(youtube.ResolveResponse resolved) {

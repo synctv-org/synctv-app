@@ -8,6 +8,7 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -109,7 +110,7 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
         ),
       );
     }
-    return Column(
+    final controls = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ProviderAccountSelector<TrueNasBindInfo>(
@@ -161,6 +162,10 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
           ),
         ),
         const SizedBox(height: 8),
+      ],
+    );
+    final results = Column(
+      children: [
         if (_loading) const AppLinearProgress(minHeight: 2),
         Expanded(child: _fileList()),
         Row(
@@ -185,6 +190,7 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
         ),
       ],
     );
+    return ProviderWorkspace(controls: controls, results: results);
   }
 
   Widget _breadcrumbs() {

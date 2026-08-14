@@ -380,6 +380,8 @@ class _RoomScreenState extends State<RoomScreen>
   int _mentionCandidatePage = 0;
   bool _mentionCandidatesHasMore = true;
   List<RoomMediaEntry> _mediaEntries = [];
+  late final TextEditingController _mediaSearchController;
+  bool _mediaSupportsSearch = true;
   bool _isLoadingMediaEntries = true;
   bool _isVideoLoading = false;
   bool get _playbackNavigationInFlight =>
@@ -554,6 +556,7 @@ class _RoomScreenState extends State<RoomScreen>
   @override
   void initState() {
     super.initState();
+    _mediaSearchController = TextEditingController();
     _chatGateway = DependencyScope.read<RoomChatGateway>(context);
     _playbackGateway = DependencyScope.read<RoomPlaybackGateway>(context);
     _playbackController = RoomPlaybackController();
@@ -1191,6 +1194,7 @@ class _RoomScreenState extends State<RoomScreen>
         page: _currentPage + 1,
         cursor: _usesCursorPagination ? _nextCursor : null,
         pageSize: _pageSize,
+        search: _mediaSearchController.text.trim(),
       );
 
       final entries = result.entries;
@@ -1203,6 +1207,7 @@ class _RoomScreenState extends State<RoomScreen>
             _usesCursorPagination = result.usesCursor;
             _nextCursor = result.nextCursor;
             _currentPage = result.page;
+            _mediaSupportsSearch = result.supportsSearch;
             _hasMoreMediaEntries = result.usesCursor
                 ? result.nextCursor.isNotEmpty
                 : total != null && _mediaEntries.length < total;
@@ -1933,6 +1938,7 @@ class _RoomScreenState extends State<RoomScreen>
     }
     setState(() {
       _mediaEntries = mediaLibrary.entries;
+      _mediaSupportsSearch = mediaLibrary.supportsSearch;
       _mediaEntriesScopeKey = _selectionObservationScopeKey;
       _currentPage = mediaLibrary.page;
       _usesCursorPagination = mediaLibrary.usesCursor;
@@ -3302,6 +3308,7 @@ class _RoomScreenState extends State<RoomScreen>
     _reconnectTimer?.cancel();
     unawaited(_channel?.close());
     _messageController.dispose();
+    _mediaSearchController.dispose();
     _chatScrollController.dispose();
     _mediaEntryScrollController.dispose();
     unawaited(_voiceChatManager?.dispose());
@@ -5861,6 +5868,16 @@ class _RoomScreenState extends State<RoomScreen>
               ),
               const SizedBox(height: 6),
               _buildPlaylistBreadcrumbs(),
+              if (_mediaSupportsSearch || !_isInsideProviderTargetScope) ...[
+                const SizedBox(height: 8),
+                AppTextField(
+                  controller: _mediaSearchController,
+                  label: context.l10n.searchMediaOrPlaylist,
+                  prefixIcon: Icons.search_rounded,
+                  showClearButton: true,
+                  onSubmitted: (_) => _submitMediaSearch(),
+                ),
+              ],
             ],
           ),
         ),
@@ -6831,6 +6848,7 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() {
       _playlistStack.add(playlist);
       _playlistNameStack.add(playlist.name);
+      _mediaSearchController.clear();
       _isLoadingMediaEntries = true;
     });
     _observeCurrentPlaylist();
@@ -6841,6 +6859,7 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() {
       _playlistStack.removeLast();
       _playlistNameStack.removeLast();
+      _mediaSearchController.clear();
       _isLoadingMediaEntries = true;
     });
     _observeCurrentPlaylist();
@@ -6853,6 +6872,7 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() {
       _playlistStack.removeRange(depth, _playlistStack.length);
       _playlistNameStack.removeRange(depth + 1, _playlistNameStack.length);
+      _mediaSearchController.clear();
       _isLoadingMediaEntries = true;
     });
     _observeCurrentPlaylist();
@@ -6870,6 +6890,7 @@ class _RoomScreenState extends State<RoomScreen>
         _realtimeProtocol.encodePlaylistObservation(
           playlistId: parentPlaylist?.playbackPlaylistId ?? '',
           target: parentPlaylist?.playbackTarget,
+          search: _mediaSearchController.text.trim(),
           page: 1,
           pageSize: _pageSize,
         ),
@@ -6894,6 +6915,7 @@ class _RoomScreenState extends State<RoomScreen>
         widget.room.roomId,
         playlistId: playlist?.playbackPlaylistId ?? '',
         target: playlist?.playbackTarget,
+        search: _mediaSearchController.text.trim(),
         pageSize: _pageSize,
         refresh: _isInsideProviderTargetScope,
       );
@@ -6908,6 +6930,30 @@ class _RoomScreenState extends State<RoomScreen>
     } finally {
       if (mounted) setState(() => _isRefreshingMediaEntries = false);
     }
+  }
+
+  void _submitMediaSearch() {
+    setState(() {
+      _currentPage = 1;
+      _nextCursor = '';
+      _usesCursorPagination = false;
+      _hasMoreMediaEntries = true;
+      _mediaEntries = const [];
+      _isLoadingMediaEntries = true;
+    });
+    _sendRealtimeMessage(
+      _realtimeProtocol.encodePlaylistObservation(
+        playlistId: _playlistStack.isEmpty
+            ? ''
+            : _playlistStack.last.playbackPlaylistId,
+        target: _playlistStack.isEmpty
+            ? null
+            : _playlistStack.last.playbackTarget,
+        page: 1,
+        pageSize: _pageSize,
+        search: _mediaSearchController.text.trim(),
+      ),
+    );
   }
 
   Future<void> _switchMedia(RoomMediaEntry entry) async {

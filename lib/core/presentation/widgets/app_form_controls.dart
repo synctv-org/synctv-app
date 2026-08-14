@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:forui/forui.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 
@@ -1259,6 +1258,7 @@ class AppActionButton extends StatelessWidget {
   final AppActionButtonSize size;
   final FocusNode? focusNode;
   final bool autofocus;
+  final Color? foregroundColor;
 
   const AppActionButton({
     super.key,
@@ -1271,26 +1271,86 @@ class AppActionButton extends StatelessWidget {
     this.size = AppActionButtonSize.md,
     this.focusNode,
     this.autofocus = false,
+    this.foregroundColor,
   }) : assert(icon == null || prefix == null);
 
   @override
   Widget build(BuildContext context) {
     final effectiveOnPressed = loading ? null : onPressed;
     final buttonIcon = loading
-        ? const FCircularProgress(size: FCircularProgressSizeVariant.sm)
+        ? const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
         : prefix ?? (icon == null ? null : Icon(icon, size: 18));
     final child = Text(label, overflow: TextOverflow.ellipsis);
-    final variant = switch (style) {
-      AppActionButtonStyle.filled => FButtonVariant.primary,
-      AppActionButtonStyle.tonal => FButtonVariant.secondary,
-      AppActionButtonStyle.outlined => FButtonVariant.outline,
-      AppActionButtonStyle.text => FButtonVariant.ghost,
-      AppActionButtonStyle.destructive => FButtonVariant.destructive,
-    };
-    final buttonSize = switch (size) {
-      AppActionButtonSize.sm => FButtonSizeVariant.sm,
-      AppActionButtonSize.md => FButtonSizeVariant.md,
-    };
+    final buttonChild = buttonIcon == null
+        ? child
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              buttonIcon,
+              const SizedBox(width: 8),
+              Flexible(child: child),
+            ],
+          );
+    final minimumSize = size == AppActionButtonSize.sm
+        ? const Size(28, 36)
+        : const Size(44, 44);
+    final destructiveStyle = style == AppActionButtonStyle.destructive;
+    final buttonStyle = ButtonStyle(
+      minimumSize: WidgetStatePropertyAll(minimumSize),
+      padding: WidgetStatePropertyAll(
+        EdgeInsets.symmetric(
+          horizontal: size == AppActionButtonSize.sm ? 10 : 14,
+        ),
+      ),
+      foregroundColor: destructiveStyle
+          ? WidgetStatePropertyAll(Theme.of(context).colorScheme.onError)
+          : foregroundColor == null
+          ? null
+          : WidgetStatePropertyAll(foregroundColor),
+      backgroundColor: destructiveStyle
+          ? WidgetStatePropertyAll(Theme.of(context).colorScheme.error)
+          : null,
+    );
+    Widget button;
+    switch (style) {
+      case AppActionButtonStyle.filled:
+      case AppActionButtonStyle.destructive:
+        button = FilledButton(
+          onPressed: effectiveOnPressed,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          style: buttonStyle,
+          child: buttonChild,
+        );
+      case AppActionButtonStyle.tonal:
+        button = FilledButton.tonal(
+          onPressed: effectiveOnPressed,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          style: buttonStyle,
+          child: buttonChild,
+        );
+      case AppActionButtonStyle.outlined:
+        button = OutlinedButton(
+          onPressed: effectiveOnPressed,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          style: buttonStyle,
+          child: buttonChild,
+        );
+      case AppActionButtonStyle.text:
+        button = TextButton(
+          onPressed: effectiveOnPressed,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          style: buttonStyle,
+          child: buttonChild,
+        );
+    }
 
     return Semantics(
       button: true,
@@ -1299,17 +1359,7 @@ class AppActionButton extends StatelessWidget {
       onTap: effectiveOnPressed,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-        child: FButton(
-          onPress: effectiveOnPressed,
-          variant: variant,
-          size: buttonSize,
-          mainAxisSize: MainAxisSize.min,
-          prefix: buttonIcon,
-          semanticsTooltip: label,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          child: child,
-        ),
+        child: button,
       ),
     );
   }
@@ -1352,35 +1402,74 @@ class AppIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveOnPressed = loading ? null : onPressed;
-    final variant = switch (style) {
-      AppIconButtonStyle.ghost => FButtonVariant.ghost,
-      AppIconButtonStyle.tonal => FButtonVariant.secondary,
-      AppIconButtonStyle.outlined => FButtonVariant.outline,
-      AppIconButtonStyle.filled => FButtonVariant.primary,
-      AppIconButtonStyle.destructive => FButtonVariant.destructive,
-    };
+    final buttonSize = size == AppIconButtonSize.sm ? 36.0 : 44.0;
     final child = loading
-        ? const FCircularProgress(size: FCircularProgressSizeVariant.sm)
+        ? const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
         : Icon(
             selected && selectedIcon != null ? selectedIcon : icon,
             size: iconSize,
           );
-    final buttonSize = switch (size) {
-      AppIconButtonSize.sm => FButtonSizeVariant.sm,
-      AppIconButtonSize.md => FButtonSizeVariant.md,
-    };
-
-    Widget button = FButton.icon(
-      onPress: effectiveOnPressed,
-      variant: variant,
-      size: buttonSize,
-      semanticsLabel: tooltip,
-      semanticsTooltip: tooltip,
-      selected: selected,
-      focusNode: focusNode,
-      autofocus: autofocus,
-      child: child,
+    final destructive = style == AppIconButtonStyle.destructive;
+    final baseStyle = IconButton.styleFrom(
+      minimumSize: Size(buttonSize, buttonSize),
+      maximumSize: Size(buttonSize, buttonSize),
+      padding: EdgeInsets.zero,
+      backgroundColor: destructive ? Theme.of(context).colorScheme.error : null,
+      foregroundColor: destructive
+          ? Theme.of(context).colorScheme.onError
+          : null,
+      side: style == AppIconButtonStyle.outlined
+          ? BorderSide(color: Theme.of(context).colorScheme.outline)
+          : null,
     );
+    Widget button;
+    switch (style) {
+      case AppIconButtonStyle.ghost:
+        button = IconButton(
+          onPressed: effectiveOnPressed,
+          icon: child,
+          style: baseStyle,
+          isSelected: selected,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          tooltip: null,
+        );
+      case AppIconButtonStyle.tonal:
+        button = IconButton.filledTonal(
+          onPressed: effectiveOnPressed,
+          icon: child,
+          style: baseStyle,
+          isSelected: selected,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          tooltip: null,
+        );
+      case AppIconButtonStyle.outlined:
+        button = IconButton.outlined(
+          onPressed: effectiveOnPressed,
+          icon: child,
+          style: baseStyle,
+          isSelected: selected,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          tooltip: null,
+        );
+      case AppIconButtonStyle.filled:
+      case AppIconButtonStyle.destructive:
+        button = IconButton.filled(
+          onPressed: effectiveOnPressed,
+          icon: child,
+          style: baseStyle,
+          isSelected: selected,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          tooltip: null,
+        );
+    }
     if (padding != null) {
       button = Padding(padding: padding!, child: button);
     }
@@ -1951,18 +2040,18 @@ class AppLoadingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progressSize = switch (size) {
-      AppLoadingSize.sm => FCircularProgressSizeVariant.sm,
-      AppLoadingSize.md => FCircularProgressSizeVariant.md,
-      AppLoadingSize.lg => FCircularProgressSizeVariant.lg,
+      AppLoadingSize.sm => 16.0,
+      AppLoadingSize.md => 24.0,
+      AppLoadingSize.lg => 36.0,
     };
-    Widget progress = color == null
-        ? FCircularProgress(size: progressSize)
-        : FCircularProgress(
-            size: progressSize,
-            style: FCircularProgressStyleDelta.delta(
-              iconStyle: IconThemeDataDelta.delta(color: color),
-            ),
-          );
+    Widget progress = SizedBox(
+      width: progressSize,
+      height: progressSize,
+      child: CircularProgressIndicator(
+        color: color,
+        strokeWidth: size == AppLoadingSize.sm ? 2 : 3,
+      ),
+    );
     if (padding != EdgeInsets.zero) {
       progress = Padding(padding: padding, child: progress);
     }
@@ -3473,7 +3562,7 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FCard(
+    return Card(
       clipBehavior: clipBehavior,
       child: Padding(
         padding: padding ?? AppMetrics.cardPadding(context),
@@ -3499,14 +3588,11 @@ class AppAccordionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget accordion = FAccordion(
-      children: [
-        FAccordionItem(
-          title: title,
-          initiallyExpanded: initiallyExpanded,
-          child: child,
-        ),
-      ],
+    Widget accordion = ExpansionTile(
+      initiallyExpanded: initiallyExpanded,
+      title: title,
+      childrenPadding: const EdgeInsets.only(bottom: 12),
+      children: [child],
     );
     if (padding != null) {
       accordion = Padding(padding: padding!, child: accordion);
@@ -3551,25 +3637,25 @@ class AppTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tile = FTile(
+    final tile = ListTile(
       title: title,
       subtitle: subtitle,
-      prefix: prefix,
-      suffix: suffix,
+      leading: prefix,
+      trailing: suffix,
       enabled: enabled,
       selected: selected,
-      semanticsLabel: semanticsLabel,
-      semanticsTooltip: semanticsLabel,
+      selectedTileColor: Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withValues(alpha: 0.45),
+      iconColor: destructive ? Theme.of(context).colorScheme.error : null,
+      textColor: destructive ? Theme.of(context).colorScheme.error : null,
       autofocus: autofocus,
       focusNode: focusNode,
-      onPress: enabled ? onPressed : null,
+      onTap: enabled ? onPressed : null,
       onLongPress: enabled ? onLongPress : null,
-      variant: destructive ? FItemVariant.destructive : FItemVariant.primary,
+      contentPadding: contentPadding,
     );
     Widget result = tile;
-    if (contentPadding != null) {
-      result = Padding(padding: contentPadding!, child: result);
-    }
     if (padding != null) {
       result = Padding(padding: padding!, child: result);
     }
@@ -3697,25 +3783,14 @@ class AppConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FDialog.adaptive(
-      horizontalBuilder: (context, style) => _buildAppDialogContent(
-        context,
-        style,
-        horizontal: true,
-        icon: icon,
-        title: Text(title),
-        body: content,
-        actions: _actions(context),
+    return AlertDialog(
+      icon: icon,
+      title: Text(title),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 480),
+        child: SingleChildScrollView(child: content),
       ),
-      verticalBuilder: (context, style) => _buildAppDialogContent(
-        context,
-        style,
-        horizontal: false,
-        icon: icon,
-        title: Text(title),
-        body: content,
-        actions: _actions(context),
-      ),
+      actions: _actions(context),
     );
   }
 
@@ -3758,100 +3833,22 @@ class AppDialog extends StatelessWidget {
       context,
       constraints.hasBoundedHeight ? constraints.maxHeight : null,
     );
-    return FDialog.adaptive(
-      constraints: constraints.copyWith(maxHeight: maxHeight),
-      horizontalBuilder: (context, style) => _buildAppDialogContent(
-        context,
-        style,
-        horizontal: true,
-        icon: icon,
-        title: title,
-        body: body,
-        actions: actions,
-      ),
-      verticalBuilder: (context, style) => _buildAppDialogContent(
-        context,
-        style,
-        horizontal: false,
-        icon: icon,
-        title: title,
-        body: body,
-        actions: actions,
-      ),
+    return AlertDialog(
+      icon: icon,
+      title: title,
+      content: body == null
+          ? null
+          : ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: constraints.minWidth,
+                maxWidth: constraints.maxWidth,
+                maxHeight: maxHeight,
+              ),
+              child: SingleChildScrollView(child: body),
+            ),
+      actions: actions,
     );
   }
-}
-
-Widget _buildAppDialogContent(
-  BuildContext context,
-  FDialogStyle style, {
-  required bool horizontal,
-  required Widget? icon,
-  required Widget? title,
-  required Widget? body,
-  required List<Widget> actions,
-}) {
-  final textContent = Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      if (title != null)
-        DefaultTextStyle(style: style.titleTextStyle, child: title),
-      if (title != null && body != null) const SizedBox(height: 8),
-      if (body != null)
-        DefaultTextStyle(style: style.bodyTextStyle, child: body),
-    ],
-  );
-  final content = horizontal && icon != null
-      ? Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            IconTheme.merge(
-              data: IconThemeData(color: context.theme.colors.primary),
-              child: icon,
-            ),
-            const SizedBox(width: 16),
-            Flexible(child: textContent),
-          ],
-        )
-      : Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (icon != null) ...[
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: IconTheme.merge(
-                  data: IconThemeData(color: context.theme.colors.primary),
-                  child: icon,
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-            textContent,
-          ],
-        );
-
-  return Padding(
-    padding: const EdgeInsets.all(24),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Flexible(child: AppSingleChildScrollView(child: content)),
-        if (actions.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Wrap(
-            alignment: WrapAlignment.end,
-            runAlignment: WrapAlignment.end,
-            spacing: 8,
-            runSpacing: 8,
-            children: actions,
-          ),
-        ],
-      ],
-    ),
-  );
 }
 
 Future<T?> showAppDialog<T>({
@@ -4063,22 +4060,57 @@ class AppSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveEnabled = enabled && onChanged != null;
+    final control = Switch(
+      value: value,
+      onChanged: effectiveEnabled ? onChanged : null,
+      focusNode: focusNode,
+      autofocus: autofocus,
+    );
+    final labelWidget = label == null
+        ? control
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            textDirection: leadingLabel ? TextDirection.rtl : null,
+            children: [
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label!),
+                    if (description != null)
+                      Text(
+                        description!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    if (errorText != null)
+                      Text(
+                        errorText!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              control,
+            ],
+          );
     return Semantics(
       label: semanticsLabel ?? label ?? context.l10n.switchControl,
       toggled: value,
-      enabled: enabled && onChanged != null,
-      child: FSwitch(
-        value: value,
-        onChange: enabled ? onChanged : null,
-        enabled: enabled && onChanged != null,
-        label: label == null ? null : Text(label!),
-        description: description == null ? null : Text(description!),
-        error: errorText == null ? null : Text(errorText!),
-        semanticsLabel: semanticsLabel ?? label ?? context.l10n.switchControl,
-        leadingLabel: leadingLabel,
-        focusNode: focusNode,
-        autofocus: autofocus,
-      ),
+      enabled: effectiveEnabled,
+      child: label == null
+          ? labelWidget
+          : InkWell(
+              onTap: effectiveEnabled ? () => onChanged?.call(!value) : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: labelWidget,
+              ),
+            ),
     );
   }
 }
@@ -4111,17 +4143,63 @@ class AppCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FCheckbox(
+    final effectiveEnabled = enabled && onChanged != null;
+    final control = Checkbox(
       value: value,
-      onChange: enabled ? onChanged : null,
-      enabled: enabled && onChanged != null,
-      label: label == null ? null : Text(label!),
-      description: description == null ? null : Text(description!),
-      error: errorText == null ? null : Text(errorText!),
-      semanticsLabel: semanticsLabel ?? label,
-      leadingLabel: leadingLabel,
+      onChanged: effectiveEnabled
+          ? (next) {
+              if (next != null) onChanged?.call(next);
+            }
+          : null,
       focusNode: focusNode,
       autofocus: autofocus,
+    );
+    if (label == null) {
+      return Semantics(
+        label: semanticsLabel,
+        checked: value,
+        enabled: effectiveEnabled,
+        child: control,
+      );
+    }
+    final labelWidget = Row(
+      mainAxisSize: MainAxisSize.min,
+      textDirection: leadingLabel ? TextDirection.rtl : null,
+      children: [
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label!),
+              if (description != null)
+                Text(
+                  description!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              if (errorText != null)
+                Text(
+                  errorText!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        control,
+      ],
+    );
+    return Semantics(
+      label: semanticsLabel ?? label,
+      checked: value,
+      enabled: effectiveEnabled,
+      child: InkWell(
+        onTap: effectiveEnabled ? () => onChanged?.call(!value) : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: labelWidget,
+        ),
+      ),
     );
   }
 }
@@ -4138,7 +4216,7 @@ class AppSelect<T> extends StatelessWidget {
   final Widget Function(BuildContext context, T value)? optionPrefixBuilder;
   final FormFieldSetter<T>? onSaved;
   final VoidCallback? onReset;
-  final FormFieldValidator<T> validator;
+  final FormFieldValidator<T>? validator;
   final AutovalidateMode autovalidateMode;
   final bool enabled;
   final bool expands;
@@ -4163,7 +4241,7 @@ class AppSelect<T> extends StatelessWidget {
     this.optionPrefixBuilder,
     this.onSaved,
     this.onReset,
-    this.validator = FFormFieldProperties.defaultValidator,
+    this.validator,
     this.autovalidateMode = AutovalidateMode.onUnfocus,
     this.enabled = true,
     this.expands = false,
@@ -4178,37 +4256,47 @@ class AppSelect<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labels = {
-      for (final entry in options.entries) entry.value: entry.key,
-    };
-    final field = FSelect<T>.rich(
-      format: (value) => labels[value]!,
-      control: FSelectControl<T>.lifted(value: value, onChange: _handleChange),
-      label: label == null ? null : Text(label!),
-      hint: hintText ?? context.l10n.selectOption,
-      description: description == null ? null : Text(description!),
-      forceErrorText: errorText,
-      errorBuilder: (context, message) => Text(message),
-      prefixBuilder: prefixIcon == null
-          ? null
-          : (context, style, variants) => Icon(prefixIcon, size: 18),
-      onSaved: onSaved,
-      onReset: onReset,
-      validator: validator,
-      autovalidateMode: autovalidateMode,
-      enabled: enabled && onChanged != null,
-      clearable: clearable,
-      expands: expands,
+    final field = DropdownButtonFormField<T>(
+      initialValue: value,
+      onChanged: enabled && onChanged != null ? _handleChange : null,
       focusNode: focusNode,
       autofocus: autofocus,
-      canRequestFocus: canRequestFocus,
-      textAlign: textAlign,
-      children: [
+      isExpanded: true,
+      alignment: textAlign == TextAlign.end
+          ? AlignmentDirectional.centerEnd
+          : AlignmentDirectional.centerStart,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText ?? context.l10n.selectOption,
+        helperText: description,
+        errorText: errorText,
+        prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, size: 18),
+      ),
+      validator: validator,
+      autovalidateMode: autovalidateMode,
+      onSaved: onSaved,
+      items: [
         for (final entry in options.entries)
-          FSelectItem<T>(
+          DropdownMenuItem<T>(
             value: entry.value,
-            title: Text(entry.key),
-            prefix: optionPrefixBuilder?.call(context, entry.value),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (optionPrefixBuilder != null) ...[
+                  optionPrefixBuilder!(context, entry.value),
+                  const SizedBox(width: 8),
+                ],
+                Flexible(child: Text(entry.key, textAlign: textAlign)),
+              ],
+            ),
+          ),
+      ],
+      selectedItemBuilder: (context) => [
+        for (final entry in options.entries)
+          Text(
+            entry.key,
+            textAlign: textAlign,
+            overflow: TextOverflow.ellipsis,
           ),
       ],
     );

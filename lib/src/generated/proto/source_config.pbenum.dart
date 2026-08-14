@@ -123,15 +123,23 @@ class PlaybackProxyMode extends $pb.ProtobufEnum {
           1, _omitEnumNames ? '' : 'PLAYBACK_PROXY_MODE_PREFER');
   static const PlaybackProxyMode PLAYBACK_PROXY_MODE_ONLY =
       PlaybackProxyMode._(2, _omitEnumNames ? '' : 'PLAYBACK_PROXY_MODE_ONLY');
+  static const PlaybackProxyMode PLAYBACK_PROXY_MODE_DIRECT_PREFER =
+      PlaybackProxyMode._(
+          3, _omitEnumNames ? '' : 'PLAYBACK_PROXY_MODE_DIRECT_PREFER');
+  static const PlaybackProxyMode PLAYBACK_PROXY_MODE_DIRECT_ONLY =
+      PlaybackProxyMode._(
+          4, _omitEnumNames ? '' : 'PLAYBACK_PROXY_MODE_DIRECT_ONLY');
 
   static const $core.List<PlaybackProxyMode> values = <PlaybackProxyMode>[
     PLAYBACK_PROXY_MODE_AUTO,
     PLAYBACK_PROXY_MODE_PREFER,
     PLAYBACK_PROXY_MODE_ONLY,
+    PLAYBACK_PROXY_MODE_DIRECT_PREFER,
+    PLAYBACK_PROXY_MODE_DIRECT_ONLY,
   ];
 
   static final $core.List<PlaybackProxyMode?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 2);
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
   static PlaybackProxyMode? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

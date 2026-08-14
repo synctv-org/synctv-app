@@ -12,6 +12,7 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 
 enum TwitchAddMode { media, channel, followedLive, categoryLive, searchLive }
@@ -189,219 +190,232 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
       _instanceName = '';
     }
 
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ProviderAddTargetSelector(
+          value: _target,
+          targets: const [
+            ProviderAddTarget.parse,
+            ProviderAddTarget.media,
+            ProviderAddTarget.playlist,
+          ],
+          enabled: !_loading,
+          onChanged: _selectTarget,
+        ),
+        if (_target != ProviderAddTarget.parse) ...[
+          const SizedBox(height: 12),
+          DropdownButtonFormField<TwitchAddMode>(
+            key: const Key('twitch-source'),
+            initialValue: _mode,
+            decoration: InputDecoration(
+              labelText: context.l10n.source,
+              prefixIcon: const Icon(Icons.live_tv_outlined),
+            ),
+            items: [
+              DropdownMenuItem(
+                value: TwitchAddMode.channel,
+                child: Text(context.l10n.channelArchive),
+              ),
+              DropdownMenuItem(
+                value: TwitchAddMode.followedLive,
+                child: Text(context.l10n.followedLive),
+              ),
+              DropdownMenuItem(
+                value: TwitchAddMode.categoryLive,
+                child: Text(context.l10n.categoryLive),
+              ),
+              DropdownMenuItem(
+                value: TwitchAddMode.searchLive,
+                child: Text(context.l10n.searchLive),
+              ),
+            ],
+            onChanged: _loading
+                ? null
+                : (value) {
+                    _mode = value ?? TwitchAddMode.channel;
+                    _resourceController.clear();
+                    _categoryId = '';
+                    _categoryName = '';
+                    _changed();
+                  },
+          ),
+        ],
+        if (_requiresResource) ...[
+          const SizedBox(height: 12),
+          AppTextField(
+            key: const Key('twitch-resource'),
+            controller: _resourceController,
+            enabled: !_loading,
+            label: switch (_mode) {
+              TwitchAddMode.media => context.l10n.liveVodClipUrl,
+              TwitchAddMode.channel => context.l10n.channelNameOrUrl,
+              TwitchAddMode.searchLive => context.l10n.channelSearch,
+              _ => '',
+            },
+            prefixIcon: _mode == TwitchAddMode.media
+                ? Icons.link_outlined
+                : Icons.search,
+            keyboardType: _mode == TwitchAddMode.media
+                ? TextInputType.url
+                : TextInputType.text,
+            enableSuggestions: _mode != TwitchAddMode.media,
+            autocorrect: false,
+            onChanged: (_) => _changed(),
+          ),
+        ],
+        if (_mode == TwitchAddMode.channel) ...[
+          const SizedBox(height: 12),
+          DropdownButtonFormField<source_enum.TwitchPlaylistContent>(
+            initialValue: _content,
+            decoration: InputDecoration(
+              labelText: context.l10n.content,
+              prefixIcon: const Icon(Icons.video_collection_outlined),
+            ),
+            items: [
+              DropdownMenuItem(
+                value: source_enum
+                    .TwitchPlaylistContent
+                    .TWITCH_PLAYLIST_CONTENT_VIDEOS,
+                child: Text(context.l10n.videos),
+              ),
+              DropdownMenuItem(
+                value: source_enum
+                    .TwitchPlaylistContent
+                    .TWITCH_PLAYLIST_CONTENT_HIGHLIGHTS,
+                child: Text(context.l10n.highlights),
+              ),
+              DropdownMenuItem(
+                value: source_enum
+                    .TwitchPlaylistContent
+                    .TWITCH_PLAYLIST_CONTENT_UPLOADS,
+                child: Text(context.l10n.uploads),
+              ),
+              DropdownMenuItem(
+                value: source_enum
+                    .TwitchPlaylistContent
+                    .TWITCH_PLAYLIST_CONTENT_CLIPS,
+                child: Text(context.l10n.clips),
+              ),
+            ],
+            onChanged: _loading
+                ? null
+                : (value) {
+                    _content =
+                        value ??
+                        source_enum
+                            .TwitchPlaylistContent
+                            .TWITCH_PLAYLIST_CONTENT_VIDEOS;
+                    _changed();
+                  },
+          ),
+        ],
+        if (_mode == TwitchAddMode.categoryLive) ...[
+          const SizedBox(height: 12),
+          _categoryControl(),
+        ],
+        if (_target != ProviderAddTarget.media) ...[
+          const SizedBox(height: 12),
+          AppTextField(
+            key: const Key('twitch-name'),
+            controller: _nameController,
+            enabled: !_loading,
+            label: context.l10n.name,
+            prefixIcon: Icons.title,
+            onChanged: (_) => _nameChanged(),
+          ),
+        ],
+        const SizedBox(height: 12),
+        ProviderAccountSelector<TwitchBindInfo>(
+          accounts: widget.binds,
+          selectedId: _selectedBindId,
+          idOf: (bind) => bind.id,
+          labelOf: (bind) {
+            final label = bind.login.isEmpty
+                ? context.l10n.defaultProviderInstance
+                : bind.login;
+            return bind.providerInstanceName.isEmpty
+                ? label
+                : '$label · ${bind.providerInstanceName}';
+          },
+          includeDefault: true,
+          enabled: !_loading,
+          onChanged: (bind) => setState(() {
+            _selectedBindId = bind?.id ?? '';
+            _instanceName = bind?.providerInstanceName ?? '';
+            _clearPreview(keepCategories: false);
+          }),
+        ),
+        AppSwitchTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.l10n.shareMyCredentials),
+          prefix: const Icon(Icons.key_rounded),
+          semanticsLabel: context.l10n.shareMyCredentials,
+          value: _shared,
+          onChanged: _loading
+              ? null
+              : (value) => setState(() {
+                  _shared = value;
+                  _clearPreview();
+                }),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('twitch-preview'),
+              onPressed: _loading || !_canAct ? null : _loadPreview,
+              icon: const Icon(Icons.preview_outlined),
+              label: Text(context.l10n.preview),
+            ),
+            if (_target == ProviderAddTarget.parse)
+              FilledButton.icon(
+                key: const Key('twitch-submit'),
+                onPressed: _loading || !_previewReady ? null : _submit,
+                icon: _loading
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: AppLoadingIndicator(
+                          size: AppLoadingSize.sm,
+                          centered: false,
+                        ),
+                      )
+                    : const Icon(Icons.add),
+                label: Text(context.l10n.addMedia),
+              ),
+          ],
+        ),
+      ],
+    );
+    return ProviderWorkspace(controls: content, results: _buildResults());
+  }
+
+  Widget _buildResults() {
+    final schedule = _schedulePreview();
+    if (_hasListPreview) {
+      if (schedule == null) return _listBrowser();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          schedule,
+          const SizedBox(height: 8),
+          Expanded(child: _listBrowser()),
+        ],
+      );
+    }
+    final preview = _preview();
+    if (preview == null && schedule == null) return const SizedBox();
     return AppSingleChildScrollView(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ProviderAddTargetSelector(
-            value: _target,
-            targets: const [
-              ProviderAddTarget.parse,
-              ProviderAddTarget.media,
-              ProviderAddTarget.playlist,
-            ],
-            enabled: !_loading,
-            onChanged: _selectTarget,
-          ),
-          if (_target != ProviderAddTarget.parse) ...[
-            const SizedBox(height: 12),
-            DropdownButtonFormField<TwitchAddMode>(
-              key: const Key('twitch-source'),
-              initialValue: _mode,
-              decoration: InputDecoration(
-                labelText: context.l10n.source,
-                prefixIcon: const Icon(Icons.live_tv_outlined),
-              ),
-              items: [
-                DropdownMenuItem(
-                  value: TwitchAddMode.channel,
-                  child: Text(context.l10n.channelArchive),
-                ),
-                DropdownMenuItem(
-                  value: TwitchAddMode.followedLive,
-                  child: Text(context.l10n.followedLive),
-                ),
-                DropdownMenuItem(
-                  value: TwitchAddMode.categoryLive,
-                  child: Text(context.l10n.categoryLive),
-                ),
-                DropdownMenuItem(
-                  value: TwitchAddMode.searchLive,
-                  child: Text(context.l10n.searchLive),
-                ),
-              ],
-              onChanged: _loading
-                  ? null
-                  : (value) {
-                      _mode = value ?? TwitchAddMode.channel;
-                      _resourceController.clear();
-                      _categoryId = '';
-                      _categoryName = '';
-                      _changed();
-                    },
-            ),
-          ],
-          if (_requiresResource) ...[
-            const SizedBox(height: 12),
-            AppTextField(
-              key: const Key('twitch-resource'),
-              controller: _resourceController,
-              enabled: !_loading,
-              label: switch (_mode) {
-                TwitchAddMode.media => context.l10n.liveVodClipUrl,
-                TwitchAddMode.channel => context.l10n.channelNameOrUrl,
-                TwitchAddMode.searchLive => context.l10n.channelSearch,
-                _ => '',
-              },
-              prefixIcon: _mode == TwitchAddMode.media
-                  ? Icons.link_outlined
-                  : Icons.search,
-              keyboardType: _mode == TwitchAddMode.media
-                  ? TextInputType.url
-                  : TextInputType.text,
-              enableSuggestions: _mode != TwitchAddMode.media,
-              autocorrect: false,
-              onChanged: (_) => _changed(),
-            ),
-          ],
-          if (_mode == TwitchAddMode.channel) ...[
-            const SizedBox(height: 12),
-            DropdownButtonFormField<source_enum.TwitchPlaylistContent>(
-              initialValue: _content,
-              decoration: InputDecoration(
-                labelText: context.l10n.content,
-                prefixIcon: const Icon(Icons.video_collection_outlined),
-              ),
-              items: [
-                DropdownMenuItem(
-                  value: source_enum
-                      .TwitchPlaylistContent
-                      .TWITCH_PLAYLIST_CONTENT_VIDEOS,
-                  child: Text(context.l10n.videos),
-                ),
-                DropdownMenuItem(
-                  value: source_enum
-                      .TwitchPlaylistContent
-                      .TWITCH_PLAYLIST_CONTENT_HIGHLIGHTS,
-                  child: Text(context.l10n.highlights),
-                ),
-                DropdownMenuItem(
-                  value: source_enum
-                      .TwitchPlaylistContent
-                      .TWITCH_PLAYLIST_CONTENT_UPLOADS,
-                  child: Text(context.l10n.uploads),
-                ),
-                DropdownMenuItem(
-                  value: source_enum
-                      .TwitchPlaylistContent
-                      .TWITCH_PLAYLIST_CONTENT_CLIPS,
-                  child: Text(context.l10n.clips),
-                ),
-              ],
-              onChanged: _loading
-                  ? null
-                  : (value) {
-                      _content =
-                          value ??
-                          source_enum
-                              .TwitchPlaylistContent
-                              .TWITCH_PLAYLIST_CONTENT_VIDEOS;
-                      _changed();
-                    },
-            ),
-          ],
-          if (_mode == TwitchAddMode.categoryLive) ...[
-            const SizedBox(height: 12),
-            _categoryControl(),
-          ],
-          if (_target != ProviderAddTarget.media) ...[
-            const SizedBox(height: 12),
-            AppTextField(
-              key: const Key('twitch-name'),
-              controller: _nameController,
-              enabled: !_loading,
-              label: context.l10n.name,
-              prefixIcon: Icons.title,
-              onChanged: (_) => _nameChanged(),
-            ),
-          ],
-          const SizedBox(height: 12),
-          ProviderAccountSelector<TwitchBindInfo>(
-            accounts: widget.binds,
-            selectedId: _selectedBindId,
-            idOf: (bind) => bind.id,
-            labelOf: (bind) {
-              final label = bind.login.isEmpty
-                  ? context.l10n.defaultProviderInstance
-                  : bind.login;
-              return bind.providerInstanceName.isEmpty
-                  ? label
-                  : '$label · ${bind.providerInstanceName}';
-            },
-            includeDefault: true,
-            enabled: !_loading,
-            onChanged: (bind) => setState(() {
-              _selectedBindId = bind?.id ?? '';
-              _instanceName = bind?.providerInstanceName ?? '';
-              _clearPreview(keepCategories: false);
-            }),
-          ),
-          AppSwitchTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(context.l10n.shareMyCredentials),
-            prefix: const Icon(Icons.key_rounded),
-            semanticsLabel: context.l10n.shareMyCredentials,
-            value: _shared,
-            onChanged: _loading
-                ? null
-                : (value) => setState(() {
-                    _shared = value;
-                    _clearPreview();
-                  }),
-          ),
-          if (_target == ProviderAddTarget.parse) ...[
-            if (_preview() case final preview?) ...[
-              const SizedBox(height: 8),
-              preview,
-            ],
-          ] else if (_hasListPreview) ...[
-            const SizedBox(height: 8),
-            SizedBox(height: 380, child: _listBrowser()),
-          ],
-          if (_schedulePreview() case final schedule?) ...[
-            const SizedBox(height: 8),
-            schedule,
-          ],
-          const SizedBox(height: 12),
-          Wrap(
-            alignment: WrapAlignment.end,
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              OutlinedButton.icon(
-                key: const Key('twitch-preview'),
-                onPressed: _loading || !_canAct ? null : _loadPreview,
-                icon: const Icon(Icons.preview_outlined),
-                label: Text(context.l10n.preview),
-              ),
-              if (_target == ProviderAddTarget.parse)
-                FilledButton.icon(
-                  key: const Key('twitch-submit'),
-                  onPressed: _loading || !_previewReady ? null : _submit,
-                  icon: _loading
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: AppLoadingIndicator(
-                            size: AppLoadingSize.sm,
-                            centered: false,
-                          ),
-                        )
-                      : const Icon(Icons.add),
-                  label: Text(context.l10n.addMedia),
-                ),
-            ],
-          ),
+          ?preview,
+          if (preview != null && schedule != null) const SizedBox(height: 8),
+          ?schedule,
         ],
       ),
     );

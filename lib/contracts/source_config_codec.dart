@@ -1822,6 +1822,16 @@ class SourceConfigCodec {
       'only' ||
       'playback_proxy_mode_only' ||
       '2' => source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+      'directprefer' ||
+      'direct_prefer' ||
+      'direct-prefer' ||
+      'playback_proxy_mode_direct_prefer' ||
+      '3' => source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_PREFER,
+      'directonly' ||
+      'direct_only' ||
+      'direct-only' ||
+      'playback_proxy_mode_direct_only' ||
+      '4' => source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
       _ => source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
     };
   }
@@ -1835,6 +1845,12 @@ class SourceConfigCodec {
       },
       source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY => const {
         'proxyMode': 'only',
+      },
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_PREFER => const {
+        'proxyMode': 'directPrefer',
+      },
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY => const {
+        'proxyMode': 'directOnly',
       },
       _ => const <String, dynamic>{},
     };

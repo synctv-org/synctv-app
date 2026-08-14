@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
@@ -24,11 +23,7 @@ Finder byAppTooltip(Pattern message) {
 }
 
 Widget buildThemedTestApp(BuildContext context, Widget? child) {
-  final theme = Theme.of(context);
-  final foruiTheme = theme.brightness == Brightness.dark
-      ? FTheme.neutral.dark.desktop
-      : FTheme.neutral.light.desktop;
-  return FTheme(data: foruiTheme, child: child!);
+  return child!;
 }
 
 provider_common.DiscoveredSource testDiscoveredMediaSource({

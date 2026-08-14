@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/core/localization/app_locale_controller.dart';
@@ -23,7 +22,6 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           ...AppLocalizations.localizationsDelegates,
-          FLocalizations.delegate,
         ],
         builder: buildThemedTestApp,
         home: Builder(

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 
@@ -153,17 +152,10 @@ class AppNotifications {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (loading) ...[
-                          SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: FCircularProgress(
-                              size: FCircularProgressSizeVariant.sm,
-                              style: FCircularProgressStyleDelta.delta(
-                                iconStyle: IconThemeDataDelta.delta(
-                                  color: indicatorColor ?? textColor,
-                                ),
-                              ),
-                            ),
+                          AppLoadingIndicator(
+                            size: AppLoadingSize.sm,
+                            centered: false,
+                            color: indicatorColor ?? textColor,
                           ),
                           const SizedBox(width: 10),
                         ] else if (icon != null) ...[
@@ -185,10 +177,11 @@ class AppNotifications {
                         ),
                         if (action != null) ...[
                           const SizedBox(width: 12),
-                          FButton(
-                            size: FButtonSizeVariant.sm,
-                            variant: FButtonVariant.ghost,
-                            onPress: () {
+                          AppActionButton(
+                            style: AppActionButtonStyle.text,
+                            size: AppActionButtonSize.sm,
+                            foregroundColor: textColor,
+                            onPressed: () {
                               _removeToast(overlayEntry);
                               if (identical(_activeToast, overlayEntry)) {
                                 _activeToast = null;
@@ -197,7 +190,7 @@ class AppNotifications {
                               }
                               action.onPressed();
                             },
-                            child: Text(action.label),
+                            label: action.label,
                           ),
                         ],
                       ],

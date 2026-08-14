@@ -1457,6 +1457,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackProxyOnly => 'Proxy only';
 
   @override
+  String get playbackProxyDirectPrefer => 'Prefer direct';
+
+  @override
+  String get playbackProxyDirectOnly => 'Direct only';
+
+  @override
   String get playbackProxyAutoDescription =>
       'Use the media source\'s default playback route';
 
@@ -1467,6 +1473,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get playbackProxyOnlyDescription =>
       'Keep routes that the SyncTV server can proxy';
+
+  @override
+  String get playbackProxyDirectPreferDescription =>
+      'Keep direct and proxy routes, selecting direct by default';
+
+  @override
+  String get playbackProxyDirectOnlyDescription =>
+      'Keep direct playback routes only';
 
   @override
   String get playbackProxyDirectRisk =>

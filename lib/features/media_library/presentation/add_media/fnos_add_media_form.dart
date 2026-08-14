@@ -8,6 +8,7 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -137,7 +138,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
       );
     }
     final mediaEnabled = _bind?.mediaAvailable == true;
-    return Column(
+    final controls = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
@@ -197,7 +198,11 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
         ),
         const SizedBox(height: 10),
         _buildLocationBar(),
-        const SizedBox(height: 8),
+      ],
+    );
+    final results = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         Expanded(
           child: _loading
               ? const AppLoadingIndicator()
@@ -209,6 +214,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
         _buildPagination(),
       ],
     );
+    return ProviderWorkspace(controls: controls, results: results);
   }
 
   Widget _buildBindSelector() {
