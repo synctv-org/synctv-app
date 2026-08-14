@@ -33,7 +33,7 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: ^0.20.2
+  intl: ^0.20.3
 
   video_player: ^2.12.0
   protobuf: ^6.0.0
@@ -59,7 +59,7 @@ dependencies:
   flutter_web_auth_2: ^6.0.0-alpha.7
   url_launcher: ^6.3.2
   flutter_markdown_plus: ^1.0.12
-  passkeys: ^2.21.1
+  passkeys: ^2.22.1
   synctv_opaque:
     path: packages/synctv_opaque
   qr_flutter: ^4.1.0
