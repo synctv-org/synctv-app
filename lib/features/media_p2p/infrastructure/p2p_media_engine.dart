@@ -277,7 +277,14 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         await _writeRangeNotSatisfiable(request, totalLength);
         return;
       }
-      if (resource.logicalKey == 'root') {
+      if (requested!.isOpenEnded) {
+        await _serveProgressiveBody(
+          request,
+          resource,
+          totalLength,
+          range: range,
+        );
+      } else if (resource.logicalKey == 'root') {
         await _serveProgressiveRange(
           request,
           resource,
@@ -665,17 +672,45 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   Future<void> _serveProgressiveBody(
     HttpRequest request,
     _GatewayResource resource,
-    int totalLength,
-  ) async {
-    request.response.statusCode = HttpStatus.ok;
-    request.response.headers.contentLength = totalLength;
+    int totalLength, {
+    _ByteRange? range,
+  }) async {
+    final outputRange = range ?? _ByteRange(0, totalLength - 1);
+    if (range != null &&
+        resource.originAcceptsRanges == false &&
+        totalLength <= _maxWholeResourceBytes) {
+      await _serveSmallProgressiveRange(
+        request,
+        resource,
+        outputRange,
+        totalLength: totalLength,
+      );
+      return;
+    }
+    request.response.statusCode = range == null
+        ? HttpStatus.ok
+        : HttpStatus.partialContent;
+    request.response.headers.contentLength = outputRange.length;
     request.response.headers.contentType = _contentTypeFor(resource.upstream);
+    request.response.headers.set(HttpHeaders.acceptRangesHeader, 'bytes');
+    if (range != null) {
+      request.response.headers.set(
+        HttpHeaders.contentRangeHeader,
+        'bytes ${outputRange.start}-${outputRange.end}/$totalLength',
+      );
+    }
     if (request.method == 'HEAD') {
       await request.response.close();
       return;
     }
 
-    for (var start = 0; start < totalLength; start += progressivePieceSize) {
+    final firstPieceStart =
+        (outputRange.start ~/ progressivePieceSize) * progressivePieceSize;
+    for (
+      var start = firstPieceStart;
+      start <= outputRange.end;
+      start += progressivePieceSize
+    ) {
       final pieceIndex = start ~/ progressivePieceSize;
       final pieceKey = '${resource.logicalKey}:piece:$pieceIndex';
       final loadKey = _cacheKey(resource.swarmId, pieceKey);
@@ -727,7 +762,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
               request,
               resource,
               origin,
-              outputOffset: start,
+              outputOffset: max(start, outputRange.start),
             );
             await request.response.close();
             return;
@@ -754,7 +789,14 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
           }
         }
       }
-      request.response.add(bytes);
+      final outputStart = max(0, outputRange.start - start);
+      final outputEnd = min(bytes.length, outputRange.end - start + 1);
+      if (outputStart < outputEnd) {
+        request.response.add(
+          Uint8List.sublistView(bytes, outputStart, outputEnd),
+        );
+        await request.response.flush();
+      }
       _scheduleProgressivePeerPrefetch(
         resource,
         start: start + progressivePieceSize,
@@ -1931,10 +1973,15 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       await _serveWholePiece(request, child);
       return;
     }
+    final requested = _parseRange(rangeHeader);
     final totalLength = await _resolveResourceLength(child);
-    final range = _parseRange(rangeHeader)?.resolve(totalLength);
+    final range = requested?.resolve(totalLength);
     if (range == null) {
       await _writeRangeNotSatisfiable(request, totalLength);
+      return;
+    }
+    if (requested!.isOpenEnded) {
+      await _serveProgressiveBody(request, child, totalLength, range: range);
       return;
     }
     await _serveWholePiece(
@@ -2435,6 +2482,8 @@ class _RequestedByteRange {
   final int? start;
   final int? end;
   final int? suffixLength;
+
+  bool get isOpenEnded => start != null && end == null;
 
   _ByteRange? resolve(int totalLength) {
     if (totalLength <= 0) return null;
