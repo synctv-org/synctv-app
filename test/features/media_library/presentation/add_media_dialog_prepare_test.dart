@@ -33,7 +33,7 @@ void main() {
       find.byType(EditableText).first,
       'media.example.test/one.mp4\nhttps://media.example.test/two.m3u8',
     );
-    await _tapVisible(tester, find.text('Proxy only'));
+    await _selectProxyMode(tester, 'Proxy only');
     await _tapVisible(tester, find.byKey(const Key('direct-url-preview')));
     await tester.pumpAndSettle();
 
@@ -255,6 +255,16 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
   await tester.tap(finder);
+}
+
+Future<void> _selectProxyMode(WidgetTester tester, String label) async {
+  await _tapVisible(
+    tester,
+    find.byKey(const Key('playback-proxy-mode-dropdown')),
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
 }
 
 class _PrepareGateway implements ProviderGateway {

@@ -186,8 +186,14 @@ void main() {
       find.byKey(const ValueKey('discovery-item-repo-1:/Movie.mkv')),
     );
     await tester.pump();
-    await tester.tap(find.text('Proxy only'));
-    await tester.pump();
+    final proxyModeDropdown = find.byKey(
+      const Key('playback-proxy-mode-dropdown'),
+    );
+    await tester.ensureVisible(proxyModeDropdown);
+    await tester.tap(proxyModeDropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Proxy only').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('discovery-add-selected')));
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 4));
