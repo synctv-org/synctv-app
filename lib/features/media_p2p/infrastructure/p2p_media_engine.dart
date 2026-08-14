@@ -82,6 +82,10 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   static const int _maxManifestBytes = 4 * 1024 * 1024;
   static const int _progressivePrefetchWindow = 2;
   static const int _maxPeerPrefetches = 2;
+  static const int _progressiveOriginAttempts = 3;
+  static const Duration _progressiveOriginRetryDelay = Duration(
+    milliseconds: 200,
+  );
   static const int _maxResourceMappings = 8192;
   static const Duration _resourceIdleTtl = Duration(minutes: 30);
 
@@ -234,7 +238,16 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
           } on StateError {
             // The response already started; closing terminates the failed stream.
           }
-          await request.response.close();
+          try {
+            await _closeResponseIgnoringContentLengthShortfall(
+              request.response,
+            );
+          } catch (closeError, closeStackTrace) {
+            debugPrint(
+              'P2P media gateway response close failed: '
+              '$closeError\n$closeStackTrace',
+            );
+          }
         }
       }),
     );
@@ -742,51 +755,62 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       }
       if (bytes == null) {
         final end = min(start + progressivePieceSize, totalLength) - 1;
-        final opened = await _openOriginWithPeerRetry(
-          resource,
-          pieceKey,
-          rangeHeader: 'bytes=$start-$end',
-          expectedPeerLength: end - start + 1,
-          pendingPeerPrefetch: pendingPrefetch,
-        );
-        if (opened?.peerBytes case final peerBytes?) {
-          bytes = peerBytes;
-        } else {
-          final origin = opened?.origin;
-          if (origin == null) {
-            await request.response.close();
-            return;
-          }
-          if (origin.statusCode == HttpStatus.ok) {
-            await _streamCompleteOriginFromOffset(
-              request,
-              resource,
-              origin,
-              outputOffset: max(start, outputRange.start),
-            );
-            await request.response.close();
-            return;
-          }
-          if (origin.statusCode != HttpStatus.partialContent) {
-            await origin.drain<void>();
-            await request.response.close();
-            return;
-          }
-          bytes = await _readOriginWithPeerRetry(
+        final rangeHeader = 'bytes=$start-$end';
+        for (
+          var attempt = 0;
+          attempt < _progressiveOriginAttempts && bytes == null;
+          attempt++
+        ) {
+          final opened = await _openOriginWithPeerRetry(
             resource,
             pieceKey,
-            origin,
-            rangeHeader: 'bytes=$start-$end',
+            rangeHeader: rangeHeader,
             expectedPeerLength: end - start + 1,
-            requestedRange: _ByteRange(start, end),
+            pendingPeerPrefetch: attempt == 0 ? pendingPrefetch : null,
           );
-          if (bytes == null) {
-            await request.response.close();
-            return;
+          if (opened?.peerBytes case final peerBytes?) {
+            bytes = peerBytes;
+          } else if (opened?.origin case final origin?) {
+            if (origin.statusCode == HttpStatus.ok) {
+              await _streamCompleteOriginFromOffset(
+                request,
+                resource,
+                origin,
+                outputOffset: max(start, outputRange.start),
+              );
+              await _closeResponseIgnoringContentLengthShortfall(
+                request.response,
+              );
+              return;
+            }
+            if (origin.statusCode == HttpStatus.partialContent) {
+              bytes = await _readOriginWithPeerRetry(
+                resource,
+                pieceKey,
+                origin,
+                rangeHeader: rangeHeader,
+                expectedPeerLength: end - start + 1,
+                requestedRange: _ByteRange(start, end),
+              );
+              if (bytes != null && resource.shareable) {
+                _putCache(resource.swarmId, pieceKey, bytes);
+              }
+            } else {
+              debugPrint(
+                'P2P media origin returned ${origin.statusCode} for '
+                '$pieceKey (attempt ${attempt + 1}/'
+                '$_progressiveOriginAttempts)',
+              );
+              await origin.drain<void>();
+            }
           }
-          if (resource.shareable) {
-            _putCache(resource.swarmId, pieceKey, bytes);
+          if (bytes == null && attempt + 1 < _progressiveOriginAttempts) {
+            await Future<void>.delayed(_progressiveOriginRetryDelay);
           }
+        }
+        if (bytes == null) {
+          await _closeResponseIgnoringContentLengthShortfall(request.response);
+          return;
         }
       }
       final outputStart = max(0, outputRange.start - start);
@@ -804,6 +828,20 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       );
     }
     await request.response.close();
+  }
+
+  static Future<void> _closeResponseIgnoringContentLengthShortfall(
+    HttpResponse response,
+  ) async {
+    try {
+      await response.close();
+    } on HttpException catch (error) {
+      if (!error.message.startsWith(
+        'Content size below specified contentLength.',
+      )) {
+        rethrow;
+      }
+    }
   }
 
   void _scheduleProgressivePeerPrefetch(
