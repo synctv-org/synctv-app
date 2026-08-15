@@ -210,6 +210,224 @@ class PreparedMediaSource extends $pb.GeneratedMessage {
   void clearPlaybackKind() => $_clearField(3);
 }
 
+class PlaybackProxyAutoPolicy extends $pb.GeneratedMessage {
+  factory PlaybackProxyAutoPolicy({
+    $core.String? variant,
+    $0.PlaybackProxyMode? mode,
+    PlaybackProxyAutoReason? reason,
+  }) {
+    final result = create();
+    if (variant != null) result.variant = variant;
+    if (mode != null) result.mode = mode;
+    if (reason != null) result.reason = reason;
+    return result;
+  }
+
+  PlaybackProxyAutoPolicy._();
+
+  factory PlaybackProxyAutoPolicy.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlaybackProxyAutoPolicy.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlaybackProxyAutoPolicy',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'variant')
+    ..aE<$0.PlaybackProxyMode>(2, _omitFieldNames ? '' : 'mode',
+        enumValues: $0.PlaybackProxyMode.values)
+    ..aE<PlaybackProxyAutoReason>(3, _omitFieldNames ? '' : 'reason',
+        enumValues: PlaybackProxyAutoReason.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackProxyAutoPolicy clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackProxyAutoPolicy copyWith(
+          void Function(PlaybackProxyAutoPolicy) updates) =>
+      super.copyWith((message) => updates(message as PlaybackProxyAutoPolicy))
+          as PlaybackProxyAutoPolicy;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlaybackProxyAutoPolicy create() => PlaybackProxyAutoPolicy._();
+  @$core.override
+  PlaybackProxyAutoPolicy createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlaybackProxyAutoPolicy getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlaybackProxyAutoPolicy>(create);
+  static PlaybackProxyAutoPolicy? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get variant => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set variant($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVariant() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVariant() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $0.PlaybackProxyMode get mode => $_getN(1);
+  @$pb.TagNumber(2)
+  set mode($0.PlaybackProxyMode value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMode() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  PlaybackProxyAutoReason get reason => $_getN(2);
+  @$pb.TagNumber(3)
+  set reason(PlaybackProxyAutoReason value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasReason() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearReason() => $_clearField(3);
+}
+
+class PlaybackProxyPolicy extends $pb.GeneratedMessage {
+  factory PlaybackProxyPolicy({
+    $core.Iterable<$0.PlaybackProxyMode>? supportedModes,
+    $0.PlaybackProxyMode? currentMode,
+    $core.Iterable<PlaybackProxyAutoPolicy>? autoPolicies,
+  }) {
+    final result = create();
+    if (supportedModes != null) result.supportedModes.addAll(supportedModes);
+    if (currentMode != null) result.currentMode = currentMode;
+    if (autoPolicies != null) result.autoPolicies.addAll(autoPolicies);
+    return result;
+  }
+
+  PlaybackProxyPolicy._();
+
+  factory PlaybackProxyPolicy.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlaybackProxyPolicy.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlaybackProxyPolicy',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..pc<$0.PlaybackProxyMode>(
+        1, _omitFieldNames ? '' : 'supportedModes', $pb.PbFieldType.KE,
+        valueOf: $0.PlaybackProxyMode.valueOf,
+        enumValues: $0.PlaybackProxyMode.values,
+        defaultEnumValue: $0.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO)
+    ..aE<$0.PlaybackProxyMode>(2, _omitFieldNames ? '' : 'currentMode',
+        enumValues: $0.PlaybackProxyMode.values)
+    ..pPM<PlaybackProxyAutoPolicy>(3, _omitFieldNames ? '' : 'autoPolicies',
+        subBuilder: PlaybackProxyAutoPolicy.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackProxyPolicy clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackProxyPolicy copyWith(void Function(PlaybackProxyPolicy) updates) =>
+      super.copyWith((message) => updates(message as PlaybackProxyPolicy))
+          as PlaybackProxyPolicy;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlaybackProxyPolicy create() => PlaybackProxyPolicy._();
+  @$core.override
+  PlaybackProxyPolicy createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlaybackProxyPolicy getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlaybackProxyPolicy>(create);
+  static PlaybackProxyPolicy? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$0.PlaybackProxyMode> get supportedModes => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $0.PlaybackProxyMode get currentMode => $_getN(1);
+  @$pb.TagNumber(2)
+  set currentMode($0.PlaybackProxyMode value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCurrentMode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCurrentMode() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $pb.PbList<PlaybackProxyAutoPolicy> get autoPolicies => $_getList(2);
+}
+
+class ResolvePlaybackProxyPolicyRequest extends $pb.GeneratedMessage {
+  factory ResolvePlaybackProxyPolicyRequest({
+    DiscoveredSource? source,
+  }) {
+    final result = create();
+    if (source != null) result.source = source;
+    return result;
+  }
+
+  ResolvePlaybackProxyPolicyRequest._();
+
+  factory ResolvePlaybackProxyPolicyRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ResolvePlaybackProxyPolicyRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ResolvePlaybackProxyPolicyRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..aOM<DiscoveredSource>(1, _omitFieldNames ? '' : 'source',
+        subBuilder: DiscoveredSource.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ResolvePlaybackProxyPolicyRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ResolvePlaybackProxyPolicyRequest copyWith(
+          void Function(ResolvePlaybackProxyPolicyRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as ResolvePlaybackProxyPolicyRequest))
+          as ResolvePlaybackProxyPolicyRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ResolvePlaybackProxyPolicyRequest create() =>
+      ResolvePlaybackProxyPolicyRequest._();
+  @$core.override
+  ResolvePlaybackProxyPolicyRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ResolvePlaybackProxyPolicyRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ResolvePlaybackProxyPolicyRequest>(
+          create);
+  static ResolvePlaybackProxyPolicyRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  DiscoveredSource get source => $_getN(0);
+  @$pb.TagNumber(1)
+  set source(DiscoveredSource value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSource() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSource() => $_clearField(1);
+  @$pb.TagNumber(1)
+  DiscoveredSource ensureSource() => $_ensure(0);
+}
+
 class PrepareDirectUrlRequest extends $pb.GeneratedMessage {
   factory PrepareDirectUrlRequest({
     $core.String? url,

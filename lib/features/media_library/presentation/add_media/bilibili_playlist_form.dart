@@ -731,6 +731,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
               PlaybackProxyModeControl(
                 value: widget.proxyMode,
                 enabled: !_loading,
+                source: _preview?.source,
                 onChanged: onProxyModeChanged,
               ),
             ],

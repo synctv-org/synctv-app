@@ -398,6 +398,7 @@ class SyncTvRoomMediaDomainService {
     String mediaId, {
     required String name,
     String? description,
+    source_enum.PlaybackProxyMode? playbackProxyMode,
   }) async {
     final response = await _api.room.editMedia(
       roomId,
@@ -405,6 +406,7 @@ class SyncTvRoomMediaDomainService {
         mediaId: mediaId,
         name: name,
         description: description ?? '',
+        playbackProxyMode: playbackProxyMode,
       ),
     );
     return _api.mapMedia(response);

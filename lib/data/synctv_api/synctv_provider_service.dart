@@ -65,6 +65,10 @@ class SyncTvProviderDomainService {
     provider_common.PrepareRtmpRequest(mode: mode),
   );
 
+  Future<provider_common.PlaybackProxyPolicy> resolvePlaybackProxyPolicy(
+    provider_common.DiscoveredSource source,
+  ) => _api.providerCommon.resolvePlaybackProxyPolicy(source);
+
   Future<AlistLoginInfo> loginAList(
     String host,
     String username,

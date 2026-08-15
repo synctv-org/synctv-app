@@ -1340,6 +1340,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         PlaybackProxyModeControl(
           value: _directProxyMode,
           enabled: !_isLoading,
+          source: _directPreview.firstOrNull?.source,
           onChanged: (value) => setState(() {
             _directProxyMode = value;
             _directPreview = const [];
@@ -2193,6 +2194,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   });
                 },
         ),
+        PlaybackProxyModeControl(
+          value: _bilibiliProxyMode,
+          enabled: !_isLoading,
+          source: selected?.source,
+          onChanged: (value) => setState(() => _bilibiliProxyMode = value),
+        ),
+        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 14),
           child: Row(
@@ -2370,6 +2378,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         PlaybackProxyModeControl(
           value: _alistProxyMode,
           enabled: !_alistLoading && !_isLoading,
+          source: _alistListSource,
           onChanged: (value) => setState(() => _alistProxyMode = value),
         ),
         const SizedBox(height: 12),
@@ -2459,6 +2468,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         PlaybackProxyModeControl(
           value: _embyProxyMode,
           enabled: !_isLoading,
+          source: _embyListSource,
           onChanged: (value) => setState(() => _embyProxyMode = value),
         ),
         const SizedBox(height: 12),
@@ -2611,6 +2621,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         PlaybackProxyModeControl(
           value: _cloudreveProxyMode,
           enabled: !_cloudreveLoading && !_isLoading,
+          source: _cloudreveListSource,
           onChanged: (value) => setState(() => _cloudreveProxyMode = value),
         ),
         const SizedBox(height: 12),

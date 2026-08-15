@@ -36,6 +36,11 @@ class ProviderCommonServiceApi {
           $pb.ClientContext? ctx, $0.PrepareRtmpRequest request) =>
       _client.invoke<$0.PreparedMediaSource>(ctx, 'ProviderCommonService',
           'PrepareRtmp', request, $0.PreparedMediaSource());
+  $async.Future<$0.PlaybackProxyPolicy> resolvePlaybackProxyPolicy(
+          $pb.ClientContext? ctx,
+          $0.ResolvePlaybackProxyPolicyRequest request) =>
+      _client.invoke<$0.PlaybackProxyPolicy>(ctx, 'ProviderCommonService',
+          'ResolvePlaybackProxyPolicy', request, $0.PlaybackProxyPolicy());
   $async.Future<$0.ProviderInstancesResponse> listAvailableProviderInstances(
           $pb.ClientContext? ctx,
           $0.ListAvailableProviderInstancesRequest request) =>

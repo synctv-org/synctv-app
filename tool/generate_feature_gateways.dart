@@ -432,6 +432,7 @@ const _providerMethods = <String>{
   'resolveDouyin',
   'resolveDouyu',
   'resolveHuya',
+  'resolvePlaybackProxyPolicy',
   'resolveTikTok',
   'resolveTwitch',
   'resolveYoutube',

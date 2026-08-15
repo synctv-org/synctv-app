@@ -19,8 +19,10 @@ typedef P2pPieceRequester =
     );
 typedef P2pIntegrityReporter =
     Future<void> Function(P2pPeerSource source, bool valid);
+typedef P2pPeerAvailability = bool Function(String swarmId);
 
 Future<void> _ignorePeerIntegrity(P2pPeerSource source, bool valid) async {}
+bool _alwaysHasPeer(String swarmId) => true;
 
 enum _P2pManifestKind { progressive, hls, dash }
 
@@ -46,6 +48,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   P2pMediaEngine({
     required this.requestPeerPiece,
     this.reportPeerIntegrity = _ignorePeerIntegrity,
+    this.hasConnectedPeer = _alwaysHasPeer,
     this.maxCacheBytes = 128 * 1024 * 1024,
     this.persistentCache,
     Duration? cacheTtl,
@@ -93,6 +96,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
 
   final P2pPieceRequester requestPeerPiece;
   final P2pIntegrityReporter reportPeerIntegrity;
+  final P2pPeerAvailability hasConnectedPeer;
   @override
   final int maxCacheBytes;
   final P2pMediaPersistentCache? persistentCache;
@@ -1088,6 +1092,14 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       resource,
       rangeHeader: rangeHeader,
     );
+    if (!_canRequestPeer(resource)) {
+      final origin = await Future.any<HttpClientResponse?>([
+        originOperation.future,
+        Future<HttpClientResponse?>.delayed(originHeaderTimeout, () => null),
+      ]);
+      if (origin == null) await originOperation.cancel();
+      return origin == null ? null : _OpenedOriginOrPeer(origin: origin);
+    }
     final cancellation = P2pPieceRequestCancellation();
     _activePeerRequests.add(cancellation);
     final Future<Uint8List?> peerFuture;
@@ -1199,6 +1211,17 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         requestedRange.end + 1,
       );
     });
+    if (!_canRequestPeer(resource)) {
+      final stalled = await Future.any<bool>([
+        originFuture.then((_) => false),
+        originRead.stalled,
+      ]);
+      if (stalled) {
+        await originRead.cancel();
+        return null;
+      }
+      return originFuture;
+    }
     final cancellation = P2pPieceRequestCancellation();
     _activePeerRequests.add(cancellation);
     final startPeer = Completer<bool>();
@@ -2117,7 +2140,8 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     }
   }
 
-  bool _canRequestPeer(_GatewayResource resource) => resource.shareable;
+  bool _canRequestPeer(_GatewayResource resource) =>
+      resource.shareable && hasConnectedPeer(resource.swarmId);
 
   Uri _localUri(_GatewayResource resource) {
     final server = _server!;

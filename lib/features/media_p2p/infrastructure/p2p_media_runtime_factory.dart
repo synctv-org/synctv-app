@@ -48,6 +48,7 @@ final class NativeP2pMediaRuntimeFactory implements P2pMediaRuntimeFactory {
     return P2pMediaEngine(
       requestPeerPiece: session.requestPiece,
       reportPeerIntegrity: session.reportPeerIntegrity,
+      hasConnectedPeer: session.hasConnectedPeer,
       maxCacheBytes: maxCacheBytes,
       persistentCache: persistentCache,
       securityMode: securityMode,

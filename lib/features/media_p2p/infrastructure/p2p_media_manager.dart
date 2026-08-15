@@ -107,6 +107,13 @@ class P2pMediaManager implements P2pMediaSession {
   int get uploadedBytes => _uploadedBytes;
 
   @override
+  bool hasConnectedPeer(String swarmId) => _channels.entries.any(
+    (entry) =>
+        entry.key.swarmId == swarmId &&
+        entry.value.state == RTCDataChannelState.RTCDataChannelOpen,
+  );
+
+  @override
   Future<void> setActiveSwarms(Map<String, String> swarms) {
     final next = Map<String, String>.fromEntries(
       swarms.entries.where(
@@ -630,11 +637,7 @@ class P2pMediaManager implements P2pMediaSession {
     String swarmId,
     P2pPieceRequestCancellation cancellation,
   ) async {
-    if (_channels.entries.any(
-      (entry) =>
-          entry.key.swarmId == swarmId &&
-          entry.value.state == RTCDataChannelState.RTCDataChannelOpen,
-    )) {
+    if (hasConnectedPeer(swarmId)) {
       _finishPeerDiscovery(swarmId);
       return;
     }

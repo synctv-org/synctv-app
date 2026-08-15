@@ -973,6 +973,11 @@ final class SyncTvProviderGateway implements ProviderGateway {
   }) => SyncTvService.resolveHuya(resource, instanceName: instanceName);
 
   @override
+  Future<provider_common.PlaybackProxyPolicy> resolvePlaybackProxyPolicy(
+    provider_common.DiscoveredSource source,
+  ) => SyncTvService.resolvePlaybackProxyPolicy(source);
+
+  @override
   Future<tiktok.ResolveResponse> resolveTikTok(
     String resource, {
     String instanceName = '',

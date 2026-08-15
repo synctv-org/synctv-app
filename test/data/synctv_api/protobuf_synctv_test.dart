@@ -934,6 +934,9 @@ void main() {
         client.PlaybackContainer.PLAYBACK_CONTAINER_MKV,
         client.PlaybackContainer.PLAYBACK_CONTAINER_WEBM,
       ]);
+      expect(profile.supportedLiveTransports, [
+        client.PlaybackLiveTransport.PLAYBACK_LIVE_TRANSPORT_FLV,
+      ]);
       expect(
         profile.audioCapability,
         client.PlaybackAudioCapability.PLAYBACK_AUDIO_CAPABILITY_STEREO,
@@ -4997,6 +5000,10 @@ void main() {
       expect(
         requestedUri!.queryParameters,
         containsPair('containers', '1,2,3'),
+      );
+      expect(
+        requestedUri!.queryParameters,
+        containsPair('liveTransports', '2'),
       );
       expect(
         requestedUri!.queryParameters,

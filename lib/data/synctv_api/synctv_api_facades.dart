@@ -3057,6 +3057,17 @@ class SyncTvProviderCommonApi {
     );
   }
 
+  Future<provider_common.PlaybackProxyPolicy> resolvePlaybackProxyPolicy(
+    provider_common.DiscoveredSource source,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/providers/playback-proxy-policy',
+      provider_common.PlaybackProxyPolicy.create,
+      body: provider_common.ResolvePlaybackProxyPolicyRequest(source: source),
+    );
+  }
+
   Future<provider_common.ProviderBackendsResponse> listProviderBackends(
     provider_common.ListProviderBackendsRequest request,
   ) {

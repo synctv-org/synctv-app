@@ -14,6 +14,48 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+class PlaybackProxyAutoReason extends $pb.ProtobufEnum {
+  static const PlaybackProxyAutoReason PLAYBACK_PROXY_AUTO_REASON_UNSPECIFIED =
+      PlaybackProxyAutoReason._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_PROXY_AUTO_REASON_UNSPECIFIED');
+  static const PlaybackProxyAutoReason
+      PLAYBACK_PROXY_AUTO_REASON_PUBLIC_RESOURCE = PlaybackProxyAutoReason._(1,
+          _omitEnumNames ? '' : 'PLAYBACK_PROXY_AUTO_REASON_PUBLIC_RESOURCE');
+  static const PlaybackProxyAutoReason
+      PLAYBACK_PROXY_AUTO_REASON_REQUEST_CREDENTIALS =
+      PlaybackProxyAutoReason._(
+          2,
+          _omitEnumNames
+              ? ''
+              : 'PLAYBACK_PROXY_AUTO_REASON_REQUEST_CREDENTIALS');
+  static const PlaybackProxyAutoReason
+      PLAYBACK_PROXY_AUTO_REASON_SIGNED_RESOURCE = PlaybackProxyAutoReason._(3,
+          _omitEnumNames ? '' : 'PLAYBACK_PROXY_AUTO_REASON_SIGNED_RESOURCE');
+  static const PlaybackProxyAutoReason
+      PLAYBACK_PROXY_AUTO_REASON_PROVIDER_SESSION = PlaybackProxyAutoReason._(4,
+          _omitEnumNames ? '' : 'PLAYBACK_PROXY_AUTO_REASON_PROVIDER_SESSION');
+  static const PlaybackProxyAutoReason
+      PLAYBACK_PROXY_AUTO_REASON_SERVER_TRANSPORT = PlaybackProxyAutoReason._(5,
+          _omitEnumNames ? '' : 'PLAYBACK_PROXY_AUTO_REASON_SERVER_TRANSPORT');
+
+  static const $core.List<PlaybackProxyAutoReason> values =
+      <PlaybackProxyAutoReason>[
+    PLAYBACK_PROXY_AUTO_REASON_UNSPECIFIED,
+    PLAYBACK_PROXY_AUTO_REASON_PUBLIC_RESOURCE,
+    PLAYBACK_PROXY_AUTO_REASON_REQUEST_CREDENTIALS,
+    PLAYBACK_PROXY_AUTO_REASON_SIGNED_RESOURCE,
+    PLAYBACK_PROXY_AUTO_REASON_PROVIDER_SESSION,
+    PLAYBACK_PROXY_AUTO_REASON_SERVER_TRANSPORT,
+  ];
+
+  static final $core.List<PlaybackProxyAutoReason?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
+  static PlaybackProxyAutoReason? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackProxyAutoReason._(super.value, super.name);
+}
+
 class ProviderInstanceStatus extends $pb.ProtobufEnum {
   static const ProviderInstanceStatus PROVIDER_INSTANCE_STATUS_UNSPECIFIED =
       ProviderInstanceStatus._(

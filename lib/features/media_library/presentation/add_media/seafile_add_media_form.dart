@@ -135,6 +135,7 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
         const SizedBox(height: 10),
         PlaybackProxyModeControl(
           value: _proxyMode,
+          source: _listSource,
           onChanged: (value) => setState(() => _proxyMode = value),
         ),
         const SizedBox(height: 10),

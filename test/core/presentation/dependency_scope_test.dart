@@ -46,6 +46,23 @@ void main() {
 
     expect(resolved, same(local));
   });
+
+  testWidgets('maybeRead returns null when a dependency is absent', (
+    tester,
+  ) async {
+    _Dependency? resolved;
+
+    await tester.pumpWidget(
+      Builder(
+        builder: (context) {
+          resolved = DependencyScope.maybeRead<_Dependency>(context);
+          return const SizedBox();
+        },
+      ),
+    );
+
+    expect(resolved, isNull);
+  });
 }
 
 final class _Dependency {

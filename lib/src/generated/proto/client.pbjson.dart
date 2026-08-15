@@ -495,6 +495,22 @@ final $typed_data.Uint8List playbackContainerDescriptor = $convert.base64Decode(
     'IaChZQTEFZQkFDS19DT05UQUlORVJfTVA0EAESGgoWUExBWUJBQ0tfQ09OVEFJTkVSX01LVhAC'
     'EhsKF1BMQVlCQUNLX0NPTlRBSU5FUl9XRUJNEAM=');
 
+@$core.Deprecated('Use playbackLiveTransportDescriptor instead')
+const PlaybackLiveTransport$json = {
+  '1': 'PlaybackLiveTransport',
+  '2': [
+    {'1': 'PLAYBACK_LIVE_TRANSPORT_UNSPECIFIED', '2': 0},
+    {'1': 'PLAYBACK_LIVE_TRANSPORT_HLS', '2': 1},
+    {'1': 'PLAYBACK_LIVE_TRANSPORT_FLV', '2': 2},
+  ],
+};
+
+/// Descriptor for `PlaybackLiveTransport`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playbackLiveTransportDescriptor = $convert.base64Decode(
+    'ChVQbGF5YmFja0xpdmVUcmFuc3BvcnQSJwojUExBWUJBQ0tfTElWRV9UUkFOU1BPUlRfVU5TUE'
+    'VDSUZJRUQQABIfChtQTEFZQkFDS19MSVZFX1RSQU5TUE9SVF9ITFMQARIfChtQTEFZQkFDS19M'
+    'SVZFX1RSQU5TUE9SVF9GTFYQAg==');
+
 @$core.Deprecated('Use playbackAudioCapabilityDescriptor instead')
 const PlaybackAudioCapability$json = {
   '1': 'PlaybackAudioCapability',
@@ -6992,6 +7008,20 @@ const EditMediaRequest$json = {
     {'1': 'media_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'mediaId'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'name'},
     {'1': 'description', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'description'},
+    {
+      '1': 'playback_proxy_mode',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '9': 0,
+      '10': 'playbackProxyMode',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_playback_proxy_mode'},
   ],
 };
 
@@ -6999,7 +7029,10 @@ const EditMediaRequest$json = {
 final $typed_data.Uint8List editMediaRequestDescriptor = $convert.base64Decode(
     'ChBFZGl0TWVkaWFSZXF1ZXN0EjgKCG1lZGlhX2lkGAEgASgJQh26SBpyGBABGEAyEl5tZWRfW0'
     'EtWmEtejAtOV0rJFIHbWVkaWFJZBIcCgRuYW1lGAIgASgJQgi6SAVyAxj0A1IEbmFtZRIqCgtk'
-    'ZXNjcmlwdGlvbhgDIAEoCUIIukgFcgMYiCdSC2Rlc2NyaXB0aW9u');
+    'ZXNjcmlwdGlvbhgDIAEoCUIIukgFcgMYiCdSC2Rlc2NyaXB0aW9uEmYKE3BsYXliYWNrX3Byb3'
+    'h5X21vZGUYBCABKA4yJy5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5YmFja1Byb3h5TW9kZUII'
+    'ukgFggECEAFIAFIRcGxheWJhY2tQcm94eU1vZGWIAQFCFgoUX3BsYXliYWNrX3Byb3h5X21vZG'
+    'U=');
 
 @$core.Deprecated('Use clearPlaylistRequestDescriptor instead')
 const ClearPlaylistRequest$json = {
@@ -7266,6 +7299,15 @@ const PlaybackClientProfile$json = {
       '8': {},
       '10': 'subtitlePreference'
     },
+    {
+      '1': 'supported_live_transports',
+      '3': 8,
+      '4': 3,
+      '5': 14,
+      '6': '.synctv.client.PlaybackLiveTransport',
+      '8': {},
+      '10': 'supportedLiveTransports'
+    },
   ],
   '8': [
     {'1': '_max_streaming_bitrate'},
@@ -7286,8 +7328,10 @@ final $typed_data.Uint8List playbackClientProfileDescriptor = $convert.base64Dec
     'aW5lcnMSWwoQYXVkaW9fY2FwYWJpbGl0eRgGIAEoDjImLnN5bmN0di5jbGllbnQuUGxheWJhY2'
     'tBdWRpb0NhcGFiaWxpdHlCCLpIBYIBAhABUg9hdWRpb0NhcGFiaWxpdHkSZAoTc3VidGl0bGVf'
     'cHJlZmVyZW5jZRgHIAEoDjIpLnN5bmN0di5jbGllbnQuUGxheWJhY2tTdWJ0aXRsZVByZWZlcm'
-    'VuY2VCCLpIBYIBAhABUhJzdWJ0aXRsZVByZWZlcmVuY2VCGAoWX21heF9zdHJlYW1pbmdfYml0'
-    'cmF0ZUIVChNfbWF4X2F1ZGlvX2NoYW5uZWxz');
+    'VuY2VCCLpIBYIBAhABUhJzdWJ0aXRsZVByZWZlcmVuY2USbwoZc3VwcG9ydGVkX2xpdmVfdHJh'
+    'bnNwb3J0cxgIIAMoDjIkLnN5bmN0di5jbGllbnQuUGxheWJhY2tMaXZlVHJhbnNwb3J0Qg26SA'
+    'qSAQciBYIBAhABUhdzdXBwb3J0ZWRMaXZlVHJhbnNwb3J0c0IYChZfbWF4X3N0cmVhbWluZ19i'
+    'aXRyYXRlQhUKE19tYXhfYXVkaW9fY2hhbm5lbHM=');
 
 @$core.Deprecated('Use getPlaybackRequestDescriptor instead')
 const GetPlaybackRequest$json = {

@@ -80,6 +80,7 @@ abstract interface class MediaLibraryGateway {
     String mediaId, {
     required String name,
     String? description,
+    source_enum.PlaybackProxyMode? playbackProxyMode,
   });
   Future<RoomMediaItem> updateVideoCover(
     String roomId,

@@ -144,6 +144,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
         const SizedBox(height: 10),
         PlaybackProxyModeControl(
           value: _proxyMode,
+          source: _listSource,
           onChanged: (value) => setState(() => _proxyMode = value),
           supportsDirectPlayback: _mode == _SynologyBrowseMode.files,
         ),

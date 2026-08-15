@@ -15,6 +15,28 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+@$core.Deprecated('Use playbackProxyAutoReasonDescriptor instead')
+const PlaybackProxyAutoReason$json = {
+  '1': 'PlaybackProxyAutoReason',
+  '2': [
+    {'1': 'PLAYBACK_PROXY_AUTO_REASON_UNSPECIFIED', '2': 0},
+    {'1': 'PLAYBACK_PROXY_AUTO_REASON_PUBLIC_RESOURCE', '2': 1},
+    {'1': 'PLAYBACK_PROXY_AUTO_REASON_REQUEST_CREDENTIALS', '2': 2},
+    {'1': 'PLAYBACK_PROXY_AUTO_REASON_SIGNED_RESOURCE', '2': 3},
+    {'1': 'PLAYBACK_PROXY_AUTO_REASON_PROVIDER_SESSION', '2': 4},
+    {'1': 'PLAYBACK_PROXY_AUTO_REASON_SERVER_TRANSPORT', '2': 5},
+  ],
+};
+
+/// Descriptor for `PlaybackProxyAutoReason`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playbackProxyAutoReasonDescriptor = $convert.base64Decode(
+    'ChdQbGF5YmFja1Byb3h5QXV0b1JlYXNvbhIqCiZQTEFZQkFDS19QUk9YWV9BVVRPX1JFQVNPTl'
+    '9VTlNQRUNJRklFRBAAEi4KKlBMQVlCQUNLX1BST1hZX0FVVE9fUkVBU09OX1BVQkxJQ19SRVNP'
+    'VVJDRRABEjIKLlBMQVlCQUNLX1BST1hZX0FVVE9fUkVBU09OX1JFUVVFU1RfQ1JFREVOVElBTF'
+    'MQAhIuCipQTEFZQkFDS19QUk9YWV9BVVRPX1JFQVNPTl9TSUdORURfUkVTT1VSQ0UQAxIvCitQ'
+    'TEFZQkFDS19QUk9YWV9BVVRPX1JFQVNPTl9QUk9WSURFUl9TRVNTSU9OEAQSLworUExBWUJBQ0'
+    'tfUFJPWFlfQVVUT19SRUFTT05fU0VSVkVSX1RSQU5TUE9SVBAF');
+
 @$core.Deprecated('Use providerInstanceStatusDescriptor instead')
 const ProviderInstanceStatus$json = {
   '1': 'ProviderInstanceStatus',
@@ -143,6 +165,104 @@ final $typed_data.Uint8List preparedMediaSourceDescriptor = $convert.base64Decod
     '5jb21tb24uRGlzY292ZXJlZFNvdXJjZUIGukgDyAEBUgZzb3VyY2USJQoOc3VnZ2VzdGVkX25h'
     'bWUYAiABKAlSDXN1Z2dlc3RlZE5hbWUSUQoNcGxheWJhY2tfa2luZBgDIAEoDjIiLnN5bmN0di'
     '5zb3VyY2VfY29uZmlnLlBsYXliYWNrS2luZEIIukgFggECEAFSDHBsYXliYWNrS2luZA==');
+
+@$core.Deprecated('Use playbackProxyAutoPolicyDescriptor instead')
+const PlaybackProxyAutoPolicy$json = {
+  '1': 'PlaybackProxyAutoPolicy',
+  '2': [
+    {'1': 'variant', '3': 1, '4': 1, '5': 9, '10': 'variant'},
+    {
+      '1': 'mode',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'mode'
+    },
+    {
+      '1': 'reason',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.provider.common.PlaybackProxyAutoReason',
+      '8': {},
+      '10': 'reason'
+    },
+  ],
+};
+
+/// Descriptor for `PlaybackProxyAutoPolicy`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List playbackProxyAutoPolicyDescriptor = $convert.base64Decode(
+    'ChdQbGF5YmFja1Byb3h5QXV0b1BvbGljeRIYCgd2YXJpYW50GAEgASgJUgd2YXJpYW50EkcKBG'
+    '1vZGUYAiABKA4yJy5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5YmFja1Byb3h5TW9kZUIKukgH'
+    'ggEEEAEgAFIEbW9kZRJTCgZyZWFzb24YAyABKA4yLy5zeW5jdHYucHJvdmlkZXIuY29tbW9uLl'
+    'BsYXliYWNrUHJveHlBdXRvUmVhc29uQgq6SAeCAQQQASAAUgZyZWFzb24=');
+
+@$core.Deprecated('Use playbackProxyPolicyDescriptor instead')
+const PlaybackProxyPolicy$json = {
+  '1': 'PlaybackProxyPolicy',
+  '2': [
+    {
+      '1': 'supported_modes',
+      '3': 1,
+      '4': 3,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'supportedModes'
+    },
+    {
+      '1': 'current_mode',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackProxyMode',
+      '8': {},
+      '10': 'currentMode'
+    },
+    {
+      '1': 'auto_policies',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.provider.common.PlaybackProxyAutoPolicy',
+      '8': {},
+      '10': 'autoPolicies'
+    },
+  ],
+};
+
+/// Descriptor for `PlaybackProxyPolicy`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List playbackProxyPolicyDescriptor = $convert.base64Decode(
+    'ChNQbGF5YmFja1Byb3h5UG9saWN5EmMKD3N1cHBvcnRlZF9tb2RlcxgBIAMoDjInLnN5bmN0di'
+    '5zb3VyY2VfY29uZmlnLlBsYXliYWNrUHJveHlNb2RlQhG6SA6SAQsIARgBIgWCAQIQAVIOc3Vw'
+    'cG9ydGVkTW9kZXMSVAoMY3VycmVudF9tb2RlGAIgASgOMicuc3luY3R2LnNvdXJjZV9jb25maW'
+    'cuUGxheWJhY2tQcm94eU1vZGVCCLpIBYIBAhABUgtjdXJyZW50TW9kZRJeCg1hdXRvX3BvbGlj'
+    'aWVzGAMgAygLMi8uc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5QbGF5YmFja1Byb3h5QXV0b1BvbG'
+    'ljeUIIukgFkgECCAFSDGF1dG9Qb2xpY2llcw==');
+
+@$core.Deprecated('Use resolvePlaybackProxyPolicyRequestDescriptor instead')
+const ResolvePlaybackProxyPolicyRequest$json = {
+  '1': 'ResolvePlaybackProxyPolicyRequest',
+  '2': [
+    {
+      '1': 'source',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.DiscoveredSource',
+      '8': {},
+      '10': 'source'
+    },
+  ],
+};
+
+/// Descriptor for `ResolvePlaybackProxyPolicyRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List resolvePlaybackProxyPolicyRequestDescriptor =
+    $convert.base64Decode(
+        'CiFSZXNvbHZlUGxheWJhY2tQcm94eVBvbGljeVJlcXVlc3QSSAoGc291cmNlGAEgASgLMiguc3'
+        'luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlQga6SAPIAQFSBnNvdXJjZQ==');
 
 @$core.Deprecated('Use prepareDirectUrlRequestDescriptor instead')
 const PrepareDirectUrlRequest$json = {

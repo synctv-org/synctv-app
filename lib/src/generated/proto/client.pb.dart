@@ -17793,11 +17793,13 @@ class EditMediaRequest extends $pb.GeneratedMessage {
     $core.String? mediaId,
     $core.String? name,
     $core.String? description,
+    $1.PlaybackProxyMode? playbackProxyMode,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
     if (name != null) result.name = name;
     if (description != null) result.description = description;
+    if (playbackProxyMode != null) result.playbackProxyMode = playbackProxyMode;
     return result;
   }
 
@@ -17817,6 +17819,8 @@ class EditMediaRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'mediaId')
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'description')
+    ..aE<$1.PlaybackProxyMode>(4, _omitFieldNames ? '' : 'playbackProxyMode',
+        enumValues: $1.PlaybackProxyMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -17864,6 +17868,15 @@ class EditMediaRequest extends $pb.GeneratedMessage {
   $core.bool hasDescription() => $_has(2);
   @$pb.TagNumber(3)
   void clearDescription() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $1.PlaybackProxyMode get playbackProxyMode => $_getN(3);
+  @$pb.TagNumber(4)
+  set playbackProxyMode($1.PlaybackProxyMode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPlaybackProxyMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPlaybackProxyMode() => $_clearField(4);
 }
 
 /// Clear Playlist
@@ -18279,6 +18292,7 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
     $core.Iterable<PlaybackContainer>? supportedContainers,
     PlaybackAudioCapability? audioCapability,
     PlaybackSubtitlePreference? subtitlePreference,
+    $core.Iterable<PlaybackLiveTransport>? supportedLiveTransports,
   }) {
     final result = create();
     if (streamPreference != null) result.streamPreference = streamPreference;
@@ -18292,6 +18306,8 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
     if (audioCapability != null) result.audioCapability = audioCapability;
     if (subtitlePreference != null)
       result.subtitlePreference = subtitlePreference;
+    if (supportedLiveTransports != null)
+      result.supportedLiveTransports.addAll(supportedLiveTransports);
     return result;
   }
 
@@ -18327,6 +18343,12 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
     ..aE<PlaybackSubtitlePreference>(
         7, _omitFieldNames ? '' : 'subtitlePreference',
         enumValues: PlaybackSubtitlePreference.values)
+    ..pc<PlaybackLiveTransport>(
+        8, _omitFieldNames ? '' : 'supportedLiveTransports', $pb.PbFieldType.KE,
+        valueOf: PlaybackLiveTransport.valueOf,
+        enumValues: PlaybackLiveTransport.values,
+        defaultEnumValue:
+            PlaybackLiveTransport.PLAYBACK_LIVE_TRANSPORT_UNSPECIFIED)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -18400,6 +18422,9 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
   $core.bool hasSubtitlePreference() => $_has(6);
   @$pb.TagNumber(7)
   void clearSubtitlePreference() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $pb.PbList<PlaybackLiveTransport> get supportedLiveTransports => $_getList(7);
 }
 
 class GetPlaybackRequest extends $pb.GeneratedMessage {

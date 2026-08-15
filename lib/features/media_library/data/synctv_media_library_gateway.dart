@@ -140,11 +140,13 @@ final class SyncTvMediaLibraryGateway implements MediaLibraryGateway {
     String mediaId, {
     required String name,
     String? description,
+    source_enum.PlaybackProxyMode? playbackProxyMode,
   }) => SyncTvService.editMedia(
     roomId,
     mediaId,
     name: name,
     description: description,
+    playbackProxyMode: playbackProxyMode,
   );
   @override
   Future<RoomMediaItem> updateVideoCover(

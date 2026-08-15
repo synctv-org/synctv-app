@@ -824,6 +824,32 @@ class PlaybackContainer extends $pb.ProtobufEnum {
   const PlaybackContainer._(super.value, super.name);
 }
 
+class PlaybackLiveTransport extends $pb.ProtobufEnum {
+  static const PlaybackLiveTransport PLAYBACK_LIVE_TRANSPORT_UNSPECIFIED =
+      PlaybackLiveTransport._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_LIVE_TRANSPORT_UNSPECIFIED');
+  static const PlaybackLiveTransport PLAYBACK_LIVE_TRANSPORT_HLS =
+      PlaybackLiveTransport._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_LIVE_TRANSPORT_HLS');
+  static const PlaybackLiveTransport PLAYBACK_LIVE_TRANSPORT_FLV =
+      PlaybackLiveTransport._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_LIVE_TRANSPORT_FLV');
+
+  static const $core.List<PlaybackLiveTransport> values =
+      <PlaybackLiveTransport>[
+    PLAYBACK_LIVE_TRANSPORT_UNSPECIFIED,
+    PLAYBACK_LIVE_TRANSPORT_HLS,
+    PLAYBACK_LIVE_TRANSPORT_FLV,
+  ];
+
+  static final $core.List<PlaybackLiveTransport?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static PlaybackLiveTransport? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackLiveTransport._(super.value, super.name);
+}
+
 class PlaybackAudioCapability extends $pb.ProtobufEnum {
   static const PlaybackAudioCapability PLAYBACK_AUDIO_CAPABILITY_UNSPECIFIED =
       PlaybackAudioCapability._(

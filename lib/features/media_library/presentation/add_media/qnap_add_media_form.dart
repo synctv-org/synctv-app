@@ -121,6 +121,7 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
         const SizedBox(height: 12),
         PlaybackProxyModeControl(
           value: _proxyMode,
+          source: _listSource,
           onChanged: (value) => setState(() => _proxyMode = value),
         ),
         const SizedBox(height: 12),

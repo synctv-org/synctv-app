@@ -554,6 +554,10 @@ abstract interface class ProviderGateway {
     String instanceName = '',
   });
 
+  Future<provider_common.PlaybackProxyPolicy> resolvePlaybackProxyPolicy(
+    provider_common.DiscoveredSource source,
+  );
+
   Future<tiktok.ResolveResponse> resolveTikTok(
     String resource, {
     String instanceName = '',

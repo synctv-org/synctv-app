@@ -1487,6 +1487,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Direct playback can expose upstream URLs, signed links, tokens, cookies, or authorization headers to room members. Use it only in a trusted room and network.';
 
   @override
+  String playbackProxyAutoEffective(
+    Object mode,
+    Object reason,
+    Object variant,
+  ) {
+    return '$variant: $mode ($reason)';
+  }
+
+  @override
+  String get playbackProxyReasonPublicResource => 'public resource';
+
+  @override
+  String get playbackProxyReasonRequestCredentials => 'request credentials';
+
+  @override
+  String get playbackProxyReasonSignedResource => 'signed resource';
+
+  @override
+  String get playbackProxyReasonProviderSession => 'provider session';
+
+  @override
+  String get playbackProxyReasonServerTransport => 'server transport';
+
+  @override
+  String playbackProxyPolicyUnavailable(Object error) {
+    return 'Playback route policy is unavailable: $error';
+  }
+
+  @override
   String get addToPlaylist => 'Add to playlist';
 
   @override

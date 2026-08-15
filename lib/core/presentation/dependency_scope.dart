@@ -16,6 +16,11 @@ final class DependencyScope<T extends Object> extends InheritedWidget {
     return scope?.value ?? DependencyRegistryScope.read<T>(context);
   }
 
+  static T? maybeRead<T extends Object>(BuildContext context) {
+    final scope = context.getInheritedWidgetOfExactType<DependencyScope<T>>();
+    return scope?.value ?? DependencyRegistryScope.maybeRead<T>(context);
+  }
+
   @override
   bool updateShouldNotify(DependencyScope<T> oldWidget) =>
       !identical(value, oldWidget.value);
@@ -40,6 +45,12 @@ final class DependencyRegistryScope extends InheritedWidget {
     final scope = context
         .getInheritedWidgetOfExactType<DependencyRegistryScope>();
     return scope?._lookup<T>() ?? _missing<T>();
+  }
+
+  static T? maybeRead<T extends Object>(BuildContext context) {
+    final scope = context
+        .getInheritedWidgetOfExactType<DependencyRegistryScope>();
+    return scope?._lookup<T>();
   }
 
   T? _lookup<T extends Object>() => values[T] as T?;

@@ -1322,6 +1322,10 @@ class SyncTvApiClient {
         'containers': profile.supportedContainers
             .map((container) => container.value)
             .join(','),
+      if (profile.supportedLiveTransports.isNotEmpty)
+        'liveTransports': profile.supportedLiveTransports
+            .map((transport) => transport.value)
+            .join(','),
       if (profile.hasAudioCapability())
         'audioCapability': profile.audioCapability.value.toString(),
       if (profile.hasSubtitlePreference())

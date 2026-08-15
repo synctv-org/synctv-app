@@ -1627,6 +1627,231 @@ segment.ts?token=secret
     expect(segmentRequests, 1);
   });
 
+  test('DASH segments bypass peer lookup without a connected peer', () async {
+    var peerRequests = 0;
+    final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    origin.listen((request) async {
+      if (request.uri.path == '/manifest.mpd') {
+        request.response.write(
+          '<MPD><Period><AdaptationSet><Representation>'
+          '<SegmentTemplate media="seg-\$Number\$.m4s" />'
+          '</Representation></AdaptationSet></Period></MPD>',
+        );
+      } else if (request.uri.path == '/seg-1.m4s') {
+        request.response.add([4, 2]);
+      } else {
+        request.response.statusCode = HttpStatus.notFound;
+      }
+      await request.response.close();
+    });
+    final engine = P2pMediaEngine(
+      hasConnectedPeer: (_) => false,
+      requestPeerPiece: (swarm, key, cancellation) {
+        peerRequests++;
+        return Completer<P2pPeerPiece?>().future;
+      },
+    );
+    addTearDown(() async {
+      await engine.dispose();
+      await origin.close(force: true);
+    });
+    final local = await engine.localize(
+      upstream: Uri.parse(
+        'http://${origin.address.address}:${origin.port}/manifest.mpd',
+      ),
+      headers: const {},
+      swarmId: 'sm2_dash_no_peer',
+      format: 'dash',
+    );
+    final manifest = await _getText(local);
+    final baseUrl = RegExp(
+      r'<BaseURL>([^<]+)</BaseURL>',
+    ).firstMatch(manifest)!.group(1)!;
+
+    final segment = await _getBytes(
+      Uri.parse(baseUrl).resolve('seg-1.m4s'),
+    ).timeout(const Duration(seconds: 1));
+
+    expect(segment, [4, 2]);
+    expect(peerRequests, 0);
+  });
+
+  test(
+    'dynamic DASH segments bypass peer lookup without a connected peer',
+    () async {
+      var peerRequests = 0;
+      final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final originBase = Uri(
+        scheme: 'http',
+        host: origin.address.address,
+        port: origin.port,
+      );
+      origin.listen((request) async {
+        if (request.uri.path == '/manifest.mpd') {
+          request.response.write(
+            '<MPD type="dynamic" minimumUpdatePeriod="PT2S">'
+            '<UTCTiming schemeIdUri="urn:mpeg:dash:utc:http-xsdate:2014" '
+            'value="/clock" />'
+            '<Period><AdaptationSet><Representation>'
+            '<SegmentTemplate media="video/\$Number\$.m4s" '
+            'initialization="video/init.mp4" />'
+            '</Representation></AdaptationSet></Period></MPD>',
+          );
+        } else if (request.uri.path == '/clock') {
+          request.response.write('2026-08-15T12:00:00Z');
+        } else if (request.uri.path == '/video/5.m4s') {
+          request.response.add([4, 2]);
+        } else {
+          request.response.statusCode = HttpStatus.notFound;
+        }
+        await request.response.close();
+      });
+      final engine = P2pMediaEngine(
+        hasConnectedPeer: (_) => false,
+        requestPeerPiece: (swarm, key, cancellation) {
+          peerRequests++;
+          return Completer<P2pPeerPiece?>().future;
+        },
+      );
+      addTearDown(() async {
+        await engine.dispose();
+        await origin.close(force: true);
+      });
+      final local = await engine.localize(
+        upstream: originBase.replace(path: '/manifest.mpd'),
+        headers: const {},
+        swarmId: 'sm2_dynamic_dash_no_peer',
+        format: 'dash',
+      );
+      final document = XmlDocument.parse(await _getText(local));
+      final baseUrl = document.findAllElements('BaseURL').first.innerText;
+      final utcTiming = document
+          .findAllElements('UTCTiming')
+          .single
+          .getAttribute('value')!;
+
+      expect(document.rootElement.getAttribute('type'), 'dynamic');
+      expect(document.rootElement.getAttribute('minimumUpdatePeriod'), 'PT2S');
+      expect(await _getText(Uri.parse(utcTiming)), '2026-08-15T12:00:00Z');
+      expect(await _getBytes(Uri.parse(baseUrl).resolve('video/5.m4s')), [
+        4,
+        2,
+      ]);
+      expect(peerRequests, 0);
+    },
+  );
+
+  test(
+    'slow DASH segment headers bypass peer lookup without a connected peer',
+    () async {
+      var peerRequests = 0;
+      final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      origin.listen((request) async {
+        if (request.uri.path == '/manifest.mpd') {
+          request.response.write(
+            '<MPD><Period><AdaptationSet><Representation>'
+            '<SegmentTemplate media="seg-\$Number\$.m4s" />'
+            '</Representation></AdaptationSet></Period></MPD>',
+          );
+        } else if (request.uri.path == '/seg-1.m4s') {
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+          request.response.add([4, 2]);
+        } else {
+          request.response.statusCode = HttpStatus.notFound;
+        }
+        await request.response.close();
+      });
+      final engine = P2pMediaEngine(
+        hasConnectedPeer: (_) => false,
+        originHeaderTimeout: const Duration(milliseconds: 300),
+        originHeaderPeerRetryDelay: const Duration(milliseconds: 5),
+        requestPeerPiece: (swarm, key, cancellation) {
+          peerRequests++;
+          return Completer<P2pPeerPiece?>().future;
+        },
+      );
+      addTearDown(() async {
+        await engine.dispose();
+        await origin.close(force: true);
+      });
+      final local = await engine.localize(
+        upstream: Uri.parse(
+          'http://${origin.address.address}:${origin.port}/manifest.mpd',
+        ),
+        headers: const {},
+        swarmId: 'sm2_dash_slow_headers_no_peer',
+        format: 'dash',
+      );
+      final manifest = await _getText(local);
+      final baseUrl = RegExp(
+        r'<BaseURL>([^<]+)</BaseURL>',
+      ).firstMatch(manifest)!.group(1)!;
+
+      final segment = await _getBytes(
+        Uri.parse(baseUrl).resolve('seg-1.m4s'),
+      ).timeout(const Duration(seconds: 1));
+
+      expect(segment, [4, 2]);
+      expect(peerRequests, 0);
+    },
+  );
+
+  test(
+    'slow DASH segment bodies bypass peer lookup without a connected peer',
+    () async {
+      var peerRequests = 0;
+      final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      origin.listen((request) async {
+        if (request.uri.path == '/manifest.mpd') {
+          request.response.write(
+            '<MPD><Period><AdaptationSet><Representation>'
+            '<SegmentTemplate media="seg-\$Number\$.m4s" />'
+            '</Representation></AdaptationSet></Period></MPD>',
+          );
+        } else if (request.uri.path == '/seg-1.m4s') {
+          request.response.headers.contentLength = 2;
+          await request.response.flush();
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+          request.response.add([4, 2]);
+        } else {
+          request.response.statusCode = HttpStatus.notFound;
+        }
+        await request.response.close();
+      });
+      final engine = P2pMediaEngine(
+        hasConnectedPeer: (_) => false,
+        originBodyStallPeerRetryDelay: const Duration(milliseconds: 20),
+        requestPeerPiece: (swarm, key, cancellation) {
+          peerRequests++;
+          return Completer<P2pPeerPiece?>().future;
+        },
+      );
+      addTearDown(() async {
+        await engine.dispose();
+        await origin.close(force: true);
+      });
+      final local = await engine.localize(
+        upstream: Uri.parse(
+          'http://${origin.address.address}:${origin.port}/manifest.mpd',
+        ),
+        headers: const {},
+        swarmId: 'sm2_dash_slow_body_no_peer',
+        format: 'dash',
+      );
+      final manifest = await _getText(local);
+      final baseUrl = RegExp(
+        r'<BaseURL>([^<]+)</BaseURL>',
+      ).firstMatch(manifest)!.group(1)!;
+
+      final segment = await _getBytes(
+        Uri.parse(baseUrl).resolve('seg-1.m4s'),
+      ).timeout(const Duration(seconds: 1));
+
+      expect(segment, [4, 2]);
+      expect(peerRequests, 0);
+    },
+  );
+
   test('DASH gateway rewrites nested absolute SegmentBase resources', () async {
     const media = [1, 2, 3, 4];
     final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);

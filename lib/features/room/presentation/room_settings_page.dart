@@ -37,6 +37,10 @@ import 'package:synctv_app/core/presentation/notifications/app_notifications.dar
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/core/presentation/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media_dialog.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
+import 'package:synctv_app/features/providers/application/provider_gateway.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/features/room/presentation/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/features/room/presentation/widgets/free_mode_settings_fields.dart';
@@ -2443,15 +2447,50 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       AppNotifications.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
+    provider_common.PlaybackProxyPolicy? playbackProxyPolicy;
+    if (entry.id.startsWith('med_')) {
+      final sourceConfig = SourceConfigCodec.mediaSourceConfigFromMap(
+        sourceProvider: entry.sourceProvider,
+        sourceConfig: entry.sourceConfig,
+      );
+      if (sourceConfig != null) {
+        try {
+          playbackProxyPolicy =
+              await DependencyScope.read<ProviderGateway>(
+                context,
+              ).resolvePlaybackProxyPolicy(
+                provider_common.DiscoveredSource(
+                  media: sourceConfig,
+                  providerInstanceName: entry.providerInstanceName,
+                ),
+              );
+        } catch (error) {
+          if (mounted) {
+            AppNotifications.showWarning(
+              context,
+              context.l10n.playbackProxyPolicyUnavailable('$error'),
+            );
+          }
+        }
+      }
+    }
+    if (!mounted) return;
     final input = await _showEntryEditDialog(
       title: entry.isPlaylist
           ? context.l10n.editPlaylist
           : context.l10n.editMedia,
       initialName: entry.name,
       initialDescription: entry.description,
+      playbackProxyPolicy: playbackProxyPolicy,
     );
     if (input == null || input.name.isEmpty) return;
-    if (input.name == entry.name && input.description == entry.description) {
+    final playbackProxyMode = input.playbackProxyMode;
+    final playbackProxyModeChanged =
+        playbackProxyMode != null &&
+        playbackProxyMode != playbackProxyPolicy?.currentMode;
+    if (input.name == entry.name &&
+        input.description == entry.description &&
+        !playbackProxyModeChanged) {
       return;
     }
     try {
@@ -2468,11 +2507,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           entry.id,
           name: input.name,
           description: input.description,
+          playbackProxyMode: playbackProxyModeChanged
+              ? playbackProxyMode
+              : null,
         );
       }
       await _loadMediaLibrary();
       if (mounted) {
-        AppNotifications.showSuccess(context, context.l10n.nameUpdated);
+        AppNotifications.showSuccess(
+          context,
+          playbackProxyModeChanged
+              ? context.l10n.settingsUpdated
+              : context.l10n.nameUpdated,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -3309,42 +3356,56 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     required String title,
     String initialName = '',
     String initialDescription = '',
+    provider_common.PlaybackProxyPolicy? playbackProxyPolicy,
   }) {
     final nameController = TextEditingController(text: initialName);
     final descriptionController = TextEditingController(
       text: initialDescription,
     );
+    var playbackProxyMode = playbackProxyPolicy?.currentMode;
     return AppDialogs.showStyledDialog<_EntryEditResult>(
       context: context,
       title: title,
       icon: const Icon(Icons.edit_outlined),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppTextField(
-              controller: nameController,
-              label: context.l10n.name,
-              autofocus: true,
-              onSubmitted: (_) {
-                Navigator.pop(
-                  context,
-                  _EntryEditResult(
-                    nameController.text.trim(),
-                    descriptionController.text.trim(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: descriptionController,
-              label: context.l10n.description,
-              minLines: 2,
-              maxLines: 4,
-            ),
-          ],
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppTextField(
+                controller: nameController,
+                label: context.l10n.name,
+                autofocus: true,
+                onSubmitted: (_) {
+                  Navigator.pop(
+                    context,
+                    _EntryEditResult(
+                      nameController.text.trim(),
+                      descriptionController.text.trim(),
+                      playbackProxyMode,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                controller: descriptionController,
+                label: context.l10n.description,
+                minLines: 2,
+                maxLines: 4,
+              ),
+              if (playbackProxyPolicy != null && playbackProxyMode != null) ...[
+                const SizedBox(height: 16),
+                PlaybackProxyModeControl(
+                  value: playbackProxyMode!,
+                  policy: playbackProxyPolicy,
+                  onChanged: (value) =>
+                      setDialogState(() => playbackProxyMode = value),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
       actions: [
@@ -3356,6 +3417,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _EntryEditResult(
               nameController.text.trim(),
               descriptionController.text.trim(),
+              playbackProxyMode,
             ),
           ),
           text: context.l10n.save,
@@ -7435,8 +7497,9 @@ enum _MediaAction {
 class _EntryEditResult {
   final String name;
   final String description;
+  final source_enum.PlaybackProxyMode? playbackProxyMode;
 
-  const _EntryEditResult(this.name, this.description);
+  const _EntryEditResult(this.name, this.description, [this.playbackProxyMode]);
 }
 
 class _MediaMoveTarget {

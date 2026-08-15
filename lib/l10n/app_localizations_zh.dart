@@ -1381,6 +1381,35 @@ class AppLocalizationsZh extends AppLocalizations {
       '直连播放可能向房间成员暴露上游地址、签名链接、Token、Cookie 或授权请求头。请仅在可信房间和受控网络中启用。';
 
   @override
+  String playbackProxyAutoEffective(
+    Object mode,
+    Object reason,
+    Object variant,
+  ) {
+    return '$variant：$mode（$reason）';
+  }
+
+  @override
+  String get playbackProxyReasonPublicResource => '公开资源';
+
+  @override
+  String get playbackProxyReasonRequestCredentials => '请求需要认证信息';
+
+  @override
+  String get playbackProxyReasonSignedResource => '签名资源';
+
+  @override
+  String get playbackProxyReasonProviderSession => 'provider 会话';
+
+  @override
+  String get playbackProxyReasonServerTransport => '服务端传输';
+
+  @override
+  String playbackProxyPolicyUnavailable(Object error) {
+    return '播放线路策略暂时不可用：$error';
+  }
+
+  @override
   String get addToPlaylist => '添加到播放列表';
 
   @override

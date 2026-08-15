@@ -2618,6 +2618,48 @@ abstract class AppLocalizations {
   /// **'Direct playback can expose upstream URLs, signed links, tokens, cookies, or authorization headers to room members. Use it only in a trusted room and network.'**
   String get playbackProxyDirectRisk;
 
+  /// No description provided for @playbackProxyAutoEffective.
+  ///
+  /// In en, this message translates to:
+  /// **'{variant}: {mode} ({reason})'**
+  String playbackProxyAutoEffective(Object mode, Object reason, Object variant);
+
+  /// No description provided for @playbackProxyReasonPublicResource.
+  ///
+  /// In en, this message translates to:
+  /// **'public resource'**
+  String get playbackProxyReasonPublicResource;
+
+  /// No description provided for @playbackProxyReasonRequestCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'request credentials'**
+  String get playbackProxyReasonRequestCredentials;
+
+  /// No description provided for @playbackProxyReasonSignedResource.
+  ///
+  /// In en, this message translates to:
+  /// **'signed resource'**
+  String get playbackProxyReasonSignedResource;
+
+  /// No description provided for @playbackProxyReasonProviderSession.
+  ///
+  /// In en, this message translates to:
+  /// **'provider session'**
+  String get playbackProxyReasonProviderSession;
+
+  /// No description provided for @playbackProxyReasonServerTransport.
+  ///
+  /// In en, this message translates to:
+  /// **'server transport'**
+  String get playbackProxyReasonServerTransport;
+
+  /// No description provided for @playbackProxyPolicyUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback route policy is unavailable: {error}'**
+  String playbackProxyPolicyUnavailable(Object error);
+
   /// No description provided for @addToPlaylist.
   ///
   /// In en, this message translates to:
