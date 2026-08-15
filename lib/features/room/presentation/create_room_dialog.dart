@@ -388,65 +388,9 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                       ),
                       const SizedBox(height: 18),
                       _buildTaxonomySection(theme),
-                      const SizedBox(height: 18),
-                      Text(
-                        l10n.accessMethod,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _AccessModeSelector(
-                        value: _accessMode,
-                        passwordRequired: _passwordRequired,
-                        passwordForbidden: _passwordForbidden,
-                        enabled:
-                            !_creating &&
-                            !_creationDisabled &&
-                            _settingsError == null,
-                        onChanged: (value) {
-                          setState(() {
-                            _accessMode = value;
-                            if (value == _RoomAccessMode.public) {
-                              _passwordController.clear();
-                            }
-                          });
-                        },
-                      ),
                       if (!_passwordForbidden) ...[
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 180),
-                          child: _needPassword
-                              ? Padding(
-                                  key: const ValueKey('password'),
-                                  padding: const EdgeInsets.only(top: 12),
-                                  child: AppTextField(
-                                    controller: _passwordController,
-                                    label: l10n.roomPassword,
-                                    hintText: _passwordRequired
-                                        ? l10n.serverRequiresPassword
-                                        : l10n.membersEnterPassword,
-                                    errorText:
-                                        _submitted && _passwordError.isNotEmpty
-                                        ? _passwordError
-                                        : null,
-                                    prefixIcon: Icons.lock_outline_rounded,
-                                    enabled:
-                                        !_creating &&
-                                        !_creationDisabled &&
-                                        _settingsError == null,
-                                    obscureText: true,
-                                    onChanged: (value) {
-                                      if (!_submitted) return;
-                                      setState(
-                                        () => _passwordError =
-                                            _validatePassword(value) ?? '',
-                                      );
-                                    },
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
+                        const SizedBox(height: 18),
+                        _buildAccessSection(theme),
                       ],
                     ],
                   ),
@@ -500,6 +444,69 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAccessSection(ThemeData theme) {
+    if (_passwordRequired) return _buildPasswordField();
+
+    final l10n = context.l10n;
+    final enabled = !_creating && !_creationDisabled && _settingsError == null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.accessMethod,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _AccessModeSelector(
+          value: _accessMode,
+          enabled: enabled,
+          onChanged: (value) {
+            setState(() {
+              _accessMode = value;
+              if (value == _RoomAccessMode.public) {
+                _passwordController.clear();
+              }
+            });
+          },
+        ),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: _needPassword
+              ? Padding(
+                  key: const ValueKey('password'),
+                  padding: const EdgeInsets.only(top: 12),
+                  child: _buildPasswordField(),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField() {
+    final l10n = context.l10n;
+    return AppTextField(
+      key: const ValueKey('create-room-password'),
+      controller: _passwordController,
+      label: l10n.roomPassword,
+      hintText: _passwordRequired
+          ? l10n.serverRequiresPassword
+          : l10n.membersEnterPassword,
+      errorText: _submitted && _passwordError.isNotEmpty
+          ? _passwordError
+          : null,
+      prefixIcon: Icons.lock_outline_rounded,
+      enabled: !_creating && !_creationDisabled && _settingsError == null,
+      obscureText: true,
+      onChanged: (value) {
+        if (!_submitted) return;
+        setState(() => _passwordError = _validatePassword(value) ?? '');
+      },
     );
   }
 
@@ -710,44 +717,34 @@ class _CreateRoomHeader extends StatelessWidget {
 
 class _AccessModeSelector extends StatelessWidget {
   final _RoomAccessMode value;
-  final bool passwordRequired;
-  final bool passwordForbidden;
   final bool enabled;
   final ValueChanged<_RoomAccessMode> onChanged;
 
   const _AccessModeSelector({
     required this.value,
-    required this.passwordRequired,
-    required this.passwordForbidden,
     required this.enabled,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final canUsePublic = enabled && !passwordRequired;
-    final canUsePassword = enabled && !passwordForbidden;
     return LayoutBuilder(
       builder: (context, constraints) {
         final stacked = constraints.maxWidth < 520;
         final publicCard = _AccessModeCard(
           selected: value == _RoomAccessMode.public,
-          enabled: canUsePublic,
+          enabled: enabled,
           icon: Icons.public_rounded,
           title: context.l10n.publicRoom,
-          subtitle: passwordRequired
-              ? context.l10n.serverRequiresPassword
-              : context.l10n.publicRoomJoinHint,
+          subtitle: context.l10n.publicRoomJoinHint,
           onTap: () => onChanged(_RoomAccessMode.public),
         );
         final passwordCard = _AccessModeCard(
           selected: value == _RoomAccessMode.password,
-          enabled: canUsePassword,
+          enabled: enabled,
           icon: Icons.lock_outline_rounded,
           title: context.l10n.passwordRoom,
-          subtitle: passwordForbidden
-              ? context.l10n.serverForbidsPassword
-              : context.l10n.passwordRoomJoinHint,
+          subtitle: context.l10n.passwordRoomJoinHint,
           onTap: () => onChanged(_RoomAccessMode.password),
         );
 
