@@ -971,6 +971,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     required int outputOffset,
     required void Function() beforeFirstOutput,
   }) async {
+    request.response.bufferOutput = false;
     var absoluteOffset = 0;
     var pieceIndex = 0;
     var wroteOutput = false;
@@ -998,6 +999,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         final startInChunk = max(0, outputOffset - absoluteOffset);
         if (!wroteOutput) beforeFirstOutput();
         request.response.add(chunk.sublist(startInChunk));
+        await request.response.flush();
         wroteOutput = true;
       }
       absoluteOffset = chunkEnd;

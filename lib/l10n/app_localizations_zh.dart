@@ -1410,6 +1410,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get playbackProxyNoCompatibleMode => '此媒体源当前没有兼容的播放线路。';
+
+  @override
   String get addToPlaylist => '添加到播放列表';
 
   @override

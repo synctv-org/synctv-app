@@ -505,6 +505,7 @@
   "playbackProxyReasonProviderSession": "provider session",
   "playbackProxyReasonServerTransport": "server transport",
   "playbackProxyPolicyUnavailable": "Playback route policy is unavailable: {error}",
+  "playbackProxyNoCompatibleMode": "No compatible playback route is available for this media source.",
   "addToPlaylist": "Add to playlist",
   "requestHeaders": "Request headers",
   "noExtraRequestHeaders": "No extra request headers are sent by default.",

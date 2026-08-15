@@ -237,6 +237,52 @@ void main() {
     );
   });
 
+  testWidgets('shows a safe state when filtering removes every policy mode', (
+    tester,
+  ) async {
+    final policy = provider_common.PlaybackProxyPolicy(
+      supportedModes: [
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
+      ],
+      currentMode:
+          source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
+    );
+    var changes = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 800,
+            child: PlaybackProxyModeControl(
+              value: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+              policy: policy,
+              supportsDirectPlayback: false,
+              onChanged: (_) => changes++,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(
+      find.byKey(const Key('playback-proxy-mode-unavailable')),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'No compatible playback route is available for this media source.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('playback-proxy-mode')), findsNothing);
+    expect(changes, 0);
+  });
+
   testWidgets('ignores taps while disabled', (tester) async {
     var mode = source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
     await tester.pumpWidget(

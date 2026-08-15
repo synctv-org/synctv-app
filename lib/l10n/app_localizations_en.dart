@@ -1516,6 +1516,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get playbackProxyNoCompatibleMode =>
+      'No compatible playback route is available for this media source.';
+
+  @override
   String get addToPlaylist => 'Add to playlist';
 
   @override

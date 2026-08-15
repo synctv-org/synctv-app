@@ -2660,6 +2660,12 @@ abstract class AppLocalizations {
   /// **'Playback route policy is unavailable: {error}'**
   String playbackProxyPolicyUnavailable(Object error);
 
+  /// No description provided for @playbackProxyNoCompatibleMode.
+  ///
+  /// In en, this message translates to:
+  /// **'No compatible playback route is available for this media source.'**
+  String get playbackProxyNoCompatibleMode;
+
   /// No description provided for @addToPlaylist.
   ///
   /// In en, this message translates to:

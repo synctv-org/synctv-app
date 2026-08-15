@@ -1464,6 +1464,123 @@ segment.ts?token=secret
     },
   );
 
+  test(
+    'DASH Range-ignoring origins flush initialization data before completion',
+    () async {
+      final media = Uint8List.fromList(
+        List<int>.generate(17 * 1024 * 1024, (index) => index % 251),
+      );
+      const initializationBytes = 8 * 1024;
+      final firstOriginChunk = Completer<void>();
+      final allowOriginCompletion = Completer<void>();
+      final originRequests = <String>[];
+      Socket? sourceSocket;
+      final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      origin.listen((request) async {
+        originRequests.add('${request.method} ${request.uri.path}');
+        if (request.uri.path == '/manifest.mpd') {
+          request.response.write(
+            '<MPD><Period><AdaptationSet><Representation>'
+            '<BaseURL>http://${origin.address.address}:${origin.port}/video.mp4'
+            '</BaseURL></Representation></AdaptationSet></Period></MPD>',
+          );
+          await request.response.close();
+          return;
+        }
+        if (request.uri.path != '/video.mp4') {
+          request.response.statusCode = HttpStatus.notFound;
+          await request.response.close();
+          return;
+        }
+        request.response.statusCode = HttpStatus.ok;
+        request.response.headers.contentLength = media.length;
+        request.response.headers.set(HttpHeaders.acceptRangesHeader, 'bytes');
+        if (request.method == 'HEAD') {
+          await request.response.close();
+          return;
+        }
+        sourceSocket = await request.response.detachSocket();
+        sourceSocket!.add(Uint8List.sublistView(media, 0, initializationBytes));
+        await sourceSocket!.flush();
+        if (!firstOriginChunk.isCompleted) firstOriginChunk.complete();
+        await allowOriginCompletion.future;
+        sourceSocket!.add(Uint8List.sublistView(media, initializationBytes));
+        await sourceSocket!.close();
+      });
+      final engine = P2pMediaEngine(
+        hasConnectedPeer: (_) => false,
+        requestPeerPiece: (swarm, key, cancellation) async => null,
+      );
+      addTearDown(() async {
+        if (!allowOriginCompletion.isCompleted) {
+          allowOriginCompletion.complete();
+        }
+        sourceSocket?.destroy();
+        await engine.dispose();
+        await origin.close(force: true);
+      });
+      final local = await engine.localize(
+        upstream: Uri.parse(
+          'http://${origin.address.address}:${origin.port}/manifest.mpd',
+        ),
+        headers: const {},
+        swarmId: 'sm1_dash_ignored_range_flush',
+        format: 'dash',
+      );
+      final document = XmlDocument.parse(await _getText(local));
+      final mediaUri = Uri.parse(
+        document.findAllElements('BaseURL').last.innerText,
+      );
+      final client = HttpClient();
+      addTearDown(() => client.close(force: true));
+      final request = await client.getUrl(mediaUri);
+      request.headers.set(HttpHeaders.rangeHeader, 'bytes=0-');
+      final response = await request.close().timeout(
+        const Duration(seconds: 1),
+        onTimeout: () => throw TimeoutException(
+          'Gateway did not forward the first DASH initialization chunk; '
+          'origin requests: $originRequests, '
+          'first chunk: ${firstOriginChunk.isCompleted}',
+        ),
+      );
+      expect(response.statusCode, HttpStatus.partialContent);
+      final firstBody = Completer<void>();
+      final responseComplete = Completer<void>();
+      final received = BytesBuilder(copy: false);
+      response.listen(
+        (chunk) {
+          received.add(chunk);
+          if (!firstBody.isCompleted) {
+            firstBody.complete();
+          }
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (!firstBody.isCompleted) {
+            firstBody.completeError(error, stackTrace);
+          }
+          if (!responseComplete.isCompleted) {
+            responseComplete.completeError(error, stackTrace);
+          }
+        },
+        onDone: () {
+          if (!responseComplete.isCompleted) responseComplete.complete();
+        },
+      );
+      await firstBody.future.timeout(
+        const Duration(seconds: 1),
+        onTimeout: () => throw TimeoutException(
+          'Gateway did not forward the first DASH initialization chunk; '
+          'origin requests: $originRequests, '
+          'first chunk: ${firstOriginChunk.isCompleted}',
+        ),
+      );
+      await firstOriginChunk.future.timeout(const Duration(seconds: 1));
+      allowOriginCompletion.complete();
+      await responseComplete.future.timeout(const Duration(seconds: 5));
+      expect(received.takeBytes(), media);
+    },
+  );
+
   test('small progressive ranges share one complete origin download', () async {
     final media = Uint8List.fromList(
       List<int>.generate(

@@ -151,6 +151,35 @@ class _PlaybackProxyModeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final options = _options(context);
+    if (options.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.route_rounded,
+                size: 18,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                context.l10n.playbackProxyMode,
+                style: theme.textTheme.labelLarge,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            key: const Key('playback-proxy-mode-unavailable'),
+            context.l10n.playbackProxyNoCompatibleMode,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      );
+    }
     final selectedValue = options.any((option) => option.value == value)
         ? value
         : options.first.value;

@@ -429,6 +429,7 @@
   "playbackProxyReasonProviderSession": "provider 会话",
   "playbackProxyReasonServerTransport": "服务端传输",
   "playbackProxyPolicyUnavailable": "播放线路策略暂时不可用：{error}",
+  "playbackProxyNoCompatibleMode": "此媒体源当前没有兼容的播放线路。",
   "addToPlaylist": "添加到播放列表",
   "requestHeaders": "请求头",
   "noExtraRequestHeaders": "默认不发送额外请求头。",
