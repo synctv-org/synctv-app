@@ -64,6 +64,18 @@ final class _RecordingSubtitleSource implements SubtitleSource {
   }
 }
 
+final class _BilibiliJsonSubtitleSource implements SubtitleSource {
+  const _BilibiliJsonSubtitleSource();
+
+  @override
+  Future<Uint8List?> load(
+    Uri uri, {
+    Map<String, String> headers = const {},
+  }) async => Uint8List.fromList(
+    '{"body":[{"from":1.0,"to":3.0,"content":"Bilibili subtitle"}]}'.codeUnits,
+  );
+}
+
 final class _ControlledSubtitleSource implements SubtitleSource {
   final requests = <Uri>[];
   final documents = <Uri, Completer<Uint8List?>>{};
@@ -1535,6 +1547,51 @@ void main() {
       ]);
     },
   );
+
+  testWidgets('renders Bilibili JSON subtitles', (tester) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 500,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _BilibiliJsonSubtitleSource(),
+              controller: controller,
+              title: 'Bilibili',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              subtitles: const {
+                'sub_0': {
+                  'name': 'Chinese',
+                  'url': 'https://example.com/subtitle.json',
+                  'format': 'json',
+                },
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    controller.value = controller.value.copyWith(
+      position: const Duration(seconds: 2),
+    );
+    await tester.pump();
+
+    expect(find.text('Bilibili subtitle'), findsOneWidget);
+  });
 
   testWidgets(
     'subtitle localization uses its own delivery and only reloads for a new swarm',

@@ -2023,6 +2023,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     await _fetchAndParseSubtitles(
       url,
       generation: generation,
+      format: subtitle['format']?.toString(),
       headers: _headersFromDynamicMap(subtitle['headers']),
       p2pDelivery: subtitle['p2pDelivery'] is P2pResourceDelivery
           ? subtitle['p2pDelivery'] as P2pResourceDelivery
@@ -2044,6 +2045,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   Future<void> _fetchAndParseSubtitles(
     String url, {
     required int generation,
+    String? format,
     Map<String, String> headers = const {},
     P2pResourceDelivery? p2pDelivery,
   }) async {
@@ -2076,7 +2078,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         );
 
         // Determine format
-        if (content.contains('[Script Info]') || content.contains('[Events]')) {
+        if (_parseBilibiliJsonSubtitles(content, format: format)) {
+          // Bilibili player-v2 subtitle documents use JSON body entries.
+        } else if (content.contains('[Script Info]') ||
+            content.contains('[Events]')) {
           _parseAssSubtitles(content);
         } else {
           _parseSubtitles(content);
@@ -2234,6 +2239,49 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     }
     debugPrint('Parsed ${_subtitleItems.length} ASS subtitles');
   }
+
+  bool _parseBilibiliJsonSubtitles(String content, {String? format}) {
+    if (format?.trim().toLowerCase() != 'json') return false;
+    try {
+      final decoded = jsonDecode(content);
+      if (decoded is! Map || decoded['body'] is! List) return false;
+
+      final items = <_SubtitleItem>[];
+      for (final value in decoded['body'] as List) {
+        if (value is! Map) continue;
+        final startSeconds = _subtitleSeconds(value['from']);
+        final endSeconds = _subtitleSeconds(value['to']);
+        final text = sanitizeSubtitleText(value['content']?.toString() ?? '');
+        if (startSeconds == null ||
+            endSeconds == null ||
+            endSeconds < startSeconds ||
+            text.isEmpty) {
+          continue;
+        }
+        items.add(
+          _SubtitleItem(
+            Duration(milliseconds: (startSeconds * 1000).round()),
+            Duration(milliseconds: (endSeconds * 1000).round()),
+            text,
+          ),
+        );
+      }
+      _subtitleItems
+        ..clear()
+        ..addAll(items);
+      debugPrint('Parsed ${_subtitleItems.length} Bilibili subtitles');
+      return true;
+    } catch (error) {
+      debugPrint('Bilibili subtitle JSON parse error: $error');
+      return false;
+    }
+  }
+
+  double? _subtitleSeconds(Object? value) => switch (value) {
+    num value => value.toDouble(),
+    String value => double.tryParse(value),
+    _ => null,
+  };
 
   void _parseAssToDanmaku(String content) {
     if (widget.danmakuController == null) return;

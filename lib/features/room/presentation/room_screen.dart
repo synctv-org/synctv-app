@@ -2847,14 +2847,24 @@ class _RoomScreenState extends State<RoomScreen>
     final danmuUrl = nextEntry.danmu == null
         ? null
         : _resourceUrlResolver.resolve(nextEntry.danmu!);
+    final danmuHeaders = authenticatedServerResourceHeaders(
+      _resourceUrlResolver,
+      nextEntry.danmu ?? '',
+      nextEntry.danmuHeaders,
+    );
+    final streamDanmuHeaders = authenticatedServerResourceHeaders(
+      _resourceUrlResolver,
+      nextEntry.streamDanmu ?? '',
+      nextEntry.streamDanmuHeaders,
+    );
 
     _danmakuController.updateConfig(
       danmakuUrl: danmuUrl,
-      danmakuHeaders: nextEntry.danmuHeaders,
+      danmakuHeaders: danmuHeaders,
       danmakuP2pDelivery: nextEntry.danmuP2pDelivery,
       localizeStaticResource: _resolveDanmakuPlaybackResource,
       streamDanmakuUrl: streamUrl,
-      streamDanmakuHeaders: nextEntry.streamDanmuHeaders,
+      streamDanmakuHeaders: streamDanmuHeaders,
       controller: _videoPlayerController,
       preserveLoadedDocument:
           previousEntry?.playbackAttachmentIdentity ==
