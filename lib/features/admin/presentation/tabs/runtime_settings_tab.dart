@@ -583,17 +583,17 @@ class _SettingChoice {
 
 List<_SettingChoice> _roomPasswordChoices(AppLocalizations l10n) => [
   _SettingChoice(
-    'optional',
+    'ROOM_PASSWORD_POLICY_OPTIONAL',
     l10n.optional,
     l10n.roomPasswordOptionalDescription,
   ),
   _SettingChoice(
-    'required',
+    'ROOM_PASSWORD_POLICY_REQUIRED',
     l10n.required,
     l10n.roomPasswordRequiredDescription,
   ),
   _SettingChoice(
-    'forbidden',
+    'ROOM_PASSWORD_POLICY_FORBIDDEN',
     l10n.disabled,
     l10n.roomPasswordDisabledDescription,
   ),

@@ -8,6 +8,8 @@ import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
+    as common_enum;
 import 'package:synctv_app/src/generated/proto/oauth2.pbenum.dart'
     as oauth2_enum;
 import 'package:synctv_app/src/generated/proto/passkey.pb.dart' as passkey;
@@ -751,6 +753,16 @@ Map<String, dynamic> runtimeSettingsSectionToJson(
           ? _runtimeSettingsWithDefaults(settings.roomCreation, {
               'enabled': settings.roomCreation.enabled,
               'approvalRequired': settings.roomCreation.approvalRequired,
+              'passwordPolicy':
+                  settings.roomCreation.passwordPolicy ==
+                      common_enum
+                          .RoomPasswordPolicy
+                          .ROOM_PASSWORD_POLICY_UNSPECIFIED
+                  ? common_enum
+                        .RoomPasswordPolicy
+                        .ROOM_PASSWORD_POLICY_OPTIONAL
+                        .name
+                  : settings.roomCreation.passwordPolicy.name,
               'maxRoomsPerUser': settings.roomCreation.maxRoomsPerUser
                   .toString(),
             })

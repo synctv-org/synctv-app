@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
 import 'package:synctv_app/src/generated/proto/oauth2.pbenum.dart';
 
 void main() {
@@ -67,7 +68,16 @@ void main() {
     );
     expect(
       runtimeSettingsSectionToJson(settings, 'roomCreation').keys,
-      containsAll(<String>['enabled', 'approvalRequired']),
+      containsAll(<String>[
+        'enabled',
+        'approvalRequired',
+        'passwordPolicy',
+        'maxRoomsPerUser',
+      ]),
+    );
+    expect(
+      runtimeSettingsSectionToJson(settings, 'roomCreation')['passwordPolicy'],
+      common.RoomPasswordPolicy.ROOM_PASSWORD_POLICY_OPTIONAL.name,
     );
     expect(
       runtimeSettingsSectionToJson(settings, 'email').keys,

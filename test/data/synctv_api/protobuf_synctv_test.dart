@@ -6972,6 +6972,11 @@ void main() {
         false,
       );
       await SyncTvService.runtimeUpdateSettingInSection(
+        'roomCreation',
+        'passwordPolicy',
+        'ROOM_PASSWORD_POLICY_FORBIDDEN',
+      );
+      await SyncTvService.runtimeUpdateSettingInSection(
         'cors',
         'allowedOrigins',
         ['https://app.example.test'],
@@ -7032,6 +7037,12 @@ void main() {
           'roomCreation': {'enabled': false},
         },
         'updateMask': 'roomCreation.enabled',
+      },
+      {
+        'settings': {
+          'roomCreation': {'passwordPolicy': 3},
+        },
+        'updateMask': 'roomCreation.passwordPolicy',
       },
       {
         'settings': {
