@@ -1,12 +1,21 @@
 import 'dart:async';
 
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
+import 'package:synctv_app/core/presentation/dependency_scope.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/bilibili_playlist_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_add_target.dart';
+import 'package:synctv_app/features/providers/application/provider_gateway.dart';
+import 'package:synctv_app/l10n/app_localizations.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 import '../../../../test_app.dart';
 
@@ -634,6 +643,198 @@ void main() {
     expect(requestedIntent?.mode, BilibiliPlaylistListMode.pgcSeason);
     expect(requestedIntent?.seasonId, 52);
   });
+
+  testWidgets('uses the dynamic playlist policy and saves its selected mode', (
+    tester,
+  ) async {
+    final gateway = _BilibiliPolicyGateway();
+    var mode = source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
+    final playlistSource = _bilibiliPlaylistSource();
+
+    await tester.binding.setSurfaceSize(const Size(900, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => buildThemedTestApp(
+          context,
+          DependencyScope<ProviderGateway>(value: gateway, child: child!),
+        ),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: StatefulBuilder(
+          builder: (context, setState) => Scaffold(
+            body: BilibiliPlaylistForm(
+              roomId: 'room',
+              parentId: 'root',
+              binds: const [],
+              target: ProviderAddTarget.playlist,
+              proxyMode: mode,
+              onProxyModeChanged: (value) => setState(() => mode = value),
+              onDraftChanged: (_) {},
+              loader: (_, _, _, _, _, _) async => BilibiliPlaylistListPage(
+                items: const [],
+                hasMore: false,
+                page: 1,
+                cursor: null,
+                source: playlistSource,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('bilibili-playback-proxy-mode')),
+      findsOneWidget,
+    );
+    expect(gateway.policySources, contains(playlistSource));
+
+    await _selectProxyOnly(tester);
+    await tester.tap(find.byKey(const Key('discovery-add-current-list')));
+    await tester.pump();
+
+    expect(
+      gateway.addedSources.single.playlist.bilibili.proxyMode,
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+    );
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('uses a selected media source for policy lookup and submission', (
+    tester,
+  ) async {
+    final gateway = _BilibiliPolicyGateway();
+    var mode = source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
+    final playlistSource = _bilibiliPlaylistSource();
+    final mediaSource = _bilibiliMediaSource();
+
+    await tester.binding.setSurfaceSize(const Size(900, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => buildThemedTestApp(
+          context,
+          DependencyScope<ProviderGateway>(value: gateway, child: child!),
+        ),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: StatefulBuilder(
+          builder: (context, setState) => Scaffold(
+            body: BilibiliPlaylistForm(
+              roomId: 'room',
+              parentId: 'root',
+              binds: const [],
+              target: ProviderAddTarget.media,
+              proxyMode: mode,
+              onProxyModeChanged: (value) => setState(() => mode = value),
+              onDraftChanged: (_) {},
+              loader: (_, _, _, _, _, _) async => BilibiliPlaylistListPage(
+                items: [
+                  BilibiliPlaylistListItemInfo(
+                    id: 'current-video',
+                    title: 'Current video',
+                    description: '',
+                    cover: '',
+                    isContainer: false,
+                    source: mediaSource,
+                    browse: null,
+                  ),
+                ],
+                hasMore: false,
+                page: 1,
+                cursor: null,
+                source: playlistSource,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(gateway.policySources, contains(playlistSource));
+    await tester.tap(
+      find.byKey(const ValueKey('discovery-item-current-video')),
+    );
+    await tester.pumpAndSettle();
+    expect(gateway.policySources, contains(mediaSource));
+
+    await _selectProxyOnly(tester);
+    await tester.tap(find.byKey(const Key('discovery-add-selected')));
+    await tester.pump();
+
+    expect(
+      gateway.addedSources.single.media.bilibili.proxyMode,
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+    );
+    await tester.pump(const Duration(seconds: 4));
+  });
+}
+
+class _BilibiliPolicyGateway implements ProviderGateway {
+  final List<provider_common.DiscoveredSource> policySources = [];
+  final List<provider_common.DiscoveredSource> addedSources = [];
+
+  @override
+  Future<provider_common.PlaybackProxyPolicy> resolvePlaybackProxyPolicy(
+    provider_common.DiscoveredSource source,
+  ) async {
+    policySources.add(source);
+    return provider_common.PlaybackProxyPolicy(
+      supportedModes: [
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+      ],
+      currentMode: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+    );
+  }
+
+  @override
+  Future<String> addDiscoveredSource(
+    String roomId, {
+    required provider_common.DiscoveredSource source,
+    String playlistId = '',
+    String name = '',
+  }) async {
+    addedSources.add(source.deepCopy());
+    return 'media-id';
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('${invocation.memberName}');
+}
+
+provider_common.DiscoveredSource _bilibiliPlaylistSource() =>
+    provider_common.DiscoveredSource(
+      playlist: source_config.PlaylistSourceConfig(
+        bilibili: source_config.BilibiliPlaylistSourceConfig(
+          popular: source_config.BilibiliPopularPlaylistSource(),
+        ),
+      ),
+    );
+
+provider_common.DiscoveredSource _bilibiliMediaSource() =>
+    provider_common.DiscoveredSource(
+      media: source_config.MediaSourceConfig(
+        bilibili: source_config.BilibiliMediaSourceConfig(
+          video: source_config.BilibiliVideoSourceConfig(
+            bvid: 'BV1policytest',
+            cid: Int64(1),
+          ),
+        ),
+      ),
+    );
+
+Future<void> _selectProxyOnly(WidgetTester tester) async {
+  final selector = find.byKey(const Key('playback-proxy-mode-dropdown'));
+  await tester.ensureVisible(selector);
+  await tester.tap(selector);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Proxy only').last);
+  await tester.pumpAndSettle();
 }
 
 final _emptyPage = BilibiliPlaylistListPage(

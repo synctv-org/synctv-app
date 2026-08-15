@@ -12,6 +12,8 @@ import 'package:synctv_app/features/media_library/presentation/add_media/provide
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/l10n/l10n.dart';
+import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
+    as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
@@ -190,6 +192,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
     _previewRequestVersion += 1;
     _preview = null;
     _browsePath.clear();
+    _selection.clear();
     widget.onDraftChanged(
       _nameController.text.trim().isNotEmpty ||
           _primaryController.text.trim().isNotEmpty ||
@@ -438,6 +441,17 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
             ),
         ],
       ],
+      if (widget.onProxyModeChanged case final onProxyModeChanged?)
+        if (_playbackPolicySource case final source?) ...[
+          const SizedBox(height: 12),
+          PlaybackProxyModeControl(
+            key: const Key('bilibili-playback-proxy-mode'),
+            value: widget.proxyMode,
+            enabled: !_loading,
+            source: source,
+            onChanged: onProxyModeChanged,
+          ),
+        ],
       if (_showSettings) ...[
         const SizedBox(height: 10),
         _buildSettings(context),
@@ -516,7 +530,8 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
             selectionController: _selection,
             selectionScope:
                 '${_selectedBindId.isEmpty ? 'default' : _selectedBindId}:'
-                '${widget.target.name}',
+                '${widget.target.name}:${_browsePath.length}',
+            onSelectionChanged: () => setState(() {}),
             loading: _loading,
             hasMore: _preview?.hasMore ?? false,
             onLoadMore: () => _loadPreview(loadMore: true),
@@ -726,19 +741,17 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
                       _reloadPreviewWhenReady();
                     },
             ),
-            if (widget.onProxyModeChanged case final onProxyModeChanged?) ...[
-              const SizedBox(height: 8),
-              PlaybackProxyModeControl(
-                value: widget.proxyMode,
-                enabled: !_loading,
-                source: _preview?.source,
-                onChanged: onProxyModeChanged,
-              ),
-            ],
           ],
         ),
       ),
     );
+  }
+
+  provider_common.DiscoveredSource? get _playbackPolicySource {
+    if (widget.target == ProviderAddTarget.media) {
+      return _selection.entries.firstOrNull?.source ?? _preview?.source;
+    }
+    return _preview?.source;
   }
 
   void _selectMode(BilibiliPlaylistMode mode) {
@@ -1561,6 +1574,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
         _BilibiliBrowseLocation(intent: browse, title: item.title),
       );
       _preview = null;
+      _selection.clear();
     });
     _loadPreview();
   }
@@ -1569,6 +1583,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
     setState(() {
       _browsePath.removeLast();
       _preview = null;
+      _selection.clear();
     });
     _loadPreview();
   }

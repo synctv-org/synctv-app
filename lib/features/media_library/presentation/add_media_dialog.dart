@@ -2175,6 +2175,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               _biliInfo = null;
               _biliSelectedIndex = 0;
               _biliPreview = null;
+              _bilibiliSelection.clear();
             });
           },
         ),
@@ -2191,15 +2192,18 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                     _bilibiliShared = value;
                     _biliInfo = null;
                     _biliPreview = null;
+                    _bilibiliSelection.clear();
                   });
                 },
         ),
-        PlaybackProxyModeControl(
-          value: _bilibiliProxyMode,
-          enabled: !_isLoading,
-          source: selected?.source,
-          onChanged: (value) => setState(() => _bilibiliProxyMode = value),
-        ),
+        if (_bilibiliPlaybackPolicySource case final source?)
+          PlaybackProxyModeControl(
+            key: const Key('bilibili-playback-proxy-mode'),
+            value: _bilibiliProxyMode,
+            enabled: !_isLoading,
+            source: source,
+            onChanged: (value) => setState(() => _bilibiliProxyMode = value),
+          ),
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 14),
@@ -2216,6 +2220,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   onChanged: (_) => setState(() {
                     _biliInfo = null;
                     _biliPreview = null;
+                    _bilibiliSelection.clear();
                   }),
                 ),
               ),
@@ -2945,6 +2950,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             onPressed: () => setState(() {
               _biliSelectedIndex = index;
               _biliPreview = null;
+              _bilibiliSelection.clear();
             }),
           );
         },
@@ -3686,6 +3692,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     setState(() {
       _isLoading = true;
       _biliInfo = null;
+      _biliPreview = null;
+      _bilibiliSelection.clear();
     });
     try {
       final info = await providerGateway.parseBilibiliInfo(
@@ -3715,6 +3723,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     final index = _biliSelectedIndex.clamp(0, candidates.length - 1).toInt();
     return candidates[index];
   }
+
+  provider_common.DiscoveredSource? get _bilibiliPlaybackPolicySource =>
+      _bilibiliSelection.entries.firstOrNull?.source ??
+      _selectedBilibiliCandidate?.source;
 
   bool get _bilibiliPreviewHasMore {
     return _biliPreview?.hasMore ?? false;

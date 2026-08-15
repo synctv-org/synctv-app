@@ -341,6 +341,7 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
               ? null
               : () => setState(() {
                   _selection.selectAll(widget.items);
+                  widget.onSelectionChanged?.call();
                 }),
         ),
         AppIconButton(
@@ -349,7 +350,10 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
           icon: Icons.deselect_rounded,
           onPressed: widget.loading || _selection.isEmpty
               ? null
-              : () => setState(_selection.clear),
+              : () => setState(() {
+                  _selection.clear();
+                  widget.onSelectionChanged?.call();
+                }),
         ),
         AppIconButton(
           key: const Key('discovery-add-selected'),
