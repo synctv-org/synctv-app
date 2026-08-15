@@ -34,7 +34,6 @@ void main() {
       find.byType(EditableText).first,
       'media.example.test/one.mp4\nhttps://media.example.test/two.m3u8',
     );
-    await _selectProxyMode(tester, 'Proxy only');
     await _tapVisible(tester, find.byKey(const Key('direct-url-preview')));
     await tester.pumpAndSettle();
 
@@ -49,11 +48,12 @@ void main() {
           .map((intent) => intent.proxyMode)
           .every(
             (mode) =>
-                mode == source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+                mode == source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
           ),
       isTrue,
     );
     expect(find.text('Selected 2'), findsOneWidget);
+    await _selectProxyMode(tester, 'Proxy only');
 
     await tester.enterText(find.byType(EditableText).at(1), 'Custom name');
     await tester.pump();
@@ -313,6 +313,20 @@ class _PrepareGateway implements ProviderGateway {
   final List<String> streamInfoMediaIds = [];
   final List<String> bilibiliParseResources = [];
   final List<BilibiliPlaylistListIntent> bilibiliListIntents = [];
+
+  @override
+  Future<provider_common.PlaybackProxyPolicy> resolvePlaybackProxyPolicy(
+    provider_common.DiscoveredSource source,
+  ) async => provider_common.PlaybackProxyPolicy(
+    supportedModes: [
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_PREFER,
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_PREFER,
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
+    ],
+    currentMode: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+  );
 
   @override
   Future<provider_common.PreparedMediaSource> prepareDirectUrl(

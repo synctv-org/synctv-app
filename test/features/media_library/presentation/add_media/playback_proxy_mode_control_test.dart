@@ -24,6 +24,7 @@ void main() {
               width: 800,
               child: PlaybackProxyModeControl(
                 value: mode,
+                policy: _allModesPolicy(),
                 onChanged: (value) => setState(() => mode = value),
               ),
             ),
@@ -107,6 +108,7 @@ void main() {
               width: 360,
               child: PlaybackProxyModeControl(
                 value: mode,
+                policy: _allModesPolicy(),
                 onChanged: (value) => setState(() => mode = value),
               ),
             ),
@@ -125,7 +127,7 @@ void main() {
     expect(find.text('Keep direct playback routes only'), findsOneWidget);
   });
 
-  testWidgets('hides direct modes when the source cannot provide them', (
+  testWidgets('renders only modes returned by the provider policy', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -137,7 +139,7 @@ void main() {
             width: 800,
             child: PlaybackProxyModeControl(
               value: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
-              supportsDirectPlayback: false,
+              policy: _proxyModesPolicy(),
               onChanged: (_) {},
             ),
           ),
@@ -237,15 +239,12 @@ void main() {
     );
   });
 
-  testWidgets('shows a safe state when filtering removes every policy mode', (
+  testWidgets('shows a safe state for an empty provider policy', (
     tester,
   ) async {
     final policy = provider_common.PlaybackProxyPolicy(
-      supportedModes: [
-        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
-      ],
-      currentMode:
-          source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
+      supportedModes: const [],
+      currentMode: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
     );
     var changes = 0;
 
@@ -259,7 +258,6 @@ void main() {
             child: PlaybackProxyModeControl(
               value: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
               policy: policy,
-              supportsDirectPlayback: false,
               onChanged: (_) => changes++,
             ),
           ),
@@ -293,6 +291,7 @@ void main() {
           body: PlaybackProxyModeControl(
             value: mode,
             enabled: false,
+            policy: _allModesPolicy(),
             onChanged: (value) => mode = value,
           ),
         ),
@@ -304,3 +303,25 @@ void main() {
     expect(mode, source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO);
   });
 }
+
+provider_common.PlaybackProxyPolicy _allModesPolicy() =>
+    provider_common.PlaybackProxyPolicy(
+      supportedModes: [
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_PREFER,
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_PREFER,
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
+      ],
+      currentMode: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+    );
+
+provider_common.PlaybackProxyPolicy _proxyModesPolicy() =>
+    provider_common.PlaybackProxyPolicy(
+      supportedModes: [
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_PREFER,
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+      ],
+      currentMode: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+    );

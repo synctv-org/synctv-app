@@ -5,6 +5,7 @@ import 'package:synctv_app/core/presentation/notifications/app_notifications.dar
 import 'package:synctv_app/core/presentation/media_variant_label.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/discovery_browser.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
@@ -45,6 +46,7 @@ class EmbyPlaylistForm extends StatefulWidget {
     required this.onDraftChanged,
     this.leadingControls,
     this.proxyMode = source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+    this.onProxyModeChanged,
     this.onOpenBinding,
     this.loader,
   });
@@ -55,6 +57,7 @@ class EmbyPlaylistForm extends StatefulWidget {
   final ValueChanged<bool> onDraftChanged;
   final Widget? leadingControls;
   final source_enum.PlaybackProxyMode proxyMode;
+  final ValueChanged<source_enum.PlaybackProxyMode>? onProxyModeChanged;
   final Future<void> Function()? onOpenBinding;
   final EmbyDiscoveryLoader? loader;
 
@@ -91,6 +94,9 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
   int _page = 1;
   bool _hasMore = false;
   bool _loading = false;
+
+  provider_common.DiscoveredSource? get _playbackPolicySource =>
+      _selection.entries.firstOrNull?.source ?? _listSource;
 
   @override
   void initState() {
@@ -153,6 +159,17 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ?widget.leadingControls,
+        if (widget.onProxyModeChanged case final onProxyModeChanged?)
+          if (_playbackPolicySource case final source?) ...[
+            const SizedBox(height: 12),
+            PlaybackProxyModeControl(
+              key: const Key('emby-playback-proxy-mode'),
+              value: widget.proxyMode,
+              enabled: !_loading,
+              source: source,
+              onChanged: onProxyModeChanged,
+            ),
+          ],
         LayoutBuilder(
           builder: (context, constraints) {
             final mode = _buildModeSelector();
@@ -208,7 +225,10 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
               enabled: !_loading,
               label: context.l10n.search,
               prefixIcon: Icons.search_rounded,
-              onChanged: (_) => setState(() => _listSource = null),
+              onChanged: (_) => setState(() {
+                _listSource = null;
+                _selection.clear();
+              }),
               onSubmitted: (_) => _list(),
             );
             final name = AppTextField(
@@ -289,7 +309,9 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
                 ),
             ],
             selectionController: _selection,
-            selectionScope: _bind?.id,
+            selectionScope:
+                '${_bind?.id}:${_requestMode.name}:$_targetId:$_activeSearch',
+            onSelectionChanged: () => setState(() {}),
             loading: _loading,
             hasMore: _hasMore,
             onLoadMore: () => _load(loadMore: true),
@@ -385,6 +407,7 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
   void _resetDiscovery({bool keepLocation = false}) {
     _items = const [];
     _listSource = null;
+    _selection.clear();
     _page = 1;
     _hasMore = false;
     _activeSearch = '';
@@ -397,6 +420,7 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
       _page = 1;
       _items = const [];
       _listSource = null;
+      _selection.clear();
     });
     _load();
   }
@@ -405,7 +429,10 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
     final bind = _bind;
     if (bind == null || _loading) return;
     final nextPage = loadMore ? _page + 1 : 1;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      if (!loadMore) _selection.clear();
+    });
     try {
       final page =
           await (widget.loader?.call(

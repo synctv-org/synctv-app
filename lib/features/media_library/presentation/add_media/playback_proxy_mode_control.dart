@@ -15,7 +15,6 @@ class PlaybackProxyModeControl extends StatefulWidget {
     required this.value,
     required this.onChanged,
     this.enabled = true,
-    this.supportsDirectPlayback = true,
     this.policy,
     this.source,
   });
@@ -23,7 +22,6 @@ class PlaybackProxyModeControl extends StatefulWidget {
   final source_enum.PlaybackProxyMode value;
   final ValueChanged<source_enum.PlaybackProxyMode> onChanged;
   final bool enabled;
-  final bool supportsDirectPlayback;
   final provider_common.PlaybackProxyPolicy? policy;
   final provider_common.DiscoveredSource? source;
 
@@ -61,9 +59,7 @@ class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
     }
     final gateway = DependencyScope.maybeRead<ProviderGateway>(context);
     try {
-      _policyFuture = gateway
-          ?.resolvePlaybackProxyPolicy(widget.source!)
-          .onError((_, _) => provider_common.PlaybackProxyPolicy());
+      _policyFuture = gateway?.resolvePlaybackProxyPolicy(widget.source!);
     } on Object {
       _policyFuture = null;
     }
@@ -72,9 +68,7 @@ class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
   void _normalizeValue(provider_common.PlaybackProxyPolicy? policy) {
     _activePolicy = policy;
     if (policy == null || policy.supportedModes.isEmpty) return;
-    final supportedModes = policy.supportedModes.where(
-      (mode) => widget.supportsDirectPlayback || !_isDirectPlaybackMode(mode),
-    );
+    final supportedModes = policy.supportedModes;
     if (supportedModes.contains(widget.value)) {
       _pendingNormalizedValue = null;
       return;
@@ -100,49 +94,77 @@ class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
   @override
   Widget build(BuildContext context) {
     final policy = widget.policy;
-    if (policy != null || _policyFuture == null) {
+    if (policy != null) {
       _normalizeValue(policy);
       return _PlaybackProxyModeView(
         value: widget.value,
         onChanged: widget.onChanged,
         enabled: widget.enabled,
-        supportsDirectPlayback: widget.supportsDirectPlayback,
         policy: policy,
+      );
+    }
+    if (widget.source == null) return const SizedBox.shrink();
+    if (_policyFuture == null) {
+      return _PlaybackProxyPolicyUnavailable(
+        error: context.l10n.playbackProxyPolicyUnavailable(''),
       );
     }
     return FutureBuilder<provider_common.PlaybackProxyPolicy>(
       future: _policyFuture,
       builder: (context, snapshot) {
-        _normalizeValue(snapshot.data);
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const SizedBox(
+            height: 40,
+            child: Center(child: CircularProgressIndicator.adaptive()),
+          );
+        }
+        final resolvedPolicy = snapshot.data;
+        if (resolvedPolicy == null || resolvedPolicy.supportedModes.isEmpty) {
+          return _PlaybackProxyPolicyUnavailable(
+            error: context.l10n.playbackProxyPolicyUnavailable(
+              snapshot.error?.toString() ?? '',
+            ),
+          );
+        }
+        _normalizeValue(resolvedPolicy);
         return _PlaybackProxyModeView(
           value: widget.value,
           onChanged: widget.onChanged,
           enabled: widget.enabled,
-          supportsDirectPlayback: widget.supportsDirectPlayback,
-          policy: snapshot.data,
+          policy: resolvedPolicy,
         );
       },
     );
   }
 }
 
-bool _isDirectPlaybackMode(source_enum.PlaybackProxyMode mode) =>
-    mode == source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_PREFER ||
-    mode == source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY;
+class _PlaybackProxyPolicyUnavailable extends StatelessWidget {
+  const _PlaybackProxyPolicyUnavailable({required this.error});
+
+  final String error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      error,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+}
 
 class _PlaybackProxyModeView extends StatelessWidget {
   const _PlaybackProxyModeView({
     required this.value,
     required this.onChanged,
     required this.enabled,
-    required this.supportsDirectPlayback,
     required this.policy,
   });
 
   final source_enum.PlaybackProxyMode value;
   final ValueChanged<source_enum.PlaybackProxyMode> onChanged;
   final bool enabled;
-  final bool supportsDirectPlayback;
   final provider_common.PlaybackProxyPolicy? policy;
 
   static const _segmentedMinimumWidth = 640.0;
@@ -390,7 +412,7 @@ class _PlaybackProxyModeView extends StatelessWidget {
   };
 
   List<_PlaybackProxyModeOption> _options(BuildContext context) {
-    final supported = policy?.supportedModes.toSet();
+    final supported = policy!.supportedModes.toSet();
     final options = [
       _PlaybackProxyModeOption(
         value: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
@@ -407,21 +429,17 @@ class _PlaybackProxyModeView extends StatelessWidget {
         icon: Icons.lock_outline_rounded,
         label: context.l10n.playbackProxyOnly,
       ),
-      if (supportsDirectPlayback)
-        _PlaybackProxyModeOption(
-          value:
-              source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_PREFER,
-          icon: Icons.lan_rounded,
-          label: context.l10n.playbackProxyDirectPrefer,
-        ),
-      if (supportsDirectPlayback)
-        _PlaybackProxyModeOption(
-          value: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
-          icon: Icons.link_rounded,
-          label: context.l10n.playbackProxyDirectOnly,
-        ),
+      _PlaybackProxyModeOption(
+        value: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_PREFER,
+        icon: Icons.lan_rounded,
+        label: context.l10n.playbackProxyDirectPrefer,
+      ),
+      _PlaybackProxyModeOption(
+        value: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
+        icon: Icons.link_rounded,
+        label: context.l10n.playbackProxyDirectOnly,
+      ),
     ];
-    if (supported == null || supported.isEmpty) return options;
     return options
         .where((option) => supported.contains(option.value))
         .toList(growable: false);

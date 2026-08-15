@@ -85,6 +85,9 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   source_enum.PlaybackProxyMode _proxyMode =
       source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
 
+  provider_common.DiscoveredSource? get _playbackPolicySource =>
+      _selection.entries.firstOrNull?.source ?? _listSource;
+
   @override
   void initState() {
     super.initState();
@@ -176,7 +179,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
         const SizedBox(height: 12),
         PlaybackProxyModeControl(
           value: _proxyMode,
-          source: _listSource,
+          source: _playbackPolicySource,
           onChanged: (value) => setState(() => _proxyMode = value),
         ),
         const SizedBox(height: 12),
@@ -287,6 +290,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
     return DiscoveryBrowser(
       selectionController: _selection,
       selectionScope: _bind?.id,
+      onSelectionChanged: () => setState(() {}),
       items: [
         for (final item in _files)
           DiscoveryBrowserEntry(
@@ -341,6 +345,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
     return DiscoveryBrowser(
       selectionController: _selection,
       selectionScope: _bind?.id,
+      onSelectionChanged: () => setState(() {}),
       items: [
         for (final item in _mediaItems)
           DiscoveryBrowserEntry(
@@ -500,6 +505,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
     setState(() {
       _loading = true;
       _listSource = null;
+      _selection.clear();
     });
     try {
       switch (_mode) {

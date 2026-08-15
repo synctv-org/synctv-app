@@ -66,6 +66,9 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   source_enum.PlaybackProxyMode _proxyMode =
       source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
 
+  provider_common.DiscoveredSource? get _playbackPolicySource =>
+      _selection.entries.firstOrNull?.source ?? _listSource;
+
   @override
   void initState() {
     super.initState();
@@ -125,7 +128,7 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
         const SizedBox(height: 10),
         PlaybackProxyModeControl(
           value: _proxyMode,
-          source: _listSource,
+          source: _playbackPolicySource,
           onChanged: (value) => setState(() => _proxyMode = value),
         ),
         const SizedBox(height: 10),
@@ -155,6 +158,8 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
                     _mode = selection.single;
                     _page = 1;
                     _items = const [];
+                    _listSource = null;
+                    _selection.clear();
                     if (_mode != NextcloudBrowseMode.search) {
                       _searchController.clear();
                     }
@@ -265,7 +270,9 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
     final itemsByKey = {for (final item in _items) item.path: item};
     return DiscoveryBrowser(
       selectionController: _selection,
-      selectionScope: _bind?.id,
+      selectionScope:
+          '${_bind?.id}:${_mode.name}:$_path:${_searchController.text}',
+      onSelectionChanged: () => setState(() {}),
       items: [
         for (final item in _items)
           DiscoveryBrowserEntry(
@@ -404,6 +411,7 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
     setState(() {
       _loading = true;
       _listSource = null;
+      _selection.clear();
     });
     try {
       final loader = widget.fileLoader ?? _defaultLoader;

@@ -185,7 +185,7 @@ void main() {
     await tester.tap(
       find.byKey(const ValueKey('discovery-item-repo-1:/Movie.mkv')),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
     final proxyModeDropdown = find.byKey(
       const Key('playback-proxy-mode-dropdown'),
     );
@@ -207,6 +207,17 @@ void main() {
 
 class _AddGateway implements ProviderGateway {
   provider_common.DiscoveredSource? addedSource;
+
+  @override
+  Future<provider_common.PlaybackProxyPolicy> resolvePlaybackProxyPolicy(
+    provider_common.DiscoveredSource source,
+  ) async => provider_common.PlaybackProxyPolicy(
+    supportedModes: [
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+    ],
+    currentMode: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+  );
 
   @override
   Future<String> addDiscoveredSource(

@@ -59,6 +59,9 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
   source_enum.PlaybackProxyMode _proxyMode =
       source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
 
+  provider_common.DiscoveredSource? get _playbackPolicySource =>
+      _selection.entries.firstOrNull?.source ?? _listSource;
+
   @override
   void initState() {
     super.initState();
@@ -134,7 +137,7 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
         const SizedBox(height: 10),
         PlaybackProxyModeControl(
           value: _proxyMode,
-          source: _listSource,
+          source: _playbackPolicySource,
           onChanged: (value) => setState(() => _proxyMode = value),
         ),
         const SizedBox(height: 10),
@@ -225,7 +228,8 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
     final itemsByKey = {for (final item in _items) item.path: item};
     return DiscoveryBrowser(
       selectionController: _selection,
-      selectionScope: _bind?.id,
+      selectionScope: '${_bind?.id}:$_path',
+      onSelectionChanged: () => setState(() {}),
       items: [
         for (final item in _items)
           DiscoveryBrowserEntry(
@@ -272,7 +276,11 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
   Future<void> _load({int? page}) async {
     final bind = _bind;
     if (bind == null || _loading) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _selection.clear();
+      _listSource = null;
+    });
     try {
       final result = await (widget.pageLoader ?? _defaultLoader)(
         bind,

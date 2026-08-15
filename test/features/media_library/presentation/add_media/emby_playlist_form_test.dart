@@ -7,6 +7,8 @@ import 'package:synctv_app/features/providers/application/provider_gateway.dart'
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
@@ -238,10 +240,98 @@ void main() {
       source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
     );
   });
+
+  testWidgets('resolves policy from selected Emby media and writes its mode', (
+    tester,
+  ) async {
+    final gateway = _AddGateway();
+    var proxyMode = source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
+    final listSource = provider_common.DiscoveredSource(
+      playlist: source_config.PlaylistSourceConfig(
+        emby: source_config.EmbyPlaylistSourceConfig(
+          serverId: 'server',
+          recentlyAdded: source_config.EmbyRecentlyAddedPlaylistSource(),
+        ),
+      ),
+    );
+    final mediaSource = provider_common.DiscoveredSource(
+      media: source_config.MediaSourceConfig(
+        emby: source_config.EmbyMediaSourceConfig(
+          serverId: 'server',
+          itemId: 'movie-1',
+        ),
+      ),
+    );
+    await tester.binding.setSurfaceSize(const Size(900, 850));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => buildThemedTestApp(
+          context,
+          DependencyScope<ProviderGateway>(value: gateway, child: child!),
+        ),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: StatefulBuilder(
+          builder: (context, setState) => Scaffold(
+            body: EmbyPlaylistForm(
+              roomId: 'room',
+              parentId: 'root',
+              binds: const [bind],
+              proxyMode: proxyMode,
+              onProxyModeChanged: (value) => setState(() => proxyMode = value),
+              onDraftChanged: (_) {},
+              loader: (_, _, _, _, _, _, _) async => EmbyListPage(
+                serverId: 'server',
+                providerInstanceName: '',
+                items: [
+                  EmbyItemInfo(
+                    id: 'movie-1',
+                    name: 'Emby Movie',
+                    type: 'Movie',
+                    isDir: false,
+                    parentId: '',
+                    seriesName: '',
+                    seriesId: '',
+                    seasonName: '',
+                    thumbnail: '',
+                    source: mediaSource,
+                  ),
+                ],
+                total: 1,
+                source: listSource,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('emby-preview')));
+    await tester.pumpAndSettle();
+    expect(gateway.policySources.single.playlist.emby.serverId, 'server');
+
+    await tester.tap(find.text('Emby Movie'));
+    await tester.pumpAndSettle();
+    expect(gateway.policySources.last.media.emby.itemId, 'movie-1');
+
+    await _selectProxyOnly(tester);
+    expect(proxyMode, source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY);
+
+    await tester.tap(find.byKey(const Key('discovery-add-selected')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 4));
+    expect(
+      gateway.addedSource?.media.emby.proxyMode,
+      source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+    );
+  });
 }
 
 class _AddGateway implements ProviderGateway {
   provider_common.DiscoveredSource? addedSource;
+  final policySources = <provider_common.DiscoveredSource>[];
 
   @override
   Future<String> addDiscoveredSource(
@@ -255,6 +345,20 @@ class _AddGateway implements ProviderGateway {
   }
 
   @override
+  Future<provider_common.PlaybackProxyPolicy> resolvePlaybackProxyPolicy(
+    provider_common.DiscoveredSource source,
+  ) async {
+    policySources.add(source.deepCopy());
+    return provider_common.PlaybackProxyPolicy(
+      supportedModes: [
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+        source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
+      ],
+      currentMode: source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO,
+    );
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
 }
@@ -263,5 +367,17 @@ Future<void> _selectMode(WidgetTester tester, String label) async {
   await tester.tap(find.byKey(const Key('emby-collection-mode')));
   await tester.pumpAndSettle();
   await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _selectProxyOnly(WidgetTester tester) async {
+  final dropdown = find.byKey(const Key('playback-proxy-mode-dropdown'));
+  if (dropdown.evaluate().isNotEmpty) {
+    await tester.tap(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Proxy only').last);
+  } else {
+    await tester.tap(find.text('Proxy only'));
+  }
   await tester.pumpAndSettle();
 }

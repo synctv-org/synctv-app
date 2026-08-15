@@ -203,6 +203,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   final _embySearchController = TextEditingController();
   final _cloudreveSearchController = TextEditingController();
   final _sourceSearchController = TextEditingController();
+  final _directSelection = DiscoverySelectionController();
   final _bilibiliSelection = DiscoverySelectionController();
   final _alistSelection = DiscoverySelectionController();
   final _embySelection = DiscoverySelectionController();
@@ -1298,7 +1299,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           smartDashesType: SmartDashesType.disabled,
           smartQuotesType: SmartQuotesType.disabled,
           enabled: !_isLoading,
-          onChanged: (_) => setState(() => _directPreview = const []),
+          onChanged: (_) => setState(() {
+            _directPreview = const [];
+            _directSelection.clear();
+          }),
         ),
         const SizedBox(height: 10),
         LayoutBuilder(
@@ -1340,11 +1344,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         PlaybackProxyModeControl(
           value: _directProxyMode,
           enabled: !_isLoading,
-          source: _directPreview.firstOrNull?.source,
-          onChanged: (value) => setState(() {
-            _directProxyMode = value;
-            _directPreview = const [];
-          }),
+          source: _directPlaybackPolicySource,
+          onChanged: (value) => setState(() => _directProxyMode = value),
         ),
         if (_directPreview.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -1423,6 +1424,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                 setState(() {
                   _directPlaybackKind = selection.single;
                   _directPreview = const [];
+                  _directSelection.clear();
                 });
               },
       ),
@@ -2383,7 +2385,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         PlaybackProxyModeControl(
           value: _alistProxyMode,
           enabled: !_alistLoading && !_isLoading,
-          source: _alistListSource,
+          source: _alistPlaybackPolicySource,
           onChanged: (value) => setState(() => _alistProxyMode = value),
         ),
         const SizedBox(height: 12),
@@ -2440,14 +2442,15 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       roomId: widget.roomId,
       parentId: widget.parentId ?? '',
       binds: _embyBinds,
-      leadingControls: _buildEmbyModeControls(),
+      leadingControls: _buildEmbyModeControls(includeProxyMode: false),
       proxyMode: _embyProxyMode,
+      onProxyModeChanged: (value) => setState(() => _embyProxyMode = value),
       onDraftChanged: (value) => _embyPlaylistHasDraft = value,
       onOpenBinding: () => _openProviderBinding('emby'),
     );
   }
 
-  Widget _buildEmbyModeControls() {
+  Widget _buildEmbyModeControls({bool includeProxyMode = true}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -2470,13 +2473,15 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               : (values) => setState(() => _embyPlaylistMode = values.first),
         ),
         const SizedBox(height: 12),
-        PlaybackProxyModeControl(
-          value: _embyProxyMode,
-          enabled: !_isLoading,
-          source: _embyListSource,
-          onChanged: (value) => setState(() => _embyProxyMode = value),
-        ),
-        const SizedBox(height: 12),
+        if (includeProxyMode) ...[
+          PlaybackProxyModeControl(
+            value: _embyProxyMode,
+            enabled: !_isLoading,
+            source: _embyPlaybackPolicySource,
+            onChanged: (value) => setState(() => _embyProxyMode = value),
+          ),
+          const SizedBox(height: 12),
+        ],
       ],
     );
   }
@@ -2626,7 +2631,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         PlaybackProxyModeControl(
           value: _cloudreveProxyMode,
           enabled: !_cloudreveLoading && !_isLoading,
-          source: _cloudreveListSource,
+          source: _cloudrevePlaybackPolicySource,
           onChanged: (value) => setState(() => _cloudreveProxyMode = value),
         ),
         const SizedBox(height: 12),
@@ -3116,6 +3121,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _directHeaders.add(_DirectHeaderDraft());
       _directHeaderError = _currentDirectHeaderValidationMessage();
       _directPreview = const [];
+      _directSelection.clear();
     });
   }
 
@@ -3124,6 +3130,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     final header = _directHeaders.removeAt(index);
     header.dispose();
     _directPreview = const [];
+    _directSelection.clear();
     _updateDirectHeaderValidation();
   }
 
@@ -3133,6 +3140,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     setState(() {
       _directHeaderError = message;
       _directPreview = const [];
+      _directSelection.clear();
     });
   }
 
@@ -3276,7 +3284,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _directSelection.clear();
+    });
     try {
       final preview = await Future.wait([
         for (final url in urls)
@@ -3308,12 +3319,15 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             key: 'direct-$index',
             title: prepared.suggestedName,
             subtitle: _playbackKindLabel(prepared.playbackKind),
-            source: prepared.source,
+            source: prepared.source.withPlaybackProxyMode(_directProxyMode),
             isContainer: false,
             selectable: prepared.hasSource(),
             leading: const Icon(Icons.link_rounded),
           ),
       ],
+      selectionController: _directSelection,
+      selectionScope: _urlController.text,
+      onSelectionChanged: () => setState(() {}),
       loading: _isLoading,
       initiallySelectAll: true,
       onAddSelected: _addPreparedDirectLinks,
@@ -3728,6 +3742,19 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _bilibiliSelection.entries.firstOrNull?.source ??
       _selectedBilibiliCandidate?.source;
 
+  provider_common.DiscoveredSource? get _directPlaybackPolicySource =>
+      _directSelection.entries.firstOrNull?.source ??
+      _directPreview.firstOrNull?.source;
+
+  provider_common.DiscoveredSource? get _alistPlaybackPolicySource =>
+      _alistSelection.entries.firstOrNull?.source ?? _alistListSource;
+
+  provider_common.DiscoveredSource? get _embyPlaybackPolicySource =>
+      _embySelection.entries.firstOrNull?.source ?? _embyListSource;
+
+  provider_common.DiscoveredSource? get _cloudrevePlaybackPolicySource =>
+      _cloudreveSelection.entries.firstOrNull?.source ?? _cloudreveListSource;
+
   bool get _bilibiliPreviewHasMore {
     return _biliPreview?.hasMore ?? false;
   }
@@ -3844,6 +3871,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     setState(() {
       _alistLoading = true;
       if (!loadMore) {
+        _alistSelection.clear();
         _alistPath = path;
         _alistFiles = [];
         _alistListSource = null;
@@ -3896,6 +3924,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     setState(() {
       _cloudreveLoading = true;
       if (!loadMore) {
+        _cloudreveSelection.clear();
         _cloudrevePath = path;
         _cloudreveFiles = [];
         _cloudreveListSource = null;
@@ -4075,6 +4104,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     setState(() {
       _embyLoading = true;
       if (!loadMore) {
+        _embySelection.clear();
         _embyPath = path;
         _embyFiles = [];
         _embyListSource = null;
