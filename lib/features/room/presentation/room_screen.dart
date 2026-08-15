@@ -34,6 +34,7 @@ import 'package:synctv_app/features/room/application/realtime_event_log_preferen
 import 'package:synctv_app/core/network/resource_url_resolver.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
 import 'package:synctv_app/features/room/application/room_chat_gateway.dart';
+import 'package:synctv_app/features/room/application/chat_read_state_updater.dart';
 import 'package:synctv_app/features/room/application/room_playback_gateway.dart';
 import 'package:synctv_app/features/room/application/room_playback_controller.dart';
 import 'package:synctv_app/features/room/application/playback_mode_preferences_controller.dart';
@@ -290,6 +291,7 @@ class _RoomScreenState extends State<RoomScreen>
   static const _endedLiveStreamDrainTimeout = Duration(seconds: 120);
 
   late final RoomChatGateway _chatGateway;
+  late final ChatReadStateUpdater _chatReadStateUpdater;
   late final RoomPlaybackGateway _playbackGateway;
   late final PlaybackModePreferencesController _playbackModePreferences;
   late final RoomSessionGateway _sessionGateway;
@@ -560,6 +562,10 @@ class _RoomScreenState extends State<RoomScreen>
     super.initState();
     _mediaSearchController = TextEditingController();
     _chatGateway = DependencyScope.read<RoomChatGateway>(context);
+    _chatReadStateUpdater = ChatReadStateUpdater(
+      markRead: (messageId) =>
+          _chatGateway.markRead(widget.room.roomId, messageId),
+    );
     _playbackGateway = DependencyScope.read<RoomPlaybackGateway>(context);
     _playbackController = RoomPlaybackController();
     _playbackModePreferences =
@@ -1110,6 +1116,9 @@ class _RoomScreenState extends State<RoomScreen>
           .where((entry) => !entry.isDeleted)
           .toList()
           .reversed;
+      if (_canViewChatHistory && page.messages.isNotEmpty) {
+        _chatReadStateUpdater.markVisible(page.messages.first.id);
+      }
       if (mounted) {
         setState(() {
           _messages.prependUnique(history, maxEntries: 100);
@@ -1474,6 +1483,9 @@ class _RoomScreenState extends State<RoomScreen>
         });
         if (shouldAutoScroll) {
           _scrollToBottom();
+          if (message.isChatCreated && _canViewChatHistory) {
+            _chatReadStateUpdater.markVisible(chatEntry.id);
+          }
         } else if (!_showChatScrollToBottom) {
           setState(() => _showChatScrollToBottom = true);
         }
@@ -3306,6 +3318,7 @@ class _RoomScreenState extends State<RoomScreen>
   @override
   void dispose() {
     _isDisposing = true;
+    _chatReadStateUpdater.dispose();
     _realtimeLogPreferences.maxEntries.removeListener(
       _handleRealtimeLogMaxEntriesChanged,
     );
@@ -3377,6 +3390,9 @@ class _RoomScreenState extends State<RoomScreen>
     final show = !_isChatNearBottom();
     if (show != _showChatScrollToBottom && mounted) {
       setState(() => _showChatScrollToBottom = show);
+    }
+    if (!show && _canViewChatHistory && _messages.isNotEmpty) {
+      _chatReadStateUpdater.markVisible(_messages.last.id);
     }
   }
 
