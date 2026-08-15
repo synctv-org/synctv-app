@@ -19,6 +19,38 @@ final class _TestResourceUrlResolver implements ResourceUrlResolver {
 }
 
 void main() {
+  group('isServerApiResourceUrl', () {
+    test('accepts resources below the configured API path', () {
+      expect(
+        isServerApiResourceUrl(
+          'https://synctv.example/synctv/api/playback-providers/bilibili/live-danmaku/media',
+          'https://synctv.example/synctv',
+        ),
+        isTrue,
+      );
+    });
+
+    test('rejects a cohosted application outside the deployment path', () {
+      expect(
+        isServerApiResourceUrl(
+          'https://synctv.example/other-app/danmaku',
+          'https://synctv.example/synctv',
+        ),
+        isFalse,
+      );
+    });
+
+    test('rejects resources outside the SyncTV API namespace', () {
+      expect(
+        isServerApiResourceUrl(
+          'https://synctv.example/synctv/provider-origin/danmaku',
+          'https://synctv.example/synctv',
+        ),
+        isFalse,
+      );
+    });
+  });
+
   test('adds session credentials to server playback resources', () {
     final headers = authenticatedServerResourceHeaders(
       const _TestResourceUrlResolver(serverResource: true),

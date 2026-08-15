@@ -10,6 +10,8 @@ abstract interface class RoomSessionGateway {
 
   Stream<void> get authErrors;
 
+  Future<bool> refreshSessionAfterUnauthorized();
+
   Future<void> syncServerTime({bool refresh = false});
 
   Future<Uri> createWebSocketUri(String roomId);

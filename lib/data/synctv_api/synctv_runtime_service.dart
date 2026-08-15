@@ -137,6 +137,14 @@ class SyncTvRuntimeService {
     };
   }
 
+  Future<bool> refreshSessionAfterUnauthorized() async {
+    return switch (session.identity) {
+      AccountSessionIdentity() => await _refreshAccountSession(),
+      GuestSessionIdentity() ||
+      AnonymousSessionIdentity() => _expireCurrentSession(),
+    };
+  }
+
   Future<bool> _refreshAccountSession() async {
     final refreshed = await _api.refreshAccessTokenIfPossible();
     if (refreshed) return true;

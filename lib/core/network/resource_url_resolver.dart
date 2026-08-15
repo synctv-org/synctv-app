@@ -6,6 +6,24 @@ abstract interface class ResourceUrlResolver {
   Map<String, String> get authenticatedHeaders;
 }
 
+/// Returns whether [resourceUrl] belongs to the configured SyncTV API.
+bool isServerApiResourceUrl(String resourceUrl, String serverBaseUrl) {
+  final resource = Uri.tryParse(resourceUrl);
+  final server = Uri.tryParse(serverBaseUrl);
+  if (resource == null || server == null) return false;
+  if (resource.scheme != server.scheme ||
+      resource.host != server.host ||
+      resource.port != server.port) {
+    return false;
+  }
+
+  final basePath = server.path.endsWith('/')
+      ? server.path.substring(0, server.path.length - 1)
+      : server.path;
+  final apiPath = '$basePath/api';
+  return resource.path == apiPath || resource.path.startsWith('$apiPath/');
+}
+
 /// Add the current session credentials only to resources served by SyncTV.
 Map<String, String> authenticatedServerResourceHeaders(
   ResourceUrlResolver resolver,

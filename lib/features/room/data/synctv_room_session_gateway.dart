@@ -19,6 +19,10 @@ final class SyncTvRoomSessionGateway implements RoomSessionGateway {
   Stream<void> get authErrors => SyncTvService.onAuthError;
 
   @override
+  Future<bool> refreshSessionAfterUnauthorized() =>
+      SyncTvService.refreshSessionAfterUnauthorized();
+
+  @override
   Future<void> syncServerTime({bool refresh = false}) =>
       SyncTvService.syncServerTime(refresh: refresh);
 

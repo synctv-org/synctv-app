@@ -12,6 +12,7 @@ final class _ControlledDanmakuSource implements DanmakuSource {
   final documents = <Uri, Completer<String?>>{};
   final documentHeaders = <Uri, Map<String, String>>{};
   final eventStreams = <Uri>[];
+  final eventHeaders = <Map<String, String>>[];
 
   @override
   Future<String?> loadDocument(
@@ -28,6 +29,7 @@ final class _ControlledDanmakuSource implements DanmakuSource {
     Map<String, String> headers = const {},
   }) {
     eventStreams.add(uri);
+    eventHeaders.add(Map<String, String>.from(headers));
     return const Stream.empty();
   }
 }
@@ -222,6 +224,32 @@ void main() {
     expect(localizedCalls, 0);
     expect(source.eventStreams, [
       Uri.parse('https://origin.example/live-danmaku'),
+    ]);
+  });
+
+  test('updated stream credentials reconnect the SSE source', () async {
+    final source = _ControlledDanmakuSource();
+    final controller = DanmakuController(source);
+    addTearDown(controller.dispose);
+
+    const url =
+        'https://synctv.example/api/playback-providers/bilibili/live-danmaku/media';
+    controller.updateConfig(
+      streamDanmakuUrl: url,
+      streamDanmakuHeaders: const {'authorization': 'Bearer expired'},
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    controller.updateConfig(
+      streamDanmakuUrl: url,
+      streamDanmakuHeaders: const {'authorization': 'Bearer refreshed'},
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(source.eventStreams, [Uri.parse(url), Uri.parse(url)]);
+    expect(source.eventHeaders, const [
+      {'authorization': 'Bearer expired'},
+      {'authorization': 'Bearer refreshed'},
     ]);
   });
 

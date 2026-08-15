@@ -112,6 +112,9 @@ class SyncTvService {
 
   static Future<String?> getToken() => _runtime.getToken();
 
+  static Future<bool> refreshSessionAfterUnauthorized() =>
+      _runtime.refreshSessionAfterUnauthorized();
+
   static Future<Uri> createRoomWebSocketUri(String roomId) {
     return _runtime.createRoomWebSocketUri(roomId);
   }

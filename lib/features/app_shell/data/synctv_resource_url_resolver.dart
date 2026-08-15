@@ -9,15 +9,8 @@ final class SyncTvResourceUrlResolver implements ResourceUrlResolver {
       SyncTvService.resolveResourceUrl(resourceUrl);
 
   @override
-  bool isServerResource(String resourceUrl) {
-    final resource = Uri.tryParse(resolve(resourceUrl));
-    final server = Uri.tryParse(SyncTvService.baseUrl);
-    return resource != null &&
-        server != null &&
-        resource.scheme == server.scheme &&
-        resource.host == server.host &&
-        resource.port == server.port;
-  }
+  bool isServerResource(String resourceUrl) =>
+      isServerApiResourceUrl(resolve(resourceUrl), SyncTvService.baseUrl);
 
   @override
   Map<String, String> get authenticatedHeaders =>
