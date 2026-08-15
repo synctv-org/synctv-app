@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
@@ -11,9 +12,52 @@ final class HttpDanmakuSource implements DanmakuSource {
     Uri uri, {
     Map<String, String> headers = const {},
   }) async {
-    final response = await http.get(uri, headers: headers);
+    final requestHeaders = <String, String>{
+      ...headers,
+      HttpHeaders.acceptEncodingHeader: 'identity',
+    };
+    final response = await http.get(uri, headers: requestHeaders);
     if (response.statusCode != 200) return null;
-    return utf8.decode(response.bodyBytes, allowMalformed: true);
+    return utf8.decode(
+      _decodeDocumentBytes(response),
+      allowMalformed: true,
+    );
+  }
+
+  List<int> _decodeDocumentBytes(http.Response response) {
+    final bytes = response.bodyBytes;
+    return switch (response.headers[HttpHeaders.contentEncodingHeader]
+        ?.trim()
+        .toLowerCase()) {
+      'deflate' => _decodeDeflate(bytes),
+      'gzip' => gzip.decode(bytes),
+      _ => _decodeUnlabelledCompressedBytes(bytes),
+    };
+  }
+
+  List<int> _decodeDeflate(List<int> bytes) {
+    try {
+      return ZLibDecoder().convert(bytes);
+    } on FormatException {
+      return ZLibDecoder(raw: true).convert(bytes);
+    }
+  }
+
+  List<int> _decodeUnlabelledCompressedBytes(List<int> bytes) {
+    try {
+      utf8.decode(bytes);
+      return bytes;
+    } on FormatException {
+      try {
+        return _decodeDeflate(bytes);
+      } on FormatException {
+        try {
+          return gzip.decode(bytes);
+        } on FormatException {
+          return bytes;
+        }
+      }
+    }
   }
 
   @override

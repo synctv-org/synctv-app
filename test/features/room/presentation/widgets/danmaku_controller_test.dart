@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -204,6 +205,41 @@ void main() {
       '<i><d p="1,1,25,16777215">origin</d></i>',
     );
     await _waitFor(() => controller.items.singleOrNull?.text == 'origin');
+  });
+
+  test('loads zlib and raw-deflate static danmaku documents', () async {
+    const document = '<i><d p="1,1,25,16777215">compressed</d></i>';
+    final compressedDocuments = <String, List<int>>{
+      '/zlib': ZLibEncoder().convert(utf8.encode(document)),
+      '/raw-deflate': ZLibEncoder(raw: true).convert(utf8.encode(document)),
+      '/unlabelled-raw-deflate': ZLibEncoder(
+        raw: true,
+      ).convert(utf8.encode(document)),
+    };
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    final serverSubscription = server.listen((request) async {
+      request.response.headers.set(
+        HttpHeaders.contentTypeHeader,
+        'text/xml; charset=utf-8',
+      );
+      if (request.uri.path != '/unlabelled-raw-deflate') {
+        request.response.headers.set(HttpHeaders.contentEncodingHeader, 'deflate');
+      }
+      request.response.add(compressedDocuments[request.uri.path]!);
+      await request.response.close();
+    });
+    addTearDown(() async {
+      await serverSubscription.cancel();
+      await server.close(force: true);
+    });
+
+    for (final path in compressedDocuments.keys) {
+      final result = await const HttpDanmakuSource().loadDocument(
+        Uri.parse('http://127.0.0.1:${server.port}$path'),
+      );
+
+      expect(result, document);
+    }
   });
 
   test('real-time danmaku bypasses static P2P localization', () async {
