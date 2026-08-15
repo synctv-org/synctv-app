@@ -428,6 +428,9 @@ class _PlaybackOptionsControlState extends State<PlaybackOptionsControl> {
       'proxied' ||
       'proxy_direct' ||
       'direct_proxy' => context.l10n.proxy,
+      'h264' => 'H.264',
+      'av1' => 'AV1',
+      'hevc' => 'HEVC',
       'dash' => 'DASH',
       'hls' => 'HLS',
       'mp4' => 'MP4',

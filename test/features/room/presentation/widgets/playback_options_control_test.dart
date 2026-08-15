@@ -352,6 +352,56 @@ void main() {
     expect(find.text('Original · HLS'), findsNWidgets(2));
   });
 
+  testWidgets('labels codec-specific Bilibili routes', (tester) async {
+    const modes = [
+      SyncTvPlaybackModeOption(
+        key: 'h264',
+        urls: [
+          SyncTvPlaybackUrlOption(name: 'H.264', url: 'https://a/h264.mpd'),
+        ],
+      ),
+      SyncTvPlaybackModeOption(
+        key: 'av1',
+        urls: [SyncTvPlaybackUrlOption(name: 'AV1', url: 'https://a/av1.mpd')],
+      ),
+      SyncTvPlaybackModeOption(
+        key: 'hevc',
+        urls: [
+          SyncTvPlaybackUrlOption(name: 'HEVC', url: 'https://a/hevc.mpd'),
+        ],
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: PlaybackOptionsControl(
+              modes: modes,
+              selectedModeKey: 'h264',
+              selectedMediaIndex: 0,
+              adaptiveTracks: const AdaptiveVideoTrackSnapshot(),
+              tooltip: 'Playback route',
+              onMediaSelected: (_, _) async {},
+              onAdaptiveTrackSelected: (_) async {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('playback_route_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('playback_route_selector')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('H.264'), findsWidgets);
+    expect(find.text('AV1'), findsWidgets);
+    expect(find.text('HEVC'), findsWidgets);
+  });
+
   testWidgets('keeps the selected resource when switching proxy routes', (
     tester,
   ) async {
