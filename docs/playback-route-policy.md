@@ -12,6 +12,10 @@ returned `supported_modes`.
 - Generate playback for the selected mode. Route generation happens before the
   playback result is built, so selected routes are the only upstream resources
   used.
+- Name each generated mode for its provider-owned media variant and delivery
+  route. For example, Bilibili can expose `h264`, `hevc`, `h264_proxy`, and
+  `hevc_proxy`; a codec mode contains one MPD whose adaptive tracks provide
+  its available qualities.
 - Keep credential-bearing headers, cookies, authorization values, signed URLs,
   and provider sessions behind a proxy by default. Public resources may use a
   direct default.
