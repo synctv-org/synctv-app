@@ -69,8 +69,11 @@ final class HttpDanmakuSource implements DanmakuSource {
         ..addAll(headers)
         ..['Accept'] = 'text/event-stream';
       final response = await client.send(request);
-      if (response.statusCode == 401 || response.statusCode == 403) {
+      if (response.statusCode == 401) {
         throw const DanmakuAccessExpiredException();
+      }
+      if (response.statusCode == 403) {
+        throw const DanmakuAccessDeniedException();
       }
       if (response.statusCode != 200) {
         throw HttpException(response.statusCode);

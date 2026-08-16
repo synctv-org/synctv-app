@@ -418,6 +418,40 @@ void main() {
 
     expect(requestCount, 1);
   });
+
+  test(
+    'a forbidden SSE stream stops without refreshing or reconnecting',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      var requestCount = 0;
+      var accessRefreshCount = 0;
+      final serverSubscription = server.listen((request) async {
+        requestCount++;
+        request.response.statusCode = HttpStatus.forbidden;
+        await request.response.close();
+      });
+      final controller = DanmakuController(
+        const HttpDanmakuSource(),
+        onStreamAccessExpired: () {
+          accessRefreshCount++;
+        },
+      );
+      addTearDown(() async {
+        controller.dispose();
+        await serverSubscription.cancel();
+        await server.close(force: true);
+      });
+
+      controller.updateConfig(
+        streamDanmakuUrl: 'http://127.0.0.1:${server.port}/forbidden',
+      );
+      await _waitFor(() => requestCount == 1);
+      await Future<void>.delayed(const Duration(milliseconds: 3500));
+
+      expect(accessRefreshCount, 0);
+      expect(requestCount, 1);
+    },
+  );
 }
 
 Future<void> _waitFor(bool Function() predicate) async {

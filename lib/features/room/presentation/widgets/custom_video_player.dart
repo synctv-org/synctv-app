@@ -290,6 +290,10 @@ class DanmakuController extends ChangeNotifier {
                 onStreamAccessExpired?.call();
                 return;
               }
+              if (error is DanmakuAccessDeniedException) {
+                debugPrint('SSE access denied');
+                return;
+              }
               debugPrint('SSE Error: $error');
               _scheduleReconnect(generation);
             },

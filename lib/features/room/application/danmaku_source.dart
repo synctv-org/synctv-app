@@ -13,3 +13,7 @@ abstract interface class DanmakuSource {
 final class DanmakuAccessExpiredException implements Exception {
   const DanmakuAccessExpiredException();
 }
+
+final class DanmakuAccessDeniedException implements Exception {
+  const DanmakuAccessDeniedException();
+}
