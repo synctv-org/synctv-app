@@ -798,16 +798,16 @@ segment.ts?token=secret
     expect(engine.stats.value.httpBytes, 0);
   });
 
-  test('unavailable origin and peer have a bounded recovery window', () async {
-    final unavailableOrigin = await HttpServer.bind(
+  test('failing origin and peer have a bounded recovery window', () async {
+    final unavailableOrigin = await ServerSocket.bind(
       InternetAddress.loopbackIPv4,
       0,
     );
+    unavailableOrigin.listen((socket) => socket.destroy());
     final upstream = Uri.parse(
       'http://${unavailableOrigin.address.address}:'
       '${unavailableOrigin.port}/subtitle.vtt',
     );
-    await unavailableOrigin.close(force: true);
     final engine = P2pMediaEngine(
       originHeaderPeerRetryDelay: const Duration(milliseconds: 10),
       originHeaderTimeout: const Duration(milliseconds: 40),
@@ -815,7 +815,10 @@ segment.ts?token=secret
       peerMissingRetryDelay: const Duration(milliseconds: 10),
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
-    addTearDown(engine.dispose);
+    addTearDown(() async {
+      await engine.dispose();
+      await unavailableOrigin.close();
+    });
     final local = await engine.localizeStatic(
       upstream: upstream,
       headers: const {},
@@ -2587,15 +2590,15 @@ segment.ts?token=secret
   test(
     'offline origin waits for a cold peer and serves progressive HEAD',
     () async {
-      final unavailableOrigin = await HttpServer.bind(
+      final unavailableOrigin = await ServerSocket.bind(
         InternetAddress.loopbackIPv4,
         0,
       );
+      unavailableOrigin.listen((socket) => socket.destroy());
       final upstream = Uri.parse(
         'http://${unavailableOrigin.address.address}:'
         '${unavailableOrigin.port}/video.mp4',
       );
-      await unavailableOrigin.close(force: true);
 
       final body = Uint8List.fromList([4, 3, 2, 1]);
       final lengthBytes = Uint8List(8);
@@ -2614,7 +2617,10 @@ segment.ts?token=secret
           return null;
         },
       );
-      addTearDown(engine.dispose);
+      addTearDown(() async {
+        await engine.dispose();
+        await unavailableOrigin.close();
+      });
       final local = await engine.localize(
         upstream: upstream,
         headers: const {},

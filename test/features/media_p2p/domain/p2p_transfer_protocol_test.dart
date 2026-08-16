@@ -41,12 +41,12 @@ void main() {
     final bytes = Uint8List.fromList([1, 2]);
     final transfer = P2pIncomingTransfer()..begin(bytes.length);
     final result = transfer.wait(
-      idleTimeout: const Duration(milliseconds: 30),
+      idleTimeout: const Duration(milliseconds: 200),
       completionBudget: const Duration(seconds: 1),
     );
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await Future<void>.delayed(const Duration(milliseconds: 125));
     transfer.add(Uint8List.fromList([1]), 16);
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await Future<void>.delayed(const Duration(milliseconds: 125));
     transfer.add(Uint8List.fromList([2]), 16);
     transfer.complete();
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:video_player/video_player.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/data/http_danmaku_source.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
@@ -33,6 +34,22 @@ final class _ControlledDanmakuSource implements DanmakuSource {
     eventHeaders.add(Map<String, String>.from(headers));
     return const Stream.empty();
   }
+}
+
+final class _EventDanmakuSource implements DanmakuSource {
+  final events = StreamController<String>();
+
+  @override
+  Future<String?> loadDocument(
+    Uri uri, {
+    Map<String, String> headers = const {},
+  }) async => null;
+
+  @override
+  Stream<String> openEventStream(
+    Uri uri, {
+    Map<String, String> headers = const {},
+  }) => events.stream;
 }
 
 void main() {
@@ -223,7 +240,10 @@ void main() {
         'text/xml; charset=utf-8',
       );
       if (request.uri.path != '/unlabelled-raw-deflate') {
-        request.response.headers.set(HttpHeaders.contentEncodingHeader, 'deflate');
+        request.response.headers.set(
+          HttpHeaders.contentEncodingHeader,
+          'deflate',
+        );
       }
       request.response.add(compressedDocuments[request.uri.path]!);
       await request.response.close();
@@ -261,6 +281,37 @@ void main() {
     expect(source.eventStreams, [
       Uri.parse('https://origin.example/live-danmaku'),
     ]);
+  });
+
+  test('Bilibili live SSE message events become danmaku', () async {
+    final source = _EventDanmakuSource();
+    final controller = DanmakuController(source);
+    final videoController =
+        VideoPlayerController.networkUrl(
+            Uri.parse('https://example.com/live.m3u8'),
+          )
+          ..value = const VideoPlayerValue(
+            duration: Duration.zero,
+            isInitialized: true,
+            position: Duration(seconds: 12),
+          );
+    addTearDown(() async {
+      controller.dispose();
+      await source.events.close();
+      await videoController.dispose();
+    });
+
+    controller.updateConfig(
+      streamDanmakuUrl: 'https://example.com/bilibili-live-danmaku',
+      controller: videoController,
+    );
+    await Future<void>.delayed(Duration.zero);
+    source.events.add('{"message":"Bilibili chat"}');
+
+    await _waitFor(
+      () => controller.items.singleOrNull?.text == 'Bilibili chat',
+    );
+    expect(controller.items.single.startTime, const Duration(seconds: 12));
   });
 
   test('updated stream credentials reconnect the SSE source', () async {

@@ -327,7 +327,9 @@ class DanmakuController extends ChangeNotifier {
       if (data is String) {
         text = data;
       } else if (data is Map) {
-        text = data['text'] ?? '';
+        // Bilibili live events expose their chat body as `message`, while
+        // the other live providers use `text`.
+        text = (data['text'] ?? data['message'] ?? '').toString();
         if (data['color'] != null) {
           try {
             String c = data['color'].toString();
