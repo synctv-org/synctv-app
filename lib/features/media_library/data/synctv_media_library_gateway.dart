@@ -99,11 +99,13 @@ final class SyncTvMediaLibraryGateway implements MediaLibraryGateway {
     String playlistId, {
     required String name,
     String? description,
+    source.PlaylistSourceConfig? sourceConfig,
   }) => SyncTvService.updatePlaylist(
     roomId,
     playlistId,
     name: name,
     description: description,
+    sourceConfig: sourceConfig,
   );
   @override
   Future<RoomPlaylistItem> updatePlaylistCover(

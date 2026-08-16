@@ -747,7 +747,6 @@ class Metadata extends $pb.GeneratedMessage {
     $fixnum.Int64? viewCount,
     $core.String? publishedAt,
     $core.Iterable<Chapter>? chapters,
-    $core.String? storyboardUrl,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -761,7 +760,6 @@ class Metadata extends $pb.GeneratedMessage {
     if (viewCount != null) result.viewCount = viewCount;
     if (publishedAt != null) result.publishedAt = publishedAt;
     if (chapters != null) result.chapters.addAll(chapters);
-    if (storyboardUrl != null) result.storyboardUrl = storyboardUrl;
     return result;
   }
 
@@ -795,7 +793,6 @@ class Metadata extends $pb.GeneratedMessage {
     ..aOS(10, _omitFieldNames ? '' : 'publishedAt')
     ..pPM<Chapter>(11, _omitFieldNames ? '' : 'chapters',
         subBuilder: Chapter.create)
-    ..aOS(12, _omitFieldNames ? '' : 'storyboardUrl')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -908,21 +905,11 @@ class Metadata extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(11)
   $pb.PbList<Chapter> get chapters => $_getList(10);
-
-  @$pb.TagNumber(12)
-  $core.String get storyboardUrl => $_getSZ(11);
-  @$pb.TagNumber(12)
-  set storyboardUrl($core.String value) => $_setString(11, value);
-  @$pb.TagNumber(12)
-  $core.bool hasStoryboardUrl() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearStoryboardUrl() => $_clearField(12);
 }
 
 class Quality extends $pb.GeneratedMessage {
   factory Quality({
     $core.String? name,
-    $core.String? url,
     $fixnum.Int64? bandwidth,
     $core.int? width,
     $core.int? height,
@@ -931,7 +918,6 @@ class Quality extends $pb.GeneratedMessage {
   }) {
     final result = create();
     if (name != null) result.name = name;
-    if (url != null) result.url = url;
     if (bandwidth != null) result.bandwidth = bandwidth;
     if (width != null) result.width = width;
     if (height != null) result.height = height;
@@ -955,14 +941,13 @@ class Quality extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.provider.twitch'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..aOS(2, _omitFieldNames ? '' : 'url')
     ..a<$fixnum.Int64>(
-        3, _omitFieldNames ? '' : 'bandwidth', $pb.PbFieldType.OU6,
+        2, _omitFieldNames ? '' : 'bandwidth', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aI(4, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
-    ..aI(5, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
-    ..aOS(6, _omitFieldNames ? '' : 'frameRate')
-    ..aOS(7, _omitFieldNames ? '' : 'codecs')
+    ..aI(3, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(5, _omitFieldNames ? '' : 'frameRate')
+    ..aOS(6, _omitFieldNames ? '' : 'codecs')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -993,58 +978,49 @@ class Quality extends $pb.GeneratedMessage {
   void clearName() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get url => $_getSZ(1);
+  $fixnum.Int64 get bandwidth => $_getI64(1);
   @$pb.TagNumber(2)
-  set url($core.String value) => $_setString(1, value);
+  set bandwidth($fixnum.Int64 value) => $_setInt64(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasUrl() => $_has(1);
+  $core.bool hasBandwidth() => $_has(1);
   @$pb.TagNumber(2)
-  void clearUrl() => $_clearField(2);
+  void clearBandwidth() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $fixnum.Int64 get bandwidth => $_getI64(2);
+  $core.int get width => $_getIZ(2);
   @$pb.TagNumber(3)
-  set bandwidth($fixnum.Int64 value) => $_setInt64(2, value);
+  set width($core.int value) => $_setUnsignedInt32(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasBandwidth() => $_has(2);
+  $core.bool hasWidth() => $_has(2);
   @$pb.TagNumber(3)
-  void clearBandwidth() => $_clearField(3);
+  void clearWidth() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.int get width => $_getIZ(3);
+  $core.int get height => $_getIZ(3);
   @$pb.TagNumber(4)
-  set width($core.int value) => $_setUnsignedInt32(3, value);
+  set height($core.int value) => $_setUnsignedInt32(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasWidth() => $_has(3);
+  $core.bool hasHeight() => $_has(3);
   @$pb.TagNumber(4)
-  void clearWidth() => $_clearField(4);
+  void clearHeight() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.int get height => $_getIZ(4);
+  $core.String get frameRate => $_getSZ(4);
   @$pb.TagNumber(5)
-  set height($core.int value) => $_setUnsignedInt32(4, value);
+  set frameRate($core.String value) => $_setString(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasHeight() => $_has(4);
+  $core.bool hasFrameRate() => $_has(4);
   @$pb.TagNumber(5)
-  void clearHeight() => $_clearField(5);
+  void clearFrameRate() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.String get frameRate => $_getSZ(5);
+  $core.String get codecs => $_getSZ(5);
   @$pb.TagNumber(6)
-  set frameRate($core.String value) => $_setString(5, value);
+  set codecs($core.String value) => $_setString(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasFrameRate() => $_has(5);
+  $core.bool hasCodecs() => $_has(5);
   @$pb.TagNumber(6)
-  void clearFrameRate() => $_clearField(6);
-
-  @$pb.TagNumber(7)
-  $core.String get codecs => $_getSZ(6);
-  @$pb.TagNumber(7)
-  set codecs($core.String value) => $_setString(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasCodecs() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearCodecs() => $_clearField(7);
+  void clearCodecs() => $_clearField(6);
 }
 
 class ResolveResponse extends $pb.GeneratedMessage {

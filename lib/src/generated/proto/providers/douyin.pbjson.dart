@@ -409,39 +409,38 @@ final $typed_data.Uint8List metadataDescriptor = $convert.base64Decode(
 const Variant$json = {
   '1': 'Variant',
   '2': [
-    {'1': 'url', '3': 1, '4': 1, '5': 9, '10': 'url'},
     {
       '1': 'format',
-      '3': 2,
+      '3': 1,
       '4': 1,
       '5': 14,
       '6': '.synctv.provider.douyin.StreamFormat',
       '10': 'format'
     },
-    {'1': 'quality', '3': 3, '4': 1, '5': 9, '10': 'quality'},
-    {'1': 'codec', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'codec', '17': true},
-    {'1': 'width', '3': 5, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
+    {'1': 'quality', '3': 2, '4': 1, '5': 9, '10': 'quality'},
+    {'1': 'codec', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'codec', '17': true},
+    {'1': 'width', '3': 4, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
     {
       '1': 'height',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 13,
       '9': 2,
       '10': 'height',
       '17': true
     },
-    {'1': 'fps', '3': 7, '4': 1, '5': 13, '9': 3, '10': 'fps', '17': true},
+    {'1': 'fps', '3': 6, '4': 1, '5': 13, '9': 3, '10': 'fps', '17': true},
     {
       '1': 'bitrate',
-      '3': 8,
+      '3': 7,
       '4': 1,
       '5': 4,
       '9': 4,
       '10': 'bitrate',
       '17': true
     },
-    {'1': 'audio_only', '3': 9, '4': 1, '5': 8, '10': 'audioOnly'},
-    {'1': 'headers_required', '3': 10, '4': 1, '5': 8, '10': 'headersRequired'},
+    {'1': 'audio_only', '3': 8, '4': 1, '5': 8, '10': 'audioOnly'},
+    {'1': 'headers_required', '3': 9, '4': 1, '5': 8, '10': 'headersRequired'},
   ],
   '8': [
     {'1': '_codec'},
@@ -454,13 +453,13 @@ const Variant$json = {
 
 /// Descriptor for `Variant`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List variantDescriptor = $convert.base64Decode(
-    'CgdWYXJpYW50EhAKA3VybBgBIAEoCVIDdXJsEjwKBmZvcm1hdBgCIAEoDjIkLnN5bmN0di5wcm'
-    '92aWRlci5kb3V5aW4uU3RyZWFtRm9ybWF0UgZmb3JtYXQSGAoHcXVhbGl0eRgDIAEoCVIHcXVh'
-    'bGl0eRIZCgVjb2RlYxgEIAEoCUgAUgVjb2RlY4gBARIZCgV3aWR0aBgFIAEoDUgBUgV3aWR0aI'
-    'gBARIbCgZoZWlnaHQYBiABKA1IAlIGaGVpZ2h0iAEBEhUKA2ZwcxgHIAEoDUgDUgNmcHOIAQES'
-    'HQoHYml0cmF0ZRgIIAEoBEgEUgdiaXRyYXRliAEBEh0KCmF1ZGlvX29ubHkYCSABKAhSCWF1ZG'
-    'lvT25seRIpChBoZWFkZXJzX3JlcXVpcmVkGAogASgIUg9oZWFkZXJzUmVxdWlyZWRCCAoGX2Nv'
-    'ZGVjQggKBl93aWR0aEIJCgdfaGVpZ2h0QgYKBF9mcHNCCgoIX2JpdHJhdGU=');
+    'CgdWYXJpYW50EjwKBmZvcm1hdBgBIAEoDjIkLnN5bmN0di5wcm92aWRlci5kb3V5aW4uU3RyZW'
+    'FtRm9ybWF0UgZmb3JtYXQSGAoHcXVhbGl0eRgCIAEoCVIHcXVhbGl0eRIZCgVjb2RlYxgDIAEo'
+    'CUgAUgVjb2RlY4gBARIZCgV3aWR0aBgEIAEoDUgBUgV3aWR0aIgBARIbCgZoZWlnaHQYBSABKA'
+    '1IAlIGaGVpZ2h0iAEBEhUKA2ZwcxgGIAEoDUgDUgNmcHOIAQESHQoHYml0cmF0ZRgHIAEoBEgE'
+    'UgdiaXRyYXRliAEBEh0KCmF1ZGlvX29ubHkYCCABKAhSCWF1ZGlvT25seRIpChBoZWFkZXJzX3'
+    'JlcXVpcmVkGAkgASgIUg9oZWFkZXJzUmVxdWlyZWRCCAoGX2NvZGVjQggKBl93aWR0aEIJCgdf'
+    'aGVpZ2h0QgYKBF9mcHNCCgoIX2JpdHJhdGU=');
 
 @$core.Deprecated('Use resolveResponseDescriptor instead')
 const ResolveResponse$json = {
@@ -475,17 +474,8 @@ const ResolveResponse$json = {
       '10': 'metadata'
     },
     {
-      '1': 'room_id',
-      '3': 2,
-      '4': 1,
-      '5': 9,
-      '9': 0,
-      '10': 'roomId',
-      '17': true
-    },
-    {
       '1': 'variants',
-      '3': 3,
+      '3': 2,
       '4': 3,
       '5': 11,
       '6': '.synctv.provider.douyin.Variant',
@@ -493,25 +483,21 @@ const ResolveResponse$json = {
     },
     {
       '1': 'source',
-      '3': 4,
+      '3': 3,
       '4': 1,
       '5': 11,
       '6': '.synctv.provider.common.DiscoveredSource',
       '10': 'source'
     },
   ],
-  '8': [
-    {'1': '_room_id'},
-  ],
 };
 
 /// Descriptor for `ResolveResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List resolveResponseDescriptor = $convert.base64Decode(
     'Cg9SZXNvbHZlUmVzcG9uc2USPAoIbWV0YWRhdGEYASABKAsyIC5zeW5jdHYucHJvdmlkZXIuZG'
-    '91eWluLk1ldGFkYXRhUghtZXRhZGF0YRIcCgdyb29tX2lkGAIgASgJSABSBnJvb21JZIgBARI7'
-    'Cgh2YXJpYW50cxgDIAMoCzIfLnN5bmN0di5wcm92aWRlci5kb3V5aW4uVmFyaWFudFIIdmFyaW'
-    'FudHMSQAoGc291cmNlGAQgASgLMiguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVk'
-    'U291cmNlUgZzb3VyY2VCCgoIX3Jvb21faWQ=');
+    '91eWluLk1ldGFkYXRhUghtZXRhZGF0YRI7Cgh2YXJpYW50cxgCIAMoCzIfLnN5bmN0di5wcm92'
+    'aWRlci5kb3V5aW4uVmFyaWFudFIIdmFyaWFudHMSQAoGc291cmNlGAMgASgLMiguc3luY3R2Ln'
+    'Byb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use listUserPostsRequestDescriptor instead')
 const ListUserPostsRequest$json = {

@@ -15,6 +15,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $1;
 import 'emby.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -56,4 +57,8 @@ class EmbyProviderServiceApi {
           $pb.ClientContext? ctx, $0.GetBindsRequest request) =>
       _client.invoke<$0.GetBindsResponse>(ctx, 'EmbyProviderService',
           'GetBinds', request, $0.GetBindsResponse());
+  $async.Future<$1.ResourceResponse> getThumbnail(
+          $pb.ClientContext? ctx, $0.GetThumbnailRequest request) =>
+      _client.invoke<$1.ResourceResponse>(ctx, 'EmbyProviderService',
+          'GetThumbnail', request, $1.ResourceResponse());
 }

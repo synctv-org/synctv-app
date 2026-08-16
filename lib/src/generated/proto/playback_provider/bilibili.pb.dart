@@ -23,6 +23,327 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 export 'bilibili.pbenum.dart';
 
+class BilibiliDynamicLiveDanmakuTarget extends $pb.GeneratedMessage {
+  factory BilibiliDynamicLiveDanmakuTarget({
+    $core.String? playlistId,
+    $fixnum.Int64? liveRoomId,
+  }) {
+    final result = create();
+    if (playlistId != null) result.playlistId = playlistId;
+    if (liveRoomId != null) result.liveRoomId = liveRoomId;
+    return result;
+  }
+
+  BilibiliDynamicLiveDanmakuTarget._();
+
+  factory BilibiliDynamicLiveDanmakuTarget.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BilibiliDynamicLiveDanmakuTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BilibiliDynamicLiveDanmakuTarget',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.playback_provider.bilibili'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'playlistId')
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'liveRoomId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliDynamicLiveDanmakuTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliDynamicLiveDanmakuTarget copyWith(
+          void Function(BilibiliDynamicLiveDanmakuTarget) updates) =>
+      super.copyWith(
+              (message) => updates(message as BilibiliDynamicLiveDanmakuTarget))
+          as BilibiliDynamicLiveDanmakuTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BilibiliDynamicLiveDanmakuTarget create() =>
+      BilibiliDynamicLiveDanmakuTarget._();
+  @$core.override
+  BilibiliDynamicLiveDanmakuTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BilibiliDynamicLiveDanmakuTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BilibiliDynamicLiveDanmakuTarget>(
+          create);
+  static BilibiliDynamicLiveDanmakuTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get playlistId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set playlistId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPlaylistId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPlaylistId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get liveRoomId => $_getI64(1);
+  @$pb.TagNumber(2)
+  set liveRoomId($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLiveRoomId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLiveRoomId() => $_clearField(2);
+}
+
+enum WatchBilibiliLiveDanmakuRequest_Target { mediaId, dynamic, notSet }
+
+class WatchBilibiliLiveDanmakuRequest extends $pb.GeneratedMessage {
+  factory WatchBilibiliLiveDanmakuRequest({
+    $core.String? mediaId,
+    BilibiliDynamicLiveDanmakuTarget? dynamic,
+  }) {
+    final result = create();
+    if (mediaId != null) result.mediaId = mediaId;
+    if (dynamic != null) result.dynamic = dynamic;
+    return result;
+  }
+
+  WatchBilibiliLiveDanmakuRequest._();
+
+  factory WatchBilibiliLiveDanmakuRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WatchBilibiliLiveDanmakuRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, WatchBilibiliLiveDanmakuRequest_Target>
+      _WatchBilibiliLiveDanmakuRequest_TargetByTag = {
+    1: WatchBilibiliLiveDanmakuRequest_Target.mediaId,
+    2: WatchBilibiliLiveDanmakuRequest_Target.dynamic,
+    0: WatchBilibiliLiveDanmakuRequest_Target.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WatchBilibiliLiveDanmakuRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.playback_provider.bilibili'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..aOM<BilibiliDynamicLiveDanmakuTarget>(2, _omitFieldNames ? '' : 'dynamic',
+        subBuilder: BilibiliDynamicLiveDanmakuTarget.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WatchBilibiliLiveDanmakuRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WatchBilibiliLiveDanmakuRequest copyWith(
+          void Function(WatchBilibiliLiveDanmakuRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as WatchBilibiliLiveDanmakuRequest))
+          as WatchBilibiliLiveDanmakuRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WatchBilibiliLiveDanmakuRequest create() =>
+      WatchBilibiliLiveDanmakuRequest._();
+  @$core.override
+  WatchBilibiliLiveDanmakuRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WatchBilibiliLiveDanmakuRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WatchBilibiliLiveDanmakuRequest>(
+          create);
+  static WatchBilibiliLiveDanmakuRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  WatchBilibiliLiveDanmakuRequest_Target whichTarget() =>
+      _WatchBilibiliLiveDanmakuRequest_TargetByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearTarget() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.String get mediaId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mediaId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMediaId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMediaId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  BilibiliDynamicLiveDanmakuTarget get dynamic => $_getN(1);
+  @$pb.TagNumber(2)
+  set dynamic(BilibiliDynamicLiveDanmakuTarget value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDynamic() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDynamic() => $_clearField(2);
+  @$pb.TagNumber(2)
+  BilibiliDynamicLiveDanmakuTarget ensureDynamic() => $_ensure(1);
+}
+
+class BilibiliLiveDanmakuEvent extends $pb.GeneratedMessage {
+  factory BilibiliLiveDanmakuEvent({
+    $core.String? format,
+    $core.String? eventType,
+    $core.String? user,
+    $core.String? message,
+    $fixnum.Int64? timestamp,
+    $core.String? giftName,
+    $core.int? giftCount,
+    $core.int? onlineCount,
+    BilibiliLiveDanmakuEventType? type,
+  }) {
+    final result = create();
+    if (format != null) result.format = format;
+    if (eventType != null) result.eventType = eventType;
+    if (user != null) result.user = user;
+    if (message != null) result.message = message;
+    if (timestamp != null) result.timestamp = timestamp;
+    if (giftName != null) result.giftName = giftName;
+    if (giftCount != null) result.giftCount = giftCount;
+    if (onlineCount != null) result.onlineCount = onlineCount;
+    if (type != null) result.type = type;
+    return result;
+  }
+
+  BilibiliLiveDanmakuEvent._();
+
+  factory BilibiliLiveDanmakuEvent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BilibiliLiveDanmakuEvent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BilibiliLiveDanmakuEvent',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.playback_provider.bilibili'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'format')
+    ..aOS(2, _omitFieldNames ? '' : 'eventType')
+    ..aOS(3, _omitFieldNames ? '' : 'user')
+    ..aOS(4, _omitFieldNames ? '' : 'message')
+    ..a<$fixnum.Int64>(
+        5, _omitFieldNames ? '' : 'timestamp', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(6, _omitFieldNames ? '' : 'giftName')
+    ..aI(7, _omitFieldNames ? '' : 'giftCount', fieldType: $pb.PbFieldType.OU3)
+    ..aI(8, _omitFieldNames ? '' : 'onlineCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<BilibiliLiveDanmakuEventType>(9, _omitFieldNames ? '' : 'type',
+        enumValues: BilibiliLiveDanmakuEventType.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliLiveDanmakuEvent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliLiveDanmakuEvent copyWith(
+          void Function(BilibiliLiveDanmakuEvent) updates) =>
+      super.copyWith((message) => updates(message as BilibiliLiveDanmakuEvent))
+          as BilibiliLiveDanmakuEvent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BilibiliLiveDanmakuEvent create() => BilibiliLiveDanmakuEvent._();
+  @$core.override
+  BilibiliLiveDanmakuEvent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BilibiliLiveDanmakuEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BilibiliLiveDanmakuEvent>(create);
+  static BilibiliLiveDanmakuEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get format => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set format($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFormat() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFormat() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get eventType => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set eventType($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEventType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEventType() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get user => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set user($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasUser() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearUser() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get message => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set message($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMessage() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMessage() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get timestamp => $_getI64(4);
+  @$pb.TagNumber(5)
+  set timestamp($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasTimestamp() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearTimestamp() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get giftName => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set giftName($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasGiftName() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearGiftName() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.int get giftCount => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set giftCount($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasGiftCount() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearGiftCount() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.int get onlineCount => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set onlineCount($core.int value) => $_setUnsignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasOnlineCount() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearOnlineCount() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  BilibiliLiveDanmakuEventType get type => $_getN(8);
+  @$pb.TagNumber(9)
+  set type(BilibiliLiveDanmakuEventType value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasType() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearType() => $_clearField(9);
+}
+
 class GetBilibiliMediaStreamRequest extends $pb.GeneratedMessage {
   factory GetBilibiliMediaStreamRequest({
     $core.String? version,
@@ -1481,221 +1802,6 @@ class BilibiliDanmakuFileResponse extends $pb.GeneratedMessage {
   void clearChunk() => $_clearField(1);
   @$pb.TagNumber(1)
   $0.StreamChunk ensureChunk() => $_ensure(0);
-}
-
-class WatchBilibiliLiveDanmakuRequest extends $pb.GeneratedMessage {
-  factory WatchBilibiliLiveDanmakuRequest({
-    $core.String? mediaId,
-  }) {
-    final result = create();
-    if (mediaId != null) result.mediaId = mediaId;
-    return result;
-  }
-
-  WatchBilibiliLiveDanmakuRequest._();
-
-  factory WatchBilibiliLiveDanmakuRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory WatchBilibiliLiveDanmakuRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WatchBilibiliLiveDanmakuRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'synctv.playback_provider.bilibili'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchBilibiliLiveDanmakuRequest clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchBilibiliLiveDanmakuRequest copyWith(
-          void Function(WatchBilibiliLiveDanmakuRequest) updates) =>
-      super.copyWith(
-              (message) => updates(message as WatchBilibiliLiveDanmakuRequest))
-          as WatchBilibiliLiveDanmakuRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static WatchBilibiliLiveDanmakuRequest create() =>
-      WatchBilibiliLiveDanmakuRequest._();
-  @$core.override
-  WatchBilibiliLiveDanmakuRequest createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static WatchBilibiliLiveDanmakuRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WatchBilibiliLiveDanmakuRequest>(
-          create);
-  static WatchBilibiliLiveDanmakuRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get mediaId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set mediaId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasMediaId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMediaId() => $_clearField(1);
-}
-
-class BilibiliLiveDanmakuEvent extends $pb.GeneratedMessage {
-  factory BilibiliLiveDanmakuEvent({
-    $core.String? format,
-    $core.String? eventType,
-    $core.String? user,
-    $core.String? message,
-    $fixnum.Int64? timestamp,
-    $core.String? giftName,
-    $core.int? giftCount,
-    $core.int? onlineCount,
-    BilibiliLiveDanmakuEventType? type,
-  }) {
-    final result = create();
-    if (format != null) result.format = format;
-    if (eventType != null) result.eventType = eventType;
-    if (user != null) result.user = user;
-    if (message != null) result.message = message;
-    if (timestamp != null) result.timestamp = timestamp;
-    if (giftName != null) result.giftName = giftName;
-    if (giftCount != null) result.giftCount = giftCount;
-    if (onlineCount != null) result.onlineCount = onlineCount;
-    if (type != null) result.type = type;
-    return result;
-  }
-
-  BilibiliLiveDanmakuEvent._();
-
-  factory BilibiliLiveDanmakuEvent.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory BilibiliLiveDanmakuEvent.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'BilibiliLiveDanmakuEvent',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'synctv.playback_provider.bilibili'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'format')
-    ..aOS(2, _omitFieldNames ? '' : 'eventType')
-    ..aOS(3, _omitFieldNames ? '' : 'user')
-    ..aOS(4, _omitFieldNames ? '' : 'message')
-    ..a<$fixnum.Int64>(
-        5, _omitFieldNames ? '' : 'timestamp', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOS(6, _omitFieldNames ? '' : 'giftName')
-    ..aI(7, _omitFieldNames ? '' : 'giftCount', fieldType: $pb.PbFieldType.OU3)
-    ..aI(8, _omitFieldNames ? '' : 'onlineCount',
-        fieldType: $pb.PbFieldType.OU3)
-    ..aE<BilibiliLiveDanmakuEventType>(9, _omitFieldNames ? '' : 'type',
-        enumValues: BilibiliLiveDanmakuEventType.values)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BilibiliLiveDanmakuEvent clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BilibiliLiveDanmakuEvent copyWith(
-          void Function(BilibiliLiveDanmakuEvent) updates) =>
-      super.copyWith((message) => updates(message as BilibiliLiveDanmakuEvent))
-          as BilibiliLiveDanmakuEvent;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static BilibiliLiveDanmakuEvent create() => BilibiliLiveDanmakuEvent._();
-  @$core.override
-  BilibiliLiveDanmakuEvent createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static BilibiliLiveDanmakuEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<BilibiliLiveDanmakuEvent>(create);
-  static BilibiliLiveDanmakuEvent? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get format => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set format($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasFormat() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearFormat() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get eventType => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set eventType($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasEventType() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearEventType() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get user => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set user($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasUser() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearUser() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.String get message => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set message($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasMessage() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearMessage() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $fixnum.Int64 get timestamp => $_getI64(4);
-  @$pb.TagNumber(5)
-  set timestamp($fixnum.Int64 value) => $_setInt64(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasTimestamp() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearTimestamp() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.String get giftName => $_getSZ(5);
-  @$pb.TagNumber(6)
-  set giftName($core.String value) => $_setString(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasGiftName() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearGiftName() => $_clearField(6);
-
-  @$pb.TagNumber(7)
-  $core.int get giftCount => $_getIZ(6);
-  @$pb.TagNumber(7)
-  set giftCount($core.int value) => $_setUnsignedInt32(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasGiftCount() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearGiftCount() => $_clearField(7);
-
-  @$pb.TagNumber(8)
-  $core.int get onlineCount => $_getIZ(7);
-  @$pb.TagNumber(8)
-  set onlineCount($core.int value) => $_setUnsignedInt32(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasOnlineCount() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearOnlineCount() => $_clearField(8);
-
-  @$pb.TagNumber(9)
-  BilibiliLiveDanmakuEventType get type => $_getN(8);
-  @$pb.TagNumber(9)
-  set type(BilibiliLiveDanmakuEventType value) => $_setField(9, value);
-  @$pb.TagNumber(9)
-  $core.bool hasType() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearType() => $_clearField(9);
 }
 
 class BilibiliPlaybackProviderServiceApi {

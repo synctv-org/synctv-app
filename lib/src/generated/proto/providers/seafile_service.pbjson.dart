@@ -57,6 +57,12 @@ const $core.Map<$core.String, $core.dynamic> SeafileProviderServiceBase$json = {
       '2': '.synctv.provider.seafile.GetBindsRequest',
       '3': '.synctv.provider.seafile.GetBindsResponse'
     },
+    {
+      '1': 'GetThumbnail',
+      '2': '.synctv.provider.seafile.GetThumbnailRequest',
+      '3': '.synctv.provider.common.ResourceResponse',
+      '6': true
+    },
   ],
 };
 
@@ -303,6 +309,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.provider.seafile.GetBindsRequest': $0.GetBindsRequest$json,
   '.synctv.provider.seafile.GetBindsResponse': $0.GetBindsResponse$json,
   '.synctv.provider.seafile.BindInfo': $0.BindInfo$json,
+  '.synctv.provider.seafile.GetThumbnailRequest': $0.GetThumbnailRequest$json,
+  '.synctv.provider.common.ResourceResponse': $1.ResourceResponse$json,
+  '.synctv.provider.common.ResourceChunk': $1.ResourceChunk$json,
 };
 
 /// Descriptor for `SeafileProviderService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
@@ -319,4 +328,6 @@ final $typed_data.Uint8List seafileProviderServiceDescriptor = $convert.base64De
     'FmaWxlLkxpc3RSZXNwb25zZRJZCgZMb2dvdXQSJi5zeW5jdHYucHJvdmlkZXIuc2VhZmlsZS5M'
     'b2dvdXRSZXF1ZXN0Gicuc3luY3R2LnByb3ZpZGVyLnNlYWZpbGUuTG9nb3V0UmVzcG9uc2USXw'
     'oIR2V0QmluZHMSKC5zeW5jdHYucHJvdmlkZXIuc2VhZmlsZS5HZXRCaW5kc1JlcXVlc3QaKS5z'
-    'eW5jdHYucHJvdmlkZXIuc2VhZmlsZS5HZXRCaW5kc1Jlc3BvbnNl');
+    'eW5jdHYucHJvdmlkZXIuc2VhZmlsZS5HZXRCaW5kc1Jlc3BvbnNlEmgKDEdldFRodW1ibmFpbB'
+    'IsLnN5bmN0di5wcm92aWRlci5zZWFmaWxlLkdldFRodW1ibmFpbFJlcXVlc3QaKC5zeW5jdHYu'
+    'cHJvdmlkZXIuY29tbW9uLlJlc291cmNlUmVzcG9uc2UwAQ==');

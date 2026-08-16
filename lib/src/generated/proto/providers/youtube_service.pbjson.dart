@@ -64,7 +64,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.provider.youtube.ResolveResponse': $0.ResolveResponse$json,
   '.synctv.provider.youtube.Metadata': $0.Metadata$json,
   '.synctv.provider.youtube.Format': $0.Format$json,
-  '.synctv.provider.youtube.Subtitle': $0.Subtitle$json,
   '.synctv.provider.common.DiscoveredSource': $1.DiscoveredSource$json,
   '.synctv.source_config.MediaSourceConfig': $2.MediaSourceConfig$json,
   '.synctv.source_config.DirectUrlMediaSourceConfig':

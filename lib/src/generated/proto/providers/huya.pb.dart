@@ -312,7 +312,6 @@ class Quality extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? cdn,
     StreamFormat? format,
-    $core.String? url,
     $fixnum.Int64? bitrate,
     $core.int? width,
     $core.int? height,
@@ -321,7 +320,6 @@ class Quality extends $pb.GeneratedMessage {
     if (name != null) result.name = name;
     if (cdn != null) result.cdn = cdn;
     if (format != null) result.format = format;
-    if (url != null) result.url = url;
     if (bitrate != null) result.bitrate = bitrate;
     if (width != null) result.width = width;
     if (height != null) result.height = height;
@@ -346,11 +344,10 @@ class Quality extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'cdn')
     ..aE<StreamFormat>(3, _omitFieldNames ? '' : 'format',
         enumValues: StreamFormat.values)
-    ..aOS(4, _omitFieldNames ? '' : 'url')
-    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'bitrate', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'bitrate', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aI(6, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
-    ..aI(7, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(6, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -399,40 +396,31 @@ class Quality extends $pb.GeneratedMessage {
   void clearFormat() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get url => $_getSZ(3);
+  $fixnum.Int64 get bitrate => $_getI64(3);
   @$pb.TagNumber(4)
-  set url($core.String value) => $_setString(3, value);
+  set bitrate($fixnum.Int64 value) => $_setInt64(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasUrl() => $_has(3);
+  $core.bool hasBitrate() => $_has(3);
   @$pb.TagNumber(4)
-  void clearUrl() => $_clearField(4);
+  void clearBitrate() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $fixnum.Int64 get bitrate => $_getI64(4);
+  $core.int get width => $_getIZ(4);
   @$pb.TagNumber(5)
-  set bitrate($fixnum.Int64 value) => $_setInt64(4, value);
+  set width($core.int value) => $_setUnsignedInt32(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasBitrate() => $_has(4);
+  $core.bool hasWidth() => $_has(4);
   @$pb.TagNumber(5)
-  void clearBitrate() => $_clearField(5);
+  void clearWidth() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.int get width => $_getIZ(5);
+  $core.int get height => $_getIZ(5);
   @$pb.TagNumber(6)
-  set width($core.int value) => $_setUnsignedInt32(5, value);
+  set height($core.int value) => $_setUnsignedInt32(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasWidth() => $_has(5);
+  $core.bool hasHeight() => $_has(5);
   @$pb.TagNumber(6)
-  void clearWidth() => $_clearField(6);
-
-  @$pb.TagNumber(7)
-  $core.int get height => $_getIZ(6);
-  @$pb.TagNumber(7)
-  set height($core.int value) => $_setUnsignedInt32(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasHeight() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearHeight() => $_clearField(7);
+  void clearHeight() => $_clearField(6);
 }
 
 class ResolveResponse extends $pb.GeneratedMessage {

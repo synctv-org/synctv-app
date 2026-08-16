@@ -329,3 +329,31 @@ const GetBindsResponse$json = {
 final $typed_data.Uint8List getBindsResponseDescriptor = $convert.base64Decode(
     'ChBHZXRCaW5kc1Jlc3BvbnNlEjcKBWJpbmRzGAEgAygLMiEuc3luY3R2LnByb3ZpZGVyLnNlYW'
     'ZpbGUuQmluZEluZm9SBWJpbmRz');
+
+@$core.Deprecated('Use getThumbnailRequestDescriptor instead')
+const GetThumbnailRequest$json = {
+  '1': 'GetThumbnailRequest',
+  '2': [
+    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
+    {
+      '1': 'repository_id',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'repositoryId'
+    },
+    {'1': 'path', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'path'},
+    {'1': 'size', '3': 4, '4': 1, '5': 13, '10': 'size'},
+  ],
+  '7': {},
+};
+
+/// Descriptor for `GetThumbnailRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getThumbnailRequestDescriptor = $convert.base64Decode(
+    'ChNHZXRUaHVtYm5haWxSZXF1ZXN0EiQKCXNlcnZlcl9pZBgBIAEoCUIHukgEcgIQAVIIc2Vydm'
+    'VySWQSLAoNcmVwb3NpdG9yeV9pZBgCIAEoCUIHukgEcgIQAVIMcmVwb3NpdG9yeUlkEhsKBHBh'
+    'dGgYAyABKAlCB7pIBHICEAFSBHBhdGgSEgoEc2l6ZRgEIAEoDVIEc2l6ZTqSAbpIjgEaiwEKGn'
+    'NlYWZpbGUuZ2V0X3RodW1ibmFpbC5zaXplEjNzaXplIG11c3QgYmUgMCAodXNlIGRlZmF1bHQp'
+    'IG9yIGJldHdlZW4gMzIgYW5kIDIwNDgaOHRoaXMuc2l6ZSA9PSAwIHx8ICh0aGlzLnNpemUgPj'
+    '0gMzIgJiYgdGhpcy5zaXplIDw9IDIwNDgp');

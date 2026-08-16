@@ -1090,12 +1090,14 @@ class SyncTvService {
     String playlistId, {
     required String name,
     String? description,
+    source_config.PlaylistSourceConfig? sourceConfig,
   }) async {
     return _domains.roomMedia.updatePlaylist(
       roomId,
       playlistId,
       name: name,
       description: description,
+      sourceConfig: sourceConfig,
     );
   }
 

@@ -166,6 +166,155 @@ final $typed_data.Uint8List preparedMediaSourceDescriptor = $convert.base64Decod
     'bWUYAiABKAlSDXN1Z2dlc3RlZE5hbWUSUQoNcGxheWJhY2tfa2luZBgDIAEoDjIiLnN5bmN0di'
     '5zb3VyY2VfY29uZmlnLlBsYXliYWNrS2luZEIIukgFggECEAFSDHBsYXliYWNrS2luZA==');
 
+@$core.Deprecated('Use resourceChunkDescriptor instead')
+const ResourceChunk$json = {
+  '1': 'ResourceChunk',
+  '2': [
+    {'1': 'data', '3': 1, '4': 1, '5': 12, '10': 'data'},
+    {'1': 'status', '3': 2, '4': 1, '5': 13, '10': 'status'},
+    {
+      '1': 'content_type',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'contentType',
+      '17': true
+    },
+    {
+      '1': 'content_length',
+      '3': 4,
+      '4': 1,
+      '5': 4,
+      '9': 1,
+      '10': 'contentLength',
+      '17': true
+    },
+    {
+      '1': 'content_range',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'contentRange',
+      '17': true
+    },
+    {
+      '1': 'accept_ranges',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'acceptRanges',
+      '17': true
+    },
+    {
+      '1': 'cache_control',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'cacheControl',
+      '17': true
+    },
+    {'1': 'etag', '3': 8, '4': 1, '5': 9, '9': 5, '10': 'etag', '17': true},
+    {
+      '1': 'last_modified',
+      '3': 9,
+      '4': 1,
+      '5': 9,
+      '9': 6,
+      '10': 'lastModified',
+      '17': true
+    },
+    {
+      '1': 'expires',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '9': 7,
+      '10': 'expires',
+      '17': true
+    },
+    {
+      '1': 'content_disposition',
+      '3': 11,
+      '4': 1,
+      '5': 9,
+      '9': 8,
+      '10': 'contentDisposition',
+      '17': true
+    },
+    {
+      '1': 'location',
+      '3': 12,
+      '4': 1,
+      '5': 9,
+      '9': 9,
+      '10': 'location',
+      '17': true
+    },
+    {
+      '1': 'content_encoding',
+      '3': 13,
+      '4': 1,
+      '5': 9,
+      '9': 10,
+      '10': 'contentEncoding',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_content_type'},
+    {'1': '_content_length'},
+    {'1': '_content_range'},
+    {'1': '_accept_ranges'},
+    {'1': '_cache_control'},
+    {'1': '_etag'},
+    {'1': '_last_modified'},
+    {'1': '_expires'},
+    {'1': '_content_disposition'},
+    {'1': '_location'},
+    {'1': '_content_encoding'},
+  ],
+};
+
+/// Descriptor for `ResourceChunk`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List resourceChunkDescriptor = $convert.base64Decode(
+    'Cg1SZXNvdXJjZUNodW5rEhIKBGRhdGEYASABKAxSBGRhdGESFgoGc3RhdHVzGAIgASgNUgZzdG'
+    'F0dXMSJgoMY29udGVudF90eXBlGAMgASgJSABSC2NvbnRlbnRUeXBliAEBEioKDmNvbnRlbnRf'
+    'bGVuZ3RoGAQgASgESAFSDWNvbnRlbnRMZW5ndGiIAQESKAoNY29udGVudF9yYW5nZRgFIAEoCU'
+    'gCUgxjb250ZW50UmFuZ2WIAQESKAoNYWNjZXB0X3JhbmdlcxgGIAEoCUgDUgxhY2NlcHRSYW5n'
+    'ZXOIAQESKAoNY2FjaGVfY29udHJvbBgHIAEoCUgEUgxjYWNoZUNvbnRyb2yIAQESFwoEZXRhZx'
+    'gIIAEoCUgFUgRldGFniAEBEigKDWxhc3RfbW9kaWZpZWQYCSABKAlIBlIMbGFzdE1vZGlmaWVk'
+    'iAEBEh0KB2V4cGlyZXMYCiABKAlIB1IHZXhwaXJlc4gBARI0ChNjb250ZW50X2Rpc3Bvc2l0aW'
+    '9uGAsgASgJSAhSEmNvbnRlbnREaXNwb3NpdGlvbogBARIfCghsb2NhdGlvbhgMIAEoCUgJUghs'
+    'b2NhdGlvbogBARIuChBjb250ZW50X2VuY29kaW5nGA0gASgJSApSD2NvbnRlbnRFbmNvZGluZ4'
+    'gBAUIPCg1fY29udGVudF90eXBlQhEKD19jb250ZW50X2xlbmd0aEIQCg5fY29udGVudF9yYW5n'
+    'ZUIQCg5fYWNjZXB0X3Jhbmdlc0IQCg5fY2FjaGVfY29udHJvbEIHCgVfZXRhZ0IQCg5fbGFzdF'
+    '9tb2RpZmllZEIKCghfZXhwaXJlc0IWChRfY29udGVudF9kaXNwb3NpdGlvbkILCglfbG9jYXRp'
+    'b25CEwoRX2NvbnRlbnRfZW5jb2Rpbmc=');
+
+@$core.Deprecated('Use resourceResponseDescriptor instead')
+const ResourceResponse$json = {
+  '1': 'ResourceResponse',
+  '2': [
+    {
+      '1': 'chunk',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.ResourceChunk',
+      '10': 'chunk'
+    },
+  ],
+};
+
+/// Descriptor for `ResourceResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List resourceResponseDescriptor = $convert.base64Decode(
+    'ChBSZXNvdXJjZVJlc3BvbnNlEjsKBWNodW5rGAEgASgLMiUuc3luY3R2LnByb3ZpZGVyLmNvbW'
+    '1vbi5SZXNvdXJjZUNodW5rUgVjaHVuaw==');
+
 @$core.Deprecated('Use playbackProxyAutoPolicyDescriptor instead')
 const PlaybackProxyAutoPolicy$json = {
   '1': 'PlaybackProxyAutoPolicy',

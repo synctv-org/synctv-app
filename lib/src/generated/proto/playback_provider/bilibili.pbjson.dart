@@ -87,6 +87,84 @@ final $typed_data.Uint8List bilibiliLiveDanmakuEventTypeDescriptor = $convert.ba
     'SUJJTElfTElWRV9EQU5NQUtVX0VWRU5UX1RZUEVfSEVBUlRCRUFUEAQSLAooQklMSUJJTElfTE'
     'lWRV9EQU5NQUtVX0VWRU5UX1RZUEVfVU5LTk9XThAF');
 
+@$core.Deprecated('Use bilibiliDynamicLiveDanmakuTargetDescriptor instead')
+const BilibiliDynamicLiveDanmakuTarget$json = {
+  '1': 'BilibiliDynamicLiveDanmakuTarget',
+  '2': [
+    {'1': 'playlist_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'playlistId'},
+    {'1': 'live_room_id', '3': 2, '4': 1, '5': 4, '8': {}, '10': 'liveRoomId'},
+  ],
+};
+
+/// Descriptor for `BilibiliDynamicLiveDanmakuTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bilibiliDynamicLiveDanmakuTargetDescriptor =
+    $convert.base64Decode(
+        'CiBCaWxpYmlsaUR5bmFtaWNMaXZlRGFubWFrdVRhcmdldBIoCgtwbGF5bGlzdF9pZBgBIAEoCU'
+        'IHukgEcgIQAVIKcGxheWxpc3RJZBIpCgxsaXZlX3Jvb21faWQYAiABKARCB7pIBDICIABSCmxp'
+        'dmVSb29tSWQ=');
+
+@$core.Deprecated('Use watchBilibiliLiveDanmakuRequestDescriptor instead')
+const WatchBilibiliLiveDanmakuRequest$json = {
+  '1': 'WatchBilibiliLiveDanmakuRequest',
+  '2': [
+    {'1': 'media_id', '3': 1, '4': 1, '5': 9, '8': {}, '9': 0, '10': 'mediaId'},
+    {
+      '1': 'dynamic',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6':
+          '.synctv.playback_provider.bilibili.BilibiliDynamicLiveDanmakuTarget',
+      '9': 0,
+      '10': 'dynamic'
+    },
+  ],
+  '8': [
+    {'1': 'target', '2': {}},
+  ],
+};
+
+/// Descriptor for `WatchBilibiliLiveDanmakuRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List watchBilibiliLiveDanmakuRequestDescriptor =
+    $convert.base64Decode(
+        'Ch9XYXRjaEJpbGliaWxpTGl2ZURhbm1ha3VSZXF1ZXN0EiQKCG1lZGlhX2lkGAEgASgJQge6SA'
+        'RyAhABSABSB21lZGlhSWQSXwoHZHluYW1pYxgCIAEoCzJDLnN5bmN0di5wbGF5YmFja19wcm92'
+        'aWRlci5iaWxpYmlsaS5CaWxpYmlsaUR5bmFtaWNMaXZlRGFubWFrdVRhcmdldEgAUgdkeW5hbW'
+        'ljQg8KBnRhcmdldBIFukgCCAE=');
+
+@$core.Deprecated('Use bilibiliLiveDanmakuEventDescriptor instead')
+const BilibiliLiveDanmakuEvent$json = {
+  '1': 'BilibiliLiveDanmakuEvent',
+  '2': [
+    {'1': 'format', '3': 1, '4': 1, '5': 9, '10': 'format'},
+    {'1': 'event_type', '3': 2, '4': 1, '5': 9, '10': 'eventType'},
+    {'1': 'user', '3': 3, '4': 1, '5': 9, '10': 'user'},
+    {'1': 'message', '3': 4, '4': 1, '5': 9, '10': 'message'},
+    {'1': 'timestamp', '3': 5, '4': 1, '5': 4, '10': 'timestamp'},
+    {'1': 'gift_name', '3': 6, '4': 1, '5': 9, '10': 'giftName'},
+    {'1': 'gift_count', '3': 7, '4': 1, '5': 13, '10': 'giftCount'},
+    {'1': 'online_count', '3': 8, '4': 1, '5': 13, '10': 'onlineCount'},
+    {
+      '1': 'type',
+      '3': 9,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.playback_provider.bilibili.BilibiliLiveDanmakuEventType',
+      '10': 'type'
+    },
+  ],
+};
+
+/// Descriptor for `BilibiliLiveDanmakuEvent`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bilibiliLiveDanmakuEventDescriptor = $convert.base64Decode(
+    'ChhCaWxpYmlsaUxpdmVEYW5tYWt1RXZlbnQSFgoGZm9ybWF0GAEgASgJUgZmb3JtYXQSHQoKZX'
+    'ZlbnRfdHlwZRgCIAEoCVIJZXZlbnRUeXBlEhIKBHVzZXIYAyABKAlSBHVzZXISGAoHbWVzc2Fn'
+    'ZRgEIAEoCVIHbWVzc2FnZRIcCgl0aW1lc3RhbXAYBSABKARSCXRpbWVzdGFtcBIbCglnaWZ0X2'
+    '5hbWUYBiABKAlSCGdpZnROYW1lEh0KCmdpZnRfY291bnQYByABKA1SCWdpZnRDb3VudBIhCgxv'
+    'bmxpbmVfY291bnQYCCABKA1SC29ubGluZUNvdW50ElMKBHR5cGUYCSABKA4yPy5zeW5jdHYucG'
+    'xheWJhY2tfcHJvdmlkZXIuYmlsaWJpbGkuQmlsaWJpbGlMaXZlRGFubWFrdUV2ZW50VHlwZVIE'
+    'dHlwZQ==');
+
 @$core.Deprecated('Use getBilibiliMediaStreamRequestDescriptor instead')
 const GetBilibiliMediaStreamRequest$json = {
   '1': 'GetBilibiliMediaStreamRequest',
@@ -449,53 +527,6 @@ final $typed_data.Uint8List bilibiliDanmakuFileResponseDescriptor =
         'ChtCaWxpYmlsaURhbm1ha3VGaWxlUmVzcG9uc2USQgoFY2h1bmsYASABKAsyLC5zeW5jdHYucG'
         'xheWJhY2tfcHJvdmlkZXIuY29tbW9uLlN0cmVhbUNodW5rUgVjaHVuaw==');
 
-@$core.Deprecated('Use watchBilibiliLiveDanmakuRequestDescriptor instead')
-const WatchBilibiliLiveDanmakuRequest$json = {
-  '1': 'WatchBilibiliLiveDanmakuRequest',
-  '2': [
-    {'1': 'media_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'mediaId'},
-  ],
-};
-
-/// Descriptor for `WatchBilibiliLiveDanmakuRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List watchBilibiliLiveDanmakuRequestDescriptor =
-    $convert.base64Decode(
-        'Ch9XYXRjaEJpbGliaWxpTGl2ZURhbm1ha3VSZXF1ZXN0EiIKCG1lZGlhX2lkGAEgASgJQge6SA'
-        'RyAhABUgdtZWRpYUlk');
-
-@$core.Deprecated('Use bilibiliLiveDanmakuEventDescriptor instead')
-const BilibiliLiveDanmakuEvent$json = {
-  '1': 'BilibiliLiveDanmakuEvent',
-  '2': [
-    {'1': 'format', '3': 1, '4': 1, '5': 9, '10': 'format'},
-    {'1': 'event_type', '3': 2, '4': 1, '5': 9, '10': 'eventType'},
-    {'1': 'user', '3': 3, '4': 1, '5': 9, '10': 'user'},
-    {'1': 'message', '3': 4, '4': 1, '5': 9, '10': 'message'},
-    {'1': 'timestamp', '3': 5, '4': 1, '5': 4, '10': 'timestamp'},
-    {'1': 'gift_name', '3': 6, '4': 1, '5': 9, '10': 'giftName'},
-    {'1': 'gift_count', '3': 7, '4': 1, '5': 13, '10': 'giftCount'},
-    {'1': 'online_count', '3': 8, '4': 1, '5': 13, '10': 'onlineCount'},
-    {
-      '1': 'type',
-      '3': 9,
-      '4': 1,
-      '5': 14,
-      '6': '.synctv.playback_provider.bilibili.BilibiliLiveDanmakuEventType',
-      '10': 'type'
-    },
-  ],
-};
-
-/// Descriptor for `BilibiliLiveDanmakuEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List bilibiliLiveDanmakuEventDescriptor = $convert.base64Decode(
-    'ChhCaWxpYmlsaUxpdmVEYW5tYWt1RXZlbnQSFgoGZm9ybWF0GAEgASgJUgZmb3JtYXQSHQoKZX'
-    'ZlbnRfdHlwZRgCIAEoCVIJZXZlbnRUeXBlEhIKBHVzZXIYAyABKAlSBHVzZXISGAoHbWVzc2Fn'
-    'ZRgEIAEoCVIHbWVzc2FnZRIcCgl0aW1lc3RhbXAYBSABKARSCXRpbWVzdGFtcBIbCglnaWZ0X2'
-    '5hbWUYBiABKAlSCGdpZnROYW1lEh0KCmdpZnRfY291bnQYByABKA1SCWdpZnRDb3VudBIhCgxv'
-    'bmxpbmVfY291bnQYCCABKA1SC29ubGluZUNvdW50ElMKBHR5cGUYCSABKA4yPy5zeW5jdHYucG'
-    'xheWJhY2tfcHJvdmlkZXIuYmlsaWJpbGkuQmlsaWJpbGlMaXZlRGFubWFrdUV2ZW50VHlwZVIE'
-    'dHlwZQ==');
-
 const $core.Map<$core.String, $core.dynamic>
     BilibiliPlaybackProviderServiceBase$json = {
   '1': 'BilibiliPlaybackProviderService',
@@ -585,6 +616,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       BilibiliDanmakuFileResponse$json,
   '.synctv.playback_provider.bilibili.WatchBilibiliLiveDanmakuRequest':
       WatchBilibiliLiveDanmakuRequest$json,
+  '.synctv.playback_provider.bilibili.BilibiliDynamicLiveDanmakuTarget':
+      BilibiliDynamicLiveDanmakuTarget$json,
   '.synctv.playback_provider.bilibili.BilibiliLiveDanmakuEvent':
       BilibiliLiveDanmakuEvent$json,
 };

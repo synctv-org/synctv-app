@@ -67,6 +67,12 @@ const $core.Map<$core.String, $core.dynamic> FnosProviderServiceBase$json = {
       '2': '.synctv.provider.fnos.GetBindsRequest',
       '3': '.synctv.provider.fnos.GetBindsResponse'
     },
+    {
+      '1': 'GetThumbnail',
+      '2': '.synctv.provider.fnos.GetThumbnailRequest',
+      '3': '.synctv.provider.common.ResourceResponse',
+      '6': true
+    },
   ],
 };
 
@@ -324,6 +330,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.provider.fnos.GetBindsRequest': $0.GetBindsRequest$json,
   '.synctv.provider.fnos.GetBindsResponse': $0.GetBindsResponse$json,
   '.synctv.provider.fnos.BindInfo': $0.BindInfo$json,
+  '.synctv.provider.fnos.GetThumbnailRequest': $0.GetThumbnailRequest$json,
+  '.synctv.provider.common.ResourceResponse': $1.ResourceResponse$json,
+  '.synctv.provider.common.ResourceChunk': $1.ResourceChunk$json,
 };
 
 /// Descriptor for `FnosProviderService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
@@ -344,4 +353,5 @@ final $typed_data.Uint8List fnosProviderServiceDescriptor = $convert.base64Decod
     'dvdXQSIy5zeW5jdHYucHJvdmlkZXIuZm5vcy5Mb2dvdXRSZXF1ZXN0GiQuc3luY3R2LnByb3Zp'
     'ZGVyLmZub3MuTG9nb3V0UmVzcG9uc2USWQoIR2V0QmluZHMSJS5zeW5jdHYucHJvdmlkZXIuZm'
     '5vcy5HZXRCaW5kc1JlcXVlc3QaJi5zeW5jdHYucHJvdmlkZXIuZm5vcy5HZXRCaW5kc1Jlc3Bv'
-    'bnNl');
+    'bnNlEmUKDEdldFRodW1ibmFpbBIpLnN5bmN0di5wcm92aWRlci5mbm9zLkdldFRodW1ibmFpbF'
+    'JlcXVlc3QaKC5zeW5jdHYucHJvdmlkZXIuY29tbW9uLlJlc291cmNlUmVzcG9uc2UwAQ==');

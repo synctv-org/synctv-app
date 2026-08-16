@@ -58,6 +58,12 @@ const $core.Map<$core.String, $core.dynamic> NextcloudProviderServiceBase$json =
       '2': '.synctv.provider.nextcloud.GetBindsRequest',
       '3': '.synctv.provider.nextcloud.GetBindsResponse'
     },
+    {
+      '1': 'GetPreview',
+      '2': '.synctv.provider.nextcloud.GetPreviewRequest',
+      '3': '.synctv.provider.common.ResourceResponse',
+      '6': true
+    },
   ],
 };
 
@@ -306,6 +312,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.provider.nextcloud.GetBindsRequest': $0.GetBindsRequest$json,
   '.synctv.provider.nextcloud.GetBindsResponse': $0.GetBindsResponse$json,
   '.synctv.provider.nextcloud.BindInfo': $0.BindInfo$json,
+  '.synctv.provider.nextcloud.GetPreviewRequest': $0.GetPreviewRequest$json,
+  '.synctv.provider.common.ResourceResponse': $1.ResourceResponse$json,
+  '.synctv.provider.common.ResourceChunk': $1.ResourceChunk$json,
 };
 
 /// Descriptor for `NextcloudProviderService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
@@ -323,4 +332,6 @@ final $typed_data.Uint8List nextcloudProviderServiceDescriptor = $convert.base64
     'eW5jdHYucHJvdmlkZXIubmV4dGNsb3VkLkxvZ291dFJlcXVlc3QaKS5zeW5jdHYucHJvdmlkZX'
     'IubmV4dGNsb3VkLkxvZ291dFJlc3BvbnNlEmMKCEdldEJpbmRzEiouc3luY3R2LnByb3ZpZGVy'
     'Lm5leHRjbG91ZC5HZXRCaW5kc1JlcXVlc3QaKy5zeW5jdHYucHJvdmlkZXIubmV4dGNsb3VkLk'
-    'dldEJpbmRzUmVzcG9uc2U=');
+    'dldEJpbmRzUmVzcG9uc2USZgoKR2V0UHJldmlldxIsLnN5bmN0di5wcm92aWRlci5uZXh0Y2xv'
+    'dWQuR2V0UHJldmlld1JlcXVlc3QaKC5zeW5jdHYucHJvdmlkZXIuY29tbW9uLlJlc291cmNlUm'
+    'VzcG9uc2UwAQ==');

@@ -232,21 +232,6 @@ final $typed_data.Uint8List authorDescriptor = $convert.base64Decode(
     'dmF0YXIYBSABKAsyHS5zeW5jdHYucHJvdmlkZXIudGlrdG9rLkltYWdlSABSBmF2YXRhcogBAU'
     'IJCgdfYXZhdGFy');
 
-@$core.Deprecated('Use subtitleDescriptor instead')
-const Subtitle$json = {
-  '1': 'Subtitle',
-  '2': [
-    {'1': 'language', '3': 1, '4': 1, '5': 9, '10': 'language'},
-    {'1': 'format', '3': 2, '4': 1, '5': 9, '10': 'format'},
-    {'1': 'url', '3': 3, '4': 1, '5': 9, '10': 'url'},
-  ],
-};
-
-/// Descriptor for `Subtitle`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List subtitleDescriptor = $convert.base64Decode(
-    'CghTdWJ0aXRsZRIaCghsYW5ndWFnZRgBIAEoCVIIbGFuZ3VhZ2USFgoGZm9ybWF0GAIgASgJUg'
-    'Zmb3JtYXQSEAoDdXJsGAMgASgJUgN1cmw=');
-
 @$core.Deprecated('Use metadataDescriptor instead')
 const Metadata$json = {
   '1': 'Metadata',
@@ -381,14 +366,7 @@ const Metadata$json = {
       '10': 'musicAuthor',
       '17': true
     },
-    {
-      '1': 'subtitles',
-      '3': 19,
-      '4': 3,
-      '5': 11,
-      '6': '.synctv.provider.tiktok.Subtitle',
-      '10': 'subtitles'
-    },
+    {'1': 'subtitle_count', '3': 19, '4': 1, '5': 13, '10': 'subtitleCount'},
   ],
   '8': [
     {'1': '_cover'},
@@ -421,32 +399,30 @@ final $typed_data.Uint8List metadataDescriptor = $convert.base64Decode(
     'ASgESAdSCnNoYXJlQ291bnSIAQESKAoNY29sbGVjdF9jb3VudBgPIAEoBEgIUgxjb2xsZWN0Q2'
     '91bnSIAQESMgoSY29uY3VycmVudF92aWV3ZXJzGBAgASgESAlSEWNvbmN1cnJlbnRWaWV3ZXJz'
     'iAEBEiQKC211c2ljX3RpdGxlGBEgASgJSApSCm11c2ljVGl0bGWIAQESJgoMbXVzaWNfYXV0aG'
-    '9yGBIgASgJSAtSC211c2ljQXV0aG9yiAEBEj4KCXN1YnRpdGxlcxgTIAMoCzIgLnN5bmN0di5w'
-    'cm92aWRlci50aWt0b2suU3VidGl0bGVSCXN1YnRpdGxlc0IICgZfY292ZXJCEAoOX2R5bmFtaW'
-    'NfY292ZXJCDgoMX2R1cmF0aW9uX21zQg0KC19jcmVhdGVkX2F0Qg0KC192aWV3X2NvdW50Qg0K'
-    'C19saWtlX2NvdW50QhAKDl9jb21tZW50X2NvdW50Qg4KDF9zaGFyZV9jb3VudEIQCg5fY29sbG'
-    'VjdF9jb3VudEIVChNfY29uY3VycmVudF92aWV3ZXJzQg4KDF9tdXNpY190aXRsZUIPCg1fbXVz'
-    'aWNfYXV0aG9y');
+    '9yGBIgASgJSAtSC211c2ljQXV0aG9yiAEBEiUKDnN1YnRpdGxlX2NvdW50GBMgASgNUg1zdWJ0'
+    'aXRsZUNvdW50QggKBl9jb3ZlckIQCg5fZHluYW1pY19jb3ZlckIOCgxfZHVyYXRpb25fbXNCDQ'
+    'oLX2NyZWF0ZWRfYXRCDQoLX3ZpZXdfY291bnRCDQoLX2xpa2VfY291bnRCEAoOX2NvbW1lbnRf'
+    'Y291bnRCDgoMX3NoYXJlX2NvdW50QhAKDl9jb2xsZWN0X2NvdW50QhUKE19jb25jdXJyZW50X3'
+    'ZpZXdlcnNCDgoMX211c2ljX3RpdGxlQg8KDV9tdXNpY19hdXRob3I=');
 
 @$core.Deprecated('Use variantDescriptor instead')
 const Variant$json = {
   '1': 'Variant',
   '2': [
-    {'1': 'url', '3': 1, '4': 1, '5': 9, '10': 'url'},
     {
       '1': 'format',
-      '3': 2,
+      '3': 1,
       '4': 1,
       '5': 14,
       '6': '.synctv.provider.tiktok.StreamFormat',
       '10': 'format'
     },
-    {'1': 'quality', '3': 3, '4': 1, '5': 9, '10': 'quality'},
-    {'1': 'codec', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'codec', '17': true},
-    {'1': 'width', '3': 5, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
+    {'1': 'quality', '3': 2, '4': 1, '5': 9, '10': 'quality'},
+    {'1': 'codec', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'codec', '17': true},
+    {'1': 'width', '3': 4, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
     {
       '1': 'height',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 13,
       '9': 2,
@@ -455,16 +431,16 @@ const Variant$json = {
     },
     {
       '1': 'bitrate',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 4,
       '9': 3,
       '10': 'bitrate',
       '17': true
     },
-    {'1': 'audio_only', '3': 8, '4': 1, '5': 8, '10': 'audioOnly'},
-    {'1': 'watermarked', '3': 9, '4': 1, '5': 8, '10': 'watermarked'},
-    {'1': 'headers_required', '3': 10, '4': 1, '5': 8, '10': 'headersRequired'},
+    {'1': 'audio_only', '3': 7, '4': 1, '5': 8, '10': 'audioOnly'},
+    {'1': 'watermarked', '3': 8, '4': 1, '5': 8, '10': 'watermarked'},
+    {'1': 'headers_required', '3': 9, '4': 1, '5': 8, '10': 'headersRequired'},
   ],
   '8': [
     {'1': '_codec'},
@@ -476,13 +452,13 @@ const Variant$json = {
 
 /// Descriptor for `Variant`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List variantDescriptor = $convert.base64Decode(
-    'CgdWYXJpYW50EhAKA3VybBgBIAEoCVIDdXJsEjwKBmZvcm1hdBgCIAEoDjIkLnN5bmN0di5wcm'
-    '92aWRlci50aWt0b2suU3RyZWFtRm9ybWF0UgZmb3JtYXQSGAoHcXVhbGl0eRgDIAEoCVIHcXVh'
-    'bGl0eRIZCgVjb2RlYxgEIAEoCUgAUgVjb2RlY4gBARIZCgV3aWR0aBgFIAEoDUgBUgV3aWR0aI'
-    'gBARIbCgZoZWlnaHQYBiABKA1IAlIGaGVpZ2h0iAEBEh0KB2JpdHJhdGUYByABKARIA1IHYml0'
-    'cmF0ZYgBARIdCgphdWRpb19vbmx5GAggASgIUglhdWRpb09ubHkSIAoLd2F0ZXJtYXJrZWQYCS'
-    'ABKAhSC3dhdGVybWFya2VkEikKEGhlYWRlcnNfcmVxdWlyZWQYCiABKAhSD2hlYWRlcnNSZXF1'
-    'aXJlZEIICgZfY29kZWNCCAoGX3dpZHRoQgkKB19oZWlnaHRCCgoIX2JpdHJhdGU=');
+    'CgdWYXJpYW50EjwKBmZvcm1hdBgBIAEoDjIkLnN5bmN0di5wcm92aWRlci50aWt0b2suU3RyZW'
+    'FtRm9ybWF0UgZmb3JtYXQSGAoHcXVhbGl0eRgCIAEoCVIHcXVhbGl0eRIZCgVjb2RlYxgDIAEo'
+    'CUgAUgVjb2RlY4gBARIZCgV3aWR0aBgEIAEoDUgBUgV3aWR0aIgBARIbCgZoZWlnaHQYBSABKA'
+    '1IAlIGaGVpZ2h0iAEBEh0KB2JpdHJhdGUYBiABKARIA1IHYml0cmF0ZYgBARIdCgphdWRpb19v'
+    'bmx5GAcgASgIUglhdWRpb09ubHkSIAoLd2F0ZXJtYXJrZWQYCCABKAhSC3dhdGVybWFya2VkEi'
+    'kKEGhlYWRlcnNfcmVxdWlyZWQYCSABKAhSD2hlYWRlcnNSZXF1aXJlZEIICgZfY29kZWNCCAoG'
+    'X3dpZHRoQgkKB19oZWlnaHRCCgoIX2JpdHJhdGU=');
 
 @$core.Deprecated('Use resolveResponseDescriptor instead')
 const ResolveResponse$json = {
@@ -497,17 +473,8 @@ const ResolveResponse$json = {
       '10': 'metadata'
     },
     {
-      '1': 'room_id',
-      '3': 2,
-      '4': 1,
-      '5': 9,
-      '9': 0,
-      '10': 'roomId',
-      '17': true
-    },
-    {
       '1': 'variants',
-      '3': 3,
+      '3': 2,
       '4': 3,
       '5': 11,
       '6': '.synctv.provider.tiktok.Variant',
@@ -515,25 +482,21 @@ const ResolveResponse$json = {
     },
     {
       '1': 'source',
-      '3': 4,
+      '3': 3,
       '4': 1,
       '5': 11,
       '6': '.synctv.provider.common.DiscoveredSource',
       '10': 'source'
     },
   ],
-  '8': [
-    {'1': '_room_id'},
-  ],
 };
 
 /// Descriptor for `ResolveResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List resolveResponseDescriptor = $convert.base64Decode(
     'Cg9SZXNvbHZlUmVzcG9uc2USPAoIbWV0YWRhdGEYASABKAsyIC5zeW5jdHYucHJvdmlkZXIudG'
-    'lrdG9rLk1ldGFkYXRhUghtZXRhZGF0YRIcCgdyb29tX2lkGAIgASgJSABSBnJvb21JZIgBARI7'
-    'Cgh2YXJpYW50cxgDIAMoCzIfLnN5bmN0di5wcm92aWRlci50aWt0b2suVmFyaWFudFIIdmFyaW'
-    'FudHMSQAoGc291cmNlGAQgASgLMiguc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVk'
-    'U291cmNlUgZzb3VyY2VCCgoIX3Jvb21faWQ=');
+    'lrdG9rLk1ldGFkYXRhUghtZXRhZGF0YRI7Cgh2YXJpYW50cxgCIAMoCzIfLnN5bmN0di5wcm92'
+    'aWRlci50aWt0b2suVmFyaWFudFIIdmFyaWFudHMSQAoGc291cmNlGAMgASgLMiguc3luY3R2Ln'
+    'Byb3ZpZGVyLmNvbW1vbi5EaXNjb3ZlcmVkU291cmNlUgZzb3VyY2U=');
 
 @$core.Deprecated('Use getUserRequestDescriptor instead')
 const GetUserRequest$json = {

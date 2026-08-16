@@ -174,10 +174,9 @@ const Stream$json = {
   '1': 'Stream',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'url', '3': 2, '4': 1, '5': 9, '10': 'url'},
     {
       '1': 'kind',
-      '3': 3,
+      '3': 2,
       '4': 1,
       '5': 14,
       '6': '.synctv.provider.cctv.StreamKind',
@@ -188,8 +187,8 @@ const Stream$json = {
 
 /// Descriptor for `Stream`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List streamDescriptor = $convert.base64Decode(
-    'CgZTdHJlYW0SEgoEbmFtZRgBIAEoCVIEbmFtZRIQCgN1cmwYAiABKAlSA3VybBI0CgRraW5kGA'
-    'MgASgOMiAuc3luY3R2LnByb3ZpZGVyLmNjdHYuU3RyZWFtS2luZFIEa2luZA==');
+    'CgZTdHJlYW0SEgoEbmFtZRgBIAEoCVIEbmFtZRI0CgRraW5kGAIgASgOMiAuc3luY3R2LnByb3'
+    'ZpZGVyLmNjdHYuU3RyZWFtS2luZFIEa2luZA==');
 
 @$core.Deprecated('Use resolveResponseDescriptor instead')
 const ResolveResponse$json = {

@@ -747,84 +747,6 @@ class Author extends $pb.GeneratedMessage {
   Image ensureAvatar() => $_ensure(4);
 }
 
-class Subtitle extends $pb.GeneratedMessage {
-  factory Subtitle({
-    $core.String? language,
-    $core.String? format,
-    $core.String? url,
-  }) {
-    final result = create();
-    if (language != null) result.language = language;
-    if (format != null) result.format = format;
-    if (url != null) result.url = url;
-    return result;
-  }
-
-  Subtitle._();
-
-  factory Subtitle.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory Subtitle.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Subtitle',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'synctv.provider.tiktok'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'language')
-    ..aOS(2, _omitFieldNames ? '' : 'format')
-    ..aOS(3, _omitFieldNames ? '' : 'url')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Subtitle clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Subtitle copyWith(void Function(Subtitle) updates) =>
-      super.copyWith((message) => updates(message as Subtitle)) as Subtitle;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Subtitle create() => Subtitle._();
-  @$core.override
-  Subtitle createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static Subtitle getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Subtitle>(create);
-  static Subtitle? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get language => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set language($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasLanguage() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearLanguage() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get format => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set format($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasFormat() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearFormat() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get url => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set url($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasUrl() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearUrl() => $_clearField(3);
-}
-
 class Metadata extends $pb.GeneratedMessage {
   factory Metadata({
     $core.String? id,
@@ -845,7 +767,7 @@ class Metadata extends $pb.GeneratedMessage {
     $fixnum.Int64? concurrentViewers,
     $core.String? musicTitle,
     $core.String? musicAuthor,
-    $core.Iterable<Subtitle>? subtitles,
+    $core.int? subtitleCount,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -866,7 +788,7 @@ class Metadata extends $pb.GeneratedMessage {
     if (concurrentViewers != null) result.concurrentViewers = concurrentViewers;
     if (musicTitle != null) result.musicTitle = musicTitle;
     if (musicAuthor != null) result.musicAuthor = musicAuthor;
-    if (subtitles != null) result.subtitles.addAll(subtitles);
+    if (subtitleCount != null) result.subtitleCount = subtitleCount;
     return result;
   }
 
@@ -918,8 +840,8 @@ class Metadata extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(17, _omitFieldNames ? '' : 'musicTitle')
     ..aOS(18, _omitFieldNames ? '' : 'musicAuthor')
-    ..pPM<Subtitle>(19, _omitFieldNames ? '' : 'subtitles',
-        subBuilder: Subtitle.create)
+    ..aI(19, _omitFieldNames ? '' : 'subtitleCount',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1109,12 +1031,17 @@ class Metadata extends $pb.GeneratedMessage {
   void clearMusicAuthor() => $_clearField(18);
 
   @$pb.TagNumber(19)
-  $pb.PbList<Subtitle> get subtitles => $_getList(18);
+  $core.int get subtitleCount => $_getIZ(18);
+  @$pb.TagNumber(19)
+  set subtitleCount($core.int value) => $_setUnsignedInt32(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasSubtitleCount() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearSubtitleCount() => $_clearField(19);
 }
 
 class Variant extends $pb.GeneratedMessage {
   factory Variant({
-    $core.String? url,
     StreamFormat? format,
     $core.String? quality,
     $core.String? codec,
@@ -1126,7 +1053,6 @@ class Variant extends $pb.GeneratedMessage {
     $core.bool? headersRequired,
   }) {
     final result = create();
-    if (url != null) result.url = url;
     if (format != null) result.format = format;
     if (quality != null) result.quality = quality;
     if (codec != null) result.codec = codec;
@@ -1153,18 +1079,17 @@ class Variant extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.tiktok'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'url')
-    ..aE<StreamFormat>(2, _omitFieldNames ? '' : 'format',
+    ..aE<StreamFormat>(1, _omitFieldNames ? '' : 'format',
         enumValues: StreamFormat.values)
-    ..aOS(3, _omitFieldNames ? '' : 'quality')
-    ..aOS(4, _omitFieldNames ? '' : 'codec')
-    ..aI(5, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
-    ..aI(6, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
-    ..a<$fixnum.Int64>(7, _omitFieldNames ? '' : 'bitrate', $pb.PbFieldType.OU6,
+    ..aOS(2, _omitFieldNames ? '' : 'quality')
+    ..aOS(3, _omitFieldNames ? '' : 'codec')
+    ..aI(4, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'bitrate', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOB(8, _omitFieldNames ? '' : 'audioOnly')
-    ..aOB(9, _omitFieldNames ? '' : 'watermarked')
-    ..aOB(10, _omitFieldNames ? '' : 'headersRequired')
+    ..aOB(7, _omitFieldNames ? '' : 'audioOnly')
+    ..aOB(8, _omitFieldNames ? '' : 'watermarked')
+    ..aOB(9, _omitFieldNames ? '' : 'headersRequired')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1186,106 +1111,95 @@ class Variant extends $pb.GeneratedMessage {
   static Variant? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get url => $_getSZ(0);
+  StreamFormat get format => $_getN(0);
   @$pb.TagNumber(1)
-  set url($core.String value) => $_setString(0, value);
+  set format(StreamFormat value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasUrl() => $_has(0);
+  $core.bool hasFormat() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUrl() => $_clearField(1);
+  void clearFormat() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  StreamFormat get format => $_getN(1);
+  $core.String get quality => $_getSZ(1);
   @$pb.TagNumber(2)
-  set format(StreamFormat value) => $_setField(2, value);
+  set quality($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasFormat() => $_has(1);
+  $core.bool hasQuality() => $_has(1);
   @$pb.TagNumber(2)
-  void clearFormat() => $_clearField(2);
+  void clearQuality() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get quality => $_getSZ(2);
+  $core.String get codec => $_getSZ(2);
   @$pb.TagNumber(3)
-  set quality($core.String value) => $_setString(2, value);
+  set codec($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasQuality() => $_has(2);
+  $core.bool hasCodec() => $_has(2);
   @$pb.TagNumber(3)
-  void clearQuality() => $_clearField(3);
+  void clearCodec() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get codec => $_getSZ(3);
+  $core.int get width => $_getIZ(3);
   @$pb.TagNumber(4)
-  set codec($core.String value) => $_setString(3, value);
+  set width($core.int value) => $_setUnsignedInt32(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasCodec() => $_has(3);
+  $core.bool hasWidth() => $_has(3);
   @$pb.TagNumber(4)
-  void clearCodec() => $_clearField(4);
+  void clearWidth() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.int get width => $_getIZ(4);
+  $core.int get height => $_getIZ(4);
   @$pb.TagNumber(5)
-  set width($core.int value) => $_setUnsignedInt32(4, value);
+  set height($core.int value) => $_setUnsignedInt32(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasWidth() => $_has(4);
+  $core.bool hasHeight() => $_has(4);
   @$pb.TagNumber(5)
-  void clearWidth() => $_clearField(5);
+  void clearHeight() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.int get height => $_getIZ(5);
+  $fixnum.Int64 get bitrate => $_getI64(5);
   @$pb.TagNumber(6)
-  set height($core.int value) => $_setUnsignedInt32(5, value);
+  set bitrate($fixnum.Int64 value) => $_setInt64(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasHeight() => $_has(5);
+  $core.bool hasBitrate() => $_has(5);
   @$pb.TagNumber(6)
-  void clearHeight() => $_clearField(6);
+  void clearBitrate() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $fixnum.Int64 get bitrate => $_getI64(6);
+  $core.bool get audioOnly => $_getBF(6);
   @$pb.TagNumber(7)
-  set bitrate($fixnum.Int64 value) => $_setInt64(6, value);
+  set audioOnly($core.bool value) => $_setBool(6, value);
   @$pb.TagNumber(7)
-  $core.bool hasBitrate() => $_has(6);
+  $core.bool hasAudioOnly() => $_has(6);
   @$pb.TagNumber(7)
-  void clearBitrate() => $_clearField(7);
+  void clearAudioOnly() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $core.bool get audioOnly => $_getBF(7);
+  $core.bool get watermarked => $_getBF(7);
   @$pb.TagNumber(8)
-  set audioOnly($core.bool value) => $_setBool(7, value);
+  set watermarked($core.bool value) => $_setBool(7, value);
   @$pb.TagNumber(8)
-  $core.bool hasAudioOnly() => $_has(7);
+  $core.bool hasWatermarked() => $_has(7);
   @$pb.TagNumber(8)
-  void clearAudioOnly() => $_clearField(8);
+  void clearWatermarked() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  $core.bool get watermarked => $_getBF(8);
+  $core.bool get headersRequired => $_getBF(8);
   @$pb.TagNumber(9)
-  set watermarked($core.bool value) => $_setBool(8, value);
+  set headersRequired($core.bool value) => $_setBool(8, value);
   @$pb.TagNumber(9)
-  $core.bool hasWatermarked() => $_has(8);
+  $core.bool hasHeadersRequired() => $_has(8);
   @$pb.TagNumber(9)
-  void clearWatermarked() => $_clearField(9);
-
-  @$pb.TagNumber(10)
-  $core.bool get headersRequired => $_getBF(9);
-  @$pb.TagNumber(10)
-  set headersRequired($core.bool value) => $_setBool(9, value);
-  @$pb.TagNumber(10)
-  $core.bool hasHeadersRequired() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearHeadersRequired() => $_clearField(10);
+  void clearHeadersRequired() => $_clearField(9);
 }
 
 class ResolveResponse extends $pb.GeneratedMessage {
   factory ResolveResponse({
     Metadata? metadata,
-    $core.String? roomId,
     $core.Iterable<Variant>? variants,
     $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (metadata != null) result.metadata = metadata;
-    if (roomId != null) result.roomId = roomId;
     if (variants != null) result.variants.addAll(variants);
     if (source != null) result.source = source;
     return result;
@@ -1307,10 +1221,9 @@ class ResolveResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<Metadata>(1, _omitFieldNames ? '' : 'metadata',
         subBuilder: Metadata.create)
-    ..aOS(2, _omitFieldNames ? '' : 'roomId')
-    ..pPM<Variant>(3, _omitFieldNames ? '' : 'variants',
+    ..pPM<Variant>(2, _omitFieldNames ? '' : 'variants',
         subBuilder: Variant.create)
-    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
+    ..aOM<$0.DiscoveredSource>(3, _omitFieldNames ? '' : 'source',
         subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
@@ -1345,27 +1258,18 @@ class ResolveResponse extends $pb.GeneratedMessage {
   Metadata ensureMetadata() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $core.String get roomId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set roomId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasRoomId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearRoomId() => $_clearField(2);
+  $pb.PbList<Variant> get variants => $_getList(1);
 
   @$pb.TagNumber(3)
-  $pb.PbList<Variant> get variants => $_getList(2);
-
-  @$pb.TagNumber(4)
-  $0.DiscoveredSource get source => $_getN(3);
-  @$pb.TagNumber(4)
-  set source($0.DiscoveredSource value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasSource() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearSource() => $_clearField(4);
-  @$pb.TagNumber(4)
-  $0.DiscoveredSource ensureSource() => $_ensure(3);
+  $0.DiscoveredSource get source => $_getN(2);
+  @$pb.TagNumber(3)
+  set source($0.DiscoveredSource value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSource() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSource() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $0.DiscoveredSource ensureSource() => $_ensure(2);
 }
 
 class GetUserRequest extends $pb.GeneratedMessage {

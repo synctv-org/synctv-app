@@ -57,6 +57,7 @@ abstract interface class MediaLibraryGateway {
     String playlistId, {
     required String name,
     String? description,
+    source.PlaylistSourceConfig? sourceConfig,
   });
   Future<RoomPlaylistItem> updatePlaylistCover(
     String roomId,

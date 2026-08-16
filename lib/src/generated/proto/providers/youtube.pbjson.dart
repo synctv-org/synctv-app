@@ -321,23 +321,6 @@ final $typed_data.Uint8List formatDescriptor = $convert.base64Decode(
     'ASgIUghhZGFwdGl2ZRIdCgphdWRpb19vbmx5GAogASgIUglhdWRpb09ubHlCCAoGX3dpZHRoQg'
     'kKB19oZWlnaHRCBgoEX2Zwcw==');
 
-@$core.Deprecated('Use subtitleDescriptor instead')
-const Subtitle$json = {
-  '1': 'Subtitle',
-  '2': [
-    {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'language', '3': 2, '4': 1, '5': 9, '10': 'language'},
-    {'1': 'automatic', '3': 3, '4': 1, '5': 8, '10': 'automatic'},
-    {'1': 'translatable', '3': 4, '4': 1, '5': 8, '10': 'translatable'},
-  ],
-};
-
-/// Descriptor for `Subtitle`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List subtitleDescriptor = $convert.base64Decode(
-    'CghTdWJ0aXRsZRISCgRuYW1lGAEgASgJUgRuYW1lEhoKCGxhbmd1YWdlGAIgASgJUghsYW5ndW'
-    'FnZRIcCglhdXRvbWF0aWMYAyABKAhSCWF1dG9tYXRpYxIiCgx0cmFuc2xhdGFibGUYBCABKAhS'
-    'DHRyYW5zbGF0YWJsZQ==');
-
 @$core.Deprecated('Use resolveResponseDescriptor instead')
 const ResolveResponse$json = {
   '1': 'ResolveResponse',
@@ -358,34 +341,15 @@ const ResolveResponse$json = {
       '6': '.synctv.provider.youtube.Format',
       '10': 'formats'
     },
-    {
-      '1': 'subtitles',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.synctv.provider.youtube.Subtitle',
-      '10': 'subtitles'
-    },
-    {
-      '1': 'storyboard_spec',
-      '3': 4,
-      '4': 1,
-      '5': 9,
-      '9': 0,
-      '10': 'storyboardSpec',
-      '17': true
-    },
+    {'1': 'subtitle_count', '3': 3, '4': 1, '5': 13, '10': 'subtitleCount'},
     {
       '1': 'source',
-      '3': 5,
+      '3': 4,
       '4': 1,
       '5': 11,
       '6': '.synctv.provider.common.DiscoveredSource',
       '10': 'source'
     },
-  ],
-  '8': [
-    {'1': '_storyboard_spec'},
   ],
 };
 
@@ -393,11 +357,9 @@ const ResolveResponse$json = {
 final $typed_data.Uint8List resolveResponseDescriptor = $convert.base64Decode(
     'Cg9SZXNvbHZlUmVzcG9uc2USPQoIbWV0YWRhdGEYASABKAsyIS5zeW5jdHYucHJvdmlkZXIueW'
     '91dHViZS5NZXRhZGF0YVIIbWV0YWRhdGESOQoHZm9ybWF0cxgCIAMoCzIfLnN5bmN0di5wcm92'
-    'aWRlci55b3V0dWJlLkZvcm1hdFIHZm9ybWF0cxI/CglzdWJ0aXRsZXMYAyADKAsyIS5zeW5jdH'
-    'YucHJvdmlkZXIueW91dHViZS5TdWJ0aXRsZVIJc3VidGl0bGVzEiwKD3N0b3J5Ym9hcmRfc3Bl'
-    'YxgEIAEoCUgAUg5zdG9yeWJvYXJkU3BlY4gBARJACgZzb3VyY2UYBSABKAsyKC5zeW5jdHYucH'
-    'JvdmlkZXIuY29tbW9uLkRpc2NvdmVyZWRTb3VyY2VSBnNvdXJjZUISChBfc3Rvcnlib2FyZF9z'
-    'cGVj');
+    'aWRlci55b3V0dWJlLkZvcm1hdFIHZm9ybWF0cxIlCg5zdWJ0aXRsZV9jb3VudBgDIAEoDVINc3'
+    'VidGl0bGVDb3VudBJACgZzb3VyY2UYBCABKAsyKC5zeW5jdHYucHJvdmlkZXIuY29tbW9uLkRp'
+    'c2NvdmVyZWRTb3VyY2VSBnNvdXJjZQ==');
 
 @$core.Deprecated('Use listRequestDescriptor instead')
 const ListRequest$json = {

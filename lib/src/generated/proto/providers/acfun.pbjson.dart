@@ -210,10 +210,9 @@ const Quality$json = {
   '1': 'Quality',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'url', '3': 2, '4': 1, '5': 9, '10': 'url'},
     {
       '1': 'format',
-      '3': 3,
+      '3': 2,
       '4': 1,
       '5': 14,
       '6': '.synctv.provider.acfun.StreamFormat',
@@ -221,28 +220,28 @@ const Quality$json = {
     },
     {
       '1': 'bitrate',
-      '3': 4,
+      '3': 3,
       '4': 1,
       '5': 4,
       '9': 0,
       '10': 'bitrate',
       '17': true
     },
-    {'1': 'width', '3': 5, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
+    {'1': 'width', '3': 4, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
     {
       '1': 'height',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 13,
       '9': 2,
       '10': 'height',
       '17': true
     },
-    {'1': 'fps', '3': 7, '4': 1, '5': 13, '9': 3, '10': 'fps', '17': true},
-    {'1': 'codec', '3': 8, '4': 1, '5': 9, '9': 4, '10': 'codec', '17': true},
+    {'1': 'fps', '3': 6, '4': 1, '5': 13, '9': 3, '10': 'fps', '17': true},
+    {'1': 'codec', '3': 7, '4': 1, '5': 9, '9': 4, '10': 'codec', '17': true},
     {
       '1': 'quality_type',
-      '3': 9,
+      '3': 8,
       '4': 1,
       '5': 9,
       '9': 5,
@@ -262,13 +261,13 @@ const Quality$json = {
 
 /// Descriptor for `Quality`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List qualityDescriptor = $convert.base64Decode(
-    'CgdRdWFsaXR5EhIKBG5hbWUYASABKAlSBG5hbWUSEAoDdXJsGAIgASgJUgN1cmwSOwoGZm9ybW'
-    'F0GAMgASgOMiMuc3luY3R2LnByb3ZpZGVyLmFjZnVuLlN0cmVhbUZvcm1hdFIGZm9ybWF0Eh0K'
-    'B2JpdHJhdGUYBCABKARIAFIHYml0cmF0ZYgBARIZCgV3aWR0aBgFIAEoDUgBUgV3aWR0aIgBAR'
-    'IbCgZoZWlnaHQYBiABKA1IAlIGaGVpZ2h0iAEBEhUKA2ZwcxgHIAEoDUgDUgNmcHOIAQESGQoF'
-    'Y29kZWMYCCABKAlIBFIFY29kZWOIAQESJgoMcXVhbGl0eV90eXBlGAkgASgJSAVSC3F1YWxpdH'
-    'lUeXBliAEBQgoKCF9iaXRyYXRlQggKBl93aWR0aEIJCgdfaGVpZ2h0QgYKBF9mcHNCCAoGX2Nv'
-    'ZGVjQg8KDV9xdWFsaXR5X3R5cGU=');
+    'CgdRdWFsaXR5EhIKBG5hbWUYASABKAlSBG5hbWUSOwoGZm9ybWF0GAIgASgOMiMuc3luY3R2Ln'
+    'Byb3ZpZGVyLmFjZnVuLlN0cmVhbUZvcm1hdFIGZm9ybWF0Eh0KB2JpdHJhdGUYAyABKARIAFIH'
+    'Yml0cmF0ZYgBARIZCgV3aWR0aBgEIAEoDUgBUgV3aWR0aIgBARIbCgZoZWlnaHQYBSABKA1IAl'
+    'IGaGVpZ2h0iAEBEhUKA2ZwcxgGIAEoDUgDUgNmcHOIAQESGQoFY29kZWMYByABKAlIBFIFY29k'
+    'ZWOIAQESJgoMcXVhbGl0eV90eXBlGAggASgJSAVSC3F1YWxpdHlUeXBliAEBQgoKCF9iaXRyYX'
+    'RlQggKBl93aWR0aEIJCgdfaGVpZ2h0QgYKBF9mcHNCCAoGX2NvZGVjQg8KDV9xdWFsaXR5X3R5'
+    'cGU=');
 
 @$core.Deprecated('Use resolveResponseDescriptor instead')
 const ResolveResponse$json = {

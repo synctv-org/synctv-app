@@ -13432,6 +13432,156 @@ class ListRoomStreamsResponse extends $pb.GeneratedMessage {
   void clearTotal() => $_clearField(2);
 }
 
+class CreateRoomPublishKeyRequest extends $pb.GeneratedMessage {
+  factory CreateRoomPublishKeyRequest({
+    $core.String? mediaId,
+  }) {
+    final result = create();
+    if (mediaId != null) result.mediaId = mediaId;
+    return result;
+  }
+
+  CreateRoomPublishKeyRequest._();
+
+  factory CreateRoomPublishKeyRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateRoomPublishKeyRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateRoomPublishKeyRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateRoomPublishKeyRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateRoomPublishKeyRequest copyWith(
+          void Function(CreateRoomPublishKeyRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as CreateRoomPublishKeyRequest))
+          as CreateRoomPublishKeyRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateRoomPublishKeyRequest create() =>
+      CreateRoomPublishKeyRequest._();
+  @$core.override
+  CreateRoomPublishKeyRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateRoomPublishKeyRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateRoomPublishKeyRequest>(create);
+  static CreateRoomPublishKeyRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get mediaId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mediaId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMediaId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMediaId() => $_clearField(1);
+}
+
+class CreateRoomPublishKeyResponse extends $pb.GeneratedMessage {
+  factory CreateRoomPublishKeyResponse({
+    $core.String? publishKey,
+    $core.String? rtmpUrl,
+    $core.String? streamKey,
+    $fixnum.Int64? expiresAt,
+  }) {
+    final result = create();
+    if (publishKey != null) result.publishKey = publishKey;
+    if (rtmpUrl != null) result.rtmpUrl = rtmpUrl;
+    if (streamKey != null) result.streamKey = streamKey;
+    if (expiresAt != null) result.expiresAt = expiresAt;
+    return result;
+  }
+
+  CreateRoomPublishKeyResponse._();
+
+  factory CreateRoomPublishKeyResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateRoomPublishKeyResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateRoomPublishKeyResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'publishKey')
+    ..aOS(2, _omitFieldNames ? '' : 'rtmpUrl')
+    ..aOS(3, _omitFieldNames ? '' : 'streamKey')
+    ..aInt64(4, _omitFieldNames ? '' : 'expiresAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateRoomPublishKeyResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateRoomPublishKeyResponse copyWith(
+          void Function(CreateRoomPublishKeyResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as CreateRoomPublishKeyResponse))
+          as CreateRoomPublishKeyResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateRoomPublishKeyResponse create() =>
+      CreateRoomPublishKeyResponse._();
+  @$core.override
+  CreateRoomPublishKeyResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateRoomPublishKeyResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateRoomPublishKeyResponse>(create);
+  static CreateRoomPublishKeyResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get publishKey => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set publishKey($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPublishKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPublishKey() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get rtmpUrl => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set rtmpUrl($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRtmpUrl() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRtmpUrl() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get streamKey => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set streamKey($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStreamKey() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStreamKey() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get expiresAt => $_getI64(3);
+  @$pb.TagNumber(4)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasExpiresAt() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearExpiresAt() => $_clearField(4);
+}
+
 class GetRoomStreamInfoRequest extends $pb.GeneratedMessage {
   factory GetRoomStreamInfoRequest({
     $core.String? mediaId,
@@ -14872,11 +15022,13 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
     $core.String? playlistId,
     $core.String? name,
     $core.String? description,
+    $1.PlaylistSourceConfig? sourceConfig,
   }) {
     final result = create();
     if (playlistId != null) result.playlistId = playlistId;
     if (name != null) result.name = name;
     if (description != null) result.description = description;
+    if (sourceConfig != null) result.sourceConfig = sourceConfig;
     return result;
   }
 
@@ -14896,6 +15048,8 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'playlistId')
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'description')
+    ..aOM<$1.PlaylistSourceConfig>(4, _omitFieldNames ? '' : 'sourceConfig',
+        subBuilder: $1.PlaylistSourceConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -14944,6 +15098,19 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
   $core.bool hasDescription() => $_has(2);
   @$pb.TagNumber(3)
   void clearDescription() => $_clearField(3);
+
+  /// Replaces the complete source configuration of an existing dynamic
+  /// playlist. The provider is derived from this config.
+  @$pb.TagNumber(4)
+  $1.PlaylistSourceConfig get sourceConfig => $_getN(3);
+  @$pb.TagNumber(4)
+  set sourceConfig($1.PlaylistSourceConfig value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSourceConfig() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSourceConfig() => $_clearField(4);
+  @$pb.TagNumber(4)
+  $1.PlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
 }
 
 enum MovePlaylistRequest_Anchor { beforePlaylistId, afterPlaylistId, notSet }
@@ -24939,6 +25106,7 @@ class PlaybackDanmaku extends $pb.GeneratedMessage {
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? headers,
     $fixnum.Int64? expireAt,
     P2pResourceDelivery? p2pDelivery,
+    PlaybackDanmakuDelivery? delivery,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -24947,6 +25115,7 @@ class PlaybackDanmaku extends $pb.GeneratedMessage {
     if (headers != null) result.headers.addEntries(headers);
     if (expireAt != null) result.expireAt = expireAt;
     if (p2pDelivery != null) result.p2pDelivery = p2pDelivery;
+    if (delivery != null) result.delivery = delivery;
     return result;
   }
 
@@ -24974,6 +25143,8 @@ class PlaybackDanmaku extends $pb.GeneratedMessage {
     ..aInt64(5, _omitFieldNames ? '' : 'expireAt')
     ..aOM<P2pResourceDelivery>(6, _omitFieldNames ? '' : 'p2pDelivery',
         subBuilder: P2pResourceDelivery.create)
+    ..aE<PlaybackDanmakuDelivery>(7, _omitFieldNames ? '' : 'delivery',
+        enumValues: PlaybackDanmakuDelivery.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -25050,6 +25221,16 @@ class PlaybackDanmaku extends $pb.GeneratedMessage {
   void clearP2pDelivery() => $_clearField(6);
   @$pb.TagNumber(6)
   P2pResourceDelivery ensureP2pDelivery() => $_ensure(5);
+
+  /// Transport contract for this danmaku resource.
+  @$pb.TagNumber(7)
+  PlaybackDanmakuDelivery get delivery => $_getN(6);
+  @$pb.TagNumber(7)
+  set delivery(PlaybackDanmakuDelivery value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasDelivery() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearDelivery() => $_clearField(7);
 }
 
 enum ClientMessage_Message {
@@ -49801,6 +49982,10 @@ class RoomServiceApi {
           $pb.ClientContext? ctx, ListRoomStreamsRequest request) =>
       _client.invoke<ListRoomStreamsResponse>(ctx, 'RoomService',
           'ListRoomStreams', request, ListRoomStreamsResponse());
+  $async.Future<CreateRoomPublishKeyResponse> createRoomPublishKey(
+          $pb.ClientContext? ctx, CreateRoomPublishKeyRequest request) =>
+      _client.invoke<CreateRoomPublishKeyResponse>(ctx, 'RoomService',
+          'CreateRoomPublishKey', request, CreateRoomPublishKeyResponse());
   $async.Future<GetRoomStreamInfoResponse> getRoomStreamInfo(
           $pb.ClientContext? ctx, GetRoomStreamInfoRequest request) =>
       _client.invoke<GetRoomStreamInfoResponse>(ctx, 'RoomService',

@@ -23,7 +23,7 @@ void main() {
     test('accepts resources below the configured API path', () {
       expect(
         isServerApiResourceUrl(
-          'https://synctv.example/synctv/api/playback-providers/bilibili/live-danmaku/media',
+          'https://synctv.example/synctv/api/playback-providers/room/bilibili/live-danmaku/media',
           'https://synctv.example/synctv',
         ),
         isTrue,
@@ -77,7 +77,7 @@ void main() {
   test('uses the current session authorization for server resources', () {
     final headers = authenticatedServerResourceHeaders(
       const _TestResourceUrlResolver(serverResource: true),
-      'https://synctv.example/api/playback-providers/bilibili/live-danmaku/media',
+      'https://synctv.example/api/playback-providers/room/bilibili/live-danmaku/media',
       const {'Authorization': 'Bearer stale-provider-token'},
     );
 

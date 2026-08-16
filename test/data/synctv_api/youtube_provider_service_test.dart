@@ -23,7 +23,7 @@ void main() {
           channelName: 'Creator',
         ),
         formats: [youtube.Format(itag: 22, name: '720p')],
-        subtitles: [youtube.Subtitle(language: 'en')],
+        subtitleCount: 1,
         source: provider_common.DiscoveredSource(
           providerInstanceName: 'edge',
           media: source.MediaSourceConfig(
@@ -51,7 +51,7 @@ void main() {
 
       expect(result.metadata.title, 'Video');
       expect(result.formats.single.itag, 22);
-      expect(result.subtitles.single.language, 'en');
+      expect(result.subtitleCount, 1);
       expect(result.source.media.youtube.videoId, 'abcdefghijk');
       expect(result.source.media.youtube.shared, isFalse);
       expect(capturedRequest.url.path, '/api/providers/youtube/resolve');

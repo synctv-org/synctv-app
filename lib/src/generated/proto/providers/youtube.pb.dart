@@ -1000,109 +1000,17 @@ class Format extends $pb.GeneratedMessage {
   void clearAudioOnly() => $_clearField(10);
 }
 
-class Subtitle extends $pb.GeneratedMessage {
-  factory Subtitle({
-    $core.String? name,
-    $core.String? language,
-    $core.bool? automatic,
-    $core.bool? translatable,
-  }) {
-    final result = create();
-    if (name != null) result.name = name;
-    if (language != null) result.language = language;
-    if (automatic != null) result.automatic = automatic;
-    if (translatable != null) result.translatable = translatable;
-    return result;
-  }
-
-  Subtitle._();
-
-  factory Subtitle.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory Subtitle.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Subtitle',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'synctv.provider.youtube'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..aOS(2, _omitFieldNames ? '' : 'language')
-    ..aOB(3, _omitFieldNames ? '' : 'automatic')
-    ..aOB(4, _omitFieldNames ? '' : 'translatable')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Subtitle clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Subtitle copyWith(void Function(Subtitle) updates) =>
-      super.copyWith((message) => updates(message as Subtitle)) as Subtitle;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Subtitle create() => Subtitle._();
-  @$core.override
-  Subtitle createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static Subtitle getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Subtitle>(create);
-  static Subtitle? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get name => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set name($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasName() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearName() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get language => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set language($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasLanguage() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearLanguage() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.bool get automatic => $_getBF(2);
-  @$pb.TagNumber(3)
-  set automatic($core.bool value) => $_setBool(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasAutomatic() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearAutomatic() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.bool get translatable => $_getBF(3);
-  @$pb.TagNumber(4)
-  set translatable($core.bool value) => $_setBool(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasTranslatable() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearTranslatable() => $_clearField(4);
-}
-
 class ResolveResponse extends $pb.GeneratedMessage {
   factory ResolveResponse({
     Metadata? metadata,
     $core.Iterable<Format>? formats,
-    $core.Iterable<Subtitle>? subtitles,
-    $core.String? storyboardSpec,
+    $core.int? subtitleCount,
     $0.DiscoveredSource? source,
   }) {
     final result = create();
     if (metadata != null) result.metadata = metadata;
     if (formats != null) result.formats.addAll(formats);
-    if (subtitles != null) result.subtitles.addAll(subtitles);
-    if (storyboardSpec != null) result.storyboardSpec = storyboardSpec;
+    if (subtitleCount != null) result.subtitleCount = subtitleCount;
     if (source != null) result.source = source;
     return result;
   }
@@ -1125,10 +1033,9 @@ class ResolveResponse extends $pb.GeneratedMessage {
         subBuilder: Metadata.create)
     ..pPM<Format>(2, _omitFieldNames ? '' : 'formats',
         subBuilder: Format.create)
-    ..pPM<Subtitle>(3, _omitFieldNames ? '' : 'subtitles',
-        subBuilder: Subtitle.create)
-    ..aOS(4, _omitFieldNames ? '' : 'storyboardSpec')
-    ..aOM<$0.DiscoveredSource>(5, _omitFieldNames ? '' : 'source',
+    ..aI(3, _omitFieldNames ? '' : 'subtitleCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOM<$0.DiscoveredSource>(4, _omitFieldNames ? '' : 'source',
         subBuilder: $0.DiscoveredSource.create)
     ..hasRequiredFields = false;
 
@@ -1166,27 +1073,24 @@ class ResolveResponse extends $pb.GeneratedMessage {
   $pb.PbList<Format> get formats => $_getList(1);
 
   @$pb.TagNumber(3)
-  $pb.PbList<Subtitle> get subtitles => $_getList(2);
+  $core.int get subtitleCount => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set subtitleCount($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSubtitleCount() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSubtitleCount() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get storyboardSpec => $_getSZ(3);
+  $0.DiscoveredSource get source => $_getN(3);
   @$pb.TagNumber(4)
-  set storyboardSpec($core.String value) => $_setString(3, value);
+  set source($0.DiscoveredSource value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasStoryboardSpec() => $_has(3);
+  $core.bool hasSource() => $_has(3);
   @$pb.TagNumber(4)
-  void clearStoryboardSpec() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $0.DiscoveredSource get source => $_getN(4);
-  @$pb.TagNumber(5)
-  set source($0.DiscoveredSource value) => $_setField(5, value);
-  @$pb.TagNumber(5)
-  $core.bool hasSource() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearSource() => $_clearField(5);
-  @$pb.TagNumber(5)
-  $0.DiscoveredSource ensureSource() => $_ensure(4);
+  void clearSource() => $_clearField(4);
+  @$pb.TagNumber(4)
+  $0.DiscoveredSource ensureSource() => $_ensure(3);
 }
 
 class ListRequest_Playlist extends $pb.GeneratedMessage {

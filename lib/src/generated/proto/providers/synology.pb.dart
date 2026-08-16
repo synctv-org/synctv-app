@@ -2414,6 +2414,254 @@ class GetBindsResponse extends $pb.GeneratedMessage {
   $pb.PbList<BindInfo> get binds => $_getList(0);
 }
 
+class FileImageRequest extends $pb.GeneratedMessage {
+  factory FileImageRequest({
+    $core.String? path,
+    $core.String? size,
+  }) {
+    final result = create();
+    if (path != null) result.path = path;
+    if (size != null) result.size = size;
+    return result;
+  }
+
+  FileImageRequest._();
+
+  factory FileImageRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FileImageRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FileImageRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.synology'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'path')
+    ..aOS(2, _omitFieldNames ? '' : 'size')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FileImageRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FileImageRequest copyWith(void Function(FileImageRequest) updates) =>
+      super.copyWith((message) => updates(message as FileImageRequest))
+          as FileImageRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FileImageRequest create() => FileImageRequest._();
+  @$core.override
+  FileImageRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FileImageRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FileImageRequest>(create);
+  static FileImageRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get path => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set path($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPath() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPath() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get size => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set size($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSize() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSize() => $_clearField(2);
+}
+
+class PosterImageRequest extends $pb.GeneratedMessage {
+  factory PosterImageRequest({
+    $fixnum.Int64? itemId,
+    $core.String? mediaType,
+    $core.String? posterMtime,
+  }) {
+    final result = create();
+    if (itemId != null) result.itemId = itemId;
+    if (mediaType != null) result.mediaType = mediaType;
+    if (posterMtime != null) result.posterMtime = posterMtime;
+    return result;
+  }
+
+  PosterImageRequest._();
+
+  factory PosterImageRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PosterImageRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PosterImageRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.synology'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'itemId')
+    ..aOS(2, _omitFieldNames ? '' : 'mediaType')
+    ..aOS(3, _omitFieldNames ? '' : 'posterMtime')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PosterImageRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PosterImageRequest copyWith(void Function(PosterImageRequest) updates) =>
+      super.copyWith((message) => updates(message as PosterImageRequest))
+          as PosterImageRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PosterImageRequest create() => PosterImageRequest._();
+  @$core.override
+  PosterImageRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PosterImageRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PosterImageRequest>(create);
+  static PosterImageRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get itemId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set itemId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasItemId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearItemId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get mediaType => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set mediaType($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMediaType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMediaType() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get posterMtime => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set posterMtime($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPosterMtime() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPosterMtime() => $_clearField(3);
+}
+
+enum GetImageRequest_Image { file, poster, notSet }
+
+class GetImageRequest extends $pb.GeneratedMessage {
+  factory GetImageRequest({
+    $core.String? serverId,
+    FileImageRequest? file,
+    PosterImageRequest? poster,
+  }) {
+    final result = create();
+    if (serverId != null) result.serverId = serverId;
+    if (file != null) result.file = file;
+    if (poster != null) result.poster = poster;
+    return result;
+  }
+
+  GetImageRequest._();
+
+  factory GetImageRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetImageRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, GetImageRequest_Image>
+      _GetImageRequest_ImageByTag = {
+    2: GetImageRequest_Image.file,
+    3: GetImageRequest_Image.poster,
+    0: GetImageRequest_Image.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetImageRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.synology'),
+      createEmptyInstance: create)
+    ..oo(0, [2, 3])
+    ..aOS(1, _omitFieldNames ? '' : 'serverId')
+    ..aOM<FileImageRequest>(2, _omitFieldNames ? '' : 'file',
+        subBuilder: FileImageRequest.create)
+    ..aOM<PosterImageRequest>(3, _omitFieldNames ? '' : 'poster',
+        subBuilder: PosterImageRequest.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetImageRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetImageRequest copyWith(void Function(GetImageRequest) updates) =>
+      super.copyWith((message) => updates(message as GetImageRequest))
+          as GetImageRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetImageRequest create() => GetImageRequest._();
+  @$core.override
+  GetImageRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetImageRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetImageRequest>(create);
+  static GetImageRequest? _defaultInstance;
+
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  GetImageRequest_Image whichImage() =>
+      _GetImageRequest_ImageByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  void clearImage() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.String get serverId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set serverId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasServerId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearServerId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  FileImageRequest get file => $_getN(1);
+  @$pb.TagNumber(2)
+  set file(FileImageRequest value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasFile() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFile() => $_clearField(2);
+  @$pb.TagNumber(2)
+  FileImageRequest ensureFile() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  PosterImageRequest get poster => $_getN(2);
+  @$pb.TagNumber(3)
+  set poster(PosterImageRequest value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPoster() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPoster() => $_clearField(3);
+  @$pb.TagNumber(3)
+  PosterImageRequest ensurePoster() => $_ensure(2);
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

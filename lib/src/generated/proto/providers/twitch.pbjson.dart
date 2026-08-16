@@ -287,15 +287,6 @@ const Metadata$json = {
       '6': '.synctv.provider.twitch.Chapter',
       '10': 'chapters'
     },
-    {
-      '1': 'storyboard_url',
-      '3': 12,
-      '4': 1,
-      '5': 9,
-      '9': 6,
-      '10': 'storyboardUrl',
-      '17': true
-    },
   ],
   '8': [
     {'1': '_category'},
@@ -304,7 +295,6 @@ const Metadata$json = {
     {'1': '_duration_seconds'},
     {'1': '_view_count'},
     {'1': '_published_at'},
-    {'1': '_storyboard_url'},
   ],
 };
 
@@ -317,30 +307,27 @@ final $typed_data.Uint8List metadataDescriptor = $convert.base64Decode(
     'bl9zZWNvbmRzGAggASgESANSD2R1cmF0aW9uU2Vjb25kc4gBARIiCgp2aWV3X2NvdW50GAkgAS'
     'gESARSCXZpZXdDb3VudIgBARImCgxwdWJsaXNoZWRfYXQYCiABKAlIBVILcHVibGlzaGVkQXSI'
     'AQESOwoIY2hhcHRlcnMYCyADKAsyHy5zeW5jdHYucHJvdmlkZXIudHdpdGNoLkNoYXB0ZXJSCG'
-    'NoYXB0ZXJzEioKDnN0b3J5Ym9hcmRfdXJsGAwgASgJSAZSDXN0b3J5Ym9hcmRVcmyIAQFCCwoJ'
-    'X2NhdGVnb3J5QhAKDl90aHVtYm5haWxfdXJsQg4KDF9kZXNjcmlwdGlvbkITChFfZHVyYXRpb2'
-    '5fc2Vjb25kc0INCgtfdmlld19jb3VudEIPCg1fcHVibGlzaGVkX2F0QhEKD19zdG9yeWJvYXJk'
-    'X3VybA==');
+    'NoYXB0ZXJzQgsKCV9jYXRlZ29yeUIQCg5fdGh1bWJuYWlsX3VybEIOCgxfZGVzY3JpcHRpb25C'
+    'EwoRX2R1cmF0aW9uX3NlY29uZHNCDQoLX3ZpZXdfY291bnRCDwoNX3B1Ymxpc2hlZF9hdA==');
 
 @$core.Deprecated('Use qualityDescriptor instead')
 const Quality$json = {
   '1': 'Quality',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'url', '3': 2, '4': 1, '5': 9, '10': 'url'},
     {
       '1': 'bandwidth',
-      '3': 3,
+      '3': 2,
       '4': 1,
       '5': 4,
       '9': 0,
       '10': 'bandwidth',
       '17': true
     },
-    {'1': 'width', '3': 4, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
+    {'1': 'width', '3': 3, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
     {
       '1': 'height',
-      '3': 5,
+      '3': 4,
       '4': 1,
       '5': 13,
       '9': 2,
@@ -349,14 +336,14 @@ const Quality$json = {
     },
     {
       '1': 'frame_rate',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 9,
       '9': 3,
       '10': 'frameRate',
       '17': true
     },
-    {'1': 'codecs', '3': 7, '4': 1, '5': 9, '9': 4, '10': 'codecs', '17': true},
+    {'1': 'codecs', '3': 6, '4': 1, '5': 9, '9': 4, '10': 'codecs', '17': true},
   ],
   '8': [
     {'1': '_bandwidth'},
@@ -369,11 +356,11 @@ const Quality$json = {
 
 /// Descriptor for `Quality`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List qualityDescriptor = $convert.base64Decode(
-    'CgdRdWFsaXR5EhIKBG5hbWUYASABKAlSBG5hbWUSEAoDdXJsGAIgASgJUgN1cmwSIQoJYmFuZH'
-    'dpZHRoGAMgASgESABSCWJhbmR3aWR0aIgBARIZCgV3aWR0aBgEIAEoDUgBUgV3aWR0aIgBARIb'
-    'CgZoZWlnaHQYBSABKA1IAlIGaGVpZ2h0iAEBEiIKCmZyYW1lX3JhdGUYBiABKAlIA1IJZnJhbW'
-    'VSYXRliAEBEhsKBmNvZGVjcxgHIAEoCUgEUgZjb2RlY3OIAQFCDAoKX2JhbmR3aWR0aEIICgZf'
-    'd2lkdGhCCQoHX2hlaWdodEINCgtfZnJhbWVfcmF0ZUIJCgdfY29kZWNz');
+    'CgdRdWFsaXR5EhIKBG5hbWUYASABKAlSBG5hbWUSIQoJYmFuZHdpZHRoGAIgASgESABSCWJhbm'
+    'R3aWR0aIgBARIZCgV3aWR0aBgDIAEoDUgBUgV3aWR0aIgBARIbCgZoZWlnaHQYBCABKA1IAlIG'
+    'aGVpZ2h0iAEBEiIKCmZyYW1lX3JhdGUYBSABKAlIA1IJZnJhbWVSYXRliAEBEhsKBmNvZGVjcx'
+    'gGIAEoCUgEUgZjb2RlY3OIAQFCDAoKX2JhbmR3aWR0aEIICgZfd2lkdGhCCQoHX2hlaWdodEIN'
+    'CgtfZnJhbWVfcmF0ZUIJCgdfY29kZWNz');
 
 @$core.Deprecated('Use resolveResponseDescriptor instead')
 const ResolveResponse$json = {

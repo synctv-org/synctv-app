@@ -350,7 +350,6 @@ class Metadata extends $pb.GeneratedMessage {
 class Quality extends $pb.GeneratedMessage {
   factory Quality({
     $core.String? name,
-    $core.String? url,
     StreamFormat? format,
     $fixnum.Int64? bitrate,
     $core.int? width,
@@ -361,7 +360,6 @@ class Quality extends $pb.GeneratedMessage {
   }) {
     final result = create();
     if (name != null) result.name = name;
-    if (url != null) result.url = url;
     if (format != null) result.format = format;
     if (bitrate != null) result.bitrate = bitrate;
     if (width != null) result.width = width;
@@ -387,16 +385,15 @@ class Quality extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.provider.acfun'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..aOS(2, _omitFieldNames ? '' : 'url')
-    ..aE<StreamFormat>(3, _omitFieldNames ? '' : 'format',
+    ..aE<StreamFormat>(2, _omitFieldNames ? '' : 'format',
         enumValues: StreamFormat.values)
-    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'bitrate', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'bitrate', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aI(5, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
-    ..aI(6, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
-    ..aI(7, _omitFieldNames ? '' : 'fps', fieldType: $pb.PbFieldType.OU3)
-    ..aOS(8, _omitFieldNames ? '' : 'codec')
-    ..aOS(9, _omitFieldNames ? '' : 'qualityType')
+    ..aI(4, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..aI(6, _omitFieldNames ? '' : 'fps', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(7, _omitFieldNames ? '' : 'codec')
+    ..aOS(8, _omitFieldNames ? '' : 'qualityType')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -427,76 +424,67 @@ class Quality extends $pb.GeneratedMessage {
   void clearName() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get url => $_getSZ(1);
+  StreamFormat get format => $_getN(1);
   @$pb.TagNumber(2)
-  set url($core.String value) => $_setString(1, value);
+  set format(StreamFormat value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasUrl() => $_has(1);
+  $core.bool hasFormat() => $_has(1);
   @$pb.TagNumber(2)
-  void clearUrl() => $_clearField(2);
+  void clearFormat() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  StreamFormat get format => $_getN(2);
+  $fixnum.Int64 get bitrate => $_getI64(2);
   @$pb.TagNumber(3)
-  set format(StreamFormat value) => $_setField(3, value);
+  set bitrate($fixnum.Int64 value) => $_setInt64(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasFormat() => $_has(2);
+  $core.bool hasBitrate() => $_has(2);
   @$pb.TagNumber(3)
-  void clearFormat() => $_clearField(3);
+  void clearBitrate() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $fixnum.Int64 get bitrate => $_getI64(3);
+  $core.int get width => $_getIZ(3);
   @$pb.TagNumber(4)
-  set bitrate($fixnum.Int64 value) => $_setInt64(3, value);
+  set width($core.int value) => $_setUnsignedInt32(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasBitrate() => $_has(3);
+  $core.bool hasWidth() => $_has(3);
   @$pb.TagNumber(4)
-  void clearBitrate() => $_clearField(4);
+  void clearWidth() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.int get width => $_getIZ(4);
+  $core.int get height => $_getIZ(4);
   @$pb.TagNumber(5)
-  set width($core.int value) => $_setUnsignedInt32(4, value);
+  set height($core.int value) => $_setUnsignedInt32(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasWidth() => $_has(4);
+  $core.bool hasHeight() => $_has(4);
   @$pb.TagNumber(5)
-  void clearWidth() => $_clearField(5);
+  void clearHeight() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.int get height => $_getIZ(5);
+  $core.int get fps => $_getIZ(5);
   @$pb.TagNumber(6)
-  set height($core.int value) => $_setUnsignedInt32(5, value);
+  set fps($core.int value) => $_setUnsignedInt32(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasHeight() => $_has(5);
+  $core.bool hasFps() => $_has(5);
   @$pb.TagNumber(6)
-  void clearHeight() => $_clearField(6);
+  void clearFps() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $core.int get fps => $_getIZ(6);
+  $core.String get codec => $_getSZ(6);
   @$pb.TagNumber(7)
-  set fps($core.int value) => $_setUnsignedInt32(6, value);
+  set codec($core.String value) => $_setString(6, value);
   @$pb.TagNumber(7)
-  $core.bool hasFps() => $_has(6);
+  $core.bool hasCodec() => $_has(6);
   @$pb.TagNumber(7)
-  void clearFps() => $_clearField(7);
+  void clearCodec() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $core.String get codec => $_getSZ(7);
+  $core.String get qualityType => $_getSZ(7);
   @$pb.TagNumber(8)
-  set codec($core.String value) => $_setString(7, value);
+  set qualityType($core.String value) => $_setString(7, value);
   @$pb.TagNumber(8)
-  $core.bool hasCodec() => $_has(7);
+  $core.bool hasQualityType() => $_has(7);
   @$pb.TagNumber(8)
-  void clearCodec() => $_clearField(8);
-
-  @$pb.TagNumber(9)
-  $core.String get qualityType => $_getSZ(8);
-  @$pb.TagNumber(9)
-  set qualityType($core.String value) => $_setString(8, value);
-  @$pb.TagNumber(9)
-  $core.bool hasQualityType() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearQualityType() => $_clearField(9);
+  void clearQualityType() => $_clearField(8);
 }
 
 class ResolveResponse extends $pb.GeneratedMessage {

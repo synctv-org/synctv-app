@@ -15,6 +15,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $1;
 import 'synology.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -64,4 +65,8 @@ class SynologyProviderServiceApi {
           $pb.ClientContext? ctx, $0.GetBindsRequest request) =>
       _client.invoke<$0.GetBindsResponse>(ctx, 'SynologyProviderService',
           'GetBinds', request, $0.GetBindsResponse());
+  $async.Future<$1.ResourceResponse> getImage(
+          $pb.ClientContext? ctx, $0.GetImageRequest request) =>
+      _client.invoke<$1.ResourceResponse>(ctx, 'SynologyProviderService',
+          'GetImage', request, $1.ResourceResponse());
 }

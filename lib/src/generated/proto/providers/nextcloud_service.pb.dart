@@ -15,6 +15,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'common.pb.dart' as $1;
 import 'nextcloud.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -52,4 +53,8 @@ class NextcloudProviderServiceApi {
           $pb.ClientContext? ctx, $0.GetBindsRequest request) =>
       _client.invoke<$0.GetBindsResponse>(ctx, 'NextcloudProviderService',
           'GetBinds', request, $0.GetBindsResponse());
+  $async.Future<$1.ResourceResponse> getPreview(
+          $pb.ClientContext? ctx, $0.GetPreviewRequest request) =>
+      _client.invoke<$1.ResourceResponse>(ctx, 'NextcloudProviderService',
+          'GetPreview', request, $1.ResourceResponse());
 }

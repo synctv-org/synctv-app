@@ -1018,6 +1018,32 @@ class TikTokPlaybackKind extends $pb.ProtobufEnum {
   const TikTokPlaybackKind._(super.value, super.name);
 }
 
+class PlaybackDanmakuDelivery extends $pb.ProtobufEnum {
+  static const PlaybackDanmakuDelivery PLAYBACK_DANMAKU_DELIVERY_UNSPECIFIED =
+      PlaybackDanmakuDelivery._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_DANMAKU_DELIVERY_UNSPECIFIED');
+  static const PlaybackDanmakuDelivery PLAYBACK_DANMAKU_DELIVERY_DOCUMENT =
+      PlaybackDanmakuDelivery._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_DANMAKU_DELIVERY_DOCUMENT');
+  static const PlaybackDanmakuDelivery PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM =
+      PlaybackDanmakuDelivery._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM');
+
+  static const $core.List<PlaybackDanmakuDelivery> values =
+      <PlaybackDanmakuDelivery>[
+    PLAYBACK_DANMAKU_DELIVERY_UNSPECIFIED,
+    PLAYBACK_DANMAKU_DELIVERY_DOCUMENT,
+    PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM,
+  ];
+
+  static final $core.List<PlaybackDanmakuDelivery?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static PlaybackDanmakuDelivery? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackDanmakuDelivery._(super.value, super.name);
+}
+
 class ResourceDeliveryMode extends $pb.ProtobufEnum {
   static const ResourceDeliveryMode RESOURCE_DELIVERY_MODE_UNSPECIFIED =
       ResourceDeliveryMode._(

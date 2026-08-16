@@ -201,20 +201,19 @@ const Quality$json = {
       '6': '.synctv.provider.huya.StreamFormat',
       '10': 'format'
     },
-    {'1': 'url', '3': 4, '4': 1, '5': 9, '10': 'url'},
     {
       '1': 'bitrate',
-      '3': 5,
+      '3': 4,
       '4': 1,
       '5': 4,
       '9': 0,
       '10': 'bitrate',
       '17': true
     },
-    {'1': 'width', '3': 6, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
+    {'1': 'width', '3': 5, '4': 1, '5': 13, '9': 1, '10': 'width', '17': true},
     {
       '1': 'height',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 13,
       '9': 2,
@@ -232,10 +231,10 @@ const Quality$json = {
 /// Descriptor for `Quality`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List qualityDescriptor = $convert.base64Decode(
     'CgdRdWFsaXR5EhIKBG5hbWUYASABKAlSBG5hbWUSEAoDY2RuGAIgASgJUgNjZG4SOgoGZm9ybW'
-    'F0GAMgASgOMiIuc3luY3R2LnByb3ZpZGVyLmh1eWEuU3RyZWFtRm9ybWF0UgZmb3JtYXQSEAoD'
-    'dXJsGAQgASgJUgN1cmwSHQoHYml0cmF0ZRgFIAEoBEgAUgdiaXRyYXRliAEBEhkKBXdpZHRoGA'
-    'YgASgNSAFSBXdpZHRoiAEBEhsKBmhlaWdodBgHIAEoDUgCUgZoZWlnaHSIAQFCCgoIX2JpdHJh'
-    'dGVCCAoGX3dpZHRoQgkKB19oZWlnaHQ=');
+    'F0GAMgASgOMiIuc3luY3R2LnByb3ZpZGVyLmh1eWEuU3RyZWFtRm9ybWF0UgZmb3JtYXQSHQoH'
+    'Yml0cmF0ZRgEIAEoBEgAUgdiaXRyYXRliAEBEhkKBXdpZHRoGAUgASgNSAFSBXdpZHRoiAEBEh'
+    'sKBmhlaWdodBgGIAEoDUgCUgZoZWlnaHSIAQFCCgoIX2JpdHJhdGVCCAoGX3dpZHRoQgkKB19o'
+    'ZWlnaHQ=');
 
 @$core.Deprecated('Use resolveResponseDescriptor instead')
 const ResolveResponse$json = {

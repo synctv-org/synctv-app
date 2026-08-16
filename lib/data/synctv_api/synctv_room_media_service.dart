@@ -14,7 +14,6 @@ import 'package:synctv_app/core/time/synced_clock.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
-import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -353,6 +352,7 @@ class SyncTvRoomMediaDomainService {
     String playlistId, {
     required String name,
     String? description,
+    source_config.PlaylistSourceConfig? sourceConfig,
   }) async {
     final response = await _api.room.updatePlaylist(
       roomId,
@@ -360,6 +360,7 @@ class SyncTvRoomMediaDomainService {
         playlistId: playlistId,
         name: name,
         description: description ?? '',
+        sourceConfig: sourceConfig,
       ),
     );
     return _api.mapPlaylist(response);
@@ -917,8 +918,9 @@ class SyncTvRoomMediaDomainService {
     String roomId,
     String mediaId,
   ) async {
-    final response = await _api.rtmpProvider.createPublishKey(
-      rtmp.CreatePublishKeyRequest(roomId: roomId, mediaId: mediaId),
+    final response = await _api.room.createRoomPublishKey(
+      roomId,
+      client.CreateRoomPublishKeyRequest(mediaId: mediaId),
     );
     return RtmpPublishKeyInfo(
       publishKey: response.publishKey,
@@ -932,8 +934,9 @@ class SyncTvRoomMediaDomainService {
     required String roomId,
     required String mediaId,
   }) async {
-    final response = await _api.rtmpProvider.getStreamInfo(
-      rtmp.GetStreamInfoRequest(roomId: roomId, mediaId: mediaId),
+    final response = await _api.room.getRoomStreamInfo(
+      roomId,
+      client.GetRoomStreamInfoRequest(mediaId: mediaId),
     );
     return RoomStreamEntryInfo(
       mediaId: mediaId,

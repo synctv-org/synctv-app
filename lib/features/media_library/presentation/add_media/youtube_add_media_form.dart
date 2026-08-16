@@ -321,7 +321,7 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     final details = <String>[
       if (metadata.channelName.isNotEmpty) metadata.channelName,
       context.l10n.formatsCount(resolved.formats.length),
-      context.l10n.subtitlesCount(resolved.subtitles.length),
+      context.l10n.subtitlesCount(resolved.subtitleCount),
       if (metadata.isLive) context.l10n.live,
     ];
     return DecoratedBox(

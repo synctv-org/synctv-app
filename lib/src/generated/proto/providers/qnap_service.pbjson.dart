@@ -47,6 +47,12 @@ const $core.Map<$core.String, $core.dynamic> QnapProviderServiceBase$json = {
       '2': '.synctv.provider.qnap.GetBindsRequest',
       '3': '.synctv.provider.qnap.GetBindsResponse'
     },
+    {
+      '1': 'GetThumbnail',
+      '2': '.synctv.provider.qnap.GetThumbnailRequest',
+      '3': '.synctv.provider.common.ResourceResponse',
+      '6': true
+    },
   ],
 };
 
@@ -291,6 +297,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.provider.qnap.GetBindsRequest': $0.GetBindsRequest$json,
   '.synctv.provider.qnap.GetBindsResponse': $0.GetBindsResponse$json,
   '.synctv.provider.qnap.BindInfo': $0.BindInfo$json,
+  '.synctv.provider.qnap.GetThumbnailRequest': $0.GetThumbnailRequest$json,
+  '.synctv.provider.common.ResourceResponse': $1.ResourceResponse$json,
+  '.synctv.provider.common.ResourceChunk': $1.ResourceChunk$json,
 };
 
 /// Descriptor for `QnapProviderService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
@@ -303,4 +312,6 @@ final $typed_data.Uint8List qnapProviderServiceDescriptor = $convert.base64Decod
     'FiaWxpdGllc1Jlc3BvbnNlElMKBkxvZ291dBIjLnN5bmN0di5wcm92aWRlci5xbmFwLkxvZ291'
     'dFJlcXVlc3QaJC5zeW5jdHYucHJvdmlkZXIucW5hcC5Mb2dvdXRSZXNwb25zZRJZCghHZXRCaW'
     '5kcxIlLnN5bmN0di5wcm92aWRlci5xbmFwLkdldEJpbmRzUmVxdWVzdBomLnN5bmN0di5wcm92'
-    'aWRlci5xbmFwLkdldEJpbmRzUmVzcG9uc2U=');
+    'aWRlci5xbmFwLkdldEJpbmRzUmVzcG9uc2USZQoMR2V0VGh1bWJuYWlsEikuc3luY3R2LnByb3'
+    'ZpZGVyLnFuYXAuR2V0VGh1bWJuYWlsUmVxdWVzdBooLnN5bmN0di5wcm92aWRlci5jb21tb24u'
+    'UmVzb3VyY2VSZXNwb25zZTAB');

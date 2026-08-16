@@ -679,3 +679,80 @@ const GetBindsResponse$json = {
 final $typed_data.Uint8List getBindsResponseDescriptor = $convert.base64Decode(
     'ChBHZXRCaW5kc1Jlc3BvbnNlEjgKBWJpbmRzGAEgAygLMiIuc3luY3R2LnByb3ZpZGVyLnN5bm'
     '9sb2d5LkJpbmRJbmZvUgViaW5kcw==');
+
+@$core.Deprecated('Use fileImageRequestDescriptor instead')
+const FileImageRequest$json = {
+  '1': 'FileImageRequest',
+  '2': [
+    {'1': 'path', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'path'},
+    {'1': 'size', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'size'},
+  ],
+};
+
+/// Descriptor for `FileImageRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fileImageRequestDescriptor = $convert.base64Decode(
+    'ChBGaWxlSW1hZ2VSZXF1ZXN0EhsKBHBhdGgYASABKAlCB7pIBHICEAFSBHBhdGgSGwoEc2l6ZR'
+    'gCIAEoCUIHukgEcgIQAVIEc2l6ZQ==');
+
+@$core.Deprecated('Use posterImageRequestDescriptor instead')
+const PosterImageRequest$json = {
+  '1': 'PosterImageRequest',
+  '2': [
+    {'1': 'item_id', '3': 1, '4': 1, '5': 3, '8': {}, '10': 'itemId'},
+    {'1': 'media_type', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'mediaType'},
+    {
+      '1': 'poster_mtime',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'posterMtime',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_poster_mtime'},
+  ],
+};
+
+/// Descriptor for `PosterImageRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List posterImageRequestDescriptor = $convert.base64Decode(
+    'ChJQb3N0ZXJJbWFnZVJlcXVlc3QSIAoHaXRlbV9pZBgBIAEoA0IHukgEIgIgAFIGaXRlbUlkEi'
+    'YKCm1lZGlhX3R5cGUYAiABKAlCB7pIBHICEAFSCW1lZGlhVHlwZRImCgxwb3N0ZXJfbXRpbWUY'
+    'AyABKAlIAFILcG9zdGVyTXRpbWWIAQFCDwoNX3Bvc3Rlcl9tdGltZQ==');
+
+@$core.Deprecated('Use getImageRequestDescriptor instead')
+const GetImageRequest$json = {
+  '1': 'GetImageRequest',
+  '2': [
+    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
+    {
+      '1': 'file',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.synology.FileImageRequest',
+      '9': 0,
+      '10': 'file'
+    },
+    {
+      '1': 'poster',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.synology.PosterImageRequest',
+      '9': 0,
+      '10': 'poster'
+    },
+  ],
+  '8': [
+    {'1': 'image', '2': {}},
+  ],
+};
+
+/// Descriptor for `GetImageRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getImageRequestDescriptor = $convert.base64Decode(
+    'Cg9HZXRJbWFnZVJlcXVlc3QSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUghzZXJ2ZXJJZB'
+    'JACgRmaWxlGAIgASgLMiouc3luY3R2LnByb3ZpZGVyLnN5bm9sb2d5LkZpbGVJbWFnZVJlcXVl'
+    'c3RIAFIEZmlsZRJGCgZwb3N0ZXIYAyABKAsyLC5zeW5jdHYucHJvdmlkZXIuc3lub2xvZ3kuUG'
+    '9zdGVySW1hZ2VSZXF1ZXN0SABSBnBvc3RlckIOCgVpbWFnZRIFukgCCAE=');

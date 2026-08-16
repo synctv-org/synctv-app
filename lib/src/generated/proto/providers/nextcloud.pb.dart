@@ -1382,6 +1382,110 @@ class GetBindsResponse extends $pb.GeneratedMessage {
   $pb.PbList<BindInfo> get binds => $_getList(0);
 }
 
+class GetPreviewRequest extends $pb.GeneratedMessage {
+  factory GetPreviewRequest({
+    $core.String? serverId,
+    $fixnum.Int64? fileId,
+    $core.int? width,
+    $core.int? height,
+    $core.bool? crop,
+  }) {
+    final result = create();
+    if (serverId != null) result.serverId = serverId;
+    if (fileId != null) result.fileId = fileId;
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    if (crop != null) result.crop = crop;
+    return result;
+  }
+
+  GetPreviewRequest._();
+
+  factory GetPreviewRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetPreviewRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetPreviewRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.nextcloud'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'serverId')
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'fileId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aI(3, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..aOB(5, _omitFieldNames ? '' : 'crop')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetPreviewRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetPreviewRequest copyWith(void Function(GetPreviewRequest) updates) =>
+      super.copyWith((message) => updates(message as GetPreviewRequest))
+          as GetPreviewRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetPreviewRequest create() => GetPreviewRequest._();
+  @$core.override
+  GetPreviewRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetPreviewRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetPreviewRequest>(create);
+  static GetPreviewRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get serverId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set serverId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasServerId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearServerId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get fileId => $_getI64(1);
+  @$pb.TagNumber(2)
+  set fileId($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasFileId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFileId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get width => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set width($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasWidth() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearWidth() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.int get height => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set height($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasHeight() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearHeight() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get crop => $_getBF(4);
+  @$pb.TagNumber(5)
+  set crop($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasCrop() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearCrop() => $_clearField(5);
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

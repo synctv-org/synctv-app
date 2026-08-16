@@ -2146,6 +2146,85 @@ class GetBindsResponse extends $pb.GeneratedMessage {
   $pb.PbList<BindInfo> get binds => $_getList(0);
 }
 
+class GetThumbnailRequest extends $pb.GeneratedMessage {
+  factory GetThumbnailRequest({
+    $core.String? serverId,
+    $core.String? imagePath,
+    $core.int? width,
+  }) {
+    final result = create();
+    if (serverId != null) result.serverId = serverId;
+    if (imagePath != null) result.imagePath = imagePath;
+    if (width != null) result.width = width;
+    return result;
+  }
+
+  GetThumbnailRequest._();
+
+  factory GetThumbnailRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetThumbnailRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetThumbnailRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.fnos'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'serverId')
+    ..aOS(2, _omitFieldNames ? '' : 'imagePath')
+    ..aI(3, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetThumbnailRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetThumbnailRequest copyWith(void Function(GetThumbnailRequest) updates) =>
+      super.copyWith((message) => updates(message as GetThumbnailRequest))
+          as GetThumbnailRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetThumbnailRequest create() => GetThumbnailRequest._();
+  @$core.override
+  GetThumbnailRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetThumbnailRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetThumbnailRequest>(create);
+  static GetThumbnailRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get serverId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set serverId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasServerId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearServerId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get imagePath => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set imagePath($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasImagePath() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearImagePath() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get width => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set width($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasWidth() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearWidth() => $_clearField(3);
+}
+
 class BindInfo extends $pb.GeneratedMessage {
   factory BindInfo({
     $core.String? id,

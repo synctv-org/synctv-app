@@ -80,7 +80,6 @@ void main() {
                     endSeconds: Int64(120),
                   ),
                 ],
-                storyboardUrl: 'https://img/storyboard.jpg',
               ),
               qualities: [
                 twitch.Quality(name: '1080p60'),
@@ -103,8 +102,6 @@ void main() {
     expect(find.text('Twitch VOD'), findsOneWidget);
     expect(find.textContaining('2 qualities'), findsOneWidget);
     expect(find.textContaining('1 chapters'), findsOneWidget);
-    expect(find.textContaining('Storyboard'), findsOneWidget);
-
     await tester.tap(find.text('Share my credentials'));
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('Twitch VOD'), findsNothing);

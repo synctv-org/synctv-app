@@ -41,7 +41,6 @@ import 'package:synctv_app/src/generated/proto/providers/synology.pb.dart'
     as synology;
 import 'package:synctv_app/src/generated/proto/providers/truenas.pb.dart'
     as truenas;
-import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
 import 'package:synctv_app/src/generated/proto/providers/twitch.pb.dart'
     as twitch;
 import 'package:synctv_app/src/generated/proto/providers/huya.pb.dart' as huya;
@@ -253,7 +252,6 @@ class SyncTvApiClient {
       SyncTvCloudreveProviderApi._(this);
   late final SyncTvBilibiliProviderApi bilibiliProvider =
       SyncTvBilibiliProviderApi._(this);
-  late final SyncTvRtmpProviderApi rtmpProvider = SyncTvRtmpProviderApi._(this);
   late final SyncTvTwitchProviderApi twitchProvider = SyncTvTwitchProviderApi._(
     this,
   );

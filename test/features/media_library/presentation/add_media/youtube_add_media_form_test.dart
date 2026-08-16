@@ -223,7 +223,7 @@ void main() {
                 thumbnailUrl: 'https://img.example/video.jpg',
               ),
               formats: [youtube.Format(name: '1080p')],
-              subtitles: [youtube.Subtitle(language: 'en')],
+              subtitleCount: 1,
               source: _youtubeMediaSource(request.value),
             ),
           ),

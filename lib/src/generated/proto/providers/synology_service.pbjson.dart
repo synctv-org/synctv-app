@@ -73,6 +73,12 @@ const $core.Map<$core.String, $core.dynamic> SynologyProviderServiceBase$json =
       '2': '.synctv.provider.synology.GetBindsRequest',
       '3': '.synctv.provider.synology.GetBindsResponse'
     },
+    {
+      '1': 'GetImage',
+      '2': '.synctv.provider.synology.GetImageRequest',
+      '3': '.synctv.provider.common.ResourceResponse',
+      '6': true
+    },
   ],
 };
 
@@ -329,6 +335,11 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.provider.synology.GetBindsRequest': $0.GetBindsRequest$json,
   '.synctv.provider.synology.GetBindsResponse': $0.GetBindsResponse$json,
   '.synctv.provider.synology.BindInfo': $0.BindInfo$json,
+  '.synctv.provider.synology.GetImageRequest': $0.GetImageRequest$json,
+  '.synctv.provider.synology.FileImageRequest': $0.FileImageRequest$json,
+  '.synctv.provider.synology.PosterImageRequest': $0.PosterImageRequest$json,
+  '.synctv.provider.common.ResourceResponse': $1.ResourceResponse$json,
+  '.synctv.provider.common.ResourceChunk': $1.ResourceChunk$json,
 };
 
 /// Descriptor for `SynologyProviderService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
@@ -352,4 +363,6 @@ final $typed_data.Uint8List synologyProviderServiceDescriptor = $convert.base64D
     'b0l0ZW1zUmVzcG9uc2USWwoGTG9nb3V0Eicuc3luY3R2LnByb3ZpZGVyLnN5bm9sb2d5LkxvZ2'
     '91dFJlcXVlc3QaKC5zeW5jdHYucHJvdmlkZXIuc3lub2xvZ3kuTG9nb3V0UmVzcG9uc2USYQoI'
     'R2V0QmluZHMSKS5zeW5jdHYucHJvdmlkZXIuc3lub2xvZ3kuR2V0QmluZHNSZXF1ZXN0Giouc3'
-    'luY3R2LnByb3ZpZGVyLnN5bm9sb2d5LkdldEJpbmRzUmVzcG9uc2U=');
+    'luY3R2LnByb3ZpZGVyLnN5bm9sb2d5LkdldEJpbmRzUmVzcG9uc2USYQoIR2V0SW1hZ2USKS5z'
+    'eW5jdHYucHJvdmlkZXIuc3lub2xvZ3kuR2V0SW1hZ2VSZXF1ZXN0Giguc3luY3R2LnByb3ZpZG'
+    'VyLmNvbW1vbi5SZXNvdXJjZVJlc3BvbnNlMAE=');

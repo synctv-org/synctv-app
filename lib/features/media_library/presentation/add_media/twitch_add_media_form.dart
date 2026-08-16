@@ -471,7 +471,6 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
           context.l10n.qualitiesCount(resolved.qualities.length),
           if (resolved.metadata.chapters.isNotEmpty)
             context.l10n.chaptersCount(resolved.metadata.chapters.length),
-          if (resolved.metadata.hasStoryboardUrl()) context.l10n.storyboard,
         ].where((value) => value.isNotEmpty).join(' · '),
         imageUrl: resolved.metadata.thumbnailUrl,
       );

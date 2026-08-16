@@ -10,6 +10,7 @@ import 'package:synctv_app/features/room/application/room_realtime_protocol.dart
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/content_reports/presentation/content_reports_view.dart';
@@ -2443,34 +2444,48 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _renameEntry(RoomMediaEntry entry) async {
-    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
+    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicItem) {
       AppNotifications.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
     provider_common.PlaybackProxyPolicy? playbackProxyPolicy;
-    if (entry.id.startsWith('med_')) {
-      final sourceConfig = SourceConfigCodec.mediaSourceConfigFromMap(
-        sourceProvider: entry.sourceProvider,
-        sourceConfig: entry.sourceConfig,
-      );
-      if (sourceConfig != null) {
-        try {
-          playbackProxyPolicy =
-              await DependencyScope.read<ProviderGateway>(
-                context,
-              ).resolvePlaybackProxyPolicy(
-                provider_common.DiscoveredSource(
-                  media: sourceConfig,
-                  providerInstanceName: entry.providerInstanceName,
-                ),
-              );
-        } catch (error) {
-          if (mounted) {
-            AppNotifications.showWarning(
-              context,
-              context.l10n.playbackProxyPolicyUnavailable('$error'),
-            );
-          }
+    final mediaSourceConfig = entry.id.startsWith('med_')
+        ? SourceConfigCodec.mediaSourceConfigFromMap(
+            sourceProvider: entry.sourceProvider,
+            sourceConfig: entry.sourceConfig,
+          )
+        : null;
+    final playlistSourceConfig = entry.id.startsWith('pl_')
+        ? SourceConfigCodec.playlistSourceConfigFromMap(
+            sourceProvider: entry.sourceProvider,
+            sourceConfig: entry.sourceConfig,
+          )
+        : null;
+    final discoveredSource = switch ((
+      mediaSourceConfig,
+      playlistSourceConfig,
+    )) {
+      (final media?, _) => provider_common.DiscoveredSource(
+        media: media,
+        providerInstanceName: entry.providerInstanceName,
+      ),
+      (_, final playlist?) => provider_common.DiscoveredSource(
+        playlist: playlist,
+        providerInstanceName: entry.providerInstanceName,
+      ),
+      _ => null,
+    };
+    if (discoveredSource != null) {
+      try {
+        playbackProxyPolicy = await DependencyScope.read<ProviderGateway>(
+          context,
+        ).resolvePlaybackProxyPolicy(discoveredSource);
+      } catch (error) {
+        if (mounted) {
+          AppNotifications.showWarning(
+            context,
+            context.l10n.playbackProxyPolicyUnavailable('$error'),
+          );
         }
       }
     }
@@ -2500,6 +2515,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           entry.id,
           name: input.name,
           description: input.description,
+          sourceConfig: playbackProxyModeChanged && playlistSourceConfig != null
+              ? provider_common.DiscoveredSource(
+                  playlist: playlistSourceConfig,
+                  providerInstanceName: entry.providerInstanceName,
+                ).withPlaybackProxyMode(playbackProxyMode).requirePlaylist()
+              : null,
         );
       } else if (entry.id.startsWith('med_')) {
         await _mediaLibraryGateway.editMedia(
@@ -2529,7 +2550,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _deleteEntry(RoomMediaEntry entry) async {
-    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
+    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicItem) {
       AppNotifications.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
@@ -2588,7 +2609,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           final canMutate =
               _canMutateCurrentMediaScope &&
               (detail.id.startsWith('pl_') || detail.id.startsWith('med_')) &&
-              !detail.isProviderDynamicEntry;
+              !detail.isProviderDynamicItem;
           return AppSafeArea(
             child: AppSingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -2769,7 +2790,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _updateEntryCover(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope ||
-        entry.isProviderDynamicEntry ||
+        entry.isProviderDynamicItem ||
         (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_'))) {
       return;
     }
@@ -2805,7 +2826,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _clearEntryCover(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope ||
-        entry.isProviderDynamicEntry ||
+        entry.isProviderDynamicItem ||
         (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_'))) {
       return;
     }
@@ -2831,7 +2852,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _updateEntryThumbnail(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope ||
-        entry.isProviderDynamicEntry ||
+        entry.isProviderDynamicItem ||
         !entry.id.startsWith('med_')) {
       return;
     }
@@ -2859,7 +2880,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _clearEntryThumbnail(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope ||
-        entry.isProviderDynamicEntry ||
+        entry.isProviderDynamicItem ||
         !entry.id.startsWith('med_')) {
       return;
     }
@@ -3105,7 +3126,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _moveMedia(RoomMediaEntry entry) async {
-    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
+    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicItem) {
       AppNotifications.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
@@ -3142,7 +3163,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     RoomMediaEntry entry,
     int direction,
   ) async {
-    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
+    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicItem) {
       AppNotifications.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
@@ -5764,7 +5785,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final canMutate =
         _canMutateCurrentMediaScope &&
         isPersisted &&
-        !entry.isProviderDynamicEntry;
+        !entry.isProviderDynamicItem;
     final playlistIndex = entry.id.startsWith('pl_')
         ? _mediaPage?.playlists.indexWhere((item) => item.id == entry.id) ?? -1
         : -1;

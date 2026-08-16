@@ -320,7 +320,7 @@ void main() {
     addTearDown(controller.dispose);
 
     const url =
-        'https://synctv.example/api/playback-providers/bilibili/live-danmaku/media';
+        'https://synctv.example/api/playback-providers/room/bilibili/live-danmaku/media';
     controller.updateConfig(
       streamDanmakuUrl: url,
       streamDanmakuHeaders: const {'authorization': 'Bearer expired'},

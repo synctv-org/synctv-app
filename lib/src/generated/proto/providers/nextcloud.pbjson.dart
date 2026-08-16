@@ -393,3 +393,25 @@ const GetBindsResponse$json = {
 final $typed_data.Uint8List getBindsResponseDescriptor = $convert.base64Decode(
     'ChBHZXRCaW5kc1Jlc3BvbnNlEjkKBWJpbmRzGAEgAygLMiMuc3luY3R2LnByb3ZpZGVyLm5leH'
     'RjbG91ZC5CaW5kSW5mb1IFYmluZHM=');
+
+@$core.Deprecated('Use getPreviewRequestDescriptor instead')
+const GetPreviewRequest$json = {
+  '1': 'GetPreviewRequest',
+  '2': [
+    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
+    {'1': 'file_id', '3': 2, '4': 1, '5': 4, '8': {}, '10': 'fileId'},
+    {'1': 'width', '3': 3, '4': 1, '5': 13, '8': {}, '10': 'width'},
+    {'1': 'height', '3': 4, '4': 1, '5': 13, '8': {}, '10': 'height'},
+    {'1': 'crop', '3': 5, '4': 1, '5': 8, '9': 0, '10': 'crop', '17': true},
+  ],
+  '8': [
+    {'1': '_crop'},
+  ],
+};
+
+/// Descriptor for `GetPreviewRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getPreviewRequestDescriptor = $convert.base64Decode(
+    'ChFHZXRQcmV2aWV3UmVxdWVzdBIkCglzZXJ2ZXJfaWQYASABKAlCB7pIBHICEAFSCHNlcnZlck'
+    'lkEiAKB2ZpbGVfaWQYAiABKARCB7pIBDICIABSBmZpbGVJZBIeCgV3aWR0aBgDIAEoDUIIukgF'
+    'KgMYgBBSBXdpZHRoEiAKBmhlaWdodBgEIAEoDUIIukgFKgMYgBBSBmhlaWdodBIXCgRjcm9wGA'
+    'UgASgISABSBGNyb3CIAQFCBwoFX2Nyb3A=');

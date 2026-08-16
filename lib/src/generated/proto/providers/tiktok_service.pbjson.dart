@@ -70,7 +70,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.provider.tiktok.Metadata': $0.Metadata$json,
   '.synctv.provider.tiktok.Author': $0.Author$json,
   '.synctv.provider.tiktok.Image': $0.Image$json,
-  '.synctv.provider.tiktok.Subtitle': $0.Subtitle$json,
   '.synctv.provider.tiktok.Variant': $0.Variant$json,
   '.synctv.provider.common.DiscoveredSource': $1.DiscoveredSource$json,
   '.synctv.source_config.MediaSourceConfig': $2.MediaSourceConfig$json,

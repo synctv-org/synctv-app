@@ -47,6 +47,12 @@ const $core.Map<$core.String, $core.dynamic> EmbyProviderServiceBase$json = {
       '2': '.synctv.provider.emby.GetBindsRequest',
       '3': '.synctv.provider.emby.GetBindsResponse'
     },
+    {
+      '1': 'GetThumbnail',
+      '2': '.synctv.provider.emby.GetThumbnailRequest',
+      '3': '.synctv.provider.common.ResourceResponse',
+      '6': true
+    },
   ],
 };
 
@@ -289,6 +295,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.provider.emby.GetBindsRequest': $0.GetBindsRequest$json,
   '.synctv.provider.emby.GetBindsResponse': $0.GetBindsResponse$json,
   '.synctv.provider.emby.BindInfo': $0.BindInfo$json,
+  '.synctv.provider.emby.GetThumbnailRequest': $0.GetThumbnailRequest$json,
+  '.synctv.provider.common.ResourceResponse': $1.ResourceResponse$json,
+  '.synctv.provider.common.ResourceChunk': $1.ResourceChunk$json,
 };
 
 /// Descriptor for `EmbyProviderService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
@@ -300,4 +309,6 @@ final $typed_data.Uint8List embyProviderServiceDescriptor = $convert.base64Decod
     'cXVlc3QaIy5zeW5jdHYucHJvdmlkZXIuZW1ieS5HZXRNZVJlc3BvbnNlElMKBkxvZ291dBIjLn'
     'N5bmN0di5wcm92aWRlci5lbWJ5LkxvZ291dFJlcXVlc3QaJC5zeW5jdHYucHJvdmlkZXIuZW1i'
     'eS5Mb2dvdXRSZXNwb25zZRJZCghHZXRCaW5kcxIlLnN5bmN0di5wcm92aWRlci5lbWJ5LkdldE'
-    'JpbmRzUmVxdWVzdBomLnN5bmN0di5wcm92aWRlci5lbWJ5LkdldEJpbmRzUmVzcG9uc2U=');
+    'JpbmRzUmVxdWVzdBomLnN5bmN0di5wcm92aWRlci5lbWJ5LkdldEJpbmRzUmVzcG9uc2USZQoM'
+    'R2V0VGh1bWJuYWlsEikuc3luY3R2LnByb3ZpZGVyLmVtYnkuR2V0VGh1bWJuYWlsUmVxdWVzdB'
+    'ooLnN5bmN0di5wcm92aWRlci5jb21tb24uUmVzb3VyY2VSZXNwb25zZTAB');

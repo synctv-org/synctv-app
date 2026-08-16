@@ -289,7 +289,7 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
         details.add(metadata.author.nickname);
       }
       details.add(context.l10n.variantsCount(_resolved!.variants.length));
-      details.add(context.l10n.subtitlesCount(metadata.subtitles.length));
+      details.add(context.l10n.subtitlesCount(metadata.subtitleCount));
       final cleanVariants = _resolved!.variants
           .where((variant) => !variant.watermarked)
           .length;

@@ -371,12 +371,10 @@ class Metadata extends $pb.GeneratedMessage {
 class Stream extends $pb.GeneratedMessage {
   factory Stream({
     $core.String? name,
-    $core.String? url,
     StreamKind? kind,
   }) {
     final result = create();
     if (name != null) result.name = name;
-    if (url != null) result.url = url;
     if (kind != null) result.kind = kind;
     return result;
   }
@@ -396,8 +394,7 @@ class Stream extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.provider.cctv'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..aOS(2, _omitFieldNames ? '' : 'url')
-    ..aE<StreamKind>(3, _omitFieldNames ? '' : 'kind',
+    ..aE<StreamKind>(2, _omitFieldNames ? '' : 'kind',
         enumValues: StreamKind.values)
     ..hasRequiredFields = false;
 
@@ -429,22 +426,13 @@ class Stream extends $pb.GeneratedMessage {
   void clearName() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get url => $_getSZ(1);
+  StreamKind get kind => $_getN(1);
   @$pb.TagNumber(2)
-  set url($core.String value) => $_setString(1, value);
+  set kind(StreamKind value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasUrl() => $_has(1);
+  $core.bool hasKind() => $_has(1);
   @$pb.TagNumber(2)
-  void clearUrl() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  StreamKind get kind => $_getN(2);
-  @$pb.TagNumber(3)
-  set kind(StreamKind value) => $_setField(3, value);
-  @$pb.TagNumber(3)
-  $core.bool hasKind() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearKind() => $_clearField(3);
+  void clearKind() => $_clearField(2);
 }
 
 class ResolveResponse extends $pb.GeneratedMessage {
