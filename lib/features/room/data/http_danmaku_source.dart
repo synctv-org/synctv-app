@@ -18,10 +18,7 @@ final class HttpDanmakuSource implements DanmakuSource {
     };
     final response = await http.get(uri, headers: requestHeaders);
     if (response.statusCode != 200) return null;
-    return utf8.decode(
-      _decodeDocumentBytes(response),
-      allowMalformed: true,
-    );
+    return utf8.decode(_decodeDocumentBytes(response), allowMalformed: true);
   }
 
   List<int> _decodeDocumentBytes(http.Response response) {
