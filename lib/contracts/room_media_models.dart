@@ -6,13 +6,15 @@ class RtmpPublishKeyInfo {
   final String publishKey;
   final String rtmpUrl;
   final String streamKey;
-  final int expiresAt;
+  final int? expiresAt;
+  final client_enum.PublishKeyType keyType;
 
   const RtmpPublishKeyInfo({
     required this.publishKey,
     required this.rtmpUrl,
     required this.streamKey,
     required this.expiresAt,
+    required this.keyType,
   });
 }
 

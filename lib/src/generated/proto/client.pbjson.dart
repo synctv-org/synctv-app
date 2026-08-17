@@ -389,6 +389,23 @@ final $typed_data.Uint8List notificationListSortByDescriptor = $convert.base64De
     'CiROT1RJRklDQVRJT05fTElTVF9TT1JUX0JZX1VQREFURURfQVQQAhIjCh9OT1RJRklDQVRJT0'
     '5fTElTVF9TT1JUX0JZX1RJVExFEAM=');
 
+@$core.Deprecated('Use publishKeyTypeDescriptor instead')
+const PublishKeyType$json = {
+  '1': 'PublishKeyType',
+  '2': [
+    {'1': 'PUBLISH_KEY_TYPE_UNSPECIFIED', '2': 0},
+    {'1': 'PUBLISH_KEY_TYPE_SINGLE_USE', '2': 1},
+    {'1': 'PUBLISH_KEY_TYPE_EXPIRING', '2': 2},
+    {'1': 'PUBLISH_KEY_TYPE_PERMANENT', '2': 3},
+  ],
+};
+
+/// Descriptor for `PublishKeyType`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List publishKeyTypeDescriptor = $convert.base64Decode(
+    'Cg5QdWJsaXNoS2V5VHlwZRIgChxQVUJMSVNIX0tFWV9UWVBFX1VOU1BFQ0lGSUVEEAASHwobUF'
+    'VCTElTSF9LRVlfVFlQRV9TSU5HTEVfVVNFEAESHQoZUFVCTElTSF9LRVlfVFlQRV9FWFBJUklO'
+    'RxACEh4KGlBVQkxJU0hfS0VZX1RZUEVfUEVSTUFORU5UEAM=');
+
 @$core.Deprecated('Use itemTypeDescriptor instead')
 const ItemType$json = {
   '1': 'ItemType',
@@ -5434,14 +5451,36 @@ const CreateRoomPublishKeyRequest$json = {
   '1': 'CreateRoomPublishKeyRequest',
   '2': [
     {'1': 'media_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'mediaId'},
+    {
+      '1': 'type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PublishKeyType',
+      '8': {},
+      '10': 'type'
+    },
+    {
+      '1': 'expires_at',
+      '3': 3,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'expiresAt',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_expires_at'},
   ],
 };
 
 /// Descriptor for `CreateRoomPublishKeyRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List createRoomPublishKeyRequestDescriptor =
-    $convert.base64Decode(
-        'ChtDcmVhdGVSb29tUHVibGlzaEtleVJlcXVlc3QSOAoIbWVkaWFfaWQYASABKAlCHbpIGnIYEA'
-        'EYQDISXm1lZF9bQS1aYS16MC05XSskUgdtZWRpYUlk');
+final $typed_data.Uint8List createRoomPublishKeyRequestDescriptor = $convert.base64Decode(
+    'ChtDcmVhdGVSb29tUHVibGlzaEtleVJlcXVlc3QSOAoIbWVkaWFfaWQYASABKAlCHbpIGnIYEA'
+    'EYQDISXm1lZF9bQS1aYS16MC05XSskUgdtZWRpYUlkEj0KBHR5cGUYAiABKA4yHS5zeW5jdHYu'
+    'Y2xpZW50LlB1Ymxpc2hLZXlUeXBlQgq6SAeCAQQQASAAUgR0eXBlEiIKCmV4cGlyZXNfYXQYAy'
+    'ABKANIAFIJZXhwaXJlc0F0iAEBQg0KC19leHBpcmVzX2F0');
 
 @$core.Deprecated('Use createRoomPublishKeyResponseDescriptor instead')
 const CreateRoomPublishKeyResponse$json = {
@@ -5450,16 +5489,36 @@ const CreateRoomPublishKeyResponse$json = {
     {'1': 'publish_key', '3': 1, '4': 1, '5': 9, '10': 'publishKey'},
     {'1': 'rtmp_url', '3': 2, '4': 1, '5': 9, '10': 'rtmpUrl'},
     {'1': 'stream_key', '3': 3, '4': 1, '5': 9, '10': 'streamKey'},
-    {'1': 'expires_at', '3': 4, '4': 1, '5': 3, '10': 'expiresAt'},
+    {
+      '1': 'expires_at',
+      '3': 4,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'expiresAt',
+      '17': true
+    },
+    {
+      '1': 'type',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PublishKeyType',
+      '10': 'type'
+    },
+  ],
+  '8': [
+    {'1': '_expires_at'},
   ],
 };
 
 /// Descriptor for `CreateRoomPublishKeyResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List createRoomPublishKeyResponseDescriptor =
-    $convert.base64Decode(
-        'ChxDcmVhdGVSb29tUHVibGlzaEtleVJlc3BvbnNlEh8KC3B1Ymxpc2hfa2V5GAEgASgJUgpwdW'
-        'JsaXNoS2V5EhkKCHJ0bXBfdXJsGAIgASgJUgdydG1wVXJsEh0KCnN0cmVhbV9rZXkYAyABKAlS'
-        'CXN0cmVhbUtleRIdCgpleHBpcmVzX2F0GAQgASgDUglleHBpcmVzQXQ=');
+final $typed_data.Uint8List createRoomPublishKeyResponseDescriptor = $convert.base64Decode(
+    'ChxDcmVhdGVSb29tUHVibGlzaEtleVJlc3BvbnNlEh8KC3B1Ymxpc2hfa2V5GAEgASgJUgpwdW'
+    'JsaXNoS2V5EhkKCHJ0bXBfdXJsGAIgASgJUgdydG1wVXJsEh0KCnN0cmVhbV9rZXkYAyABKAlS'
+    'CXN0cmVhbUtleRIiCgpleHBpcmVzX2F0GAQgASgDSABSCWV4cGlyZXNBdIgBARIxCgR0eXBlGA'
+    'UgASgOMh0uc3luY3R2LmNsaWVudC5QdWJsaXNoS2V5VHlwZVIEdHlwZUINCgtfZXhwaXJlc19h'
+    'dA==');
 
 @$core.Deprecated('Use getRoomStreamInfoRequestDescriptor instead')
 const GetRoomStreamInfoRequest$json = {

@@ -1440,6 +1440,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get streamMode => '流模式';
 
   @override
+  String get publishKeyType => '发布密钥类型';
+
+  @override
+  String get singleUsePublishKey => '一次性密钥';
+
+  @override
+  String get expiringPublishKey => '到期前可重复使用';
+
+  @override
+  String get permanentPublishKey => '永不过期';
+
+  @override
+  String get permanentPublishKeyDescription => '持有此密钥的用户可持续发布，直到服务端 JWT 密钥变更。';
+
+  @override
+  String get noExpiration => '永不过期';
+
+  @override
   String get audioAndVideo => '音频和视频';
 
   @override

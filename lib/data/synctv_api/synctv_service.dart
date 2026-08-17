@@ -1580,9 +1580,16 @@ class SyncTvService {
 
   static Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
     String roomId,
-    String mediaId,
-  ) async {
-    return _domains.roomMedia.createRtmpPublishKeyInfo(roomId, mediaId);
+    String mediaId, {
+    required client.PublishKeyType keyType,
+    int? expiresAt,
+  }) async {
+    return _domains.roomMedia.createRtmpPublishKeyInfo(
+      roomId,
+      mediaId,
+      keyType: keyType,
+      expiresAt: expiresAt,
+    );
   }
 
   static Future<RoomStreamEntryInfo> getRtmpStreamInfo({

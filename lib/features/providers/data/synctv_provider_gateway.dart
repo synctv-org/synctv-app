@@ -102,8 +102,15 @@ final class SyncTvProviderGateway implements ProviderGateway {
   @override
   Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
     String roomId,
-    String mediaId,
-  ) => SyncTvService.createRtmpPublishKeyInfo(roomId, mediaId);
+    String mediaId, {
+    required client_enum.PublishKeyType keyType,
+    int? expiresAt,
+  }) => SyncTvService.createRtmpPublishKeyInfo(
+    roomId,
+    mediaId,
+    keyType: keyType,
+    expiresAt: expiresAt,
+  );
 
   @override
   Future<AlistAccountInfo> getAlistAccount(

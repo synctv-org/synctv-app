@@ -1548,6 +1548,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get streamMode => 'Stream mode';
 
   @override
+  String get publishKeyType => 'Publish key type';
+
+  @override
+  String get singleUsePublishKey => 'One-time key';
+
+  @override
+  String get expiringPublishKey => 'Reusable until expiration';
+
+  @override
+  String get permanentPublishKey => 'Never expires';
+
+  @override
+  String get permanentPublishKeyDescription =>
+      'Anyone with this key can publish until the server JWT secret changes.';
+
+  @override
+  String get noExpiration => 'Never expires';
+
+  @override
   String get audioAndVideo => 'Audio and video';
 
   @override

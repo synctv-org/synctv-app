@@ -67,8 +67,10 @@ abstract interface class ProviderGateway {
 
   Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
     String roomId,
-    String mediaId,
-  );
+    String mediaId, {
+    required client_enum.PublishKeyType keyType,
+    int? expiresAt,
+  });
 
   Future<AlistAccountInfo> getAlistAccount(
     String serverId, {

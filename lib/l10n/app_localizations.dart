@@ -2720,6 +2720,42 @@ abstract class AppLocalizations {
   /// **'Stream mode'**
   String get streamMode;
 
+  /// No description provided for @publishKeyType.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish key type'**
+  String get publishKeyType;
+
+  /// No description provided for @singleUsePublishKey.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time key'**
+  String get singleUsePublishKey;
+
+  /// No description provided for @expiringPublishKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Reusable until expiration'**
+  String get expiringPublishKey;
+
+  /// No description provided for @permanentPublishKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Never expires'**
+  String get permanentPublishKey;
+
+  /// No description provided for @permanentPublishKeyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with this key can publish until the server JWT secret changes.'**
+  String get permanentPublishKeyDescription;
+
+  /// No description provided for @noExpiration.
+  ///
+  /// In en, this message translates to:
+  /// **'Never expires'**
+  String get noExpiration;
+
   /// No description provided for @audioAndVideo.
   ///
   /// In en, this message translates to:

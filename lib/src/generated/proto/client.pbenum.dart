@@ -648,6 +648,31 @@ class NotificationListSortBy extends $pb.ProtobufEnum {
   const NotificationListSortBy._(super.value, super.name);
 }
 
+class PublishKeyType extends $pb.ProtobufEnum {
+  static const PublishKeyType PUBLISH_KEY_TYPE_UNSPECIFIED =
+      PublishKeyType._(0, _omitEnumNames ? '' : 'PUBLISH_KEY_TYPE_UNSPECIFIED');
+  static const PublishKeyType PUBLISH_KEY_TYPE_SINGLE_USE =
+      PublishKeyType._(1, _omitEnumNames ? '' : 'PUBLISH_KEY_TYPE_SINGLE_USE');
+  static const PublishKeyType PUBLISH_KEY_TYPE_EXPIRING =
+      PublishKeyType._(2, _omitEnumNames ? '' : 'PUBLISH_KEY_TYPE_EXPIRING');
+  static const PublishKeyType PUBLISH_KEY_TYPE_PERMANENT =
+      PublishKeyType._(3, _omitEnumNames ? '' : 'PUBLISH_KEY_TYPE_PERMANENT');
+
+  static const $core.List<PublishKeyType> values = <PublishKeyType>[
+    PUBLISH_KEY_TYPE_UNSPECIFIED,
+    PUBLISH_KEY_TYPE_SINGLE_USE,
+    PUBLISH_KEY_TYPE_EXPIRING,
+    PUBLISH_KEY_TYPE_PERMANENT,
+  ];
+
+  static final $core.List<PublishKeyType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static PublishKeyType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PublishKeyType._(super.value, super.name);
+}
+
 class ItemType extends $pb.ProtobufEnum {
   static const ItemType ITEM_TYPE_UNSPECIFIED =
       ItemType._(0, _omitEnumNames ? '' : 'ITEM_TYPE_UNSPECIFIED');

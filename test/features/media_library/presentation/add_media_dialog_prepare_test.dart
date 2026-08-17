@@ -13,6 +13,8 @@ import 'package:synctv_app/features/media_library/presentation/add_media_dialog.
 import 'package:synctv_app/features/providers/application/provider_gateway.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
@@ -113,8 +115,34 @@ void main() {
     await tester.pump();
 
     expect(gateway.publishMediaIds, ['media_server_42']);
+    expect(gateway.publishKeyTypes, [
+      client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
+    ]);
+    expect(gateway.publishExpiresAt.single, isNotNull);
     expect(gateway.streamInfoMediaIds, ['media_server_42']);
     expect(gateway.addedNames, ['Studio camera']);
+  });
+
+  testWidgets('RTMP permanent key omits expiration', (tester) async {
+    final gateway = _PrepareGateway();
+    await _pumpDialog(tester, gateway);
+    await _selectSource(tester, 1);
+
+    await _tapVisible(tester, find.byKey(const Key('rtmp-publish-key-type')));
+    await tester.pumpAndSettle();
+    await _tapVisible(tester, find.text('Never expires').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('rtmp-publish-key-expiration')), findsNothing);
+    await _tapVisible(tester, find.byKey(const Key('rtmp-preview')));
+    await tester.pumpAndSettle();
+    await _tapVisible(tester, find.byKey(const Key('rtmp-submit')));
+    await tester.pump();
+
+    expect(gateway.publishKeyTypes, [
+      client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT,
+    ]);
+    expect(gateway.publishExpiresAt, [null]);
   });
 
   testWidgets('live proxy protocol changes invalidate prepared source', (
@@ -310,6 +338,8 @@ class _PrepareGateway implements ProviderGateway {
   final List<provider_common.DiscoveredSource> addedSources = [];
   final List<String> addedNames = [];
   final List<String> publishMediaIds = [];
+  final List<client_enum.PublishKeyType> publishKeyTypes = [];
+  final List<int?> publishExpiresAt = [];
   final List<String> streamInfoMediaIds = [];
   final List<String> bilibiliParseResources = [];
   final List<BilibiliPlaylistListIntent> bilibiliListIntents = [];
@@ -402,14 +432,19 @@ class _PrepareGateway implements ProviderGateway {
   @override
   Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
     String roomId,
-    String mediaId,
-  ) async {
+    String mediaId, {
+    required client_enum.PublishKeyType keyType,
+    int? expiresAt,
+  }) async {
     publishMediaIds.add(mediaId);
+    publishKeyTypes.add(keyType);
+    publishExpiresAt.add(expiresAt);
     return const RtmpPublishKeyInfo(
       publishKey: 'publish-key',
       rtmpUrl: 'rtmp://publish.example.test/live',
       streamKey: 'stream-key',
       expiresAt: 1900000000,
+      keyType: client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
     );
   }
 

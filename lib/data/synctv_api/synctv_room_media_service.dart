@@ -916,17 +916,24 @@ class SyncTvRoomMediaDomainService {
 
   Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
     String roomId,
-    String mediaId,
-  ) async {
+    String mediaId, {
+    required client_enum.PublishKeyType keyType,
+    int? expiresAt,
+  }) async {
     final response = await _api.room.createRoomPublishKey(
       roomId,
-      client.CreateRoomPublishKeyRequest(mediaId: mediaId),
+      client.CreateRoomPublishKeyRequest(
+        mediaId: mediaId,
+        type: keyType,
+        expiresAt: expiresAt == null ? null : Int64(expiresAt),
+      ),
     );
     return RtmpPublishKeyInfo(
       publishKey: response.publishKey,
       rtmpUrl: response.rtmpUrl,
       streamKey: response.streamKey,
-      expiresAt: response.expiresAt.toInt(),
+      expiresAt: response.hasExpiresAt() ? response.expiresAt.toInt() : null,
+      keyType: response.type,
     );
   }
 

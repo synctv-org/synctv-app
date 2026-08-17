@@ -13435,9 +13435,13 @@ class ListRoomStreamsResponse extends $pb.GeneratedMessage {
 class CreateRoomPublishKeyRequest extends $pb.GeneratedMessage {
   factory CreateRoomPublishKeyRequest({
     $core.String? mediaId,
+    PublishKeyType? type,
+    $fixnum.Int64? expiresAt,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
+    if (type != null) result.type = type;
+    if (expiresAt != null) result.expiresAt = expiresAt;
     return result;
   }
 
@@ -13455,6 +13459,9 @@ class CreateRoomPublishKeyRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..aE<PublishKeyType>(2, _omitFieldNames ? '' : 'type',
+        enumValues: PublishKeyType.values)
+    ..aInt64(3, _omitFieldNames ? '' : 'expiresAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13487,6 +13494,24 @@ class CreateRoomPublishKeyRequest extends $pb.GeneratedMessage {
   $core.bool hasMediaId() => $_has(0);
   @$pb.TagNumber(1)
   void clearMediaId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  PublishKeyType get type => $_getN(1);
+  @$pb.TagNumber(2)
+  set type(PublishKeyType value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearType() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get expiresAt => $_getI64(2);
+  @$pb.TagNumber(3)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasExpiresAt() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearExpiresAt() => $_clearField(3);
 }
 
 class CreateRoomPublishKeyResponse extends $pb.GeneratedMessage {
@@ -13495,12 +13520,14 @@ class CreateRoomPublishKeyResponse extends $pb.GeneratedMessage {
     $core.String? rtmpUrl,
     $core.String? streamKey,
     $fixnum.Int64? expiresAt,
+    PublishKeyType? type,
   }) {
     final result = create();
     if (publishKey != null) result.publishKey = publishKey;
     if (rtmpUrl != null) result.rtmpUrl = rtmpUrl;
     if (streamKey != null) result.streamKey = streamKey;
     if (expiresAt != null) result.expiresAt = expiresAt;
+    if (type != null) result.type = type;
     return result;
   }
 
@@ -13521,6 +13548,8 @@ class CreateRoomPublishKeyResponse extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'rtmpUrl')
     ..aOS(3, _omitFieldNames ? '' : 'streamKey')
     ..aInt64(4, _omitFieldNames ? '' : 'expiresAt')
+    ..aE<PublishKeyType>(5, _omitFieldNames ? '' : 'type',
+        enumValues: PublishKeyType.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13580,6 +13609,15 @@ class CreateRoomPublishKeyResponse extends $pb.GeneratedMessage {
   $core.bool hasExpiresAt() => $_has(3);
   @$pb.TagNumber(4)
   void clearExpiresAt() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  PublishKeyType get type => $_getN(4);
+  @$pb.TagNumber(5)
+  set type(PublishKeyType value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasType() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearType() => $_clearField(5);
 }
 
 class GetRoomStreamInfoRequest extends $pb.GeneratedMessage {

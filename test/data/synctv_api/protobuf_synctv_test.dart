@@ -6377,6 +6377,7 @@ void main() {
               'rtmpUrl': 'rtmp://example.test/live',
               'streamKey': 'stream_1',
               'expiresAt': '1760000100',
+              'type': 'PUBLISH_KEY_TYPE_SINGLE_USE',
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -6395,7 +6396,11 @@ void main() {
 
     final publish = await api.room.createRoomPublishKey(
       'room_1',
-      client.CreateRoomPublishKeyRequest(mediaId: 'med_1'),
+      client.CreateRoomPublishKeyRequest(
+        mediaId: 'med_1',
+        type: client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
+        expiresAt: Int64(1760000100),
+      ),
     );
     final info = await api.room.getRoomStreamInfo(
       'room_1',
@@ -6410,7 +6415,10 @@ void main() {
       requests.first.url.path,
       '/api/playback-providers/room_1/rtmp/med_1/publish-key',
     );
-    expect(requests.first.body, isEmpty);
+    expect(
+      jsonDecode(requests.first.body),
+      containsPair('type', 1),
+    );
     expect(requests.last.method, 'GET');
     expect(requests.last.url.path, '/api/rooms/room_1/streams/med_1');
   });

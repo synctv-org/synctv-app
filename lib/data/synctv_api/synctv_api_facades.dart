@@ -894,6 +894,7 @@ class SyncTvRoomApi {
       'POST',
       '/api/playback-providers/$roomId/rtmp/${request.mediaId}/publish-key',
       client.CreateRoomPublishKeyResponse.create,
+      body: request,
     );
   }
 
