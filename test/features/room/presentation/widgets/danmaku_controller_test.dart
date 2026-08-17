@@ -224,9 +224,10 @@ void main() {
     await _waitFor(() => controller.items.singleOrNull?.text == 'origin');
   });
 
-  test('loads zlib and raw-deflate static danmaku documents', () async {
+  test('loads labelled and unlabelled compressed danmaku documents', () async {
     const document = '<i><d p="1,1,25,16777215">compressed</d></i>';
     final compressedDocuments = <String, List<int>>{
+      '/gzip': gzip.encode(utf8.encode(document)),
       '/zlib': ZLibEncoder().convert(utf8.encode(document)),
       '/raw-deflate': ZLibEncoder(raw: true).convert(utf8.encode(document)),
       '/unlabelled-raw-deflate': ZLibEncoder(
@@ -239,10 +240,15 @@ void main() {
         HttpHeaders.contentTypeHeader,
         'text/xml; charset=utf-8',
       );
-      if (request.uri.path != '/unlabelled-raw-deflate') {
+      final contentEncoding = switch (request.uri.path) {
+        '/gzip' => 'gzip',
+        '/unlabelled-raw-deflate' => null,
+        _ => 'deflate',
+      };
+      if (contentEncoding != null) {
         request.response.headers.set(
           HttpHeaders.contentEncodingHeader,
-          'deflate',
+          contentEncoding,
         );
       }
       request.response.add(compressedDocuments[request.uri.path]!);

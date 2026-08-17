@@ -1038,8 +1038,24 @@ class RoomMediaEntry {
   }
 
   static bool _isStreamDanmu(client.PlaybackDanmaku danmaku) {
-    return danmaku.delivery ==
-        client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM;
+    final delivery = danmaku.delivery;
+    if (delivery ==
+        client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM) {
+      return true;
+    }
+    if (delivery ==
+        client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_DOCUMENT) {
+      return false;
+    }
+
+    final format = danmaku.format.trim().toLowerCase();
+    if (format == 'synctv-bilibili-live') return true;
+    if (format == 'synctv-twitch-live') return true;
+    if (format == 'synctv-huya-live') return true;
+    if (format == 'synctv-douyu-live') return true;
+    if (format == 'synctv-douyin-live') return true;
+    if (format == 'synctv-acfun-live') return true;
+    return danmaku.url.contains('/live-danmaku/');
   }
 }
 

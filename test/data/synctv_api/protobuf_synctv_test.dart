@@ -4748,6 +4748,52 @@ void main() {
     );
   });
 
+  test('playback mapping recognizes legacy live danmaku delivery', () {
+    final legacySources = <(String, String)>[
+      ('synctv-bilibili-live', 'https://example.test/bilibili'),
+      ('synctv-twitch-live', 'https://example.test/twitch'),
+      ('synctv-huya-live', 'https://example.test/huya'),
+      ('synctv-douyu-live', 'https://example.test/douyu'),
+      ('synctv-douyin-live', 'https://example.test/douyin'),
+      ('synctv-acfun-live', 'https://example.test/acfun'),
+      ('legacy', 'https://example.test/live-danmaku/stream'),
+    ];
+
+    for (final (format, url) in legacySources) {
+      final entry = RoomMediaEntry.fromPlaybackProto(
+        client.Playback(
+          mediaId: 'med_legacy',
+          name: 'Legacy live danmaku',
+          playbackInfos: [
+            MapEntry(
+              'live',
+              client.PlaybackInfo(
+                medias: [
+                  client.PlaybackMedia(
+                    name: 'Live',
+                    url: 'https://example.test/live.flv',
+                    format: 'flv',
+                  ),
+                ],
+                danmakus: [
+                  client.PlaybackDanmaku(
+                    name: 'Legacy',
+                    url: url,
+                    format: format,
+                  ),
+                ],
+              ),
+            ),
+          ],
+          defaultMode: 'live',
+        ),
+      );
+
+      expect(entry.streamDanmu, url, reason: format);
+      expect(entry.danmu, isNull, reason: format);
+    }
+  });
+
   test('playback mapping preserves live proxy HLS and FLV choices', () {
     final entry = RoomMediaEntry.fromPlaybackProto(
       client.Playback(
@@ -6367,6 +6413,46 @@ void main() {
     expect(requests.first.body, isEmpty);
     expect(requests.last.method, 'GET');
     expect(requests.last.url.path, '/api/rooms/room_1/streams/med_1');
+  });
+
+  test('room publish key falls back to the legacy RTMP route', () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        if (requests.length == 1) {
+          return http.Response(
+            '{}',
+            404,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        return http.Response(
+          jsonEncode({
+            'publishKey': 'pub_legacy',
+            'rtmpUrl': 'rtmp://example.test/live',
+            'streamKey': 'stream_legacy',
+            'expiresAt': '1760000100',
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+
+    final response = await api.room.createRoomPublishKey(
+      'room_1',
+      client.CreateRoomPublishKeyRequest(mediaId: 'med_1'),
+    );
+
+    expect(response.publishKey, 'pub_legacy');
+    expect(requests.map((request) => request.url.path), [
+      '/api/rooms/room_1/streams/med_1/publish-key',
+      '/api/providers/rtmp/rooms/room_1/publish-key/med_1',
+    ]);
+    expect(requests.every((request) => request.method == 'POST'), isTrue);
   });
 
   test(

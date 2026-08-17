@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 
 final class HttpDanmakuSource implements DanmakuSource {
@@ -16,9 +17,14 @@ final class HttpDanmakuSource implements DanmakuSource {
       ...headers,
       HttpHeaders.acceptEncodingHeader: 'identity',
     };
-    final response = await http.get(uri, headers: requestHeaders);
-    if (response.statusCode != 200) return null;
-    return utf8.decode(_decodeDocumentBytes(response), allowMalformed: true);
+    final client = IOClient(HttpClient()..autoUncompress = false);
+    try {
+      final response = await client.get(uri, headers: requestHeaders);
+      if (response.statusCode != 200) return null;
+      return utf8.decode(_decodeDocumentBytes(response), allowMalformed: true);
+    } finally {
+      client.close();
+    }
   }
 
   List<int> _decodeDocumentBytes(http.Response response) {

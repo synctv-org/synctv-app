@@ -889,10 +889,20 @@ class SyncTvRoomApi {
   Future<client.CreateRoomPublishKeyResponse> createRoomPublishKey(
     String roomId,
     client.CreateRoomPublishKeyRequest request,
-  ) {
+  ) async {
+    try {
+      return await _api._send(
+        'POST',
+        '/api/rooms/$roomId/streams/${request.mediaId}/publish-key',
+        client.CreateRoomPublishKeyResponse.create,
+      );
+    } on SyncTvApiException catch (error) {
+      if (error.statusCode != 404 && error.statusCode != 405) rethrow;
+    }
+
     return _api._send(
       'POST',
-      '/api/rooms/$roomId/streams/${request.mediaId}/publish-key',
+      '/api/providers/rtmp/rooms/$roomId/publish-key/${request.mediaId}',
       client.CreateRoomPublishKeyResponse.create,
     );
   }
