@@ -6415,10 +6415,7 @@ void main() {
       requests.first.url.path,
       '/api/playback-providers/room_1/rtmp/med_1/publish-key',
     );
-    expect(
-      jsonDecode(requests.first.body),
-      containsPair('type', 1),
-    );
+    expect(jsonDecode(requests.first.body), containsPair('type', 1));
     expect(requests.last.method, 'GET');
     expect(requests.last.url.path, '/api/rooms/room_1/streams/med_1');
   });
