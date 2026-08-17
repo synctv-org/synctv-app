@@ -7,6 +7,7 @@ import 'package:synctv_app/src/generated/proto/providers/acfun.pb.dart'
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pbenum.dart'
     as bilibili_enum;
 import 'package:synctv_app/src/generated/proto/providers/cctv.pb.dart' as cctv;
+import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/providers/douyin.pb.dart'
@@ -103,7 +104,7 @@ final class SyncTvProviderGateway implements ProviderGateway {
   Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
     String roomId,
     String mediaId, {
-    required client_enum.PublishKeyType keyType,
+    required client.PublishKeyType keyType,
     int? expiresAt,
   }) => SyncTvService.createRtmpPublishKeyInfo(
     roomId,
