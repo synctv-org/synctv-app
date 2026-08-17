@@ -268,6 +268,40 @@ void main() {
   });
 
   test(
+    'non-free mode retries automatic sync after delayed playback falls behind',
+    () {
+      final target = resolvePlaybackSyncTarget(
+        status: SyncTvPlaybackStatus(
+          isPlaying: true,
+          currentTime: 10,
+          generatedAtMillis: 1_000,
+        ),
+        duration: const Duration(seconds: 30),
+        now: DateTime.fromMillisecondsSinceEpoch(4_000),
+      );
+
+      expect(
+        shouldAutoSeekToPlaybackSyncTarget(
+          currentPositionSeconds: 10,
+          target: target,
+          driftThresholdSeconds: 1.2,
+          freeModeEnabled: false,
+        ),
+        isTrue,
+      );
+      expect(
+        shouldAutoSeekToPlaybackSyncTarget(
+          currentPositionSeconds: 10,
+          target: target,
+          driftThresholdSeconds: 1.2,
+          freeModeEnabled: true,
+        ),
+        isFalse,
+      );
+    },
+  );
+
+  test(
     'sync target preserves derived playback position without known duration',
     () {
       final target = resolvePlaybackSyncTarget(

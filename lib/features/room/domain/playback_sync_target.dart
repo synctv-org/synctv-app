@@ -31,3 +31,14 @@ PlaybackSyncTarget resolvePlaybackSyncTarget({
   }
   return PlaybackSyncTarget(positionSeconds: computedTime);
 }
+
+bool shouldAutoSeekToPlaybackSyncTarget({
+  required double currentPositionSeconds,
+  required PlaybackSyncTarget target,
+  required double driftThresholdSeconds,
+  required bool freeModeEnabled,
+}) {
+  if (freeModeEnabled) return false;
+  return (currentPositionSeconds - target.positionSeconds).abs() >
+      driftThresholdSeconds;
+}

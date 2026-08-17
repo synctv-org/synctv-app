@@ -919,6 +919,7 @@ class _RoomScreenState extends State<RoomScreen>
     _samplePlaybackDiagnostics();
     _diagnosticsTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (!mounted) return;
+      _retryAutomaticPlaybackSync();
       setState(_samplePlaybackDiagnostics);
     });
   }
@@ -2022,8 +2023,14 @@ class _RoomScreenState extends State<RoomScreen>
         final currentPos = controller.value.position.inMilliseconds / 1000.0;
         final positionDrift = (currentPos - target.positionSeconds).abs();
         final shouldAutoSeek =
-            !_playbackModeConfig.freeModeEnabled &&
-            positionDrift > _playbackModeConfig.autoSeekDriftThresholdSeconds;
+            target.isAtEnd ||
+            shouldAutoSeekToPlaybackSyncTarget(
+              currentPositionSeconds: currentPos,
+              target: target,
+              driftThresholdSeconds:
+                  _playbackModeConfig.autoSeekDriftThresholdSeconds,
+              freeModeEnabled: _playbackModeConfig.freeModeEnabled,
+            );
         final shouldManualSeek =
             forceSeek &&
             positionDrift >=
@@ -2065,6 +2072,32 @@ class _RoomScreenState extends State<RoomScreen>
       duration: controller.value.duration,
       now: SyncedClock.now(),
     );
+  }
+
+  void _retryAutomaticPlaybackSync() {
+    if (_isSyncing || _playbackModeConfig.freeModeEnabled) return;
+
+    final status = _currentStatus;
+    final controller = _videoPlayerController;
+    if (status?.entry?.live != false ||
+        controller == null ||
+        !controller.value.isInitialized) {
+      return;
+    }
+
+    final target = _playbackSyncTarget(status!, controller);
+    final currentPositionSeconds =
+        controller.value.position.inMilliseconds / 1000.0;
+    if (!shouldAutoSeekToPlaybackSyncTarget(
+      currentPositionSeconds: currentPositionSeconds,
+      target: target,
+      driftThresholdSeconds: _playbackModeConfig.autoSeekDriftThresholdSeconds,
+      freeModeEnabled: _playbackModeConfig.freeModeEnabled,
+    )) {
+      return;
+    }
+
+    unawaited(_performSync(status));
   }
 
   double? _playbackDeviationSeconds() {
