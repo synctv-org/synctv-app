@@ -6408,51 +6408,11 @@ void main() {
     expect(requests.first.method, 'POST');
     expect(
       requests.first.url.path,
-      '/api/rooms/room_1/streams/med_1/publish-key',
+      '/api/playback-providers/room_1/rtmp/med_1/publish-key',
     );
     expect(requests.first.body, isEmpty);
     expect(requests.last.method, 'GET');
     expect(requests.last.url.path, '/api/rooms/room_1/streams/med_1');
-  });
-
-  test('room publish key falls back to the legacy RTMP route', () async {
-    final requests = <http.Request>[];
-    final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
-      session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
-      httpClient: MockClient((request) async {
-        requests.add(request);
-        if (requests.length == 1) {
-          return http.Response(
-            '{}',
-            404,
-            headers: {'content-type': 'application/json'},
-          );
-        }
-        return http.Response(
-          jsonEncode({
-            'publishKey': 'pub_legacy',
-            'rtmpUrl': 'rtmp://example.test/live',
-            'streamKey': 'stream_legacy',
-            'expiresAt': '1760000100',
-          }),
-          200,
-          headers: {'content-type': 'application/json'},
-        );
-      }),
-    );
-
-    final response = await api.room.createRoomPublishKey(
-      'room_1',
-      client.CreateRoomPublishKeyRequest(mediaId: 'med_1'),
-    );
-
-    expect(response.publishKey, 'pub_legacy');
-    expect(requests.map((request) => request.url.path), [
-      '/api/rooms/room_1/streams/med_1/publish-key',
-      '/api/providers/rtmp/rooms/room_1/publish-key/med_1',
-    ]);
-    expect(requests.every((request) => request.method == 'POST'), isTrue);
   });
 
   test(
