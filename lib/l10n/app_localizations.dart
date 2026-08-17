@@ -2756,6 +2756,12 @@ abstract class AppLocalizations {
   /// **'Never expires'**
   String get noExpiration;
 
+  /// No description provided for @publishKeyExpirationMustBeFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiration time must be in the future.'**
+  String get publishKeyExpirationMustBeFuture;
+
   /// No description provided for @audioAndVideo.
   ///
   /// In en, this message translates to:

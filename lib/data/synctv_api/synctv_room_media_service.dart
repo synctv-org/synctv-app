@@ -933,7 +933,11 @@ class SyncTvRoomMediaDomainService {
       rtmpUrl: response.rtmpUrl,
       streamKey: response.streamKey,
       expiresAt: response.hasExpiresAt() ? response.expiresAt.toInt() : null,
-      keyType: response.type,
+      keyType:
+          response.type ==
+              client_enum.PublishKeyType.PUBLISH_KEY_TYPE_UNSPECIFIED
+          ? client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE
+          : response.type,
     );
   }
 

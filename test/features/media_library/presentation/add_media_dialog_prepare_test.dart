@@ -145,6 +145,23 @@ void main() {
     expect(gateway.publishExpiresAt, [null]);
   });
 
+  testWidgets('RTMP expired key does not create media', (tester) async {
+    final gateway = _PrepareGateway();
+    var now = DateTime(2026, 1, 1, 12);
+    await _pumpDialog(tester, gateway, now: () => now);
+    await _selectSource(tester, 1);
+    await _tapVisible(tester, find.byKey(const Key('rtmp-preview')));
+    await tester.pumpAndSettle();
+
+    now = now.add(const Duration(hours: 2));
+    await _tapVisible(tester, find.byKey(const Key('rtmp-submit')));
+    await tester.pump();
+
+    expect(gateway.addedSources, isEmpty);
+    expect(gateway.publishMediaIds, isEmpty);
+    await tester.pump(const Duration(seconds: 4));
+  });
+
   testWidgets('live proxy protocol changes invalidate prepared source', (
     tester,
   ) async {
@@ -279,7 +296,11 @@ void main() {
   });
 }
 
-Future<void> _pumpDialog(WidgetTester tester, ProviderGateway gateway) async {
+Future<void> _pumpDialog(
+  WidgetTester tester,
+  ProviderGateway gateway, {
+  DateTime Function()? now,
+}) async {
   tester.view.physicalSize = const ui.Size(430, 800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -292,7 +313,12 @@ Future<void> _pumpDialog(WidgetTester tester, ProviderGateway gateway) async {
         context,
         DependencyScope<ProviderGateway>(value: gateway, child: child!),
       ),
-      home: const Scaffold(body: AddMediaDialog(roomId: 'room_prepare_test')),
+      home: Scaffold(
+        body: AddMediaDialog(
+          roomId: 'room_prepare_test',
+          now: now ?? DateTime.now,
+        ),
+      ),
     ),
   );
   await tester.pumpAndSettle();

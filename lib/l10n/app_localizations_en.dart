@@ -1567,6 +1567,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noExpiration => 'Never expires';
 
   @override
+  String get publishKeyExpirationMustBeFuture =>
+      'Expiration time must be in the future.';
+
+  @override
   String get audioAndVideo => 'Audio and video';
 
   @override

@@ -521,6 +521,7 @@
   "permanentPublishKey": "Never expires",
   "permanentPublishKeyDescription": "Anyone with this key can publish until the server JWT secret changes.",
   "noExpiration": "Never expires",
+  "publishKeyExpirationMustBeFuture": "Expiration time must be in the future.",
   "audioAndVideo": "Audio and video",
   "videoOnly": "Video only",
   "audioOnly": "Audio only",

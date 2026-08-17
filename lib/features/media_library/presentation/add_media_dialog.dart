@@ -47,6 +47,7 @@ class AddMediaDialog extends StatefulWidget {
   final String? parentId;
   final ProviderDistributionPolicy distributionPolicy;
   final VoidCallback? onCompactClose;
+  final DateTime Function() now;
 
   const AddMediaDialog({
     super.key,
@@ -54,6 +55,7 @@ class AddMediaDialog extends StatefulWidget {
     this.parentId,
     this.distributionPolicy = ProviderDistributionPolicy.current,
     this.onCompactClose,
+    this.now = DateTime.now,
   });
 
   static Future<void> show(
@@ -231,7 +233,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   provider_common.PreparedMediaSource? _rtmpPreview;
   client_enum.PublishKeyType _rtmpPublishKeyType =
       client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE;
-  DateTime _rtmpPublishExpiresAt = DateTime.now().add(const Duration(hours: 1));
+  late DateTime _rtmpPublishExpiresAt;
   _LivePullProtocol _liveProxyProtocol = _LivePullProtocol.rtmp;
   source_enum.RtmpStreamMode _liveProxyRtmpMode =
       source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT;
@@ -329,6 +331,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   @override
   void initState() {
     super.initState();
+    _rtmpPublishExpiresAt = widget.now().add(const Duration(hours: 1));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _selectedIndex == 0) {
         _urlFocusNode.requestFocus();
@@ -3456,6 +3459,15 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   Future<void> _addRtmpPublish() async {
     final preview = _rtmpPreview;
     if (preview == null || !preview.hasSource()) return;
+    if (_rtmpPublishKeyType !=
+            client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT &&
+        !_rtmpPublishExpiresAt.isAfter(widget.now())) {
+      AppNotifications.showWarning(
+        context,
+        context.l10n.publishKeyExpirationMustBeFuture,
+      );
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       final name = _nameController.text.trim();
@@ -3778,7 +3790,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Future<void> _selectRtmpPublishExpiration() async {
-    final now = DateTime.now();
+    final now = widget.now();
     final selectedDate = await showDatePicker(
       context: context,
       initialDate: _rtmpPublishExpiresAt.isBefore(now)
@@ -3795,15 +3807,24 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
     if (!mounted || selectedTime == null) return;
 
-    setState(() {
-      _rtmpPublishExpiresAt = DateTime(
-        selectedDate.year,
-        selectedDate.month,
-        selectedDate.day,
-        selectedTime.hour,
-        selectedTime.minute,
-      );
-    });
+    final expiresAt = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
+    if (!expiresAt.isAfter(widget.now())) {
+      if (mounted) {
+        AppNotifications.showWarning(
+          context,
+          context.l10n.publishKeyExpirationMustBeFuture,
+        );
+      }
+      return;
+    }
+
+    setState(() => _rtmpPublishExpiresAt = expiresAt);
   }
 
   Future<void> _parseBilibili() async {

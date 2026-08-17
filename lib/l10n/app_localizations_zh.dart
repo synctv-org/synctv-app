@@ -1458,6 +1458,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noExpiration => '永不过期';
 
   @override
+  String get publishKeyExpirationMustBeFuture => '过期时间必须晚于当前时间。';
+
+  @override
   String get audioAndVideo => '音频和视频';
 
   @override

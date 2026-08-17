@@ -6420,6 +6420,38 @@ void main() {
     expect(requests.last.url.path, '/api/rooms/room_1/streams/med_1');
   });
 
+  test('legacy publish key responses default to single-use', () async {
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
+      httpClient: MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'publishKey': 'pub_legacy',
+            'rtmpUrl': 'rtmp://example.test/live',
+            'streamKey': 'stream_legacy',
+            'expiresAt': '1760000100',
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final service = SyncTvRoomMediaDomainService(api);
+
+    final publish = await service.createRtmpPublishKeyInfo(
+      'room_1',
+      'med_1',
+      keyType: client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT,
+    );
+
+    expect(
+      publish.keyType,
+      client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
+    );
+    expect(publish.expiresAt, 1760000100);
+  });
+
   test(
     'direct url, rtmp, and live proxy require prepare intents before creation',
     () async {

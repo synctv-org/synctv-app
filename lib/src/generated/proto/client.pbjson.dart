@@ -5478,9 +5478,9 @@ const CreateRoomPublishKeyRequest$json = {
 /// Descriptor for `CreateRoomPublishKeyRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List createRoomPublishKeyRequestDescriptor = $convert.base64Decode(
     'ChtDcmVhdGVSb29tUHVibGlzaEtleVJlcXVlc3QSOAoIbWVkaWFfaWQYASABKAlCHbpIGnIYEA'
-    'EYQDISXm1lZF9bQS1aYS16MC05XSskUgdtZWRpYUlkEj0KBHR5cGUYAiABKA4yHS5zeW5jdHYu'
-    'Y2xpZW50LlB1Ymxpc2hLZXlUeXBlQgq6SAeCAQQQASAAUgR0eXBlEiIKCmV4cGlyZXNfYXQYAy'
-    'ABKANIAFIJZXhwaXJlc0F0iAEBQg0KC19leHBpcmVzX2F0');
+    'EYQDISXm1lZF9bQS1aYS16MC05XSskUgdtZWRpYUlkEjsKBHR5cGUYAiABKA4yHS5zeW5jdHYu'
+    'Y2xpZW50LlB1Ymxpc2hLZXlUeXBlQgi6SAWCAQIQAVIEdHlwZRIiCgpleHBpcmVzX2F0GAMgAS'
+    'gDSABSCWV4cGlyZXNBdIgBAUINCgtfZXhwaXJlc19hdA==');
 
 @$core.Deprecated('Use createRoomPublishKeyResponseDescriptor instead')
 const CreateRoomPublishKeyResponse$json = {
