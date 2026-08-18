@@ -8,7 +8,7 @@ import Foundation
 import audio_session
 import desktop_webview_window
 import device_info_plus
-import file_picker
+import file_picker_darwin
 import flutter_web_auth_2
 import flutter_webrtc
 import media_kit_libs_macos_video
@@ -18,7 +18,6 @@ import passkeys_darwin
 import screen_brightness_macos
 import screen_retriever_macos
 import shared_preferences_foundation
-import ua_client_hints
 import url_launcher_macos
 import video_player_avfoundation
 import volume_controller
@@ -41,7 +40,6 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   ScreenBrightnessMacosPlugin.register(with: registry.registrar(forPlugin: "ScreenBrightnessMacosPlugin"))
   ScreenRetrieverMacosPlugin.register(with: registry.registrar(forPlugin: "ScreenRetrieverMacosPlugin"))
   SharedPreferencesPlugin.register(with: registry.registrar(forPlugin: "SharedPreferencesPlugin"))
-  UAClientHintsPlugin.register(with: registry.registrar(forPlugin: "UAClientHintsPlugin"))
   UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))
   VideoPlayerPlugin.register(with: registry.registrar(forPlugin: "VideoPlayerPlugin"))
   VolumeControllerPlugin.register(with: registry.registrar(forPlugin: "VolumeControllerPlugin"))

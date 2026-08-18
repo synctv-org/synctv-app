@@ -5,9 +5,9 @@ pending upstream in [corbado/flutter-passkeys][upstream].
 
 ## Fork rationale
 
-The fork is based on the published `passkeys_darwin 0.4.2+2` package. The
-upstream `main` branch was last checked on 2026-07-25 at
-[`fffb633005ed7581d715cec89a51149c635f05da`][checked-commit]. It still had the
+The fork is based on the published `passkeys_darwin 0.4.3+3` package. The
+upstream `main` branch was last checked on 2026-08-18 at
+[`a1fdabef92a8bd6d4c59f0c9bbf41df295a75f10`][checked-commit]. It still had the
 following defects:
 
 1. Registration and authentication preserve WebAuthn `userVerification` in
@@ -45,7 +45,7 @@ Delete `packages/passkeys_darwin` and the root dependency override together
 once those conditions are met.
 
 [upstream]: https://github.com/corbado/flutter-passkeys/tree/main/packages/passkeys/passkeys_darwin
-[checked-commit]: https://github.com/corbado/flutter-passkeys/commit/fffb633005ed7581d715cec89a51149c635f05da
+[checked-commit]: https://github.com/corbado/flutter-passkeys/commit/a1fdabef92a8bd6d4c59f0c9bbf41df295a75f10
 
 ## Usage
 

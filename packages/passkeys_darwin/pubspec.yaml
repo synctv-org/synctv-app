@@ -3,7 +3,7 @@ description: Shared Darwin implementation (iOS & macOS) of the Corbado passkeys 
 publish_to: none
 homepage: https://docs.corbado.com/overview/welcome
 repository: https://github.com/corbado/flutter-passkeys/tree/main/packages/passkeys/passkeys_darwin
-version: 0.4.2+2
+version: 0.4.3+3
 
 environment:
   sdk: ">=3.9.0 <4.0.0"
@@ -31,6 +31,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  pigeon: ^27.3.0
+  pigeon: ^27.3.1
   plugin_platform_interface: ^2.0.0
   very_good_analysis: ^10.3.0

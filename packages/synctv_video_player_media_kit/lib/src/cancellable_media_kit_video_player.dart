@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:video_player/video_player.dart';
+import 'package:video_player/video_player.dart' hide VideoTrack;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart'
     hide VideoTrack;
 

@@ -5,6 +5,11 @@
 - Handle registration responses with a nil raw attestation object.
 - Document the upstream baseline and the conditions for removing this fork.
 
+## 0.4.3+3
+
+- **FIX**(passkeys_darwin): compile out Signal API on Xcode older than 26.2
+  ([#289](https://github.com/corbado/flutter-passkeys/issues/289)).
+
 ## 0.4.2+2
 
  - **FIX**(passkeys_darwin): map no-credentials-available regardless of device locale ([#271](https://github.com/corbado/flutter-passkeys/issues/271)). ([7414c54a](https://github.com/corbado/flutter-passkeys/commit/7414c54a24ddde979bc2d64d19b28a52065fc8ca))
