@@ -531,6 +531,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String roomOnlineTotal(int count) {
+    return 'Online: $count';
+  }
+
+  @override
   String roomPresenceWithMembers(
     int onlineMembers,
     int onlineGuests,
@@ -4341,14 +4346,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get review => 'Review';
 
   @override
-  String roomMemberUpdateSummary(int members, String time) {
+  String roomMemberUpdateSummary(int online, int members, String time) {
     String _temp0 = intl.Intl.pluralLogic(
       members,
       locale: localeName,
       other: '$members members',
       one: '1 member',
     );
-    return '$_temp0 · Updated $time';
+    return '$online online · $_temp0 · Updated $time';
   }
 
   @override

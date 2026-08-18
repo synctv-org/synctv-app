@@ -208,6 +208,8 @@ class SyncTvRoom {
 
   bool get isActive => status == common_enum.RoomStatus.ROOM_STATUS_ACTIVE;
 
+  int get onlineCount => onlineMemberCount + onlineGuestCount;
+
   SyncTvRoom({
     required this.roomId,
     required this.roomName,

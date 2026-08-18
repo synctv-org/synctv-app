@@ -911,13 +911,20 @@ class _RoomManagementTile extends StatelessWidget {
                 ),
             ],
           );
-          final meta = Text(
-            context.l10n.roomMemberUpdateSummary(
-              room.memberCount,
-              updatedAtLabel,
+          final meta = AppTooltip(
+            message: context.l10n.roomPresenceSummary(
+              room.onlineMemberCount,
+              room.onlineGuestCount,
             ),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+            child: Text(
+              context.l10n.roomMemberUpdateSummary(
+                room.onlineCount,
+                room.memberCount,
+                updatedAtLabel,
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+              ),
             ),
           );
           final actions = Wrap(

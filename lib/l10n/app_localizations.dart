@@ -1004,6 +1004,12 @@ abstract class AppLocalizations {
   /// **'Online: {onlineMembers} members · {onlineGuests} guests'**
   String roomPresenceSummary(int onlineMembers, int onlineGuests);
 
+  /// No description provided for @roomOnlineTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Online: {count}'**
+  String roomOnlineTotal(int count);
+
   /// No description provided for @roomPresenceWithMembers.
   ///
   /// In en, this message translates to:
@@ -7449,8 +7455,8 @@ abstract class AppLocalizations {
   /// No description provided for @roomMemberUpdateSummary.
   ///
   /// In en, this message translates to:
-  /// **'{members, plural, =1{1 member} other{{members} members}} · Updated {time}'**
-  String roomMemberUpdateSummary(int members, String time);
+  /// **'{online} online · {members, plural, =1{1 member} other{{members} members}} · Updated {time}'**
+  String roomMemberUpdateSummary(int online, int members, String time);
 
   /// No description provided for @open.
   ///

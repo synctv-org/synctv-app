@@ -502,6 +502,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String roomOnlineTotal(int count) {
+    return '在线：$count';
+  }
+
+  @override
   String roomPresenceWithMembers(
     int onlineMembers,
     int onlineGuests,
@@ -4066,8 +4071,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get review => '审核';
 
   @override
-  String roomMemberUpdateSummary(int members, String time) {
-    return '成员 $members · 更新 $time';
+  String roomMemberUpdateSummary(int online, int members, String time) {
+    return '在线 $online · 成员 $members · 更新 $time';
   }
 
   @override

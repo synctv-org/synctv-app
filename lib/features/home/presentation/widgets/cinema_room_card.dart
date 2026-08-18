@@ -71,7 +71,10 @@ class CinemaRoomCard extends StatelessWidget {
         : isGuestAccess
         ? theme.colorScheme.tertiary
         : theme.colorScheme.primary;
-    final audienceText = l10n.roomPresenceSummary(
+    final audienceText = l10n.roomOnlineTotal(
+      onlineMemberCount + onlineGuestCount,
+    );
+    final audienceTooltip = l10n.roomPresenceSummary(
       onlineMemberCount,
       onlineGuestCount,
     );
@@ -91,6 +94,7 @@ class CinemaRoomCard extends StatelessWidget {
               coverUrl: coverUrl,
               creatorName: creatorName,
               audienceText: audienceText,
+              audienceTooltip: audienceTooltip,
               statusLabel: statusLabel,
               statusColor: statusColor,
               isUnavailable: isUnavailable,
@@ -195,6 +199,7 @@ class CinemaRoomCard extends StatelessWidget {
                             child: _RoomMetric(
                               icon: Icons.people_alt_rounded,
                               label: audienceText,
+                              tooltip: audienceTooltip,
                             ),
                           ),
                         ],
@@ -298,6 +303,7 @@ class _CompactRoomCard extends StatelessWidget {
     required this.coverUrl,
     required this.creatorName,
     required this.audienceText,
+    required this.audienceTooltip,
     required this.statusLabel,
     required this.statusColor,
     required this.isUnavailable,
@@ -311,6 +317,7 @@ class _CompactRoomCard extends StatelessWidget {
   final String coverUrl;
   final String creatorName;
   final String audienceText;
+  final String audienceTooltip;
   final String statusLabel;
   final Color statusColor;
   final bool isUnavailable;
@@ -427,13 +434,16 @@ class _CompactRoomCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Flexible(
-                    child: Text(
-                      audienceText,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.82),
-                        fontWeight: FontWeight.w600,
+                    child: AppTooltip(
+                      message: audienceTooltip,
+                      child: Text(
+                        audienceText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.82),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -596,25 +606,33 @@ class _RoomCover extends StatelessWidget {
 class _RoomMetric extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String tooltip;
 
-  const _RoomMetric({required this.icon, required this.label});
+  const _RoomMetric({
+    required this.icon,
+    required this.label,
+    required this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AppBadge(
-      icon: icon,
-      iconSize: 14,
-      color: theme.colorScheme.onSurface.withValues(alpha: 0.64),
-      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
-        alpha: 0.62,
+    return AppTooltip(
+      message: tooltip,
+      child: AppBadge(
+        icon: icon,
+        iconSize: 14,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.64),
+        backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.62,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        textStyle: theme.textTheme.labelMedium?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.70),
+          fontWeight: FontWeight.w600,
+        ),
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      textStyle: theme.textTheme.labelMedium?.copyWith(
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.70),
-        fontWeight: FontWeight.w600,
-      ),
-      label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
   }
 }

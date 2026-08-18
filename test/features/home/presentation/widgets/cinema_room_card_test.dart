@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -26,6 +27,8 @@ Widget _app(Widget child, {double height = 318}) {
 CinemaRoomCard _card({
   client_enum.RoomDiscoveryAccess access =
       client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNSPECIFIED,
+  int onlineMemberCount = 4,
+  int onlineGuestCount = 3,
   bool isOwner = false,
   bool joined = false,
   bool canJoin = false,
@@ -37,8 +40,8 @@ CinemaRoomCard _card({
   return CinemaRoomCard(
     roomName: 'Open cinema',
     description: description,
-    onlineMemberCount: 4,
-    onlineGuestCount: 3,
+    onlineMemberCount: onlineMemberCount,
+    onlineGuestCount: onlineGuestCount,
     discoveryAccess: access,
     isOwner: isOwner,
     joined: joined,
@@ -50,10 +53,36 @@ CinemaRoomCard _card({
 }
 
 void main() {
-  testWidgets('member and guest presence are shown separately', (tester) async {
+  testWidgets('total presence is shown with a detailed tooltip', (
+    tester,
+  ) async {
     await tester.pumpWidget(_app(_card()));
 
+    expect(find.text('Online: 7'), findsOneWidget);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer();
+    await mouse.moveTo(tester.getCenter(find.text('Online: 7')));
+    await tester.pump(const Duration(milliseconds: 600));
+
     expect(find.text('Online: 4 members · 3 guests'), findsOneWidget);
+    await mouse.removePointer();
+  });
+
+  testWidgets('zero guests do not change the total presence presentation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(_card(onlineGuestCount: 0)));
+
+    expect(find.text('Online: 4'), findsOneWidget);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer();
+    await mouse.moveTo(tester.getCenter(find.text('Online: 4')));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Online: 4 members · 0 guests'), findsOneWidget);
+    await mouse.removePointer();
   });
 
   testWidgets('guest room has a distinct direct-entry badge', (tester) async {
@@ -138,12 +167,10 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('compact card keeps both presence categories visible', (
-    tester,
-  ) async {
+  testWidgets('compact card shows total presence', (tester) async {
     await tester.pumpWidget(_app(_card(), height: 240));
 
-    expect(find.text('Online: 4 members · 3 guests'), findsOneWidget);
+    expect(find.text('Online: 7'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

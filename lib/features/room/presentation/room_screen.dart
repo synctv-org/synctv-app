@@ -3711,16 +3711,21 @@ class _RoomScreenState extends State<RoomScreen>
                   ),
                 ),
                 Flexible(
-                  child: Text(
-                    context.l10n.roomPresenceSummary(
+                  child: AppTooltip(
+                    message: context.l10n.roomPresenceSummary(
                       _onlineMemberCount,
                       _onlineGuestCount,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.58,
+                    child: Text(
+                      context.l10n.roomOnlineTotal(
+                        _onlineMemberCount + _onlineGuestCount,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.58,
+                        ),
                       ),
                     ),
                   ),
@@ -6697,16 +6702,21 @@ class _RoomScreenState extends State<RoomScreen>
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  context.l10n.roomPresenceSummary(
+                child: AppTooltip(
+                  message: context.l10n.roomPresenceSummary(
                     _onlineMemberCount,
                     _onlineGuestCount,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  child: Text(
+                    context.l10n.roomOnlineTotal(
+                      _onlineMemberCount + _onlineGuestCount,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
