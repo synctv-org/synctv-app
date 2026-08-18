@@ -3655,7 +3655,7 @@ class AppTile extends StatelessWidget {
       onLongPress: enabled ? onLongPress : null,
       contentPadding: contentPadding,
     );
-    Widget result = tile;
+    Widget result = Material(type: MaterialType.transparency, child: tile);
     if (padding != null) {
       result = Padding(padding: padding!, child: result);
     }

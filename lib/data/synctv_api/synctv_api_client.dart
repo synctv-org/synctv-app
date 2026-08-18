@@ -1475,6 +1475,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
           : room.memberCount,
       connectionCount: room.hasPresence() ? room.presence.connectionCount : 0,
       memberCount: room.memberCount,
+      isPublic: room.hasIsPublic() ? room.isPublic : true,
       creator: room.creatorUsername,
       creatorId: room.creatorId,
       creatorAvatarUrl: resolveResourceUrl(room.creatorAvatarUrl),
@@ -1505,6 +1506,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
           : room.memberCount,
       connectionCount: room.hasPresence() ? room.presence.connectionCount : 0,
       memberCount: room.memberCount,
+      isPublic: room.hasIsPublic() ? room.isPublic : true,
       creator: room.hasCreator() ? room.creator.username : '',
       creatorId: room.hasCreator() ? room.creator.id : room.createdBy,
       creatorAvatarUrl: resolveResourceUrl(

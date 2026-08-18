@@ -1211,6 +1211,29 @@ void main() {
     expect(tapped, isTrue);
   });
 
+  testWidgets('AppTile owns a Material surface inside decorated parents', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        DecoratedBox(
+          decoration: const BoxDecoration(color: Colors.black),
+          child: AppTile(
+            title: const Text('Selected item'),
+            selected: true,
+            onPressed: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(
+      find.ancestor(of: find.byType(ListTile), matching: find.byType(Material)),
+      findsWidgets,
+    );
+  });
+
   testWidgets('AppInkSurface centralizes tappable material surfaces', (
     tester,
   ) async {

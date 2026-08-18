@@ -3802,6 +3802,7 @@ class Room extends $pb.GeneratedMessage {
     UserPublicView? creator,
     RoomCategory? category,
     $core.Iterable<RoomLabel>? labels,
+    $core.bool? isPublic,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -3821,6 +3822,7 @@ class Room extends $pb.GeneratedMessage {
     if (creator != null) result.creator = creator;
     if (category != null) result.category = category;
     if (labels != null) result.labels.addAll(labels);
+    if (isPublic != null) result.isPublic = isPublic;
     return result;
   }
 
@@ -3862,6 +3864,7 @@ class Room extends $pb.GeneratedMessage {
         subBuilder: RoomCategory.create)
     ..pPM<RoomLabel>(17, _omitFieldNames ? '' : 'labels',
         subBuilder: RoomLabel.create)
+    ..aOB(18, _omitFieldNames ? '' : 'isPublic')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4038,6 +4041,15 @@ class Room extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(17)
   $pb.PbList<RoomLabel> get labels => $_getList(16);
+
+  @$pb.TagNumber(18)
+  $core.bool get isPublic => $_getBF(17);
+  @$pb.TagNumber(18)
+  set isPublic($core.bool value) => $_setBool(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasIsPublic() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearIsPublic() => $_clearField(18);
 }
 
 class RoomCategory extends $pb.GeneratedMessage {
@@ -10849,6 +10861,7 @@ class CreateRoomRequest extends $pb.GeneratedMessage {
     $core.String? password,
     $core.String? categoryId,
     $core.Iterable<$core.String>? labelIds,
+    $core.bool? isPublic,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -10857,6 +10870,7 @@ class CreateRoomRequest extends $pb.GeneratedMessage {
     if (password != null) result.password = password;
     if (categoryId != null) result.categoryId = categoryId;
     if (labelIds != null) result.labelIds.addAll(labelIds);
+    if (isPublic != null) result.isPublic = isPublic;
     return result;
   }
 
@@ -10880,6 +10894,7 @@ class CreateRoomRequest extends $pb.GeneratedMessage {
     ..aOS(4, _omitFieldNames ? '' : 'password')
     ..aOS(5, _omitFieldNames ? '' : 'categoryId')
     ..pPS(6, _omitFieldNames ? '' : 'labelIds')
+    ..aOB(7, _omitFieldNames ? '' : 'isPublic')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -10950,6 +10965,15 @@ class CreateRoomRequest extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(6)
   $pb.PbList<$core.String> get labelIds => $_getList(5);
+
+  @$pb.TagNumber(7)
+  $core.bool get isPublic => $_getBF(6);
+  @$pb.TagNumber(7)
+  set isPublic($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasIsPublic() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearIsPublic() => $_clearField(7);
 }
 
 /// Note: UserService room-scoped resource request; room_id is carried in payload.
@@ -12264,6 +12288,63 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
   void clearUpdateMask() => $_clearField(2);
   @$pb.TagNumber(2)
   $3.FieldMask ensureUpdateMask() => $_ensure(1);
+}
+
+class UpdateRoomVisibilityRequest extends $pb.GeneratedMessage {
+  factory UpdateRoomVisibilityRequest({
+    $core.bool? isPublic,
+  }) {
+    final result = create();
+    if (isPublic != null) result.isPublic = isPublic;
+    return result;
+  }
+
+  UpdateRoomVisibilityRequest._();
+
+  factory UpdateRoomVisibilityRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateRoomVisibilityRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateRoomVisibilityRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'isPublic')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomVisibilityRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomVisibilityRequest copyWith(
+          void Function(UpdateRoomVisibilityRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as UpdateRoomVisibilityRequest))
+          as UpdateRoomVisibilityRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomVisibilityRequest create() =>
+      UpdateRoomVisibilityRequest._();
+  @$core.override
+  UpdateRoomVisibilityRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomVisibilityRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateRoomVisibilityRequest>(create);
+  static UpdateRoomVisibilityRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get isPublic => $_getBF(0);
+  @$pb.TagNumber(1)
+  set isPublic($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIsPublic() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIsPublic() => $_clearField(1);
 }
 
 /// Get room settings
@@ -49974,6 +50055,10 @@ class RoomServiceApi {
           $pb.ClientContext? ctx, UpdateRoomSettingsRequest request) =>
       _client.invoke<Room>(
           ctx, 'RoomService', 'UpdateRoomSettings', request, Room());
+  $async.Future<Room> updateRoomVisibility(
+          $pb.ClientContext? ctx, UpdateRoomVisibilityRequest request) =>
+      _client.invoke<Room>(
+          ctx, 'RoomService', 'UpdateRoomVisibility', request, Room());
   $async.Future<RoomSettings> resetRoomSettings(
           $pb.ClientContext? ctx, ResetRoomSettingsRequest request) =>
       _client.invoke<RoomSettings>(

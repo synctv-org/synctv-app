@@ -249,6 +249,7 @@ class Room extends $pb.GeneratedMessage {
     $1.ResourceCover? cover,
     $1.RoomCategory? category,
     $core.Iterable<$1.RoomLabel>? labels,
+    $core.bool? isPublic,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -269,6 +270,7 @@ class Room extends $pb.GeneratedMessage {
     if (cover != null) result.cover = cover;
     if (category != null) result.category = category;
     if (labels != null) result.labels.addAll(labels);
+    if (isPublic != null) result.isPublic = isPublic;
     return result;
   }
 
@@ -310,6 +312,7 @@ class Room extends $pb.GeneratedMessage {
         subBuilder: $1.RoomCategory.create)
     ..pPM<$1.RoomLabel>(18, _omitFieldNames ? '' : 'labels',
         subBuilder: $1.RoomLabel.create)
+    ..aOB(19, _omitFieldNames ? '' : 'isPublic')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -493,6 +496,15 @@ class Room extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(18)
   $pb.PbList<$1.RoomLabel> get labels => $_getList(17);
+
+  @$pb.TagNumber(19)
+  $core.bool get isPublic => $_getBF(18);
+  @$pb.TagNumber(19)
+  set isPublic($core.bool value) => $_setBool(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasIsPublic() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearIsPublic() => $_clearField(19);
 }
 
 class RuntimeSettings extends $pb.GeneratedMessage {

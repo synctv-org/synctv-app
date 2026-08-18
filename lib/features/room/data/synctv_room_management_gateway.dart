@@ -49,6 +49,9 @@ final class SyncTvRoomManagementGateway implements RoomManagementGateway {
   Future<void> updateRoomPassword(String roomId, String? password) =>
       SyncTvService.updateRoomPassword(roomId, password);
   @override
+  Future<SyncTvRoom> updateRoomVisibility(String roomId, bool isPublic) =>
+      SyncTvService.updateRoomVisibility(roomId, isPublic);
+  @override
   Future<void> updateRoomSettings(String roomId, SyncTvRoomSettings settings) =>
       SyncTvService.updateRoomSettings(roomId, settings);
   @override

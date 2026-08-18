@@ -20,6 +20,10 @@ void main() {
     );
 
     expect(find.text('Access method'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('create-room-public-visibility')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('create-room-password')), findsOneWidget);
     expect(find.text('Password room'), findsNothing);
   });
@@ -33,11 +37,15 @@ void main() {
     );
 
     expect(find.text('Access method'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('create-room-public-visibility')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('create-room-password')), findsNothing);
     expect(find.text('Password room'), findsNothing);
   });
 
-  testWidgets('optional password policy keeps the access selector', (
+  testWidgets('optional password policy keeps password controls independent', (
     tester,
   ) async {
     await _pumpCreateRoomDialog(
@@ -45,9 +53,10 @@ void main() {
       common.RoomPasswordPolicy.ROOM_PASSWORD_POLICY_OPTIONAL,
     );
 
-    expect(find.text('Access method'), findsOneWidget);
+    expect(find.text('Room visibility'), findsOneWidget);
     expect(find.text('Public room'), findsOneWidget);
     expect(find.text('Password room'), findsOneWidget);
+    expect(find.text('No password'), findsOneWidget);
     expect(find.byKey(const ValueKey('create-room-password')), findsNothing);
 
     await tester.ensureVisible(find.text('Password room'));
@@ -56,15 +65,74 @@ void main() {
 
     expect(find.byKey(const ValueKey('create-room-password')), findsOneWidget);
   });
+
+  testWidgets('creates a private room without a password', (tester) async {
+    final gateway = await _pumpCreateRoomDialog(
+      tester,
+      common.RoomPasswordPolicy.ROOM_PASSWORD_POLICY_OPTIONAL,
+      surfaceSize: const Size(800, 1200),
+    );
+
+    await tester.enterText(find.byType(TextField).first, 'Private room');
+    final visibility = find.byKey(
+      const ValueKey('create-room-public-visibility'),
+    );
+    await tester.ensureVisible(visibility);
+    await tester.pumpAndSettle();
+    await tester.tap(visibility);
+    await tester.pump();
+    await tester.tap(find.text('Create room').last);
+    await tester.pumpAndSettle();
+
+    expect(gateway.createdPassword, isNull);
+    expect(gateway.createdIsPublic, isFalse);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('creates a public password-protected room', (tester) async {
+    final gateway = await _pumpCreateRoomDialog(
+      tester,
+      common.RoomPasswordPolicy.ROOM_PASSWORD_POLICY_OPTIONAL,
+      surfaceSize: const Size(800, 1200),
+    );
+
+    await tester.enterText(find.byType(TextField).first, 'Protected room');
+    final passwordRoom = find.text('Password room');
+    await tester.ensureVisible(passwordRoom);
+    await tester.pumpAndSettle();
+    await tester.tap(passwordRoom);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('create-room-password')),
+      'secret',
+    );
+    await tester.tap(find.text('Create room').last);
+    await tester.pumpAndSettle();
+
+    expect(gateway.createdPassword, 'secret');
+    expect(gateway.createdIsPublic, isTrue);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+  });
 }
 
-Future<void> _pumpCreateRoomDialog(
+Future<_FakeRoomCreationGateway> _pumpCreateRoomDialog(
   WidgetTester tester,
-  common.RoomPasswordPolicy passwordPolicy,
-) async {
+  common.RoomPasswordPolicy passwordPolicy, {
+  Size? surfaceSize,
+}) async {
+  if (surfaceSize != null) {
+    tester.view.physicalSize = surfaceSize;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+
+  final gateway = _FakeRoomCreationGateway(_settings(passwordPolicy));
   await tester.pumpWidget(
     DependencyScope<RoomCreationGateway>(
-      value: _FakeRoomCreationGateway(_settings(passwordPolicy)),
+      value: gateway,
       child: MaterialApp(
         locale: const Locale('en'),
         supportedLocales: AppLocalizations.supportedLocales,
@@ -87,6 +155,7 @@ Future<void> _pumpCreateRoomDialog(
 
   await tester.tap(find.text('Open'));
   await tester.pumpAndSettle();
+  return gateway;
 }
 
 PublicSettingsInfo _settings(common.RoomPasswordPolicy passwordPolicy) =>
@@ -113,9 +182,11 @@ PublicSettingsInfo _settings(common.RoomPasswordPolicy passwordPolicy) =>
     );
 
 final class _FakeRoomCreationGateway implements RoomCreationGateway {
-  const _FakeRoomCreationGateway(this.settings);
+  _FakeRoomCreationGateway(this.settings);
 
   final PublicSettingsInfo settings;
+  String? createdPassword;
+  bool? createdIsPublic;
 
   @override
   Future<SyncTvRoom> createRoom(
@@ -124,7 +195,19 @@ final class _FakeRoomCreationGateway implements RoomCreationGateway {
     String? description,
     String categoryId = '',
     List<String> labelIds = const [],
-  }) => Future<SyncTvRoom>.error(UnimplementedError());
+    bool isPublic = true,
+  }) async {
+    createdPassword = password;
+    createdIsPublic = isPublic;
+    return SyncTvRoom(
+      roomId: 'room_created',
+      roomName: name,
+      creatorId: 'user_creator',
+      status: common.RoomStatus.ROOM_STATUS_ACTIVE,
+      isPublic: isPublic,
+      needPassword: password != null,
+    );
+  }
 
   @override
   Future<PublicSettingsInfo> getPublicSettings({bool refresh = false}) async =>

@@ -779,6 +779,18 @@ class SyncTvRoomApi {
     );
   }
 
+  Future<client.Room> updateRoomVisibility(
+    String roomId,
+    client.UpdateRoomVisibilityRequest request,
+  ) {
+    return _api._send(
+      'PATCH',
+      '/api/rooms/$roomId/visibility',
+      client.Room.create,
+      body: request,
+    );
+  }
+
   Future<client.RoomSettings> resetRoomSettings(
     String roomId,
     client.ResetRoomSettingsRequest request,

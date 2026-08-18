@@ -728,6 +728,42 @@ abstract class AppLocalizations {
   /// **'Access method'**
   String get accessMethod;
 
+  /// No description provided for @roomVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Room visibility'**
+  String get roomVisibility;
+
+  /// No description provided for @publicRoomVisibilityDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Listed in discovery; anonymous guests can access when guest joining is enabled'**
+  String get publicRoomVisibilityDescription;
+
+  /// No description provided for @privateRoomVisibilityDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden from discovery and unavailable to anonymous guests'**
+  String get privateRoomVisibilityDescription;
+
+  /// No description provided for @passwordProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Password protection'**
+  String get passwordProtection;
+
+  /// No description provided for @noRoomPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'No password'**
+  String get noRoomPassword;
+
+  /// No description provided for @noRoomPasswordJoinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Eligible members can join without a password'**
+  String get noRoomPasswordJoinHint;
+
   /// No description provided for @serverRequiresPassword.
   ///
   /// In en, this message translates to:
@@ -806,10 +842,16 @@ abstract class AppLocalizations {
   /// **'Eligible members can join a public room'**
   String get publicRoomAccessHint;
 
+  /// No description provided for @privateRoomAccessHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This room is hidden from discovery and unavailable to anonymous guests'**
+  String get privateRoomAccessHint;
+
   /// No description provided for @createRoomSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Set the room name, description, and access method'**
+  /// **'Set the room name, visibility, and password protection'**
   String get createRoomSubtitle;
 
   /// No description provided for @publicRoom.
@@ -7555,6 +7597,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings updated'**
   String get settingsUpdated;
+
+  /// No description provided for @roomVisibilityUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Room visibility updated'**
+  String get roomVisibilityUpdated;
+
+  /// No description provided for @makeRoomPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Make room private?'**
+  String get makeRoomPrivate;
+
+  /// No description provided for @makeRoomPrivateConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'The room will be removed from discovery and current anonymous guests will be disconnected.'**
+  String get makeRoomPrivateConfirmation;
+
+  /// No description provided for @makePrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Make private'**
+  String get makePrivate;
 
   /// No description provided for @updateFailed.
   ///

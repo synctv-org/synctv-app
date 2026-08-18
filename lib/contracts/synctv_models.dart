@@ -179,6 +179,7 @@ class SyncTvRoom {
   final int connectionCount;
   final int memberCount;
   final bool needPassword;
+  final bool isPublic;
   final String creator;
   final String creatorId;
   final String creatorAvatarUrl;
@@ -214,6 +215,7 @@ class SyncTvRoom {
     this.connectionCount = 0,
     this.memberCount = 0,
     this.needPassword = false,
+    this.isPublic = true,
     this.creator = '',
     required this.creatorId,
     this.creatorAvatarUrl = '',
@@ -250,6 +252,7 @@ class SyncTvRoom {
     int? connectionCount,
     int? memberCount,
     bool? needPassword,
+    bool? isPublic,
     String? creator,
     String? creatorId,
     String? creatorAvatarUrl,
@@ -283,6 +286,7 @@ class SyncTvRoom {
       connectionCount: connectionCount ?? this.connectionCount,
       memberCount: memberCount ?? this.memberCount,
       needPassword: needPassword ?? this.needPassword,
+      isPublic: isPublic ?? this.isPublic,
       creator: creator ?? this.creator,
       creatorId: creatorId ?? this.creatorId,
       creatorAvatarUrl: creatorAvatarUrl ?? this.creatorAvatarUrl,

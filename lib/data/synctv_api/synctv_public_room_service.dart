@@ -311,6 +311,7 @@ class SyncTvPublicRoomDomainService {
     String? description,
     String categoryId = '',
     List<String> labelIds = const [],
+    bool isPublic = true,
   }) async {
     if (_api.session.identity is GuestSessionIdentity) {
       throw AuthException('访客 token 只能访问对应房间，不能创建房间。');
@@ -326,6 +327,7 @@ class SyncTvPublicRoomDomainService {
       request.categoryId = categoryId;
     }
     request.labelIds.addAll(labelIds);
+    request.isPublic = isPublic;
     final room = await _api.user.createRoom(request);
     return _api
         .mapRoom(room)

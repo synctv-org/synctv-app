@@ -257,6 +257,14 @@ class SyncTvRoomManagementDomainService {
     );
   }
 
+  Future<SyncTvRoom> updateRoomVisibility(String roomId, bool isPublic) async {
+    final room = await _api.room.updateRoomVisibility(
+      roomId,
+      client.UpdateRoomVisibilityRequest(isPublic: isPublic),
+    );
+    return _api.mapRoom(room);
+  }
+
   Future<void> updateRoomAutoPlay(
     String roomId, {
     required bool enabled,

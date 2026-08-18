@@ -830,6 +830,7 @@ class SyncTvService {
     String? description,
     String categoryId = '',
     List<String> labelIds = const [],
+    bool isPublic = true,
   }) async {
     final room = await _domains.publicRooms.createRoom(
       name,
@@ -837,6 +838,7 @@ class SyncTvService {
       description: description,
       categoryId: categoryId,
       labelIds: labelIds,
+      isPublic: isPublic,
     );
     _domains.cache.invalidatePrefix('account:rooms');
     return room;
@@ -2698,6 +2700,19 @@ class SyncTvService {
     SyncTvRoomSettings settings,
   ) async {
     await _domains.roomManagement.updateRoomSettings(roomId, settings);
+  }
+
+  static Future<SyncTvRoom> updateRoomVisibility(
+    String roomId,
+    bool isPublic,
+  ) async {
+    final room = await _domains.roomManagement.updateRoomVisibility(
+      roomId,
+      isPublic,
+    );
+    _domains.cache.invalidatePrefix('account:rooms');
+    _domains.cache.invalidatePrefix('account:favorite-rooms');
+    return room;
   }
 
   static Future<void> updateRoomAutoPlay(

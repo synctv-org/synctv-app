@@ -14,5 +14,6 @@ abstract interface class RoomCreationGateway {
     String? description,
     String categoryId = '',
     List<String> labelIds = const [],
+    bool isPublic = true,
   });
 }

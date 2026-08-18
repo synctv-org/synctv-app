@@ -25,11 +25,13 @@ final class SyncTvRoomCreationGateway implements RoomCreationGateway {
     String? description,
     String categoryId = '',
     List<String> labelIds = const [],
+    bool isPublic = true,
   }) => SyncTvService.createRoom(
     name,
     password: password,
     description: description,
     categoryId: categoryId,
     labelIds: labelIds,
+    isPublic: isPublic,
   );
 }

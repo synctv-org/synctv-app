@@ -7314,6 +7314,7 @@ class _RoomScreenState extends State<RoomScreen>
               roomName: widget.room.roomName,
               creatorId: widget.room.creatorId,
               currentUserId: _currentUser?.id ?? '',
+              isPublic: widget.room.isPublic,
               canViewPlaybackHistory: _canViewPlaybackHistory,
               canNavigatePlayback: _canNavigatePlayback,
               canUseWebRtc: _canUseVoiceChat || _canUseP2pMedia,

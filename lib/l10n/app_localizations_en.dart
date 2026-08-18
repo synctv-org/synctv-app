@@ -379,6 +379,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessMethod => 'Access method';
 
   @override
+  String get roomVisibility => 'Room visibility';
+
+  @override
+  String get publicRoomVisibilityDescription =>
+      'Listed in discovery; anonymous guests can access when guest joining is enabled';
+
+  @override
+  String get privateRoomVisibilityDescription =>
+      'Hidden from discovery and unavailable to anonymous guests';
+
+  @override
+  String get passwordProtection => 'Password protection';
+
+  @override
+  String get noRoomPassword => 'No password';
+
+  @override
+  String get noRoomPasswordJoinHint =>
+      'Eligible members can join without a password';
+
+  @override
   String get serverRequiresPassword => 'The server requires a password';
 
   @override
@@ -421,8 +442,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publicRoomAccessHint => 'Eligible members can join a public room';
 
   @override
+  String get privateRoomAccessHint =>
+      'This room is hidden from discovery and unavailable to anonymous guests';
+
+  @override
   String get createRoomSubtitle =>
-      'Set the room name, description, and access method';
+      'Set the room name, visibility, and password protection';
 
   @override
   String get publicRoom => 'Public room';
@@ -4400,6 +4425,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsUpdated => 'Settings updated';
+
+  @override
+  String get roomVisibilityUpdated => 'Room visibility updated';
+
+  @override
+  String get makeRoomPrivate => 'Make room private?';
+
+  @override
+  String get makeRoomPrivateConfirmation =>
+      'The room will be removed from discovery and current anonymous guests will be disconnected.';
+
+  @override
+  String get makePrivate => 'Make private';
 
   @override
   String updateFailed(String error) {

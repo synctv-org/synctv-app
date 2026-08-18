@@ -604,6 +604,7 @@ class _AppShellState extends State<AppShell> {
           roomName: room.roomName,
           creatorId: room.creatorId,
           currentUserId: user.id,
+          isPublic: room.isPublic,
           currentSettings: settings,
           realtime: RoomRealtimeSession(
             send: (_) {},

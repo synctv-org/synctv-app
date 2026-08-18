@@ -6969,6 +6969,40 @@ void main() {
     },
   );
 
+  test(
+    'room visibility update uses its dedicated authenticated endpoint',
+    () async {
+      http.Request? capturedRequest;
+      final api = SyncTvApiClient(
+        baseUrl: 'https://example.test/api',
+        session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
+        httpClient: MockClient((request) async {
+          capturedRequest = request;
+          return http.Response(
+            jsonEncode({
+              'id': 'room_1',
+              'name': 'Room 1',
+              'createdBy': 'user_1',
+              'isPublic': false,
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+      );
+      final service = SyncTvRoomManagementDomainService(api);
+
+      final room = await service.updateRoomVisibility('room_1', false);
+
+      expect(capturedRequest, isNotNull);
+      expect(capturedRequest!.method, 'PATCH');
+      expect(capturedRequest!.url.path, '/api/rooms/room_1/visibility');
+      expect(capturedRequest!.headers['authorization'], 'Bearer token');
+      expect(jsonDecode(capturedRequest!.body), {'isPublic': false});
+      expect(room.isPublic, isFalse);
+    },
+  );
+
   test('room playback mode update uses a narrow protobuf field mask', () async {
     String? requestBody;
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
@@ -10759,7 +10793,7 @@ void main() {
   });
 
   test(
-    'create room sends current protobuf body and maps review response',
+    'create room sends visibility and defaults a missing response field to public',
     () async {
       http.Request? capturedRequest;
       const roomCredential = 'not-real-room-credential';
@@ -10796,6 +10830,7 @@ void main() {
         password: roomCredential,
         categoryId: 'roomcat_anime',
         labelIds: const ['roomlbl_weekly'],
+        isPublic: false,
       );
 
       expect(capturedRequest, isNotNull);
@@ -10805,6 +10840,7 @@ void main() {
         'password': roomCredential,
         'categoryId': 'roomcat_anime',
         'labelIds': ['roomlbl_weekly'],
+        'isPublic': false,
       });
       expect(room.roomId, 'room_pending');
       expect(room.status, common.RoomStatus.ROOM_STATUS_UNSPECIFIED);
@@ -10820,6 +10856,7 @@ void main() {
         client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED,
       );
       expect(room.needPassword, isFalse);
+      expect(room.isPublic, isTrue);
     },
   );
 

@@ -161,6 +161,7 @@ class RoomSettingsPage extends StatefulWidget {
   final String roomName;
   final String creatorId;
   final String currentUserId;
+  final bool isPublic;
   final SyncTvRoomSettings currentSettings;
   final RoomRealtimeSession realtime;
   final bool canViewPlaybackHistory;
@@ -174,6 +175,7 @@ class RoomSettingsPage extends StatefulWidget {
     required this.roomName,
     this.creatorId = '',
     this.currentUserId = '',
+    required this.isPublic,
     required this.currentSettings,
     required this.realtime,
     required this.p2pMediaPreferences,
@@ -275,6 +277,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   _RealtimeDiagnosticsPane _realtimePane = _RealtimeDiagnosticsPane.overview;
 
   bool _allowGuestJoin = false;
+  late bool _isPublic;
   bool _requireApproval = false;
   bool _allowAutoJoin = true;
   bool _chatEnabled = true;
@@ -295,6 +298,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _iceLoading = false;
   bool _coverUpdating = false;
   bool _passwordUpdating = false;
+  bool _visibilityUpdating = false;
+  int _visibilityMutationGeneration = 0;
   bool _freeModeSaving = false;
   bool _isDisposing = false;
   ChatReadStateInfo? _chatReadState;
@@ -327,6 +332,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _tabController = TabController(length: _sectionCount, vsync: this);
     _tabController.addListener(_handleTabChanged);
     _settings = widget.currentSettings;
+    _isPublic = widget.isPublic;
     _playbackModeConfig = _playbackModePreferences.value;
     _currentUserId = widget.currentUserId;
     _passwordController = TextEditingController();
@@ -493,10 +499,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _loadRoomInfo() async {
+    final visibilityGeneration = _visibilityMutationGeneration;
     try {
       final room = await _roomGateway.getRoomInfo(widget.roomId);
       if (!mounted) return;
-      setState(() => _roomInfo = room);
+      setState(() {
+        _roomInfo = room;
+        if (visibilityGeneration == _visibilityMutationGeneration) {
+          _isPublic = room.isPublic;
+        }
+      });
     } catch (e) {
       debugPrint('Load room info failed: $e');
     }
@@ -524,6 +536,49 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       }
     } finally {
       if (mounted) setState(() => _coverUpdating = false);
+    }
+  }
+
+  Future<void> _updateRoomVisibility(bool isPublic) async {
+    if (_visibilityUpdating || isPublic == _isPublic) return;
+    if (!isPublic) {
+      setState(() => _visibilityUpdating = true);
+      final confirmed = await _confirm(
+        title: context.l10n.makeRoomPrivate,
+        content: context.l10n.makeRoomPrivateConfirmation,
+        action: context.l10n.makePrivate,
+        destructive: true,
+      );
+      if (!mounted) return;
+      if (!confirmed) {
+        setState(() => _visibilityUpdating = false);
+        return;
+      }
+    }
+    final previousValue = _isPublic;
+    setState(() {
+      _isPublic = isPublic;
+      _visibilityUpdating = true;
+      _visibilityMutationGeneration += 1;
+    });
+    try {
+      final room = await _roomGateway.updateRoomVisibility(
+        widget.roomId,
+        isPublic,
+      );
+      if (!mounted) return;
+      setState(() {
+        _roomInfo = room;
+        _isPublic = room.isPublic;
+      });
+      AppNotifications.showSuccess(context, context.l10n.roomVisibilityUpdated);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isPublic = previousValue);
+        AppNotifications.showError(context, context.l10n.updateFailed('$e'));
+      }
+    } finally {
+      if (mounted) setState(() => _visibilityUpdating = false);
     }
   }
 
@@ -3771,7 +3826,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     String title,
     String? subtitle,
     bool value,
-    ValueChanged<bool> onChanged,
+    ValueChanged<bool>? onChanged,
     ThemeData theme,
     bool isDark,
   ) {
@@ -3988,6 +4043,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _buildSurface(
           isDark: isDark,
           children: [
+            _buildSwitchItem(
+              context.l10n.publicRoom,
+              _isPublic
+                  ? context.l10n.publicRoomVisibilityDescription
+                  : context.l10n.privateRoomVisibilityDescription,
+              _isPublic,
+              _visibilityUpdating ? null : _updateRoomVisibility,
+              theme,
+              isDark,
+            ),
+            _buildDivider(theme),
             _buildSwitchItem(
               context.l10n.allowGuestJoin,
               context.l10n.guestTokenCurrentRoomOnly,

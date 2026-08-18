@@ -25,6 +25,7 @@ abstract interface class RoomManagementGateway {
     bool refresh = false,
   });
   Future<void> updateRoomPassword(String roomId, String? password);
+  Future<SyncTvRoom> updateRoomVisibility(String roomId, bool isPublic);
   Future<void> updateRoomSettings(String roomId, SyncTvRoomSettings settings);
   Future<void> updateRoomAutoPlay(
     String roomId, {
