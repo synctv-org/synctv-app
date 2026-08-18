@@ -42,7 +42,8 @@ class AdminServiceState {
   final int bannedRooms;
   final int totalMedia;
   final int providerInstances;
-  final int onlineUsers;
+  final int onlineMembers;
+  final int onlineGuests;
   final int onlineConnections;
   final int activePresenceRooms;
   final int activeStreams;
@@ -57,7 +58,8 @@ class AdminServiceState {
     required this.bannedRooms,
     required this.totalMedia,
     required this.providerInstances,
-    this.onlineUsers = 0,
+    this.onlineMembers = 0,
+    this.onlineGuests = 0,
     this.onlineConnections = 0,
     this.activePresenceRooms = 0,
     required this.activeStreams,

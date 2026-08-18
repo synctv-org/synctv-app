@@ -8,7 +8,7 @@ import 'package:synctv_app/features/home/presentation/widgets/cinema_room_card.d
 
 import '../../../../test_app.dart';
 
-Widget _app(Widget child) {
+Widget _app(Widget child, {double height = 318}) {
   return MaterialApp(
     builder: buildThemedTestApp,
     locale: const Locale('en'),
@@ -17,7 +17,9 @@ Widget _app(Widget child) {
     theme: ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
     ),
-    home: Scaffold(body: SizedBox(width: 340, height: 318, child: child)),
+    home: Scaffold(
+      body: SizedBox(width: 340, height: height, child: child),
+    ),
   );
 }
 
@@ -35,8 +37,8 @@ CinemaRoomCard _card({
   return CinemaRoomCard(
     roomName: 'Open cinema',
     description: description,
-    viewerCount: 4,
-    memberCount: 12,
+    onlineMemberCount: 4,
+    onlineGuestCount: 3,
     discoveryAccess: access,
     isOwner: isOwner,
     joined: joined,
@@ -48,6 +50,12 @@ CinemaRoomCard _card({
 }
 
 void main() {
+  testWidgets('member and guest presence are shown separately', (tester) async {
+    await tester.pumpWidget(_app(_card()));
+
+    expect(find.text('Online: 4 members · 3 guests'), findsOneWidget);
+  });
+
   testWidgets('guest room has a distinct direct-entry badge', (tester) async {
     await tester.pumpWidget(
       _app(
@@ -127,6 +135,15 @@ void main() {
       ),
     );
 
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('compact card keeps both presence categories visible', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(_card(), height: 240));
+
+    expect(find.text('Online: 4 members · 3 guests'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -175,7 +175,8 @@ class SyncTvRoom {
   final String roomId;
   final String roomName;
   final String description;
-  final int viewerCount;
+  final int onlineMemberCount;
+  final int onlineGuestCount;
   final int connectionCount;
   final int memberCount;
   final bool needPassword;
@@ -211,7 +212,8 @@ class SyncTvRoom {
     required this.roomId,
     required this.roomName,
     this.description = '',
-    this.viewerCount = 0,
+    this.onlineMemberCount = 0,
+    this.onlineGuestCount = 0,
     this.connectionCount = 0,
     this.memberCount = 0,
     this.needPassword = false,
@@ -248,7 +250,8 @@ class SyncTvRoom {
     String? roomId,
     String? roomName,
     String? description,
-    int? viewerCount,
+    int? onlineMemberCount,
+    int? onlineGuestCount,
     int? connectionCount,
     int? memberCount,
     bool? needPassword,
@@ -282,7 +285,8 @@ class SyncTvRoom {
       roomId: roomId ?? this.roomId,
       roomName: roomName ?? this.roomName,
       description: description ?? this.description,
-      viewerCount: viewerCount ?? this.viewerCount,
+      onlineMemberCount: onlineMemberCount ?? this.onlineMemberCount,
+      onlineGuestCount: onlineGuestCount ?? this.onlineGuestCount,
       connectionCount: connectionCount ?? this.connectionCount,
       memberCount: memberCount ?? this.memberCount,
       needPassword: needPassword ?? this.needPassword,

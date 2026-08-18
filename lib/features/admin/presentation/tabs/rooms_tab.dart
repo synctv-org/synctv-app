@@ -951,7 +951,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       if (!mounted) return;
       var members = data.members;
       var total = data.total;
-      var onlineCount = data.onlineCount;
+      var onlineMemberCount = data.onlineMemberCount;
       var connectionCount = data.connectionCount;
       var loading = false;
       await AppDialogs.showStyledDialog(
@@ -985,7 +985,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                   setDialogState(() {
                     members = next.members;
                     total = next.total;
-                    onlineCount = next.onlineCount;
+                    onlineMemberCount = next.onlineMemberCount;
                     connectionCount = next.connectionCount;
                     loading = false;
                   });
@@ -1190,7 +1190,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     child: Text(
                       context.l10n.memberAdminSummary(
                         total,
-                        onlineCount,
+                        onlineMemberCount,
                         connectionCount,
                       ),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(

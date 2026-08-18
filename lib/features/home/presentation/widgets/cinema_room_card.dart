@@ -8,8 +8,8 @@ class CinemaRoomCard extends StatelessWidget {
   final String roomName;
   final String description;
   final String coverUrl;
-  final int viewerCount;
-  final int memberCount;
+  final int onlineMemberCount;
+  final int onlineGuestCount;
   final String creatorName;
   final String creatorAvatarUrl;
   final client_enum.ResourceAvailability availability;
@@ -30,8 +30,8 @@ class CinemaRoomCard extends StatelessWidget {
     required this.roomName,
     this.description = '',
     this.coverUrl = '',
-    required this.viewerCount,
-    this.memberCount = 0,
+    required this.onlineMemberCount,
+    required this.onlineGuestCount,
     this.creatorName = '',
     this.creatorAvatarUrl = '',
     this.availability =
@@ -71,7 +71,10 @@ class CinemaRoomCard extends StatelessWidget {
         : isGuestAccess
         ? theme.colorScheme.tertiary
         : theme.colorScheme.primary;
-    final audienceText = l10n.roomAudienceWithMembers(viewerCount, memberCount);
+    final audienceText = l10n.roomPresenceSummary(
+      onlineMemberCount,
+      onlineGuestCount,
+    );
 
     final card = AppInkSurface(
       color: theme.colorScheme.surface,

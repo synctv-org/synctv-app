@@ -698,10 +698,17 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                   isDark,
                 ),
                 _StatTile(
-                  context.l10n.onlineUsers,
-                  stats.onlineUsers,
+                  context.l10n.onlineMembersLabel,
+                  stats.onlineMembers,
                   Icons.online_prediction_rounded,
                   Colors.lightGreen,
+                  isDark,
+                ),
+                _StatTile(
+                  context.l10n.onlineGuestsLabel,
+                  stats.onlineGuests,
+                  Icons.person_outline_rounded,
+                  Colors.teal,
                   isDark,
                 ),
                 _StatTile(

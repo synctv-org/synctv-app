@@ -521,8 +521,11 @@ class SyncTvAdminDomainService {
       bannedRooms: response.bannedRooms.toInt(),
       totalMedia: response.totalMedia.toInt(),
       providerInstances: response.providerInstances.toInt(),
-      onlineUsers: response.hasPresence()
-          ? response.presence.onlineUserCount
+      onlineMembers: response.hasPresence()
+          ? response.presence.onlineMemberCount
+          : 0,
+      onlineGuests: response.hasPresence()
+          ? response.presence.onlineGuestCount
           : 0,
       onlineConnections: response.hasPresence()
           ? response.presence.connectionCount
@@ -678,8 +681,8 @@ class SyncTvAdminDomainService {
     return AdminRoomMembersPage(
       members: response.members.map(roomMemberFromProto).toList(),
       total: response.total,
-      onlineCount: response.hasPresence()
-          ? response.presence.onlineUserCount
+      onlineMemberCount: response.hasPresence()
+          ? response.presence.onlineMemberCount
           : 0,
       connectionCount: response.hasPresence()
           ? response.presence.connectionCount

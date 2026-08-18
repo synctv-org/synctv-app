@@ -15919,13 +15919,27 @@ final $typed_data.Uint8List heartbeatAckDescriptor = $convert.base64Decode(
 const OnlineCount$json = {
   '1': 'OnlineCount',
   '2': [
-    {'1': 'count', '3': 1, '4': 1, '5': 5, '10': 'count'},
+    {
+      '1': 'online_member_count',
+      '3': 1,
+      '4': 1,
+      '5': 5,
+      '10': 'onlineMemberCount'
+    },
+    {
+      '1': 'online_guest_count',
+      '3': 2,
+      '4': 1,
+      '5': 5,
+      '10': 'onlineGuestCount'
+    },
   ],
 };
 
 /// Descriptor for `OnlineCount`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List onlineCountDescriptor =
-    $convert.base64Decode('CgtPbmxpbmVDb3VudBIUCgVjb3VudBgBIAEoBVIFY291bnQ=');
+final $typed_data.Uint8List onlineCountDescriptor = $convert.base64Decode(
+    'CgtPbmxpbmVDb3VudBIuChNvbmxpbmVfbWVtYmVyX2NvdW50GAEgASgFUhFvbmxpbmVNZW1iZX'
+    'JDb3VudBIsChJvbmxpbmVfZ3Vlc3RfY291bnQYAiABKAVSEG9ubGluZUd1ZXN0Q291bnQ=');
 
 @$core.Deprecated('Use onlineEventDescriptor instead')
 const OnlineEvent$json = {

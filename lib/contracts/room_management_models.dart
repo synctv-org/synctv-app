@@ -71,7 +71,7 @@ class RoomJoinReviewsPage {
 class RoomMembersPage {
   final List<AdminRoomMember> members;
   final int total;
-  final int onlineCount;
+  final int onlineMemberCount;
   final int connectionCount;
   final int page;
   final int pageSize;
@@ -80,7 +80,7 @@ class RoomMembersPage {
   const RoomMembersPage({
     required this.members,
     required this.total,
-    this.onlineCount = 0,
+    this.onlineMemberCount = 0,
     this.connectionCount = 0,
     required this.page,
     required this.pageSize,
@@ -213,13 +213,13 @@ class AdminRoomMember {
 class AdminRoomMembersPage {
   final List<AdminRoomMember> members;
   final int total;
-  final int onlineCount;
+  final int onlineMemberCount;
   final int connectionCount;
 
   const AdminRoomMembersPage({
     required this.members,
     required this.total,
-    this.onlineCount = 0,
+    this.onlineMemberCount = 0,
     this.connectionCount = 0,
   });
 }

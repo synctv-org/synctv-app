@@ -317,14 +317,16 @@ class NodeConnectionCount extends $pb.GeneratedMessage {
 
 class RoomPresenceStats extends $pb.GeneratedMessage {
   factory RoomPresenceStats({
-    $core.int? onlineUserCount,
+    $core.int? onlineMemberCount,
+    $core.int? onlineGuestCount,
     $core.int? connectionCount,
     $core.Iterable<NodeConnectionCount>? nodeConnectionCounts,
     $fixnum.Int64? sampledAt,
     $fixnum.Int64? version,
   }) {
     final result = create();
-    if (onlineUserCount != null) result.onlineUserCount = onlineUserCount;
+    if (onlineMemberCount != null) result.onlineMemberCount = onlineMemberCount;
+    if (onlineGuestCount != null) result.onlineGuestCount = onlineGuestCount;
     if (connectionCount != null) result.connectionCount = connectionCount;
     if (nodeConnectionCounts != null)
       result.nodeConnectionCounts.addAll(nodeConnectionCounts);
@@ -346,12 +348,13 @@ class RoomPresenceStats extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'RoomPresenceStats',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.common'),
       createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'onlineUserCount')
-    ..aI(2, _omitFieldNames ? '' : 'connectionCount')
-    ..pPM<NodeConnectionCount>(3, _omitFieldNames ? '' : 'nodeConnectionCounts',
+    ..aI(1, _omitFieldNames ? '' : 'onlineMemberCount')
+    ..aI(2, _omitFieldNames ? '' : 'onlineGuestCount')
+    ..aI(3, _omitFieldNames ? '' : 'connectionCount')
+    ..pPM<NodeConnectionCount>(4, _omitFieldNames ? '' : 'nodeConnectionCounts',
         subBuilder: NodeConnectionCount.create)
-    ..aInt64(4, _omitFieldNames ? '' : 'sampledAt')
-    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OU6,
+    ..aInt64(5, _omitFieldNames ? '' : 'sampledAt')
+    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
@@ -375,43 +378,52 @@ class RoomPresenceStats extends $pb.GeneratedMessage {
   static RoomPresenceStats? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.int get onlineUserCount => $_getIZ(0);
+  $core.int get onlineMemberCount => $_getIZ(0);
   @$pb.TagNumber(1)
-  set onlineUserCount($core.int value) => $_setSignedInt32(0, value);
+  set onlineMemberCount($core.int value) => $_setSignedInt32(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasOnlineUserCount() => $_has(0);
+  $core.bool hasOnlineMemberCount() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOnlineUserCount() => $_clearField(1);
+  void clearOnlineMemberCount() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.int get connectionCount => $_getIZ(1);
+  $core.int get onlineGuestCount => $_getIZ(1);
   @$pb.TagNumber(2)
-  set connectionCount($core.int value) => $_setSignedInt32(1, value);
+  set onlineGuestCount($core.int value) => $_setSignedInt32(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasConnectionCount() => $_has(1);
+  $core.bool hasOnlineGuestCount() => $_has(1);
   @$pb.TagNumber(2)
-  void clearConnectionCount() => $_clearField(2);
+  void clearOnlineGuestCount() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $pb.PbList<NodeConnectionCount> get nodeConnectionCounts => $_getList(2);
+  $core.int get connectionCount => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set connectionCount($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasConnectionCount() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearConnectionCount() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $fixnum.Int64 get sampledAt => $_getI64(3);
-  @$pb.TagNumber(4)
-  set sampledAt($fixnum.Int64 value) => $_setInt64(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasSampledAt() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearSampledAt() => $_clearField(4);
+  $pb.PbList<NodeConnectionCount> get nodeConnectionCounts => $_getList(3);
 
   @$pb.TagNumber(5)
-  $fixnum.Int64 get version => $_getI64(4);
+  $fixnum.Int64 get sampledAt => $_getI64(4);
   @$pb.TagNumber(5)
-  set version($fixnum.Int64 value) => $_setInt64(4, value);
+  set sampledAt($fixnum.Int64 value) => $_setInt64(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasVersion() => $_has(4);
+  $core.bool hasSampledAt() => $_has(4);
   @$pb.TagNumber(5)
-  void clearVersion() => $_clearField(5);
+  void clearSampledAt() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get version => $_getI64(5);
+  @$pb.TagNumber(6)
+  set version($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasVersion() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearVersion() => $_clearField(6);
 }
 
 class UserPresenceStats extends $pb.GeneratedMessage {
@@ -523,7 +535,8 @@ class NodePresenceStats extends $pb.GeneratedMessage {
   factory NodePresenceStats({
     $core.String? nodeId,
     $core.int? connectionCount,
-    $core.int? onlineUserCount,
+    $core.int? onlineMemberCount,
+    $core.int? onlineGuestCount,
     $core.int? roomCount,
     $fixnum.Int64? sampledAt,
     $fixnum.Int64? version,
@@ -531,7 +544,8 @@ class NodePresenceStats extends $pb.GeneratedMessage {
     final result = create();
     if (nodeId != null) result.nodeId = nodeId;
     if (connectionCount != null) result.connectionCount = connectionCount;
-    if (onlineUserCount != null) result.onlineUserCount = onlineUserCount;
+    if (onlineMemberCount != null) result.onlineMemberCount = onlineMemberCount;
+    if (onlineGuestCount != null) result.onlineGuestCount = onlineGuestCount;
     if (roomCount != null) result.roomCount = roomCount;
     if (sampledAt != null) result.sampledAt = sampledAt;
     if (version != null) result.version = version;
@@ -553,10 +567,11 @@ class NodePresenceStats extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'nodeId')
     ..aI(2, _omitFieldNames ? '' : 'connectionCount')
-    ..aI(3, _omitFieldNames ? '' : 'onlineUserCount')
-    ..aI(4, _omitFieldNames ? '' : 'roomCount')
-    ..aInt64(5, _omitFieldNames ? '' : 'sampledAt')
-    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OU6,
+    ..aI(3, _omitFieldNames ? '' : 'onlineMemberCount')
+    ..aI(4, _omitFieldNames ? '' : 'onlineGuestCount')
+    ..aI(5, _omitFieldNames ? '' : 'roomCount')
+    ..aInt64(6, _omitFieldNames ? '' : 'sampledAt')
+    ..a<$fixnum.Int64>(7, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
@@ -598,45 +613,55 @@ class NodePresenceStats extends $pb.GeneratedMessage {
   void clearConnectionCount() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.int get onlineUserCount => $_getIZ(2);
+  $core.int get onlineMemberCount => $_getIZ(2);
   @$pb.TagNumber(3)
-  set onlineUserCount($core.int value) => $_setSignedInt32(2, value);
+  set onlineMemberCount($core.int value) => $_setSignedInt32(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasOnlineUserCount() => $_has(2);
+  $core.bool hasOnlineMemberCount() => $_has(2);
   @$pb.TagNumber(3)
-  void clearOnlineUserCount() => $_clearField(3);
+  void clearOnlineMemberCount() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.int get roomCount => $_getIZ(3);
+  $core.int get onlineGuestCount => $_getIZ(3);
   @$pb.TagNumber(4)
-  set roomCount($core.int value) => $_setSignedInt32(3, value);
+  set onlineGuestCount($core.int value) => $_setSignedInt32(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasRoomCount() => $_has(3);
+  $core.bool hasOnlineGuestCount() => $_has(3);
   @$pb.TagNumber(4)
-  void clearRoomCount() => $_clearField(4);
+  void clearOnlineGuestCount() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $fixnum.Int64 get sampledAt => $_getI64(4);
+  $core.int get roomCount => $_getIZ(4);
   @$pb.TagNumber(5)
-  set sampledAt($fixnum.Int64 value) => $_setInt64(4, value);
+  set roomCount($core.int value) => $_setSignedInt32(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasSampledAt() => $_has(4);
+  $core.bool hasRoomCount() => $_has(4);
   @$pb.TagNumber(5)
-  void clearSampledAt() => $_clearField(5);
+  void clearRoomCount() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $fixnum.Int64 get version => $_getI64(5);
+  $fixnum.Int64 get sampledAt => $_getI64(5);
   @$pb.TagNumber(6)
-  set version($fixnum.Int64 value) => $_setInt64(5, value);
+  set sampledAt($fixnum.Int64 value) => $_setInt64(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasVersion() => $_has(5);
+  $core.bool hasSampledAt() => $_has(5);
   @$pb.TagNumber(6)
-  void clearVersion() => $_clearField(6);
+  void clearSampledAt() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get version => $_getI64(6);
+  @$pb.TagNumber(7)
+  set version($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasVersion() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearVersion() => $_clearField(7);
 }
 
 class PresenceOverview extends $pb.GeneratedMessage {
   factory PresenceOverview({
-    $core.int? onlineUserCount,
+    $core.int? onlineMemberCount,
+    $core.int? onlineGuestCount,
     $core.int? connectionCount,
     $core.int? activeRoomCount,
     $core.Iterable<NodePresenceStats>? nodes,
@@ -644,7 +669,8 @@ class PresenceOverview extends $pb.GeneratedMessage {
     $fixnum.Int64? version,
   }) {
     final result = create();
-    if (onlineUserCount != null) result.onlineUserCount = onlineUserCount;
+    if (onlineMemberCount != null) result.onlineMemberCount = onlineMemberCount;
+    if (onlineGuestCount != null) result.onlineGuestCount = onlineGuestCount;
     if (connectionCount != null) result.connectionCount = connectionCount;
     if (activeRoomCount != null) result.activeRoomCount = activeRoomCount;
     if (nodes != null) result.nodes.addAll(nodes);
@@ -666,13 +692,14 @@ class PresenceOverview extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'PresenceOverview',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.common'),
       createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'onlineUserCount')
-    ..aI(2, _omitFieldNames ? '' : 'connectionCount')
-    ..aI(3, _omitFieldNames ? '' : 'activeRoomCount')
-    ..pPM<NodePresenceStats>(4, _omitFieldNames ? '' : 'nodes',
+    ..aI(1, _omitFieldNames ? '' : 'onlineMemberCount')
+    ..aI(2, _omitFieldNames ? '' : 'onlineGuestCount')
+    ..aI(3, _omitFieldNames ? '' : 'connectionCount')
+    ..aI(4, _omitFieldNames ? '' : 'activeRoomCount')
+    ..pPM<NodePresenceStats>(5, _omitFieldNames ? '' : 'nodes',
         subBuilder: NodePresenceStats.create)
-    ..aInt64(5, _omitFieldNames ? '' : 'sampledAt')
-    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OU6,
+    ..aInt64(6, _omitFieldNames ? '' : 'sampledAt')
+    ..a<$fixnum.Int64>(7, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
@@ -696,52 +723,61 @@ class PresenceOverview extends $pb.GeneratedMessage {
   static PresenceOverview? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.int get onlineUserCount => $_getIZ(0);
+  $core.int get onlineMemberCount => $_getIZ(0);
   @$pb.TagNumber(1)
-  set onlineUserCount($core.int value) => $_setSignedInt32(0, value);
+  set onlineMemberCount($core.int value) => $_setSignedInt32(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasOnlineUserCount() => $_has(0);
+  $core.bool hasOnlineMemberCount() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOnlineUserCount() => $_clearField(1);
+  void clearOnlineMemberCount() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.int get connectionCount => $_getIZ(1);
+  $core.int get onlineGuestCount => $_getIZ(1);
   @$pb.TagNumber(2)
-  set connectionCount($core.int value) => $_setSignedInt32(1, value);
+  set onlineGuestCount($core.int value) => $_setSignedInt32(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasConnectionCount() => $_has(1);
+  $core.bool hasOnlineGuestCount() => $_has(1);
   @$pb.TagNumber(2)
-  void clearConnectionCount() => $_clearField(2);
+  void clearOnlineGuestCount() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.int get activeRoomCount => $_getIZ(2);
+  $core.int get connectionCount => $_getIZ(2);
   @$pb.TagNumber(3)
-  set activeRoomCount($core.int value) => $_setSignedInt32(2, value);
+  set connectionCount($core.int value) => $_setSignedInt32(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasActiveRoomCount() => $_has(2);
+  $core.bool hasConnectionCount() => $_has(2);
   @$pb.TagNumber(3)
-  void clearActiveRoomCount() => $_clearField(3);
+  void clearConnectionCount() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $pb.PbList<NodePresenceStats> get nodes => $_getList(3);
+  $core.int get activeRoomCount => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set activeRoomCount($core.int value) => $_setSignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasActiveRoomCount() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearActiveRoomCount() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $fixnum.Int64 get sampledAt => $_getI64(4);
-  @$pb.TagNumber(5)
-  set sampledAt($fixnum.Int64 value) => $_setInt64(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasSampledAt() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearSampledAt() => $_clearField(5);
+  $pb.PbList<NodePresenceStats> get nodes => $_getList(4);
 
   @$pb.TagNumber(6)
-  $fixnum.Int64 get version => $_getI64(5);
+  $fixnum.Int64 get sampledAt => $_getI64(5);
   @$pb.TagNumber(6)
-  set version($fixnum.Int64 value) => $_setInt64(5, value);
+  set sampledAt($fixnum.Int64 value) => $_setInt64(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasVersion() => $_has(5);
+  $core.bool hasSampledAt() => $_has(5);
   @$pb.TagNumber(6)
-  void clearVersion() => $_clearField(6);
+  void clearSampledAt() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get version => $_getI64(6);
+  @$pb.TagNumber(7)
+  set version($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasVersion() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearVersion() => $_clearField(7);
 }
 
 const $core.bool _omitFieldNames =

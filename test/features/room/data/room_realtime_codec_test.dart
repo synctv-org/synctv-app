@@ -15,6 +15,24 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_config;
 
 void main() {
+  test('room presence keeps member and guest counts separate', () {
+    final encoded = client.ServerMessage(
+      resourceEvent: client.ResourceEvent(
+        observeId: 'online_count',
+        onlineCount: client.OnlineCount(
+          onlineMemberCount: 4,
+          onlineGuestCount: 3,
+        ),
+      ),
+    ).writeToBuffer();
+
+    final decoded = RoomRealtimeCodec.decode(Uint8List.fromList(encoded));
+
+    expect(decoded.kind, RoomRealtimeMessageKind.presenceCount);
+    expect(decoded.onlineMemberCount, 4);
+    expect(decoded.onlineGuestCount, 3);
+  });
+
   test('playback errors preserve their client operation id', () {
     final encoded = client.ServerMessage(
       error: client.ErrorMessage(

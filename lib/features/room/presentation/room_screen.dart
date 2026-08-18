@@ -370,7 +370,8 @@ class _RoomScreenState extends State<RoomScreen>
   bool _membershipObservationStarted = false;
   SyncTvRoomSettings _roomSettings = SyncTvRoomSettings();
   bool _playModeUpdateInFlight = false;
-  int _roomOnlineCount = 0;
+  int _onlineMemberCount = 0;
+  int _onlineGuestCount = 0;
   bool _membersLoading = false;
   bool _pinnedMessagesLoading = false;
   bool _memberEventsObserved = false;
@@ -560,6 +561,8 @@ class _RoomScreenState extends State<RoomScreen>
   @override
   void initState() {
     super.initState();
+    _onlineMemberCount = widget.room.onlineMemberCount;
+    _onlineGuestCount = widget.room.onlineGuestCount;
     _mediaSearchController = TextEditingController();
     _chatGateway = DependencyScope.read<RoomChatGateway>(context);
     _chatReadStateUpdater = ChatReadStateUpdater(
@@ -1596,11 +1599,16 @@ class _RoomScreenState extends State<RoomScreen>
       } else {
         _applyMediaLibrary(mediaLibrary);
       }
-    } else if (type == RoomRealtimeMessageKind.viewerCount) {
+    } else if (type == RoomRealtimeMessageKind.presenceCount) {
       if (!_isPrimaryResourceMessage(message, 'online_count')) return;
       final members = message.members;
       if (members == null) {
-        if (mounted) setState(() => _roomOnlineCount = message.resourceTotal);
+        if (mounted) {
+          setState(() {
+            _onlineMemberCount = message.onlineMemberCount;
+            _onlineGuestCount = message.onlineGuestCount;
+          });
+        }
       } else {
         _applyMembers(members);
       }
@@ -3702,10 +3710,19 @@ class _RoomScreenState extends State<RoomScreen>
                     ),
                   ),
                 ),
-                Text(
-                  context.l10n.peopleCount(_roomOnlineCount),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+                Flexible(
+                  child: Text(
+                    context.l10n.roomPresenceSummary(
+                      _onlineMemberCount,
+                      _onlineGuestCount,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.58,
+                      ),
+                    ),
                   ),
                 ),
                 if (_canBrowseLibrary) ...[
@@ -6679,14 +6696,21 @@ class _RoomScreenState extends State<RoomScreen>
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              Text(
-                context.l10n.onlineMembers(_roomOnlineCount),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              Expanded(
+                child: Text(
+                  context.l10n.roomPresenceSummary(
+                    _onlineMemberCount,
+                    _onlineGuestCount,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               AppBadge(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,

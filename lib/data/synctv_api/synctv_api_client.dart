@@ -1470,9 +1470,10 @@ extension SyncTvModelMapping on SyncTvApiClient {
       roomId: room.id,
       roomName: room.name,
       description: room.description,
-      viewerCount: room.hasPresence()
-          ? room.presence.onlineUserCount
-          : room.memberCount,
+      onlineMemberCount: room.hasPresence()
+          ? room.presence.onlineMemberCount
+          : 0,
+      onlineGuestCount: room.hasPresence() ? room.presence.onlineGuestCount : 0,
       connectionCount: room.hasPresence() ? room.presence.connectionCount : 0,
       memberCount: room.memberCount,
       isPublic: room.hasIsPublic() ? room.isPublic : true,
@@ -1501,9 +1502,10 @@ extension SyncTvModelMapping on SyncTvApiClient {
       roomId: room.id,
       roomName: room.name,
       description: room.description,
-      viewerCount: room.hasPresence()
-          ? room.presence.onlineUserCount
-          : room.memberCount,
+      onlineMemberCount: room.hasPresence()
+          ? room.presence.onlineMemberCount
+          : 0,
+      onlineGuestCount: room.hasPresence() ? room.presence.onlineGuestCount : 0,
       connectionCount: room.hasPresence() ? room.presence.connectionCount : 0,
       memberCount: room.memberCount,
       isPublic: room.hasIsPublic() ? room.isPublic : true,

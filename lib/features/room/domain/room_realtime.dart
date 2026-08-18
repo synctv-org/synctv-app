@@ -20,7 +20,7 @@ enum RoomRealtimeMessageKind {
   roomSettings,
   mediaLibrary,
   playbackHistory,
-  viewerCount,
+  presenceCount,
   memberEvent,
   onlineEvent,
   chatPin,
@@ -309,7 +309,8 @@ class RoomRealtimeMessage {
     this.resourceObserveId = '',
     this.resourceVersion = '',
     this.resourceEvent = false,
-    this.resourceTotal = 0,
+    this.onlineMemberCount = 0,
+    this.onlineGuestCount = 0,
   });
 
   final RoomRealtimeMessageKind kind;
@@ -349,7 +350,8 @@ class RoomRealtimeMessage {
   final String resourceObserveId;
   final String resourceVersion;
   final bool resourceEvent;
-  final int resourceTotal;
+  final int onlineMemberCount;
+  final int onlineGuestCount;
 
   bool get isChatCreated => chatEventKind == RoomRealtimeChatEventKind.created;
   bool get isChatEdited =>

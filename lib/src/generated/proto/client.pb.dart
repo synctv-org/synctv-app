@@ -26373,7 +26373,7 @@ class ObserveOnlineCount extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ObserveOnlineCount>(create);
   static ObserveOnlineCount? _defaultInstance;
 
-  /// Empty filters return the whole-room online user count.
+  /// Empty filters return the whole-room member and guest online counts.
   /// Use role filters or user_ids to reduce the aggregation scope for member list views.
   @$pb.TagNumber(1)
   $pb.PbList<$0.RoomMemberRole> get roles => $_getList(0);
@@ -39799,10 +39799,12 @@ class HeartbeatAck extends $pb.GeneratedMessage {
 
 class OnlineCount extends $pb.GeneratedMessage {
   factory OnlineCount({
-    $core.int? count,
+    $core.int? onlineMemberCount,
+    $core.int? onlineGuestCount,
   }) {
     final result = create();
-    if (count != null) result.count = count;
+    if (onlineMemberCount != null) result.onlineMemberCount = onlineMemberCount;
+    if (onlineGuestCount != null) result.onlineGuestCount = onlineGuestCount;
     return result;
   }
 
@@ -39819,7 +39821,8 @@ class OnlineCount extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'OnlineCount',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'count')
+    ..aI(1, _omitFieldNames ? '' : 'onlineMemberCount')
+    ..aI(2, _omitFieldNames ? '' : 'onlineGuestCount')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -39842,13 +39845,22 @@ class OnlineCount extends $pb.GeneratedMessage {
   static OnlineCount? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.int get count => $_getIZ(0);
+  $core.int get onlineMemberCount => $_getIZ(0);
   @$pb.TagNumber(1)
-  set count($core.int value) => $_setSignedInt32(0, value);
+  set onlineMemberCount($core.int value) => $_setSignedInt32(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasCount() => $_has(0);
+  $core.bool hasOnlineMemberCount() => $_has(0);
   @$pb.TagNumber(1)
-  void clearCount() => $_clearField(1);
+  void clearOnlineMemberCount() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get onlineGuestCount => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set onlineGuestCount($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasOnlineGuestCount() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOnlineGuestCount() => $_clearField(2);
 }
 
 class OnlineEvent extends $pb.GeneratedMessage {

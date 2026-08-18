@@ -864,12 +864,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       if (mounted) setState(() {});
       return;
     }
-    if (message.kind == RoomRealtimeMessageKind.viewerCount) {
+    if (message.kind == RoomRealtimeMessageKind.presenceCount) {
       _membersWatchStats.record(
         RoomResourceWatchEvent<void>.changed(version: message.resourceVersion),
       );
       if (mounted) {
-        setState(() => _membersOnlineCount = message.resourceTotal);
+        setState(() => _membersOnlineCount = message.onlineMemberCount);
       }
       return;
     }
@@ -1254,8 +1254,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ..clear()
           ..addAll(page.members);
         _membersTotal = page.total;
-        _membersOnlineCount = page.onlineCount > 0
-            ? page.onlineCount
+        _membersOnlineCount = page.onlineMemberCount > 0
+            ? page.onlineMemberCount
             : _members.where((m) => m.isOnline).length;
         _membersWatchVersion = page.version;
       });
@@ -7063,8 +7063,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ),
                       _buildDetailLine(
                         context.l10n.members,
-                        context.l10n.onlineMemberSummary(
-                          room?.viewerCount ?? 0,
+                        context.l10n.roomPresenceWithMembers(
+                          room?.onlineMemberCount ?? 0,
+                          room?.onlineGuestCount ?? 0,
                           room?.memberCount ?? 0,
                         ),
                       ),

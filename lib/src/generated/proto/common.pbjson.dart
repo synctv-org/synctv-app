@@ -247,28 +247,42 @@ final $typed_data.Uint8List nodeConnectionCountDescriptor = $convert.base64Decod
 const RoomPresenceStats$json = {
   '1': 'RoomPresenceStats',
   '2': [
-    {'1': 'online_user_count', '3': 1, '4': 1, '5': 5, '10': 'onlineUserCount'},
-    {'1': 'connection_count', '3': 2, '4': 1, '5': 5, '10': 'connectionCount'},
+    {
+      '1': 'online_member_count',
+      '3': 1,
+      '4': 1,
+      '5': 5,
+      '10': 'onlineMemberCount'
+    },
+    {
+      '1': 'online_guest_count',
+      '3': 2,
+      '4': 1,
+      '5': 5,
+      '10': 'onlineGuestCount'
+    },
+    {'1': 'connection_count', '3': 3, '4': 1, '5': 5, '10': 'connectionCount'},
     {
       '1': 'node_connection_counts',
-      '3': 3,
+      '3': 4,
       '4': 3,
       '5': 11,
       '6': '.synctv.common.NodeConnectionCount',
       '10': 'nodeConnectionCounts'
     },
-    {'1': 'sampled_at', '3': 4, '4': 1, '5': 3, '10': 'sampledAt'},
-    {'1': 'version', '3': 5, '4': 1, '5': 4, '10': 'version'},
+    {'1': 'sampled_at', '3': 5, '4': 1, '5': 3, '10': 'sampledAt'},
+    {'1': 'version', '3': 6, '4': 1, '5': 4, '10': 'version'},
   ],
 };
 
 /// Descriptor for `RoomPresenceStats`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List roomPresenceStatsDescriptor = $convert.base64Decode(
-    'ChFSb29tUHJlc2VuY2VTdGF0cxIqChFvbmxpbmVfdXNlcl9jb3VudBgBIAEoBVIPb25saW5lVX'
-    'NlckNvdW50EikKEGNvbm5lY3Rpb25fY291bnQYAiABKAVSD2Nvbm5lY3Rpb25Db3VudBJYChZu'
-    'b2RlX2Nvbm5lY3Rpb25fY291bnRzGAMgAygLMiIuc3luY3R2LmNvbW1vbi5Ob2RlQ29ubmVjdG'
-    'lvbkNvdW50UhRub2RlQ29ubmVjdGlvbkNvdW50cxIdCgpzYW1wbGVkX2F0GAQgASgDUglzYW1w'
-    'bGVkQXQSGAoHdmVyc2lvbhgFIAEoBFIHdmVyc2lvbg==');
+    'ChFSb29tUHJlc2VuY2VTdGF0cxIuChNvbmxpbmVfbWVtYmVyX2NvdW50GAEgASgFUhFvbmxpbm'
+    'VNZW1iZXJDb3VudBIsChJvbmxpbmVfZ3Vlc3RfY291bnQYAiABKAVSEG9ubGluZUd1ZXN0Q291'
+    'bnQSKQoQY29ubmVjdGlvbl9jb3VudBgDIAEoBVIPY29ubmVjdGlvbkNvdW50ElgKFm5vZGVfY2'
+    '9ubmVjdGlvbl9jb3VudHMYBCADKAsyIi5zeW5jdHYuY29tbW9uLk5vZGVDb25uZWN0aW9uQ291'
+    'bnRSFG5vZGVDb25uZWN0aW9uQ291bnRzEh0KCnNhbXBsZWRfYXQYBSABKANSCXNhbXBsZWRBdB'
+    'IYCgd2ZXJzaW9uGAYgASgEUgd2ZXJzaW9u');
 
 @$core.Deprecated('Use userPresenceStatsDescriptor instead')
 const UserPresenceStats$json = {
@@ -304,44 +318,72 @@ const NodePresenceStats$json = {
   '2': [
     {'1': 'node_id', '3': 1, '4': 1, '5': 9, '10': 'nodeId'},
     {'1': 'connection_count', '3': 2, '4': 1, '5': 5, '10': 'connectionCount'},
-    {'1': 'online_user_count', '3': 3, '4': 1, '5': 5, '10': 'onlineUserCount'},
-    {'1': 'room_count', '3': 4, '4': 1, '5': 5, '10': 'roomCount'},
-    {'1': 'sampled_at', '3': 5, '4': 1, '5': 3, '10': 'sampledAt'},
-    {'1': 'version', '3': 6, '4': 1, '5': 4, '10': 'version'},
+    {
+      '1': 'online_member_count',
+      '3': 3,
+      '4': 1,
+      '5': 5,
+      '10': 'onlineMemberCount'
+    },
+    {
+      '1': 'online_guest_count',
+      '3': 4,
+      '4': 1,
+      '5': 5,
+      '10': 'onlineGuestCount'
+    },
+    {'1': 'room_count', '3': 5, '4': 1, '5': 5, '10': 'roomCount'},
+    {'1': 'sampled_at', '3': 6, '4': 1, '5': 3, '10': 'sampledAt'},
+    {'1': 'version', '3': 7, '4': 1, '5': 4, '10': 'version'},
   ],
 };
 
 /// Descriptor for `NodePresenceStats`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List nodePresenceStatsDescriptor = $convert.base64Decode(
     'ChFOb2RlUHJlc2VuY2VTdGF0cxIXCgdub2RlX2lkGAEgASgJUgZub2RlSWQSKQoQY29ubmVjdG'
-    'lvbl9jb3VudBgCIAEoBVIPY29ubmVjdGlvbkNvdW50EioKEW9ubGluZV91c2VyX2NvdW50GAMg'
-    'ASgFUg9vbmxpbmVVc2VyQ291bnQSHQoKcm9vbV9jb3VudBgEIAEoBVIJcm9vbUNvdW50Eh0KCn'
-    'NhbXBsZWRfYXQYBSABKANSCXNhbXBsZWRBdBIYCgd2ZXJzaW9uGAYgASgEUgd2ZXJzaW9u');
+    'lvbl9jb3VudBgCIAEoBVIPY29ubmVjdGlvbkNvdW50Ei4KE29ubGluZV9tZW1iZXJfY291bnQY'
+    'AyABKAVSEW9ubGluZU1lbWJlckNvdW50EiwKEm9ubGluZV9ndWVzdF9jb3VudBgEIAEoBVIQb2'
+    '5saW5lR3Vlc3RDb3VudBIdCgpyb29tX2NvdW50GAUgASgFUglyb29tQ291bnQSHQoKc2FtcGxl'
+    'ZF9hdBgGIAEoA1IJc2FtcGxlZEF0EhgKB3ZlcnNpb24YByABKARSB3ZlcnNpb24=');
 
 @$core.Deprecated('Use presenceOverviewDescriptor instead')
 const PresenceOverview$json = {
   '1': 'PresenceOverview',
   '2': [
-    {'1': 'online_user_count', '3': 1, '4': 1, '5': 5, '10': 'onlineUserCount'},
-    {'1': 'connection_count', '3': 2, '4': 1, '5': 5, '10': 'connectionCount'},
-    {'1': 'active_room_count', '3': 3, '4': 1, '5': 5, '10': 'activeRoomCount'},
+    {
+      '1': 'online_member_count',
+      '3': 1,
+      '4': 1,
+      '5': 5,
+      '10': 'onlineMemberCount'
+    },
+    {
+      '1': 'online_guest_count',
+      '3': 2,
+      '4': 1,
+      '5': 5,
+      '10': 'onlineGuestCount'
+    },
+    {'1': 'connection_count', '3': 3, '4': 1, '5': 5, '10': 'connectionCount'},
+    {'1': 'active_room_count', '3': 4, '4': 1, '5': 5, '10': 'activeRoomCount'},
     {
       '1': 'nodes',
-      '3': 4,
+      '3': 5,
       '4': 3,
       '5': 11,
       '6': '.synctv.common.NodePresenceStats',
       '10': 'nodes'
     },
-    {'1': 'sampled_at', '3': 5, '4': 1, '5': 3, '10': 'sampledAt'},
-    {'1': 'version', '3': 6, '4': 1, '5': 4, '10': 'version'},
+    {'1': 'sampled_at', '3': 6, '4': 1, '5': 3, '10': 'sampledAt'},
+    {'1': 'version', '3': 7, '4': 1, '5': 4, '10': 'version'},
   ],
 };
 
 /// Descriptor for `PresenceOverview`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List presenceOverviewDescriptor = $convert.base64Decode(
-    'ChBQcmVzZW5jZU92ZXJ2aWV3EioKEW9ubGluZV91c2VyX2NvdW50GAEgASgFUg9vbmxpbmVVc2'
-    'VyQ291bnQSKQoQY29ubmVjdGlvbl9jb3VudBgCIAEoBVIPY29ubmVjdGlvbkNvdW50EioKEWFj'
-    'dGl2ZV9yb29tX2NvdW50GAMgASgFUg9hY3RpdmVSb29tQ291bnQSNgoFbm9kZXMYBCADKAsyIC'
-    '5zeW5jdHYuY29tbW9uLk5vZGVQcmVzZW5jZVN0YXRzUgVub2RlcxIdCgpzYW1wbGVkX2F0GAUg'
-    'ASgDUglzYW1wbGVkQXQSGAoHdmVyc2lvbhgGIAEoBFIHdmVyc2lvbg==');
+    'ChBQcmVzZW5jZU92ZXJ2aWV3Ei4KE29ubGluZV9tZW1iZXJfY291bnQYASABKAVSEW9ubGluZU'
+    '1lbWJlckNvdW50EiwKEm9ubGluZV9ndWVzdF9jb3VudBgCIAEoBVIQb25saW5lR3Vlc3RDb3Vu'
+    'dBIpChBjb25uZWN0aW9uX2NvdW50GAMgASgFUg9jb25uZWN0aW9uQ291bnQSKgoRYWN0aXZlX3'
+    'Jvb21fY291bnQYBCABKAVSD2FjdGl2ZVJvb21Db3VudBI2CgVub2RlcxgFIAMoCzIgLnN5bmN0'
+    'di5jb21tb24uTm9kZVByZXNlbmNlU3RhdHNSBW5vZGVzEh0KCnNhbXBsZWRfYXQYBiABKANSCX'
+    'NhbXBsZWRBdBIYCgd2ZXJzaW9uGAcgASgEUgd2ZXJzaW9u');

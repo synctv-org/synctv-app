@@ -5744,7 +5744,8 @@ void main() {
 
     expect(room.status, common.RoomStatus.ROOM_STATUS_ACTIVE);
     expect(room.isBanned, isTrue);
-    expect(room.viewerCount, 9);
+    expect(room.onlineMemberCount, 0);
+    expect(room.onlineGuestCount, 0);
     expect(room.memberCount, 9);
     expect(room.description, 'Admin room description');
     expect(room.updatedAt, 1760000010);
@@ -10878,7 +10879,11 @@ void main() {
                   'createdBy': 'usr_owner',
                   'status': 1,
                   'memberCount': 12,
-                  'presence': {'onlineUserCount': 7, 'connectionCount': 8},
+                  'presence': {
+                    'onlineMemberCount': 5,
+                    'onlineGuestCount': 2,
+                    'connectionCount': 8,
+                  },
                 },
                 'canJoin': true,
                 'access': client_enum
@@ -10909,7 +10914,8 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/discover');
     expect(requestedUri!.queryParameters, {'page': '1', 'pageSize': '8'});
     expect(discovery.rooms.single.roomId, 'room_hot');
-    expect(discovery.rooms.single.viewerCount, 7);
+    expect(discovery.rooms.single.onlineMemberCount, 5);
+    expect(discovery.rooms.single.onlineGuestCount, 2);
     expect(discovery.rooms.single.memberCount, 12);
     expect(discovery.rooms.single.joined, isFalse);
     expect(discovery.rooms.single.isFavorite, isFalse);
