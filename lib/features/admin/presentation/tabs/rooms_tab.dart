@@ -1670,7 +1670,6 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       bool requireApproval = settings.requireApproval;
       bool allowGuestJoin = settings.allowGuestJoin;
       bool chatEnabled = settings.chatEnabled;
-      bool danmakuEnabled = settings.danmakuEnabled;
       final confirmed = await AppDialogs.showStyledDialog<bool>(
         context: context,
         title: context.l10n.roomSettings,
@@ -1704,12 +1703,6 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     onChanged: (value) =>
                         setDialogState(() => chatEnabled = value),
                     title: Text(context.l10n.chat),
-                  ),
-                  AppSwitchTile(
-                    value: danmakuEnabled,
-                    onChanged: (value) =>
-                        setDialogState(() => danmakuEnabled = value),
-                    title: Text(context.l10n.danmaku),
                   ),
                   AppDialogs.createFormField(
                     context: dialogContext,
@@ -1753,7 +1746,6 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       settings.requireApproval = requireApproval;
       settings.allowGuestJoin = allowGuestJoin;
       settings.chatEnabled = chatEnabled;
-      settings.danmakuEnabled = danmakuEnabled;
       settings.maxMembers =
           int.tryParse(maxMembers.text.trim()) ?? settings.maxMembers;
       await adminGateway.adminUpdateRoomSettings(room.roomId, settings);

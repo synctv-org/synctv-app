@@ -25,20 +25,25 @@ void main() {
       const PlaybackOverlayPreferenceValues(
         subtitleFontSize: 100,
         subtitleOpacity: -1,
-        danmakuDuration: 1,
-        danmakuArea: 2,
-        danmakuStrokeWidth: 20,
+        videoDanmakuStyle: DanmakuOverlayStyle(
+          duration: 1,
+          area: 2,
+          strokeWidth: 20,
+        ),
+        chatDanmakuStyle: DanmakuOverlayStyle(fontSize: 100, opacity: -1),
         subtitleOutlineWidth: -1,
       ),
     );
 
     expect(controller.value.subtitleFontSize, 48);
     expect(controller.value.subtitleOpacity, 0);
-    expect(controller.value.danmakuDuration, 3);
-    expect(controller.value.danmakuArea, 1);
-    expect(controller.value.danmakuStrokeWidth, 6);
+    expect(controller.value.videoDanmakuStyle.duration, 3);
+    expect(controller.value.videoDanmakuStyle.area, 1);
+    expect(controller.value.videoDanmakuStyle.strokeWidth, 6);
+    expect(controller.value.chatDanmakuStyle.fontSize, 64);
+    expect(controller.value.chatDanmakuStyle.opacity, 0);
     expect(controller.value.subtitleOutlineWidth, 0);
-    expect(store.value.danmakuDuration, 3);
+    expect(store.value.videoDanmakuStyle.duration, 3);
   });
 
   test('reset restores platform defaults', () async {
@@ -46,12 +51,52 @@ void main() {
       store: _MemoryOverlayStore(),
     );
     await controller.save(
-      controller.value.copyWith(danmakuFontSize: 60, danmakuHideTop: true),
+      controller.value.copyWith(
+        videoDanmakuEnabled: false,
+        chatDanmakuEnabled: false,
+        videoDanmakuStyle: controller.value.videoDanmakuStyle.copyWith(
+          fontSize: 60,
+          hideTop: true,
+        ),
+      ),
     );
     await controller.reset();
 
-    expect(controller.value.danmakuFontSize, 25);
-    expect(controller.value.danmakuHideTop, isFalse);
+    expect(controller.value.videoDanmakuEnabled, isTrue);
+    expect(controller.value.chatDanmakuEnabled, isTrue);
+    expect(controller.value.videoDanmakuStyle.fontSize, 25);
+    expect(controller.value.videoDanmakuStyle.hideTop, isFalse);
+  });
+
+  test('video and chat danmaku preferences serialize independently', () {
+    const values = PlaybackOverlayPreferenceValues(
+      videoDanmakuEnabled: false,
+      chatDanmakuEnabled: true,
+      videoDanmakuStyle: DanmakuOverlayStyle(fontSize: 18, opacity: 0.4),
+      chatDanmakuStyle: DanmakuOverlayStyle(fontSize: 30, opacity: 0.9),
+    );
+
+    final restored = PlaybackOverlayPreferenceValues.fromJson(values.toJson());
+
+    expect(restored.videoDanmakuEnabled, isFalse);
+    expect(restored.chatDanmakuEnabled, isTrue);
+    expect(restored.videoDanmakuStyle.fontSize, 18);
+    expect(restored.videoDanmakuStyle.opacity, 0.4);
+    expect(restored.chatDanmakuStyle.fontSize, 30);
+    expect(restored.chatDanmakuStyle.opacity, 0.9);
+  });
+
+  test('legacy danmaku style initializes both independent styles', () {
+    final restored = PlaybackOverlayPreferenceValues.fromJson({
+      'danmakuFontSize': 31,
+      'danmakuOpacity': 0.6,
+      'danmakuHideTop': true,
+    });
+
+    expect(restored.videoDanmakuStyle.fontSize, 31);
+    expect(restored.chatDanmakuStyle.fontSize, 31);
+    expect(restored.videoDanmakuStyle.opacity, 0.6);
+    expect(restored.chatDanmakuStyle.hideTop, isTrue);
   });
 
   test(

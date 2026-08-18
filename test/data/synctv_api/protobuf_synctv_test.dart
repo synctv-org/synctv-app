@@ -59,6 +59,7 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/providers/emby.pb.dart' as emby;
 import 'package:synctv_app/features/room/presentation/playback_danmaku.dart';
+import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
 import 'package:synctv_app/features/room/domain/chat_reactions.dart';
 import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
 
@@ -1909,6 +1910,7 @@ void main() {
 
     expect(chatReactionSummarySuffix(reactions), '  😂5 🎉3');
     expect(danmaku.text, 'sender: hello  😂5 🎉3');
+    expect(danmaku.origin, DanmakuOrigin.chat);
   });
 
   test('live playback skips historical chat danmaku fetches', () async {

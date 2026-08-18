@@ -89,6 +89,10 @@ class DanmakuController extends ChangeNotifier {
         !preserveLoadedDocument ||
         (!_documentLoaded && (!_documentLoading || !requestedDocumentMatches));
     if (shouldLoadDocument) {
+      if (!preserveLoadedDocument) {
+        _items.clear();
+        notifyListeners();
+      }
       _loadedDanmakuUrl = danmakuUrl;
       _loadedDanmakuHeaders = Map<String, String>.from(danmakuHeaders);
       _documentLoaded = false;
@@ -139,7 +143,16 @@ class DanmakuController extends ChangeNotifier {
   }
 
   String _danmakuKey(DanmakuItem item) {
-    return '${item.startTime.inMilliseconds}|${item.text}|${item.type.index}';
+    return '${item.origin.index}|${item.startTime.inMilliseconds}|'
+        '${item.text}|${item.type.index}';
+  }
+
+  void replaceVideoItems(List<DanmakuItem> newItems) {
+    _items = [
+      ..._items.where((item) => item.origin != DanmakuOrigin.video),
+      ...newItems,
+    ];
+    notifyListeners();
   }
 
   bool _sameHeaders(Map<String, String> a, Map<String, String> b) {
@@ -202,8 +215,7 @@ class DanmakuController extends ChangeNotifier {
   void _parseDanmaku(String content) {
     final acFunItems = decodeAcFunDanmakuDocument(content);
     if (acFunItems != null) {
-      _items = acFunItems;
-      notifyListeners();
+      replaceVideoItems(acFunItems);
       return;
     }
     String normalized = content
@@ -255,8 +267,7 @@ class DanmakuController extends ChangeNotifier {
       }
     }
 
-    _items = newItems;
-    notifyListeners();
+    replaceVideoItems(newItems);
   }
 
   Future<void> _replaceDanmakuStream() async {
@@ -963,7 +974,6 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
     required this.danmakuController,
     this.overlayPreferences,
     required this.emptyState,
-    this.danmakuEnabled = true,
     this.exitTooltip,
     this.volumeTooltip,
     this.playbackOptionsControl,
@@ -986,7 +996,6 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
   final DanmakuController danmakuController;
   final PlaybackOverlayPreferencesController? overlayPreferences;
   final Widget emptyState;
-  final bool danmakuEnabled;
   final String? exitTooltip;
   final String? volumeTooltip;
   final Widget? playbackOptionsControl;
@@ -1464,26 +1473,36 @@ class _PictureInPicturePlaybackSurfaceState
                               children: [
                                 VideoPlayer(videoController),
                                 IgnorePointer(
-                                  child: DanmakuOverlay(
-                                    videoController: videoController,
-                                    danmakuList: widget.danmakuController.items,
-                                    isEnabled: widget.danmakuEnabled,
-                                    option: DanmakuOption(
-                                      fontSize: _overlayStyle.danmakuFontSize,
-                                      opacity: _overlayStyle.danmakuOpacity,
-                                      duration: _overlayStyle.danmakuDuration,
-                                      area: _overlayStyle.danmakuArea,
-                                      strokeWidth:
-                                          _overlayStyle.danmakuStrokeWidth,
-                                      massiveMode:
-                                          _overlayStyle.danmakuMassiveMode,
-                                      hideTop: _overlayStyle.danmakuHideTop,
-                                      hideBottom:
-                                          _overlayStyle.danmakuHideBottom,
-                                      hideScroll:
-                                          _overlayStyle.danmakuHideScroll,
-                                      safeArea: true,
-                                    ),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      if (_overlayStyle.videoDanmakuEnabled)
+                                        DanmakuOverlay(
+                                          key: const ValueKey(
+                                            'pip_video_danmaku_overlay',
+                                          ),
+                                          videoController: videoController,
+                                          danmakuList:
+                                              widget.danmakuController.items,
+                                          origin: DanmakuOrigin.video,
+                                          option: _danmakuOption(
+                                            _overlayStyle.videoDanmakuStyle,
+                                          ),
+                                        ),
+                                      if (_overlayStyle.chatDanmakuEnabled)
+                                        DanmakuOverlay(
+                                          key: const ValueKey(
+                                            'pip_chat_danmaku_overlay',
+                                          ),
+                                          videoController: videoController,
+                                          danmakuList:
+                                              widget.danmakuController.items,
+                                          origin: DanmakuOrigin.chat,
+                                          option: _danmakuOption(
+                                            _overlayStyle.chatDanmakuStyle,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -1611,7 +1630,8 @@ class PlayerControlVisibility {
     required this.showSync,
     required this.showPlaybackRoute,
     required this.showSpeed,
-    required this.showDanmaku,
+    required this.showVideoDanmaku,
+    required this.showChatDanmaku,
     required this.showSubtitles,
     required this.showPictureInPicture,
     required this.showSendDanmaku,
@@ -1629,10 +1649,11 @@ class PlayerControlVisibility {
       showSync: width >= 520,
       showPlaybackRoute: width >= 600,
       showSpeed: width >= 680,
-      showDanmaku: width >= 740,
-      showSubtitles: width >= 800,
-      showPictureInPicture: width >= 860,
-      showSendDanmaku: width >= 920,
+      showVideoDanmaku: width >= 740,
+      showChatDanmaku: false,
+      showSubtitles: width >= 860,
+      showPictureInPicture: width >= 920,
+      showSendDanmaku: width >= 980,
       showSettings: width >= 460,
     );
   }
@@ -1643,7 +1664,8 @@ class PlayerControlVisibility {
   final bool showSync;
   final bool showPlaybackRoute;
   final bool showSpeed;
-  final bool showDanmaku;
+  final bool showVideoDanmaku;
+  final bool showChatDanmaku;
   final bool showSubtitles;
   final bool showPictureInPicture;
   final bool showSendDanmaku;
@@ -1769,7 +1791,20 @@ Color subtitleBackgroundColor(double opacity, {int color = 0xFF000000}) {
       : Color(color).withValues(alpha: normalized);
 }
 
-enum _OverlaySettingsSection { subtitle, danmaku }
+DanmakuOption _danmakuOption(DanmakuOverlayStyle style) => DanmakuOption(
+  fontSize: style.fontSize,
+  opacity: style.opacity,
+  duration: style.duration,
+  area: style.area,
+  strokeWidth: style.strokeWidth,
+  massiveMode: style.massiveMode,
+  hideTop: style.hideTop,
+  hideBottom: style.hideBottom,
+  hideScroll: style.hideScroll,
+  safeArea: true,
+);
+
+enum _OverlaySettingsSection { subtitle, videoDanmaku, chatDanmaku }
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     with SingleTickerProviderStateMixin {
@@ -1782,7 +1817,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   Timer? _hideTimer;
   bool _isDragging = false;
   bool _isVerticalDragging = false;
-  bool _showDanmaku = true;
+  bool _showVideoDanmaku = true;
+  bool _showChatDanmaku = true;
   bool _p2pMediaEnabled = false;
   double _lastAudibleVolume = 1.0;
   Timer? _volumeOverlayHideTimer;
@@ -1841,6 +1877,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _overlayPreferences =
         widget.overlayPreferences?.value ??
         const PlaybackOverlayPreferenceValues();
+    _showVideoDanmaku = _overlayPreferences.videoDanmakuEnabled;
+    _showChatDanmaku = _overlayPreferences.chatDanmakuEnabled;
     widget.overlayPreferences?.addListener(_onOverlayPreferencesChanged);
     _restorePersistedVolume();
     _startHideTimer();
@@ -1853,7 +1891,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onOverlayPreferencesChanged() {
     if (!mounted || widget.overlayPreferences == null) return;
-    setState(() => _overlayPreferences = widget.overlayPreferences!.value);
+    setState(() {
+      _overlayPreferences = widget.overlayPreferences!.value;
+      _showVideoDanmaku = _overlayPreferences.videoDanmakuEnabled;
+      _showChatDanmaku = _overlayPreferences.chatDanmakuEnabled;
+    });
   }
 
   void _onP2pPreferenceChanged() {
@@ -1885,6 +1927,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       _overlayPreferences =
           widget.overlayPreferences?.value ??
           const PlaybackOverlayPreferenceValues();
+      _showVideoDanmaku = _overlayPreferences.videoDanmakuEnabled;
+      _showChatDanmaku = _overlayPreferences.chatDanmakuEnabled;
     }
     if (widget.p2pMediaPreferences != oldWidget.p2pMediaPreferences) {
       oldWidget.p2pMediaPreferences?.removeListener(_onP2pPreferenceChanged);
@@ -2409,18 +2453,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _subtitleItems.clear();
 
     // Add to danmaku controller
-    widget.danmakuController!.clear();
-    widget.danmakuController!.addItems(danmakuItems);
+    widget.danmakuController!.replaceVideoItems(danmakuItems);
     debugPrint(
       'Parsed and added ${danmakuItems.length} danmaku items from ASS',
     );
-
-    // Enable danmaku if not already
-    if (!_showDanmaku) {
-      setState(() {
-        _showDanmaku = true;
-      });
-    }
   }
 
   Duration _parseAssDuration(String s) {
@@ -2664,20 +2700,54 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     );
   }
 
-  void _toggleDanmaku() {
-    setState(() => _showDanmaku = !_showDanmaku);
+  void _toggleDanmaku(DanmakuOrigin source) {
+    final preferences = widget.overlayPreferences;
+    setState(() {
+      switch (source) {
+        case DanmakuOrigin.video:
+          _showVideoDanmaku = !_showVideoDanmaku;
+          break;
+        case DanmakuOrigin.chat:
+          _showChatDanmaku = !_showChatDanmaku;
+          break;
+      }
+    });
+    if (preferences == null) return;
+    final value = preferences.value.copyWith(
+      videoDanmakuEnabled: _showVideoDanmaku,
+      chatDanmakuEnabled: _showChatDanmaku,
+    );
+    unawaited(preferences.save(value));
   }
 
-  Widget _buildDanmakuControl(double iconSize, {VoidCallback? onChanged}) {
+  bool _danmakuEnabled(DanmakuOrigin source) => switch (source) {
+    DanmakuOrigin.video => _showVideoDanmaku,
+    DanmakuOrigin.chat => _showChatDanmaku,
+  };
+
+  Widget _buildDanmakuControl(
+    double iconSize, {
+    required DanmakuOrigin source,
+    VoidCallback? onChanged,
+  }) {
+    final enabled = _danmakuEnabled(source);
+    final isVideo = source == DanmakuOrigin.video;
     return _PlayerIconButton(
-      key: const Key('playback_danmaku_button'),
-      icon: Icons.comment_rounded,
-      tooltip: _showDanmaku
-          ? context.l10n.disableDanmaku
-          : context.l10n.enableDanmaku,
-      selected: _showDanmaku,
+      key: ValueKey(
+        isVideo
+            ? 'playback_video_danmaku_button'
+            : 'playback_chat_danmaku_button',
+      ),
+      icon: isVideo ? Icons.subtitles_rounded : Icons.forum_rounded,
+      tooltip: switch ((source, enabled)) {
+        (DanmakuOrigin.video, true) => context.l10n.disableVideoDanmaku,
+        (DanmakuOrigin.video, false) => context.l10n.enableVideoDanmaku,
+        (DanmakuOrigin.chat, true) => context.l10n.disableChatDanmaku,
+        (DanmakuOrigin.chat, false) => context.l10n.enableChatDanmaku,
+      },
+      selected: enabled,
       onPressed: () {
-        setState(() => _showDanmaku = !_showDanmaku);
+        _toggleDanmaku(source);
         onChanged?.call();
       },
       padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
@@ -3515,8 +3585,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void _showSubtitleSettings() =>
       _showOverlaySettings(_OverlaySettingsSection.subtitle);
 
-  void _showDanmakuSettings() =>
-      _showOverlaySettings(_OverlaySettingsSection.danmaku);
+  void _showVideoDanmakuSettings() =>
+      _showOverlaySettings(_OverlaySettingsSection.videoDanmaku);
+
+  void _showChatDanmakuSettings() =>
+      _showOverlaySettings(_OverlaySettingsSection.chatDanmaku);
 
   Widget _buildOverlaySettingsSection(
     BuildContext context, {
@@ -3524,6 +3597,18 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }) {
     final preferences = widget.overlayPreferences;
     if (preferences == null) return const SizedBox.shrink();
+    PlaybackOverlayPreferenceValues updateDanmakuStyle(
+      PlaybackOverlayPreferenceValues values,
+      DanmakuOverlayStyle Function(DanmakuOverlayStyle style) update,
+    ) => switch (section) {
+      _OverlaySettingsSection.videoDanmaku => values.copyWith(
+        videoDanmakuStyle: update(values.videoDanmakuStyle),
+      ),
+      _OverlaySettingsSection.chatDanmaku => values.copyWith(
+        chatDanmakuStyle: update(values.chatDanmakuStyle),
+      ),
+      _OverlaySettingsSection.subtitle => values,
+    };
     Widget slider({
       required String label,
       required double value,
@@ -3571,7 +3656,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     return ListenableBuilder(
       listenable: preferences,
       builder: (context, _) {
-        final style = preferences.value;
+        final values = preferences.value;
+        final danmakuStyle = switch (section) {
+          _OverlaySettingsSection.videoDanmaku => values.videoDanmakuStyle,
+          _OverlaySettingsSection.chatDanmaku => values.chatDanmakuStyle,
+          _OverlaySettingsSection.subtitle => const DanmakuOverlayStyle(),
+        };
         return ExpansionTile(
           key: const Key('playback_overlay_settings'),
           initiallyExpanded: true,
@@ -3579,7 +3669,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           title: Text(
             section == _OverlaySettingsSection.subtitle
                 ? context.l10n.subtitleSettings
-                : context.l10n.danmakuSettings,
+                : section == _OverlaySettingsSection.videoDanmaku
+                ? context.l10n.videoDanmakuSettings
+                : context.l10n.chatDanmakuSettings,
             style: const TextStyle(color: Colors.white),
           ),
           iconColor: Colors.white,
@@ -3601,14 +3693,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
               ),
               slider(
                 label: context.l10n.subtitleSize,
-                value: style.subtitleFontSize,
+                value: values.subtitleFontSize,
                 min: 12,
                 max: 48,
                 update: (s, v) => s.copyWith(subtitleFontSize: v),
               ),
               slider(
                 label: context.l10n.subtitleOpacity,
-                value: style.subtitleOpacity,
+                value: values.subtitleOpacity,
                 min: 0,
                 max: 1,
                 update: (s, v) => s.copyWith(subtitleOpacity: v),
@@ -3616,7 +3708,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
               ),
               slider(
                 label: context.l10n.subtitleBackground,
-                value: style.subtitleBackgroundOpacity,
+                value: values.subtitleBackgroundOpacity,
                 min: 0,
                 max: 1,
                 update: (s, v) => s.copyWith(subtitleBackgroundOpacity: v),
@@ -3624,7 +3716,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
               ),
               slider(
                 label: context.l10n.subtitlePosition,
-                value: style.subtitleBottom,
+                value: values.subtitleBottom,
                 min: 0,
                 max: 0.3,
                 update: (s, v) => s.copyWith(subtitleBottom: v),
@@ -3654,14 +3746,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
               ),
               slider(
                 label: context.l10n.subtitleOutline,
-                value: style.subtitleOutlineWidth,
+                value: values.subtitleOutlineWidth,
                 min: 0,
                 max: 6,
                 update: (s, v) => s.copyWith(subtitleOutlineWidth: v),
                 valueLabel: (v) => v.toStringAsFixed(1),
               ),
             ],
-            if (section == _OverlaySettingsSection.danmaku) ...[
+            if (section != _OverlaySettingsSection.subtitle) ...[
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
@@ -3670,80 +3762,115 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                     vertical: 4,
                   ),
                   child: Text(
-                    context.l10n.danmakuStyle,
+                    section == _OverlaySettingsSection.videoDanmaku
+                        ? context.l10n.videoDanmakuStyle
+                        : context.l10n.chatDanmakuStyle,
                     style: const TextStyle(color: Colors.white70),
                   ),
                 ),
               ),
               slider(
                 label: context.l10n.danmakuSize,
-                value: style.danmakuFontSize,
+                value: danmakuStyle.fontSize,
                 min: 12,
                 max: 64,
-                update: (s, v) => s.copyWith(danmakuFontSize: v),
+                update: (s, v) => updateDanmakuStyle(
+                  s,
+                  (style) => style.copyWith(fontSize: v),
+                ),
               ),
               slider(
                 label: context.l10n.danmakuOpacity,
-                value: style.danmakuOpacity,
+                value: danmakuStyle.opacity,
                 min: 0,
                 max: 1,
-                update: (s, v) => s.copyWith(danmakuOpacity: v),
+                update: (s, v) => updateDanmakuStyle(
+                  s,
+                  (style) => style.copyWith(opacity: v),
+                ),
                 valueLabel: (v) => '${(v * 100).round()}%',
               ),
               slider(
                 label: context.l10n.danmakuSpeed,
-                value: style.danmakuDuration,
+                value: danmakuStyle.duration,
                 min: 3,
                 max: 20,
-                update: (s, v) => s.copyWith(danmakuDuration: v),
+                update: (s, v) => updateDanmakuStyle(
+                  s,
+                  (style) => style.copyWith(duration: v),
+                ),
                 valueLabel: (v) => '${v.toStringAsFixed(0)}s',
               ),
               slider(
                 label: context.l10n.danmakuArea,
-                value: style.danmakuArea,
+                value: danmakuStyle.area,
                 min: 0.1,
                 max: 1,
-                update: (s, v) => s.copyWith(danmakuArea: v),
+                update: (s, v) =>
+                    updateDanmakuStyle(s, (style) => style.copyWith(area: v)),
                 valueLabel: (v) => '${(v * 100).round()}%',
               ),
               slider(
                 label: context.l10n.danmakuOutline,
-                value: style.danmakuStrokeWidth,
+                value: danmakuStyle.strokeWidth,
                 min: 0,
                 max: 6,
-                update: (s, v) => s.copyWith(danmakuStrokeWidth: v),
+                update: (s, v) => updateDanmakuStyle(
+                  s,
+                  (style) => style.copyWith(strokeWidth: v),
+                ),
                 valueLabel: (v) => v.toStringAsFixed(1),
               ),
               SwitchListTile(
-                value: style.danmakuMassiveMode,
+                value: danmakuStyle.massiveMode,
                 title: Text(
                   context.l10n.danmakuMassiveMode,
                   style: const TextStyle(color: Colors.white),
                 ),
                 onChanged: (value) => unawaited(
-                  preferences.save(style.copyWith(danmakuMassiveMode: value)),
+                  preferences.save(
+                    updateDanmakuStyle(
+                      values,
+                      (style) => style.copyWith(massiveMode: value),
+                    ),
+                  ),
                 ),
               ),
               for (final entry in <(String, bool, ValueChanged<bool>)>[
                 (
                   context.l10n.danmakuTop,
-                  !style.danmakuHideTop,
+                  !danmakuStyle.hideTop,
                   (v) => unawaited(
-                    preferences.save(style.copyWith(danmakuHideTop: !v)),
+                    preferences.save(
+                      updateDanmakuStyle(
+                        values,
+                        (style) => style.copyWith(hideTop: !v),
+                      ),
+                    ),
                   ),
                 ),
                 (
                   context.l10n.danmakuBottom,
-                  !style.danmakuHideBottom,
+                  !danmakuStyle.hideBottom,
                   (v) => unawaited(
-                    preferences.save(style.copyWith(danmakuHideBottom: !v)),
+                    preferences.save(
+                      updateDanmakuStyle(
+                        values,
+                        (style) => style.copyWith(hideBottom: !v),
+                      ),
+                    ),
                   ),
                 ),
                 (
                   context.l10n.danmakuScroll,
-                  !style.danmakuHideScroll,
+                  !danmakuStyle.hideScroll,
                   (v) => unawaited(
-                    preferences.save(style.copyWith(danmakuHideScroll: !v)),
+                    preferences.save(
+                      updateDanmakuStyle(
+                        values,
+                        (style) => style.copyWith(hideScroll: !v),
+                      ),
+                    ),
                   ),
                 ),
               ])
@@ -3831,6 +3958,27 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     ];
   }
 
+  Widget _buildDanmakuOverlay(
+    DanmakuOrigin source,
+    DanmakuOverlayStyle style,
+    bool enabled,
+  ) {
+    final sourceKey = source == DanmakuOrigin.video ? 'video' : 'chat';
+    return DanmakuOverlay(
+      key: ValueKey(
+        '${sourceKey}_danmaku_${style.fontSize}_${style.opacity}_'
+        '${style.duration}_${style.area}_${style.strokeWidth}_'
+        '${style.massiveMode}_${style.hideTop}_${style.hideBottom}_'
+        '${style.hideScroll}',
+      ),
+      videoController: widget.controller,
+      danmakuList: widget.danmakuController?.items ?? const [],
+      origin: source,
+      isEnabled: enabled,
+      option: _danmakuOption(style),
+    );
+  }
+
   Widget _buildVideoContent(VideoPlayerValue videoValue) {
     final aspectRatio = videoValue.aspectRatio > 0
         ? videoValue.aspectRatio
@@ -3851,33 +3999,20 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 Positioned.fill(
                   child: IgnorePointer(
                     child: ExcludeSemantics(
-                      child: DanmakuOverlay(
-                        key: ValueKey(
-                          'danmaku_${_overlayStyle.danmakuFontSize}_'
-                          '${_overlayStyle.danmakuOpacity}_'
-                          '${_overlayStyle.danmakuDuration}_'
-                          '${_overlayStyle.danmakuArea}_'
-                          '${_overlayStyle.danmakuStrokeWidth}_'
-                          '${_overlayStyle.danmakuMassiveMode}_'
-                          '${_overlayStyle.danmakuHideTop}_'
-                          '${_overlayStyle.danmakuHideBottom}_'
-                          '${_overlayStyle.danmakuHideScroll}',
-                        ),
-                        videoController: widget.controller,
-                        danmakuList: widget.danmakuController?.items ?? [],
-                        isEnabled: _showDanmaku,
-                        option: DanmakuOption(
-                          fontSize: _overlayStyle.danmakuFontSize,
-                          opacity: _overlayStyle.danmakuOpacity,
-                          duration: _overlayStyle.danmakuDuration,
-                          area: _overlayStyle.danmakuArea,
-                          strokeWidth: _overlayStyle.danmakuStrokeWidth,
-                          massiveMode: _overlayStyle.danmakuMassiveMode,
-                          hideTop: _overlayStyle.danmakuHideTop,
-                          hideBottom: _overlayStyle.danmakuHideBottom,
-                          hideScroll: _overlayStyle.danmakuHideScroll,
-                          safeArea: true,
-                        ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          _buildDanmakuOverlay(
+                            DanmakuOrigin.video,
+                            _overlayStyle.videoDanmakuStyle,
+                            _showVideoDanmaku,
+                          ),
+                          _buildDanmakuOverlay(
+                            DanmakuOrigin.chat,
+                            _overlayStyle.chatDanmakuStyle,
+                            _showChatDanmaku,
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -4386,19 +4521,38 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                           visible: visibility.showSpeed,
                                         ),
                                       (
-                                        label: context.l10n.danmaku,
-                                        icon: Icons.comment_rounded,
+                                        label: context.l10n.videoDanmaku,
+                                        icon: Icons.subtitles_rounded,
                                         build: (onChanged) =>
                                             _buildDanmakuControl(
                                               iconSize,
+                                              source: DanmakuOrigin.video,
                                               onChanged: onChanged,
                                             ),
-                                        onPressed: _toggleDanmaku,
-                                        switchValue: () => _showDanmaku,
+                                        onPressed: () =>
+                                            _toggleDanmaku(DanmakuOrigin.video),
+                                        switchValue: () => _showVideoDanmaku,
                                         onSwitchChanged: (_) =>
-                                            _toggleDanmaku(),
+                                            _toggleDanmaku(DanmakuOrigin.video),
                                         dismissOnSwitch: false,
-                                        visible: visibility.showDanmaku,
+                                        visible: visibility.showVideoDanmaku,
+                                      ),
+                                      (
+                                        label: context.l10n.chatDanmaku,
+                                        icon: Icons.forum_rounded,
+                                        build: (onChanged) =>
+                                            _buildDanmakuControl(
+                                              iconSize,
+                                              source: DanmakuOrigin.chat,
+                                              onChanged: onChanged,
+                                            ),
+                                        onPressed: () =>
+                                            _toggleDanmaku(DanmakuOrigin.chat),
+                                        switchValue: () => _showChatDanmaku,
+                                        onSwitchChanged: (_) =>
+                                            _toggleDanmaku(DanmakuOrigin.chat),
+                                        dismissOnSwitch: false,
+                                        visible: false,
                                       ),
                                       if (widget.p2pMediaPreferences
                                           case final p2pPreferences?)
@@ -4448,20 +4602,46 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                       if (widget.overlayPreferences != null &&
                                           widget.danmakuController != null)
                                         (
-                                          label: context.l10n.danmakuSettings,
-                                          icon: Icons.comment_rounded,
+                                          label:
+                                              context.l10n.videoDanmakuSettings,
+                                          icon: Icons.subtitles_rounded,
                                           build: (_) =>
                                               _buildOverlaySettingsControl(
                                                 iconSize,
                                                 tooltip: context
                                                     .l10n
-                                                    .danmakuSettings,
-                                                onPressed: _showDanmakuSettings,
+                                                    .videoDanmakuSettings,
+                                                onPressed:
+                                                    _showVideoDanmakuSettings,
                                                 key: const Key(
-                                                  'playback_danmaku_settings_button',
+                                                  'playback_video_danmaku_settings_button',
                                                 ),
                                               ),
-                                          onPressed: _showDanmakuSettings,
+                                          onPressed: _showVideoDanmakuSettings,
+                                          switchValue: null,
+                                          onSwitchChanged: null,
+                                          dismissOnSwitch: false,
+                                          visible: false,
+                                        ),
+                                      if (widget.overlayPreferences != null &&
+                                          widget.danmakuController != null)
+                                        (
+                                          label:
+                                              context.l10n.chatDanmakuSettings,
+                                          icon: Icons.forum_rounded,
+                                          build: (_) =>
+                                              _buildOverlaySettingsControl(
+                                                iconSize,
+                                                tooltip: context
+                                                    .l10n
+                                                    .chatDanmakuSettings,
+                                                onPressed:
+                                                    _showChatDanmakuSettings,
+                                                key: const Key(
+                                                  'playback_chat_danmaku_settings_button',
+                                                ),
+                                              ),
+                                          onPressed: _showChatDanmakuSettings,
                                           switchValue: null,
                                           onSwitchChanged: null,
                                           dismissOnSwitch: false,

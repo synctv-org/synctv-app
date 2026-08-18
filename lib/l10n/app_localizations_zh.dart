@@ -1088,6 +1088,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get danmaku => '弹幕';
 
   @override
+  String get videoDanmaku => '视频弹幕';
+
+  @override
+  String get chatDanmaku => '聊天弹幕';
+
+  @override
   String get danmakuHint => '发个弹幕见证当下...';
 
   @override
@@ -1109,10 +1115,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get subtitles => '字幕';
 
   @override
-  String get disableDanmaku => '关闭弹幕';
+  String get disableVideoDanmaku => '关闭视频弹幕';
 
   @override
-  String get enableDanmaku => '开启弹幕';
+  String get enableVideoDanmaku => '开启视频弹幕';
+
+  @override
+  String get disableChatDanmaku => '关闭聊天弹幕';
+
+  @override
+  String get enableChatDanmaku => '开启聊天弹幕';
 
   @override
   String get overlaySettings => '字幕与弹幕设置';
@@ -1121,7 +1133,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get subtitleSettings => '字幕设置';
 
   @override
-  String get danmakuSettings => '弹幕设置';
+  String get videoDanmakuSettings => '视频弹幕设置';
+
+  @override
+  String get chatDanmakuSettings => '聊天弹幕设置';
 
   @override
   String get subtitleStyle => '字幕样式';
@@ -1148,7 +1163,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get subtitleOutline => '字幕描边';
 
   @override
-  String get danmakuStyle => '弹幕样式';
+  String get videoDanmakuStyle => '视频弹幕样式';
+
+  @override
+  String get chatDanmakuStyle => '聊天弹幕样式';
 
   @override
   String get danmakuSize => '弹幕大小';

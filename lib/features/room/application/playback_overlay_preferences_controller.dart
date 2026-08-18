@@ -1,6 +1,105 @@
 import 'package:flutter/foundation.dart';
 
 @immutable
+final class DanmakuOverlayStyle {
+  const DanmakuOverlayStyle({
+    this.fontSize = 25,
+    this.opacity = 0.8,
+    this.duration = 8,
+    this.area = 1,
+    this.strokeWidth = 1.5,
+    this.massiveMode = false,
+    this.hideTop = false,
+    this.hideBottom = false,
+    this.hideScroll = false,
+  });
+
+  final double fontSize;
+  final double opacity;
+  final double duration;
+  final double area;
+  final double strokeWidth;
+  final bool massiveMode;
+  final bool hideTop;
+  final bool hideBottom;
+  final bool hideScroll;
+
+  DanmakuOverlayStyle copyWith({
+    double? fontSize,
+    double? opacity,
+    double? duration,
+    double? area,
+    double? strokeWidth,
+    bool? massiveMode,
+    bool? hideTop,
+    bool? hideBottom,
+    bool? hideScroll,
+  }) => DanmakuOverlayStyle(
+    fontSize: fontSize ?? this.fontSize,
+    opacity: opacity ?? this.opacity,
+    duration: duration ?? this.duration,
+    area: area ?? this.area,
+    strokeWidth: strokeWidth ?? this.strokeWidth,
+    massiveMode: massiveMode ?? this.massiveMode,
+    hideTop: hideTop ?? this.hideTop,
+    hideBottom: hideBottom ?? this.hideBottom,
+    hideScroll: hideScroll ?? this.hideScroll,
+  );
+
+  DanmakuOverlayStyle normalized() {
+    double finite(double value, double fallback) =>
+        value.isFinite ? value : fallback;
+    return DanmakuOverlayStyle(
+      fontSize: finite(fontSize, 25).clamp(12, 64).toDouble(),
+      opacity: finite(opacity, 0.8).clamp(0, 1).toDouble(),
+      duration: finite(duration, 8).clamp(3, 20).toDouble(),
+      area: finite(area, 1).clamp(0.1, 1).toDouble(),
+      strokeWidth: finite(strokeWidth, 1.5).clamp(0, 6).toDouble(),
+      massiveMode: massiveMode,
+      hideTop: hideTop,
+      hideBottom: hideBottom,
+      hideScroll: hideScroll,
+    );
+  }
+
+  Map<String, Object> toJson() => <String, Object>{
+    'fontSize': fontSize,
+    'opacity': opacity,
+    'duration': duration,
+    'area': area,
+    'strokeWidth': strokeWidth,
+    'massiveMode': massiveMode,
+    'hideTop': hideTop,
+    'hideBottom': hideBottom,
+    'hideScroll': hideScroll,
+  };
+
+  factory DanmakuOverlayStyle.fromJson(
+    Map<String, Object?> json, {
+    DanmakuOverlayStyle fallback = const DanmakuOverlayStyle(),
+  }) {
+    double number(String key, double defaultValue) {
+      final value = json[key];
+      return value is num ? value.toDouble() : defaultValue;
+    }
+
+    bool flag(String key, bool defaultValue) =>
+        json[key] is bool ? json[key] as bool : defaultValue;
+    return DanmakuOverlayStyle(
+      fontSize: number('fontSize', fallback.fontSize),
+      opacity: number('opacity', fallback.opacity),
+      duration: number('duration', fallback.duration),
+      area: number('area', fallback.area),
+      strokeWidth: number('strokeWidth', fallback.strokeWidth),
+      massiveMode: flag('massiveMode', fallback.massiveMode),
+      hideTop: flag('hideTop', fallback.hideTop),
+      hideBottom: flag('hideBottom', fallback.hideBottom),
+      hideScroll: flag('hideScroll', fallback.hideScroll),
+    ).normalized();
+  }
+}
+
+@immutable
 final class PlaybackOverlayPreferenceValues {
   const PlaybackOverlayPreferenceValues({
     this.subtitleFontSize = 18,
@@ -10,15 +109,10 @@ final class PlaybackOverlayPreferenceValues {
     this.subtitleColor = 0xFFFFFFFF,
     this.subtitleBackgroundColor = 0xFF000000,
     this.subtitleOutlineWidth = 2,
-    this.danmakuFontSize = 25,
-    this.danmakuOpacity = 0.8,
-    this.danmakuDuration = 8,
-    this.danmakuArea = 1,
-    this.danmakuStrokeWidth = 1.5,
-    this.danmakuMassiveMode = false,
-    this.danmakuHideTop = false,
-    this.danmakuHideBottom = false,
-    this.danmakuHideScroll = false,
+    this.videoDanmakuEnabled = true,
+    this.chatDanmakuEnabled = true,
+    this.videoDanmakuStyle = const DanmakuOverlayStyle(),
+    this.chatDanmakuStyle = const DanmakuOverlayStyle(),
   });
 
   final double subtitleFontSize;
@@ -30,15 +124,10 @@ final class PlaybackOverlayPreferenceValues {
   final int subtitleColor;
   final int subtitleBackgroundColor;
   final double subtitleOutlineWidth;
-  final double danmakuFontSize;
-  final double danmakuOpacity;
-  final double danmakuDuration;
-  final double danmakuArea;
-  final double danmakuStrokeWidth;
-  final bool danmakuMassiveMode;
-  final bool danmakuHideTop;
-  final bool danmakuHideBottom;
-  final bool danmakuHideScroll;
+  final bool videoDanmakuEnabled;
+  final bool chatDanmakuEnabled;
+  final DanmakuOverlayStyle videoDanmakuStyle;
+  final DanmakuOverlayStyle chatDanmakuStyle;
 
   PlaybackOverlayPreferenceValues copyWith({
     double? subtitleFontSize,
@@ -48,15 +137,10 @@ final class PlaybackOverlayPreferenceValues {
     int? subtitleColor,
     int? subtitleBackgroundColor,
     double? subtitleOutlineWidth,
-    double? danmakuFontSize,
-    double? danmakuOpacity,
-    double? danmakuDuration,
-    double? danmakuArea,
-    double? danmakuStrokeWidth,
-    bool? danmakuMassiveMode,
-    bool? danmakuHideTop,
-    bool? danmakuHideBottom,
-    bool? danmakuHideScroll,
+    bool? videoDanmakuEnabled,
+    bool? chatDanmakuEnabled,
+    DanmakuOverlayStyle? videoDanmakuStyle,
+    DanmakuOverlayStyle? chatDanmakuStyle,
   }) => PlaybackOverlayPreferenceValues(
     subtitleFontSize: subtitleFontSize ?? this.subtitleFontSize,
     subtitleOpacity: subtitleOpacity ?? this.subtitleOpacity,
@@ -67,15 +151,10 @@ final class PlaybackOverlayPreferenceValues {
     subtitleBackgroundColor:
         subtitleBackgroundColor ?? this.subtitleBackgroundColor,
     subtitleOutlineWidth: subtitleOutlineWidth ?? this.subtitleOutlineWidth,
-    danmakuFontSize: danmakuFontSize ?? this.danmakuFontSize,
-    danmakuOpacity: danmakuOpacity ?? this.danmakuOpacity,
-    danmakuDuration: danmakuDuration ?? this.danmakuDuration,
-    danmakuArea: danmakuArea ?? this.danmakuArea,
-    danmakuStrokeWidth: danmakuStrokeWidth ?? this.danmakuStrokeWidth,
-    danmakuMassiveMode: danmakuMassiveMode ?? this.danmakuMassiveMode,
-    danmakuHideTop: danmakuHideTop ?? this.danmakuHideTop,
-    danmakuHideBottom: danmakuHideBottom ?? this.danmakuHideBottom,
-    danmakuHideScroll: danmakuHideScroll ?? this.danmakuHideScroll,
+    videoDanmakuEnabled: videoDanmakuEnabled ?? this.videoDanmakuEnabled,
+    chatDanmakuEnabled: chatDanmakuEnabled ?? this.chatDanmakuEnabled,
+    videoDanmakuStyle: videoDanmakuStyle ?? this.videoDanmakuStyle,
+    chatDanmakuStyle: chatDanmakuStyle ?? this.chatDanmakuStyle,
   );
 
   PlaybackOverlayPreferenceValues normalized() {
@@ -95,18 +174,10 @@ final class PlaybackOverlayPreferenceValues {
         subtitleOutlineWidth,
         2,
       ).clamp(0, 6).toDouble(),
-      danmakuFontSize: finite(danmakuFontSize, 25).clamp(12, 64).toDouble(),
-      danmakuOpacity: finite(danmakuOpacity, 0.8).clamp(0, 1).toDouble(),
-      danmakuDuration: finite(danmakuDuration, 8).clamp(3, 20).toDouble(),
-      danmakuArea: finite(danmakuArea, 1).clamp(0.1, 1).toDouble(),
-      danmakuStrokeWidth: finite(
-        danmakuStrokeWidth,
-        1.5,
-      ).clamp(0, 6).toDouble(),
-      danmakuMassiveMode: danmakuMassiveMode,
-      danmakuHideTop: danmakuHideTop,
-      danmakuHideBottom: danmakuHideBottom,
-      danmakuHideScroll: danmakuHideScroll,
+      videoDanmakuEnabled: videoDanmakuEnabled,
+      chatDanmakuEnabled: chatDanmakuEnabled,
+      videoDanmakuStyle: videoDanmakuStyle.normalized(),
+      chatDanmakuStyle: chatDanmakuStyle.normalized(),
     );
   }
 
@@ -118,15 +189,10 @@ final class PlaybackOverlayPreferenceValues {
     'subtitleColor': subtitleColor,
     'subtitleBackgroundColor': subtitleBackgroundColor,
     'subtitleOutlineWidth': subtitleOutlineWidth,
-    'danmakuFontSize': danmakuFontSize,
-    'danmakuOpacity': danmakuOpacity,
-    'danmakuDuration': danmakuDuration,
-    'danmakuArea': danmakuArea,
-    'danmakuStrokeWidth': danmakuStrokeWidth,
-    'danmakuMassiveMode': danmakuMassiveMode,
-    'danmakuHideTop': danmakuHideTop,
-    'danmakuHideBottom': danmakuHideBottom,
-    'danmakuHideScroll': danmakuHideScroll,
+    'videoDanmakuEnabled': videoDanmakuEnabled,
+    'chatDanmakuEnabled': chatDanmakuEnabled,
+    'videoDanmakuStyle': videoDanmakuStyle.toJson(),
+    'chatDanmakuStyle': chatDanmakuStyle.toJson(),
   };
 
   factory PlaybackOverlayPreferenceValues.fromJson(Map<String, Object?> json) {
@@ -137,6 +203,20 @@ final class PlaybackOverlayPreferenceValues {
 
     bool flag(String key, bool fallback) =>
         json[key] is bool ? json[key] as bool : fallback;
+    final legacyStyle = DanmakuOverlayStyle(
+      fontSize: number('danmakuFontSize', 25),
+      opacity: number('danmakuOpacity', 0.8),
+      duration: number('danmakuDuration', 8),
+      area: number('danmakuArea', 1),
+      strokeWidth: number('danmakuStrokeWidth', 1.5),
+      massiveMode: flag('danmakuMassiveMode', false),
+      hideTop: flag('danmakuHideTop', false),
+      hideBottom: flag('danmakuHideBottom', false),
+      hideScroll: flag('danmakuHideScroll', false),
+    );
+    Map<String, Object?> objectMap(Object? value) => value is Map
+        ? Map<String, Object?>.from(value)
+        : const <String, Object?>{};
     return PlaybackOverlayPreferenceValues(
       subtitleFontSize: number('subtitleFontSize', 18),
       subtitleOpacity: number('subtitleOpacity', 1),
@@ -149,15 +229,16 @@ final class PlaybackOverlayPreferenceValues {
           ? (json['subtitleBackgroundColor'] as num).toInt()
           : 0xFF000000,
       subtitleOutlineWidth: number('subtitleOutlineWidth', 2),
-      danmakuFontSize: number('danmakuFontSize', 25),
-      danmakuOpacity: number('danmakuOpacity', 0.8),
-      danmakuDuration: number('danmakuDuration', 8),
-      danmakuArea: number('danmakuArea', 1),
-      danmakuStrokeWidth: number('danmakuStrokeWidth', 1.5),
-      danmakuMassiveMode: flag('danmakuMassiveMode', false),
-      danmakuHideTop: flag('danmakuHideTop', false),
-      danmakuHideBottom: flag('danmakuHideBottom', false),
-      danmakuHideScroll: flag('danmakuHideScroll', false),
+      videoDanmakuEnabled: flag('videoDanmakuEnabled', true),
+      chatDanmakuEnabled: flag('chatDanmakuEnabled', true),
+      videoDanmakuStyle: DanmakuOverlayStyle.fromJson(
+        objectMap(json['videoDanmakuStyle']),
+        fallback: legacyStyle,
+      ),
+      chatDanmakuStyle: DanmakuOverlayStyle.fromJson(
+        objectMap(json['chatDanmakuStyle']),
+        fallback: legacyStyle,
+      ),
     ).normalized();
   }
 }

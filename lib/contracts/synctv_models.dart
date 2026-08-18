@@ -1485,7 +1485,6 @@ class SyncTvRoomSettings {
   bool allowAutoJoin;
   int maxMembers;
   bool chatEnabled;
-  bool danmakuEnabled;
   bool autoPlayEnabled;
   client.PlayMode autoPlayMode;
   int autoPlayDelay;
@@ -1505,7 +1504,6 @@ class SyncTvRoomSettings {
     this.allowAutoJoin = true,
     this.maxMembers = 100,
     this.chatEnabled = true,
-    this.danmakuEnabled = true,
     this.autoPlayEnabled = true,
     this.autoPlayMode = client.PlayMode.PLAY_MODE_SEQUENTIAL,
     this.autoPlayDelay = 3,
@@ -1534,7 +1532,6 @@ class SyncTvRoomSettings {
       allowAutoJoin: _readBool(json, 'allowAutoJoin', true),
       maxMembers: _readInt(json, 'maxMembers', 100),
       chatEnabled: _readBool(json, 'chatEnabled', true),
-      danmakuEnabled: _readBool(json, 'danmakuEnabled', true),
       autoPlayEnabled: _readBool(autoPlay, 'enabled', true),
       autoPlayMode:
           parsedMode == null ||
@@ -1570,7 +1567,6 @@ class SyncTvRoomSettings {
       'allowAutoJoin': allowAutoJoin,
       'maxMembers': maxMembers,
       'chatEnabled': chatEnabled,
-      'danmakuEnabled': danmakuEnabled,
       'autoPlay': {
         'enabled': autoPlayEnabled,
         'mode': autoPlayMode.value,

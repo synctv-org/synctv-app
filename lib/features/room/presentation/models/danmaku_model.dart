@@ -11,6 +11,7 @@ class DanmakuItem {
   final double? moveStartX; // 移动起始X坐标
   final double? moveEndX; // 移动结束X坐标
   final double? positionY; // Y坐标位置
+  final DanmakuOrigin origin;
 
   const DanmakuItem({
     required this.text,
@@ -22,6 +23,7 @@ class DanmakuItem {
     this.moveStartX,
     this.moveEndX,
     this.positionY,
+    this.origin = DanmakuOrigin.video,
   });
 
   /// 检查弹幕是否在指定时间点应该显示
@@ -52,6 +54,9 @@ class DanmakuItem {
     return 'DanmakuItem(text: $text, start: ${startTime.inSeconds}s, end: ${endTime.inSeconds}s)';
   }
 }
+
+/// Identifies where a danmaku came from so viewers can control each stream.
+enum DanmakuOrigin { video, chat }
 
 /// 弹幕类型枚举
 enum DanmakuType {

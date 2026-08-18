@@ -510,6 +510,8 @@ class _RoomScreenState extends State<RoomScreen>
   bool get _canViewMembers => _capabilities.canViewMembers;
   bool get _canViewChatHistory => _capabilities.canViewChatHistory;
   bool get _canSendChatMessages => _capabilities.canSendChatMessages;
+  bool get _canSendRoomDanmaku =>
+      _roomSettings.chatEnabled && _canSendChatMessages;
   bool get _canAccessChat => _canViewChatHistory || _canSendChatMessages;
   bool get _canManageOwnMedia => _capabilities.canManageOwnMedia;
   bool get _canDeleteMedia => _capabilities.canDeleteMedia;
@@ -1438,6 +1440,7 @@ class _RoomScreenState extends State<RoomScreen>
       }
 
       if (message.isChatCreated &&
+          _playbackOverlayPreferences.value.chatDanmakuEnabled &&
           chatDanmakuMessageTypes.contains(message.chatMessageType) &&
           _videoPlayerController != null &&
           _videoPlayerController!.value.isInitialized) {
@@ -1452,6 +1455,7 @@ class _RoomScreenState extends State<RoomScreen>
           endTime: currentPos + const Duration(seconds: 8),
           color: Colors.white,
           type: DanmakuType.floating,
+          origin: DanmakuOrigin.chat,
         );
         _danmakuController.add(danmaku);
       }
@@ -2678,6 +2682,10 @@ class _RoomScreenState extends State<RoomScreen>
     double positionSeconds, {
     bool force = false,
   }) async {
+    if (!_playbackOverlayPreferences.value.chatDanmakuEnabled) {
+      _playbackDanmakuWindow = null;
+      return;
+    }
     final entry = _currentStatus?.entry;
     if (entry == null || entry.live) {
       _playbackDanmakuWindow = null;
@@ -2712,6 +2720,7 @@ class _RoomScreenState extends State<RoomScreen>
       final currentEntry = _currentStatus?.entry;
       if (!mounted ||
           result == null ||
+          !_playbackOverlayPreferences.value.chatDanmakuEnabled ||
           currentEntry == null ||
           currentEntry.live ||
           playbackDanmakuSourceKey(currentEntry) != sourceKey) {
@@ -3634,7 +3643,9 @@ class _RoomScreenState extends State<RoomScreen>
                             ),
                         onReloadPlayback: () =>
                             unawaited(_reloadCurrentPlaybackUrl()),
-                        onSendDanmaku: _sendDanmaku,
+                        onSendDanmaku: _canSendRoomDanmaku
+                            ? _sendDanmaku
+                            : null,
                         interactionMode: videoPlayerInteractionModeForPlatform(
                           defaultTargetPlatform,
                         ),
@@ -4125,7 +4136,7 @@ class _RoomScreenState extends State<RoomScreen>
                     : client_enum.PlayMode.PLAY_MODE_SEQUENTIAL,
               ),
               onReloadPlayback: () => unawaited(_reloadCurrentPlaybackUrl()),
-              onSendDanmaku: _sendDanmaku,
+              onSendDanmaku: _canSendRoomDanmaku ? _sendDanmaku : null,
               isFullScreen: true,
               interactionMode: videoPlayerInteractionModeForPlatform(
                 defaultTargetPlatform,
@@ -4145,7 +4156,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _sendDanmaku(String text) {
-    if (text.trim().isEmpty) return;
+    if (!_canSendRoomDanmaku || text.trim().isEmpty) return;
     if (_channel != null) {
       try {
         final bytes = _realtimeProtocol.encodeChat(

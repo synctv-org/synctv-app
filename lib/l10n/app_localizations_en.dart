@@ -1186,6 +1186,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get danmaku => 'Danmaku';
 
   @override
+  String get videoDanmaku => 'Video danmaku';
+
+  @override
+  String get chatDanmaku => 'Chat danmaku';
+
+  @override
   String get danmakuHint => 'Send a danmaku for this moment...';
 
   @override
@@ -1207,10 +1213,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subtitles => 'Subtitles';
 
   @override
-  String get disableDanmaku => 'Turn off danmaku';
+  String get disableVideoDanmaku => 'Turn off video danmaku';
 
   @override
-  String get enableDanmaku => 'Turn on danmaku';
+  String get enableVideoDanmaku => 'Turn on video danmaku';
+
+  @override
+  String get disableChatDanmaku => 'Turn off chat danmaku';
+
+  @override
+  String get enableChatDanmaku => 'Turn on chat danmaku';
 
   @override
   String get overlaySettings => 'Subtitle and danmaku settings';
@@ -1219,7 +1231,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subtitleSettings => 'Subtitle settings';
 
   @override
-  String get danmakuSettings => 'Danmaku settings';
+  String get videoDanmakuSettings => 'Video danmaku settings';
+
+  @override
+  String get chatDanmakuSettings => 'Chat danmaku settings';
 
   @override
   String get subtitleStyle => 'Subtitle style';
@@ -1246,7 +1261,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subtitleOutline => 'Subtitle outline';
 
   @override
-  String get danmakuStyle => 'Danmaku style';
+  String get videoDanmakuStyle => 'Video danmaku style';
+
+  @override
+  String get chatDanmakuStyle => 'Chat danmaku style';
 
   @override
   String get danmakuSize => 'Danmaku size';

@@ -281,7 +281,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _requireApproval = false;
   bool _allowAutoJoin = true;
   bool _chatEnabled = true;
-  bool _danmakuEnabled = true;
   bool _voiceChatEnabled = true;
   bool _p2pMediaEnabled = true;
   int _memberPermissions = RoomMemberPermissions.all;
@@ -435,7 +434,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _requireApproval = settings.requireApproval;
     _allowAutoJoin = settings.allowAutoJoin;
     _chatEnabled = settings.chatEnabled;
-    _danmakuEnabled = settings.danmakuEnabled;
     _voiceChatEnabled = settings.voiceChatEnabled;
     _p2pMediaEnabled = settings.p2pMediaEnabled;
     _memberPermissions = settings.effectiveMemberPermissions;
@@ -1145,7 +1143,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         allowAutoJoin: _allowAutoJoin,
         maxMembers: maxMembers,
         chatEnabled: _chatEnabled,
-        danmakuEnabled: _danmakuEnabled,
         autoPlayEnabled: _settings.autoPlayEnabled,
         autoPlayMode: _settings.autoPlayMode,
         autoPlayDelay: _settings.autoPlayDelay,
@@ -4119,15 +4116,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               theme,
               isDark,
             ),
-            _buildDivider(theme),
-            _buildSwitchItem(
-              context.l10n.danmaku,
-              null,
-              _danmakuEnabled,
-              (v) => setState(() => _danmakuEnabled = v),
-              theme,
-              isDark,
-            ),
           ],
         ),
         _buildSectionHeader(context.l10n.regularMemberPermissions, theme),
@@ -4840,7 +4828,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           'allowAutoJoin': _settings.allowAutoJoin,
           'requireApproval': _settings.requireApproval,
           'chatEnabled': _settings.chatEnabled,
-          'danmakuEnabled': _settings.danmakuEnabled,
           'maxMembers': _settings.maxMembers,
           'memberPermissions': _settings.effectiveMemberPermissions,
           'guestPermissions': _settings.effectiveGuestPermissions,

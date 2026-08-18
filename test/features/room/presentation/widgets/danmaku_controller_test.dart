@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:video_player/video_player.dart';
@@ -8,6 +9,7 @@ import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/data/http_danmaku_source.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
+import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
 import 'package:synctv_app/features/room/presentation/widgets/custom_video_player.dart';
 
 final class _ControlledDanmakuSource implements DanmakuSource {
@@ -53,6 +55,64 @@ final class _EventDanmakuSource implements DanmakuSource {
 }
 
 void main() {
+  test('clearing a media timeline removes video and chat danmaku', () {
+    final controller = DanmakuController(_ControlledDanmakuSource());
+    addTearDown(controller.dispose);
+    controller.addItems(const [
+      DanmakuItem(
+        text: 'video comment',
+        startTime: Duration.zero,
+        endTime: Duration(seconds: 8),
+        color: Color(0xFFFFFFFF),
+      ),
+      DanmakuItem(
+        text: 'room chat',
+        startTime: Duration.zero,
+        endTime: Duration(seconds: 8),
+        color: Color(0xFFFFFFFF),
+        origin: DanmakuOrigin.chat,
+      ),
+    ]);
+
+    controller.clear();
+
+    expect(controller.items, isEmpty);
+  });
+
+  test(
+    'static video danmaku loading preserves concurrent chat danmaku',
+    () async {
+      final source = _ControlledDanmakuSource();
+      final controller = DanmakuController(source);
+      addTearDown(controller.dispose);
+      final uri = Uri.parse('https://example.com/video.xml');
+
+      controller.updateConfig(danmakuUrl: uri.toString());
+      await Future<void>.delayed(Duration.zero);
+      controller.add(
+        const DanmakuItem(
+          text: 'room chat',
+          startTime: Duration(seconds: 1),
+          endTime: Duration(seconds: 9),
+          color: Color(0xFFFFFFFF),
+          origin: DanmakuOrigin.chat,
+        ),
+      );
+      source.documents[uri]!.complete(
+        '<i><d p="2,1,25,16777215">video comment</d></i>',
+      );
+
+      await _waitFor(() => controller.items.length == 2);
+      expect(
+        controller.items.map((item) => (item.text, item.origin)),
+        containsAll([
+          ('room chat', DanmakuOrigin.chat),
+          ('video comment', DanmakuOrigin.video),
+        ]),
+      );
+    },
+  );
+
   test('a completed old document cannot replace the current source', () async {
     final source = _ControlledDanmakuSource();
     final controller = DanmakuController(source);

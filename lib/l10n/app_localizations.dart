@@ -2058,6 +2058,18 @@ abstract class AppLocalizations {
   /// **'Danmaku'**
   String get danmaku;
 
+  /// No description provided for @videoDanmaku.
+  ///
+  /// In en, this message translates to:
+  /// **'Video danmaku'**
+  String get videoDanmaku;
+
+  /// No description provided for @chatDanmaku.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat danmaku'**
+  String get chatDanmaku;
+
   /// No description provided for @danmakuHint.
   ///
   /// In en, this message translates to:
@@ -2100,17 +2112,29 @@ abstract class AppLocalizations {
   /// **'Subtitles'**
   String get subtitles;
 
-  /// No description provided for @disableDanmaku.
+  /// No description provided for @disableVideoDanmaku.
   ///
   /// In en, this message translates to:
-  /// **'Turn off danmaku'**
-  String get disableDanmaku;
+  /// **'Turn off video danmaku'**
+  String get disableVideoDanmaku;
 
-  /// No description provided for @enableDanmaku.
+  /// No description provided for @enableVideoDanmaku.
   ///
   /// In en, this message translates to:
-  /// **'Turn on danmaku'**
-  String get enableDanmaku;
+  /// **'Turn on video danmaku'**
+  String get enableVideoDanmaku;
+
+  /// No description provided for @disableChatDanmaku.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off chat danmaku'**
+  String get disableChatDanmaku;
+
+  /// No description provided for @enableChatDanmaku.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on chat danmaku'**
+  String get enableChatDanmaku;
 
   /// No description provided for @overlaySettings.
   ///
@@ -2124,11 +2148,17 @@ abstract class AppLocalizations {
   /// **'Subtitle settings'**
   String get subtitleSettings;
 
-  /// No description provided for @danmakuSettings.
+  /// No description provided for @videoDanmakuSettings.
   ///
   /// In en, this message translates to:
-  /// **'Danmaku settings'**
-  String get danmakuSettings;
+  /// **'Video danmaku settings'**
+  String get videoDanmakuSettings;
+
+  /// No description provided for @chatDanmakuSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat danmaku settings'**
+  String get chatDanmakuSettings;
 
   /// No description provided for @subtitleStyle.
   ///
@@ -2178,11 +2208,17 @@ abstract class AppLocalizations {
   /// **'Subtitle outline'**
   String get subtitleOutline;
 
-  /// No description provided for @danmakuStyle.
+  /// No description provided for @videoDanmakuStyle.
   ///
   /// In en, this message translates to:
-  /// **'Danmaku style'**
-  String get danmakuStyle;
+  /// **'Video danmaku style'**
+  String get videoDanmakuStyle;
+
+  /// No description provided for @chatDanmakuStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat danmaku style'**
+  String get chatDanmakuStyle;
 
   /// No description provided for @danmakuSize.
   ///

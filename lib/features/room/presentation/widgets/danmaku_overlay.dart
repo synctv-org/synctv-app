@@ -9,6 +9,7 @@ import 'dart:async';
 class DanmakuOverlay extends StatefulWidget {
   final VideoPlayerController? videoController;
   final List<local.DanmakuItem> danmakuList;
+  final local.DanmakuOrigin? origin;
   final bool isEnabled;
   final double? opacity;
   final DanmakuOption option;
@@ -17,6 +18,7 @@ class DanmakuOverlay extends StatefulWidget {
     super.key,
     required this.videoController,
     required this.danmakuList,
+    this.origin,
     this.isEnabled = true,
     this.opacity,
     this.option = const DanmakuOption(opacity: 0.8),
@@ -135,6 +137,10 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
     int addedCount = 0;
     for (int i = 0; i < widget.danmakuList.length; i++) {
       final danmaku = widget.danmakuList[i];
+
+      if (widget.origin != null && danmaku.origin != widget.origin) {
+        continue;
+      }
 
       // 如果这条弹幕已经处理过，跳过
       if (_processedDanmakuIndices.contains(i)) {

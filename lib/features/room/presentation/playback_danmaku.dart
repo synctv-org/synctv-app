@@ -128,6 +128,7 @@ DanmakuItem chatMessageToDanmaku(RoomChatMessageInfo message) {
     color: _parseDanmakuColor(message.color),
     type: DanmakuType.floating,
     fontSize: 24,
+    origin: DanmakuOrigin.chat,
   );
 }
 
