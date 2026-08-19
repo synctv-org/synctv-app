@@ -2427,8 +2427,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     final input = await _showEntryEditDialog(
       title: context.l10n.newPlaylist,
-      playlistBrowseAccessMode:
-          client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
+      playlistBrowseAccessMode: client_enum
+          .PlaylistBrowseAccessMode
+          .PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
     );
     if (input == null || input.name.isEmpty) return;
     try {
@@ -2439,7 +2440,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         description: input.description,
         browseAccessMode:
             input.playlistBrowseAccessMode ??
-            client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
+            client_enum
+                .PlaylistBrowseAccessMode
+                .PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
       );
       await _loadMediaLibrary();
       if (mounted) {
@@ -2556,7 +2559,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       initialName: entry.name,
       initialDescription: entry.description,
       playbackProxyPolicy: playbackProxyPolicy,
-      playlistBrowseAccessMode: entry.isPlaylist ? entry.browseAccessMode : null,
+      playlistBrowseAccessMode: entry.isPlaylist
+          ? entry.browseAccessMode
+          : null,
     );
     if (input == null || input.name.isEmpty) return;
     final playbackProxyMode = input.playbackProxyMode;
@@ -3506,16 +3511,20 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     context.l10n.playlistBrowseAccessModeDefault: client_enum
                         .PlaylistBrowseAccessMode
                         .PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
-                    context.l10n.playlistBrowseAccessModeRoomMembers: client_enum
-                        .PlaylistBrowseAccessMode
-                        .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
-                    context.l10n.playlistBrowseAccessModeCreatorOnly: client_enum
-                        .PlaylistBrowseAccessMode
-                        .PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY,
+                    context.l10n.playlistBrowseAccessModeRoomMembers:
+                        client_enum
+                            .PlaylistBrowseAccessMode
+                            .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
+                    context.l10n.playlistBrowseAccessModeCreatorOnly:
+                        client_enum
+                            .PlaylistBrowseAccessMode
+                            .PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY,
                   },
                   onChanged: (value) {
                     if (value != null) {
-                      setDialogState(() => selectedPlaylistBrowseAccessMode = value);
+                      setDialogState(
+                        () => selectedPlaylistBrowseAccessMode = value,
+                      );
                     }
                   },
                 ),

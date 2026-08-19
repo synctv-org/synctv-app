@@ -517,8 +517,9 @@ class RoomMediaEntry {
     this.itemCount = 0,
     this.availability =
         client.ResourceAvailability.RESOURCE_AVAILABILITY_UNSPECIFIED,
-    this.browseAccessMode =
-        client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
+    this.browseAccessMode = client_enum
+        .PlaylistBrowseAccessMode
+        .PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
     this.version = 0,
     this.headers = const {},
     this.isPlaylist = false,

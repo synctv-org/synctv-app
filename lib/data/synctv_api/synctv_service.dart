@@ -1062,8 +1062,9 @@ class SyncTvService {
     required String name,
     String parentId = '',
     String description = '',
-    client_enum.PlaylistBrowseAccessMode browseAccessMode =
-        client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
+    client_enum.PlaylistBrowseAccessMode browseAccessMode = client_enum
+        .PlaylistBrowseAccessMode
+        .PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
   }) async {
     return _domains.roomMedia.createPlaylist(
       roomId,
