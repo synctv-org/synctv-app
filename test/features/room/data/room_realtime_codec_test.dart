@@ -50,6 +50,30 @@ void main() {
     );
   });
 
+  test('empty playback state clears the authoritative playback source', () {
+    final encoded = client.ServerMessage(
+      resourceEvent: client.ResourceEvent(
+        observeId: 'playback_state',
+        playbackState: client.PlaybackState(
+          isPlaying: false,
+          position: 0,
+          speed: 1,
+          version: Int64(9),
+        ),
+      ),
+    ).writeToBuffer();
+
+    final decoded = RoomRealtimeCodec.decode(Uint8List.fromList(encoded));
+    final status = decoded.playbackStatus!;
+
+    expect(decoded.kind, RoomRealtimeMessageKind.status);
+    expect(status.entry, isNull);
+    expect(status.playingMediaId, isEmpty);
+    expect(status.playingPlaylistId, isEmpty);
+    expect(status.isPlaying, isFalse);
+    expect(status.version, 9);
+  });
+
   test('system chat messages use the product identity', () {
     expect(
       chatMessageDisplayUsername(

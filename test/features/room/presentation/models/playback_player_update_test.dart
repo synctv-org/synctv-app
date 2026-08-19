@@ -262,4 +262,24 @@ void main() {
       PlaybackPlayerUpdateAction.dispose,
     );
   });
+
+  test('an authoritative empty source disposes the active player', () {
+    final previous = RoomPlaybackEntry(
+      id: 'med_vod',
+      name: 'Video',
+      url: 'https://example.test/video.mp4',
+    );
+
+    expect(
+      playbackPlayerUpdateAction(
+        previous: previous,
+        next: null,
+        hasController: true,
+        controllerHasPlayed: true,
+        isDrainingEndedLiveStream: false,
+        samePlayerSource: false,
+      ),
+      PlaybackPlayerUpdateAction.dispose,
+    );
+  });
 }
