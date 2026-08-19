@@ -1651,6 +1651,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       updatedAt: playlist.updatedAt.toInt(),
       itemCount: playlist.itemCount,
       availability: playlist.availability,
+      browseAccessMode: playlist.browseAccessMode,
       version: playlist.version.toInt(),
       description: playlist.description,
       coverUrl: resolveResourceUrl(

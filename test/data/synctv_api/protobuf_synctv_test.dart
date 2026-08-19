@@ -3962,6 +3962,10 @@ void main() {
                       .ResourceAvailability
                       .RESOURCE_AVAILABILITY_AVAILABLE
                       .value,
+                  'browseAccessMode': client_enum
+                      .PlaylistBrowseAccessMode
+                      .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS
+                      .value,
                   'version': '92',
                 },
               ],
@@ -4007,6 +4011,10 @@ void main() {
         expect(
           page.playlists.single.availability,
           client.ResourceAvailability.RESOURCE_AVAILABILITY_AVAILABLE,
+        );
+        expect(
+          page.playlists.single.browseAccessMode,
+          client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
         );
         expect(page.playlists.single.version, 92);
         expect(requestedUri!.path, '/api/rooms/room_1/playlists');
@@ -6685,6 +6693,10 @@ void main() {
                   'folder': {'itemId': 'folder_1'},
                 },
               },
+              'browseAccessMode': client_enum
+                  .PlaylistBrowseAccessMode
+                  .PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY
+                  .value,
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -6698,6 +6710,8 @@ void main() {
         name: 'Season 1',
         parentId: 'pl_parent',
         providerInstanceName: 'emby_main',
+        browseAccessMode:
+            client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY,
         sourceConfig: source_config.PlaylistSourceConfig(
           emby: source_config.EmbyPlaylistSourceConfig(
             serverId: 'server_1',
@@ -6758,6 +6772,10 @@ void main() {
                       .value,
                 },
               },
+              'browseAccessMode': client_enum
+                  .PlaylistBrowseAccessMode
+                  .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS
+                  .value,
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -6778,6 +6796,8 @@ void main() {
                 source_config.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
           ),
         ),
+        browseAccessMode:
+            client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
       );
 
       expect(requestMethod, 'PATCH');
@@ -6795,6 +6815,10 @@ void main() {
         },
       });
       expect(body.containsKey('sourceProvider'), isFalse);
+      expect(
+        body['browseAccessMode'],
+        client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS.value,
+      );
     },
   );
 

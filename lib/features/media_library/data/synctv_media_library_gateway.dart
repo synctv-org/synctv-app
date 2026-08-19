@@ -87,11 +87,14 @@ final class SyncTvMediaLibraryGateway implements MediaLibraryGateway {
     required String name,
     String parentId = '',
     String description = '',
+    client.PlaylistBrowseAccessMode browseAccessMode =
+        client.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
   }) => SyncTvService.createPlaylist(
     roomId,
     name: name,
     parentId: parentId,
     description: description,
+    browseAccessMode: browseAccessMode,
   );
   @override
   Future<RoomPlaylistItem> updatePlaylist(
@@ -100,12 +103,14 @@ final class SyncTvMediaLibraryGateway implements MediaLibraryGateway {
     required String name,
     String? description,
     source.PlaylistSourceConfig? sourceConfig,
+    client.PlaylistBrowseAccessMode? browseAccessMode,
   }) => SyncTvService.updatePlaylist(
     roomId,
     playlistId,
     name: name,
     description: description,
     sourceConfig: sourceConfig,
+    browseAccessMode: browseAccessMode,
   );
   @override
   Future<RoomPlaylistItem> updatePlaylistCover(

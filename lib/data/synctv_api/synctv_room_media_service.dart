@@ -310,6 +310,8 @@ class SyncTvRoomMediaDomainService {
     required String name,
     String parentId = '',
     String description = '',
+    client_enum.PlaylistBrowseAccessMode browseAccessMode =
+        client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
   }) async {
     final response = await _api.room.createPlaylist(
       roomId,
@@ -317,6 +319,7 @@ class SyncTvRoomMediaDomainService {
         name: name,
         parentId: parentId,
         description: description,
+        browseAccessMode: browseAccessMode,
       ),
     );
     return _api.mapPlaylist(response);
@@ -329,6 +332,8 @@ class SyncTvRoomMediaDomainService {
     String parentId = '',
     String providerInstanceName = '',
     String description = '',
+    client_enum.PlaylistBrowseAccessMode browseAccessMode =
+        client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
   }) async {
     final provider = SourceConfigCodec.providerForPlaylistSourceConfig(
       sourceConfig,
@@ -342,6 +347,7 @@ class SyncTvRoomMediaDomainService {
         sourceConfig: sourceConfig,
         providerInstanceName: providerInstanceName,
         description: description,
+        browseAccessMode: browseAccessMode,
       ),
     );
     return _api.mapPlaylist(response);
@@ -353,6 +359,7 @@ class SyncTvRoomMediaDomainService {
     required String name,
     String? description,
     source_config.PlaylistSourceConfig? sourceConfig,
+    client_enum.PlaylistBrowseAccessMode? browseAccessMode,
   }) async {
     final response = await _api.room.updatePlaylist(
       roomId,
@@ -361,6 +368,7 @@ class SyncTvRoomMediaDomainService {
         name: name,
         description: description ?? '',
         sourceConfig: sourceConfig,
+        browseAccessMode: browseAccessMode,
       ),
     );
     return _api.mapPlaylist(response);

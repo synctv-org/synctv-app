@@ -1621,7 +1621,10 @@ class _RoomScreenState extends State<RoomScreen>
           !_isPrimaryObserveId(message.resourceObserveId)) {
         return;
       }
+      final error = message.error;
       if (message.resourceObserveId == 'playlist_items' && mounted) {
+        final shouldReturnFromPlaylist =
+            error?.isPermissionDenied == true && _playlistStack.isNotEmpty;
         _invalidateMediaLibraryRequests();
         setState(() {
           _mediaEntries = const [];
@@ -1634,9 +1637,18 @@ class _RoomScreenState extends State<RoomScreen>
           _selectedMediaEntryIds.clear();
           _selectedMediaEntries.clear();
           _isSelectionMode = false;
+          if (shouldReturnFromPlaylist) {
+            _playlistStack.removeLast();
+            _playlistNameStack.removeLast();
+            _mediaSearchController.clear();
+            _isLoadingMediaEntries = true;
+          }
         });
+
+        if (shouldReturnFromPlaylist) {
+          _observeCurrentPlaylist();
+        }
       }
-      final error = message.error;
       if (error != null && error.clientOperationId.isNotEmpty) {
         final voiceChatManager = _voiceChatManager;
         if (voiceChatManager != null) {
@@ -1653,7 +1665,9 @@ class _RoomScreenState extends State<RoomScreen>
       if (errorMsg.isNotEmpty && mounted) {
         AppNotifications.showError(
           context,
-          context.l10n.errorMessage(errorMsg),
+          message.isPlaylistBrowseAccessDenied
+              ? context.l10n.playlistBrowseAccessDenied
+              : context.l10n.errorMessage(errorMsg),
         );
       }
     } else if (type == RoomRealtimeMessageKind.expired) {

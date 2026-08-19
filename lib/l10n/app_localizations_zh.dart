@@ -3153,6 +3153,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playlistSubscribeFailed => '播放列表订阅失败';
 
   @override
+  String get playlistBrowseAccessDenied => '你没有权限浏览此播放列表';
+
+  @override
   String get switchedAndPlaying => '已切换并播放';
 
   @override
@@ -4427,6 +4430,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get editPlaylist => '编辑播放列表';
+
+  @override
+  String get playlistBrowseAccess => '浏览权限';
+
+  @override
+  String get playlistBrowseAccessDescription =>
+      '默认情况下，静态播放列表允许房间成员浏览，动态播放列表仅允许创建者浏览。';
+
+  @override
+  String get playlistBrowseAccessModeDefault => '默认';
+
+  @override
+  String get playlistBrowseAccessModeRoomMembers => '房间成员';
+
+  @override
+  String get playlistBrowseAccessModeCreatorOnly => '仅创建者';
 
   @override
   String get editMedia => '编辑媒体';

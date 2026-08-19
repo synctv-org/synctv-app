@@ -3361,6 +3361,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistSubscribeFailed => 'Could not subscribe to the playlist';
 
   @override
+  String get playlistBrowseAccessDenied =>
+      'You do not have permission to browse this playlist';
+
+  @override
   String get switchedAndPlaying => 'Switched and started playback';
 
   @override
@@ -4713,6 +4717,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editPlaylist => 'Edit playlist';
+
+  @override
+  String get playlistBrowseAccess => 'Browse access';
+
+  @override
+  String get playlistBrowseAccessDescription =>
+      'Default allows room members to browse static playlists and limits dynamic playlists to their creator.';
+
+  @override
+  String get playlistBrowseAccessModeDefault => 'Default';
+
+  @override
+  String get playlistBrowseAccessModeRoomMembers => 'Room members';
+
+  @override
+  String get playlistBrowseAccessModeCreatorOnly => 'Creator only';
 
   @override
   String get editMedia => 'Edit media';

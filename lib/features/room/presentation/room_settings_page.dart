@@ -2425,7 +2425,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       AppNotifications.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
-    final input = await _showEntryEditDialog(title: context.l10n.newPlaylist);
+    final input = await _showEntryEditDialog(
+      title: context.l10n.newPlaylist,
+      playlistBrowseAccessMode:
+          client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
+    );
     if (input == null || input.name.isEmpty) return;
     try {
       await _mediaLibraryGateway.createPlaylist(
@@ -2433,6 +2437,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         name: input.name,
         parentId: _currentPlaylistId,
         description: input.description,
+        browseAccessMode:
+            input.playlistBrowseAccessMode ??
+            client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
       );
       await _loadMediaLibrary();
       if (mounted) {
@@ -2549,15 +2556,20 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       initialName: entry.name,
       initialDescription: entry.description,
       playbackProxyPolicy: playbackProxyPolicy,
+      playlistBrowseAccessMode: entry.isPlaylist ? entry.browseAccessMode : null,
     );
     if (input == null || input.name.isEmpty) return;
     final playbackProxyMode = input.playbackProxyMode;
     final playbackProxyModeChanged =
         playbackProxyMode != null &&
         playbackProxyMode != playbackProxyPolicy?.currentMode;
+    final playlistBrowseAccessModeChanged =
+        input.playlistBrowseAccessMode != null &&
+        input.playlistBrowseAccessMode != entry.browseAccessMode;
     if (input.name == entry.name &&
         input.description == entry.description &&
-        !playbackProxyModeChanged) {
+        !playbackProxyModeChanged &&
+        !playlistBrowseAccessModeChanged) {
       return;
     }
     try {
@@ -2567,6 +2579,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           entry.id,
           name: input.name,
           description: input.description,
+          browseAccessMode: playlistBrowseAccessModeChanged
+              ? input.playlistBrowseAccessMode
+              : null,
           sourceConfig: playbackProxyModeChanged && playlistSourceConfig != null
               ? provider_common.DiscoveredSource(
                   playlist: playlistSourceConfig,
@@ -2589,7 +2604,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       if (mounted) {
         AppNotifications.showSuccess(
           context,
-          playbackProxyModeChanged
+          playbackProxyModeChanged || playlistBrowseAccessModeChanged
               ? context.l10n.settingsUpdated
               : context.l10n.nameUpdated,
         );
@@ -3430,12 +3445,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     String initialName = '',
     String initialDescription = '',
     provider_common.PlaybackProxyPolicy? playbackProxyPolicy,
+    client_enum.PlaylistBrowseAccessMode? playlistBrowseAccessMode,
   }) {
     final nameController = TextEditingController(text: initialName);
     final descriptionController = TextEditingController(
       text: initialDescription,
     );
     var playbackProxyMode = playbackProxyPolicy?.currentMode;
+    var selectedPlaylistBrowseAccessMode = playlistBrowseAccessMode;
     return AppDialogs.showStyledDialog<_EntryEditResult>(
       context: context,
       title: title,
@@ -3457,6 +3474,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       nameController.text.trim(),
                       descriptionController.text.trim(),
                       playbackProxyMode,
+                      selectedPlaylistBrowseAccessMode,
                     ),
                   );
                 },
@@ -3477,6 +3495,31 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       setDialogState(() => playbackProxyMode = value),
                 ),
               ],
+              if (selectedPlaylistBrowseAccessMode != null) ...[
+                const SizedBox(height: 16),
+                AppSelect<client_enum.PlaylistBrowseAccessMode>(
+                  value: selectedPlaylistBrowseAccessMode,
+                  label: context.l10n.playlistBrowseAccess,
+                  description: context.l10n.playlistBrowseAccessDescription,
+                  prefixIcon: Icons.visibility_outlined,
+                  options: {
+                    context.l10n.playlistBrowseAccessModeDefault: client_enum
+                        .PlaylistBrowseAccessMode
+                        .PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
+                    context.l10n.playlistBrowseAccessModeRoomMembers: client_enum
+                        .PlaylistBrowseAccessMode
+                        .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
+                    context.l10n.playlistBrowseAccessModeCreatorOnly: client_enum
+                        .PlaylistBrowseAccessMode
+                        .PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY,
+                  },
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => selectedPlaylistBrowseAccessMode = value);
+                    }
+                  },
+                ),
+              ],
             ],
           ),
         ),
@@ -3491,6 +3534,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               nameController.text.trim(),
               descriptionController.text.trim(),
               playbackProxyMode,
+              selectedPlaylistBrowseAccessMode,
             ),
           ),
           text: context.l10n.save,
@@ -7573,8 +7617,14 @@ class _EntryEditResult {
   final String name;
   final String description;
   final source_enum.PlaybackProxyMode? playbackProxyMode;
+  final client_enum.PlaylistBrowseAccessMode? playlistBrowseAccessMode;
 
-  const _EntryEditResult(this.name, this.description, [this.playbackProxyMode]);
+  const _EntryEditResult(
+    this.name,
+    this.description, [
+    this.playbackProxyMode,
+    this.playlistBrowseAccessMode,
+  ]);
 }
 
 class _MediaMoveTarget {

@@ -105,6 +105,32 @@ class PlaybackChangeReason extends $pb.ProtobufEnum {
   const PlaybackChangeReason._(super.value, super.name);
 }
 
+class PlaylistBrowseAccessMode extends $pb.ProtobufEnum {
+  static const PlaylistBrowseAccessMode PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT =
+      PlaylistBrowseAccessMode._(
+          0, _omitEnumNames ? '' : 'PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT');
+  static const PlaylistBrowseAccessMode
+      PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS = PlaylistBrowseAccessMode._(
+          1, _omitEnumNames ? '' : 'PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS');
+  static const PlaylistBrowseAccessMode
+      PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY = PlaylistBrowseAccessMode._(
+          2, _omitEnumNames ? '' : 'PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY');
+
+  static const $core.List<PlaylistBrowseAccessMode> values =
+      <PlaylistBrowseAccessMode>[
+    PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
+    PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
+    PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY,
+  ];
+
+  static final $core.List<PlaylistBrowseAccessMode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static PlaylistBrowseAccessMode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaylistBrowseAccessMode._(super.value, super.name);
+}
+
 class ResourceAvailability extends $pb.ProtobufEnum {
   static const ResourceAvailability RESOURCE_AVAILABILITY_UNSPECIFIED =
       ResourceAvailability._(

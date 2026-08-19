@@ -1,5 +1,7 @@
 import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
@@ -472,6 +474,7 @@ class RoomMediaEntry {
   final int updatedAt;
   final int itemCount;
   final client.ResourceAvailability availability;
+  final client_enum.PlaylistBrowseAccessMode browseAccessMode;
   final int version;
   final Map<String, String> headers;
   final bool isPlaylist;
@@ -514,6 +517,8 @@ class RoomMediaEntry {
     this.itemCount = 0,
     this.availability =
         client.ResourceAvailability.RESOURCE_AVAILABILITY_UNSPECIFIED,
+    this.browseAccessMode =
+        client_enum.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
     this.version = 0,
     this.headers = const {},
     this.isPlaylist = false,
@@ -719,6 +724,7 @@ class RoomMediaEntry {
     int? updatedAt,
     int? itemCount,
     client.ResourceAvailability? availability,
+    client_enum.PlaylistBrowseAccessMode? browseAccessMode,
     int? version,
     Map<String, String>? headers,
     bool? isPlaylist,
@@ -763,6 +769,7 @@ class RoomMediaEntry {
       updatedAt: updatedAt ?? this.updatedAt,
       itemCount: itemCount ?? this.itemCount,
       availability: availability ?? this.availability,
+      browseAccessMode: browseAccessMode ?? this.browseAccessMode,
       version: version ?? this.version,
       headers: headers ?? this.headers,
       isPlaylist: isPlaylist ?? this.isPlaylist,
@@ -1082,6 +1089,7 @@ class RoomMediaItem extends RoomMediaEntry {
     super.position,
     super.addedAt,
     super.availability,
+    super.browseAccessMode,
     super.version,
     super.headers,
     super.sourceProvider,
@@ -1107,6 +1115,7 @@ class RoomPlaylistItem extends RoomMediaEntry {
     super.updatedAt,
     super.itemCount,
     super.availability,
+    super.browseAccessMode,
     super.version,
     super.description,
     super.coverUrl,

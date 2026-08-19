@@ -4559,6 +4559,7 @@ class Playlist extends $pb.GeneratedMessage {
     ResourceCover? cover,
     $core.String? creatorId,
     ResourceMetadata? metadata,
+    PlaylistBrowseAccessMode? browseAccessMode,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -4580,6 +4581,7 @@ class Playlist extends $pb.GeneratedMessage {
     if (cover != null) result.cover = cover;
     if (creatorId != null) result.creatorId = creatorId;
     if (metadata != null) result.metadata = metadata;
+    if (browseAccessMode != null) result.browseAccessMode = browseAccessMode;
     return result;
   }
 
@@ -4619,6 +4621,9 @@ class Playlist extends $pb.GeneratedMessage {
     ..aOS(17, _omitFieldNames ? '' : 'creatorId')
     ..aOM<ResourceMetadata>(18, _omitFieldNames ? '' : 'metadata',
         subBuilder: ResourceMetadata.create)
+    ..aE<PlaylistBrowseAccessMode>(
+        19, _omitFieldNames ? '' : 'browseAccessMode',
+        enumValues: PlaylistBrowseAccessMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4806,6 +4811,15 @@ class Playlist extends $pb.GeneratedMessage {
   void clearMetadata() => $_clearField(18);
   @$pb.TagNumber(18)
   ResourceMetadata ensureMetadata() => $_ensure(17);
+
+  @$pb.TagNumber(19)
+  PlaylistBrowseAccessMode get browseAccessMode => $_getN(18);
+  @$pb.TagNumber(19)
+  set browseAccessMode(PlaylistBrowseAccessMode value) => $_setField(19, value);
+  @$pb.TagNumber(19)
+  $core.bool hasBrowseAccessMode() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearBrowseAccessMode() => $_clearField(19);
 }
 
 class ResourceCover extends $pb.GeneratedMessage {
@@ -15024,6 +15038,7 @@ class CreatePlaylistRequest extends $pb.GeneratedMessage {
     $1.PlaylistSourceConfig? sourceConfig,
     $core.String? providerInstanceName,
     $core.String? description,
+    PlaylistBrowseAccessMode? browseAccessMode,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -15033,6 +15048,7 @@ class CreatePlaylistRequest extends $pb.GeneratedMessage {
     if (providerInstanceName != null)
       result.providerInstanceName = providerInstanceName;
     if (description != null) result.description = description;
+    if (browseAccessMode != null) result.browseAccessMode = browseAccessMode;
     return result;
   }
 
@@ -15057,6 +15073,8 @@ class CreatePlaylistRequest extends $pb.GeneratedMessage {
         subBuilder: $1.PlaylistSourceConfig.create)
     ..aOS(5, _omitFieldNames ? '' : 'providerInstanceName')
     ..aOS(6, _omitFieldNames ? '' : 'description')
+    ..aE<PlaylistBrowseAccessMode>(7, _omitFieldNames ? '' : 'browseAccessMode',
+        enumValues: PlaylistBrowseAccessMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -15134,6 +15152,15 @@ class CreatePlaylistRequest extends $pb.GeneratedMessage {
   $core.bool hasDescription() => $_has(5);
   @$pb.TagNumber(6)
   void clearDescription() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  PlaylistBrowseAccessMode get browseAccessMode => $_getN(6);
+  @$pb.TagNumber(7)
+  set browseAccessMode(PlaylistBrowseAccessMode value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasBrowseAccessMode() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearBrowseAccessMode() => $_clearField(7);
 }
 
 class UpdatePlaylistRequest extends $pb.GeneratedMessage {
@@ -15142,12 +15169,14 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? description,
     $1.PlaylistSourceConfig? sourceConfig,
+    PlaylistBrowseAccessMode? browseAccessMode,
   }) {
     final result = create();
     if (playlistId != null) result.playlistId = playlistId;
     if (name != null) result.name = name;
     if (description != null) result.description = description;
     if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (browseAccessMode != null) result.browseAccessMode = browseAccessMode;
     return result;
   }
 
@@ -15169,6 +15198,8 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'description')
     ..aOM<$1.PlaylistSourceConfig>(4, _omitFieldNames ? '' : 'sourceConfig',
         subBuilder: $1.PlaylistSourceConfig.create)
+    ..aE<PlaylistBrowseAccessMode>(6, _omitFieldNames ? '' : 'browseAccessMode',
+        enumValues: PlaylistBrowseAccessMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -15230,6 +15261,15 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
   void clearSourceConfig() => $_clearField(4);
   @$pb.TagNumber(4)
   $1.PlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
+
+  @$pb.TagNumber(6)
+  PlaylistBrowseAccessMode get browseAccessMode => $_getN(4);
+  @$pb.TagNumber(6)
+  set browseAccessMode(PlaylistBrowseAccessMode value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasBrowseAccessMode() => $_has(4);
+  @$pb.TagNumber(6)
+  void clearBrowseAccessMode() => $_clearField(6);
 }
 
 enum MovePlaylistRequest_Anchor { beforePlaylistId, afterPlaylistId, notSet }

@@ -5844,6 +5844,12 @@ abstract class AppLocalizations {
   /// **'Could not subscribe to the playlist'**
   String get playlistSubscribeFailed;
 
+  /// No description provided for @playlistBrowseAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have permission to browse this playlist'**
+  String get playlistBrowseAccessDenied;
+
   /// No description provided for @switchedAndPlaying.
   ///
   /// In en, this message translates to:
@@ -8045,6 +8051,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit playlist'**
   String get editPlaylist;
+
+  /// No description provided for @playlistBrowseAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse access'**
+  String get playlistBrowseAccess;
+
+  /// No description provided for @playlistBrowseAccessDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Default allows room members to browse static playlists and limits dynamic playlists to their creator.'**
+  String get playlistBrowseAccessDescription;
+
+  /// No description provided for @playlistBrowseAccessModeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get playlistBrowseAccessModeDefault;
+
+  /// No description provided for @playlistBrowseAccessModeRoomMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Room members'**
+  String get playlistBrowseAccessModeRoomMembers;
+
+  /// No description provided for @playlistBrowseAccessModeCreatorOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator only'**
+  String get playlistBrowseAccessModeCreatorOnly;
 
   /// No description provided for @editMedia.
   ///

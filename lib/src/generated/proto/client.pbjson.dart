@@ -78,6 +78,22 @@ final $typed_data.Uint8List playbackChangeReasonDescriptor = $convert.base64Deco
     'MQAxIoCiRQTEFZQkFDS19DSEFOR0VfUkVBU09OX0hJU1RPUllfRU5UUlkQBBInCiNQTEFZQkFD'
     'S19DSEFOR0VfUkVBU09OX0FVVE9fQURWQU5DRRAF');
 
+@$core.Deprecated('Use playlistBrowseAccessModeDescriptor instead')
+const PlaylistBrowseAccessMode$json = {
+  '1': 'PlaylistBrowseAccessMode',
+  '2': [
+    {'1': 'PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT', '2': 0},
+    {'1': 'PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS', '2': 1},
+    {'1': 'PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY', '2': 2},
+  ],
+};
+
+/// Descriptor for `PlaylistBrowseAccessMode`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playlistBrowseAccessModeDescriptor = $convert.base64Decode(
+    'ChhQbGF5bGlzdEJyb3dzZUFjY2Vzc01vZGUSJwojUExBWUxJU1RfQlJPV1NFX0FDQ0VTU19NT0'
+    'RFX0RFRkFVTFQQABIsCihQTEFZTElTVF9CUk9XU0VfQUNDRVNTX01PREVfUk9PTV9NRU1CRVJT'
+    'EAESLAooUExBWUxJU1RfQlJPV1NFX0FDQ0VTU19NT0RFX0NSRUFUT1JfT05MWRAC');
+
 @$core.Deprecated('Use resourceAvailabilityDescriptor instead')
 const ResourceAvailability$json = {
   '1': 'ResourceAvailability',
@@ -2541,6 +2557,14 @@ const Playlist$json = {
       '6': '.synctv.client.ResourceMetadata',
       '10': 'metadata'
     },
+    {
+      '1': 'browse_access_mode',
+      '3': 19,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaylistBrowseAccessMode',
+      '10': 'browseAccessMode'
+    },
   ],
 };
 
@@ -2559,7 +2583,8 @@ final $typed_data.Uint8List playlistDescriptor = $convert.base64Decode(
     'c3RhbmNlTmFtZRIgCgtkZXNjcmlwdGlvbhgPIAEoCVILZGVzY3JpcHRpb24SMgoFY292ZXIYEC'
     'ABKAsyHC5zeW5jdHYuY2xpZW50LlJlc291cmNlQ292ZXJSBWNvdmVyEh0KCmNyZWF0b3JfaWQY'
     'ESABKAlSCWNyZWF0b3JJZBI7CghtZXRhZGF0YRgSIAEoCzIfLnN5bmN0di5jbGllbnQuUmVzb3'
-    'VyY2VNZXRhZGF0YVIIbWV0YWRhdGE=');
+    'VyY2VNZXRhZGF0YVIIbWV0YWRhdGESVQoSYnJvd3NlX2FjY2Vzc19tb2RlGBMgASgOMicuc3lu'
+    'Y3R2LmNsaWVudC5QbGF5bGlzdEJyb3dzZUFjY2Vzc01vZGVSEGJyb3dzZUFjY2Vzc01vZGU=');
 
 @$core.Deprecated('Use resourceCoverDescriptor instead')
 const ResourceCover$json = {
@@ -5990,6 +6015,15 @@ const CreatePlaylistRequest$json = {
       '10': 'providerInstanceName'
     },
     {'1': 'description', '3': 6, '4': 1, '5': 9, '8': {}, '10': 'description'},
+    {
+      '1': 'browse_access_mode',
+      '3': 7,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaylistBrowseAccessMode',
+      '8': {},
+      '10': 'browseAccessMode'
+    },
   ],
   '7': {},
 };
@@ -6002,17 +6036,19 @@ final $typed_data.Uint8List createPlaylistRequestDescriptor = $convert.base64Dec
     'ZpZGVyEk8KDXNvdXJjZV9jb25maWcYBCABKAsyKi5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5'
     'bGlzdFNvdXJjZUNvbmZpZ1IMc291cmNlQ29uZmlnElIKFnByb3ZpZGVyX2luc3RhbmNlX25hbW'
     'UYBSABKAlCHLpIGXIUGEAyEF5bQS1aYS16MC05Xy1dKyTYAQFSFHByb3ZpZGVySW5zdGFuY2VO'
-    'YW1lEioKC2Rlc2NyaXB0aW9uGAYgASgJQgi6SAVyAxiIJ1ILZGVzY3JpcHRpb246pAS6SKAEGo'
-    'sBCiBwbGF5bGlzdC5keW5hbWljLnJlcXVpcmVzX2ZpZWxkcxIxZHluYW1pYyBwbGF5bGlzdHMg'
-    'cmVxdWlyZSBub24tZW1wdHkgc291cmNlX2NvbmZpZxo0dGhpcy5zb3VyY2VfcHJvdmlkZXIgPT'
-    '0gMCB8fCBoYXModGhpcy5zb3VyY2VfY29uZmlnKRrXAQomcGxheWxpc3Quc3RhdGljLnJlamVj'
-    'dHNfZHluYW1pY19maWVsZHMST3NvdXJjZV9wcm92aWRlciBpcyByZXF1aXJlZCB3aGVuIHNvdX'
-    'JjZV9jb25maWcgb3IgcHJvdmlkZXJfaW5zdGFuY2VfbmFtZSBpcyBzZXQaXHRoaXMuc291cmNl'
-    'X3Byb3ZpZGVyICE9IDAgfHwgKCFoYXModGhpcy5zb3VyY2VfY29uZmlnKSAmJiB0aGlzLnByb3'
-    'ZpZGVyX2luc3RhbmNlX25hbWUgPT0gJycpGrUBChlwbGF5bGlzdC5wYXJlbnRfaWQuZm9ybWF0'
-    'EjNwYXJlbnRfaWQgbXVzdCBiZSBhIHB1YmxpYyBpZGVudGlmaWVyIHdoZW4gcHJvdmlkZWQaY3'
-    'RoaXMucGFyZW50X2lkID09ICcnIHx8IChzaXplKHRoaXMucGFyZW50X2lkKSA8PSA2NCAmJiB0'
-    'aGlzLnBhcmVudF9pZC5tYXRjaGVzKCdecGxfW0EtWmEtejAtOV0rJCcpKQ==');
+    'YW1lEioKC2Rlc2NyaXB0aW9uGAYgASgJQgi6SAVyAxiIJ1ILZGVzY3JpcHRpb24SXwoSYnJvd3'
+    'NlX2FjY2Vzc19tb2RlGAcgASgOMicuc3luY3R2LmNsaWVudC5QbGF5bGlzdEJyb3dzZUFjY2Vz'
+    'c01vZGVCCLpIBYIBAhABUhBicm93c2VBY2Nlc3NNb2RlOqQEukigBBqLAQogcGxheWxpc3QuZH'
+    'luYW1pYy5yZXF1aXJlc19maWVsZHMSMWR5bmFtaWMgcGxheWxpc3RzIHJlcXVpcmUgbm9uLWVt'
+    'cHR5IHNvdXJjZV9jb25maWcaNHRoaXMuc291cmNlX3Byb3ZpZGVyID09IDAgfHwgaGFzKHRoaX'
+    'Muc291cmNlX2NvbmZpZyka1wEKJnBsYXlsaXN0LnN0YXRpYy5yZWplY3RzX2R5bmFtaWNfZmll'
+    'bGRzEk9zb3VyY2VfcHJvdmlkZXIgaXMgcmVxdWlyZWQgd2hlbiBzb3VyY2VfY29uZmlnIG9yIH'
+    'Byb3ZpZGVyX2luc3RhbmNlX25hbWUgaXMgc2V0Glx0aGlzLnNvdXJjZV9wcm92aWRlciAhPSAw'
+    'IHx8ICghaGFzKHRoaXMuc291cmNlX2NvbmZpZykgJiYgdGhpcy5wcm92aWRlcl9pbnN0YW5jZV'
+    '9uYW1lID09ICcnKRq1AQoZcGxheWxpc3QucGFyZW50X2lkLmZvcm1hdBIzcGFyZW50X2lkIG11'
+    'c3QgYmUgYSBwdWJsaWMgaWRlbnRpZmllciB3aGVuIHByb3ZpZGVkGmN0aGlzLnBhcmVudF9pZC'
+    'A9PSAnJyB8fCAoc2l6ZSh0aGlzLnBhcmVudF9pZCkgPD0gNjQgJiYgdGhpcy5wYXJlbnRfaWQu'
+    'bWF0Y2hlcygnXnBsX1tBLVphLXowLTldKyQnKSk=');
 
 @$core.Deprecated('Use updatePlaylistRequestDescriptor instead')
 const UpdatePlaylistRequest$json = {
@@ -6031,9 +6067,21 @@ const UpdatePlaylistRequest$json = {
       '10': 'sourceConfig',
       '17': true
     },
+    {
+      '1': 'browse_access_mode',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaylistBrowseAccessMode',
+      '8': {},
+      '9': 1,
+      '10': 'browseAccessMode',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_source_config'},
+    {'1': '_browse_access_mode'},
   ],
 };
 
@@ -6043,7 +6091,10 @@ final $typed_data.Uint8List updatePlaylistRequestDescriptor = $convert.base64Dec
     'IRXnBsX1tBLVphLXowLTldKyRSCnBsYXlsaXN0SWQSHwoEbmFtZRgCIAEoCUILukgIcgMY/wHY'
     'AQFSBG5hbWUSKgoLZGVzY3JpcHRpb24YAyABKAlCCLpIBXIDGIgnUgtkZXNjcmlwdGlvbhJUCg'
     '1zb3VyY2VfY29uZmlnGAQgASgLMiouc3luY3R2LnNvdXJjZV9jb25maWcuUGxheWxpc3RTb3Vy'
-    'Y2VDb25maWdIAFIMc291cmNlQ29uZmlniAEBQhAKDl9zb3VyY2VfY29uZmln');
+    'Y2VDb25maWdIAFIMc291cmNlQ29uZmlniAEBEmQKEmJyb3dzZV9hY2Nlc3NfbW9kZRgGIAEoDj'
+    'InLnN5bmN0di5jbGllbnQuUGxheWxpc3RCcm93c2VBY2Nlc3NNb2RlQgi6SAWCAQIQAUgBUhBi'
+    'cm93c2VBY2Nlc3NNb2RliAEBQhAKDl9zb3VyY2VfY29uZmlnQhUKE19icm93c2VfYWNjZXNzX2'
+    '1vZGU=');
 
 @$core.Deprecated('Use movePlaylistRequestDescriptor instead')
 const MovePlaylistRequest$json = {

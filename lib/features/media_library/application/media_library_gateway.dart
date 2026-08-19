@@ -51,6 +51,8 @@ abstract interface class MediaLibraryGateway {
     required String name,
     String parentId = '',
     String description = '',
+    client.PlaylistBrowseAccessMode browseAccessMode =
+        client.PlaylistBrowseAccessMode.PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
   });
   Future<RoomPlaylistItem> updatePlaylist(
     String roomId,
@@ -58,6 +60,7 @@ abstract interface class MediaLibraryGateway {
     required String name,
     String? description,
     source.PlaylistSourceConfig? sourceConfig,
+    client.PlaylistBrowseAccessMode? browseAccessMode,
   });
   Future<RoomPlaylistItem> updatePlaylistCover(
     String roomId,

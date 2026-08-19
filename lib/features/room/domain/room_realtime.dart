@@ -68,6 +68,8 @@ class RoomRealtimeError {
   final String clientOperationId;
 
   bool get isConflict => code == 2003;
+
+  bool get isPermissionDenied => code == 4000;
 }
 
 class RoomRealtimeOnlineEvent {
@@ -358,6 +360,10 @@ class RoomRealtimeMessage {
       chatEdited || chatEventKind == RoomRealtimeChatEventKind.edited;
   bool get isChatDeleted =>
       chatDeleted || chatEventKind == RoomRealtimeChatEventKind.deleted;
+
+  bool get isPlaylistBrowseAccessDenied =>
+      resourceObserveId == 'playlist_items' &&
+      error?.isPermissionDenied == true;
 }
 
 class RoomRealtimeSession {
