@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/presentation/models/playlist_selection_policy.dart';
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
 
 void main() {
   testWidgets('selection works without exposing delete permission', (
@@ -89,6 +91,32 @@ void main() {
     expect(find.text('Selected 1'), findsOneWidget);
     expect(find.byKey(const Key('delete-selection')), findsNothing);
   });
+
+  testWidgets('activation respects lifecycle and playlist browse access', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: _SelectionHarness(canDeleteMedia: false, canClearMedia: false),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('entry-shared-dynamic-playlist')));
+    await tester.pump();
+    expect(find.text('Activated shared-dynamic-playlist'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('entry-unavailable-media')));
+    await tester.pump();
+    expect(find.text('Activated shared-dynamic-playlist'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('entry-creator-only-playlist')));
+    await tester.pump();
+    expect(find.text('Activated shared-dynamic-playlist'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('entry-opaque-media-a')));
+    await tester.pump();
+    expect(find.text('Activated opaque-media-a'), findsOneWidget);
+  });
 }
 
 class _SelectionHarness extends StatefulWidget {
@@ -117,6 +145,7 @@ class _SelectionHarnessState extends State<_SelectionHarness> {
     RoomPlaylistItem(
       id: 'opaque-dynamic-playlist',
       name: 'Dynamic playlist',
+      creator: 'usr_viewer',
       metadata: const {'isDynamic': true},
     ),
     RoomDynamicMediaEntry(
@@ -126,15 +155,40 @@ class _SelectionHarnessState extends State<_SelectionHarness> {
       subPath: '/child',
       isPlaylist: false,
     ),
+    RoomPlaylistItem(
+      id: 'shared-dynamic-playlist',
+      name: 'Shared dynamic playlist',
+      creator: 'usr_creator',
+      browseAccessMode: client_enum
+          .PlaylistBrowseAccessMode
+          .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
+      metadata: const {'isDynamic': true},
+    ),
+    RoomPlaylistItem(
+      id: 'creator-only-playlist',
+      name: 'Creator-only playlist',
+      creator: 'usr_creator',
+      metadata: const {'isDynamic': true},
+    ),
+    RoomMediaItem(
+      id: 'unavailable-media',
+      name: 'Unavailable media',
+      url: 'https://example.test/unavailable.mp4',
+      availability: client_enum
+          .ResourceAvailability
+          .RESOURCE_AVAILABILITY_CREATOR_INACTIVE,
+    ),
   ];
 
   final selectedIds = <String>{};
   bool selectionMode = false;
+  String activatedId = '';
 
   void _apply(RoomMediaEntry entry, PlaylistEntryGestureIntent intent) {
     setState(() {
       switch (intent) {
         case PlaylistEntryGestureIntent.activate:
+          activatedId = entry.id;
           return;
         case PlaylistEntryGestureIntent.enterSelection:
           selectionMode = true;
@@ -156,6 +210,7 @@ class _SelectionHarnessState extends State<_SelectionHarness> {
       body: Column(
         children: [
           Text('Selected ${selectedIds.length}'),
+          Text('Activated $activatedId'),
           if (selectionMode && widget.canDeleteMedia && !widget.readOnlyScope)
             const Icon(Icons.delete_outline, key: Key('delete-selection')),
           if (widget.canClearMedia)
@@ -167,10 +222,15 @@ class _SelectionHarnessState extends State<_SelectionHarness> {
   }
 
   Widget _buildEntry(RoomMediaEntry entry) {
+    final canActivate = PlaylistSelectionPolicy.canActivate(
+      entry: entry,
+      viewerId: 'usr_viewer',
+      canControlPlayback: true,
+    );
     final tapIntent = PlaylistSelectionPolicy.tapIntent(
       entry: entry,
       selectionMode: selectionMode,
-      canActivate: true,
+      canActivate: canActivate,
     );
     final longPressIntent = PlaylistSelectionPolicy.longPressIntent(
       entry: entry,

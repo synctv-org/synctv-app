@@ -45,6 +45,7 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
 import 'package:synctv_app/features/room/presentation/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/features/room/presentation/widgets/free_mode_settings_fields.dart';
+import 'package:synctv_app/features/room/presentation/models/playlist_selection_policy.dart';
 import 'package:synctv_app/features/media_p2p/presentation/p2p_media_settings_fields.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_history_list.dart';
 import 'package:synctv_app/features/room/presentation/widgets/realtime_event_log_view.dart';
@@ -1775,17 +1776,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       _mediaTarget.isEmpty && !_isInsideDynamicMediaPlaylist;
 
   bool _canOpenMediaEntry(RoomMediaEntry entry) {
-    if (!entry.isPlaylist) return false;
-    final isPersistedPlaylist = entry.id.startsWith('pl_');
-    if (isPersistedPlaylist && entry.isDynamicPlaylist) {
-      return entry.creator.isNotEmpty && entry.creator == _currentUserId;
-    }
-    return true;
+    return PlaylistSelectionPolicy.canActivate(
+      entry: entry,
+      viewerId: _currentUserId,
+      canControlPlayback: false,
+    );
   }
 
   Future<void> _openMediaEntry(RoomMediaEntry entry) async {
     if (!_canOpenMediaEntry(entry)) {
-      if (entry.isDynamicPlaylist) {
+      if (!entry.isAvailable) {
+        AppNotifications.showError(context, context.l10n.creatorUnavailable);
+      } else if (entry.isPlaylist) {
         AppNotifications.showError(
           context,
           context.l10n.dynamicPlaylistCreatorOnly,
@@ -6646,7 +6648,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       final mode = entry.metadata['isDynamic'] == true
           ? context.l10n.dynamicPlaylist
           : context.l10n.playlist;
-      if (entry.isDynamicPlaylist && !_canOpenMediaEntry(entry)) {
+      if (!entry.isAvailable) {
+        return '$mode · ${context.l10n.creatorUnavailable}';
+      }
+      if (!_canOpenMediaEntry(entry)) {
         return context.l10n.creatorOnlyMode(mode);
       }
       final provider = SourceConfigCodec.providerToString(entry.sourceProvider);
@@ -6654,7 +6659,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     if (entry.id.startsWith('med_')) {
       final provider = SourceConfigCodec.providerToString(entry.sourceProvider);
-      return '$provider · ${entry.providerInstanceName.isEmpty ? 'default' : entry.providerInstanceName}';
+      final details =
+          '$provider · ${entry.providerInstanceName.isEmpty ? 'default' : entry.providerInstanceName}';
+      return entry.isAvailable
+          ? details
+          : '$details · ${context.l10n.creatorUnavailable}';
     }
     final size = entry.metadata['size'];
     return entry.isPlaylist

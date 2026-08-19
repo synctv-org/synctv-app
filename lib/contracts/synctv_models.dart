@@ -598,6 +598,41 @@ class RoomMediaEntry {
 
   bool get isProviderDynamicEntry => isDynamicPlaylist || isProviderDynamicItem;
 
+  bool get isAvailable =>
+      availability !=
+      client.ResourceAvailability.RESOURCE_AVAILABILITY_CREATOR_INACTIVE;
+
+  client_enum.PlaylistBrowseAccessMode get effectiveBrowseAccessMode {
+    if (browseAccessMode !=
+        client_enum
+            .PlaylistBrowseAccessMode
+            .PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT) {
+      return browseAccessMode;
+    }
+    return isDynamicPlaylist
+        ? client_enum
+              .PlaylistBrowseAccessMode
+              .PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY
+        : client_enum
+              .PlaylistBrowseAccessMode
+              .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS;
+  }
+
+  bool canBrowsePlaylistFor(String viewerId) {
+    if (!isPlaylist || !isAvailable || viewerId.isEmpty) return false;
+    return switch (effectiveBrowseAccessMode) {
+      client_enum
+          .PlaylistBrowseAccessMode
+          .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS =>
+        true,
+      client_enum
+          .PlaylistBrowseAccessMode
+          .PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY =>
+        creator.isNotEmpty && creator == viewerId,
+      _ => false,
+    };
+  }
+
   bool get hasPlaybackTarget =>
       (subPath ?? '').isNotEmpty && (parentId ?? '').startsWith('pl_');
 

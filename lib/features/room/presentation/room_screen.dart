@@ -6544,10 +6544,15 @@ class _RoomScreenState extends State<RoomScreen>
     RoomMediaEntry entry,
     bool selectionMode,
   ) {
+    final canActivate = PlaylistSelectionPolicy.canActivate(
+      entry: entry,
+      viewerId: _currentUser?.id ?? '',
+      canControlPlayback: _canControlPlaybackState,
+    );
     final intent = PlaylistSelectionPolicy.tapIntent(
       entry: entry,
       selectionMode: selectionMode,
-      canActivate: entry.isPlaylist || _canControlPlaybackState,
+      canActivate: canActivate,
     );
     return intent == null
         ? null
@@ -6617,6 +6622,13 @@ class _RoomScreenState extends State<RoomScreen>
     Color primaryColor,
   ) {
     if (isCurrent) return primaryColor;
+    if (!PlaylistSelectionPolicy.canActivate(
+      entry: entry,
+      viewerId: _currentUser?.id ?? '',
+      canControlPlayback: _canControlPlaybackState,
+    )) {
+      return Theme.of(context).disabledColor;
+    }
     final provider = SourceConfigCodec.providerToString(entry.sourceProvider);
     if (provider.isNotEmpty) {
       final brand = mediaProviderBrand(provider);
@@ -6635,6 +6647,12 @@ class _RoomScreenState extends State<RoomScreen>
 
   String _playlistEntryShortMeta(RoomMediaEntry entry) {
     final parts = <String>[_playlistEntryTypeLabel(entry)];
+    if (!entry.isAvailable) {
+      parts.add(context.l10n.creatorUnavailable);
+    } else if (entry.isPlaylist &&
+        !entry.canBrowsePlaylistFor(_currentUser?.id ?? '')) {
+      parts.add(context.l10n.playlistBrowseAccessModeCreatorOnly);
+    }
     if (entry.isPlaylist && entry.itemCount > 0) {
       parts.add(context.l10n.itemCount(entry.itemCount));
     }
@@ -6650,12 +6668,18 @@ class _RoomScreenState extends State<RoomScreen>
 
   List<String> _playlistEntryChips(RoomMediaEntry entry) {
     final chips = <String>[_playlistEntryTypeLabel(entry)];
+    if (!entry.isAvailable) {
+      chips.add(context.l10n.creatorUnavailable);
+    } else if (entry.isPlaylist &&
+        !entry.canBrowsePlaylistFor(_currentUser?.id ?? '')) {
+      chips.add(context.l10n.playlistBrowseAccessModeCreatorOnly);
+    }
     if (entry.isPlaylist) {
-      chips.add(
-        entry.itemCount > 0
-            ? context.l10n.itemCount(entry.itemCount)
-            : context.l10n.openable,
-      );
+      if (entry.itemCount > 0) {
+        chips.add(context.l10n.itemCount(entry.itemCount));
+      } else if (entry.canBrowsePlaylistFor(_currentUser?.id ?? '')) {
+        chips.add(context.l10n.openable);
+      }
     }
     final provider = _playlistProviderLabel(entry);
     if (provider.isNotEmpty) chips.add(provider);

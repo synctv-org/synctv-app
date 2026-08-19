@@ -7,6 +7,17 @@ final class PlaylistSelectionPolicy {
 
   static bool isSelectable(RoomMediaEntry entry) => entry.id.trim().isNotEmpty;
 
+  static bool canActivate({
+    required RoomMediaEntry entry,
+    required String viewerId,
+    required bool canControlPlayback,
+  }) {
+    if (!entry.isAvailable) return false;
+    return entry.isPlaylist
+        ? entry.canBrowsePlaylistFor(viewerId)
+        : canControlPlayback;
+  }
+
   static PlaylistEntryGestureIntent? tapIntent({
     required RoomMediaEntry entry,
     required bool selectionMode,

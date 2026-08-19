@@ -5,6 +5,80 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 
 void main() {
+  group('media lifecycle and playlist browse access', () {
+    test('creator-inactive entries remain visible but cannot activate', () {
+      final media = RoomMediaItem(
+        id: 'med_1',
+        name: 'Unavailable media',
+        url: 'https://example.test/media.mp4',
+        availability: client_enum
+            .ResourceAvailability
+            .RESOURCE_AVAILABILITY_CREATOR_INACTIVE,
+      );
+      final playlist = RoomPlaylistItem(
+        id: 'pl_1',
+        name: 'Unavailable playlist',
+        creator: 'usr_creator',
+        availability: client_enum
+            .ResourceAvailability
+            .RESOURCE_AVAILABILITY_CREATOR_INACTIVE,
+        metadata: const {'isDynamic': true},
+      );
+
+      expect(media.isAvailable, isFalse);
+      expect(playlist.isAvailable, isFalse);
+      expect(playlist.canBrowsePlaylistFor('usr_creator'), isFalse);
+    });
+
+    test('default browse access follows static and dynamic playlist kinds', () {
+      final staticPlaylist = RoomPlaylistItem(
+        id: 'pl_static',
+        name: 'Static playlist',
+        creator: 'usr_creator',
+      );
+      final dynamicPlaylist = RoomPlaylistItem(
+        id: 'pl_dynamic',
+        name: 'Dynamic playlist',
+        creator: 'usr_creator',
+        metadata: const {'isDynamic': true},
+      );
+
+      expect(staticPlaylist.canBrowsePlaylistFor('usr_member'), isTrue);
+      expect(staticPlaylist.canBrowsePlaylistFor(''), isFalse);
+      expect(dynamicPlaylist.canBrowsePlaylistFor('usr_creator'), isTrue);
+      expect(dynamicPlaylist.canBrowsePlaylistFor('usr_member'), isFalse);
+    });
+
+    test('room-member mode shares dynamic playlist browsing', () {
+      final playlist = RoomPlaylistItem(
+        id: 'pl_shared',
+        name: 'Shared dynamic playlist',
+        creator: 'usr_creator',
+        browseAccessMode: client_enum
+            .PlaylistBrowseAccessMode
+            .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
+        metadata: const {'isDynamic': true},
+      );
+
+      expect(playlist.canBrowsePlaylistFor('usr_member'), isTrue);
+      expect(playlist.canBrowsePlaylistFor(''), isFalse);
+    });
+
+    test('explicit creator-only mode also restricts static playlists', () {
+      final playlist = RoomPlaylistItem(
+        id: 'pl_private_static',
+        name: 'Creator-only static playlist',
+        creator: 'usr_creator',
+        browseAccessMode: client_enum
+            .PlaylistBrowseAccessMode
+            .PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY,
+      );
+
+      expect(playlist.canBrowsePlaylistFor('usr_creator'), isTrue);
+      expect(playlist.canBrowsePlaylistFor('usr_member'), isFalse);
+    });
+  });
+
   test('media library counts provider dynamic entries in scope summary', () {
     final page = RoomMediaLibraryPage(
       playlists: const [],
