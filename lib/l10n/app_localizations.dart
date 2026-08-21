@@ -12723,6 +12723,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stale while revalidate'**
   String get staleWhileRevalidate;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @blockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users'**
+  String get blockedUsers;
+
+  /// No description provided for @blockedUsersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages from these users are hidden, and rooms they create are excluded from Home discovery.'**
+  String get blockedUsersDescription;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block user'**
+  String get blockUser;
+
+  /// No description provided for @unblockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock user'**
+  String get unblockUser;
+
+  /// No description provided for @confirmBlockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {name}? Their messages will disappear and their rooms will be hidden from Home discovery. Existing room memberships remain available.'**
+  String confirmBlockUser(String name);
+
+  /// No description provided for @confirmUnblockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock {name}? Their messages and rooms will become visible again.'**
+  String confirmUnblockUser(String name);
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'User blocked'**
+  String get userBlocked;
+
+  /// No description provided for @userUnblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'User unblocked'**
+  String get userUnblocked;
+
+  /// No description provided for @blockUserFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not block user: {error}'**
+  String blockUserFailed(String error);
+
+  /// No description provided for @unblockUserFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not unblock user: {error}'**
+  String unblockUserFailed(String error);
+
+  /// No description provided for @noBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked users'**
+  String get noBlockedUsers;
+
+  /// No description provided for @searchBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search blocked users'**
+  String get searchBlockedUsers;
+
+  /// No description provided for @blockedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked {time}'**
+  String blockedAt(String time);
+
+  /// No description provided for @blockedCreator.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked creator'**
+  String get blockedCreator;
+
+  /// No description provided for @blockedUsersTemporarilyUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users are temporarily unavailable'**
+  String get blockedUsersTemporarilyUnavailable;
 }
 
 class _AppLocalizationsDelegate

@@ -11,6 +11,16 @@ abstract interface class AccountGateway {
 
   Future<SyncTvUser> getCurrentUser({bool refresh = false});
 
+  Future<BlockedUserInfo> blockUser(String userId);
+
+  Future<void> unblockUser(String userId);
+
+  Future<BlockedUsersPage> listBlockedUsers({
+    int page = 1,
+    int pageSize = 50,
+    String? search,
+  });
+
   Future<PublicSettingsInfo> getPublicSettings({bool refresh = false});
 
   Future<AccountPreferences> getPreferences({bool refresh = false});

@@ -46,6 +46,49 @@ class SyncTvAccountDomainService {
     return _api.mapUser(user);
   }
 
+  Future<BlockedUserInfo> blockUser(String userId) async {
+    final response = await _api.user.blockUser(
+      client.BlockUserRequest(userId: userId),
+    );
+    if (!response.hasBlockedUser() || !response.blockedUser.hasUser()) {
+      throw StateError('Block user response is missing the blocked user');
+    }
+    return BlockedUserInfo(
+      user: _api.mapPublicUser(response.blockedUser.user),
+      blockedAt: response.blockedUser.blockedAt.toInt(),
+    );
+  }
+
+  Future<void> unblockUser(String userId) async {
+    await _api.user.unblockUser(client.UnblockUserRequest(userId: userId));
+  }
+
+  Future<BlockedUsersPage> listBlockedUsers({
+    int page = 1,
+    int pageSize = 50,
+    String? search,
+  }) async {
+    final response = await _api.user.listBlockedUsers(
+      client.ListBlockedUsersRequest(
+        page: page,
+        pageSize: pageSize,
+        search: search ?? '',
+      ),
+    );
+    return BlockedUsersPage(
+      users: response.users
+          .where((blocked) => blocked.hasUser())
+          .map(
+            (blocked) => BlockedUserInfo(
+              user: _api.mapPublicUser(blocked.user),
+              blockedAt: blocked.blockedAt.toInt(),
+            ),
+          )
+          .toList(growable: false),
+      total: response.total,
+    );
+  }
+
   Future<SyncTvUser> updateUsername(String username) async {
     await _api.user.setUsername(
       client.SetUsernameRequest(newUsername: username),

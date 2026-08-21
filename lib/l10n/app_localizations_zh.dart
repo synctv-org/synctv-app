@@ -7054,4 +7054,62 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get staleWhileRevalidate => '后台刷新陈旧缓存';
+
+  @override
+  String get privacy => '隐私';
+
+  @override
+  String get blockedUsers => '已拉黑用户';
+
+  @override
+  String get blockedUsersDescription => '这些用户的消息将被隐藏，他们创建的房间也不会出现在首页发现中。';
+
+  @override
+  String get blockUser => '拉黑用户';
+
+  @override
+  String get unblockUser => '解除拉黑';
+
+  @override
+  String confirmBlockUser(String name) {
+    return '拉黑 $name？其消息将立即消失，其创建的房间也会从首页发现中隐藏。已有房间关系仍会保留。';
+  }
+
+  @override
+  String confirmUnblockUser(String name) {
+    return '解除对 $name 的拉黑？其消息和房间将重新可见。';
+  }
+
+  @override
+  String get userBlocked => '已拉黑用户';
+
+  @override
+  String get userUnblocked => '已解除拉黑';
+
+  @override
+  String blockUserFailed(String error) {
+    return '拉黑用户失败：$error';
+  }
+
+  @override
+  String unblockUserFailed(String error) {
+    return '解除拉黑失败：$error';
+  }
+
+  @override
+  String get noBlockedUsers => '暂无已拉黑用户';
+
+  @override
+  String get searchBlockedUsers => '搜索已拉黑用户';
+
+  @override
+  String blockedAt(String time) {
+    return '拉黑于 $time';
+  }
+
+  @override
+  String get blockedCreator => '创建者已拉黑';
+
+  @override
+  String get blockedUsersTemporarilyUnavailable => '暂时无法加载已拉黑用户';
 }

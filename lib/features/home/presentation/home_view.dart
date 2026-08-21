@@ -834,6 +834,7 @@ class _RoomCard extends StatelessWidget {
       onlineGuestCount: room.onlineGuestCount,
       creatorName: room.creator,
       creatorAvatarUrl: room.creatorAvatarUrl,
+      creatorBlocked: room.creatorBlocked,
       availability: room.availability,
       isBanned: room.isBanned,
       isOwner: isOwner,

@@ -33,6 +33,7 @@ CinemaRoomCard _card({
   bool joined = false,
   bool canJoin = false,
   bool favoriteLoading = false,
+  bool creatorBlocked = false,
   VoidCallback? onTap,
   VoidCallback? onFavoritePressed,
   String description = '',
@@ -47,6 +48,7 @@ CinemaRoomCard _card({
     joined: joined,
     canJoin: canJoin,
     favoriteLoading: favoriteLoading,
+    creatorBlocked: creatorBlocked,
     onTap: onTap,
     onFavoritePressed: onFavoritePressed,
   );
@@ -164,6 +166,23 @@ void main() {
       ),
     );
 
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('retained room identifies a blocked creator', (tester) async {
+    await tester.pumpWidget(_app(_card(creatorBlocked: true)));
+
+    expect(find.text('Blocked creator'), findsOneWidget);
+    expect(find.byIcon(Icons.block_rounded), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('compact retained room identifies a blocked creator', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(_card(creatorBlocked: true), height: 220));
+
+    expect(find.text('Blocked creator'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

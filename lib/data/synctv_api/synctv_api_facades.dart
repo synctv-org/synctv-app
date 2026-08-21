@@ -338,6 +338,36 @@ class SyncTvUserApi {
     return _api._send('GET', '/api/user', client.User.create);
   }
 
+  Future<client.BlockUserResponse> blockUser(client.BlockUserRequest request) {
+    return _api._send(
+      'POST',
+      '/api/user/blocks',
+      client.BlockUserResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.UnblockUserResponse> unblockUser(
+    client.UnblockUserRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/user/blocks/${Uri.encodeComponent(request.userId)}',
+      client.UnblockUserResponse.create,
+    );
+  }
+
+  Future<client.ListBlockedUsersResponse> listBlockedUsers(
+    client.ListBlockedUsersRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/user/blocks',
+      client.ListBlockedUsersResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
   Future<client.CreateUserAvatarUploadSessionResponse>
   createUserAvatarUploadSession(
     client.CreateUserAvatarUploadSessionRequest request,

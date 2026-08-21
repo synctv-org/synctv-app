@@ -459,6 +459,22 @@ class SyncTvService {
     return _domains.account.getMe(refresh: refresh);
   }
 
+  static Future<BlockedUserInfo> blockUser(String userId) =>
+      _domains.account.blockUser(userId);
+
+  static Future<void> unblockUser(String userId) =>
+      _domains.account.unblockUser(userId);
+
+  static Future<BlockedUsersPage> listBlockedUsers({
+    int page = 1,
+    int pageSize = 50,
+    String? search,
+  }) => _domains.account.listBlockedUsers(
+    page: page,
+    pageSize: pageSize,
+    search: search,
+  );
+
   static Future<SyncTvUser> updateUsername(String username) async {
     return _domains.account.updateUsername(username);
   }

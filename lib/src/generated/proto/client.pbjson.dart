@@ -1032,6 +1032,129 @@ final $typed_data.Uint8List userPublicViewDescriptor = $convert.base64Decode(
     'YXZhdGFyX2FjY2VzcxgHIAEoCzIfLnN5bmN0di5jbGllbnQuRmlsZU9iamVjdEFjY2Vzc1IMYX'
     'ZhdGFyQWNjZXNz');
 
+@$core.Deprecated('Use blockedUserDescriptor instead')
+const BlockedUser$json = {
+  '1': 'BlockedUser',
+  '2': [
+    {
+      '1': 'user',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.UserPublicView',
+      '10': 'user'
+    },
+    {'1': 'blocked_at', '3': 2, '4': 1, '5': 3, '10': 'blockedAt'},
+  ],
+};
+
+/// Descriptor for `BlockedUser`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List blockedUserDescriptor = $convert.base64Decode(
+    'CgtCbG9ja2VkVXNlchIxCgR1c2VyGAEgASgLMh0uc3luY3R2LmNsaWVudC5Vc2VyUHVibGljVm'
+    'lld1IEdXNlchIdCgpibG9ja2VkX2F0GAIgASgDUglibG9ja2VkQXQ=');
+
+@$core.Deprecated('Use blockUserRequestDescriptor instead')
+const BlockUserRequest$json = {
+  '1': 'BlockUserRequest',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'userId'},
+  ],
+};
+
+/// Descriptor for `BlockUserRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List blockUserRequestDescriptor = $convert.base64Decode(
+    'ChBCbG9ja1VzZXJSZXF1ZXN0EjYKB3VzZXJfaWQYASABKAlCHbpIGnIYEAEYQDISXnVzcl9bQS'
+    '1aYS16MC05XSskUgZ1c2VySWQ=');
+
+@$core.Deprecated('Use blockUserResponseDescriptor instead')
+const BlockUserResponse$json = {
+  '1': 'BlockUserResponse',
+  '2': [
+    {
+      '1': 'blocked_user',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.BlockedUser',
+      '10': 'blockedUser'
+    },
+  ],
+};
+
+/// Descriptor for `BlockUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List blockUserResponseDescriptor = $convert.base64Decode(
+    'ChFCbG9ja1VzZXJSZXNwb25zZRI9CgxibG9ja2VkX3VzZXIYASABKAsyGi5zeW5jdHYuY2xpZW'
+    '50LkJsb2NrZWRVc2VyUgtibG9ja2VkVXNlcg==');
+
+@$core.Deprecated('Use unblockUserRequestDescriptor instead')
+const UnblockUserRequest$json = {
+  '1': 'UnblockUserRequest',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'userId'},
+  ],
+};
+
+/// Descriptor for `UnblockUserRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List unblockUserRequestDescriptor = $convert.base64Decode(
+    'ChJVbmJsb2NrVXNlclJlcXVlc3QSNgoHdXNlcl9pZBgBIAEoCUIdukgachgQARhAMhJedXNyX1'
+    'tBLVphLXowLTldKyRSBnVzZXJJZA==');
+
+@$core.Deprecated('Use unblockUserResponseDescriptor instead')
+const UnblockUserResponse$json = {
+  '1': 'UnblockUserResponse',
+  '2': [
+    {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
+  ],
+};
+
+/// Descriptor for `UnblockUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List unblockUserResponseDescriptor =
+    $convert.base64Decode(
+        'ChNVbmJsb2NrVXNlclJlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3M=');
+
+@$core.Deprecated('Use listBlockedUsersRequestDescriptor instead')
+const ListBlockedUsersRequest$json = {
+  '1': 'ListBlockedUsersRequest',
+  '2': [
+    {'1': 'page', '3': 1, '4': 1, '5': 5, '10': 'page'},
+    {'1': 'page_size', '3': 2, '4': 1, '5': 5, '10': 'pageSize'},
+    {'1': 'search', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'search'},
+  ],
+  '7': {},
+};
+
+/// Descriptor for `ListBlockedUsersRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listBlockedUsersRequestDescriptor = $convert.base64Decode(
+    'ChdMaXN0QmxvY2tlZFVzZXJzUmVxdWVzdBISCgRwYWdlGAEgASgFUgRwYWdlEhsKCXBhZ2Vfc2'
+    'l6ZRgCIAEoBVIIcGFnZVNpemUSHwoGc2VhcmNoGAMgASgJQge6SARyAhhkUgZzZWFyY2g6jQK6'
+    'SIkCGmcKF2xpc3RfYmxvY2tlZF91c2Vycy5wYWdlEipwYWdlIG11c3QgYmUgMCAodXNlIGRlZm'
+    'F1bHQpIG9yIGF0IGxlYXN0IDEaIHRoaXMucGFnZSA9PSAwIHx8IHRoaXMucGFnZSA+PSAxGp0B'
+    'ChxsaXN0X2Jsb2NrZWRfdXNlcnMucGFnZV9zaXplEjZwYWdlX3NpemUgbXVzdCBiZSAwICh1c2'
+    'UgZGVmYXVsdCkgb3IgYmV0d2VlbiAxIGFuZCAxMDAaRXRoaXMucGFnZV9zaXplID09IDAgfHwg'
+    'KHRoaXMucGFnZV9zaXplID49IDEgJiYgdGhpcy5wYWdlX3NpemUgPD0gMTAwKQ==');
+
+@$core.Deprecated('Use listBlockedUsersResponseDescriptor instead')
+const ListBlockedUsersResponse$json = {
+  '1': 'ListBlockedUsersResponse',
+  '2': [
+    {
+      '1': 'users',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.BlockedUser',
+      '10': 'users'
+    },
+    {'1': 'total', '3': 2, '4': 1, '5': 5, '10': 'total'},
+  ],
+};
+
+/// Descriptor for `ListBlockedUsersResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listBlockedUsersResponseDescriptor =
+    $convert.base64Decode(
+        'ChhMaXN0QmxvY2tlZFVzZXJzUmVzcG9uc2USMAoFdXNlcnMYASADKAsyGi5zeW5jdHYuY2xpZW'
+        '50LkJsb2NrZWRVc2VyUgV1c2VycxIUCgV0b3RhbBgCIAEoBVIFdG90YWw=');
+
 @$core.Deprecated('Use autoPlaySettingsDescriptor instead')
 const AutoPlaySettings$json = {
   '1': 'AutoPlaySettings',
@@ -2343,6 +2466,7 @@ const Room$json = {
       '10': 'isPublic',
       '17': true
     },
+    {'1': 'creator_blocked', '3': 19, '4': 1, '5': 8, '10': 'creatorBlocked'},
   ],
   '8': [
     {'1': '_is_public'},
@@ -2364,7 +2488,8 @@ final $typed_data.Uint8List roomDescriptor = $convert.base64Decode(
     'NwoHY3JlYXRvchgPIAEoCzIdLnN5bmN0di5jbGllbnQuVXNlclB1YmxpY1ZpZXdSB2NyZWF0b3'
     'ISNwoIY2F0ZWdvcnkYECABKAsyGy5zeW5jdHYuY2xpZW50LlJvb21DYXRlZ29yeVIIY2F0ZWdv'
     'cnkSMAoGbGFiZWxzGBEgAygLMhguc3luY3R2LmNsaWVudC5Sb29tTGFiZWxSBmxhYmVscxIgCg'
-    'lpc19wdWJsaWMYEiABKAhIAFIIaXNQdWJsaWOIAQFCDAoKX2lzX3B1YmxpYw==');
+    'lpc19wdWJsaWMYEiABKAhIAFIIaXNQdWJsaWOIAQESJwoPY3JlYXRvcl9ibG9ja2VkGBMgASgI'
+    'Ug5jcmVhdG9yQmxvY2tlZEIMCgpfaXNfcHVibGlj');
 
 @$core.Deprecated('Use roomCategoryDescriptor instead')
 const RoomCategory$json = {
@@ -19588,6 +19713,21 @@ const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
       '3': '.synctv.client.CloseAccountResponse'
     },
     {
+      '1': 'BlockUser',
+      '2': '.synctv.client.BlockUserRequest',
+      '3': '.synctv.client.BlockUserResponse'
+    },
+    {
+      '1': 'UnblockUser',
+      '2': '.synctv.client.UnblockUserRequest',
+      '3': '.synctv.client.UnblockUserResponse'
+    },
+    {
+      '1': 'ListBlockedUsers',
+      '2': '.synctv.client.ListBlockedUsersRequest',
+      '3': '.synctv.client.ListBlockedUsersResponse'
+    },
+    {
       '1': 'CreateRoom',
       '2': '.synctv.client.CreateRoomRequest',
       '3': '.synctv.client.Room'
@@ -19780,12 +19920,19 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.SetTwoFactorEnabledRequest': SetTwoFactorEnabledRequest$json,
   '.synctv.client.CloseAccountRequest': CloseAccountRequest$json,
   '.synctv.client.CloseAccountResponse': CloseAccountResponse$json,
+  '.synctv.client.BlockUserRequest': BlockUserRequest$json,
+  '.synctv.client.BlockUserResponse': BlockUserResponse$json,
+  '.synctv.client.BlockedUser': BlockedUser$json,
+  '.synctv.client.UserPublicView': UserPublicView$json,
+  '.synctv.client.UnblockUserRequest': UnblockUserRequest$json,
+  '.synctv.client.UnblockUserResponse': UnblockUserResponse$json,
+  '.synctv.client.ListBlockedUsersRequest': ListBlockedUsersRequest$json,
+  '.synctv.client.ListBlockedUsersResponse': ListBlockedUsersResponse$json,
   '.synctv.client.CreateRoomRequest': CreateRoomRequest$json,
   '.synctv.client.Room': Room$json,
   '.synctv.client.ResourceCover': ResourceCover$json,
   '.synctv.common.RoomPresenceStats': $0.RoomPresenceStats$json,
   '.synctv.common.NodeConnectionCount': $0.NodeConnectionCount$json,
-  '.synctv.client.UserPublicView': UserPublicView$json,
   '.synctv.client.RoomCategory': RoomCategory$json,
   '.synctv.client.RoomLabel': RoomLabel$json,
   '.synctv.client.GetRoomRequest': GetRoomRequest$json,
@@ -19901,25 +20048,30 @@ final $typed_data.Uint8List userServiceDescriptor = $convert.base64Decode(
     'RmFjdG9yRW5hYmxlZBIpLnN5bmN0di5jbGllbnQuU2V0VHdvRmFjdG9yRW5hYmxlZFJlcXVlc3'
     'QaKS5zeW5jdHYuY2xpZW50LkdldFVzZXJQcmVmZXJlbmNlc1Jlc3BvbnNlElcKDENsb3NlQWNj'
     'b3VudBIiLnN5bmN0di5jbGllbnQuQ2xvc2VBY2NvdW50UmVxdWVzdBojLnN5bmN0di5jbGllbn'
-    'QuQ2xvc2VBY2NvdW50UmVzcG9uc2USQwoKQ3JlYXRlUm9vbRIgLnN5bmN0di5jbGllbnQuQ3Jl'
-    'YXRlUm9vbVJlcXVlc3QaEy5zeW5jdHYuY2xpZW50LlJvb20SSAoHR2V0Um9vbRIdLnN5bmN0di'
-    '5jbGllbnQuR2V0Um9vbVJlcXVlc3QaHi5zeW5jdHYuY2xpZW50LkdldFJvb21SZXNwb25zZRJL'
-    'CghKb2luUm9vbRIeLnN5bmN0di5jbGllbnQuSm9pblJvb21SZXF1ZXN0Gh8uc3luY3R2LmNsaW'
-    'VudC5Kb2luUm9vbVJlc3BvbnNlEnUKFlN0YXJ0Um9vbVBhc3N3b3JkTG9naW4SLC5zeW5jdHYu'
-    'Y2xpZW50LlN0YXJ0Um9vbVBhc3N3b3JkTG9naW5SZXF1ZXN0Gi0uc3luY3R2LmNsaWVudC5TdG'
-    'FydFJvb21QYXNzd29yZExvZ2luUmVzcG9uc2USaQoXRmluaXNoUm9vbVBhc3N3b3JkTG9naW4S'
-    'LS5zeW5jdHYuY2xpZW50LkZpbmlzaFJvb21QYXNzd29yZExvZ2luUmVxdWVzdBofLnN5bmN0di'
-    '5jbGllbnQuSm9pblJvb21SZXNwb25zZRJcChBHZXRSb29tRGlzY292ZXJ5EiYuc3luY3R2LmNs'
-    'aWVudC5HZXRSb29tRGlzY292ZXJ5UmVxdWVzdBogLnN5bmN0di5jbGllbnQuUm9vbURpc2Nvdm'
-    'VyeUl0ZW0SWgoNRGlzY292ZXJSb29tcxIjLnN5bmN0di5jbGllbnQuRGlzY292ZXJSb29tc1Jl'
-    'cXVlc3QaJC5zeW5jdHYuY2xpZW50LkRpc2NvdmVyUm9vbXNSZXNwb25zZRJUCgtMaXN0TXlSb2'
-    '9tcxIhLnN5bmN0di5jbGllbnQuTGlzdE15Um9vbXNSZXF1ZXN0GiIuc3luY3R2LmNsaWVudC5M'
-    'aXN0TXlSb29tc1Jlc3BvbnNlElcKDEZhdm9yaXRlUm9vbRIiLnN5bmN0di5jbGllbnQuRmF2b3'
-    'JpdGVSb29tUmVxdWVzdBojLnN5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVzcG9uc2USXQoO'
-    'VW5mYXZvcml0ZVJvb20SJC5zeW5jdHYuY2xpZW50LlVuZmF2b3JpdGVSb29tUmVxdWVzdBolLn'
-    'N5bmN0di5jbGllbnQuVW5mYXZvcml0ZVJvb21SZXNwb25zZRJmChFMaXN0RmF2b3JpdGVSb29t'
-    'cxInLnN5bmN0di5jbGllbnQuTGlzdEZhdm9yaXRlUm9vbXNSZXF1ZXN0Giguc3luY3R2LmNsaW'
-    'VudC5MaXN0RmF2b3JpdGVSb29tc1Jlc3BvbnNl');
+    'QuQ2xvc2VBY2NvdW50UmVzcG9uc2USTgoJQmxvY2tVc2VyEh8uc3luY3R2LmNsaWVudC5CbG9j'
+    'a1VzZXJSZXF1ZXN0GiAuc3luY3R2LmNsaWVudC5CbG9ja1VzZXJSZXNwb25zZRJUCgtVbmJsb2'
+    'NrVXNlchIhLnN5bmN0di5jbGllbnQuVW5ibG9ja1VzZXJSZXF1ZXN0GiIuc3luY3R2LmNsaWVu'
+    'dC5VbmJsb2NrVXNlclJlc3BvbnNlEmMKEExpc3RCbG9ja2VkVXNlcnMSJi5zeW5jdHYuY2xpZW'
+    '50Lkxpc3RCbG9ja2VkVXNlcnNSZXF1ZXN0Gicuc3luY3R2LmNsaWVudC5MaXN0QmxvY2tlZFVz'
+    'ZXJzUmVzcG9uc2USQwoKQ3JlYXRlUm9vbRIgLnN5bmN0di5jbGllbnQuQ3JlYXRlUm9vbVJlcX'
+    'Vlc3QaEy5zeW5jdHYuY2xpZW50LlJvb20SSAoHR2V0Um9vbRIdLnN5bmN0di5jbGllbnQuR2V0'
+    'Um9vbVJlcXVlc3QaHi5zeW5jdHYuY2xpZW50LkdldFJvb21SZXNwb25zZRJLCghKb2luUm9vbR'
+    'IeLnN5bmN0di5jbGllbnQuSm9pblJvb21SZXF1ZXN0Gh8uc3luY3R2LmNsaWVudC5Kb2luUm9v'
+    'bVJlc3BvbnNlEnUKFlN0YXJ0Um9vbVBhc3N3b3JkTG9naW4SLC5zeW5jdHYuY2xpZW50LlN0YX'
+    'J0Um9vbVBhc3N3b3JkTG9naW5SZXF1ZXN0Gi0uc3luY3R2LmNsaWVudC5TdGFydFJvb21QYXNz'
+    'd29yZExvZ2luUmVzcG9uc2USaQoXRmluaXNoUm9vbVBhc3N3b3JkTG9naW4SLS5zeW5jdHYuY2'
+    'xpZW50LkZpbmlzaFJvb21QYXNzd29yZExvZ2luUmVxdWVzdBofLnN5bmN0di5jbGllbnQuSm9p'
+    'blJvb21SZXNwb25zZRJcChBHZXRSb29tRGlzY292ZXJ5EiYuc3luY3R2LmNsaWVudC5HZXRSb2'
+    '9tRGlzY292ZXJ5UmVxdWVzdBogLnN5bmN0di5jbGllbnQuUm9vbURpc2NvdmVyeUl0ZW0SWgoN'
+    'RGlzY292ZXJSb29tcxIjLnN5bmN0di5jbGllbnQuRGlzY292ZXJSb29tc1JlcXVlc3QaJC5zeW'
+    '5jdHYuY2xpZW50LkRpc2NvdmVyUm9vbXNSZXNwb25zZRJUCgtMaXN0TXlSb29tcxIhLnN5bmN0'
+    'di5jbGllbnQuTGlzdE15Um9vbXNSZXF1ZXN0GiIuc3luY3R2LmNsaWVudC5MaXN0TXlSb29tc1'
+    'Jlc3BvbnNlElcKDEZhdm9yaXRlUm9vbRIiLnN5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVx'
+    'dWVzdBojLnN5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVzcG9uc2USXQoOVW5mYXZvcml0ZV'
+    'Jvb20SJC5zeW5jdHYuY2xpZW50LlVuZmF2b3JpdGVSb29tUmVxdWVzdBolLnN5bmN0di5jbGll'
+    'bnQuVW5mYXZvcml0ZVJvb21SZXNwb25zZRJmChFMaXN0RmF2b3JpdGVSb29tcxInLnN5bmN0di'
+    '5jbGllbnQuTGlzdEZhdm9yaXRlUm9vbXNSZXF1ZXN0Giguc3luY3R2LmNsaWVudC5MaXN0RmF2'
+    'b3JpdGVSb29tc1Jlc3BvbnNl');
 
 const $core.Map<$core.String, $core.dynamic> RoomServiceBase$json = {
   '1': 'RoomService',

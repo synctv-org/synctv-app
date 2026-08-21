@@ -12,6 +12,7 @@ class CinemaRoomCard extends StatelessWidget {
   final int onlineGuestCount;
   final String creatorName;
   final String creatorAvatarUrl;
+  final bool creatorBlocked;
   final client_enum.ResourceAvailability availability;
   final bool isBanned;
   final VoidCallback? onTap;
@@ -34,6 +35,7 @@ class CinemaRoomCard extends StatelessWidget {
     required this.onlineGuestCount,
     this.creatorName = '',
     this.creatorAvatarUrl = '',
+    this.creatorBlocked = false,
     this.availability =
         client_enum.ResourceAvailability.RESOURCE_AVAILABILITY_UNSPECIFIED,
     this.isBanned = false,
@@ -93,6 +95,7 @@ class CinemaRoomCard extends StatelessWidget {
               description: description,
               coverUrl: coverUrl,
               creatorName: creatorName,
+              creatorBlocked: creatorBlocked,
               audienceText: audienceText,
               audienceTooltip: audienceTooltip,
               statusLabel: statusLabel,
@@ -178,6 +181,7 @@ class CinemaRoomCard extends StatelessWidget {
                       _RoomCreator(
                         name: creatorName,
                         avatarUrl: creatorAvatarUrl,
+                        blocked: creatorBlocked,
                       ),
                       const Spacer(),
                       Row(
@@ -302,6 +306,7 @@ class _CompactRoomCard extends StatelessWidget {
     required this.description,
     required this.coverUrl,
     required this.creatorName,
+    required this.creatorBlocked,
     required this.audienceText,
     required this.audienceTooltip,
     required this.statusLabel,
@@ -316,6 +321,7 @@ class _CompactRoomCard extends StatelessWidget {
   final String description;
   final String coverUrl;
   final String creatorName;
+  final bool creatorBlocked;
   final String audienceText;
   final String audienceTooltip;
   final String statusLabel;
@@ -360,6 +366,19 @@ class _CompactRoomCard extends StatelessWidget {
             backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.92),
           ),
         ),
+        if (creatorBlocked)
+          Positioned(
+            top: 42,
+            left: 10,
+            child: AppBadge(
+              icon: Icons.block_rounded,
+              label: Text(context.l10n.blockedCreator),
+              color: theme.colorScheme.error,
+              backgroundColor: theme.colorScheme.surface.withValues(
+                alpha: 0.92,
+              ),
+            ),
+          ),
         if (onFavoritePressed != null)
           Positioned(
             top: 8,
@@ -458,10 +477,15 @@ class _CompactRoomCard extends StatelessWidget {
 }
 
 class _RoomCreator extends StatelessWidget {
-  const _RoomCreator({required this.name, required this.avatarUrl});
+  const _RoomCreator({
+    required this.name,
+    required this.avatarUrl,
+    required this.blocked,
+  });
 
   final String name;
   final String avatarUrl;
+  final bool blocked;
 
   @override
   Widget build(BuildContext context) {
@@ -494,6 +518,15 @@ class _RoomCreator extends StatelessWidget {
             ),
           ),
         ),
+        if (blocked) ...[
+          const SizedBox(width: 8),
+          AppBadge(
+            icon: Icons.block_rounded,
+            label: Text(context.l10n.blockedCreator),
+            color: theme.colorScheme.error,
+            backgroundColor: theme.colorScheme.errorContainer,
+          ),
+        ],
       ],
     );
   }

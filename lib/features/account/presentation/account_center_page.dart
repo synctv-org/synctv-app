@@ -105,10 +105,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   static const int _notificationPageSize = 50;
   static const int _roomsPageSize = 24;
-  static const int _sectionCount = 6;
+  static const int _blockedUsersPageSize = 24;
+  static const int _sectionCount = 7;
   static const String _moduleAccountPreferences = 'account_preferences';
   static const String _moduleNotifications = 'notifications';
   static const String _moduleRooms = 'rooms';
+  static const String _moduleBlockedUsers = 'blocked_users';
   final DeviceDisplayNameService _deviceDisplayNameService =
       DeviceDisplayNameService();
   static const String _moduleOAuthProviders = 'oauth_providers';
@@ -129,6 +131,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     _AccountSection(
       label: context.l10n.rooms,
       icon: Icons.meeting_room_outlined,
+    ),
+    _AccountSection(
+      label: context.l10n.privacy,
+      icon: Icons.privacy_tip_outlined,
     ),
     _AccountSection(label: context.l10n.security, icon: Icons.security_rounded),
     _AccountSection(
@@ -153,6 +159,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       label: context.l10n.myRooms,
       impact: context.l10n.myRoomsUnavailableImpact,
       icon: Icons.meeting_room_outlined,
+    ),
+    _moduleBlockedUsers: _AccountModuleInfo(
+      label: context.l10n.blockedUsers,
+      impact: context.l10n.blockedUsersDescription,
+      icon: Icons.person_off_outlined,
     ),
     _moduleOAuthProviders: _AccountModuleInfo(
       label: context.l10n.oauthAvailableAccounts,
@@ -186,6 +197,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   AccountPreferences? _preferences;
   UserNotificationsPage? _notifications;
   RoomsPage? _myRooms;
+  BlockedUsersPage? _blockedUsers;
   PublicSettingsInfo? _publicSettings;
   List<OAuth2ProviderOption> _availableOAuth2 = const [];
   List<OAuth2LinkedAccount> _linkedOAuth2 = const [];
@@ -208,6 +220,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   bool _loadingNotifications = false;
   int _roomsPage = 1;
   bool _loadingRooms = false;
+  int _blockedUsersPage = 1;
+  bool _loadingBlockedUsers = false;
   client_enum.MyRoomRelation _roomRelationFilter =
       client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL;
   client_enum.MyRoomListSortBy _roomSortBy =
@@ -216,6 +230,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   final TextEditingController _notificationSearchController =
       TextEditingController();
   final TextEditingController _roomSearchController = TextEditingController();
+  final TextEditingController _blockedUserSearchController =
+      TextEditingController();
   late final OpaqueAuthenticatorService _opaqueAuthenticator;
 
   bool get _passkeyEnabled =>
@@ -255,6 +271,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     _tabController.dispose();
     _notificationSearchController.dispose();
     _roomSearchController.dispose();
+    _blockedUserSearchController.dispose();
     super.dispose();
   }
 
@@ -329,6 +346,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           )
         else
           Future<bool?>.value(false),
+        _loadOptional(
+          errors,
+          _moduleBlockedUsers,
+          () => _gateway.listBlockedUsers(
+            page: _blockedUsersPage,
+            pageSize: _blockedUsersPageSize,
+            search: _blockedUserSearchController.text.trim(),
+          ),
+        ),
       ]);
       if (!mounted) return;
       setState(() {
@@ -342,6 +368,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _linkedOAuth2 = results[4] as List<OAuth2LinkedAccount>? ?? const [];
         _passkeys = results[5] as List<PasskeyCredentialInfo>? ?? const [];
         _passkeyAvailable = results[6] as bool? ?? false;
+        _blockedUsers = results[7] as BlockedUsersPage?;
         _loadErrors = Map.unmodifiable(errors);
         _loading = false;
       });
@@ -1256,6 +1283,87 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
   }
 
+  Future<void> _reloadBlockedUsers({int? page}) async {
+    var targetPage = page ?? _blockedUsersPage;
+    if (targetPage < 1) targetPage = 1;
+    setState(() => _loadingBlockedUsers = true);
+    try {
+      var blockedUsers = await _fetchBlockedUsersPage(targetPage);
+      var actualPage = targetPage;
+      final maxPage = _blockedUsersMaxPage(blockedUsers.total);
+      if (targetPage > maxPage) {
+        actualPage = maxPage;
+        blockedUsers = await _fetchBlockedUsersPage(actualPage);
+      }
+      if (!mounted) return;
+      setState(() {
+        _blockedUsers = blockedUsers;
+        _blockedUsersPage = actualPage;
+        _loadingBlockedUsers = false;
+        _clearLoadError(_moduleBlockedUsers);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadingBlockedUsers = false;
+        _setLoadError(_moduleBlockedUsers, e);
+      });
+      AppNotifications.showError(
+        context,
+        context.l10n.blockedUsersTemporarilyUnavailable,
+      );
+    }
+  }
+
+  Future<BlockedUsersPage> _fetchBlockedUsersPage(int page) {
+    return _gateway.listBlockedUsers(
+      page: page,
+      pageSize: _blockedUsersPageSize,
+      search: _blockedUserSearchController.text.trim(),
+    );
+  }
+
+  Future<void> _reloadBlockedUsersFromFirstPage() {
+    return _reloadBlockedUsers(page: 1);
+  }
+
+  int _blockedUsersMaxPage(int total) {
+    if (total <= 0) return 1;
+    return ((total + _blockedUsersPageSize - 1) / _blockedUsersPageSize).ceil();
+  }
+
+  Future<void> _unblockUser(BlockedUserInfo blockedUser) async {
+    final user = blockedUser.user;
+    final name = user.username.trim().isEmpty ? user.id : user.username.trim();
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      builder: (context) => AppConfirmDialog(
+        icon: const Icon(Icons.person_add_alt_1_outlined),
+        title: context.l10n.unblockUser,
+        content: Text(context.l10n.confirmUnblockUser(name)),
+        confirmLabel: context.l10n.unblockUser,
+        confirmIcon: Icons.person_add_alt_1_outlined,
+        onConfirm: () => Navigator.pop(context, true),
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await _gateway.unblockUser(user.id);
+      if (!mounted) return;
+      await _reloadBlockedUsers();
+      if (!mounted) return;
+      AppNotifications.showSuccess(context, context.l10n.userUnblocked);
+    } catch (e) {
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.unblockUserFailed('$e'),
+        );
+      }
+    }
+  }
+
   String? _loadError(String label) => _loadErrors[label];
 
   void _setLoadError(String label, Object error) {
@@ -1512,6 +1620,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _buildOverviewTab(theme),
         _buildProfileTab(theme),
         _buildRoomsTab(theme),
+        _buildPrivacyTab(theme),
         _buildSecurityTab(theme),
         _buildNotificationsTab(theme),
         _buildBindingsTab(theme),
@@ -2228,6 +2337,156 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             ),
                           );
                         },
+                      );
+                    },
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrivacyTab(ThemeData theme) {
+    final page = _blockedUsers;
+    final loadError = _loadError(_moduleBlockedUsers);
+    final users = page?.users ?? const <BlockedUserInfo>[];
+    final total = page?.total ?? 0;
+    final maxPage = _blockedUsersMaxPage(total);
+    final pageStart = total == 0
+        ? 0
+        : ((_blockedUsersPage - 1) * _blockedUsersPageSize) + 1;
+    final pageEnd = total == 0
+        ? 0
+        : (_blockedUsersPage * _blockedUsersPageSize).clamp(0, total);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SectionHeader(
+                          title: context.l10n.blockedUsers,
+                          subtitle: context.l10n.blockedUsersDescription,
+                          icon: Icons.person_off_outlined,
+                          dense: true,
+                        ),
+                      ),
+                      AppIconButton(
+                        onPressed: _loadingBlockedUsers
+                            ? null
+                            : _reloadBlockedUsers,
+                        icon: Icons.refresh_rounded,
+                        tooltip: context.l10n.refresh,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  AppSearchField(
+                    controller: _blockedUserSearchController,
+                    hintText: context.l10n.searchBlockedUsers,
+                    enabled: !_loadingBlockedUsers,
+                    onChanged: (value) {
+                      if (value.isEmpty) _reloadBlockedUsersFromFirstPage();
+                    },
+                    onSubmitted: (_) => _reloadBlockedUsersFromFirstPage(),
+                  ),
+                  const SizedBox(height: 8),
+                  AppPaginationBar(
+                    padding: EdgeInsets.zero,
+                    label: context.l10n.pageRangeSummary(
+                      _blockedUsersPage,
+                      maxPage,
+                      pageStart,
+                      pageEnd,
+                      total,
+                    ),
+                    onPrevious: _loadingBlockedUsers || _blockedUsersPage <= 1
+                        ? null
+                        : () =>
+                              _reloadBlockedUsers(page: _blockedUsersPage - 1),
+                    onNext: _loadingBlockedUsers || _blockedUsersPage >= maxPage
+                        ? null
+                        : () =>
+                              _reloadBlockedUsers(page: _blockedUsersPage + 1),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: loadError != null && page == null
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: _LoadErrorBanner(
+                      title: context.l10n.blockedUsersTemporarilyUnavailable,
+                      moduleInfo: _moduleInfo[_moduleBlockedUsers],
+                      message: loadError,
+                      onRetry: _reloadBlockedUsers,
+                    ),
+                  ),
+                )
+              : users.isEmpty
+              ? AppEmptyMessage(message: context.l10n.noBlockedUsers)
+              : AppRefreshIndicator(
+                  onRefresh: _reloadBlockedUsers,
+                  child: AppListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+                    itemCount: users.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final blockedUser = users[index];
+                      final user = blockedUser.user;
+                      final name = user.username.trim().isEmpty
+                          ? user.id
+                          : user.username.trim();
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 900),
+                          child: AppPanelSurface(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: theme.dividerColor.withValues(alpha: 0.6),
+                            ),
+                            child: AppTile(
+                              prefix: AppAvatar(
+                                name: name,
+                                imageUrl: user.avatarUrl,
+                                size: 42,
+                              ),
+                              title: Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                context.l10n.blockedAt(
+                                  _formatTimestamp(blockedUser.blockedAt),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              suffix: AppActionButton(
+                                onPressed: _loadingBlockedUsers
+                                    ? null
+                                    : () => _unblockUser(blockedUser),
+                                icon: Icons.person_add_alt_1_outlined,
+                                label: context.l10n.unblockUser,
+                                style: AppActionButtonStyle.outlined,
+                              ),
+                            ),
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -3220,7 +3479,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           SizedBox(
             width: double.infinity,
             child: AppActionButton(
-              onPressed: () => _tabController.animateTo(3),
+              onPressed: () => _tabController.animateTo(4),
               icon: Icons.security_rounded,
               label: context.l10n.manageSecurity,
               style: AppActionButtonStyle.outlined,

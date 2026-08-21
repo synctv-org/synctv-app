@@ -502,6 +502,20 @@ class UserNotificationsPage {
   });
 }
 
+class BlockedUserInfo {
+  const BlockedUserInfo({required this.user, required this.blockedAt});
+
+  final SyncTvUser user;
+  final int blockedAt;
+}
+
+class BlockedUsersPage {
+  const BlockedUsersPage({required this.users, required this.total});
+
+  final List<BlockedUserInfo> users;
+  final int total;
+}
+
 class PasskeyCredentialInfo {
   final String credentialId;
   final String name;

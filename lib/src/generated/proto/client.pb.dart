@@ -333,6 +333,435 @@ class UserPublicView extends $pb.GeneratedMessage {
   FileObjectAccess ensureAvatarAccess() => $_ensure(6);
 }
 
+class BlockedUser extends $pb.GeneratedMessage {
+  factory BlockedUser({
+    UserPublicView? user,
+    $fixnum.Int64? blockedAt,
+  }) {
+    final result = create();
+    if (user != null) result.user = user;
+    if (blockedAt != null) result.blockedAt = blockedAt;
+    return result;
+  }
+
+  BlockedUser._();
+
+  factory BlockedUser.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BlockedUser.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BlockedUser',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<UserPublicView>(1, _omitFieldNames ? '' : 'user',
+        subBuilder: UserPublicView.create)
+    ..aInt64(2, _omitFieldNames ? '' : 'blockedAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BlockedUser clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BlockedUser copyWith(void Function(BlockedUser) updates) =>
+      super.copyWith((message) => updates(message as BlockedUser))
+          as BlockedUser;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BlockedUser create() => BlockedUser._();
+  @$core.override
+  BlockedUser createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BlockedUser getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BlockedUser>(create);
+  static BlockedUser? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  UserPublicView get user => $_getN(0);
+  @$pb.TagNumber(1)
+  set user(UserPublicView value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUser() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUser() => $_clearField(1);
+  @$pb.TagNumber(1)
+  UserPublicView ensureUser() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get blockedAt => $_getI64(1);
+  @$pb.TagNumber(2)
+  set blockedAt($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasBlockedAt() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearBlockedAt() => $_clearField(2);
+}
+
+class BlockUserRequest extends $pb.GeneratedMessage {
+  factory BlockUserRequest({
+    $core.String? userId,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    return result;
+  }
+
+  BlockUserRequest._();
+
+  factory BlockUserRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BlockUserRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BlockUserRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BlockUserRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BlockUserRequest copyWith(void Function(BlockUserRequest) updates) =>
+      super.copyWith((message) => updates(message as BlockUserRequest))
+          as BlockUserRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BlockUserRequest create() => BlockUserRequest._();
+  @$core.override
+  BlockUserRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BlockUserRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BlockUserRequest>(create);
+  static BlockUserRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+}
+
+class BlockUserResponse extends $pb.GeneratedMessage {
+  factory BlockUserResponse({
+    BlockedUser? blockedUser,
+  }) {
+    final result = create();
+    if (blockedUser != null) result.blockedUser = blockedUser;
+    return result;
+  }
+
+  BlockUserResponse._();
+
+  factory BlockUserResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BlockUserResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BlockUserResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<BlockedUser>(1, _omitFieldNames ? '' : 'blockedUser',
+        subBuilder: BlockedUser.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BlockUserResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BlockUserResponse copyWith(void Function(BlockUserResponse) updates) =>
+      super.copyWith((message) => updates(message as BlockUserResponse))
+          as BlockUserResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BlockUserResponse create() => BlockUserResponse._();
+  @$core.override
+  BlockUserResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BlockUserResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BlockUserResponse>(create);
+  static BlockUserResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  BlockedUser get blockedUser => $_getN(0);
+  @$pb.TagNumber(1)
+  set blockedUser(BlockedUser value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasBlockedUser() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBlockedUser() => $_clearField(1);
+  @$pb.TagNumber(1)
+  BlockedUser ensureBlockedUser() => $_ensure(0);
+}
+
+class UnblockUserRequest extends $pb.GeneratedMessage {
+  factory UnblockUserRequest({
+    $core.String? userId,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    return result;
+  }
+
+  UnblockUserRequest._();
+
+  factory UnblockUserRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UnblockUserRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UnblockUserRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnblockUserRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnblockUserRequest copyWith(void Function(UnblockUserRequest) updates) =>
+      super.copyWith((message) => updates(message as UnblockUserRequest))
+          as UnblockUserRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UnblockUserRequest create() => UnblockUserRequest._();
+  @$core.override
+  UnblockUserRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UnblockUserRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UnblockUserRequest>(create);
+  static UnblockUserRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+}
+
+class UnblockUserResponse extends $pb.GeneratedMessage {
+  factory UnblockUserResponse({
+    $core.bool? success,
+  }) {
+    final result = create();
+    if (success != null) result.success = success;
+    return result;
+  }
+
+  UnblockUserResponse._();
+
+  factory UnblockUserResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UnblockUserResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UnblockUserResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'success')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnblockUserResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnblockUserResponse copyWith(void Function(UnblockUserResponse) updates) =>
+      super.copyWith((message) => updates(message as UnblockUserResponse))
+          as UnblockUserResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UnblockUserResponse create() => UnblockUserResponse._();
+  @$core.override
+  UnblockUserResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UnblockUserResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UnblockUserResponse>(create);
+  static UnblockUserResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => $_clearField(1);
+}
+
+class ListBlockedUsersRequest extends $pb.GeneratedMessage {
+  factory ListBlockedUsersRequest({
+    $core.int? page,
+    $core.int? pageSize,
+    $core.String? search,
+  }) {
+    final result = create();
+    if (page != null) result.page = page;
+    if (pageSize != null) result.pageSize = pageSize;
+    if (search != null) result.search = search;
+    return result;
+  }
+
+  ListBlockedUsersRequest._();
+
+  factory ListBlockedUsersRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListBlockedUsersRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListBlockedUsersRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'page')
+    ..aI(2, _omitFieldNames ? '' : 'pageSize')
+    ..aOS(3, _omitFieldNames ? '' : 'search')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListBlockedUsersRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListBlockedUsersRequest copyWith(
+          void Function(ListBlockedUsersRequest) updates) =>
+      super.copyWith((message) => updates(message as ListBlockedUsersRequest))
+          as ListBlockedUsersRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListBlockedUsersRequest create() => ListBlockedUsersRequest._();
+  @$core.override
+  ListBlockedUsersRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListBlockedUsersRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListBlockedUsersRequest>(create);
+  static ListBlockedUsersRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get page => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set page($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPage() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPage() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get pageSize => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set pageSize($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPageSize() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPageSize() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get search => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set search($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSearch() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSearch() => $_clearField(3);
+}
+
+class ListBlockedUsersResponse extends $pb.GeneratedMessage {
+  factory ListBlockedUsersResponse({
+    $core.Iterable<BlockedUser>? users,
+    $core.int? total,
+  }) {
+    final result = create();
+    if (users != null) result.users.addAll(users);
+    if (total != null) result.total = total;
+    return result;
+  }
+
+  ListBlockedUsersResponse._();
+
+  factory ListBlockedUsersResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListBlockedUsersResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListBlockedUsersResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pPM<BlockedUser>(1, _omitFieldNames ? '' : 'users',
+        subBuilder: BlockedUser.create)
+    ..aI(2, _omitFieldNames ? '' : 'total')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListBlockedUsersResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListBlockedUsersResponse copyWith(
+          void Function(ListBlockedUsersResponse) updates) =>
+      super.copyWith((message) => updates(message as ListBlockedUsersResponse))
+          as ListBlockedUsersResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListBlockedUsersResponse create() => ListBlockedUsersResponse._();
+  @$core.override
+  ListBlockedUsersResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListBlockedUsersResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListBlockedUsersResponse>(create);
+  static ListBlockedUsersResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<BlockedUser> get users => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.int get total => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set total($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTotal() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTotal() => $_clearField(2);
+}
+
 class AutoPlaySettings extends $pb.GeneratedMessage {
   factory AutoPlaySettings({
     $core.bool? enabled,
@@ -3803,6 +4232,7 @@ class Room extends $pb.GeneratedMessage {
     RoomCategory? category,
     $core.Iterable<RoomLabel>? labels,
     $core.bool? isPublic,
+    $core.bool? creatorBlocked,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -3823,6 +4253,7 @@ class Room extends $pb.GeneratedMessage {
     if (category != null) result.category = category;
     if (labels != null) result.labels.addAll(labels);
     if (isPublic != null) result.isPublic = isPublic;
+    if (creatorBlocked != null) result.creatorBlocked = creatorBlocked;
     return result;
   }
 
@@ -3865,6 +4296,7 @@ class Room extends $pb.GeneratedMessage {
     ..pPM<RoomLabel>(17, _omitFieldNames ? '' : 'labels',
         subBuilder: RoomLabel.create)
     ..aOB(18, _omitFieldNames ? '' : 'isPublic')
+    ..aOB(19, _omitFieldNames ? '' : 'creatorBlocked')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4050,6 +4482,15 @@ class Room extends $pb.GeneratedMessage {
   $core.bool hasIsPublic() => $_has(17);
   @$pb.TagNumber(18)
   void clearIsPublic() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $core.bool get creatorBlocked => $_getBF(18);
+  @$pb.TagNumber(19)
+  set creatorBlocked($core.bool value) => $_setBool(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasCreatorBlocked() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearCreatorBlocked() => $_clearField(19);
 }
 
 class RoomCategory extends $pb.GeneratedMessage {
@@ -50043,6 +50484,18 @@ class UserServiceApi {
           $pb.ClientContext? ctx, CloseAccountRequest request) =>
       _client.invoke<CloseAccountResponse>(
           ctx, 'UserService', 'CloseAccount', request, CloseAccountResponse());
+  $async.Future<BlockUserResponse> blockUser(
+          $pb.ClientContext? ctx, BlockUserRequest request) =>
+      _client.invoke<BlockUserResponse>(
+          ctx, 'UserService', 'BlockUser', request, BlockUserResponse());
+  $async.Future<UnblockUserResponse> unblockUser(
+          $pb.ClientContext? ctx, UnblockUserRequest request) =>
+      _client.invoke<UnblockUserResponse>(
+          ctx, 'UserService', 'UnblockUser', request, UnblockUserResponse());
+  $async.Future<ListBlockedUsersResponse> listBlockedUsers(
+          $pb.ClientContext? ctx, ListBlockedUsersRequest request) =>
+      _client.invoke<ListBlockedUsersResponse>(ctx, 'UserService',
+          'ListBlockedUsers', request, ListBlockedUsersResponse());
 
   /// User-initiated room lifecycle operations outside room-scoped context
   $async.Future<Room> createRoom(

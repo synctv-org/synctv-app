@@ -207,6 +207,7 @@ class SyncTvRoom {
   final bool joined;
   final bool canJoin;
   final client.RoomDiscoveryAccess discoveryAccess;
+  final bool creatorBlocked;
 
   bool get isActive => status == common_enum.RoomStatus.ROOM_STATUS_ACTIVE;
 
@@ -248,6 +249,7 @@ class SyncTvRoom {
     this.canJoin = false,
     this.discoveryAccess =
         client.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_UNSPECIFIED,
+    this.creatorBlocked = false,
   });
 
   SyncTvRoom copyWith({
@@ -284,6 +286,7 @@ class SyncTvRoom {
     bool? joined,
     bool? canJoin,
     client.RoomDiscoveryAccess? discoveryAccess,
+    bool? creatorBlocked,
   }) {
     return SyncTvRoom(
       roomId: roomId ?? this.roomId,
@@ -319,6 +322,7 @@ class SyncTvRoom {
       joined: joined ?? this.joined,
       canJoin: canJoin ?? this.canJoin,
       discoveryAccess: discoveryAccess ?? this.discoveryAccess,
+      creatorBlocked: creatorBlocked ?? this.creatorBlocked,
     );
   }
 }

@@ -20,6 +20,24 @@ final class SyncTvAccountGateway implements AccountGateway {
       SyncTvService.getMe(refresh: refresh);
 
   @override
+  Future<BlockedUserInfo> blockUser(String userId) =>
+      SyncTvService.blockUser(userId);
+
+  @override
+  Future<void> unblockUser(String userId) => SyncTvService.unblockUser(userId);
+
+  @override
+  Future<BlockedUsersPage> listBlockedUsers({
+    int page = 1,
+    int pageSize = 50,
+    String? search,
+  }) => SyncTvService.listBlockedUsers(
+    page: page,
+    pageSize: pageSize,
+    search: search,
+  );
+
+  @override
   Future<PublicSettingsInfo> getPublicSettings({bool refresh = false}) =>
       SyncTvService.getPublicSettings(refresh: refresh);
 

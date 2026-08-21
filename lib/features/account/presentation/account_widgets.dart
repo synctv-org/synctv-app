@@ -909,6 +909,12 @@ class _RoomManagementTile extends StatelessWidget {
                   label: context.l10n.banned,
                   danger: true,
                 ),
+              if (room.creatorBlocked)
+                _StatusPill(
+                  icon: Icons.person_off_outlined,
+                  label: context.l10n.blockedCreator,
+                  danger: true,
+                ),
             ],
           );
           final meta = AppTooltip(

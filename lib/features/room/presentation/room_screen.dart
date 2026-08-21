@@ -27,6 +27,7 @@ import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/application/room_realtime_protocol.dart';
+import 'package:synctv_app/features/account/application/account_gateway.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/application/subtitle_source.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
@@ -291,6 +292,7 @@ class _RoomScreenState extends State<RoomScreen>
   static const _endedLiveStreamDrainTimeout = Duration(seconds: 120);
 
   late final RoomChatGateway _chatGateway;
+  late final AccountGateway _accountGateway;
   late final ChatReadStateUpdater _chatReadStateUpdater;
   late final RoomPlaybackGateway _playbackGateway;
   late final PlaybackModePreferencesController _playbackModePreferences;
@@ -334,6 +336,7 @@ class _RoomScreenState extends State<RoomScreen>
   final Map<String, RoomRealtimeChatEntry> _chatMessageCache = {};
   final Map<String, GlobalKey> _chatMessageKeys = {};
   final Map<String, ChatMessageReadReceiptsInfo> _chatReceiptCache = {};
+  final Set<String> _blockedUserIds = <String>{};
   final Set<String> _loadingReplyMessageIds = {};
   final Set<String> _chatReceiptLoadingIds = {};
   final List<RealtimeEventLogEntry> _realtimeEvents = [];
@@ -568,6 +571,7 @@ class _RoomScreenState extends State<RoomScreen>
     _onlineGuestCount = widget.room.onlineGuestCount;
     _mediaSearchController = TextEditingController();
     _chatGateway = DependencyScope.read<RoomChatGateway>(context);
+    _accountGateway = DependencyScope.read<AccountGateway>(context);
     _chatReadStateUpdater = ChatReadStateUpdater(
       markRead: (messageId) =>
           _chatGateway.markRead(widget.room.roomId, messageId),
@@ -982,6 +986,36 @@ class _RoomScreenState extends State<RoomScreen>
     _connectRealtime();
     if (_sessionGateway.sessionIdentity is AccountSessionIdentity) {
       unawaited(_fetchCurrentUser());
+      unawaited(_loadBlockedUserIds());
+    }
+  }
+
+  Future<void> _loadBlockedUserIds() async {
+    try {
+      final blockedUserIds = <String>{};
+      var page = 1;
+      while (true) {
+        final result = await _accountGateway.listBlockedUsers(
+          page: page,
+          pageSize: 100,
+        );
+        blockedUserIds.addAll(result.users.map((item) => item.user.id));
+        if (blockedUserIds.length >= result.total || result.users.isEmpty) {
+          break;
+        }
+        page++;
+      }
+      if (!mounted) return;
+      setState(() {
+        _blockedUserIds
+          ..clear()
+          ..addAll(blockedUserIds.where((userId) => userId.isNotEmpty));
+        for (final userId in _blockedUserIds) {
+          _removeBlockedUserContent(userId);
+        }
+      });
+    } catch (e) {
+      debugPrint('Fetch blocked users error: $e');
     }
   }
 
@@ -1441,6 +1475,7 @@ class _RoomScreenState extends State<RoomScreen>
       if (message.chatEventId.isNotEmpty) {
         _lastChatEventId = message.chatEventId;
       }
+      if (_blockedUserIds.contains(chatEntry.userId)) return;
 
       if (message.isChatCreated &&
           _playbackOverlayPreferences.value.chatDanmakuEnabled &&
@@ -1495,6 +1530,7 @@ class _RoomScreenState extends State<RoomScreen>
     } else if (type == RoomRealtimeMessageKind.chatPin) {
       final event = message.chatPinEvent;
       if (event == null) return;
+      if (_blockedUserIds.contains(event.message.userId)) return;
       if (mounted) {
         setState(() => _applyChatPinEvent(event));
       }
@@ -5172,6 +5208,14 @@ class _RoomScreenState extends State<RoomScreen>
           color: scheme.error,
           onPressed: () => _deleteChatMessage(message),
         ),
+      if (!isMine && message.userId.isNotEmpty)
+        _buildChatActionIcon(
+          tooltip: context.l10n.blockUser,
+          icon: Icons.person_off_outlined,
+          color: scheme.error,
+          onPressed: () =>
+              _blockUser(userId: message.userId, username: message.username),
+        ),
       _buildChatActionIcon(
         tooltip: context.l10n.report,
         icon: Icons.flag_outlined,
@@ -5332,7 +5376,7 @@ class _RoomScreenState extends State<RoomScreen>
       anchorX: position.dx,
       anchorY: position.dy,
       reactionCount: commonChatReactionKeys.length,
-      actionCount: isMine || _canDeleteChatMessages ? 5 : 4,
+      actionCount: isMine || _canDeleteChatMessages ? 6 : 5,
     );
     await showGeneralDialog<void>(
       context: context,
@@ -5446,6 +5490,17 @@ class _RoomScreenState extends State<RoomScreen>
                     color: scheme.error,
                     onClose: onClose,
                     onPressed: () => _deleteChatMessage(message),
+                  ),
+                if (!isMine && message.userId.isNotEmpty)
+                  _buildContextActionIcon(
+                    tooltip: context.l10n.blockUser,
+                    icon: Icons.person_off_outlined,
+                    color: scheme.error,
+                    onClose: onClose,
+                    onPressed: () => _blockUser(
+                      userId: message.userId,
+                      username: message.username,
+                    ),
                   ),
                 _buildContextActionIcon(
                   tooltip: context.l10n.report,
@@ -5690,6 +5745,107 @@ class _RoomScreenState extends State<RoomScreen>
         reason: reason,
       ),
     );
+  }
+
+  Future<void> _blockUser({
+    required String userId,
+    required String username,
+  }) async {
+    if (userId.isEmpty || userId == _currentUser?.id) return;
+    final name = username.trim().isEmpty ? userId : username.trim();
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      builder: (context) => AppConfirmDialog(
+        icon: const Icon(Icons.person_off_outlined),
+        title: context.l10n.blockUser,
+        content: Text(context.l10n.confirmBlockUser(name)),
+        confirmLabel: context.l10n.blockUser,
+        confirmIcon: Icons.person_off_outlined,
+        destructive: true,
+        onConfirm: () => Navigator.pop(context, true),
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await _accountGateway.blockUser(userId);
+      if (!mounted) return;
+      setState(() {
+        _blockedUserIds.add(userId);
+        _removeBlockedUserContent(userId);
+      });
+      AppNotifications.showSuccess(context, context.l10n.userBlocked);
+    } catch (e) {
+      if (mounted) {
+        AppNotifications.showError(context, context.l10n.blockUserFailed('$e'));
+      }
+    }
+  }
+
+  Future<void> _unblockUserFromRoom(SyncTvUser user) async {
+    if (user.id.isEmpty) return;
+    final name = user.username.trim().isEmpty ? user.id : user.username.trim();
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      builder: (context) => AppConfirmDialog(
+        icon: const Icon(Icons.person_add_alt_1_outlined),
+        title: context.l10n.unblockUser,
+        content: Text(context.l10n.confirmUnblockUser(name)),
+        confirmLabel: context.l10n.unblockUser,
+        confirmIcon: Icons.person_add_alt_1_outlined,
+        onConfirm: () => Navigator.pop(context, true),
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await _accountGateway.unblockUser(user.id);
+      if (!mounted) return;
+      setState(() => _blockedUserIds.remove(user.id));
+      await Future.wait([_loadChatHistory(), _loadPinnedChatMessages()]);
+      if (!mounted) return;
+      AppNotifications.showSuccess(context, context.l10n.userUnblocked);
+    } catch (e) {
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.unblockUserFailed('$e'),
+        );
+      }
+    }
+  }
+
+  void _removeBlockedUserContent(String userId) {
+    final removedEntries = <RoomRealtimeChatEntry>[
+      ..._messages.where((entry) => entry.userId == userId),
+      ..._pinnedMessages.where((entry) => entry.userId == userId),
+      ..._chatMessageCache.values.where((entry) => entry.userId == userId),
+    ];
+    final messageIds = removedEntries
+        .map((entry) => entry.id)
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    final dedupeKeys = removedEntries.map((entry) => entry.dedupeKey).toSet();
+
+    _messages.removeWhere((entry) => entry.userId == userId);
+    _pinnedMessages.removeWhere((entry) => entry.userId == userId);
+    _chatMessageCache.removeWhere((_, entry) => entry.userId == userId);
+    _chatMessageKeys.removeWhere((id, _) => messageIds.contains(id));
+    _chatReceiptCache.removeWhere((id, _) => messageIds.contains(id));
+    _loadingReplyMessageIds.removeAll(messageIds);
+    _chatReceiptLoadingIds.removeAll(messageIds);
+    _mentionCandidates.removeWhere((user) => user.id == userId);
+    _pendingChatMentions.removeWhere((mention) => mention.userId == userId);
+    if (_replyingToMessage?.userId == userId) _replyingToMessage = null;
+    if (dedupeKeys.contains(_hoveredChatMessageId)) {
+      _hoveredChatMessageId = null;
+    }
+    if (dedupeKeys.contains(_activeChatMessageId)) {
+      _activeChatMessageId = null;
+    }
+    if (dedupeKeys.contains(_expandedChatActionMessageId)) {
+      _expandedChatActionMessageId = null;
+    }
   }
 
   Future<void> _showReportContentDialog({
@@ -6845,6 +7001,7 @@ class _RoomScreenState extends State<RoomScreen>
                     member.username == widget.room.creator;
                 final isTargetAdmin = member.role.isRoomAdministrator;
                 final isMe = _currentUser?.id == member.id;
+                final isBlocked = _blockedUserIds.contains(member.id);
                 final targetLevel = isTargetCreator
                     ? 3
                     : (isTargetAdmin ? 2 : 1);
@@ -6853,8 +7010,10 @@ class _RoomScreenState extends State<RoomScreen>
                 final canKick = _canRemoveMembers && viewerLevel > targetLevel;
 
                 final memberActions = <Widget>[
-                  if (!isMe && !isTargetCreator) ...[
-                    if (canManageRole && member.role.isRoomMember)
+                  if (!isMe) ...[
+                    if (!isTargetCreator &&
+                        canManageRole &&
+                        member.role.isRoomMember)
                       AppIconButton(
                         icon: Icons.admin_panel_settings_outlined,
                         tooltip: context.l10n.makeAdmin,
@@ -6863,7 +7022,7 @@ class _RoomScreenState extends State<RoomScreen>
                         iconSize: 18,
                         style: AppIconButtonStyle.tonal,
                       ),
-                    if (canManageRole && isTargetAdmin)
+                    if (!isTargetCreator && canManageRole && isTargetAdmin)
                       AppIconButton(
                         icon: Icons.remove_moderator_outlined,
                         tooltip: context.l10n.removeAdmin,
@@ -6872,7 +7031,7 @@ class _RoomScreenState extends State<RoomScreen>
                         iconSize: 18,
                         style: AppIconButtonStyle.outlined,
                       ),
-                    if (canKick)
+                    if (!isTargetCreator && canKick)
                       AppIconButton(
                         icon: Icons.remove_circle_outline,
                         tooltip: context.l10n.removeMember,
@@ -6890,12 +7049,29 @@ class _RoomScreenState extends State<RoomScreen>
                       style: AppIconButtonStyle.outlined,
                     ),
                     AppIconButton(
-                      icon: Icons.person_off_outlined,
+                      icon: Icons.person_search_outlined,
                       tooltip: context.l10n.reportUser,
                       onPressed: () => _showReportUserDialog(member),
                       size: AppIconButtonSize.sm,
                       iconSize: 18,
                       style: AppIconButtonStyle.outlined,
+                    ),
+                    AppIconButton(
+                      icon: Icons.person_off_outlined,
+                      tooltip: isBlocked
+                          ? context.l10n.unblockUser
+                          : context.l10n.blockUser,
+                      onPressed: isBlocked
+                          ? () => _unblockUserFromRoom(member)
+                          : () => _blockUser(
+                              userId: member.id,
+                              username: member.username,
+                            ),
+                      size: AppIconButtonSize.sm,
+                      iconSize: 18,
+                      style: isBlocked
+                          ? AppIconButtonStyle.tonal
+                          : AppIconButtonStyle.destructive,
                     ),
                   ],
                 ];
@@ -6968,6 +7144,11 @@ class _RoomScreenState extends State<RoomScreen>
                                     _RoomMiniBadge(
                                       label: context.l10n.me,
                                       color: theme.primaryColor,
+                                    ),
+                                  if (isBlocked)
+                                    _RoomMiniBadge(
+                                      label: context.l10n.userBlocked,
+                                      color: theme.colorScheme.error,
                                     ),
                                   if (isTargetAdmin) ...[
                                     _RoomMiniBadge(

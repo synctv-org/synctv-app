@@ -7558,4 +7558,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get staleWhileRevalidate => 'Stale while revalidate';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get blockedUsers => 'Blocked users';
+
+  @override
+  String get blockedUsersDescription =>
+      'Messages from these users are hidden, and rooms they create are excluded from Home discovery.';
+
+  @override
+  String get blockUser => 'Block user';
+
+  @override
+  String get unblockUser => 'Unblock user';
+
+  @override
+  String confirmBlockUser(String name) {
+    return 'Block $name? Their messages will disappear and their rooms will be hidden from Home discovery. Existing room memberships remain available.';
+  }
+
+  @override
+  String confirmUnblockUser(String name) {
+    return 'Unblock $name? Their messages and rooms will become visible again.';
+  }
+
+  @override
+  String get userBlocked => 'User blocked';
+
+  @override
+  String get userUnblocked => 'User unblocked';
+
+  @override
+  String blockUserFailed(String error) {
+    return 'Could not block user: $error';
+  }
+
+  @override
+  String unblockUserFailed(String error) {
+    return 'Could not unblock user: $error';
+  }
+
+  @override
+  String get noBlockedUsers => 'No blocked users';
+
+  @override
+  String get searchBlockedUsers => 'Search blocked users';
+
+  @override
+  String blockedAt(String time) {
+    return 'Blocked $time';
+  }
+
+  @override
+  String get blockedCreator => 'Blocked creator';
+
+  @override
+  String get blockedUsersTemporarilyUnavailable =>
+      'Blocked users are temporarily unavailable';
 }
