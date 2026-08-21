@@ -216,4 +216,108 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('uses explicit page navigation without scroll loading', (
+    tester,
+  ) async {
+    var previousCalls = 0;
+    var nextCalls = 0;
+    var loadMoreCalls = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            height: 260,
+            child: DiscoveryBrowser(
+              items: [
+                for (var index = 0; index < 20; index++)
+                  DiscoveryBrowserEntry(
+                    key: 'item-$index',
+                    title: 'Item $index',
+                    source: testDiscoveredMediaSource(),
+                    isContainer: false,
+                  ),
+              ],
+              loading: false,
+              paginationMode: DiscoveryPaginationMode.page,
+              page: 2,
+              pageSize: 20,
+              total: 60,
+              hasMore: true,
+              onLoadMore: () async => loadMoreCalls++,
+              onPreviousPage: () => previousCalls++,
+              onNextPage: () => nextCalls++,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(AppPaginationBar), findsOneWidget);
+    expect(find.byType(AppLoadMoreFooter), findsNothing);
+    await tester.drag(
+      find.byType(AppSingleChildScrollView),
+      const Offset(0, -2000),
+    );
+    await tester.pump();
+    expect(loadMoreCalls, 0);
+
+    final pagination = find.byType(AppPaginationBar);
+    await tester.tap(
+      find.descendant(
+        of: pagination,
+        matching: find.byIcon(Icons.chevron_left_rounded),
+      ),
+    );
+    await tester.tap(
+      find.descendant(
+        of: pagination,
+        matching: find.byIcon(Icons.chevron_right_rounded),
+      ),
+    );
+    expect(previousCalls, 1);
+    expect(nextCalls, 1);
+  });
+
+  testWidgets('keeps cursor pagination as append-style loading', (
+    tester,
+  ) async {
+    var loadMoreCalls = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            height: 260,
+            child: DiscoveryBrowser(
+              items: [
+                DiscoveryBrowserEntry(
+                  key: 'item',
+                  title: 'Item',
+                  source: testDiscoveredMediaSource(),
+                  isContainer: false,
+                ),
+              ],
+              loading: false,
+              hasMore: true,
+              onLoadMore: () async => loadMoreCalls++,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(AppPaginationBar), findsNothing);
+    expect(find.byType(AppLoadMoreFooter), findsOneWidget);
+    await tester.tap(find.text('加载更多'));
+    await tester.pump();
+    expect(loadMoreCalls, 1);
+  });
 }

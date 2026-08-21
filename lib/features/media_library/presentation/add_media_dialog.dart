@@ -252,6 +252,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   List<AlistItemInfo> _alistFiles = [];
   bool _alistLoading = false;
   int _alistPage = 1;
+  int _alistTotal = 0;
   bool _alistHasMore = true;
   String _alistServerId = '';
   String _alistInstanceName = '';
@@ -267,6 +268,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   List<EmbyItemInfo> _embyFiles = [];
   bool _embyLoading = false;
   int _embyPage = 1;
+  int _embyTotal = 0;
   bool _embyHasMore = true;
   String _embyServerId = '';
   String _embyInstanceName = '';
@@ -280,6 +282,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   List<CloudreveItemInfo> _cloudreveFiles = [];
   bool _cloudreveLoading = false;
   int _cloudrevePage = 1;
+  int _cloudreveTotal = 0;
   bool _cloudreveUsesCursor = false;
   String _cloudreveNextCursor = '';
   bool _cloudreveHasMore = true;
@@ -2157,8 +2160,25 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       selectionScope: '$_bilibiliInstanceName:$selectedIndex:$title',
       onSelectionChanged: () => setState(() {}),
       loading: _isLoading,
+      paginationMode: _bilibiliPreviewUsesCursor
+          ? DiscoveryPaginationMode.cursor
+          : DiscoveryPaginationMode.page,
+      page: _biliPreview?.page ?? 1,
+      pageSize: 24,
       hasMore: _bilibiliPreviewHasMore,
-      onLoadMore: () => _previewBilibiliCandidate(loadMore: true),
+      onLoadMore: _bilibiliPreviewUsesCursor
+          ? () => _previewBilibiliCandidate(loadMore: true)
+          : null,
+      onPreviousPage:
+          _isLoading ||
+              _bilibiliPreviewUsesCursor ||
+              (_biliPreview?.page ?? 1) <= 1
+          ? null
+          : () => _previewBilibiliCandidate(page: _biliPreview!.page - 1),
+      onNextPage:
+          _isLoading || _bilibiliPreviewUsesCursor || !_bilibiliPreviewHasMore
+          ? null
+          : () => _previewBilibiliCandidate(page: _biliPreview!.page + 1),
       onAddSelected: _addSelectedBilibiliPreviewItems,
       onAddCurrentList: _addBilibiliCandidate,
       currentListLabel: context.l10n.addCurrentList,
@@ -2465,8 +2485,25 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             ),
             onSelectionChanged: () => setState(() {}),
             loading: _alistLoading || _isLoading,
+            paginationMode: DiscoveryPaginationMode.page,
+            page: _alistPage,
+            pageSize: _pageSize,
+            total: _alistTotal,
             hasMore: _alistHasMore,
-            onLoadMore: () => _loadAlist(_alistPath, loadMore: true),
+            onPreviousPage: _alistLoading || _alistPage <= 1
+                ? null
+                : () => _loadAlist(
+                    _alistPath,
+                    page: _alistPage - 1,
+                    preserveResults: true,
+                  ),
+            onNextPage: _alistLoading || !_alistHasMore
+                ? null
+                : () => _loadAlist(
+                    _alistPath,
+                    page: _alistPage + 1,
+                    preserveResults: true,
+                  ),
             onOpen: (entry) => _openAlistDirectory(entry.key),
             onAddSelected: _addDiscoveredEntries,
             onAddCurrentList: _alistListSource == null
@@ -2622,8 +2659,25 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       selectionScope: _providerBindKey(_embyServerId, _embyInstanceName),
       onSelectionChanged: () => setState(() {}),
       loading: _embyLoading || _isLoading,
+      paginationMode: DiscoveryPaginationMode.page,
+      page: _embyPage,
+      pageSize: _pageSize,
+      total: _embyTotal,
       hasMore: _embyHasMore,
-      onLoadMore: () => _loadEmby(_embyPath, loadMore: true),
+      onPreviousPage: _embyLoading || _embyPage <= 1
+          ? null
+          : () => _loadEmby(
+              _embyPath,
+              page: _embyPage - 1,
+              preserveResults: true,
+            ),
+      onNextPage: _embyLoading || !_embyHasMore
+          ? null
+          : () => _loadEmby(
+              _embyPath,
+              page: _embyPage + 1,
+              preserveResults: true,
+            ),
       onOpen: (entry) => _enterEmbyDir(entry.key, entry.title),
       onAddSelected: _addDiscoveredEntries,
       onAddCurrentList: _embyListSource == null
@@ -2743,8 +2797,32 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       ),
       onSelectionChanged: () => setState(() {}),
       loading: _cloudreveLoading || _isLoading,
+      paginationMode: _cloudreveUsesCursor
+          ? DiscoveryPaginationMode.cursor
+          : DiscoveryPaginationMode.page,
+      page: _cloudrevePage,
+      pageSize: _pageSize,
+      total: _cloudreveTotal,
       hasMore: _cloudreveHasMore,
-      onLoadMore: () => _loadCloudreve(_cloudrevePath, loadMore: true),
+      onLoadMore: _cloudreveUsesCursor
+          ? () => _loadCloudreve(_cloudrevePath, loadMore: true)
+          : null,
+      onPreviousPage:
+          _cloudreveLoading || _cloudreveUsesCursor || _cloudrevePage <= 1
+          ? null
+          : () => _loadCloudreve(
+              _cloudrevePath,
+              requestedPage: _cloudrevePage - 1,
+              preserveResults: true,
+            ),
+      onNextPage:
+          _cloudreveLoading || _cloudreveUsesCursor || !_cloudreveHasMore
+          ? null
+          : () => _loadCloudreve(
+              _cloudrevePath,
+              requestedPage: _cloudrevePage + 1,
+              preserveResults: true,
+            ),
       onOpen: (entry) => _openCloudreveDirectory(entry.key),
       onAddSelected: _addDiscoveredEntries,
       onAddCurrentList: _cloudreveListSource == null
@@ -3886,7 +3964,14 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     return _biliPreview?.hasMore ?? false;
   }
 
-  Future<void> _previewBilibiliCandidate({bool loadMore = false}) async {
+  bool get _bilibiliPreviewUsesCursor =>
+      _selectedBilibiliCandidate?.browse?.mode ==
+      BilibiliPlaylistListMode.history;
+
+  Future<void> _previewBilibiliCandidate({
+    bool loadMore = false,
+    int? page,
+  }) async {
     final candidate = _selectedBilibiliCandidate;
     if (candidate == null || !candidate.isPlaylist) return;
     final intent = candidate.browse;
@@ -3897,15 +3982,16 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     try {
       final preview = await providerGateway.listBilibiliPlaylist(
         intent,
-        page: loadMore ? (current?.page ?? 1) + 1 : 1,
+        page: page ?? (loadMore ? (current?.page ?? 1) + 1 : 1),
         pageSize: 24,
-        cursor: loadMore ? current?.cursor : null,
+        cursor: _bilibiliPreviewUsesCursor && loadMore ? current?.cursor : null,
         instanceName: candidate.source.providerInstanceName,
         shared: _bilibiliShared,
       );
       if (mounted) {
         setState(() {
-          _biliPreview = loadMore && current != null
+          _biliPreview =
+              _bilibiliPreviewUsesCursor && loadMore && current != null
               ? BilibiliPlaylistListPage(
                   items: [...current.items, ...preview.items],
                   hasMore: preview.hasMore,
@@ -3984,11 +4070,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  Future<void> _loadAlist(String path, {bool loadMore = false}) async {
+  Future<void> _loadAlist(
+    String path, {
+    int page = 1,
+    bool preserveResults = false,
+  }) async {
     if (_alistBinds.isEmpty || _alistServerId.isEmpty) return;
-    if (loadMore && _alistLoading) return;
-
-    int targetPage = loadMore ? _alistPage + 1 : 1;
+    if (_alistLoading) return;
     final keyword = _alistKeyword;
     final password = _alistPasswordController.text;
     if (password != _alistPassword) {
@@ -3997,11 +4085,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
     setState(() {
       _alistLoading = true;
-      if (!loadMore) {
+      _alistPath = path;
+      _alistListSource = null;
+      if (!preserveResults) {
         _alistSelection.clear();
-        _alistPath = path;
         _alistFiles = [];
-        _alistListSource = null;
+        _alistTotal = 0;
       }
     });
 
@@ -4009,7 +4098,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       final pageInfo = await providerGateway.listAlistPage(
         path,
         keyword: keyword,
-        page: targetPage,
+        page: page,
         max: _pageSize,
         password: password,
         serverId: _alistServerId,
@@ -4022,15 +4111,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         setState(() {
           _alistServerId = pageInfo.serverId;
           _alistInstanceName = pageInfo.providerInstanceName;
-          if (loadMore) {
-            _alistFiles.addAll(newItems);
-            _alistPage = targetPage;
-          } else {
-            _alistFiles = newItems;
-            _alistPage = 1;
-          }
-
-          _alistHasMore = _alistFiles.length < total;
+          _alistFiles = newItems;
+          _alistPage = page;
+          _alistTotal = total;
+          _alistHasMore = page * _pageSize < total;
           _alistListSource = pageInfo.source;
         });
       }
@@ -4044,28 +4128,32 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  Future<void> _loadCloudreve(String path, {bool loadMore = false}) async {
+  Future<void> _loadCloudreve(
+    String path, {
+    bool loadMore = false,
+    int requestedPage = 1,
+    bool preserveResults = false,
+  }) async {
     if (_cloudreveBinds.isEmpty || _cloudreveServerId.isEmpty) return;
     if (loadMore && _cloudreveLoading) return;
-    final targetPage = loadMore ? _cloudrevePage + 1 : 1;
+    final targetPage = loadMore ? _cloudrevePage + 1 : requestedPage;
     setState(() {
       _cloudreveLoading = true;
-      if (!loadMore) {
+      if (!loadMore && !preserveResults) {
         _cloudreveSelection.clear();
         _cloudrevePath = path;
         _cloudreveFiles = [];
+        _cloudreveTotal = 0;
         _cloudreveListSource = null;
       }
     });
     try {
-      final page = await providerGateway.listCloudrevePage(
+      final result = await providerGateway.listCloudrevePage(
         path,
         keyword: _cloudreveKeyword,
         page: targetPage,
         max: _pageSize,
-        offset: _cloudreveKeyword.isNotEmpty && loadMore
-            ? _cloudreveFiles.length
-            : 0,
+        offset: _cloudreveKeyword.isNotEmpty ? (targetPage - 1) * _pageSize : 0,
         cursor: _cloudreveKeyword.isEmpty && loadMore && _cloudreveUsesCursor
             ? _cloudreveNextCursor
             : null,
@@ -4074,19 +4162,20 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       );
       if (!mounted) return;
       setState(() {
-        if (loadMore) {
-          _cloudreveFiles.addAll(page.items);
+        if (result.usesCursor && loadMore) {
+          _cloudreveFiles.addAll(result.items);
           _cloudrevePage = targetPage;
         } else {
-          _cloudreveFiles = page.items;
-          _cloudrevePage = 1;
+          _cloudreveFiles = result.items;
+          _cloudrevePage = targetPage;
         }
-        _cloudreveUsesCursor = page.usesCursor;
-        _cloudreveNextCursor = page.nextCursor;
-        _cloudreveHasMore = page.usesCursor
-            ? page.nextCursor.isNotEmpty
-            : _cloudreveFiles.length < page.total;
-        _cloudreveListSource = page.source;
+        _cloudreveTotal = result.total;
+        _cloudreveUsesCursor = result.usesCursor;
+        _cloudreveNextCursor = result.nextCursor;
+        _cloudreveHasMore = result.usesCursor
+            ? result.nextCursor.isNotEmpty
+            : targetPage * _pageSize < result.total;
+        _cloudreveListSource = result.source;
       });
     } catch (e) {
       if (mounted) {
@@ -4222,19 +4311,24 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     _loadAlist(parts.length == 1 && parts[0] == '' ? '/' : parts.join('/'));
   }
 
-  Future<void> _loadEmby(String path, {bool loadMore = false}) async {
+  Future<void> _loadEmby(
+    String path, {
+    int page = 1,
+    bool preserveResults = false,
+  }) async {
     if (_embyBinds.isEmpty || _embyServerId.isEmpty) return;
-    if (loadMore && _embyLoading) return;
-    final targetPage = loadMore ? _embyPage + 1 : 1;
+    if (_embyLoading) return;
+    final targetPage = page;
     final keyword = _embyKeyword;
 
     setState(() {
       _embyLoading = true;
-      if (!loadMore) {
+      _embyPath = path;
+      _embyListSource = null;
+      if (!preserveResults) {
         _embySelection.clear();
-        _embyPath = path;
         _embyFiles = [];
-        _embyListSource = null;
+        _embyTotal = 0;
       }
     });
     try {
@@ -4253,14 +4347,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         setState(() {
           _embyServerId = pageInfo.serverId;
           _embyInstanceName = pageInfo.providerInstanceName;
-          if (loadMore) {
-            _embyFiles.addAll(newItems);
-            _embyPage = targetPage;
-          } else {
-            _embyFiles = newItems;
-            _embyPage = 1;
-          }
-          _embyHasMore = _embyFiles.length < total;
+          _embyFiles = newItems;
+          _embyPage = targetPage;
+          _embyTotal = total;
+          _embyHasMore = targetPage * _pageSize < total;
           _embyListSource = pageInfo.source;
         });
       }

@@ -212,6 +212,85 @@ void main() {
     );
   });
 
+  test('playlist observation encodes the requested page', () {
+    final message = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodePlaylistObservation(
+        playlistId: 'pl_1',
+        page: 3,
+        pageSize: 20,
+        search: 'movie',
+      ),
+    );
+
+    final request = message.observeResource.playlistItems.request;
+    expect(request.page.page, 3);
+    expect(request.pageSize, 20);
+    expect(request.search, 'movie');
+    expect(request.playlistId, 'pl_1');
+  });
+
+  test('playlist observation omits pagination when page is unspecified', () {
+    final message = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodePlaylistObservation(playlistId: 'pl_dynamic'),
+    );
+
+    final request = message.observeResource.playlistItems.request;
+    expect(
+      request.whichPagination(),
+      client.ListPlaylistItemsRequest_Pagination.notSet,
+    );
+    expect(request.pageSize, 100);
+  });
+
+  test('playlist observation encodes cursor pagination', () {
+    final message = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodePlaylistObservation(
+        playlistId: 'pl_dynamic',
+        cursor: 'next-page',
+      ),
+    );
+
+    final request = message.observeResource.playlistItems.request;
+    expect(
+      request.whichPagination(),
+      client.ListPlaylistItemsRequest_Pagination.cursor,
+    );
+    expect(request.cursor.cursor, 'next-page');
+  });
+
+  test('empty cursor does not override an explicit page', () {
+    final message = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodePlaylistObservation(page: 2, cursor: ''),
+    );
+
+    final request = message.observeResource.playlistItems.request;
+    expect(
+      request.whichPagination(),
+      client.ListPlaylistItemsRequest_Pagination.page,
+    );
+    expect(request.page.page, 2);
+  });
+
+  test('static playlist response keeps the requested page', () {
+    RoomRealtimeCodec.encodePlaylistObservation(
+      observeId: 'playlist_page',
+      playlistId: 'pl_static',
+      page: 4,
+    );
+
+    final decoded = RoomRealtimeCodec.decode(
+      client.ServerMessage(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'playlist_page',
+          playlistItems: client.ListPlaylistItemsResponse(total: Int64(120)),
+        ),
+      ).writeToBuffer(),
+    );
+
+    expect(decoded.mediaLibrary?.page, 4);
+    expect(decoded.mediaLibrary?.usesCursor, isFalse);
+  });
+
   test('playback resource snapshot preserves dynamic target identity', () {
     final target = client.ProviderTarget(
       alist: client.AlistTarget(relativePath: '/video.mp4'),

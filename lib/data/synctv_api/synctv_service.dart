@@ -935,7 +935,7 @@ class SyncTvService {
     String version = '',
     String playlistId = '',
     String? target,
-    int page = 1,
+    int? page,
     int pageSize = 100,
     String search = '',
     source_enum.SourceProvider sourceProvider =
@@ -980,7 +980,7 @@ class SyncTvService {
 
   static Future<RoomMediaLibraryPage> listMediaLibrary(
     String roomId, {
-    int page = 1,
+    int? page,
     String? cursor,
     int pageSize = 50,
     String playlistId = '',

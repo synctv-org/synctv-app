@@ -404,6 +404,7 @@ class _RoomScreenState extends State<RoomScreen>
   bool _usesCursorPagination = false;
   String _nextCursor = '';
   final int _pageSize = 20;
+  int? _mediaEntryTotal;
   bool _hasMoreMediaEntries = true;
   bool _isLoadingMoreMediaEntries = false;
   bool _isRefreshingMediaEntries = false;
@@ -1177,6 +1178,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _onMediaEntryScroll() {
+    if (!_usesCursorPagination) return;
     if (_mediaEntryScrollController.position.pixels >=
         _mediaEntryScrollController.position.maxScrollExtent - 200) {
       if (!_isLoadingMediaEntries &&
@@ -1201,7 +1203,7 @@ class _RoomScreenState extends State<RoomScreen>
         ? _playlistStack.last
         : null;
     final requestedPage = _currentPage + 1;
-    final requestedCursor = _usesCursorPagination ? _nextCursor : null;
+    final requestedCursor = _nextCursor;
     final requestedSearch = _mediaSearchController.text.trim();
 
     setState(() {
@@ -1229,6 +1231,7 @@ class _RoomScreenState extends State<RoomScreen>
           _usesCursorPagination = result.usesCursor;
           _nextCursor = result.nextCursor;
           _currentPage = result.page;
+          _mediaEntryTotal = result.total;
           _mediaSupportsSearch = result.supportsSearch;
           _hasMoreMediaEntries = result.usesCursor
               ? result.nextCursor.isNotEmpty
@@ -1631,6 +1634,7 @@ class _RoomScreenState extends State<RoomScreen>
           _currentPage = 1;
           _usesCursorPagination = false;
           _nextCursor = '';
+          _mediaEntryTotal = null;
           _hasMoreMediaEntries = false;
           _isLoadingMediaEntries = false;
           _isLoadingMoreMediaEntries = false;
@@ -1967,7 +1971,9 @@ class _RoomScreenState extends State<RoomScreen>
   void _applyMediaLibrary(RoomMediaLibraryPage mediaLibrary) {
     if (!mounted) return;
     final scopeChanged = _mediaEntriesScopeKey != _selectionObservationScopeKey;
-    if (!scopeChanged) {
+    final pageChanged =
+        !mediaLibrary.usesCursor && mediaLibrary.page != _currentPage;
+    if (!scopeChanged && !pageChanged) {
       final currentIds = mediaLibrary.entries.map((entry) => entry.id).toSet();
       for (final entry in _mediaEntries) {
         if (!currentIds.contains(entry.id)) {
@@ -1986,11 +1992,10 @@ class _RoomScreenState extends State<RoomScreen>
       _mediaSupportsSearch = mediaLibrary.supportsSearch;
       _mediaEntriesScopeKey = _selectionObservationScopeKey;
       _currentPage = mediaLibrary.page;
+      _mediaEntryTotal = mediaLibrary.total;
       _usesCursorPagination = mediaLibrary.usesCursor;
       _nextCursor = mediaLibrary.nextCursor;
-      _hasMoreMediaEntries = mediaLibrary.usesCursor
-          ? mediaLibrary.nextCursor.isNotEmpty
-          : (mediaLibrary.total ?? 0) > _mediaEntries.length;
+      _hasMoreMediaEntries = mediaLibrary.hasNextPage(_pageSize);
       _isLoadingMediaEntries = false;
       if (_selectedMediaEntryIds.isEmpty) _isSelectionMode = false;
     });
@@ -6042,6 +6047,21 @@ class _RoomScreenState extends State<RoomScreen>
                 )
               : _buildPlaylistEntries(primaryColor, selectionMode),
         ),
+        if (!_isLoadingMediaEntries &&
+            !_usesCursorPagination &&
+            (_mediaEntries.isNotEmpty || _currentPage > 1))
+          AppPaginationBar.page(
+            context: context,
+            page: _currentPage,
+            pageSize: _pageSize,
+            total: _mediaEntryTotal,
+            onPrevious: _isRefreshingMediaEntries || _currentPage <= 1
+                ? null
+                : () => _observeCurrentPlaylist(page: _currentPage - 1),
+            onNext: _isRefreshingMediaEntries || !_hasMoreMediaEntries
+                ? null
+                : () => _observeCurrentPlaylist(page: _currentPage + 1),
+          ),
       ],
     );
   }
@@ -6050,7 +6070,9 @@ class _RoomScreenState extends State<RoomScreen>
     return switch (_playlistViewMode) {
       _PlaylistViewMode.compact => AppListView.builder(
         controller: _mediaEntryScrollController,
-        itemCount: _mediaEntries.length + (_hasMoreMediaEntries ? 1 : 0),
+        itemCount:
+            _mediaEntries.length +
+            (_usesCursorPagination && _hasMoreMediaEntries ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _mediaEntries.length) return _buildPlaylistLoadingRow();
           return _buildCompactPlaylistEntry(
@@ -6063,7 +6085,9 @@ class _RoomScreenState extends State<RoomScreen>
       _PlaylistViewMode.detailed => AppListView.builder(
         controller: _mediaEntryScrollController,
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-        itemCount: _mediaEntries.length + (_hasMoreMediaEntries ? 1 : 0),
+        itemCount:
+            _mediaEntries.length +
+            (_usesCursorPagination && _hasMoreMediaEntries ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _mediaEntries.length) return _buildPlaylistLoadingRow();
           return _buildDetailedPlaylistEntry(
@@ -6082,7 +6106,9 @@ class _RoomScreenState extends State<RoomScreen>
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
         ),
-        itemCount: _mediaEntries.length + (_hasMoreMediaEntries ? 1 : 0),
+        itemCount:
+            _mediaEntries.length +
+            (_usesCursorPagination && _hasMoreMediaEntries ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _mediaEntries.length) return _buildPlaylistLoadingCard();
           return _buildGridPlaylistEntry(
@@ -7040,20 +7066,24 @@ class _RoomScreenState extends State<RoomScreen>
     _observeCurrentPlaylist();
   }
 
-  void _observeCurrentPlaylist() {
+  void _observeCurrentPlaylist({int? page}) {
+    _invalidateMediaLibraryRequests();
     final parentPlaylist = _playlistStack.isNotEmpty
         ? _playlistStack.last
         : null;
     _selectionObservationScopeKey =
         '${parentPlaylist?.playbackPlaylistId ?? ''}::'
         '${parentPlaylist?.playbackTarget ?? ''}';
+    if (page != null && page != _currentPage && mounted) {
+      setState(() => _isLoadingMediaEntries = true);
+    }
     try {
       _sendRealtimeMessage(
         _realtimeProtocol.encodePlaylistObservation(
           playlistId: parentPlaylist?.playbackPlaylistId ?? '',
           target: parentPlaylist?.playbackTarget,
           search: _mediaSearchController.text.trim(),
-          page: 1,
+          page: page,
           pageSize: _pageSize,
         ),
       );
@@ -7079,6 +7109,7 @@ class _RoomScreenState extends State<RoomScreen>
         widget.room.roomId,
         playlistId: playlist?.playbackPlaylistId ?? '',
         target: playlist?.playbackTarget,
+        page: _usesCursorPagination ? null : _currentPage,
         search: _mediaSearchController.text.trim(),
         pageSize: _pageSize,
         refresh: _isInsideProviderTargetScope,
@@ -7100,6 +7131,7 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() {
       _currentPage = 1;
       _nextCursor = '';
+      _mediaEntryTotal = null;
       _usesCursorPagination = false;
       _hasMoreMediaEntries = false;
       _mediaEntries = const [];

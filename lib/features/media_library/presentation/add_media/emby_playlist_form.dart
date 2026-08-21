@@ -92,6 +92,7 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
   provider_common.DiscoveredSource? _listSource;
   String _activeSearch = '';
   int _page = 1;
+  int _total = 0;
   bool _hasMore = false;
   bool _loading = false;
 
@@ -313,8 +314,17 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
                 '${_bind?.id}:${_requestMode.name}:$_targetId:$_activeSearch',
             onSelectionChanged: () => setState(() {}),
             loading: _loading,
+            paginationMode: DiscoveryPaginationMode.page,
+            page: _page,
+            pageSize: _pageSize,
+            total: _total,
             hasMore: _hasMore,
-            onLoadMore: () => _load(loadMore: true),
+            onPreviousPage: _loading || _page <= 1
+                ? null
+                : () => _load(page: _page - 1, preserveSelection: true),
+            onNextPage: _loading || !_hasMore
+                ? null
+                : () => _load(page: _page + 1, preserveSelection: true),
             onOpen: _open,
             onAddSelected: _addSelected,
             onAddCurrentList: _listSource == null ? null : _addCurrentList,
@@ -409,6 +419,7 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
     _listSource = null;
     _selection.clear();
     _page = 1;
+    _total = 0;
     _hasMore = false;
     _activeSearch = '';
     if (!keepLocation) _locations.clear();
@@ -425,13 +436,13 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
     _load();
   }
 
-  Future<void> _load({bool loadMore = false}) async {
+  Future<void> _load({int? page, bool preserveSelection = false}) async {
     final bind = _bind;
     if (bind == null || _loading) return;
-    final nextPage = loadMore ? _page + 1 : 1;
+    final nextPage = page ?? 1;
     setState(() {
       _loading = true;
-      if (!loadMore) _selection.clear();
+      if (!preserveSelection) _selection.clear();
     });
     try {
       final page =
@@ -456,13 +467,10 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
               ));
       if (!mounted) return;
       setState(() {
-        if (loadMore) {
-          _items = [..._items, ...page.items];
-        } else {
-          _items = page.items;
-        }
+        _items = page.items;
         _page = nextPage;
-        _hasMore = _items.length < page.total;
+        _total = page.total;
+        _hasMore = _page * _pageSize < page.total;
         _listSource = page.source;
       });
     } catch (error) {

@@ -74,7 +74,8 @@ final class ProtobufRoomRealtimeProtocol implements RoomRealtimeProtocol {
     String version = '',
     String playlistId = '',
     String? target,
-    int page = 1,
+    int? page,
+    String? cursor,
     int pageSize = 100,
     String search = '',
     source_enum.SourceProvider sourceProvider =
@@ -92,6 +93,7 @@ final class ProtobufRoomRealtimeProtocol implements RoomRealtimeProtocol {
     playlistId: playlistId,
     target: target,
     page: page,
+    cursor: cursor,
     pageSize: pageSize,
     search: search,
     sourceProvider: sourceProvider,

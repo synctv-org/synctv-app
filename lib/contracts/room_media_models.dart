@@ -49,6 +49,12 @@ class RoomMediaLibraryPage {
 
   List<RoomMediaEntry> get entries => [...playlists, ...media, ...dynamicItems];
 
+  bool hasNextPage(int pageSize) {
+    if (usesCursor) return nextCursor.isNotEmpty;
+    if (total case final total?) return page * pageSize < total;
+    return entries.length >= pageSize;
+  }
+
   int get effectivePlaylistCount =>
       playlistCount + dynamicItems.where((item) => item.isPlaylist).length;
 

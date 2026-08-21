@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
+import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/emby_playlist_form.dart';
 import 'package:synctv_app/features/providers/application/provider_gateway.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
@@ -326,6 +327,68 @@ void main() {
       gateway.addedSource?.media.emby.proxyMode,
       source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
     );
+  });
+
+  testWidgets('replaces Emby results when changing pages', (tester) async {
+    final requestedPages = <int>[];
+    await tester.binding.setSurfaceSize(const Size(900, 850));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: EmbyPlaylistForm(
+            roomId: 'room',
+            parentId: 'root',
+            binds: const [bind],
+            onDraftChanged: (_) {},
+            loader: (_, _, _, _, _, page, _) async {
+              requestedPages.add(page);
+              return EmbyListPage(
+                serverId: 'server',
+                providerInstanceName: '',
+                items: [
+                  EmbyItemInfo(
+                    id: 'movie-$page',
+                    name: 'Movie page $page',
+                    type: 'Movie',
+                    isDir: false,
+                    parentId: '',
+                    seriesName: '',
+                    seriesId: '',
+                    seasonName: '',
+                    thumbnail: '',
+                    source: testDiscoveredMediaSource(name: 'Movie page $page'),
+                  ),
+                ],
+                total: 60,
+                source: testDiscoveredPlaylistSource(),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('emby-preview')));
+    await tester.pumpAndSettle();
+    expect(find.text('Movie page 1'), findsOneWidget);
+
+    final pagination = find.byType(AppPaginationBar);
+    await tester.tap(
+      find.descendant(
+        of: pagination,
+        matching: find.byIcon(Icons.chevron_right_rounded),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(requestedPages, [1, 2]);
+    expect(find.text('Movie page 1'), findsNothing);
+    expect(find.text('Movie page 2'), findsOneWidget);
   });
 }
 

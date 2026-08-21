@@ -446,7 +446,7 @@ final class SyncTvProviderGateway implements ProviderGateway {
   @override
   Future<RoomMediaLibraryPage> listMediaLibrary(
     String roomId, {
-    int page = 1,
+    int? page,
     String? cursor,
     int pageSize = 50,
     String playlistId = '',

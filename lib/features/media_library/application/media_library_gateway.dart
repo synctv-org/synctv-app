@@ -9,7 +9,7 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
 abstract interface class MediaLibraryGateway {
   Future<RoomMediaLibraryPage> listMediaLibrary(
     String roomId, {
-    int page = 1,
+    int? page,
     String? cursor,
     int pageSize = 50,
     String playlistId = '',

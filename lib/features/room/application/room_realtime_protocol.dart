@@ -45,7 +45,8 @@ abstract interface class RoomRealtimeProtocol {
     String version = '',
     String playlistId = '',
     String? target,
-    int page = 1,
+    int? page,
+    String? cursor,
     int pageSize = 100,
     String search = '',
     source_enum.SourceProvider sourceProvider =

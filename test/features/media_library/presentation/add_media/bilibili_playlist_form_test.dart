@@ -388,18 +388,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Season one · Updated'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('bilibili-followed-load-more')));
+    final followedPagination = find.byKey(
+      const Key('bilibili-followed-pagination'),
+    );
+    await tester.ensureVisible(followedPagination);
+    await tester.tap(
+      find.descendant(
+        of: followedPagination,
+        matching: find.byIcon(Icons.chevron_right_rounded),
+      ),
+    );
     await tester.pumpAndSettle();
+    expect(find.text('Season one · Updated'), findsNothing);
     await tester.tap(find.byKey(const Key('bilibili-followed-pgc')));
     await tester.pumpAndSettle();
-    expect(find.text('Season two · Updated'), findsOneWidget);
-    await tester.tap(find.text('Season one · Updated').last);
+    expect(find.text('Season two · Updated'), findsWidgets);
+    await tester.tap(find.text('Season two · Updated').last);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('bilibili-playlist-preview')));
     await tester.pumpAndSettle();
     expect(requestedIntent?.mode, BilibiliPlaylistListMode.pgcSeason);
-    expect(requestedIntent?.seasonId, 41);
+    expect(requestedIntent?.seasonId, 42);
   });
 
   testWidgets('previews playback history with a native history filter', (
@@ -627,11 +637,18 @@ void main() {
     expect(requestedYear, '2020-2026');
     expect(find.text('Indexed season'), findsOneWidget);
 
-    await tester.ensureVisible(
-      find.byKey(const Key('bilibili-pgc-index-load-more')),
+    final pgcPagination = find.byKey(
+      const Key('bilibili-pgc-index-pagination'),
     );
-    await tester.tap(find.byKey(const Key('bilibili-pgc-index-load-more')));
+    await tester.ensureVisible(pgcPagination);
+    await tester.tap(
+      find.descendant(
+        of: pgcPagination,
+        matching: find.byIcon(Icons.chevron_right_rounded),
+      ),
+    );
     await tester.pumpAndSettle();
+    expect(find.text('Indexed season'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('bilibili-pgc-season-52')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(

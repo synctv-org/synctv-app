@@ -143,7 +143,7 @@ class SyncTvRoomMediaDomainService {
     String version = '',
     String playlistId = '',
     String? target,
-    int page = 1,
+    int? page,
     int pageSize = 100,
     String search = '',
     source_enum.SourceProvider sourceProvider =
@@ -166,7 +166,7 @@ class SyncTvRoomMediaDomainService {
               request: client.ListPlaylistItemsRequest(
                 playlistId: playlistId,
                 target: providerTargetFromBase64(target),
-                page: client.PagePagination(page: page),
+                page: page == null ? null : client.PagePagination(page: page),
                 pageSize: pageSize,
                 search: search,
                 sourceProvider: sourceProvider,
@@ -196,6 +196,7 @@ class SyncTvRoomMediaDomainService {
             snapshot: _mediaLibraryPageFromProto(
               event.resourceEvent.playlistItems,
               parentId: playlistId,
+              requestedPage: page,
             ),
           );
         });
@@ -203,7 +204,7 @@ class SyncTvRoomMediaDomainService {
 
   Future<RoomMediaLibraryPage> listMediaLibrary(
     String roomId, {
-    int page = 1,
+    int? page,
     String? cursor,
     int pageSize = 50,
     String playlistId = '',
@@ -227,8 +228,12 @@ class SyncTvRoomMediaDomainService {
       client.ListPlaylistItemsRequest(
         playlistId: playlistId,
         target: providerTargetFromBase64(target),
-        page: cursor == null ? client.PagePagination(page: page) : null,
-        cursor: cursor == null ? null : client.CursorPagination(cursor: cursor),
+        page: cursor?.isNotEmpty != true && page != null
+            ? client.PagePagination(page: page)
+            : null,
+        cursor: cursor?.isNotEmpty == true
+            ? client.CursorPagination(cursor: cursor)
+            : null,
         pageSize: pageSize,
         search: search,
         sourceProvider: sourceProvider,
@@ -247,7 +252,11 @@ class SyncTvRoomMediaDomainService {
                   )),
       ),
     );
-    return _mediaLibraryPageFromProto(response, parentId: playlistId);
+    return _mediaLibraryPageFromProto(
+      response,
+      parentId: playlistId,
+      requestedPage: page,
+    );
   }
 
   Future<PlaylistDetailInfo> getPlaylist(
@@ -1110,6 +1119,7 @@ class SyncTvRoomMediaDomainService {
   RoomMediaLibraryPage _mediaLibraryPageFromProto(
     client.ListPlaylistItemsResponse response, {
     String parentId = '',
+    int? requestedPage,
   }) {
     return RoomMediaLibraryPage(
       playlists: response.playlists.map(_api.mapPlaylist).toList(),
@@ -1126,7 +1136,7 @@ class SyncTvRoomMediaDomainService {
           response.whichPagination() ==
           client.ListPlaylistItemsResponse_Pagination.cursor,
       nextCursor: response.hasCursor() ? response.cursor.cursor : '',
-      page: response.hasPage() ? response.page.page : 1,
+      page: response.hasPage() ? response.page.page : requestedPage ?? 1,
       supportsSearch: response.supportsSearch,
     );
   }

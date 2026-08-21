@@ -76,6 +76,8 @@ class DiscoverySelectionController {
   void clear() => _selected.clear();
 }
 
+enum DiscoveryPaginationMode { cursor, page }
+
 class DiscoveryBrowser extends StatefulWidget {
   const DiscoveryBrowser({
     super.key,
@@ -86,6 +88,12 @@ class DiscoveryBrowser extends StatefulWidget {
     this.onAddCurrentList,
     this.onLoadMore,
     this.hasMore = false,
+    this.paginationMode = DiscoveryPaginationMode.cursor,
+    this.page = 1,
+    this.pageSize,
+    this.total,
+    this.onPreviousPage,
+    this.onNextPage,
     this.initiallySelectAll = false,
     this.currentListLabel,
     this.emptyIcon = Icons.video_library_outlined,
@@ -104,6 +112,12 @@ class DiscoveryBrowser extends StatefulWidget {
   final Future<void> Function()? onAddCurrentList;
   final Future<void> Function()? onLoadMore;
   final bool hasMore;
+  final DiscoveryPaginationMode paginationMode;
+  final int page;
+  final int? pageSize;
+  final int? total;
+  final VoidCallback? onPreviousPage;
+  final VoidCallback? onNextPage;
   final bool initiallySelectAll;
   final String? currentListLabel;
   final IconData emptyIcon;
@@ -147,6 +161,7 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
   @override
   Widget build(BuildContext context) {
     final target = _effectiveTarget;
+    final isPageMode = widget.paginationMode == DiscoveryPaginationMode.page;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -177,6 +192,52 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                           return Center(child: emptyState);
                         },
                       )
+              : isPageMode
+              ? LayoutBuilder(
+                  builder: (context, constraints) {
+                    final pagination = AppPaginationBar.page(
+                      context: context,
+                      page: widget.page,
+                      pageSize: widget.pageSize,
+                      total: widget.total,
+                      onPrevious: widget.onPreviousPage,
+                      onNext: widget.onNextPage,
+                    );
+                    if (constraints.hasBoundedHeight &&
+                        constraints.maxHeight < 300) {
+                      return AppSingleChildScrollView(
+                        child: Column(
+                          children: [
+                            for (
+                              var index = 0;
+                              index < widget.items.length;
+                              index++
+                            ) ...[
+                              if (index > 0) const AppDivider(height: 1),
+                              _item(widget.items[index]),
+                            ],
+                            pagination,
+                          ],
+                        ),
+                      );
+                    }
+                    return Column(
+                      children: [
+                        Flexible(
+                          child: AppListView.separated(
+                            primary: true,
+                            itemCount: widget.items.length,
+                            separatorBuilder: (_, _) =>
+                                const AppDivider(height: 1),
+                            itemBuilder: (context, index) =>
+                                _item(widget.items[index]),
+                          ),
+                        ),
+                        pagination,
+                      ],
+                    );
+                  },
+                )
               : NotificationListener<ScrollNotification>(
                   onNotification: (notification) {
                     if (!widget.loading &&

@@ -191,6 +191,11 @@ class RoomSettingsPage extends StatefulWidget {
 
 class _RoomSettingsPageState extends State<RoomSettingsPage>
     with SingleTickerProviderStateMixin {
+  // Dynamic providers may cap a request to 50 items (for example Bilibili).
+  // Keep the client page size aligned with that cap so a full page remains a
+  // reliable signal when the response does not include a total.
+  static const _mediaPageSize = 50;
+
   late final RoomChatGateway _chatGateway;
   late final RoomPlaybackGateway _playbackGateway;
   late final PlaybackModePreferencesController _playbackModePreferences;
@@ -704,6 +709,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   void _startMediaWatch() {
+    _startMediaWatchForPagination();
+  }
+
+  void _startMediaWatchForPagination({int? page, String? cursor}) {
     final previousObserveId = _mediaObserveId;
     _mediaObserveGeneration += 1;
     _mediaObserveId = '${_mediaObserveIdPrefix}_$_mediaObserveGeneration';
@@ -714,8 +723,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         version: _mediaWatchVersion,
         playlistId: _currentPlaylistId,
         target: _mediaTarget,
-        page: 1,
-        pageSize: 100,
+        page: page,
+        cursor: cursor,
+        pageSize: _mediaPageSize,
         search: _mediaSearchController.text.trim(),
         sourceProvider: _mediaSourceProvider,
         providerInstanceName: _mediaProviderInstanceName,
@@ -1270,15 +1280,23 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _loadMediaLibrary({bool refresh = false}) async {
+  Future<void> _loadMediaLibrary({
+    bool refresh = false,
+    int? page,
+    String? cursor,
+    bool append = false,
+  }) async {
     if (!mounted) return;
     final loadGeneration = ++_mediaLoadGeneration;
     setState(() => _mediaLoading = true);
     try {
-      final page = await _mediaLibraryGateway.listMediaLibrary(
+      final result = await _mediaLibraryGateway.listMediaLibrary(
         widget.roomId,
         playlistId: _currentPlaylistId,
         target: _mediaTarget,
+        page: page,
+        cursor: cursor,
+        pageSize: _mediaPageSize,
         search: _mediaSearchController.text.trim(),
         sourceProvider: _mediaSourceProvider,
         providerInstanceName: _mediaProviderInstanceName,
@@ -1288,9 +1306,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         refresh: refresh,
       );
       if (!mounted || loadGeneration != _mediaLoadGeneration) return;
+      final current = _mediaPage;
       setState(() {
-        _mediaPage = page;
-        _mediaWatchVersion = page.version;
+        _mediaPage =
+            append && current != null && current.usesCursor && result.usesCursor
+            ? _appendMediaLibraryPage(current, result)
+            : result;
+        _mediaWatchVersion = result.version;
       });
     } catch (e) {
       if (mounted && loadGeneration == _mediaLoadGeneration) {
@@ -1306,10 +1328,42 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _reloadMediaLibrary({bool refresh = false}) async {
+  Future<void> _reloadMediaLibrary({
+    bool refresh = false,
+    int? page,
+    String? cursor,
+  }) async {
     _mediaWatchVersion = '';
-    _startMediaWatch();
-    await _loadMediaLibrary(refresh: refresh);
+    _startMediaWatchForPagination(page: page, cursor: cursor);
+    await _loadMediaLibrary(refresh: refresh, page: page, cursor: cursor);
+  }
+
+  Future<void> _loadMoreMediaLibrary() async {
+    final page = _mediaPage;
+    if (_mediaLoading || page == null || !page.usesCursor) return;
+    final cursor = page.nextCursor;
+    if (cursor.isEmpty) return;
+    await _loadMediaLibrary(cursor: cursor, append: true);
+  }
+
+  RoomMediaLibraryPage _appendMediaLibraryPage(
+    RoomMediaLibraryPage current,
+    RoomMediaLibraryPage next,
+  ) {
+    return RoomMediaLibraryPage(
+      playlists: [...current.playlists, ...next.playlists],
+      media: [...current.media, ...next.media],
+      dynamicItems: [...current.dynamicItems, ...next.dynamicItems],
+      currentPath: next.currentPath,
+      total: next.total ?? current.total,
+      playlistCount: next.playlistCount,
+      fileCount: next.fileCount,
+      version: next.version,
+      usesCursor: next.usesCursor,
+      nextCursor: next.nextCursor,
+      page: next.page,
+      supportsSearch: next.supportsSearch,
+    );
   }
 
   void _resetRealtimeDiagnostics() {
@@ -4727,6 +4781,27 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildEmptyState(context.l10n.noMediaEntriesAtCurrentLevel, theme)
           else
             ...entries.map((entry) => _buildMediaTile(entry, theme, isDark)),
+          if (page != null && page.usesCursor)
+            AppLoadMoreFooter(
+              loading: _mediaLoading,
+              onPressed: page.nextCursor.isEmpty ? null : _loadMoreMediaLibrary,
+              visible: page.nextCursor.isNotEmpty || _mediaLoading,
+            )
+          else if (page != null &&
+              (entries.isNotEmpty || page.page > 1) &&
+              (page.total != 0 || page.entries.length >= _mediaPageSize))
+            AppPaginationBar.page(
+              context: context,
+              page: page.page,
+              pageSize: _mediaPageSize,
+              total: page.total,
+              onPrevious: _mediaLoading || page.page <= 1
+                  ? null
+                  : () => _reloadMediaLibrary(page: page.page - 1),
+              onNext: _mediaLoading || !page.hasNextPage(_mediaPageSize)
+                  ? null
+                  : () => _reloadMediaLibrary(page: page.page + 1),
+            ),
         ],
       ),
     );

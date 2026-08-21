@@ -112,6 +112,50 @@ void main() {
 
     expect(page.effectivePlaylistCount, 2);
     expect(page.effectiveFileCount, 3);
+    expect(page.hasNextPage(2), isTrue);
+  });
+
+  test('page navigation falls back to page size when total is unavailable', () {
+    final fullPage = RoomMediaLibraryPage(
+      playlists: const [],
+      media: const [],
+      dynamicItems: List.generate(
+        20,
+        (index) => RoomDynamicMediaEntry(
+          id: 'media-$index',
+          name: 'Media $index',
+          parentId: 'playlist',
+          subPath: 'media-$index',
+          isPlaylist: false,
+        ),
+      ),
+      currentPath: const [],
+      total: null,
+      playlistCount: 0,
+      fileCount: 0,
+      version: 'v1',
+      usesCursor: false,
+      nextCursor: '',
+      page: 2,
+      supportsSearch: false,
+    );
+    final partialPage = RoomMediaLibraryPage(
+      playlists: const [],
+      media: const [],
+      dynamicItems: fullPage.dynamicItems.take(5).toList(),
+      currentPath: const [],
+      total: null,
+      playlistCount: 0,
+      fileCount: 0,
+      version: 'v2',
+      usesCursor: false,
+      nextCursor: '',
+      page: 3,
+      supportsSearch: false,
+    );
+
+    expect(fullPage.hasNextPage(20), isTrue);
+    expect(partialPage.hasNextPage(20), isFalse);
   });
 
   test('only active user messages are editable by their sender', () {

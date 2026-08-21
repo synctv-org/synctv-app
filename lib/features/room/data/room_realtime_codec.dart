@@ -23,6 +23,7 @@ import 'package:synctv_app/contracts/synctv_models.dart';
 
 class RoomRealtimeCodec {
   static final Map<String, String> _playlistObserveParents = <String, String>{};
+  static final Map<String, int> _playlistObservePages = <String, int>{};
   static final Map<String, client.ResourceDeliveryMode> _observeDeliveryModes =
       <String, client.ResourceDeliveryMode>{};
 
@@ -358,7 +359,8 @@ class RoomRealtimeCodec {
     String version = '',
     String playlistId = '',
     String? target,
-    int page = 1,
+    int? page,
+    String? cursor,
     int pageSize = 100,
     String search = '',
     source_enum.SourceProvider sourceProvider =
@@ -376,6 +378,11 @@ class RoomRealtimeCodec {
     } else {
       _playlistObserveParents[observeId] = playlistId;
     }
+    if (page == null && (cursor == null || cursor.isEmpty)) {
+      _playlistObservePages.remove(observeId);
+    } else {
+      _playlistObservePages[observeId] = page ?? 1;
+    }
     return _observe(
       observeId,
       playlistItems: client.ObservePlaylistItems(
@@ -383,7 +390,12 @@ class RoomRealtimeCodec {
         request: client.ListPlaylistItemsRequest(
           playlistId: playlistId,
           target: providerTargetFromBase64(target),
-          page: client.PagePagination(page: page),
+          page: page == null || cursor?.isNotEmpty == true
+              ? null
+              : client.PagePagination(page: page),
+          cursor: cursor == null || cursor.isEmpty
+              ? null
+              : client.CursorPagination(cursor: cursor),
           pageSize: pageSize,
           search: search,
           sourceProvider: sourceProvider,
@@ -532,6 +544,7 @@ class RoomRealtimeCodec {
   static List<int> encodeUnobserveResource(String observeId) {
     _observeDeliveryModes.remove(observeId);
     _playlistObserveParents.remove(observeId);
+    _playlistObservePages.remove(observeId);
     return client.ClientMessage(
       unobserveResource: client.UnobserveResource(observeId: observeId),
     ).writeToBuffer();
@@ -850,6 +863,7 @@ class RoomRealtimeCodec {
       mediaLibrary: _mediaLibraryPageFromProto(
         response,
         parentId: _playlistObserveParents[observeId] ?? '',
+        requestedPage: _playlistObservePages[observeId],
       ),
       resourceObserveId: observeId,
       resourceVersion: version,
@@ -1184,6 +1198,7 @@ class RoomRealtimeCodec {
   static RoomMediaLibraryPage _mediaLibraryPageFromProto(
     client.ListPlaylistItemsResponse response, {
     String parentId = '',
+    int? requestedPage,
   }) {
     final resolvedParentId = parentId.isNotEmpty
         ? parentId
@@ -1207,7 +1222,7 @@ class RoomRealtimeCodec {
           response.whichPagination() ==
           client.ListPlaylistItemsResponse_Pagination.cursor,
       nextCursor: response.hasCursor() ? response.cursor.cursor : '',
-      page: response.hasPage() ? response.page.page : 1,
+      page: response.hasPage() ? response.page.page : requestedPage ?? 1,
       supportsSearch: response.supportsSearch,
     );
   }

@@ -147,7 +147,8 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
   bool _followedPgcLoading = false;
   List<BilibiliFollowedPgcInfo> _followedPgc = const [];
   int? _followedSeasonId;
-  int _followedPgcPage = 0;
+  int _followedPgcPage = 1;
+  int _followedPgcTotal = 0;
   bool _followedPgcHasMore = false;
   BilibiliHistoryFilter _historyFilter = BilibiliHistoryFilter.all;
   BilibiliPgcTimelineKind _timelineKind = BilibiliPgcTimelineKind.anime;
@@ -162,11 +163,15 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
   bool _pgcSeasonsLoading = false;
   List<BilibiliPgcSeasonInfo> _pgcSeasons = const [];
   int? _selectedPgcSeasonId;
-  int _pgcSeasonPage = 0;
+  int _pgcSeasonPage = 1;
+  int _pgcSeasonTotal = 0;
   bool _pgcSeasonsHasMore = false;
   BilibiliPlaylistListPage? _preview;
   final List<_BilibiliBrowseLocation> _browsePath = [];
   int _previewRequestVersion = 0;
+
+  bool get _previewUsesCursor =>
+      _currentIntent.mode == BilibiliPlaylistListMode.history;
 
   @override
   void initState() {
@@ -419,26 +424,19 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
                     _changed();
                   },
           ),
-          if (_followedPgcHasMore)
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                key: const Key('bilibili-followed-load-more'),
-                onPressed: _followedPgcLoading
-                    ? null
-                    : () => _loadFollowedPgc(reset: false),
-                icon: _followedPgcLoading
-                    ? const SizedBox.square(
-                        dimension: 16,
-                        child: AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
-                        ),
-                      )
-                    : const Icon(Icons.expand_more),
-                label: Text(context.l10n.loadMore),
-              ),
-            ),
+          AppPaginationBar.page(
+            key: const Key('bilibili-followed-pagination'),
+            context: context,
+            page: _followedPgcPage,
+            pageSize: 30,
+            total: _followedPgcTotal,
+            onPrevious: _followedPgcLoading || _followedPgcPage <= 1
+                ? null
+                : () => _loadFollowedPgc(page: _followedPgcPage - 1),
+            onNext: _followedPgcLoading || !_followedPgcHasMore
+                ? null
+                : () => _loadFollowedPgc(page: _followedPgcPage + 1),
+          ),
         ],
       ],
       if (widget.onProxyModeChanged case final onProxyModeChanged?)
@@ -533,8 +531,23 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
                 '${widget.target.name}:${_browsePath.length}',
             onSelectionChanged: () => setState(() {}),
             loading: _loading,
+            paginationMode: _previewUsesCursor
+                ? DiscoveryPaginationMode.cursor
+                : DiscoveryPaginationMode.page,
+            page: _preview?.page ?? 1,
+            pageSize: 30,
             hasMore: _preview?.hasMore ?? false,
-            onLoadMore: () => _loadPreview(loadMore: true),
+            onLoadMore: _previewUsesCursor
+                ? () => _loadPreview(loadMore: true)
+                : null,
+            onPreviousPage:
+                _loading || _previewUsesCursor || (_preview?.page ?? 1) <= 1
+                ? null
+                : () => _loadPreview(page: _preview!.page - 1),
+            onNextPage:
+                _loading || _previewUsesCursor || _preview?.hasMore != true
+                ? null
+                : () => _loadPreview(page: _preview!.page + 1),
             onOpen: (entry) =>
                 _openBrowse(items.firstWhere((item) => item.id == entry.key)),
             target: widget.target,
@@ -772,13 +785,13 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
     }
     if (mode == BilibiliPlaylistMode.followedAnime ||
         mode == BilibiliPlaylistMode.followedCinema) {
-      unawaited(_loadFollowedPgc(reset: true));
+      unawaited(_loadFollowedPgc());
     }
     if (mode == BilibiliPlaylistMode.pgcTimeline) {
       unawaited(_loadPgcTimeline());
     }
     if (mode == BilibiliPlaylistMode.pgcIndex) {
-      unawaited(_loadPgcSeasons(reset: true));
+      unawaited(_loadPgcSeasons());
     }
     _reloadPreviewWhenReady();
   }
@@ -933,7 +946,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
                   : (value) {
                       if (value == null) return;
                       _pgcSeasonKind = value;
-                      unawaited(_loadPgcSeasons(reset: true));
+                      unawaited(_loadPgcSeasons());
                     },
             ),
           ),
@@ -960,7 +973,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
                   : (value) {
                       if (value == null) return;
                       _pgcSeasonOrder = value;
-                      unawaited(_loadPgcSeasons(reset: true));
+                      unawaited(_loadPgcSeasons());
                     },
             ),
           ),
@@ -989,7 +1002,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
                   ? null
                   : (value) {
                       _pgcFinished = value;
-                      unawaited(_loadPgcSeasons(reset: true));
+                      unawaited(_loadPgcSeasons());
                     },
             ),
           ),
@@ -1004,7 +1017,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
                   ? null
                   : (value) {
                       setState(() => _pgcAscending = value);
-                      unawaited(_loadPgcSeasons(reset: true));
+                      unawaited(_loadPgcSeasons());
                     },
             ),
           ),
@@ -1067,7 +1080,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
               key: const Key('bilibili-pgc-index-search'),
               onPressed: _loading || _pgcSeasonsLoading
                   ? null
-                  : () => _loadPgcSeasons(reset: true),
+                  : () => _loadPgcSeasons(),
               icon: const Icon(Icons.search),
               label: Text(context.l10n.search),
             ),
@@ -1080,26 +1093,19 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
       ] else ...[
         const SizedBox(height: 8),
         ..._pgcSeasons.map(_pgcSeasonTile),
-        if (_pgcSeasonsHasMore)
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              key: const Key('bilibili-pgc-index-load-more'),
-              onPressed: _pgcSeasonsLoading
-                  ? null
-                  : () => _loadPgcSeasons(reset: false),
-              icon: _pgcSeasonsLoading
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: AppLoadingIndicator(
-                        size: AppLoadingSize.sm,
-                        centered: false,
-                      ),
-                    )
-                  : const Icon(Icons.expand_more),
-              label: Text(context.l10n.loadMore),
-            ),
-          ),
+        AppPaginationBar.page(
+          key: const Key('bilibili-pgc-index-pagination'),
+          context: context,
+          page: _pgcSeasonPage,
+          pageSize: 30,
+          total: _pgcSeasonTotal,
+          onPrevious: _pgcSeasonsLoading || _pgcSeasonPage <= 1
+              ? null
+              : () => _loadPgcSeasons(page: _pgcSeasonPage - 1),
+          onNext: _pgcSeasonsLoading || !_pgcSeasonsHasMore
+              ? null
+              : () => _loadPgcSeasons(page: _pgcSeasonPage + 1),
+        ),
       ],
     ];
   }
@@ -1169,13 +1175,13 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
     }
     if (_mode == BilibiliPlaylistMode.followedAnime ||
         _mode == BilibiliPlaylistMode.followedCinema) {
-      unawaited(_loadFollowedPgc(reset: true));
+      unawaited(_loadFollowedPgc());
     }
     if (_mode == BilibiliPlaylistMode.pgcTimeline) {
       unawaited(_loadPgcTimeline());
     }
     if (_mode == BilibiliPlaylistMode.pgcIndex) {
-      unawaited(_loadPgcSeasons(reset: true));
+      unawaited(_loadPgcSeasons());
     }
     _reloadPreviewWhenReady();
   }
@@ -1306,7 +1312,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
   BilibiliPlaylistListIntent get _currentIntent =>
       _browsePath.lastOrNull?.intent ?? _rootIntent;
 
-  Future<void> _loadPreview({bool loadMore = false}) async {
+  Future<void> _loadPreview({bool loadMore = false, int? page}) async {
     if (_loading && loadMore) return;
     final requestVersion = ++_previewRequestVersion;
     final current = _preview;
@@ -1315,12 +1321,12 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
     final shared = _shared;
     setState(() => _loading = true);
     try {
-      final page = loadMore ? (current?.page ?? 1) + 1 : 1;
-      final cursor = loadMore ? current?.cursor : null;
+      final targetPage = page ?? (loadMore ? (current?.page ?? 1) + 1 : 1);
+      final cursor = _previewUsesCursor && loadMore ? current?.cursor : null;
       final preview = switch (widget.loader) {
         final loader? => await loader(
           intent,
-          page,
+          targetPage,
           30,
           cursor,
           instanceName,
@@ -1328,7 +1334,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
         ),
         null => await providerGateway.listBilibiliPlaylist(
           intent,
-          page: page,
+          page: targetPage,
           pageSize: 30,
           cursor: cursor,
           instanceName: instanceName,
@@ -1337,7 +1343,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
       };
       if (!mounted || requestVersion != _previewRequestVersion) return;
       setState(() {
-        _preview = loadMore && current != null
+        _preview = _previewUsesCursor && loadMore && current != null
             ? BilibiliPlaylistListPage(
                 items: [...current.items, ...preview.items],
                 hasMore: preview.hasMore,
@@ -1434,11 +1440,10 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
     }
   }
 
-  Future<void> _loadFollowedPgc({required bool reset}) async {
+  Future<void> _loadFollowedPgc({int page = 1}) async {
     if (_followedPgcLoading) return;
     setState(() => _followedPgcLoading = true);
     try {
-      final page = reset ? 1 : _followedPgcPage + 1;
       final cinema = _mode == BilibiliPlaylistMode.followedCinema;
       final result = switch (widget.onLoadFollowedPgc) {
         final callback? => await callback(cinema, page, _instanceName),
@@ -1451,10 +1456,9 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
       };
       if (!mounted) return;
       setState(() {
-        _followedPgc = reset
-            ? result.items
-            : [..._followedPgc, ...result.items];
+        _followedPgc = result.items;
         _followedPgcPage = page;
+        _followedPgcTotal = result.total;
         _followedPgcHasMore = result.hasMore;
         if (!_followedPgc.any(
           (season) => season.seasonId == _followedSeasonId,
@@ -1501,11 +1505,10 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
     }
   }
 
-  Future<void> _loadPgcSeasons({required bool reset}) async {
+  Future<void> _loadPgcSeasons({int page = 1}) async {
     if (_pgcSeasonsLoading) return;
     setState(() => _pgcSeasonsLoading = true);
     try {
-      final page = reset ? 1 : _pgcSeasonPage + 1;
       final area = _pgcAreaController.text.trim();
       final year = _pgcYearController.text.trim();
       final styleId = int.tryParse(_pgcStyleController.text.trim());
@@ -1536,8 +1539,9 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
       };
       if (!mounted) return;
       setState(() {
-        _pgcSeasons = reset ? result.items : [..._pgcSeasons, ...result.items];
+        _pgcSeasons = result.items;
         _pgcSeasonPage = page;
+        _pgcSeasonTotal = result.total;
         _pgcSeasonsHasMore = result.hasMore;
         if (!_pgcSeasons.any(
           (season) => season.seasonId == _selectedPgcSeasonId,
