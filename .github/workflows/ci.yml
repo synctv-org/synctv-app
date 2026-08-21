@@ -285,3 +285,20 @@ jobs:
           bash tool/ci/verify_apple_private_apis.sh \
             build/ios/iphoneos/Runner.app
           bash tool/ci/package_release.sh ios arm64 "0.0.0+0-ci" dist/ios
+
+  web-docker:
+    name: Build Web Docker image
+    if: inputs.native-build-mode != 'skip'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build Web Docker image
+        env:
+          DOCKER_BUILDKIT: "1"
+        run: docker build --progress=plain -t synctv-web-ci .

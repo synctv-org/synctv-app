@@ -1,0 +1,49 @@
+server {
+    listen ${NGINX_PORT};
+    server_name _;
+
+    # Resolve the backend hostname per request so nginx can still start while
+    # the synctv container is restarting or not yet registered in DNS.
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $synctv_backend ${SYNCTV_BACKEND_URL};
+
+    root /usr/share/nginx/html;
+    index index.html;
+    client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE};
+
+    gzip on;
+    gzip_min_length 1024;
+    gzip_comp_level 5;
+    gzip_types
+        text/plain
+        text/css
+        application/javascript
+        application/json
+        application/wasm
+        image/svg+xml;
+    gzip_vary on;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass $synctv_backend$request_uri;
+        proxy_http_version 1.1;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+    }
+
+    location /ws/rooms/ {
+        proxy_pass $synctv_backend$request_uri;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $http_host;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+}

@@ -46,6 +46,11 @@ on:
         required: true
         type: boolean
         default: false
+      publish_web_docker:
+        description: Build and publish the Flutter Web Docker image on workflow_dispatch
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -1009,10 +1014,77 @@ jobs:
           pkg="$(find dist -maxdepth 1 -type f -name 'SyncTV-*-macos-app-store.pkg' -print -quit)"
           bundle exec fastlane mac mac_app_store pkg:"$pkg"
 
+  web-docker:
+    name: Build and publish Web Docker
+    if: >-
+      github.ref_type == 'tag' ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish_web_docker)
+    needs: metadata
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to Docker registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ${{ vars.SYNCTV_WEB_DOCKER_REGISTRY || 'docker.io' }}
+          username: ${{ secrets.SYNCTV_WEB_DOCKER_USERNAME || secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.SYNCTV_WEB_DOCKER_TOKEN || secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and publish Web Docker image
+        shell: bash
+        env:
+          DOCKER_IMAGE: ${{ vars.SYNCTV_WEB_DOCKER_IMAGE || 'noelorin/synctv-flutter-web' }}
+          DOCKER_PLATFORMS: ${{ vars.SYNCTV_WEB_DOCKER_PLATFORMS || 'linux/amd64,linux/arm64' }}
+          PUBLISH_TAGS: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          extra_tags=()
+          if [[ -n "$PUBLISH_TAGS" ]]; then
+            read -r -a extra_tags <<< "$PUBLISH_TAGS"
+          fi
+
+          tags=("$DOCKER_IMAGE:latest" "$DOCKER_IMAGE:${{ github.sha }}")
+          for tag in "${extra_tags[@]}"; do
+            tags+=("$DOCKER_IMAGE:$tag")
+          done
+
+          build_args=(
+            --pull
+            --platform "$DOCKER_PLATFORMS"
+            --push
+            --build-arg "SYNCTV_BUILT_IN_SERVER_URL=${SYNCTV_BUILT_IN_SERVER_URL:-}"
+            --build-arg "SYNCTV_OPTIMIZATION_LEVEL=${SYNCTV_OPTIMIZATION_LEVEL:-4}"
+            --build-arg "SYNCTV_SOURCE_MAPS=${SYNCTV_SOURCE_MAPS:-0}"
+            --build-arg "SYNCTV_WEB_RESOURCES_CDN=${SYNCTV_WEB_RESOURCES_CDN:-1}"
+            --build-arg "SYNCTV_BASE_HREF=${SYNCTV_BASE_HREF:-}"
+          )
+          for tag in "${tags[@]}"; do
+            build_args+=(--tag "$tag")
+          done
+
+          printf 'Publishing %s with tags: %s\n' "$DOCKER_IMAGE" "${tags[*]}"
+          docker buildx build "${build_args[@]}" .
+
   publish:
     name: Publish GitHub Release
     if: github.ref_type == 'tag'
-    needs: [metadata, android, linux, windows, macos, ios]
+    needs: [metadata, android, linux, windows, macos, ios, web-docker]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

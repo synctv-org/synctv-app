@@ -99,10 +99,7 @@ int _deepHash(Object? value) {
 
 /// Represents a relying party
 class RelyingParty {
-  RelyingParty({
-    required this.name,
-    required this.id,
-  });
+  RelyingParty({required this.name, required this.id});
 
   /// Name of the relying party
   String name;
@@ -111,10 +108,7 @@ class RelyingParty {
   String id;
 
   List<Object?> _toList() {
-    return <Object?>[
-      name,
-      id,
-    ];
+    return <Object?>[name, id];
   }
 
   Object encode() {
@@ -123,10 +117,7 @@ class RelyingParty {
 
   static RelyingParty decode(Object result) {
     result as List<Object?>;
-    return RelyingParty(
-      name: result[0]! as String,
-      id: result[1]! as String,
-    );
+    return RelyingParty(name: result[0]! as String, id: result[1]! as String);
   }
 
   @override
@@ -169,11 +160,7 @@ class CredentialType {
   List<String?> transports;
 
   List<Object?> _toList() {
-    return <Object?>[
-      type,
-      id,
-      transports,
-    ];
+    return <Object?>[type, id, transports];
   }
 
   Object encode() {
@@ -215,10 +202,7 @@ class CredentialType {
 
 /// Represents a user
 class User {
-  User({
-    required this.name,
-    required this.id,
-  });
+  User({required this.name, required this.id});
 
   /// The name
   String name;
@@ -227,10 +211,7 @@ class User {
   String id;
 
   List<Object?> _toList() {
-    return <Object?>[
-      name,
-      id,
-    ];
+    return <Object?>[name, id];
   }
 
   Object encode() {
@@ -239,10 +220,7 @@ class User {
 
   static User decode(Object result) {
     result as List<Object?>;
-    return User(
-      name: result[0]! as String,
-      id: result[1]! as String,
-    );
+    return User(name: result[0]! as String, id: result[1]! as String);
   }
 
   @override

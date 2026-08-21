@@ -4,13 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_opaque/synctv_opaque.dart';
 
 void main() {
-  test('native OPAQUE client creates protocol messages', () {
+  test('native OPAQUE client creates protocol messages', () async {
     final client = SyncTvOpaqueClient();
 
-    final registration = client.startRegistration(
+    final registration = await client.startRegistration(
       'correct horse battery staple',
     );
-    final login = client.startLogin('correct horse battery staple');
+    final login = await client.startLogin('correct horse battery staple');
 
     expect(registration.registrationRequest, isA<Uint8List>());
     expect(registration.registrationRequest, isNotEmpty);

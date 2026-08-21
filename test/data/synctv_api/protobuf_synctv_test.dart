@@ -12690,9 +12690,11 @@ String _expectedContentManifestSha256(
   return sha256.convert(bytes.toBytes()).toString();
 }
 
-class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {
+class _FakeOpaqueClient implements opaque.SyncTvOpaqueClient {
   @override
-  opaque.OpaqueRegistrationStart startRegistration(String password) {
+  Future<opaque.OpaqueRegistrationStart> startRegistration(
+    String password,
+  ) async {
     expect(password, 'plain-room-password');
     return opaque.OpaqueRegistrationStart(
       registrationRequest: Uint8List.fromList([1, 2, 3]),
@@ -12701,11 +12703,11 @@ class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {
   }
 
   @override
-  opaque.OpaqueRegistrationFinish finishRegistration({
+  Future<opaque.OpaqueRegistrationFinish> finishRegistration({
     required String password,
     required Uint8List state,
     required Uint8List registrationResponse,
-  }) {
+  }) async {
     expect(password, 'plain-room-password');
     expect(state, [20, 21, 22]);
     expect(registrationResponse, [9, 8, 7]);
@@ -12715,7 +12717,7 @@ class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {
   }
 
   @override
-  opaque.OpaqueLoginStart startLogin(String password) {
+  Future<opaque.OpaqueLoginStart> startLogin(String password) async {
     expect(password, 'plain-room-password');
     return opaque.OpaqueLoginStart(
       credentialRequest: Uint8List.fromList([40, 41, 42]),
@@ -12724,11 +12726,11 @@ class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {
   }
 
   @override
-  opaque.OpaqueLoginFinish finishLogin({
+  Future<opaque.OpaqueLoginFinish> finishLogin({
     required String password,
     required Uint8List state,
     required Uint8List credentialResponse,
-  }) {
+  }) async {
     expect(password, 'plain-room-password');
     expect(state, [60, 61, 62]);
     expect(credentialResponse, [30, 31, 32]);

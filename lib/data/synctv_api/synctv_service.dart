@@ -105,6 +105,14 @@ class SyncTvService {
     _domains = _createDomains();
   }
 
+  /// Runtime server override: activates the server named by [url] unless it
+  /// is already active. Used on web to inject the current page origin as the
+  /// server, so each deployment consistently points at its own origin.
+  static Future<void> applyServerOverride(String url) async {
+    await _runtime.applyRuntimeServerOverride(url);
+    _domains = _createDomains();
+  }
+
   static Future<void> removeServer(String endpoint) async {
     await _runtime.removeServer(endpoint);
     _domains = _createDomains();

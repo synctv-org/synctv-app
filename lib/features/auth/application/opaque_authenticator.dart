@@ -74,12 +74,12 @@ class OpaqueAuthenticatorService {
       throw const FormatException('请输入账号和密码');
     }
 
-    final start = _client.startLogin(password);
+    final start = await _client.startLogin(password);
     final challenge = await _gateway.startLogin(
       loginSessionId: loginSessionId,
       credentialRequest: start.credentialRequest,
     );
-    final finish = _client.finishLogin(
+    final finish = await _client.finishLogin(
       password: password,
       state: start.state,
       credentialResponse: Uint8List.fromList(challenge.credentialResponse),
@@ -101,13 +101,13 @@ class OpaqueAuthenticatorService {
       throw const FormatException('请输入用户名和密码');
     }
 
-    final start = _client.startRegistration(password);
+    final start = await _client.startRegistration(password);
     final challenge = await _gateway.startRegistration(
       username: normalizedUsername,
       email: normalizedEmail,
       registrationRequest: start.registrationRequest,
     );
-    final finish = _client.finishRegistration(
+    final finish = await _client.finishRegistration(
       password: password,
       state: start.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),
@@ -126,19 +126,19 @@ class OpaqueAuthenticatorService {
       throw const FormatException('请输入当前密码和新密码');
     }
 
-    final loginStart = _client.startLogin(currentPassword);
-    final registrationStart = _client.startRegistration(newPassword);
+    final loginStart = await _client.startLogin(currentPassword);
+    final registrationStart = await _client.startRegistration(newPassword);
     final challenge = await _gateway.startPasswordUpdate(
       credentialRequest: loginStart.credentialRequest,
       registrationRequest: registrationStart.registrationRequest,
       verification: OpaquePasswordVerification.currentPassword,
     );
-    final loginFinish = _client.finishLogin(
+    final loginFinish = await _client.finishLogin(
       password: currentPassword,
       state: loginStart.state,
       credentialResponse: Uint8List.fromList(challenge.credentialResponse),
     );
-    final registrationFinish = _client.finishRegistration(
+    final registrationFinish = await _client.finishRegistration(
       password: newPassword,
       state: registrationStart.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),
@@ -159,13 +159,13 @@ class OpaqueAuthenticatorService {
       throw const FormatException('请输入邮箱验证码和新密码');
     }
 
-    final registrationStart = _client.startRegistration(newPassword);
+    final registrationStart = await _client.startRegistration(newPassword);
     final challenge = await _gateway.startPasswordUpdate(
       registrationRequest: registrationStart.registrationRequest,
       verification: OpaquePasswordVerification.emailToken,
       emailToken: normalizedToken,
     );
-    final registrationFinish = _client.finishRegistration(
+    final registrationFinish = await _client.finishRegistration(
       password: newPassword,
       state: registrationStart.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),
@@ -181,7 +181,7 @@ class OpaqueAuthenticatorService {
       throw const FormatException('请输入新密码');
     }
 
-    final registrationStart = _client.startRegistration(newPassword);
+    final registrationStart = await _client.startRegistration(newPassword);
     final challenge = await _gateway.startPasswordUpdate(
       registrationRequest: registrationStart.registrationRequest,
       verification: OpaquePasswordVerification.passkey,
@@ -193,7 +193,7 @@ class OpaqueAuthenticatorService {
     final credential = await _gateway.getPasskeyCredential(
       challenge.passkeyOptions,
     );
-    final registrationFinish = _client.finishRegistration(
+    final registrationFinish = await _client.finishRegistration(
       password: newPassword,
       state: registrationStart.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),
@@ -219,13 +219,13 @@ class OpaqueAuthenticatorService {
       throw const FormatException('请输入邮箱、验证码和新密码');
     }
 
-    final registrationStart = _client.startRegistration(newPassword);
+    final registrationStart = await _client.startRegistration(newPassword);
     final challenge = await _gateway.startPasswordReset(
       email: normalizedEmail,
       token: normalizedToken,
       registrationRequest: registrationStart.registrationRequest,
     );
-    final registrationFinish = _client.finishRegistration(
+    final registrationFinish = await _client.finishRegistration(
       password: newPassword,
       state: registrationStart.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),

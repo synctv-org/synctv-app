@@ -56,6 +56,7 @@ void main(List<String> args) async {
   }
   await appLocaleController.load();
   await SyncTvService.init();
+  await _applyRuntimeServerOverride();
   if (SyncTvService.activeServer != null) {
     await SyncTvService.syncServerTime();
   }
@@ -152,6 +153,26 @@ void main(List<String> args) async {
     voiceChatSessionFactory: const NativeVoiceChatSessionFactory(),
   );
   runApp(MyApp(dependencies: dependencies));
+}
+
+/// Registers the current page origin as the server on web builds.
+///
+/// The web app is served behind a reverse proxy that forwards `/api` and
+/// `/ws` to a SyncTV backend, so the origin the page was loaded from is a
+/// usable server endpoint. Injecting it at runtime means the app works out of
+/// the box on every deployment: opening a different origin consistently uses
+/// that origin as the server, and accounts, sessions, and cached data stay
+/// isolated per server address. Failures are logged and ignored so startup
+/// never blocks.
+Future<void> _applyRuntimeServerOverride() async {
+  if (!kIsWeb) return;
+  final origin = Uri.base.origin.trim();
+  if (origin.isEmpty) return;
+  try {
+    await SyncTvService.applyServerOverride(origin);
+  } catch (error) {
+    debugPrint("Ignoring runtime server override: $error");
+  }
 }
 
 const _enableAccessibilityTools = bool.fromEnvironment(

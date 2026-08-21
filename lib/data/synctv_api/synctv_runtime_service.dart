@@ -72,6 +72,18 @@ class SyncTvRuntimeService {
     }
   }
 
+  /// Activates the server named by [rawUrl] unless it is already active.
+  ///
+  /// Used for runtime server overrides on web, where the page origin is
+  /// injected as the server so deployments work without manual setup. Throws
+  /// when the URL is invalid or the server cannot be reached; callers decide
+  /// whether to surface or swallow the failure.
+  Future<void> applyRuntimeServerOverride(String rawUrl) async {
+    final endpoint = ServerEndpointIdentity.normalize(rawUrl);
+    if (activeServer?.endpoint == endpoint) return;
+    await addServer(endpoint);
+  }
+
   Future<void> activateServer(String endpoint) async {
     final normalized = ServerEndpointIdentity.normalize(endpoint);
     if (!servers.any((server) => server.endpoint == normalized)) {

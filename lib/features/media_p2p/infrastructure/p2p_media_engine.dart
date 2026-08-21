@@ -7,8 +7,9 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_runtime.dart';
-import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_cache.dart';
 import 'package:synctv_app/features/media_p2p/domain/p2p_media_preferences.dart';
+import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_cache.dart';
+import 'package:synctv_app/features/media_p2p/infrastructure/p2p_max_resource_length.dart';
 import 'package:xml/xml.dart';
 
 typedef P2pPieceRequester =
@@ -1647,7 +1648,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         final bytes = peer?.bytes;
         if (bytes != null && bytes.length >= 8) {
           final length = ByteData.sublistView(bytes).getUint64(0);
-          if (length > 0 && length <= 0x7fffffffffffffff) {
+          if (length > 0 && length <= maxP2pResourceLength) {
             resource.originAcceptsRanges = _decodeRangeCapability(bytes);
             _recordP2p(bytes.length);
             return length;

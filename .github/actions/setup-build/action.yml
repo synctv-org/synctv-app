@@ -1,5 +1,5 @@
 name: Set up SyncTV build toolchain
-description: Install pinned Flutter and Rust toolchains and restore project dependencies.
+description: Install the pinned Flutter toolchain, optionally install Rust, and restore project dependencies.
 
 inputs:
   flutter-version:
@@ -22,6 +22,10 @@ inputs:
     description: Optional comma-separated Rust compilation targets.
     required: false
     default: ""
+  setup-rust:
+    description: Install the Rust toolchain after Flutter setup.
+    required: false
+    default: "true"
 
 runs:
   using: composite
@@ -77,6 +81,7 @@ runs:
         "$FLUTTER_ROOT/bin/flutter" --version
 
     - name: Set up Rust
+      if: inputs.setup-rust == 'true'
       uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
       with:
         toolchain: ${{ inputs.rust-version }}

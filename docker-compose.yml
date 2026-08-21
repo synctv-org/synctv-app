@@ -1,0 +1,107 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: synctv-postgres
+    env_file:
+      - path: .env.postgres
+        required: true
+    ports:
+      - "127.0.0.1:5555:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synctv"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - synctv
+    restart: unless-stopped
+
+  redis:
+    image: redis:8
+    container_name: synctv-redis
+    env_file:
+      - path: .env.redis
+        required: true
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    command: sh -ec 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"'
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - synctv
+    restart: unless-stopped
+
+  synctv:
+    image: synctvorg/synctv:${SYNCTV_IMAGE_TAG:-latest}
+    container_name: synctv-app
+    env_file:
+      - path: .env.synctv
+        required: true
+    environment:
+      # Keep application runtime data on the named volume.
+      SYNCTV_DATA_DIR: /data
+    ports:
+      - "8080:8080"
+      - "1935:1935"
+      - "3478:3478/udp"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - synctv
+    volumes:
+      - synctv_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health/ready"]
+      interval: 30s
+      timeout: 3s
+      start_period: 40s
+      retries: 3
+
+  web:
+    image: noelorin/synctv-flutter-web:${SYNCTV_WEB_IMAGE_TAG:-latest}
+    container_name: synctv-flutter-web
+    environment:
+      # Flutter web nginx proxies API and WebSocket traffic to the internal
+      # SyncTV service, not to a host-mapped localhost address.
+      SYNCTV_BACKEND_URL: ${SYNCTV_BACKEND_URL:-http://synctv:8080}
+      NGINX_CLIENT_MAX_BODY_SIZE: ${SYNCTV_CLIENT_MAX_BODY_SIZE:-200m}
+    ports:
+      - "${SYNCTV_WEB_PORT:-8081}:8080"
+    depends_on:
+      synctv:
+        condition: service_started
+    networks:
+      synctv:
+        aliases:
+          - flutter-web
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  synctv_data:
+    driver: local
+
+networks:
+  synctv:
+    driver: bridge

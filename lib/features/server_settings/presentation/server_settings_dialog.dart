@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -276,7 +277,13 @@ class _AddServerDialogState extends State<_AddServerDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialAddress);
+    _controller = TextEditingController(
+      text: widget.initialAddress.isNotEmpty
+          ? widget.initialAddress
+          : kIsWeb
+          ? Uri.base.origin
+          : '',
+    );
     _focusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
