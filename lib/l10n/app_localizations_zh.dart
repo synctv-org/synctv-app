@@ -5819,6 +5819,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playHistoryEntry => '播放此记录';
 
   @override
+  String get newestFirst => '最新优先';
+
+  @override
+  String get oldestFirst => '最早优先';
+
+  @override
+  String get deletePlaybackHistoryEntryTitle => '删除历史记录';
+
+  @override
+  String get deletePlaybackHistoryEntryConfirm => '从房间播放历史中删除这条记录？';
+
+  @override
+  String get deleteCurrentPlaybackHistoryEntryConfirm =>
+      '从房间播放历史中删除当前记录？正在播放的内容会继续，上一项/下一项的历史导航会重置。';
+
+  @override
+  String get clearPlaybackHistoryTitle => '清空播放历史';
+
+  @override
+  String get clearPlaybackHistoryConfirm => '删除此房间的全部播放历史？正在播放的内容会继续，此操作无法撤销。';
+
+  @override
   String get viewPlaybackHistory => '查看播放历史';
 
   @override

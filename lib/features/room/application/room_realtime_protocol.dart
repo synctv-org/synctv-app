@@ -88,6 +88,8 @@ abstract interface class RoomRealtimeProtocol {
     String observeId = 'playback_history',
     String version = '',
     int limit = 50,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_DESC,
   });
 
   List<int> encodeChatEventsObservation({

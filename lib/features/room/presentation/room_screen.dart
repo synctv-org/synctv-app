@@ -7613,6 +7613,7 @@ class _RoomScreenState extends State<RoomScreen>
               isPublic: widget.room.isPublic,
               canViewPlaybackHistory: _canViewPlaybackHistory,
               canNavigatePlayback: _canNavigatePlayback,
+              canManagePlaybackHistory: _canManageRoom,
               canUseWebRtc: _canUseVoiceChat || _canUseP2pMedia,
               currentSettings: settings,
               realtime: RoomRealtimeSession(

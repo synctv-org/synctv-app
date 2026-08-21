@@ -6210,6 +6210,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playHistoryEntry => 'Play this entry';
 
   @override
+  String get newestFirst => 'Newest first';
+
+  @override
+  String get oldestFirst => 'Oldest first';
+
+  @override
+  String get deletePlaybackHistoryEntryTitle => 'Delete history entry';
+
+  @override
+  String get deletePlaybackHistoryEntryConfirm =>
+      'Delete this entry from the room playback history?';
+
+  @override
+  String get deleteCurrentPlaybackHistoryEntryConfirm =>
+      'Delete the current entry from the room playback history? Playback will continue, and previous/next history navigation will reset.';
+
+  @override
+  String get clearPlaybackHistoryTitle => 'Clear playback history';
+
+  @override
+  String get clearPlaybackHistoryConfirm =>
+      'Delete all playback history for this room? Current playback will continue, and this action cannot be undone.';
+
+  @override
   String get viewPlaybackHistory => 'View playback history';
 
   @override

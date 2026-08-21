@@ -151,10 +151,13 @@ final class ProtobufRoomRealtimeProtocol implements RoomRealtimeProtocol {
     String observeId = 'playback_history',
     String version = '',
     int limit = 50,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_DESC,
   }) => RoomRealtimeCodec.encodePlaybackHistoryObservation(
     observeId: observeId,
     version: version,
     limit: limit,
+    sortDirection: sortDirection,
   );
 
   @override

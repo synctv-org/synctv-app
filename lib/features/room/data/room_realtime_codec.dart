@@ -500,12 +500,17 @@ class RoomRealtimeCodec {
     String observeId = 'playback_history',
     String version = '',
     int limit = 50,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_DESC,
   }) {
     return _observe(
       observeId,
       playbackHistory: client.ObservePlaybackHistory(
         afterEventSequence: _watchSequence(version),
-        request: client.ListPlaybackHistoryRequest(limit: limit),
+        request: client.ListPlaybackHistoryRequest(
+          limit: limit,
+          sortDirection: sortDirection,
+        ),
       ),
     );
   }

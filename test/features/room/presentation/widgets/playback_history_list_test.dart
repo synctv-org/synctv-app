@@ -84,4 +84,38 @@ void main() {
       expect(playCount, 0);
     },
   );
+
+  testWidgets('history delete reports whether the entry is current', (
+    tester,
+  ) async {
+    final deleted = <(String, bool)>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        home: Scaffold(
+          body: PlaybackHistoryList(
+            entries: [
+              client.PlaybackHistoryEntry(
+                id: 'ph_current',
+                mediaName: 'Current film',
+                createdAt: Int64(1),
+              ),
+            ],
+            historyCursorId: 'ph_current',
+            unknownSourceLabel: 'Unknown',
+            playTooltip: 'Play',
+            deleteTooltip: 'Delete',
+            canDelete: true,
+            onPlay: (_) {},
+            onDelete: (id, isCurrent) => deleted.add((id, isCurrent)),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('delete_history_entry_ph_current')));
+    await tester.pump();
+
+    expect(deleted, [('ph_current', true)]);
+  });
 }

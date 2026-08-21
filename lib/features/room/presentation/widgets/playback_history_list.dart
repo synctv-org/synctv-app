@@ -10,18 +10,26 @@ class PlaybackHistoryList extends StatelessWidget {
     required this.unknownSourceLabel,
     required this.playTooltip,
     required this.onPlay,
+    this.deleteTooltip = '',
+    this.onDelete,
     this.sourceDetailsBuilder,
     this.playingEntryId = '',
+    this.deletingEntryIds = const <String>{},
     this.canPlay = true,
+    this.canDelete = false,
   });
 
   final List<client.PlaybackHistoryEntry> entries;
   final String historyCursorId;
   final String unknownSourceLabel;
   final String playTooltip;
+  final String deleteTooltip;
   final String playingEntryId;
+  final Set<String> deletingEntryIds;
   final bool canPlay;
+  final bool canDelete;
   final ValueChanged<String> onPlay;
+  final void Function(String entryId, bool isCurrent)? onDelete;
   final String Function(client.PlaybackHistoryEntry entry)?
   sourceDetailsBuilder;
 
@@ -56,15 +64,19 @@ class PlaybackHistoryList extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          trailing: playingEntryId == entry.id
-              ? const SizedBox.square(
-                  dimension: 20,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (playingEntryId == entry.id)
+                const SizedBox.square(
+                  dimension: 40,
                   child: AppLoadingIndicator(
                     size: AppLoadingSize.sm,
-                    centered: false,
+                    centered: true,
                   ),
                 )
-              : AppIconButton(
+              else
+                AppIconButton(
                   key: Key('play_history_entry_${entry.id}'),
                   icon: Icons.play_arrow_rounded,
                   tooltip: playTooltip,
@@ -72,6 +84,24 @@ class PlaybackHistoryList extends StatelessWidget {
                       ? null
                       : () => onPlay(entry.id),
                 ),
+              if (canDelete)
+                if (deletingEntryIds.contains(entry.id))
+                  const SizedBox.square(
+                    dimension: 40,
+                    child: AppLoadingIndicator(
+                      size: AppLoadingSize.sm,
+                      centered: true,
+                    ),
+                  )
+                else
+                  AppIconButton(
+                    key: Key('delete_history_entry_${entry.id}'),
+                    icon: Icons.delete_outline_rounded,
+                    tooltip: deleteTooltip,
+                    onPressed: () => onDelete?.call(entry.id, isCurrent),
+                  ),
+            ],
+          ),
         );
       },
     );

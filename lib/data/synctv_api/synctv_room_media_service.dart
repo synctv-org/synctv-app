@@ -43,14 +43,17 @@ class SyncTvRoomMediaDomainService {
 
   Future<client.ListPlaybackHistoryResponse> listPlaybackHistory(
     String roomId, {
-    String beforeEntryId = '',
+    String cursorEntryId = '',
     int limit = 50,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_DESC,
   }) {
     return _api.room.listPlaybackHistory(
       roomId,
       client.ListPlaybackHistoryRequest(
-        beforeEntryId: beforeEntryId.isEmpty ? null : beforeEntryId,
+        cursorEntryId: cursorEntryId.isEmpty ? null : cursorEntryId,
         limit: limit,
+        sortDirection: sortDirection,
       ),
     );
   }
@@ -67,6 +70,19 @@ class SyncTvRoomMediaDomainService {
       ),
     );
     return _playbackStatusFromState(state);
+  }
+
+  Future<bool> deletePlaybackHistoryEntry(String roomId, String entryId) async {
+    final response = await _api.room.deletePlaybackHistoryEntry(
+      roomId,
+      client.DeletePlaybackHistoryEntryRequest(entryId: entryId),
+    );
+    return response.deleted;
+  }
+
+  Future<int> clearPlaybackHistory(String roomId) async {
+    final response = await _api.room.clearPlaybackHistory(roomId);
+    return response.deletedCount.toInt();
   }
 
   Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>> watchPlaybackState(

@@ -101,11 +101,16 @@ void main() {
         RoomRealtimeCodec.encodePlaybackHistoryObservation(
           observeId: 'manage_playback_history',
           version: '42',
+          sortDirection: client.SortDirection.SORT_DIRECTION_ASC,
         ),
       );
       expect(
         observe.observeResource.playbackHistory.afterEventSequence,
         Int64(42),
+      );
+      expect(
+        observe.observeResource.playbackHistory.request.sortDirection,
+        client.SortDirection.SORT_DIRECTION_ASC,
       );
 
       final message = client.ServerMessage(

@@ -911,13 +911,16 @@ class SyncTvService {
 
   static Future<client.ListPlaybackHistoryResponse> listPlaybackHistory(
     String roomId, {
-    String beforeEntryId = '',
+    String cursorEntryId = '',
     int limit = 50,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_DESC,
   }) {
     return _domains.roomMedia.listPlaybackHistory(
       roomId,
-      beforeEntryId: beforeEntryId,
+      cursorEntryId: cursorEntryId,
       limit: limit,
+      sortDirection: sortDirection,
     );
   }
 
@@ -926,6 +929,17 @@ class SyncTvService {
     String entryId,
   ) {
     return _domains.roomMedia.playHistoryEntry(roomId, entryId);
+  }
+
+  static Future<bool> deletePlaybackHistoryEntry(
+    String roomId,
+    String entryId,
+  ) {
+    return _domains.roomMedia.deletePlaybackHistoryEntry(roomId, entryId);
+  }
+
+  static Future<int> clearPlaybackHistory(String roomId) {
+    return _domains.roomMedia.clearPlaybackHistory(roomId);
   }
 
   static Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>>

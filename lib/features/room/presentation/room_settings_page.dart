@@ -167,6 +167,7 @@ class RoomSettingsPage extends StatefulWidget {
   final RoomRealtimeSession realtime;
   final bool canViewPlaybackHistory;
   final bool canNavigatePlayback;
+  final bool canManagePlaybackHistory;
   final bool canUseWebRtc;
   final P2pMediaPreferencesController p2pMediaPreferences;
 
@@ -182,6 +183,7 @@ class RoomSettingsPage extends StatefulWidget {
     required this.p2pMediaPreferences,
     this.canViewPlaybackHistory = false,
     this.canNavigatePlayback = false,
+    this.canManagePlaybackHistory = false,
     required this.canUseWebRtc,
   });
 
@@ -460,6 +462,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       _realtimeProtocol.encodePlaybackHistoryObservation(
         observeId: _playbackHistoryObserveId,
         version: _playbackHistoryController.state.version,
+        sortDirection: _playbackHistoryController.state.sortDirection,
       ),
     );
   }
@@ -486,6 +489,61 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _playHistoryEntry(String entryId) async {
     try {
       await _playbackHistoryController.play(entryId);
+    } catch (error) {
+      if (mounted) AppNotifications.showError(context, error.toString());
+    }
+  }
+
+  Future<void> _setPlaybackHistorySortDirection(
+    client_enum.SortDirection sortDirection,
+  ) async {
+    final refresh = _playbackHistoryController.setSortDirection(sortDirection);
+    _startPlaybackHistoryWatch();
+    try {
+      await refresh;
+    } catch (error) {
+      if (mounted) AppNotifications.showError(context, error.toString());
+    }
+  }
+
+  Future<void> _loadMorePlaybackHistory() async {
+    try {
+      await _playbackHistoryController.loadMore();
+    } catch (error) {
+      if (mounted) AppNotifications.showError(context, error.toString());
+    }
+  }
+
+  Future<void> _deletePlaybackHistoryEntry(
+    String entryId, {
+    required bool isCurrent,
+  }) async {
+    final confirmed = await _confirm(
+      title: context.l10n.deletePlaybackHistoryEntryTitle,
+      content: isCurrent
+          ? context.l10n.deleteCurrentPlaybackHistoryEntryConfirm
+          : context.l10n.deletePlaybackHistoryEntryConfirm,
+      action: context.l10n.delete,
+      destructive: true,
+    );
+    if (!confirmed) return;
+    try {
+      await _playbackHistoryController.deleteEntry(entryId);
+    } catch (error) {
+      if (mounted) AppNotifications.showError(context, error.toString());
+    }
+  }
+
+  Future<void> _clearPlaybackHistory() async {
+    final confirmed = await _confirm(
+      title: context.l10n.clearPlaybackHistoryTitle,
+      content: context.l10n.clearPlaybackHistoryConfirm,
+      action: context.l10n.clear,
+      destructive: true,
+    );
+    if (!confirmed) return;
+    try {
+      await _playbackHistoryController.clear();
     } catch (error) {
       if (mounted) AppNotifications.showError(context, error.toString());
     }
@@ -1765,28 +1823,98 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         if (state.loading && state.entries.isEmpty) {
           return const AppLoadingIndicator();
         }
-        if (state.entries.isEmpty) {
-          return Center(child: Text(context.l10n.playbackHistoryEmpty));
-        }
-        return AppRefreshIndicator(
-          onRefresh: _loadPlaybackHistory,
-          child: PlaybackHistoryList(
-            entries: state.entries,
-            historyCursorId: state.cursorId,
-            unknownSourceLabel: context.l10n.unknownVideo,
-            playTooltip: context.l10n.playHistoryEntry,
-            sourceDetailsBuilder: (entry) {
-              if (!entry.hasSourceProvider()) return '';
-              final provider =
-                  _mediaSourceLabels[entry.sourceProvider] ??
-                  SourceConfigCodec.providerToString(entry.sourceProvider);
-              final instance = entry.providerInstanceName.trim();
-              return instance.isEmpty ? provider : '$provider · $instance';
-            },
-            playingEntryId: state.playingEntryId,
-            canPlay: widget.canNavigatePlayback,
-            onPlay: _playHistoryEntry,
-          ),
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AppSegmentedControl<client_enum.SortDirection>(
+                      segments: [
+                        ButtonSegment(
+                          value: client_enum.SortDirection.SORT_DIRECTION_DESC,
+                          icon: const Icon(Icons.arrow_downward_rounded),
+                          label: Text(context.l10n.newestFirst),
+                        ),
+                        ButtonSegment(
+                          value: client_enum.SortDirection.SORT_DIRECTION_ASC,
+                          icon: const Icon(Icons.arrow_upward_rounded),
+                          label: Text(context.l10n.oldestFirst),
+                        ),
+                      ],
+                      value: state.sortDirection,
+                      onChanged: (sortDirection) {
+                        if (!state.clearing) {
+                          unawaited(
+                            _setPlaybackHistorySortDirection(sortDirection),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  if (widget.canManagePlaybackHistory) ...[
+                    const SizedBox(width: 8),
+                    AppIconButton(
+                      icon: Icons.delete_sweep_outlined,
+                      tooltip: context.l10n.clearPlaybackHistoryTitle,
+                      style: AppIconButtonStyle.outlined,
+                      onPressed:
+                          state.entries.isEmpty ||
+                              state.clearing ||
+                              state.deletingEntryIds.isNotEmpty
+                          ? null
+                          : _clearPlaybackHistory,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Expanded(
+              child: state.entries.isEmpty
+                  ? Center(child: Text(context.l10n.playbackHistoryEmpty))
+                  : AppRefreshIndicator(
+                      onRefresh: _loadPlaybackHistory,
+                      child: PlaybackHistoryList(
+                        entries: state.entries,
+                        historyCursorId: state.cursorId,
+                        unknownSourceLabel: context.l10n.unknownVideo,
+                        playTooltip: context.l10n.playHistoryEntry,
+                        deleteTooltip:
+                            context.l10n.deletePlaybackHistoryEntryTitle,
+                        sourceDetailsBuilder: (entry) {
+                          if (!entry.hasSourceProvider()) return '';
+                          final provider =
+                              _mediaSourceLabels[entry.sourceProvider] ??
+                              SourceConfigCodec.providerToString(
+                                entry.sourceProvider,
+                              );
+                          final instance = entry.providerInstanceName.trim();
+                          return instance.isEmpty
+                              ? provider
+                              : '$provider · $instance';
+                        },
+                        playingEntryId: state.playingEntryId,
+                        deletingEntryIds: state.deletingEntryIds,
+                        canPlay: widget.canNavigatePlayback,
+                        canDelete: widget.canManagePlaybackHistory,
+                        onPlay: _playHistoryEntry,
+                        onDelete: (entryId, isCurrent) =>
+                            _deletePlaybackHistoryEntry(
+                              entryId,
+                              isCurrent: isCurrent,
+                            ),
+                      ),
+                    ),
+            ),
+            AppLoadMoreFooter(
+              loading: state.loadingMore,
+              onPressed: state.hasMore && !state.loadingMore
+                  ? _loadMorePlaybackHistory
+                  : null,
+              visible: state.hasMore || state.loadingMore,
+            ),
+          ],
         );
       },
     );

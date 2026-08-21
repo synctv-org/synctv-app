@@ -10492,6 +10492,48 @@ abstract class AppLocalizations {
   /// **'Play this entry'**
   String get playHistoryEntry;
 
+  /// No description provided for @newestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get newestFirst;
+
+  /// No description provided for @oldestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get oldestFirst;
+
+  /// No description provided for @deletePlaybackHistoryEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete history entry'**
+  String get deletePlaybackHistoryEntryTitle;
+
+  /// No description provided for @deletePlaybackHistoryEntryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this entry from the room playback history?'**
+  String get deletePlaybackHistoryEntryConfirm;
+
+  /// No description provided for @deleteCurrentPlaybackHistoryEntryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the current entry from the room playback history? Playback will continue, and previous/next history navigation will reset.'**
+  String get deleteCurrentPlaybackHistoryEntryConfirm;
+
+  /// No description provided for @clearPlaybackHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear playback history'**
+  String get clearPlaybackHistoryTitle;
+
+  /// No description provided for @clearPlaybackHistoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all playback history for this room? Current playback will continue, and this action cannot be undone.'**
+  String get clearPlaybackHistoryConfirm;
+
   /// No description provided for @viewPlaybackHistory.
   ///
   /// In en, this message translates to:

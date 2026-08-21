@@ -2100,7 +2100,11 @@ class SyncTvRoomApi {
       client.ListPlaybackHistoryResponse.create,
       query: {
         if (request.hasBeforeEntryId()) 'beforeEntryId': request.beforeEntryId,
+        if (request.hasCursorEntryId()) 'cursorEntryId': request.cursorEntryId,
         if (request.limit != 0) 'limit': request.limit.toString(),
+        if (request.sortDirection !=
+            client.SortDirection.SORT_DIRECTION_UNSPECIFIED)
+          'sortDirection': request.sortDirection.value.toString(),
       },
     );
   }
@@ -2113,6 +2117,27 @@ class SyncTvRoomApi {
       'POST',
       '/api/rooms/$roomId/playback/history/${request.entryId}/play',
       client.PlaybackState.create,
+    );
+  }
+
+  Future<client.DeletePlaybackHistoryEntryResponse> deletePlaybackHistoryEntry(
+    String roomId,
+    client.DeletePlaybackHistoryEntryRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/rooms/$roomId/playback/history/${request.entryId}',
+      client.DeletePlaybackHistoryEntryResponse.create,
+    );
+  }
+
+  Future<client.ClearPlaybackHistoryResponse> clearPlaybackHistory(
+    String roomId,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/rooms/$roomId/playback/history',
+      client.ClearPlaybackHistoryResponse.create,
     );
   }
 

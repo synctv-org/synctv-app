@@ -16806,10 +16806,14 @@ class ListPlaybackHistoryRequest extends $pb.GeneratedMessage {
   factory ListPlaybackHistoryRequest({
     $core.String? beforeEntryId,
     $core.int? limit,
+    $core.String? cursorEntryId,
+    SortDirection? sortDirection,
   }) {
     final result = create();
     if (beforeEntryId != null) result.beforeEntryId = beforeEntryId;
     if (limit != null) result.limit = limit;
+    if (cursorEntryId != null) result.cursorEntryId = cursorEntryId;
+    if (sortDirection != null) result.sortDirection = sortDirection;
     return result;
   }
 
@@ -16828,6 +16832,9 @@ class ListPlaybackHistoryRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'beforeEntryId')
     ..aI(2, _omitFieldNames ? '' : 'limit')
+    ..aOS(3, _omitFieldNames ? '' : 'cursorEntryId')
+    ..aE<SortDirection>(4, _omitFieldNames ? '' : 'sortDirection',
+        enumValues: SortDirection.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -16868,6 +16875,24 @@ class ListPlaybackHistoryRequest extends $pb.GeneratedMessage {
   $core.bool hasLimit() => $_has(1);
   @$pb.TagNumber(2)
   void clearLimit() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get cursorEntryId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set cursorEntryId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCursorEntryId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCursorEntryId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  SortDirection get sortDirection => $_getN(3);
+  @$pb.TagNumber(4)
+  set sortDirection(SortDirection value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSortDirection() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSortDirection() => $_clearField(4);
 }
 
 class ListPlaybackHistoryResponse extends $pb.GeneratedMessage {
@@ -16875,11 +16900,13 @@ class ListPlaybackHistoryResponse extends $pb.GeneratedMessage {
     $core.Iterable<PlaybackHistoryEntry>? entries,
     $core.String? historyCursorId,
     $core.String? nextBeforeEntryId,
+    $core.String? nextCursorEntryId,
   }) {
     final result = create();
     if (entries != null) result.entries.addAll(entries);
     if (historyCursorId != null) result.historyCursorId = historyCursorId;
     if (nextBeforeEntryId != null) result.nextBeforeEntryId = nextBeforeEntryId;
+    if (nextCursorEntryId != null) result.nextCursorEntryId = nextCursorEntryId;
     return result;
   }
 
@@ -16900,6 +16927,7 @@ class ListPlaybackHistoryResponse extends $pb.GeneratedMessage {
         subBuilder: PlaybackHistoryEntry.create)
     ..aOS(2, _omitFieldNames ? '' : 'historyCursorId')
     ..aOS(3, _omitFieldNames ? '' : 'nextBeforeEntryId')
+    ..aOS(4, _omitFieldNames ? '' : 'nextCursorEntryId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -16944,6 +16972,15 @@ class ListPlaybackHistoryResponse extends $pb.GeneratedMessage {
   $core.bool hasNextBeforeEntryId() => $_has(2);
   @$pb.TagNumber(3)
   void clearNextBeforeEntryId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get nextCursorEntryId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set nextCursorEntryId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasNextCursorEntryId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearNextCursorEntryId() => $_clearField(4);
 }
 
 class PlayHistoryEntryRequest extends $pb.GeneratedMessage {
@@ -17011,6 +17048,224 @@ class PlayHistoryEntryRequest extends $pb.GeneratedMessage {
   $core.bool hasClientOperationId() => $_has(1);
   @$pb.TagNumber(2)
   void clearClientOperationId() => $_clearField(2);
+}
+
+class DeletePlaybackHistoryEntryRequest extends $pb.GeneratedMessage {
+  factory DeletePlaybackHistoryEntryRequest({
+    $core.String? entryId,
+  }) {
+    final result = create();
+    if (entryId != null) result.entryId = entryId;
+    return result;
+  }
+
+  DeletePlaybackHistoryEntryRequest._();
+
+  factory DeletePlaybackHistoryEntryRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeletePlaybackHistoryEntryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeletePlaybackHistoryEntryRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'entryId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeletePlaybackHistoryEntryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeletePlaybackHistoryEntryRequest copyWith(
+          void Function(DeletePlaybackHistoryEntryRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as DeletePlaybackHistoryEntryRequest))
+          as DeletePlaybackHistoryEntryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeletePlaybackHistoryEntryRequest create() =>
+      DeletePlaybackHistoryEntryRequest._();
+  @$core.override
+  DeletePlaybackHistoryEntryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeletePlaybackHistoryEntryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeletePlaybackHistoryEntryRequest>(
+          create);
+  static DeletePlaybackHistoryEntryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get entryId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set entryId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEntryId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEntryId() => $_clearField(1);
+}
+
+class DeletePlaybackHistoryEntryResponse extends $pb.GeneratedMessage {
+  factory DeletePlaybackHistoryEntryResponse({
+    $core.bool? deleted,
+  }) {
+    final result = create();
+    if (deleted != null) result.deleted = deleted;
+    return result;
+  }
+
+  DeletePlaybackHistoryEntryResponse._();
+
+  factory DeletePlaybackHistoryEntryResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeletePlaybackHistoryEntryResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeletePlaybackHistoryEntryResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'deleted')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeletePlaybackHistoryEntryResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeletePlaybackHistoryEntryResponse copyWith(
+          void Function(DeletePlaybackHistoryEntryResponse) updates) =>
+      super.copyWith((message) =>
+              updates(message as DeletePlaybackHistoryEntryResponse))
+          as DeletePlaybackHistoryEntryResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeletePlaybackHistoryEntryResponse create() =>
+      DeletePlaybackHistoryEntryResponse._();
+  @$core.override
+  DeletePlaybackHistoryEntryResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeletePlaybackHistoryEntryResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeletePlaybackHistoryEntryResponse>(
+          create);
+  static DeletePlaybackHistoryEntryResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get deleted => $_getBF(0);
+  @$pb.TagNumber(1)
+  set deleted($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeleted() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeleted() => $_clearField(1);
+}
+
+class ClearPlaybackHistoryRequest extends $pb.GeneratedMessage {
+  factory ClearPlaybackHistoryRequest() => create();
+
+  ClearPlaybackHistoryRequest._();
+
+  factory ClearPlaybackHistoryRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ClearPlaybackHistoryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ClearPlaybackHistoryRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ClearPlaybackHistoryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ClearPlaybackHistoryRequest copyWith(
+          void Function(ClearPlaybackHistoryRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as ClearPlaybackHistoryRequest))
+          as ClearPlaybackHistoryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ClearPlaybackHistoryRequest create() =>
+      ClearPlaybackHistoryRequest._();
+  @$core.override
+  ClearPlaybackHistoryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ClearPlaybackHistoryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ClearPlaybackHistoryRequest>(create);
+  static ClearPlaybackHistoryRequest? _defaultInstance;
+}
+
+class ClearPlaybackHistoryResponse extends $pb.GeneratedMessage {
+  factory ClearPlaybackHistoryResponse({
+    $fixnum.Int64? deletedCount,
+  }) {
+    final result = create();
+    if (deletedCount != null) result.deletedCount = deletedCount;
+    return result;
+  }
+
+  ClearPlaybackHistoryResponse._();
+
+  factory ClearPlaybackHistoryResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ClearPlaybackHistoryResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ClearPlaybackHistoryResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..a<$fixnum.Int64>(
+        1, _omitFieldNames ? '' : 'deletedCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ClearPlaybackHistoryResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ClearPlaybackHistoryResponse copyWith(
+          void Function(ClearPlaybackHistoryResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ClearPlaybackHistoryResponse))
+          as ClearPlaybackHistoryResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ClearPlaybackHistoryResponse create() =>
+      ClearPlaybackHistoryResponse._();
+  @$core.override
+  ClearPlaybackHistoryResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ClearPlaybackHistoryResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ClearPlaybackHistoryResponse>(create);
+  static ClearPlaybackHistoryResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get deletedCount => $_getI64(0);
+  @$pb.TagNumber(1)
+  set deletedCount($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeletedCount() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeletedCount() => $_clearField(1);
 }
 
 /// Realtime API: update the current playback source. Empty media_id, playlist_id, and target clears playback.
@@ -51067,6 +51322,18 @@ class RoomServiceApi {
           $pb.ClientContext? ctx, PlayHistoryEntryRequest request) =>
       _client.invoke<PlaybackState>(
           ctx, 'RoomService', 'PlayHistoryEntry', request, PlaybackState());
+  $async.Future<DeletePlaybackHistoryEntryResponse> deletePlaybackHistoryEntry(
+          $pb.ClientContext? ctx, DeletePlaybackHistoryEntryRequest request) =>
+      _client.invoke<DeletePlaybackHistoryEntryResponse>(
+          ctx,
+          'RoomService',
+          'DeletePlaybackHistoryEntry',
+          request,
+          DeletePlaybackHistoryEntryResponse());
+  $async.Future<ClearPlaybackHistoryResponse> clearPlaybackHistory(
+          $pb.ClientContext? ctx, ClearPlaybackHistoryRequest request) =>
+      _client.invoke<ClearPlaybackHistoryResponse>(ctx, 'RoomService',
+          'ClearPlaybackHistory', request, ClearPlaybackHistoryResponse());
   $async.Future<GetPlaybackResponse> getPlayback(
           $pb.ClientContext? ctx, GetPlaybackRequest request) =>
       _client.invoke<GetPlaybackResponse>(

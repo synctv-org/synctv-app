@@ -615,6 +615,7 @@ class _AppShellState extends State<AppShell> {
           p2pMediaPreferences: widget.dependencies.p2pMediaPreferences,
           canViewPlaybackHistory: user.id == room.creatorId,
           canNavigatePlayback: user.id == room.creatorId,
+          canManagePlaybackHistory: user.id == room.creatorId,
           canUseWebRtc: false,
         ),
       ),

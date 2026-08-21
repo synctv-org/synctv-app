@@ -6647,18 +6647,44 @@ const ListPlaybackHistoryRequest$json = {
       '17': true
     },
     {'1': 'limit', '3': 2, '4': 1, '5': 5, '8': {}, '10': 'limit'},
+    {
+      '1': 'cursor_entry_id',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 1,
+      '10': 'cursorEntryId',
+      '17': true
+    },
+    {
+      '1': 'sort_direction',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.SortDirection',
+      '8': {},
+      '10': 'sortDirection'
+    },
   ],
+  '7': {},
   '8': [
     {'1': '_before_entry_id'},
+    {'1': '_cursor_entry_id'},
   ],
 };
 
 /// Descriptor for `ListPlaybackHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List listPlaybackHistoryRequestDescriptor =
-    $convert.base64Decode(
-        'ChpMaXN0UGxheWJhY2tIaXN0b3J5UmVxdWVzdBJJCg9iZWZvcmVfZW50cnlfaWQYASABKAlCHL'
-        'pIGXIXEAQYQDIRXnBoX1tBLVphLXowLTldKyRIAFINYmVmb3JlRW50cnlJZIgBARIfCgVsaW1p'
-        'dBgCIAEoBUIJukgGGgQYZCgAUgVsaW1pdEISChBfYmVmb3JlX2VudHJ5X2lk');
+final $typed_data.Uint8List listPlaybackHistoryRequestDescriptor = $convert.base64Decode(
+    'ChpMaXN0UGxheWJhY2tIaXN0b3J5UmVxdWVzdBJJCg9iZWZvcmVfZW50cnlfaWQYASABKAlCHL'
+    'pIGXIXEAQYQDIRXnBoX1tBLVphLXowLTldKyRIAFINYmVmb3JlRW50cnlJZIgBARIfCgVsaW1p'
+    'dBgCIAEoBUIJukgGGgQYZCgAUgVsaW1pdBJJCg9jdXJzb3JfZW50cnlfaWQYAyABKAlCHLpIGX'
+    'IXEAQYQDIRXnBoX1tBLVphLXowLTldKyRIAVINY3Vyc29yRW50cnlJZIgBARJNCg5zb3J0X2Rp'
+    'cmVjdGlvbhgEIAEoDjIcLnN5bmN0di5jbGllbnQuU29ydERpcmVjdGlvbkIIukgFggECEAFSDX'
+    'NvcnREaXJlY3Rpb246nwG6SJsBGpgBCiNsaXN0X3BsYXliYWNrX2hpc3Rvcnkuc2luZ2xlX2N1'
+    'cnNvchI2YmVmb3JlX2VudHJ5X2lkIGFuZCBjdXJzb3JfZW50cnlfaWQgY2Fubm90IGJvdGggYm'
+    'Ugc2V0GjkhKGhhcyh0aGlzLmJlZm9yZV9lbnRyeV9pZCkgJiYgaGFzKHRoaXMuY3Vyc29yX2Vu'
+    'dHJ5X2lkKSlCEgoQX2JlZm9yZV9lbnRyeV9pZEISChBfY3Vyc29yX2VudHJ5X2lk');
 
 @$core.Deprecated('Use listPlaybackHistoryResponseDescriptor instead')
 const ListPlaybackHistoryResponse$json = {
@@ -6680,6 +6706,13 @@ const ListPlaybackHistoryResponse$json = {
       '5': 9,
       '10': 'nextBeforeEntryId'
     },
+    {
+      '1': 'next_cursor_entry_id',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '10': 'nextCursorEntryId'
+    },
   ],
 };
 
@@ -6688,7 +6721,8 @@ final $typed_data.Uint8List listPlaybackHistoryResponseDescriptor = $convert.bas
     'ChtMaXN0UGxheWJhY2tIaXN0b3J5UmVzcG9uc2USPQoHZW50cmllcxgBIAMoCzIjLnN5bmN0di'
     '5jbGllbnQuUGxheWJhY2tIaXN0b3J5RW50cnlSB2VudHJpZXMSKgoRaGlzdG9yeV9jdXJzb3Jf'
     'aWQYAiABKAlSD2hpc3RvcnlDdXJzb3JJZBIvChRuZXh0X2JlZm9yZV9lbnRyeV9pZBgDIAEoCV'
-    'IRbmV4dEJlZm9yZUVudHJ5SWQ=');
+    'IRbmV4dEJlZm9yZUVudHJ5SWQSLwoUbmV4dF9jdXJzb3JfZW50cnlfaWQYBCABKAlSEW5leHRD'
+    'dXJzb3JFbnRyeUlk');
 
 @$core.Deprecated('Use playHistoryEntryRequestDescriptor instead')
 const PlayHistoryEntryRequest$json = {
@@ -6717,6 +6751,57 @@ final $typed_data.Uint8List playHistoryEntryRequestDescriptor = $convert.base64D
     'FecGhfW0EtWmEtejAtOV0rJFIHZW50cnlJZBI9ChNjbGllbnRfb3BlcmF0aW9uX2lkGAIgASgJ'
     'Qgi6SAVyA7ABAUgAUhFjbGllbnRPcGVyYXRpb25JZIgBAUIWChRfY2xpZW50X29wZXJhdGlvbl'
     '9pZA==');
+
+@$core.Deprecated('Use deletePlaybackHistoryEntryRequestDescriptor instead')
+const DeletePlaybackHistoryEntryRequest$json = {
+  '1': 'DeletePlaybackHistoryEntryRequest',
+  '2': [
+    {'1': 'entry_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'entryId'},
+  ],
+};
+
+/// Descriptor for `DeletePlaybackHistoryEntryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deletePlaybackHistoryEntryRequestDescriptor =
+    $convert.base64Decode(
+        'CiFEZWxldGVQbGF5YmFja0hpc3RvcnlFbnRyeVJlcXVlc3QSNwoIZW50cnlfaWQYASABKAlCHL'
+        'pIGXIXEAQYQDIRXnBoX1tBLVphLXowLTldKyRSB2VudHJ5SWQ=');
+
+@$core.Deprecated('Use deletePlaybackHistoryEntryResponseDescriptor instead')
+const DeletePlaybackHistoryEntryResponse$json = {
+  '1': 'DeletePlaybackHistoryEntryResponse',
+  '2': [
+    {'1': 'deleted', '3': 1, '4': 1, '5': 8, '10': 'deleted'},
+  ],
+};
+
+/// Descriptor for `DeletePlaybackHistoryEntryResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deletePlaybackHistoryEntryResponseDescriptor =
+    $convert.base64Decode(
+        'CiJEZWxldGVQbGF5YmFja0hpc3RvcnlFbnRyeVJlc3BvbnNlEhgKB2RlbGV0ZWQYASABKAhSB2'
+        'RlbGV0ZWQ=');
+
+@$core.Deprecated('Use clearPlaybackHistoryRequestDescriptor instead')
+const ClearPlaybackHistoryRequest$json = {
+  '1': 'ClearPlaybackHistoryRequest',
+};
+
+/// Descriptor for `ClearPlaybackHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List clearPlaybackHistoryRequestDescriptor =
+    $convert.base64Decode('ChtDbGVhclBsYXliYWNrSGlzdG9yeVJlcXVlc3Q=');
+
+@$core.Deprecated('Use clearPlaybackHistoryResponseDescriptor instead')
+const ClearPlaybackHistoryResponse$json = {
+  '1': 'ClearPlaybackHistoryResponse',
+  '2': [
+    {'1': 'deleted_count', '3': 1, '4': 1, '5': 4, '10': 'deletedCount'},
+  ],
+};
+
+/// Descriptor for `ClearPlaybackHistoryResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List clearPlaybackHistoryResponseDescriptor =
+    $convert.base64Decode(
+        'ChxDbGVhclBsYXliYWNrSGlzdG9yeVJlc3BvbnNlEiMKDWRlbGV0ZWRfY291bnQYASABKARSDG'
+        'RlbGV0ZWRDb3VudA==');
 
 @$core.Deprecated('Use updatePlaybackRequestDescriptor instead')
 const UpdatePlaybackRequest$json = {
@@ -20611,6 +20696,16 @@ const $core.Map<$core.String, $core.dynamic> RoomServiceBase$json = {
       '3': '.synctv.client.PlaybackState'
     },
     {
+      '1': 'DeletePlaybackHistoryEntry',
+      '2': '.synctv.client.DeletePlaybackHistoryEntryRequest',
+      '3': '.synctv.client.DeletePlaybackHistoryEntryResponse'
+    },
+    {
+      '1': 'ClearPlaybackHistory',
+      '2': '.synctv.client.ClearPlaybackHistoryRequest',
+      '3': '.synctv.client.ClearPlaybackHistoryResponse'
+    },
+    {
       '1': 'GetPlayback',
       '2': '.synctv.client.GetPlaybackRequest',
       '3': '.synctv.client.GetPlaybackResponse'
@@ -21314,6 +21409,14 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.PlayNextRequest': PlayNextRequest$json,
   '.synctv.client.PlayPreviousRequest': PlayPreviousRequest$json,
   '.synctv.client.PlayHistoryEntryRequest': PlayHistoryEntryRequest$json,
+  '.synctv.client.DeletePlaybackHistoryEntryRequest':
+      DeletePlaybackHistoryEntryRequest$json,
+  '.synctv.client.DeletePlaybackHistoryEntryResponse':
+      DeletePlaybackHistoryEntryResponse$json,
+  '.synctv.client.ClearPlaybackHistoryRequest':
+      ClearPlaybackHistoryRequest$json,
+  '.synctv.client.ClearPlaybackHistoryResponse':
+      ClearPlaybackHistoryResponse$json,
   '.synctv.client.GetPlaybackRequest': GetPlaybackRequest$json,
   '.synctv.client.GetPlaybackResponse': GetPlaybackResponse$json,
 };
@@ -21514,10 +21617,15 @@ final $typed_data.Uint8List roomServiceDescriptor = $convert.base64Decode(
     'wKE0xpc3RQbGF5YmFja0hpc3RvcnkSKS5zeW5jdHYuY2xpZW50Lkxpc3RQbGF5YmFja0hpc3Rv'
     'cnlSZXF1ZXN0Giouc3luY3R2LmNsaWVudC5MaXN0UGxheWJhY2tIaXN0b3J5UmVzcG9uc2USWA'
     'oQUGxheUhpc3RvcnlFbnRyeRImLnN5bmN0di5jbGllbnQuUGxheUhpc3RvcnlFbnRyeVJlcXVl'
-    'c3QaHC5zeW5jdHYuY2xpZW50LlBsYXliYWNrU3RhdGUSVAoLR2V0UGxheWJhY2sSIS5zeW5jdH'
-    'YuY2xpZW50LkdldFBsYXliYWNrUmVxdWVzdBoiLnN5bmN0di5jbGllbnQuR2V0UGxheWJhY2tS'
-    'ZXNwb25zZRJeChNVcGRhdGVQbGF5YmFja1N0YXRlEikuc3luY3R2LmNsaWVudC5VcGRhdGVQbG'
-    'F5YmFja1N0YXRlUmVxdWVzdBocLnN5bmN0di5jbGllbnQuUGxheWJhY2tTdGF0ZQ==');
+    'c3QaHC5zeW5jdHYuY2xpZW50LlBsYXliYWNrU3RhdGUSgQEKGkRlbGV0ZVBsYXliYWNrSGlzdG'
+    '9yeUVudHJ5EjAuc3luY3R2LmNsaWVudC5EZWxldGVQbGF5YmFja0hpc3RvcnlFbnRyeVJlcXVl'
+    'c3QaMS5zeW5jdHYuY2xpZW50LkRlbGV0ZVBsYXliYWNrSGlzdG9yeUVudHJ5UmVzcG9uc2USbw'
+    'oUQ2xlYXJQbGF5YmFja0hpc3RvcnkSKi5zeW5jdHYuY2xpZW50LkNsZWFyUGxheWJhY2tIaXN0'
+    'b3J5UmVxdWVzdBorLnN5bmN0di5jbGllbnQuQ2xlYXJQbGF5YmFja0hpc3RvcnlSZXNwb25zZR'
+    'JUCgtHZXRQbGF5YmFjaxIhLnN5bmN0di5jbGllbnQuR2V0UGxheWJhY2tSZXF1ZXN0GiIuc3lu'
+    'Y3R2LmNsaWVudC5HZXRQbGF5YmFja1Jlc3BvbnNlEl4KE1VwZGF0ZVBsYXliYWNrU3RhdGUSKS'
+    '5zeW5jdHYuY2xpZW50LlVwZGF0ZVBsYXliYWNrU3RhdGVSZXF1ZXN0Ghwuc3luY3R2LmNsaWVu'
+    'dC5QbGF5YmFja1N0YXRl');
 
 const $core.Map<$core.String, $core.dynamic> PublicServiceBase$json = {
   '1': 'PublicService',
