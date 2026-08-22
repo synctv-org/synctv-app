@@ -2,9 +2,23 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_manager.dart';
 import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_engine.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_runtime.dart';
+
+const _publicIceServers = [
+  IceServerInfo(
+    urls: ['stun:stun.cloudflare.com:3478'],
+    username: '',
+    credential: '',
+  ),
+  IceServerInfo(
+    urls: ['stun:stun.l.google.com:19302'],
+    username: '',
+    credential: '',
+  ),
+];
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +49,19 @@ class _P2pMediaSmokeAppState extends State<_P2pMediaSmokeApp> {
     );
     late P2pMediaManager first;
     late P2pMediaManager second;
+    final signals = <String>[];
+    var resultFinalized = false;
+
+    void updateStatus() {
+      if (!mounted || resultFinalized) return;
+      setState(() {
+        _status =
+            'Connecting local media peers... '
+            'first=${first.connectedPeerCount}, '
+            'second=${second.connectedPeerCount}, '
+            'signals=${signals.join(',')}';
+      });
+    }
 
     void relay(
       P2pMediaManager target,
@@ -42,6 +69,8 @@ class _P2pMediaSmokeAppState extends State<_P2pMediaSmokeApp> {
       String type,
       Map<String, dynamic> data,
     ) {
+      signals.add('$from:$type');
+      updateStatus();
       scheduleMicrotask(() {
         target.handleSignalingMessage(type, {...data, 'from': from});
       });
@@ -50,17 +79,17 @@ class _P2pMediaSmokeAppState extends State<_P2pMediaSmokeApp> {
     first = P2pMediaManager(
       onSignalingMessage: (type, data) =>
           relay(second, 'first:connection', type, data),
-      loadIceServers: () async => const [],
+      loadIceServers: () async => _publicIceServers,
       loadCachedPiece: (swarm, key) async =>
           swarm == swarmId && key == pieceKey ? expected : null,
-      onStateChange: () {},
+      onStateChange: updateStatus,
     );
     second = P2pMediaManager(
       onSignalingMessage: (type, data) =>
           relay(first, 'second:connection', type, data),
-      loadIceServers: () async => const [],
+      loadIceServers: () async => _publicIceServers,
       loadCachedPiece: (swarm, key) async => null,
-      onStateChange: () {},
+      onStateChange: updateStatus,
     );
 
     try {
@@ -85,10 +114,20 @@ class _P2pMediaSmokeAppState extends State<_P2pMediaSmokeApp> {
       );
       final result = 'P2P_MEDIA_SMOKE_OK bytes=${received.bytes.length}';
       debugPrint(result);
+      resultFinalized = true;
       if (mounted) setState(() => _status = result);
     } catch (error, stackTrace) {
       debugPrint('P2P_MEDIA_SMOKE_FAILED $error\n$stackTrace');
-      if (mounted) setState(() => _status = 'P2P media smoke failed: $error');
+      resultFinalized = true;
+      if (mounted) {
+        setState(() {
+          _status =
+              'P2P media smoke failed: $error; '
+              'first=${first.connectedPeerCount}, '
+              'second=${second.connectedPeerCount}, '
+              'signals=${signals.join(',')}';
+        });
+      }
     } finally {
       await first.dispose();
       await second.dispose();

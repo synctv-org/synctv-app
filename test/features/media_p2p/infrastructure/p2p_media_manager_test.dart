@@ -36,6 +36,28 @@ void main() {
     });
   });
 
+  test('peer requests stay enabled only for active swarm discovery', () {
+    fakeAsync((async) {
+      final manager = P2pMediaManager(
+        onSignalingMessage: (_, _) {},
+        loadIceServers: () async => const [],
+        loadCachedPiece: (_, _) async => null,
+        onStateChange: () {},
+      );
+
+      expect(manager.canRequestPeer('sm1_test'), isFalse);
+      unawaited(manager.setActiveSwarms({'sm1_test': 'ticket'}));
+      async.flushMicrotasks();
+      expect(manager.canRequestPeer('sm1_test'), isTrue);
+
+      unawaited(manager.setActiveSwarms(const {}));
+      async.flushMicrotasks();
+      expect(manager.canRequestPeer('sm1_test'), isFalse);
+      unawaited(manager.dispose());
+      async.flushMicrotasks();
+    });
+  });
+
   test('a refreshed ticket is announced for the active swarm', () async {
     final signals = <({String type, Map<String, dynamic> data})>[];
     final manager = P2pMediaManager(

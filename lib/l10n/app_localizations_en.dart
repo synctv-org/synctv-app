@@ -800,6 +800,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'OAuth2 requires an App Link or desktop callback in this build.';
 
   @override
+  String get oauth2CallbackCompleteTitle => 'Authorization complete';
+
+  @override
+  String get oauth2CallbackCompleteMessage =>
+      'You can close this window and return to SyncTV.';
+
+  @override
   String get oauthAuthorizationTimedOut =>
       'Authorization took too long. Please try again.';
 

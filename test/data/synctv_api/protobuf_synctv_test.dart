@@ -936,6 +936,7 @@ void main() {
       ]);
       expect(profile.supportedLiveTransports, [
         client.PlaybackLiveTransport.PLAYBACK_LIVE_TRANSPORT_FLV,
+        client.PlaybackLiveTransport.PLAYBACK_LIVE_TRANSPORT_HLS,
       ]);
       expect(
         profile.audioCapability,
@@ -5031,6 +5032,7 @@ void main() {
     'watch playback snapshot query includes dynamic playlist target',
     () async {
       Uri? requestedUri;
+      final playbackClientProfile = defaultPlaybackClientProfile();
       final api = SyncTvApiClient(
         baseUrl: 'https://example.test/api',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
@@ -5049,7 +5051,7 @@ void main() {
             'room_1',
             client.WatchPlaybackRequest(
               playback: client.ObservePlayback(
-                playbackClientProfile: defaultPlaybackClientProfile(),
+                playbackClientProfile: playbackClientProfile,
               ),
             ),
           )
@@ -5057,59 +5059,31 @@ void main() {
 
       expect(requestedUri, isNotNull);
       expect(requestedUri!.path, '/api/rooms/room_1/watch/playback');
+      final encodedProfile = requestedUri!.queryParameters['clientProfile'];
+      expect(encodedProfile, isNotNull);
+      final decodedProfile = client.PlaybackClientProfile.fromBuffer(
+        base64Url.decode(base64Url.normalize(encodedProfile!)),
+      );
       expect(
-        requestedUri!.queryParameters,
-        containsPair(
-          'streamPreference',
-          client_enum
-              .PlaybackStreamPreference
-              .PLAYBACK_STREAM_PREFERENCE_AUTO
-              .value
-              .toString(),
-        ),
+        decodedProfile.writeToBuffer(),
+        playbackClientProfile.writeToBuffer(),
       );
       expect(
         requestedUri!.queryParameters,
         isNot(contains('afterEventSequence')),
       );
-      expect(
-        requestedUri!.queryParameters,
-        containsPair('maxAudioChannels', '2'),
-      );
-      expect(
-        requestedUri!.queryParameters,
-        containsPair('videoCodecs', '1,2,3,4'),
-      );
-      expect(
-        requestedUri!.queryParameters,
-        containsPair('containers', '1,2,3'),
-      );
-      expect(
-        requestedUri!.queryParameters,
-        containsPair('liveTransports', '2'),
-      );
-      expect(
-        requestedUri!.queryParameters,
-        containsPair(
-          'audioCapability',
-          client_enum
-              .PlaybackAudioCapability
-              .PLAYBACK_AUDIO_CAPABILITY_STEREO
-              .value
-              .toString(),
-        ),
-      );
-      expect(
-        requestedUri!.queryParameters,
-        containsPair(
-          'subtitlePreference',
-          client_enum
-              .PlaybackSubtitlePreference
-              .PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL
-              .value
-              .toString(),
-        ),
-      );
+      for (final legacyParameter in [
+        'streamPreference',
+        'maxStreamingBitrate',
+        'maxAudioChannels',
+        'videoCodecs',
+        'containers',
+        'liveTransports',
+        'audioCapability',
+        'subtitlePreference',
+      ]) {
+        expect(requestedUri!.queryParameters, isNot(contains(legacyParameter)));
+      }
     },
   );
 
@@ -12690,9 +12664,11 @@ String _expectedContentManifestSha256(
   return sha256.convert(bytes.toBytes()).toString();
 }
 
-class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {
+class _FakeOpaqueClient implements opaque.SyncTvOpaqueClient {
   @override
-  opaque.OpaqueRegistrationStart startRegistration(String password) {
+  Future<opaque.OpaqueRegistrationStart> startRegistration(
+    String password,
+  ) async {
     expect(password, 'plain-room-password');
     return opaque.OpaqueRegistrationStart(
       registrationRequest: Uint8List.fromList([1, 2, 3]),
@@ -12701,11 +12677,11 @@ class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {
   }
 
   @override
-  opaque.OpaqueRegistrationFinish finishRegistration({
+  Future<opaque.OpaqueRegistrationFinish> finishRegistration({
     required String password,
     required Uint8List state,
     required Uint8List registrationResponse,
-  }) {
+  }) async {
     expect(password, 'plain-room-password');
     expect(state, [20, 21, 22]);
     expect(registrationResponse, [9, 8, 7]);
@@ -12715,7 +12691,7 @@ class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {
   }
 
   @override
-  opaque.OpaqueLoginStart startLogin(String password) {
+  Future<opaque.OpaqueLoginStart> startLogin(String password) async {
     expect(password, 'plain-room-password');
     return opaque.OpaqueLoginStart(
       credentialRequest: Uint8List.fromList([40, 41, 42]),
@@ -12724,11 +12700,11 @@ class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {
   }
 
   @override
-  opaque.OpaqueLoginFinish finishLogin({
+  Future<opaque.OpaqueLoginFinish> finishLogin({
     required String password,
     required Uint8List state,
     required Uint8List credentialResponse,
-  }) {
+  }) async {
     expect(password, 'plain-room-password');
     expect(state, [60, 61, 62]);
     expect(credentialResponse, [30, 31, 32]);

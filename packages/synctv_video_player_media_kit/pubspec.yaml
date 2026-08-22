@@ -15,6 +15,7 @@ dependencies:
   http: ^1.6.0
   video_player: ^2.14.0
   video_player_platform_interface: ^6.6.0
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:

@@ -751,6 +751,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oauthCallbackUnavailable => '当前构建需要配置 App Link 或桌面回跳才能使用 OAuth2。';
 
   @override
+  String get oauth2CallbackCompleteTitle => '授权完成';
+
+  @override
+  String get oauth2CallbackCompleteMessage => '现在可以关闭此窗口并返回 SyncTV。';
+
+  @override
   String get oauthAuthorizationTimedOut => '授权等待超时，请重试。';
 
   @override

@@ -562,6 +562,84 @@ final $typed_data.Uint8List playbackAudioCapabilityDescriptor = $convert.base64D
     'TEFZQkFDS19BVURJT19DQVBBQklMSVRZX1NVUlJPVU5EEAISLworUExBWUJBQ0tfQVVESU9fQ0'
     'FQQUJJTElUWV9MT1NTTEVTU19TVVJST1VORBAD');
 
+@$core.Deprecated('Use playbackClientEnvironmentDescriptor instead')
+const PlaybackClientEnvironment$json = {
+  '1': 'PlaybackClientEnvironment',
+  '2': [
+    {'1': 'PLAYBACK_CLIENT_ENVIRONMENT_UNSPECIFIED', '2': 0},
+    {'1': 'PLAYBACK_CLIENT_ENVIRONMENT_NATIVE', '2': 1},
+    {'1': 'PLAYBACK_CLIENT_ENVIRONMENT_WEB', '2': 2},
+  ],
+};
+
+/// Descriptor for `PlaybackClientEnvironment`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playbackClientEnvironmentDescriptor = $convert.base64Decode(
+    'ChlQbGF5YmFja0NsaWVudEVudmlyb25tZW50EisKJ1BMQVlCQUNLX0NMSUVOVF9FTlZJUk9OTU'
+    'VOVF9VTlNQRUNJRklFRBAAEiYKIlBMQVlCQUNLX0NMSUVOVF9FTlZJUk9OTUVOVF9OQVRJVkUQ'
+    'ARIjCh9QTEFZQkFDS19DTElFTlRfRU5WSVJPTk1FTlRfV0VCEAI=');
+
+@$core.Deprecated('Use playbackMediaTransportDescriptor instead')
+const PlaybackMediaTransport$json = {
+  '1': 'PlaybackMediaTransport',
+  '2': [
+    {'1': 'PLAYBACK_MEDIA_TRANSPORT_UNSPECIFIED', '2': 0},
+    {'1': 'PLAYBACK_MEDIA_TRANSPORT_PROGRESSIVE', '2': 1},
+    {'1': 'PLAYBACK_MEDIA_TRANSPORT_HLS', '2': 2},
+    {'1': 'PLAYBACK_MEDIA_TRANSPORT_DASH', '2': 3},
+    {'1': 'PLAYBACK_MEDIA_TRANSPORT_FLV', '2': 4},
+    {'1': 'PLAYBACK_MEDIA_TRANSPORT_MPEG_TS', '2': 5},
+  ],
+};
+
+/// Descriptor for `PlaybackMediaTransport`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playbackMediaTransportDescriptor = $convert.base64Decode(
+    'ChZQbGF5YmFja01lZGlhVHJhbnNwb3J0EigKJFBMQVlCQUNLX01FRElBX1RSQU5TUE9SVF9VTl'
+    'NQRUNJRklFRBAAEigKJFBMQVlCQUNLX01FRElBX1RSQU5TUE9SVF9QUk9HUkVTU0lWRRABEiAK'
+    'HFBMQVlCQUNLX01FRElBX1RSQU5TUE9SVF9ITFMQAhIhCh1QTEFZQkFDS19NRURJQV9UUkFOU1'
+    'BPUlRfREFTSBADEiAKHFBMQVlCQUNLX01FRElBX1RSQU5TUE9SVF9GTFYQBBIkCiBQTEFZQkFD'
+    'S19NRURJQV9UUkFOU1BPUlRfTVBFR19UUxAF');
+
+@$core.Deprecated('Use playbackMediaPipelineDescriptor instead')
+const PlaybackMediaPipeline$json = {
+  '1': 'PlaybackMediaPipeline',
+  '2': [
+    {'1': 'PLAYBACK_MEDIA_PIPELINE_UNSPECIFIED', '2': 0},
+    {'1': 'PLAYBACK_MEDIA_PIPELINE_NATIVE', '2': 1},
+    {'1': 'PLAYBACK_MEDIA_PIPELINE_MEDIA_SOURCE', '2': 2},
+    {'1': 'PLAYBACK_MEDIA_PIPELINE_MANAGED_MEDIA_SOURCE', '2': 3},
+  ],
+};
+
+/// Descriptor for `PlaybackMediaPipeline`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playbackMediaPipelineDescriptor = $convert.base64Decode(
+    'ChVQbGF5YmFja01lZGlhUGlwZWxpbmUSJwojUExBWUJBQ0tfTUVESUFfUElQRUxJTkVfVU5TUE'
+    'VDSUZJRUQQABIiCh5QTEFZQkFDS19NRURJQV9QSVBFTElORV9OQVRJVkUQARIoCiRQTEFZQkFD'
+    'S19NRURJQV9QSVBFTElORV9NRURJQV9TT1VSQ0UQAhIwCixQTEFZQkFDS19NRURJQV9QSVBFTE'
+    'lORV9NQU5BR0VEX01FRElBX1NPVVJDRRAD');
+
+@$core.Deprecated('Use playbackAudioCodecDescriptor instead')
+const PlaybackAudioCodec$json = {
+  '1': 'PlaybackAudioCodec',
+  '2': [
+    {'1': 'PLAYBACK_AUDIO_CODEC_UNSPECIFIED', '2': 0},
+    {'1': 'PLAYBACK_AUDIO_CODEC_AAC', '2': 1},
+    {'1': 'PLAYBACK_AUDIO_CODEC_MP3', '2': 2},
+    {'1': 'PLAYBACK_AUDIO_CODEC_OPUS', '2': 3},
+    {'1': 'PLAYBACK_AUDIO_CODEC_VORBIS', '2': 4},
+    {'1': 'PLAYBACK_AUDIO_CODEC_AC3', '2': 5},
+    {'1': 'PLAYBACK_AUDIO_CODEC_EAC3', '2': 6},
+    {'1': 'PLAYBACK_AUDIO_CODEC_FLAC', '2': 7},
+  ],
+};
+
+/// Descriptor for `PlaybackAudioCodec`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playbackAudioCodecDescriptor = $convert.base64Decode(
+    'ChJQbGF5YmFja0F1ZGlvQ29kZWMSJAogUExBWUJBQ0tfQVVESU9fQ09ERUNfVU5TUEVDSUZJRU'
+    'QQABIcChhQTEFZQkFDS19BVURJT19DT0RFQ19BQUMQARIcChhQTEFZQkFDS19BVURJT19DT0RF'
+    'Q19NUDMQAhIdChlQTEFZQkFDS19BVURJT19DT0RFQ19PUFVTEAMSHwobUExBWUJBQ0tfQVVESU'
+    '9fQ09ERUNfVk9SQklTEAQSHAoYUExBWUJBQ0tfQVVESU9fQ09ERUNfQUMzEAUSHQoZUExBWUJB'
+    'Q0tfQVVESU9fQ09ERUNfRUFDMxAGEh0KGVBMQVlCQUNLX0FVRElPX0NPREVDX0ZMQUMQBw==');
+
 @$core.Deprecated('Use bilibiliPlaybackKindDescriptor instead')
 const BilibiliPlaybackKind$json = {
   '1': 'BilibiliPlaybackKind',
@@ -7653,6 +7731,93 @@ final $typed_data.Uint8List updatePlaybackStateRequestDescriptor = $convert.base
     'QhcKFV9leHBlY3RlZF9wbGF5bGlzdF9pZEIXChVfZXhwZWN0ZWRfdGFyZ2V0X2hhc2hCFgoUX2'
     'NsaWVudF9vcGVyYXRpb25faWRCFQoTX2NsaWVudF90aW1lX21pbGxpcw==');
 
+@$core.Deprecated('Use playbackMediaCapabilityDescriptor instead')
+const PlaybackMediaCapability$json = {
+  '1': 'PlaybackMediaCapability',
+  '2': [
+    {
+      '1': 'transport',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaybackMediaTransport',
+      '8': {},
+      '10': 'transport'
+    },
+    {
+      '1': 'container',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaybackContainer',
+      '8': {},
+      '9': 0,
+      '10': 'container',
+      '17': true
+    },
+    {
+      '1': 'video_codec',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaybackVideoCodec',
+      '8': {},
+      '9': 1,
+      '10': 'videoCodec',
+      '17': true
+    },
+    {
+      '1': 'audio_codec',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaybackAudioCodec',
+      '8': {},
+      '9': 2,
+      '10': 'audioCodec',
+      '17': true
+    },
+    {
+      '1': 'pipeline',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaybackMediaPipeline',
+      '8': {},
+      '10': 'pipeline'
+    },
+    {
+      '1': 'codec_string',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 3,
+      '10': 'codecString',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_container'},
+    {'1': '_video_codec'},
+    {'1': '_audio_codec'},
+    {'1': '_codec_string'},
+  ],
+};
+
+/// Descriptor for `PlaybackMediaCapability`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List playbackMediaCapabilityDescriptor = $convert.base64Decode(
+    'ChdQbGF5YmFja01lZGlhQ2FwYWJpbGl0eRJNCgl0cmFuc3BvcnQYASABKA4yJS5zeW5jdHYuY2'
+    'xpZW50LlBsYXliYWNrTWVkaWFUcmFuc3BvcnRCCLpIBYIBAhABUgl0cmFuc3BvcnQSTQoJY29u'
+    'dGFpbmVyGAIgASgOMiAuc3luY3R2LmNsaWVudC5QbGF5YmFja0NvbnRhaW5lckIIukgFggECEA'
+    'FIAFIJY29udGFpbmVyiAEBElEKC3ZpZGVvX2NvZGVjGAMgASgOMiEuc3luY3R2LmNsaWVudC5Q'
+    'bGF5YmFja1ZpZGVvQ29kZWNCCLpIBYIBAhABSAFSCnZpZGVvQ29kZWOIAQESUQoLYXVkaW9fY2'
+    '9kZWMYBCABKA4yIS5zeW5jdHYuY2xpZW50LlBsYXliYWNrQXVkaW9Db2RlY0IIukgFggECEAFI'
+    'AlIKYXVkaW9Db2RlY4gBARJKCghwaXBlbGluZRgFIAEoDjIkLnN5bmN0di5jbGllbnQuUGxheW'
+    'JhY2tNZWRpYVBpcGVsaW5lQgi6SAWCAQIQAVIIcGlwZWxpbmUSMAoMY29kZWNfc3RyaW5nGAYg'
+    'ASgJQgi6SAVyAxiAAUgDUgtjb2RlY1N0cmluZ4gBAUIMCgpfY29udGFpbmVyQg4KDF92aWRlb1'
+    '9jb2RlY0IOCgxfYXVkaW9fY29kZWNCDwoNX2NvZGVjX3N0cmluZw==');
+
 @$core.Deprecated('Use playbackClientProfileDescriptor instead')
 const PlaybackClientProfile$json = {
   '1': 'PlaybackClientProfile',
@@ -7731,10 +7896,53 @@ const PlaybackClientProfile$json = {
       '8': {},
       '10': 'supportedLiveTransports'
     },
+    {'1': 'profile_version', '3': 9, '4': 1, '5': 13, '10': 'profileVersion'},
+    {
+      '1': 'environment',
+      '3': 10,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaybackClientEnvironment',
+      '8': {},
+      '10': 'environment'
+    },
+    {
+      '1': 'media_capabilities',
+      '3': 11,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.PlaybackMediaCapability',
+      '8': {},
+      '10': 'mediaCapabilities'
+    },
+    {
+      '1': 'supports_custom_http_headers',
+      '3': 12,
+      '4': 1,
+      '5': 8,
+      '10': 'supportsCustomHttpHeaders'
+    },
+    {
+      '1': 'supports_provider_proxy',
+      '3': 13,
+      '4': 1,
+      '5': 8,
+      '10': 'supportsProviderProxy'
+    },
+    {
+      '1': 'supports_insecure_http_media',
+      '3': 20,
+      '4': 1,
+      '5': 8,
+      '10': 'supportsInsecureHttpMedia'
+    },
   ],
   '8': [
     {'1': '_max_streaming_bitrate'},
     {'1': '_max_audio_channels'},
+  ],
+  '9': [
+    {'1': 14, '2': 20},
   ],
 };
 
@@ -7753,8 +7961,16 @@ final $typed_data.Uint8List playbackClientProfileDescriptor = $convert.base64Dec
     'cHJlZmVyZW5jZRgHIAEoDjIpLnN5bmN0di5jbGllbnQuUGxheWJhY2tTdWJ0aXRsZVByZWZlcm'
     'VuY2VCCLpIBYIBAhABUhJzdWJ0aXRsZVByZWZlcmVuY2USbwoZc3VwcG9ydGVkX2xpdmVfdHJh'
     'bnNwb3J0cxgIIAMoDjIkLnN5bmN0di5jbGllbnQuUGxheWJhY2tMaXZlVHJhbnNwb3J0Qg26SA'
-    'qSAQciBYIBAhABUhdzdXBwb3J0ZWRMaXZlVHJhbnNwb3J0c0IYChZfbWF4X3N0cmVhbWluZ19i'
-    'aXRyYXRlQhUKE19tYXhfYXVkaW9fY2hhbm5lbHM=');
+    'qSAQciBYIBAhABUhdzdXBwb3J0ZWRMaXZlVHJhbnNwb3J0cxInCg9wcm9maWxlX3ZlcnNpb24Y'
+    'CSABKA1SDnByb2ZpbGVWZXJzaW9uElQKC2Vudmlyb25tZW50GAogASgOMiguc3luY3R2LmNsaW'
+    'VudC5QbGF5YmFja0NsaWVudEVudmlyb25tZW50Qgi6SAWCAQIQAVILZW52aXJvbm1lbnQSXwoS'
+    'bWVkaWFfY2FwYWJpbGl0aWVzGAsgAygLMiYuc3luY3R2LmNsaWVudC5QbGF5YmFja01lZGlhQ2'
+    'FwYWJpbGl0eUIIukgFkgECEEBSEW1lZGlhQ2FwYWJpbGl0aWVzEj8KHHN1cHBvcnRzX2N1c3Rv'
+    'bV9odHRwX2hlYWRlcnMYDCABKAhSGXN1cHBvcnRzQ3VzdG9tSHR0cEhlYWRlcnMSNgoXc3VwcG'
+    '9ydHNfcHJvdmlkZXJfcHJveHkYDSABKAhSFXN1cHBvcnRzUHJvdmlkZXJQcm94eRI/ChxzdXBw'
+    'b3J0c19pbnNlY3VyZV9odHRwX21lZGlhGBQgASgIUhlzdXBwb3J0c0luc2VjdXJlSHR0cE1lZG'
+    'lhQhgKFl9tYXhfc3RyZWFtaW5nX2JpdHJhdGVCFQoTX21heF9hdWRpb19jaGFubmVsc0oECA4Q'
+    'FA==');
 
 @$core.Deprecated('Use getPlaybackRequestDescriptor instead')
 const GetPlaybackRequest$json = {
@@ -20840,6 +21056,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ObservePlaybackState': ObservePlaybackState$json,
   '.synctv.client.ObservePlayback': ObservePlayback$json,
   '.synctv.client.PlaybackClientProfile': PlaybackClientProfile$json,
+  '.synctv.client.PlaybackMediaCapability': PlaybackMediaCapability$json,
   '.synctv.client.ObserveRoomSettings': ObserveRoomSettings$json,
   '.synctv.client.ObservePlaylistItems': ObservePlaylistItems$json,
   '.synctv.client.ListPlaylistItemsRequest': ListPlaylistItemsRequest$json,

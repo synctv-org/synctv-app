@@ -150,6 +150,27 @@ class SyncTvSessionStore {
     if (changed) await _persistServers(prefs);
   }
 
+  Future<SyncTvServerProfile> forceSingleServer(String endpoint) async {
+    final normalizedEndpoint = ServerEndpointIdentity.normalize(endpoint);
+    _captureSessionToActiveServer();
+    final existing = _serverByEndpoint(normalizedEndpoint);
+    final profile =
+        existing?.copyWith(isBuiltIn: true, allowInsecureTls: false) ??
+        SyncTvServerProfile(
+          endpoint: normalizedEndpoint,
+          declaredServerId: '',
+          name: normalizedEndpoint,
+          isBuiltIn: true,
+        );
+    servers = [profile];
+    activeServerEndpoint = normalizedEndpoint;
+    baseUrl = normalizedEndpoint;
+    _loadProfileSession(profile);
+    final prefs = await SharedPreferences.getInstance();
+    await _persistServers(prefs);
+    return profile;
+  }
+
   Future<SyncTvServerProfile> addOrUpdateServer({
     required String declaredServerId,
     required String name,

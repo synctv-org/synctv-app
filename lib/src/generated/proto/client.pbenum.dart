@@ -931,6 +931,147 @@ class PlaybackAudioCapability extends $pb.ProtobufEnum {
   const PlaybackAudioCapability._(super.value, super.name);
 }
 
+/// Runtime environment is declared by the client. Servers must not infer it
+/// from User-Agent because embedded browsers and privacy modes make that signal
+/// unreliable.
+class PlaybackClientEnvironment extends $pb.ProtobufEnum {
+  static const PlaybackClientEnvironment
+      PLAYBACK_CLIENT_ENVIRONMENT_UNSPECIFIED = PlaybackClientEnvironment._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_CLIENT_ENVIRONMENT_UNSPECIFIED');
+  static const PlaybackClientEnvironment PLAYBACK_CLIENT_ENVIRONMENT_NATIVE =
+      PlaybackClientEnvironment._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_CLIENT_ENVIRONMENT_NATIVE');
+  static const PlaybackClientEnvironment PLAYBACK_CLIENT_ENVIRONMENT_WEB =
+      PlaybackClientEnvironment._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_CLIENT_ENVIRONMENT_WEB');
+
+  static const $core.List<PlaybackClientEnvironment> values =
+      <PlaybackClientEnvironment>[
+    PLAYBACK_CLIENT_ENVIRONMENT_UNSPECIFIED,
+    PLAYBACK_CLIENT_ENVIRONMENT_NATIVE,
+    PLAYBACK_CLIENT_ENVIRONMENT_WEB,
+  ];
+
+  static final $core.List<PlaybackClientEnvironment?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static PlaybackClientEnvironment? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackClientEnvironment._(super.value, super.name);
+}
+
+/// Delivery protocol consumed by a player pipeline. This is independent from
+/// the byte container because HLS and DASH can carry several container types.
+class PlaybackMediaTransport extends $pb.ProtobufEnum {
+  static const PlaybackMediaTransport PLAYBACK_MEDIA_TRANSPORT_UNSPECIFIED =
+      PlaybackMediaTransport._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_TRANSPORT_UNSPECIFIED');
+  static const PlaybackMediaTransport PLAYBACK_MEDIA_TRANSPORT_PROGRESSIVE =
+      PlaybackMediaTransport._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_TRANSPORT_PROGRESSIVE');
+  static const PlaybackMediaTransport PLAYBACK_MEDIA_TRANSPORT_HLS =
+      PlaybackMediaTransport._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_TRANSPORT_HLS');
+  static const PlaybackMediaTransport PLAYBACK_MEDIA_TRANSPORT_DASH =
+      PlaybackMediaTransport._(
+          3, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_TRANSPORT_DASH');
+  static const PlaybackMediaTransport PLAYBACK_MEDIA_TRANSPORT_FLV =
+      PlaybackMediaTransport._(
+          4, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_TRANSPORT_FLV');
+  static const PlaybackMediaTransport PLAYBACK_MEDIA_TRANSPORT_MPEG_TS =
+      PlaybackMediaTransport._(
+          5, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_TRANSPORT_MPEG_TS');
+
+  static const $core.List<PlaybackMediaTransport> values =
+      <PlaybackMediaTransport>[
+    PLAYBACK_MEDIA_TRANSPORT_UNSPECIFIED,
+    PLAYBACK_MEDIA_TRANSPORT_PROGRESSIVE,
+    PLAYBACK_MEDIA_TRANSPORT_HLS,
+    PLAYBACK_MEDIA_TRANSPORT_DASH,
+    PLAYBACK_MEDIA_TRANSPORT_FLV,
+    PLAYBACK_MEDIA_TRANSPORT_MPEG_TS,
+  ];
+
+  static final $core.List<PlaybackMediaTransport?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
+  static PlaybackMediaTransport? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackMediaTransport._(super.value, super.name);
+}
+
+class PlaybackMediaPipeline extends $pb.ProtobufEnum {
+  static const PlaybackMediaPipeline PLAYBACK_MEDIA_PIPELINE_UNSPECIFIED =
+      PlaybackMediaPipeline._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_PIPELINE_UNSPECIFIED');
+  static const PlaybackMediaPipeline PLAYBACK_MEDIA_PIPELINE_NATIVE =
+      PlaybackMediaPipeline._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_PIPELINE_NATIVE');
+  static const PlaybackMediaPipeline PLAYBACK_MEDIA_PIPELINE_MEDIA_SOURCE =
+      PlaybackMediaPipeline._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_PIPELINE_MEDIA_SOURCE');
+  static const PlaybackMediaPipeline
+      PLAYBACK_MEDIA_PIPELINE_MANAGED_MEDIA_SOURCE = PlaybackMediaPipeline._(3,
+          _omitEnumNames ? '' : 'PLAYBACK_MEDIA_PIPELINE_MANAGED_MEDIA_SOURCE');
+
+  static const $core.List<PlaybackMediaPipeline> values =
+      <PlaybackMediaPipeline>[
+    PLAYBACK_MEDIA_PIPELINE_UNSPECIFIED,
+    PLAYBACK_MEDIA_PIPELINE_NATIVE,
+    PLAYBACK_MEDIA_PIPELINE_MEDIA_SOURCE,
+    PLAYBACK_MEDIA_PIPELINE_MANAGED_MEDIA_SOURCE,
+  ];
+
+  static final $core.List<PlaybackMediaPipeline?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static PlaybackMediaPipeline? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackMediaPipeline._(super.value, super.name);
+}
+
+class PlaybackAudioCodec extends $pb.ProtobufEnum {
+  static const PlaybackAudioCodec PLAYBACK_AUDIO_CODEC_UNSPECIFIED =
+      PlaybackAudioCodec._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CODEC_UNSPECIFIED');
+  static const PlaybackAudioCodec PLAYBACK_AUDIO_CODEC_AAC =
+      PlaybackAudioCodec._(1, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CODEC_AAC');
+  static const PlaybackAudioCodec PLAYBACK_AUDIO_CODEC_MP3 =
+      PlaybackAudioCodec._(2, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CODEC_MP3');
+  static const PlaybackAudioCodec PLAYBACK_AUDIO_CODEC_OPUS =
+      PlaybackAudioCodec._(
+          3, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CODEC_OPUS');
+  static const PlaybackAudioCodec PLAYBACK_AUDIO_CODEC_VORBIS =
+      PlaybackAudioCodec._(
+          4, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CODEC_VORBIS');
+  static const PlaybackAudioCodec PLAYBACK_AUDIO_CODEC_AC3 =
+      PlaybackAudioCodec._(5, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CODEC_AC3');
+  static const PlaybackAudioCodec PLAYBACK_AUDIO_CODEC_EAC3 =
+      PlaybackAudioCodec._(
+          6, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CODEC_EAC3');
+  static const PlaybackAudioCodec PLAYBACK_AUDIO_CODEC_FLAC =
+      PlaybackAudioCodec._(
+          7, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CODEC_FLAC');
+
+  static const $core.List<PlaybackAudioCodec> values = <PlaybackAudioCodec>[
+    PLAYBACK_AUDIO_CODEC_UNSPECIFIED,
+    PLAYBACK_AUDIO_CODEC_AAC,
+    PLAYBACK_AUDIO_CODEC_MP3,
+    PLAYBACK_AUDIO_CODEC_OPUS,
+    PLAYBACK_AUDIO_CODEC_VORBIS,
+    PLAYBACK_AUDIO_CODEC_AC3,
+    PLAYBACK_AUDIO_CODEC_EAC3,
+    PLAYBACK_AUDIO_CODEC_FLAC,
+  ];
+
+  static final $core.List<PlaybackAudioCodec?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 7);
+  static PlaybackAudioCodec? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackAudioCodec._(super.value, super.name);
+}
+
 class BilibiliPlaybackKind extends $pb.ProtobufEnum {
   static const BilibiliPlaybackKind BILIBILI_PLAYBACK_KIND_UNSPECIFIED =
       BilibiliPlaybackKind._(

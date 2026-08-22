@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/account_models.dart';
@@ -186,7 +187,7 @@ class _HomeHeader extends StatelessWidget {
               if (!state.isAccount && compact)
                 AppActionButton(
                   onPressed: callbacks.openServerSettings,
-                  icon: Icons.dns_rounded,
+                  icon: kIsWeb ? Icons.info_outline_rounded : Icons.dns_rounded,
                   label: l10n.server,
                   style: AppActionButtonStyle.tonal,
                 )
@@ -194,7 +195,7 @@ class _HomeHeader extends StatelessWidget {
                 AppIconButton(
                   tooltip: l10n.serverSettings,
                   onPressed: callbacks.openServerSettings,
-                  icon: Icons.dns_rounded,
+                  icon: kIsWeb ? Icons.info_outline_rounded : Icons.dns_rounded,
                   style: AppIconButtonStyle.tonal,
                 ),
               SizedBox(width: compact ? 8 : 12),

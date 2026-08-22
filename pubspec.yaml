@@ -33,12 +33,17 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  cupertino_icons: ^1.0.9
   intl: ^0.20.2
 
   video_player: ^2.14.0
   protobuf: ^6.0.0
   fixnum: ^1.1.1
   http: ^1.6.0
+  web: ^1.1.1
+  web_socket_channel: ^3.0.3
   crypto: ^3.0.6
   xml: ^7.0.1
   file_picker: ^12.0.0
@@ -82,6 +87,8 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
+  media_kit: ^1.2.6
+  video_player_platform_interface: ^6.6.0
 
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4

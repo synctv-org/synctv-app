@@ -5,10 +5,18 @@ import 'src/cancellable_media_kit_video_player.dart';
 
 export 'src/cancellable_media_kit_video_player.dart'
     show
-        AdaptiveVideoTrackInfo,
-        AdaptiveVideoTrackSnapshot,
         AdaptiveVideoTrackController,
-        CancellableMediaKitVideoPlayer;
+        BrowserPictureInPictureController,
+        CancellableMediaKitVideoPlayer,
+        syncTvVideoFormatHeader;
+export 'src/video_player_runtime.dart'
+    show
+        AdaptiveVideoTrackInfo,
+        AdaptiveVideoTrackRuntime,
+        AdaptiveVideoTrackSnapshot,
+        PictureInPictureRuntime,
+        VideoPlayerRuntime,
+        VideoPlayerRuntimeFactory;
 
 class SyncTvVideoPlayerMediaKit {
   const SyncTvVideoPlayerMediaKit._();
@@ -32,7 +40,7 @@ class SyncTvVideoPlayerMediaKit {
             TargetPlatform.fuchsia => false,
           };
     if (!enabled) return;
-    MediaKit.ensureInitialized();
+    if (!kIsWeb) MediaKit.ensureInitialized();
     CancellableMediaKitVideoPlayer.registerWith();
   }
 }

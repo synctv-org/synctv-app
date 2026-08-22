@@ -4,12 +4,13 @@ import 'package:accessibility_tools/accessibility_tools.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/app_shell/presentation/app_shell.dart';
 import 'package:synctv_app/app/app_dependencies.dart';
 import 'package:synctv_app/features/auth/data/synctv_auth_gateway.dart';
-import 'package:synctv_app/features/auth/infrastructure/native_passkey_client.dart';
+import 'package:synctv_app/features/auth/infrastructure/platform_passkey_client.dart';
 import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
 import 'package:synctv_app/features/auth/data/synctv_opaque_auth_gateway.dart';
 import 'package:synctv_app/features/account/data/synctv_account_gateway.dart';
@@ -43,6 +44,7 @@ import 'package:synctv_app/features/providers/data/synctv_provider_gateway.dart'
 import 'package:synctv_app/features/providers/infrastructure/desktop_web_verification_client.dart';
 import 'package:synctv_app/core/localization/app_locale_controller.dart';
 import 'package:synctv_app/features/auth/infrastructure/oauth2_callback_service.dart';
+import 'package:synctv_app/features/auth/presentation/oauth2_callback_page.dart';
 import 'package:synctv_app/features/room/infrastructure/picture_in_picture_service.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_chat_manager.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
@@ -56,6 +58,7 @@ void main(List<String> args) async {
   if (runWebViewTitleBarWidget(args)) {
     return;
   }
+  usePathUrlStrategy();
   final p2pMediaPreferences = P2pMediaPreferencesController(
     store: const SharedPreferencesP2pMediaPreferencesStore(),
   );
@@ -97,7 +100,7 @@ void main(List<String> args) async {
     opaqueAuthenticator: opaqueAuthenticator,
     oauth2Callbacks: oauth2Callbacks,
     nativeAppleSignIn: const PlatformNativeAppleSignInClient(),
-    passkeyClient: const NativePasskeyClient(),
+    passkeyClient: const PlatformPasskeyClient(),
     p2pMediaPreferences: p2pMediaPreferences,
     p2pMediaRuntimeFactory: const NativeP2pMediaRuntimeFactory(),
     mediaLibraryGateway: const SyncTvMediaLibraryGateway(),
@@ -163,6 +166,7 @@ void _initializeDeferredRuntime() {
       windows: true,
       macOS: true,
       linux: true,
+      web: true,
     );
   } catch (error) {
     debugPrint('Failed to initialize media playback: $error');
@@ -215,6 +219,7 @@ class MyApp extends StatelessWidget {
 
           return dependencies.scope(child: appChild);
         },
+        onGenerateRoute: generateOAuth2CallbackRoute,
         home: AppShell(dependencies: dependencies.appShell),
       ),
     );

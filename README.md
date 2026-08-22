@@ -9,7 +9,7 @@
 <p align="center"><strong>Watch together. Stay in sync.</strong></p>
 
 <p align="center">
-  A native, self-hosting-friendly client for synchronized rooms, rich media providers,
+  A cross-platform, self-hosting-friendly client for synchronized rooms, rich media providers,
   real-time conversation, voice chat, and room-scoped media P2P.
 </p>
 
@@ -26,7 +26,7 @@
 <p align="center">
   <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/synctv-org/synctv-app?display_name=tag&sort=semver" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/Flutter-3.44.8-02569B?logo=flutter&logoColor=white" alt="Flutter 3.44.8">
-  <img src="https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux-495057" alt="Supported platforms">
+  <img src="https://img.shields.io/badge/platforms-Web%20%7C%20Android%20%7C%20iOS%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux-495057" alt="Supported platforms">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-2F855A" alt="Apache-2.0 license"></a>
 </p>
 
@@ -84,6 +84,7 @@ Contributor-facing layering and test boundaries are documented in [Application A
 
 | Platform | Minimum | Release artifacts |
 | :--- | :--- | :--- |
+| Web | Current Chrome, Firefox, or Safari | Embedded in a matching SyncTV HTTP server build; no standalone server selection |
 | Android | Android 7.0 / API 24 | Universal, armv7, arm64, and x64 APKs; universal AAB |
 | iOS | iOS 17.4 | Signed IPA for configured releases; re-signable archive for unsigned fork builds |
 | macOS | macOS 14.4 | Universal, Apple silicon, and Intel DMG/ZIP packages |
@@ -115,6 +116,10 @@ fvm flutter run
 ```
 
 Start a [SyncTV server](https://github.com/synctv-org/synctv) before running the app. Debug builds use `http://127.0.0.1:8080` as the development endpoint. Store and release builds open the server setup flow when no built-in server is configured.
+
+Production Web builds are served by the matching SyncTV backend and always use
+the page origin. Build, capability negotiation, browser security, and Chrome
+integration tests are documented in [Web Client](./docs/web.md).
 
 ### Regenerate protobuf code
 

@@ -4,7 +4,7 @@ import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 
 const assetName = 'synctv_opaque';
-const assetIdName = 'synctv_opaque.dart';
+const assetIdName = 'src/synctv_opaque_native.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {

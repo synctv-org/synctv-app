@@ -37,16 +37,32 @@ class OAuth2CallbackService {
 
   static String get mobileCallbackUrl => OAuth2CallbackConfig.mobileCallbackUrl;
 
-  static bool get canCreateSession => canCreateSessionFor(
-    defaultTargetPlatform,
-    hasMobileOrigin: OAuth2CallbackConfig.hasMobileOrigin,
-  );
+  static bool get canCreateSession => kIsWeb
+      ? canCreateWebSessionFor(Uri.base)
+      : canCreateSessionFor(
+          defaultTargetPlatform,
+          hasMobileOrigin: OAuth2CallbackConfig.hasMobileOrigin,
+        );
 
   static Future<OAuth2CallbackSession> createSession({
     Future<bool> Function(Uri authorizationUrl)? launchExternalUrl,
     Future<void> Function()? activateAppWindow,
     Duration authorizationTimeout = oauth2AuthorizationTimeout,
   }) async {
+    if (kIsWeb) {
+      if (!canCreateWebSessionFor(Uri.base)) {
+        throw UnsupportedError(
+          'OAuth2 requires HTTPS or a loopback origin in a browser.',
+        );
+      }
+      final redirectUri = webRedirectUri(Uri.base);
+      return _FlutterWebAuth2CallbackSession(
+        redirectUri: redirectUri,
+        callbackUrlScheme: redirectUri.scheme,
+        options: optionsFor(redirectUri),
+      );
+    }
+
     final platform = defaultTargetPlatform;
     final transport = callbackTransportFor(platform);
     if (transport == OAuth2CallbackTransport.unsupported) {
@@ -101,6 +117,26 @@ class OAuth2CallbackService {
         OAuth2CallbackTransport.darwinAuthenticationSession,
       TargetPlatform.fuchsia => OAuth2CallbackTransport.unsupported,
     };
+  }
+
+  @visibleForTesting
+  static bool canCreateWebSessionFor(Uri pageUri) {
+    if (pageUri.host.isEmpty) return false;
+    if (pageUri.scheme == 'https') return true;
+    return pageUri.scheme == 'http' && _isLoopbackHost(pageUri.host);
+  }
+
+  @visibleForTesting
+  static Uri webRedirectUri(Uri pageUri) {
+    return Uri.parse(pageUri.origin).replace(path: '/oauth2/callback');
+  }
+
+  static bool _isLoopbackHost(String host) {
+    final normalized = host.toLowerCase();
+    return normalized == 'localhost' ||
+        normalized == '127.0.0.1' ||
+        normalized == '::1' ||
+        normalized == '[::1]';
   }
 
   @visibleForTesting
@@ -400,6 +436,7 @@ final class _FlutterWebAuth2CallbackSession implements OAuth2CallbackSession {
       return OAuth2CallbackParser.parse(
         Uri.parse(callback),
         expectedState: expectedState,
+        expectedRedirectUri: redirectUri,
       );
     } on PlatformException catch (error) {
       if (error.code == 'CANCELED') {

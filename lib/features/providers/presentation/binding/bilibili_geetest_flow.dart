@@ -84,6 +84,8 @@ class BilibiliGeetestService {
       windowWidth: 460,
       windowHeight: 620,
       timeout: timeout,
+      browserPath: 'provider_verification.html',
+      browserFragmentParameters: {'gt': gt, 'challenge': challenge},
     );
     return parseBilibiliGeetestMessage(message);
   }
@@ -98,7 +100,7 @@ class BilibiliGeetestService {
   }
 
   static bool get _supportsDesktopWebView {
-    return !kIsWeb &&
+    return kIsWeb ||
         const {
           TargetPlatform.windows,
           TargetPlatform.linux,

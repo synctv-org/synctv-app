@@ -1511,7 +1511,7 @@ segment.ts?token=secret
         await sourceSocket!.close();
       });
       final engine = P2pMediaEngine(
-        hasConnectedPeer: (_) => false,
+        canRequestPeer: (_) => false,
         requestPeerPiece: (swarm, key, cancellation) async => null,
       );
       addTearDown(() async {
@@ -1765,7 +1765,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
-      hasConnectedPeer: (_) => false,
+      canRequestPeer: (_) => false,
       requestPeerPiece: (swarm, key, cancellation) {
         peerRequests++;
         return Completer<P2pPeerPiece?>().future;
@@ -1827,7 +1827,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
-        hasConnectedPeer: (_) => false,
+        canRequestPeer: (_) => false,
         requestPeerPiece: (swarm, key, cancellation) {
           peerRequests++;
           return Completer<P2pPeerPiece?>().future;
@@ -1882,7 +1882,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
-        hasConnectedPeer: (_) => false,
+        canRequestPeer: (_) => false,
         originHeaderTimeout: const Duration(milliseconds: 300),
         originHeaderPeerRetryDelay: const Duration(milliseconds: 5),
         requestPeerPiece: (swarm, key, cancellation) {
@@ -1939,7 +1939,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
-        hasConnectedPeer: (_) => false,
+        canRequestPeer: (_) => false,
         originBodyStallPeerRetryDelay: const Duration(milliseconds: 20),
         requestPeerPiece: (swarm, key, cancellation) {
           peerRequests++;

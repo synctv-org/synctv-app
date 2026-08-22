@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
+import 'package:synctv_app/features/auth/domain/oauth2_callback_parser.dart';
 import 'package:synctv_app/features/auth/infrastructure/oauth2_callback_service.dart';
 
 void main() {
@@ -52,6 +53,60 @@ void main() {
           hasMobileOrigin: true,
         ),
         isFalse,
+      );
+    });
+
+    test('web callbacks stay on the deployment origin', () {
+      expect(
+        OAuth2CallbackService.webRedirectUri(
+          Uri.parse('https://app.example.test/room?id=1#player'),
+        ),
+        Uri.parse('https://app.example.test/oauth2/callback'),
+      );
+      expect(
+        OAuth2CallbackService.canCreateWebSessionFor(
+          Uri.parse('https://app.example.test/'),
+        ),
+        isTrue,
+      );
+      expect(
+        OAuth2CallbackService.canCreateWebSessionFor(
+          Uri.parse('http://127.0.0.1:8080/'),
+        ),
+        isTrue,
+      );
+      expect(
+        OAuth2CallbackService.canCreateWebSessionFor(
+          Uri.parse('http://app.example.test/'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('accepts the exact Web callback URL and rejects another origin', () {
+      final redirectUri = Uri.parse('https://app.example.test/oauth2/callback');
+      final payload = OAuth2CallbackParser.parse(
+        redirectUri.replace(
+          queryParameters: const {
+            'code': 'authorization-code',
+            'state': 'expected-state',
+          },
+        ),
+        expectedState: 'expected-state',
+        expectedRedirectUri: redirectUri,
+      );
+
+      expect(payload.code, 'authorization-code');
+      expect(payload.state, 'expected-state');
+      expect(
+        () => OAuth2CallbackParser.parse(
+          Uri.parse(
+            'https://other.example.test/oauth2/callback?code=code&state=expected-state',
+          ),
+          expectedState: 'expected-state',
+          expectedRedirectUri: redirectUri,
+        ),
+        throwsArgumentError,
       );
     });
 

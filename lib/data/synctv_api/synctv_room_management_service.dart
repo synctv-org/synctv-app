@@ -190,14 +190,14 @@ class SyncTvRoomManagementDomainService {
       return;
     }
 
-    final start = _opaqueClient.startRegistration(newPassword);
+    final start = await _opaqueClient.startRegistration(newPassword);
     final challenge = await _api.room.startRoomPasswordRegistration(
       roomId,
       client.StartRoomPasswordRegistrationRequest(
         registrationRequest: start.registrationRequest,
       ),
     );
-    final finish = _opaqueClient.finishRegistration(
+    final finish = await _opaqueClient.finishRegistration(
       password: newPassword,
       state: start.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),

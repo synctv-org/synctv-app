@@ -28,7 +28,6 @@ class PasskeyAuthenticatorService {
   }) async {
     final normalizedRpId = rpId.trim().toLowerCase();
     if (!_isValidRpId(normalizedRpId)) return false;
-    if (kIsWeb) return false;
     if (!_serverCanUseRpId(serverBaseUrl, normalizedRpId)) return false;
     if (kDebugMode) {
       debugPrint(
@@ -39,10 +38,12 @@ class PasskeyAuthenticatorService {
     if (kDebugMode) {
       debugPrint('Passkey platform capability: $platformAvailable');
     }
-    final associated = await PasskeyNativeAssociationService.isAssociated(
-      serverBaseUrl: serverBaseUrl,
-      rpId: normalizedRpId,
-    ).timeout(_associationTimeout, onTimeout: () => false);
+    final associated = kIsWeb
+        ? true
+        : await PasskeyNativeAssociationService.isAssociated(
+            serverBaseUrl: serverBaseUrl,
+            rpId: normalizedRpId,
+          ).timeout(_associationTimeout, onTimeout: () => false);
     if (kDebugMode) {
       debugPrint(
         'Passkey capability: platform=$platformAvailable, '
@@ -53,6 +54,13 @@ class PasskeyAuthenticatorService {
   }
 
   static Future<bool> _platformAvailable() async {
+    if (kIsWeb) {
+      return _authenticator
+          .getAvailability()
+          .web()
+          .then((availability) => availability.hasPasskeySupport)
+          .timeout(_platformAvailabilityTimeout, onTimeout: () => false);
+    }
     if (defaultTargetPlatform == TargetPlatform.android) {
       return _authenticator
           .getAvailability()

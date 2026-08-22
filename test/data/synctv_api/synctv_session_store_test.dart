@@ -235,6 +235,53 @@ void main() {
     expect(restoredSession.accessToken, 'second-token');
   });
 
+  test(
+    'forceSingleServer keeps its session and removes other servers',
+    () async {
+      const deploymentEndpoint = 'https://app.example.com';
+      final session = SyncTvSession();
+      final store = SyncTvSessionStore(session, builtInServerUrl: '');
+      await store.load();
+      await store.addOrUpdateServer(
+        endpoint: deploymentEndpoint,
+        declaredServerId: 'deployment',
+        name: 'Deployment',
+        allowInsecureTls: true,
+      );
+      session
+        ..updateAccountTokens(accessToken: 'deployment-access')
+        ..updateAccountTokens(refreshToken: 'deployment-refresh');
+      await store.persistSession();
+      await store.addOrUpdateServer(
+        endpoint: 'https://other.example.com',
+        declaredServerId: 'other',
+        name: 'Other',
+      );
+
+      final profile = await store.forceSingleServer('$deploymentEndpoint/');
+
+      expect(store.servers, hasLength(1));
+      expect(store.activeServerEndpoint, deploymentEndpoint);
+      expect(store.baseUrl, deploymentEndpoint);
+      expect(profile.endpoint, deploymentEndpoint);
+      expect(profile.isBuiltIn, isTrue);
+      expect(profile.allowInsecureTls, isFalse);
+      expect(session.accessToken, 'deployment-access');
+      expect(session.refreshToken, 'deployment-refresh');
+
+      final restored = SyncTvRuntimeService(
+        singleServerEndpoint: deploymentEndpoint,
+      );
+      addTearDown(restored.api.close);
+      await restored.init();
+      expect(restored.servers, hasLength(1));
+      expect(restored.activeServer?.isBuiltIn, isTrue);
+      expect(restored.activeServer?.allowInsecureTls, isFalse);
+      expect(restored.session.accessToken, 'deployment-access');
+      expect(restored.session.refreshToken, 'deployment-refresh');
+    },
+  );
+
   test('active server TLS policy survives a runtime restart', () async {
     final store = SyncTvSessionStore(SyncTvSession(), builtInServerUrl: '');
     await store.load();
@@ -283,6 +330,61 @@ void main() {
     probeResponse.complete(client.GetServerInfoResponse());
     await Future<void>.delayed(Duration.zero);
   });
+
+  test(
+    'single server mode initializes before its probe and enforces the origin',
+    () async {
+      const endpoint = 'https://app.example.com';
+      final otherServer = _profile(
+        id: 'other',
+        endpoint: 'https://other.example.com',
+      );
+      SharedPreferences.setMockInitialValues({
+        SyncTvSessionStore.serversKey: jsonEncode([otherServer.toJson()]),
+        SyncTvSessionStore.activeServerKey: otherServer.endpoint,
+      });
+      final probeStarted = Completer<void>();
+      final probeResponse = Completer<client.GetServerInfoResponse>();
+      final runtime = SyncTvRuntimeService(
+        singleServerEndpoint: endpoint,
+        serverInfoProbe: (_) {
+          probeStarted.complete();
+          return probeResponse.future;
+        },
+      );
+      addTearDown(runtime.api.close);
+
+      await runtime.init().timeout(const Duration(seconds: 1));
+
+      expect(runtime.singleServerMode, isTrue);
+      expect(runtime.servers, hasLength(1));
+      expect(runtime.activeServer?.endpoint, endpoint);
+      expect(runtime.activeServer?.isBuiltIn, isTrue);
+      expect(runtime.allowInsecureTls, isFalse);
+      expect(probeStarted.isCompleted, isTrue);
+      expect(probeResponse.isCompleted, isFalse);
+      await expectLater(
+        runtime.setBaseUrl('https://other.example.com'),
+        throwsUnsupportedError,
+      );
+      await expectLater(
+        runtime.addServer(endpoint, allowInsecureTls: true),
+        throwsUnsupportedError,
+      );
+      await expectLater(
+        runtime.addServer('https://other.example.com'),
+        throwsUnsupportedError,
+      );
+      await expectLater(
+        runtime.activateServer('https://other.example.com'),
+        throwsUnsupportedError,
+      );
+      await expectLater(runtime.removeServer(endpoint), throwsUnsupportedError);
+
+      probeResponse.complete(client.GetServerInfoResponse());
+      await Future<void>.delayed(Duration.zero);
+    },
+  );
 
   test('pending server probe cannot override a later selection', () async {
     const pendingEndpoint = 'https://pending.example.com';

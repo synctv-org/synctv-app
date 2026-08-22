@@ -19305,6 +19305,129 @@ class UpdatePlaybackStateRequest extends $pb.GeneratedMessage {
   void clearClientTimeMillis() => $_clearField(10);
 }
 
+/// One browser-tested media type. Optional codec/container fields mean that the
+/// client tested the protocol or pipeline without narrowing that dimension.
+/// codec_string carries the RFC 6381 value used for the runtime probe.
+class PlaybackMediaCapability extends $pb.GeneratedMessage {
+  factory PlaybackMediaCapability({
+    PlaybackMediaTransport? transport,
+    PlaybackContainer? container,
+    PlaybackVideoCodec? videoCodec,
+    PlaybackAudioCodec? audioCodec,
+    PlaybackMediaPipeline? pipeline,
+    $core.String? codecString,
+  }) {
+    final result = create();
+    if (transport != null) result.transport = transport;
+    if (container != null) result.container = container;
+    if (videoCodec != null) result.videoCodec = videoCodec;
+    if (audioCodec != null) result.audioCodec = audioCodec;
+    if (pipeline != null) result.pipeline = pipeline;
+    if (codecString != null) result.codecString = codecString;
+    return result;
+  }
+
+  PlaybackMediaCapability._();
+
+  factory PlaybackMediaCapability.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlaybackMediaCapability.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlaybackMediaCapability',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aE<PlaybackMediaTransport>(1, _omitFieldNames ? '' : 'transport',
+        enumValues: PlaybackMediaTransport.values)
+    ..aE<PlaybackContainer>(2, _omitFieldNames ? '' : 'container',
+        enumValues: PlaybackContainer.values)
+    ..aE<PlaybackVideoCodec>(3, _omitFieldNames ? '' : 'videoCodec',
+        enumValues: PlaybackVideoCodec.values)
+    ..aE<PlaybackAudioCodec>(4, _omitFieldNames ? '' : 'audioCodec',
+        enumValues: PlaybackAudioCodec.values)
+    ..aE<PlaybackMediaPipeline>(5, _omitFieldNames ? '' : 'pipeline',
+        enumValues: PlaybackMediaPipeline.values)
+    ..aOS(6, _omitFieldNames ? '' : 'codecString')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackMediaCapability clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackMediaCapability copyWith(
+          void Function(PlaybackMediaCapability) updates) =>
+      super.copyWith((message) => updates(message as PlaybackMediaCapability))
+          as PlaybackMediaCapability;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlaybackMediaCapability create() => PlaybackMediaCapability._();
+  @$core.override
+  PlaybackMediaCapability createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlaybackMediaCapability getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlaybackMediaCapability>(create);
+  static PlaybackMediaCapability? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  PlaybackMediaTransport get transport => $_getN(0);
+  @$pb.TagNumber(1)
+  set transport(PlaybackMediaTransport value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTransport() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTransport() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  PlaybackContainer get container => $_getN(1);
+  @$pb.TagNumber(2)
+  set container(PlaybackContainer value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasContainer() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearContainer() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  PlaybackVideoCodec get videoCodec => $_getN(2);
+  @$pb.TagNumber(3)
+  set videoCodec(PlaybackVideoCodec value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasVideoCodec() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVideoCodec() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  PlaybackAudioCodec get audioCodec => $_getN(3);
+  @$pb.TagNumber(4)
+  set audioCodec(PlaybackAudioCodec value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAudioCodec() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAudioCodec() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  PlaybackMediaPipeline get pipeline => $_getN(4);
+  @$pb.TagNumber(5)
+  set pipeline(PlaybackMediaPipeline value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasPipeline() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearPipeline() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get codecString => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set codecString($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasCodecString() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearCodecString() => $_clearField(6);
+}
+
 class PlaybackClientProfile extends $pb.GeneratedMessage {
   factory PlaybackClientProfile({
     PlaybackStreamPreference? streamPreference,
@@ -19315,6 +19438,12 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
     PlaybackAudioCapability? audioCapability,
     PlaybackSubtitlePreference? subtitlePreference,
     $core.Iterable<PlaybackLiveTransport>? supportedLiveTransports,
+    $core.int? profileVersion,
+    PlaybackClientEnvironment? environment,
+    $core.Iterable<PlaybackMediaCapability>? mediaCapabilities,
+    $core.bool? supportsCustomHttpHeaders,
+    $core.bool? supportsProviderProxy,
+    $core.bool? supportsInsecureHttpMedia,
   }) {
     final result = create();
     if (streamPreference != null) result.streamPreference = streamPreference;
@@ -19330,6 +19459,16 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
       result.subtitlePreference = subtitlePreference;
     if (supportedLiveTransports != null)
       result.supportedLiveTransports.addAll(supportedLiveTransports);
+    if (profileVersion != null) result.profileVersion = profileVersion;
+    if (environment != null) result.environment = environment;
+    if (mediaCapabilities != null)
+      result.mediaCapabilities.addAll(mediaCapabilities);
+    if (supportsCustomHttpHeaders != null)
+      result.supportsCustomHttpHeaders = supportsCustomHttpHeaders;
+    if (supportsProviderProxy != null)
+      result.supportsProviderProxy = supportsProviderProxy;
+    if (supportsInsecureHttpMedia != null)
+      result.supportsInsecureHttpMedia = supportsInsecureHttpMedia;
     return result;
   }
 
@@ -19371,6 +19510,16 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
         enumValues: PlaybackLiveTransport.values,
         defaultEnumValue:
             PlaybackLiveTransport.PLAYBACK_LIVE_TRANSPORT_UNSPECIFIED)
+    ..aI(9, _omitFieldNames ? '' : 'profileVersion',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<PlaybackClientEnvironment>(10, _omitFieldNames ? '' : 'environment',
+        enumValues: PlaybackClientEnvironment.values)
+    ..pPM<PlaybackMediaCapability>(
+        11, _omitFieldNames ? '' : 'mediaCapabilities',
+        subBuilder: PlaybackMediaCapability.create)
+    ..aOB(12, _omitFieldNames ? '' : 'supportsCustomHttpHeaders')
+    ..aOB(13, _omitFieldNames ? '' : 'supportsProviderProxy')
+    ..aOB(20, _omitFieldNames ? '' : 'supportsInsecureHttpMedia')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -19447,6 +19596,57 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(8)
   $pb.PbList<PlaybackLiveTransport> get supportedLiveTransports => $_getList(7);
+
+  /// Version 0 preserves the legacy defaults of fields 1-8. Version 2 gives
+  /// repeated capability fields explicit empty-set semantics.
+  @$pb.TagNumber(9)
+  $core.int get profileVersion => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set profileVersion($core.int value) => $_setUnsignedInt32(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasProfileVersion() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearProfileVersion() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  PlaybackClientEnvironment get environment => $_getN(9);
+  @$pb.TagNumber(10)
+  set environment(PlaybackClientEnvironment value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasEnvironment() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearEnvironment() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $pb.PbList<PlaybackMediaCapability> get mediaCapabilities => $_getList(10);
+
+  @$pb.TagNumber(12)
+  $core.bool get supportsCustomHttpHeaders => $_getBF(11);
+  @$pb.TagNumber(12)
+  set supportsCustomHttpHeaders($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasSupportsCustomHttpHeaders() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearSupportsCustomHttpHeaders() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.bool get supportsProviderProxy => $_getBF(12);
+  @$pb.TagNumber(13)
+  set supportsProviderProxy($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasSupportsProviderProxy() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearSupportsProviderProxy() => $_clearField(13);
+
+  /// True when the page/runtime may load http:// media without mixed-content blocking.
+  @$pb.TagNumber(20)
+  $core.bool get supportsInsecureHttpMedia => $_getBF(13);
+  @$pb.TagNumber(20)
+  set supportsInsecureHttpMedia($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(20)
+  $core.bool hasSupportsInsecureHttpMedia() => $_has(13);
+  @$pb.TagNumber(20)
+  void clearSupportsInsecureHttpMedia() => $_clearField(20);
 }
 
 class GetPlaybackRequest extends $pb.GeneratedMessage {
