@@ -344,7 +344,7 @@ void main() {
     }
     expect(
       pictureInPictureBackendForPlatform(TargetPlatform.android, isWeb: true),
-      PictureInPictureBackend.unavailable,
+      PictureInPictureBackend.web,
     );
   });
 
@@ -868,7 +868,9 @@ void main() {
       );
       addTearDown(controller.dispose);
       var freeModeEnabled = false;
-      var pictureInPictureCalls = 0;
+      final pictureInPictureActive = ValueNotifier(false);
+      addTearDown(pictureInPictureActive.dispose);
+      final pictureInPictureChanges = <bool>[];
 
       await tester.pumpWidget(
         MaterialApp(
@@ -886,7 +888,11 @@ void main() {
                 title: 'Video',
                 interactionMode: VideoPlayerInteractionMode.desktop,
                 onFreeModeChanged: (enabled) => freeModeEnabled = enabled,
-                onEnterPictureInPicture: () => pictureInPictureCalls++,
+                pictureInPictureActive: pictureInPictureActive,
+                onPictureInPictureChanged: (active) {
+                  pictureInPictureChanges.add(active);
+                  pictureInPictureActive.value = active;
+                },
                 onToggleFullScreen: () {},
               ),
             ),
@@ -962,7 +968,15 @@ void main() {
 
       await tester.tap(find.text('Picture in picture'));
       await tester.pumpAndSettle();
-      expect(pictureInPictureCalls, 1);
+      expect(pictureInPictureChanges, [isTrue]);
+      expect(menu, findsNothing);
+
+      await tester.tap(overflow);
+      await tester.pumpAndSettle();
+      expect(switchIn(pictureInPictureRow).value, isTrue);
+      await tester.tap(find.text('Picture in picture'));
+      await tester.pumpAndSettle();
+      expect(pictureInPictureChanges, [isTrue, isFalse]);
       expect(menu, findsNothing);
     },
   );
@@ -997,7 +1011,7 @@ void main() {
               title: 'Video',
               interactionMode: VideoPlayerInteractionMode.desktop,
               onFreeModeChanged: (_) {},
-              onEnterPictureInPicture: () {},
+              onPictureInPictureChanged: (_) {},
             ),
           ),
         ),
@@ -1948,7 +1962,10 @@ void main() {
             controller: controller,
             title: 'Video',
             interactionMode: VideoPlayerInteractionMode.desktop,
-            onEnterPictureInPicture: () => invocationCount++,
+            onPictureInPictureChanged: (active) {
+              expect(active, isTrue);
+              invocationCount++;
+            },
           ),
         ),
       ),

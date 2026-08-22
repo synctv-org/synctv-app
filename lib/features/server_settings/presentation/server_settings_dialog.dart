@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -251,14 +252,16 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                       ),
                     ),
                   ),
-                  Flexible(
-                    child: AppActionButton(
-                      onPressed: _busy ? null : _openAddServerDialog,
-                      icon: Icons.add_link_rounded,
-                      label: l10n.addServer,
+                  if (!kIsWeb) ...[
+                    Flexible(
+                      child: AppActionButton(
+                        onPressed: _busy ? null : _openAddServerDialog,
+                        icon: Icons.add_link_rounded,
+                        label: l10n.addServer,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
+                    const SizedBox(width: 8),
+                  ],
                   Flexible(
                     child: AppActionButton(
                       onPressed: widget.requireServer && activeServer == null
@@ -280,26 +283,28 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                     : () => _loadServerInfo(refresh: true),
               ),
               const SizedBox(height: 16),
-              Text(
-                l10n.savedServers,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (servers.isEmpty)
-                _EmptyServerState(isDark: isDark)
-              else
-                ...servers.map(
-                  (profile) => _ServerProfileTile(
-                    profile: profile,
-                    active: profile.endpoint == activeServer?.endpoint,
-                    canRemove: !_busy && !profile.isBuiltIn,
-                    busy: _busy,
-                    onActivate: () => _activateServer(profile),
-                    onRemove: () => _removeServer(profile),
+              if (!kIsWeb) ...[
+                Text(
+                  l10n.savedServers,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+                const SizedBox(height: 10),
+                if (servers.isEmpty)
+                  _EmptyServerState(isDark: isDark)
+                else
+                  ...servers.map(
+                    (profile) => _ServerProfileTile(
+                      profile: profile,
+                      active: profile.endpoint == activeServer?.endpoint,
+                      canRemove: !_busy && !profile.isBuiltIn,
+                      busy: _busy,
+                      onActivate: () => _activateServer(profile),
+                      onRemove: () => _removeServer(profile),
+                    ),
+                  ),
+              ],
             ],
           ),
         ),

@@ -4,8 +4,14 @@ import 'package:synctv_app/features/auth/domain/oauth2_callback_config.dart';
 class OAuth2CallbackParser {
   const OAuth2CallbackParser._();
 
-  static OAuth2CallbackPayload parse(Uri uri, {String expectedState = ''}) {
-    if (!_isSupportedCallbackUri(uri)) {
+  static OAuth2CallbackPayload parse(
+    Uri uri, {
+    String expectedState = '',
+    Uri? expectedRedirectUri,
+  }) {
+    if (expectedRedirectUri == null
+        ? !_isSupportedCallbackUri(uri)
+        : !_matchesRedirectUri(uri, expectedRedirectUri)) {
       throw ArgumentError('授权回跳无效，请重新发起授权');
     }
 
@@ -34,5 +40,13 @@ class OAuth2CallbackParser {
       return true;
     }
     return OAuth2CallbackConfig.isMobileCallbackUri(uri);
+  }
+
+  static bool _matchesRedirectUri(Uri uri, Uri expected) {
+    return uri.scheme.toLowerCase() == expected.scheme.toLowerCase() &&
+        uri.host.toLowerCase() == expected.host.toLowerCase() &&
+        uri.port == expected.port &&
+        uri.path == expected.path &&
+        uri.hasQuery;
   }
 }

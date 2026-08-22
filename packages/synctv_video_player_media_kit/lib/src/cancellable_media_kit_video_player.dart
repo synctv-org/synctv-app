@@ -14,43 +14,14 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
     hide VideoTrack;
 
 import 'hls_master_playlist.dart';
+import 'platform_video_player_runtime.dart'
+    if (dart.library.js_interop) 'web_video_player_runtime.dart'
+    as platform_runtime;
+import 'video_player_runtime.dart';
 
-typedef VideoPlayerRuntimeFactory = VideoPlayerRuntime Function(int textureId);
+export 'video_player_runtime.dart';
 
-class AdaptiveVideoTrackInfo {
-  const AdaptiveVideoTrackInfo({
-    required this.id,
-    this.title,
-    this.width,
-    this.height,
-    this.fps,
-    this.bitrate,
-    this.codec,
-  });
-
-  final String id;
-  final String? title;
-  final int? width;
-  final int? height;
-  final double? fps;
-  final int? bitrate;
-  final String? codec;
-
-  String get resolution =>
-      width != null && height != null ? '${width}x$height' : '';
-}
-
-class AdaptiveVideoTrackSnapshot {
-  const AdaptiveVideoTrackSnapshot({
-    this.tracks = const [],
-    this.selectedTrackId = 'auto',
-    this.automaticSelectionAvailable = true,
-  });
-
-  final List<AdaptiveVideoTrackInfo> tracks;
-  final String selectedTrackId;
-  final bool automaticSelectionAvailable;
-}
+const syncTvVideoFormatHeader = 'x-synctv-internal-media-format';
 
 extension AdaptiveVideoTrackController on VideoPlayerController {
   Stream<AdaptiveVideoTrackSnapshot> get adaptiveVideoTracks {
@@ -66,41 +37,31 @@ extension AdaptiveVideoTrackController on VideoPlayerController {
   }
 }
 
-abstract interface class AdaptiveVideoTrackRuntime {
-  Stream<AdaptiveVideoTrackSnapshot> get adaptiveVideoTracks;
+extension BrowserPictureInPictureController on VideoPlayerController {
+  Stream<bool> get browserPictureInPictureEvents {
+    // The backend session uses the same identifier assigned by video_player.
+    // ignore: invalid_use_of_visible_for_testing_member
+    return CancellableMediaKitVideoPlayer.pictureInPictureEventsFor(playerId);
+  }
 
-  Future<void> selectAdaptiveVideoTrack(String trackId);
-}
+  Future<bool> enterBrowserPictureInPicture() {
+    // ignore: invalid_use_of_visible_for_testing_member
+    return CancellableMediaKitVideoPlayer.enterPictureInPicture(playerId);
+  }
 
-abstract interface class VideoPlayerRuntime {
-  Stream<VideoEvent> get events;
-
-  Future<void> open(Media media);
-
-  Future<void> dispose();
-
-  Future<void> play();
-
-  Future<void> pause();
-
-  Future<void> setLooping(bool looping);
-
-  Future<void> setVolume(double volume);
-
-  Future<void> seekTo(Duration position);
-
-  Future<void> setPlaybackSpeed(double speed);
-
-  Duration get position;
-
-  Widget buildView();
-
-  void reportOpenError(Object error, StackTrace stackTrace);
+  Future<void> exitBrowserPictureInPicture() {
+    // ignore: invalid_use_of_visible_for_testing_member
+    return CancellableMediaKitVideoPlayer.exitPictureInPicture(playerId);
+  }
 }
 
 class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
   CancellableMediaKitVideoPlayer({VideoPlayerRuntimeFactory? runtimeFactory})
-    : _runtimeFactory = runtimeFactory ?? _MediaKitVideoPlayerRuntime.new;
+    : _runtimeFactory =
+          runtimeFactory ??
+          (platform_runtime.usesPlatformWebVideoPlayerRuntime
+              ? platform_runtime.createPlatformWebVideoPlayerRuntime
+              : _MediaKitVideoPlayerRuntime.new);
 
   final VideoPlayerRuntimeFactory _runtimeFactory;
   final Map<int, _VideoPlayerSession> _sessions = {};
@@ -108,6 +69,36 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
 
   static void registerWith() {
     VideoPlayerPlatform.instance = CancellableMediaKitVideoPlayer();
+  }
+
+  static bool get browserPictureInPictureAvailable =>
+      platform_runtime.browserPictureInPictureAvailable;
+
+  static Stream<bool> pictureInPictureEventsFor(int playerId) {
+    final runtime = _runtimeFor(playerId);
+    if (runtime is! PictureInPictureRuntime) {
+      return Stream<bool>.value(false);
+    }
+    return (runtime! as PictureInPictureRuntime).pictureInPictureEvents;
+  }
+
+  static Future<bool> enterPictureInPicture(int playerId) async {
+    final runtime = _runtimeFor(playerId);
+    if (runtime is! PictureInPictureRuntime) return false;
+    return (runtime! as PictureInPictureRuntime).enterPictureInPicture();
+  }
+
+  static Future<void> exitPictureInPicture(int playerId) async {
+    final runtime = _runtimeFor(playerId);
+    if (runtime is PictureInPictureRuntime) {
+      await (runtime! as PictureInPictureRuntime).exitPictureInPicture();
+    }
+  }
+
+  static VideoPlayerRuntime? _runtimeFor(int playerId) {
+    final platform = VideoPlayerPlatform.instance;
+    if (platform is! CancellableMediaKitVideoPlayer) return null;
+    return platform._sessions[playerId]?.runtime;
   }
 
   static Stream<AdaptiveVideoTrackSnapshot> adaptiveVideoTracksFor(
@@ -209,8 +200,13 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
   Future<void> setMixWithOthers(bool mixWithOthers) => Future.value();
 
   @override
-  Future<void> setWebOptions(int playerId, VideoPlayerWebOptions options) =>
-      Future.value();
+  Future<void> setWebOptions(int playerId, VideoPlayerWebOptions options) {
+    final runtime = _sessions[playerId]?.runtime;
+    if (runtime == null || runtime is! WebVideoPlayerOptionsRuntime) {
+      return Future.value();
+    }
+    return (runtime as WebVideoPlayerOptionsRuntime).setWebOptions(options);
+  }
 
   _VideoPlayerSession _session(int textureId) {
     final session = _sessions[textureId];
@@ -234,10 +230,17 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
               'A URI is required for ${dataSource.sourceType}',
             )),
     };
+    final headers = Map<String, String>.of(dataSource.httpHeaders);
+    String? syncTvFormatHint;
+    for (final key in headers.keys.toList(growable: false)) {
+      if (key.toLowerCase() == syncTvVideoFormatHeader) {
+        syncTvFormatHint = headers.remove(key);
+      }
+    }
     return Media(
       resource,
-      httpHeaders: dataSource.httpHeaders,
-      extras: {'formatHint': dataSource.formatHint?.name},
+      httpHeaders: headers,
+      extras: {'formatHint': syncTvFormatHint ?? dataSource.formatHint?.name},
     );
   }
 }

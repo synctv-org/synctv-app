@@ -8,5 +8,7 @@ abstract interface class DesktopWebVerificationClient {
     required double windowWidth,
     required double windowHeight,
     required Duration timeout,
+    String? browserPath,
+    Map<String, String> browserFragmentParameters = const {},
   });
 }

@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:synctv_app/core/time/synced_clock.dart';
-import 'package:synctv_app/core/network/server_http_client.dart';
 import 'package:synctv_app/features/room/application/room_realtime_channel.dart';
 import 'package:synctv_app/features/room/application/room_session_gateway.dart';
 import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
+import 'package:synctv_app/features/room/data/room_realtime_socket.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
 typedef RealtimeMessageEncoder = String Function(client.ClientMessage message);
@@ -42,6 +41,8 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
   static const _connectTimeout = Duration(seconds: 10);
   static const _closeTimeout = Duration(seconds: 2);
 
+  Timer? _heartbeatTimer;
+
   RoomRealtimeConnection._({
     required this._outgoing,
     required this._socket,
@@ -50,7 +51,7 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
   });
 
   final StreamController<List<int>> _outgoing;
-  final Future<WebSocket> _socket;
+  final Future<RoomRealtimeSocket> _socket;
   @override
   final Stream<Uint8List> stream;
   final void Function(List<int> bytes)? onOutgoing;
@@ -67,9 +68,15 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
 
   @override
   Future<void> close() async {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
     await _outgoing.close();
-    final socket = await _socket;
-    await socket.close();
+    try {
+      final socket = await _socket.timeout(_closeTimeout);
+      await socket.close().timeout(_closeTimeout);
+    } catch (_) {
+      // A late connection closes itself after setup completes.
+    }
   }
 
   static RoomRealtimeConnection connect(
@@ -80,30 +87,53 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
     required RealtimeMessageDecoder decodeMessage,
     required int Function() nowMillis,
     bool allowInsecureTls = false,
+    Future<RoomRealtimeSocket> Function(
+      Uri uri, {
+      required bool allowInsecureTls,
+    })?
+    connectSocket,
     void Function(List<int> bytes)? onOutgoing,
     void Function(Uint8List bytes)? onIncoming,
   }) {
-    late final WebSocket socket;
+    late final RoomRealtimeSocket socket;
+    late final RoomRealtimeConnection connection;
     StreamSubscription<List<int>>? outgoingSubscription;
-    Timer? heartbeatTimer;
     final incoming = StreamController<Uint8List>();
     final outgoing = StreamController<List<int>>();
 
-    final socketFuture = createWebSocketUri(roomId)
+    final connectingSocket = createWebSocketUri(roomId)
         .timeout(_connectTimeout)
         .then(
-          (uri) => _connectWebSocket(
+          (uri) => (connectSocket ?? connectRoomRealtimeSocket)(
             uri,
             allowInsecureTls: allowInsecureTls,
-          ).timeout(_connectTimeout),
+          ),
+        );
+
+    final socketFuture = connectingSocket
+        .timeout(
+          _connectTimeout,
+          onTimeout: () {
+            unawaited(
+              connectingSocket
+                  .then((lateSocket) => lateSocket.close())
+                  .catchError((_) {}),
+            );
+            throw TimeoutException(
+              'Room realtime socket timed out',
+              _connectTimeout,
+            );
+          },
         )
         .then((connected) {
           socket = connected;
-          socket.pingInterval = const Duration(seconds: 10);
-          socket.listen(
+          if (outgoing.isClosed) {
+            unawaited(socket.close().catchError((_) {}));
+            return connected;
+          }
+          socket.messages.listen(
             (frame) {
               try {
-                if (frame is! String) return;
                 final message = decodeMessage(frame);
                 final bytes = Uint8List.fromList(message.writeToBuffer());
                 onIncoming?.call(bytes);
@@ -120,16 +150,20 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
               .listen((bytes) {
                 final message = client.ClientMessage.fromBuffer(bytes);
                 onOutgoing?.call(bytes);
-                socket.add(encodeMessage(message));
+                socket.send(encodeMessage(message));
               });
-          heartbeatTimer = Timer.periodic(const Duration(seconds: 25), (_) {
-            if (!outgoing.isClosed) {
-              outgoing.add(
-                RoomRealtimeCodec.encodeSync(timestampMillis: nowMillis()),
-              );
-            }
-          });
+          connection._heartbeatTimer = Timer.periodic(
+            const Duration(seconds: 25),
+            (_) {
+              if (!outgoing.isClosed) {
+                outgoing.add(
+                  RoomRealtimeCodec.encodeSync(timestampMillis: nowMillis()),
+                );
+              }
+            },
+          );
           for (final message in initialMessages) {
+            if (outgoing.isClosed) break;
             if (message.isNotEmpty) outgoing.add(message);
           }
           return connected;
@@ -141,11 +175,19 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
         onError: (Object error, StackTrace stackTrace) async {
           incoming.addError(error, stackTrace);
           await incoming.close();
+          await outgoing.close();
         },
       ),
     );
+    connection = RoomRealtimeConnection._(
+      outgoing: outgoing,
+      socket: socketFuture,
+      stream: incoming.stream,
+      onOutgoing: onOutgoing,
+    );
     incoming.onCancel = () async {
-      heartbeatTimer?.cancel();
+      connection._heartbeatTimer?.cancel();
+      connection._heartbeatTimer = null;
       await outgoing.close();
       await outgoingSubscription?.cancel();
       await socketFuture
@@ -153,29 +195,6 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
           .catchError((_) {});
     };
 
-    return RoomRealtimeConnection._(
-      outgoing: outgoing,
-      socket: socketFuture,
-      stream: incoming.stream,
-      onOutgoing: onOutgoing,
-    );
-  }
-
-  static Future<WebSocket> _connectWebSocket(
-    Uri uri, {
-    required bool allowInsecureTls,
-  }) async {
-    if (!allowInsecureTls || uri.scheme.toLowerCase() != 'wss') {
-      return WebSocket.connect(uri.toString());
-    }
-    final client = createServerIoHttpClient(
-      uri.replace(scheme: 'https'),
-      allowInsecureTls: true,
-    );
-    try {
-      return await WebSocket.connect(uri.toString(), customClient: client);
-    } finally {
-      client.close(force: false);
-    }
+    return connection;
   }
 }

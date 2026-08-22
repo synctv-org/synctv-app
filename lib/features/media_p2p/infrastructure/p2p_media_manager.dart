@@ -114,6 +114,13 @@ class P2pMediaManager implements P2pMediaSession {
   );
 
   @override
+  bool canRequestPeer(String swarmId) {
+    if (hasConnectedPeer(swarmId)) return true;
+    final deadline = _peerDiscoveryDeadlines[swarmId];
+    return deadline != null && deadline.isAfter(DateTime.now());
+  }
+
+  @override
   Future<void> setActiveSwarms(Map<String, String> swarms) {
     final next = Map<String, String>.fromEntries(
       swarms.entries.where(

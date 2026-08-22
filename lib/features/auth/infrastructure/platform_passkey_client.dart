@@ -1,8 +1,8 @@
 import 'package:synctv_app/features/auth/application/passkey_client.dart';
 import 'package:synctv_app/features/auth/infrastructure/passkey_authenticator_service.dart';
 
-final class NativePasskeyClient implements PasskeyClient {
-  const NativePasskeyClient();
+final class PlatformPasskeyClient implements PasskeyClient {
+  const PlatformPasskeyClient();
 
   @override
   Future<bool> isSupported({

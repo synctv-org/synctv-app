@@ -389,7 +389,8 @@ class CustomVideoPlayer extends StatefulWidget {
   final VoidCallback? onSync;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
-  final VoidCallback? onEnterPictureInPicture;
+  final ValueListenable<bool>? pictureInPictureActive;
+  final ValueChanged<bool>? onPictureInPictureChanged;
   final bool freeModeEnabled;
   final ValueChanged<bool>? onFreeModeChanged;
   final ValueChanged<bool>? onUserPlaybackStateChanged;
@@ -437,7 +438,8 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onSync,
     this.onPrevious,
     this.onNext,
-    this.onEnterPictureInPicture,
+    this.pictureInPictureActive,
+    this.onPictureInPictureChanged,
     this.freeModeEnabled = false,
     this.onFreeModeChanged,
     this.onUserPlaybackStateChanged,
@@ -1808,6 +1810,9 @@ enum _OverlaySettingsSection { subtitle, videoDanmaku, chatDanmaku }
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     with SingleTickerProviderStateMixin {
+  bool get _pictureInPictureActive =>
+      widget.pictureInPictureActive?.value ?? false;
+
   bool _showControls = true;
   bool _showDetailedStatistics = false;
   Size _viewportSize = Size.zero;
@@ -3101,8 +3106,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyP &&
-        widget.onEnterPictureInPicture != null) {
-      widget.onEnterPictureInPicture?.call();
+        widget.onPictureInPictureChanged != null) {
+      widget.onPictureInPictureChanged?.call(!_pictureInPictureActive);
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
@@ -4158,7 +4163,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         detailedStatisticsVisible: _showDetailedStatistics,
         canSync: widget.onSync != null,
         canReloadSource: widget.onReloadPlayback != null,
-        canEnterPictureInPicture: widget.onEnterPictureInPicture != null,
+        canEnterPictureInPicture: widget.onPictureInPictureChanged != null,
       ),
     );
     if (!mounted || action == null) {
@@ -4187,7 +4192,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         widget.onReloadPlayback?.call();
         break;
       case PlaybackContextMenuAction.pictureInPicture:
-        widget.onEnterPictureInPicture?.call();
+        widget.onPictureInPictureChanged?.call(!_pictureInPictureActive);
         break;
       case PlaybackContextMenuAction.copyDebugInfo:
         await _copyPlaybackDebugInfo();
@@ -4688,7 +4693,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                           dismissOnSwitch: false,
                                           visible: visibility.showSendDanmaku,
                                         ),
-                                      if (widget.onEnterPictureInPicture !=
+                                      if (widget.onPictureInPictureChanged !=
                                           null)
                                         (
                                           label: context.l10n.pictureInPicture,
@@ -4697,21 +4702,23 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                           build: (_) => PictureInPictureControl(
                                             tooltip:
                                                 context.l10n.pictureInPicture,
-                                            onPressed:
-                                                widget.onEnterPictureInPicture!,
+                                            onPressed: () =>
+                                                widget
+                                                    .onPictureInPictureChanged!(
+                                                  !_pictureInPictureActive,
+                                                ),
                                             iconSize: widget.isFullScreen
                                                 ? 24
                                                 : iconSize,
                                           ),
-                                          onPressed:
-                                              widget.onEnterPictureInPicture,
-                                          switchValue: () => false,
-                                          onSwitchChanged: (enabled) {
-                                            if (enabled) {
-                                              widget.onEnterPictureInPicture
-                                                  ?.call();
-                                            }
-                                          },
+                                          onPressed: () =>
+                                              widget.onPictureInPictureChanged!(
+                                                !_pictureInPictureActive,
+                                              ),
+                                          switchValue: () =>
+                                              _pictureInPictureActive,
+                                          onSwitchChanged:
+                                              widget.onPictureInPictureChanged,
                                           dismissOnSwitch: true,
                                           visible:
                                               visibility.showPictureInPicture,

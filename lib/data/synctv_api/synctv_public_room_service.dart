@@ -371,7 +371,7 @@ class SyncTvPublicRoomDomainService {
     String roomId,
     String password,
   ) async {
-    final start = _opaqueClient.startLogin(password);
+    final start = await _opaqueClient.startLogin(password);
     final challenge = await _api.user.startRoomPasswordLogin(
       roomId,
       client.StartRoomPasswordLoginRequest(
@@ -381,7 +381,7 @@ class SyncTvPublicRoomDomainService {
     );
     late final opaque.OpaqueLoginFinish finish;
     try {
-      finish = _opaqueClient.finishLogin(
+      finish = await _opaqueClient.finishLogin(
         password: password,
         state: start.state,
         credentialResponse: Uint8List.fromList(challenge.credentialResponse),

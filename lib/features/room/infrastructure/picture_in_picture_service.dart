@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:synctv_app/features/room/application/picture_in_picture_controller.dart';
+import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
+import 'package:video_player/video_player.dart';
 
-enum PictureInPictureBackend { unavailable, android, desktopWindow }
+enum PictureInPictureBackend { unavailable, web, android, desktopWindow }
 
 const desktopWindowMinimumSize = Size(600, 400);
 const desktopWindowDefaultSize = Size(1100, 720);
@@ -15,7 +17,7 @@ PictureInPictureBackend pictureInPictureBackendForPlatform(
   TargetPlatform platform, {
   bool isWeb = false,
 }) {
-  if (isWeb) return PictureInPictureBackend.unavailable;
+  if (isWeb) return PictureInPictureBackend.web;
   return switch (platform) {
     TargetPlatform.android => PictureInPictureBackend.android,
     TargetPlatform.iOS => PictureInPictureBackend.unavailable,
@@ -43,6 +45,8 @@ class PictureInPictureService
   bool _available = false;
   bool _initialized = false;
   bool _restoringDesktopWindow = false;
+  StreamSubscription<bool>? _webStateSubscription;
+  VideoPlayerController? _webVideoController;
   Rect? _desktopOriginalBounds;
   bool _desktopWasAlwaysOnTop = false;
   bool _desktopWasMaximized = false;
@@ -53,6 +57,10 @@ class PictureInPictureService
   @override
   bool get supportsWindowDragging =>
       backend == PictureInPictureBackend.desktopWindow;
+  @override
+  bool get usesCompactApplicationSurface =>
+      backend == PictureInPictureBackend.android ||
+      backend == PictureInPictureBackend.desktopWindow;
   PictureInPictureBackend get backend =>
       pictureInPictureBackendForPlatform(defaultTargetPlatform, isWeb: kIsWeb);
 
@@ -62,6 +70,9 @@ class PictureInPictureService
     _initialized = true;
     try {
       switch (backend) {
+        case PictureInPictureBackend.web:
+          _available =
+              CancellableMediaKitVideoPlayer.browserPictureInPictureAvailable;
         case PictureInPictureBackend.android:
           _available =
               await _androidChannel.invokeMethod<bool>('isAvailable') ?? false;
@@ -81,13 +92,17 @@ class PictureInPictureService
   }
 
   @override
-  Future<bool> enter({required double aspectRatio}) async {
+  Future<bool> enter({
+    required double aspectRatio,
+    VideoPlayerController? videoController,
+  }) async {
     if (!_available) return false;
     final ratio = aspectRatio.isFinite && aspectRatio > 0
         ? aspectRatio.clamp(1 / 2.39, 2.39)
         : 16 / 9;
     try {
       return switch (backend) {
+        PictureInPictureBackend.web => await _enterWeb(videoController),
         PictureInPictureBackend.android =>
           await _androidChannel.invokeMethod<bool>('enter', {
                 'width': (ratio * 1000).round(),
@@ -111,6 +126,8 @@ class PictureInPictureService
     if (!active.value) return;
     try {
       switch (backend) {
+        case PictureInPictureBackend.web:
+          await _exitWeb();
         case PictureInPictureBackend.android:
           await _androidChannel.invokeMethod<void>('exit');
         case PictureInPictureBackend.desktopWindow:
@@ -129,6 +146,45 @@ class PictureInPictureService
   void startDragging() {
     if (backend == PictureInPictureBackend.desktopWindow && active.value) {
       unawaited(windowManager.startDragging());
+    }
+  }
+
+  Future<bool> _enterWeb(VideoPlayerController? controller) async {
+    if (controller == null) return false;
+    try {
+      await _webStateSubscription?.cancel();
+      _webVideoController = controller;
+      _webStateSubscription = controller.browserPictureInPictureEvents.listen(
+        (value) => active.value = value,
+        onDone: () {
+          active.value = false;
+          _webVideoController = null;
+        },
+      );
+      final entered = await controller.enterBrowserPictureInPicture();
+      active.value = entered;
+      if (!entered) {
+        await _webStateSubscription?.cancel();
+        _webStateSubscription = null;
+        _webVideoController = null;
+      }
+      return entered;
+    } on Object {
+      active.value = false;
+      return false;
+    }
+  }
+
+  Future<void> _exitWeb() async {
+    try {
+      await _webVideoController?.exitBrowserPictureInPicture();
+    } on Object {
+      // Browser policy and document lifecycle can revoke PiP asynchronously.
+    } finally {
+      active.value = false;
+      await _webStateSubscription?.cancel();
+      _webStateSubscription = null;
+      _webVideoController = null;
     }
   }
 

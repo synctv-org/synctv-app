@@ -10,6 +10,7 @@ import 'package:synctv_app/features/room/presentation/room_shell_view.dart';
 import 'package:synctv_app/core/time/synced_clock.dart';
 import 'package:synctv_app/core/async/async_operation_coordinator.dart';
 import 'package:synctv_app/contracts/chat_message_selection.dart';
+import 'package:synctv_app/contracts/playback_client_profile.dart';
 import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/features/room/presentation/models/chat_context_menu_layout.dart';
 import 'package:synctv_app/features/room/presentation/playback_control_reporter.dart';
@@ -306,6 +307,8 @@ class _RoomScreenState extends State<RoomScreen>
   late final VoiceChatSessionFactory _voiceChatSessionFactory;
   late final PlayerVolumePreferencesController _playerVolumePreferences;
   late final PlaybackOverlayPreferencesController _playbackOverlayPreferences;
+  late final bool _supportsP2pMediaLoader =
+      defaultPlaybackClientProfile().supportsP2pMediaLoader;
 
   late TabController _tabController;
   late PlaybackModeConfig _playbackModeConfig;
@@ -507,7 +510,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   bool get _canUseP2pMedia {
     if (!_roomSettings.p2pMediaEnabled) return false;
-    return _capabilities.canUseP2pMedia;
+    return _supportsP2pMediaLoader && _capabilities.canUseP2pMedia;
   }
 
   bool get _canBrowseLibrary => _capabilities.canBrowseLibrary;
@@ -638,28 +641,30 @@ class _RoomScreenState extends State<RoomScreen>
         if (mounted) setState(() {});
       },
     );
-    _p2pMediaManager = _p2pRuntimeFactory.createSession(
-      loadIceServers: () => _loadWebRtcIceServers(),
-      loadCachedPiece: (swarmId, pieceKey) =>
-          _p2pEngineOperations.run(() async {
-            final engine = _p2pMediaEngine;
-            if (engine == null) return null;
-            return engine.cachedPiece(swarmId, pieceKey);
-          }),
-      onSignalingMessage: (type, data) {
-        if (_channel == null) return;
-        try {
-          _sendRealtimeMessage(
-            _realtimeProtocol.encodeWebRtcMediaSignal(type, data),
-          );
-        } catch (error) {
-          debugPrint('P2P media signaling encode error: $error');
-        }
-      },
-      onStateChange: () {
-        if (mounted) setState(() {});
-      },
-    );
+    if (_supportsP2pMediaLoader) {
+      _p2pMediaManager = _p2pRuntimeFactory.createSession(
+        loadIceServers: () => _loadWebRtcIceServers(),
+        loadCachedPiece: (swarmId, pieceKey) =>
+            _p2pEngineOperations.run(() async {
+              final engine = _p2pMediaEngine;
+              if (engine == null) return null;
+              return engine.cachedPiece(swarmId, pieceKey);
+            }),
+        onSignalingMessage: (type, data) {
+          if (_channel == null) return;
+          try {
+            _sendRealtimeMessage(
+              _realtimeProtocol.encodeWebRtcMediaSignal(type, data),
+            );
+          } catch (error) {
+            debugPrint('P2P media signaling encode error: $error');
+          }
+        },
+        onStateChange: () {
+          if (mounted) setState(() {});
+        },
+      );
+    }
     widget.p2pMediaPreferences.addListener(_handleP2pPreferenceChanged);
     unawaited(
       widget.p2pMediaPreferences.load().then((_) {
@@ -913,12 +918,33 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _enterPictureInPicture() async {
     final controller = _videoPlayerController;
     if (controller == null || !controller.value.isInitialized) return;
+    if (kIsWeb && _fullScreenRouteOpen && mounted) {
+      final entered = await _pictureInPicture.enter(
+        aspectRatio: controller.value.aspectRatio,
+        videoController: controller,
+      );
+      if (entered && mounted && _fullScreenRouteOpen) {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
     if (_fullScreenRouteOpen && mounted) {
       Navigator.of(context).pop();
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
     }
-    await _pictureInPicture.enter(aspectRatio: controller.value.aspectRatio);
+    await _pictureInPicture.enter(
+      aspectRatio: controller.value.aspectRatio,
+      videoController: controller,
+    );
+  }
+
+  Future<void> _setPictureInPicture(bool active) async {
+    if (active) {
+      await _enterPictureInPicture();
+    } else {
+      await _pictureInPicture.exit();
+    }
   }
 
   void _startDiagnosticsTimers() {
@@ -3135,15 +3161,19 @@ class _RoomScreenState extends State<RoomScreen>
     });
     if (!isLatest()) return;
 
+    final mediaFormat =
+        status?.entry?.selectedPlaybackUrlOption?.format ??
+        status?.entry?.type ??
+        '';
+    final controllerHeaders = <String, String>{
+      ...playbackHeaders,
+      if (kIsWeb && mediaFormat.isNotEmpty)
+        syncTvVideoFormatHeader: mediaFormat,
+    };
     final newController = VideoPlayerController.networkUrl(
       Uri.parse(playbackUrl),
-      httpHeaders: playbackHeaders,
-      formatHint: _videoFormatHint(
-        status?.entry?.selectedPlaybackUrlOption?.format ??
-            status?.entry?.type ??
-            '',
-        Uri.parse(url),
-      ),
+      httpHeaders: controllerHeaders,
+      formatHint: _videoFormatHint(mediaFormat, Uri.parse(url)),
     );
     _initializingVideoPlayerController = newController;
     _initializingVideoSourceKey = sourceKey;
@@ -3540,7 +3570,8 @@ class _RoomScreenState extends State<RoomScreen>
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: _pictureInPicture.active,
-      builder: (context, active, _) => active
+      builder: (context, active, _) =>
+          active && _pictureInPicture.usesCompactApplicationSurface
           ? _buildPictureInPictureSurface()
           : _buildRoomScaffold(context),
     );
@@ -3655,8 +3686,10 @@ class _RoomScreenState extends State<RoomScreen>
                             ? () =>
                                   unawaited(_navigatePlayback(previous: false))
                             : null,
-                        onEnterPictureInPicture: _pictureInPictureAvailable
-                            ? () => unawaited(_enterPictureInPicture())
+                        pictureInPictureActive: _pictureInPicture.active,
+                        onPictureInPictureChanged: _pictureInPictureAvailable
+                            ? (active) =>
+                                  unawaited(_setPictureInPicture(active))
                             : null,
                         freeModeEnabled: _playbackModeConfig.freeModeEnabled,
                         onFreeModeChanged: (enabled) =>
@@ -4153,8 +4186,9 @@ class _RoomScreenState extends State<RoomScreen>
               onNext: _canNavigatePlayback
                   ? () => unawaited(_navigatePlayback(previous: false))
                   : null,
-              onEnterPictureInPicture: _pictureInPictureAvailable
-                  ? () => unawaited(_enterPictureInPicture())
+              pictureInPictureActive: _pictureInPicture.active,
+              onPictureInPictureChanged: _pictureInPictureAvailable
+                  ? (active) => unawaited(_setPictureInPicture(active))
                   : null,
               freeModeEnabled: _playbackModeConfig.freeModeEnabled,
               onFreeModeChanged: (enabled) =>

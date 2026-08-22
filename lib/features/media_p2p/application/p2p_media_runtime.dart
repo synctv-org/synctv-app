@@ -87,6 +87,7 @@ abstract interface class P2pMediaSession {
   int get uploadedBytes;
 
   bool hasConnectedPeer(String swarmId);
+  bool canRequestPeer(String swarmId);
   Future<void> setActiveSwarms(Map<String, String> swarms);
   Future<void> resetSignalingSession();
   void handleSignalingMessage(String type, Map<String, dynamic> data);

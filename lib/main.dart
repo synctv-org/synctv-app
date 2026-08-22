@@ -9,7 +9,7 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/app_shell/presentation/app_shell.dart';
 import 'package:synctv_app/app/app_dependencies.dart';
 import 'package:synctv_app/features/auth/data/synctv_auth_gateway.dart';
-import 'package:synctv_app/features/auth/infrastructure/native_passkey_client.dart';
+import 'package:synctv_app/features/auth/infrastructure/platform_passkey_client.dart';
 import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
 import 'package:synctv_app/features/auth/data/synctv_opaque_auth_gateway.dart';
 import 'package:synctv_app/features/account/data/synctv_account_gateway.dart';
@@ -97,7 +97,7 @@ void main(List<String> args) async {
     opaqueAuthenticator: opaqueAuthenticator,
     oauth2Callbacks: oauth2Callbacks,
     nativeAppleSignIn: const PlatformNativeAppleSignInClient(),
-    passkeyClient: const NativePasskeyClient(),
+    passkeyClient: const PlatformPasskeyClient(),
     p2pMediaPreferences: p2pMediaPreferences,
     p2pMediaRuntimeFactory: const NativeP2pMediaRuntimeFactory(),
     mediaLibraryGateway: const SyncTvMediaLibraryGateway(),
@@ -163,6 +163,7 @@ void _initializeDeferredRuntime() {
       windows: true,
       macOS: true,
       linux: true,
+      web: true,
     );
   } catch (error) {
     debugPrint('Failed to initialize media playback: $error');

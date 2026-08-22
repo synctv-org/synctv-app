@@ -1305,6 +1305,13 @@ class SyncTvApiClient {
   Map<String, String> _playbackClientProfileQuery(
     client.PlaybackClientProfile profile,
   ) {
+    if (profile.profileVersion >= 2) {
+      return {
+        'clientProfile': base64UrlEncode(
+          profile.writeToBuffer(),
+        ).replaceAll('=', ''),
+      };
+    }
     return {
       if (profile.hasStreamPreference())
         'streamPreference': profile.streamPreference.value.toString(),

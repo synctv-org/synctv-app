@@ -8,10 +8,12 @@ environment:
 
 dependencies:
   code_assets: ^1.2.1
+  cryptography: ^2.9.0
   ffi: ^2.2.0
   # hooks 2.1+ requires record_use 1.x, which requires meta ^1.19.0.
   # Flutter 3.44.8 pins meta to 1.18.0, so keep the compatible release.
   hooks: ^2.0.2
+  ristretto255: ^1.0.2
 
 dev_dependencies:
   test: ^1.31.2
