@@ -1,5 +1,9 @@
 import 'package:synctv_app/contracts/account_models.dart';
 
+abstract interface class OAuth2CallbackDispatcher {
+  void dispatch();
+}
+
 abstract interface class OAuth2CallbackClient {
   bool get canCreateSession;
 

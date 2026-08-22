@@ -45,6 +45,7 @@ import 'package:synctv_app/features/room/application/room_management_gateway.dar
 import 'package:synctv_app/features/media_library/application/media_library_gateway.dart';
 import 'package:synctv_app/features/room/application/picture_in_picture_controller.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/browser_autoplay_controller.dart';
 import 'package:synctv_app/features/room/application/playback_overlay_preferences_controller.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_preferences_controller.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_runtime.dart';
@@ -306,6 +307,7 @@ class _RoomScreenState extends State<RoomScreen>
   late final P2pMediaRuntimeFactory _p2pRuntimeFactory;
   late final VoiceChatSessionFactory _voiceChatSessionFactory;
   late final PlayerVolumePreferencesController _playerVolumePreferences;
+  late final BrowserAutoplayController _browserAutoplay;
   late final PlaybackOverlayPreferencesController _playbackOverlayPreferences;
   late final bool _supportsP2pMediaLoader = supportsP2pMediaLoader();
 
@@ -597,6 +599,9 @@ class _RoomScreenState extends State<RoomScreen>
     );
     _playerVolumePreferences =
         DependencyScope.read<PlayerVolumePreferencesController>(context);
+    _browserAutoplay = BrowserAutoplayController(
+      volumePreferences: _playerVolumePreferences,
+    );
     _playbackOverlayPreferences =
         DependencyScope.read<PlaybackOverlayPreferencesController>(context);
     _resourceUrlResolver = DependencyScope.read<ResourceUrlResolver>(context);
@@ -2137,7 +2142,7 @@ class _RoomScreenState extends State<RoomScreen>
       }
 
       if (targetIsPlaying && controller.value.isPlaying == false) {
-        await controller.play();
+        await _browserAutoplay.play(controller);
         if (!isCurrentSync()) return;
         _refreshPlaybackUi(controller);
       }
@@ -3169,11 +3174,12 @@ class _RoomScreenState extends State<RoomScreen>
         status?.entry?.selectedPlaybackUrlOption?.format ??
         status?.entry?.type ??
         '';
-    Map<String, String> controllerHeaders(Map<String, String> sourceHeaders) => {
-      ...sourceHeaders,
-      if (kIsWeb && mediaFormat.isNotEmpty)
-        syncTvVideoFormatHeader: mediaFormat,
-    };
+    Map<String, String> controllerHeaders(Map<String, String> sourceHeaders) =>
+        {
+          ...sourceHeaders,
+          if (kIsWeb && mediaFormat.isNotEmpty)
+            syncTvVideoFormatHeader: mediaFormat,
+        };
     VideoPlayerController createController(
       String sourceUrl,
       Map<String, String> sourceHeaders,
@@ -3214,6 +3220,11 @@ class _RoomScreenState extends State<RoomScreen>
         return;
       }
 
+      await _browserAutoplay.applyPreferredVolume(newController);
+      if (!mounted || !isLatest()) {
+        _disposeControllerEventually(newController);
+        return;
+      }
       _videoPlayerController = newController;
       _videoPresentationRevision.value++;
       _videoPlayerSourceKey = sourceKey;
@@ -3451,6 +3462,7 @@ class _RoomScreenState extends State<RoomScreen>
     _videoPlaybackHasProgress = false;
     _playbackDeviationSnapshot = null;
     if (controller == null) return;
+    _browserAutoplay.detach(controller);
     controller.removeListener(_videoListener);
     _danmakuController.detachVideoController(controller);
     _disposeControllerEventually(controller);
@@ -3486,6 +3498,7 @@ class _RoomScreenState extends State<RoomScreen>
     _videoPlaybackHasProgress = false;
     _playbackDeviationSnapshot = null;
     if (controller != null) {
+      _browserAutoplay.detach(controller);
       controller.removeListener(_videoListener);
       _danmakuController.detachVideoController(controller);
       await _disposeController(controller);
@@ -3525,6 +3538,7 @@ class _RoomScreenState extends State<RoomScreen>
     _danmakuController.dispose();
     _videoPresentationRevision.dispose();
     _playbackController.dispose();
+    _browserAutoplay.dispose();
     _channel = null;
     _realtimeMessageBus.close();
     _realtimeEventBus.close();
@@ -3608,6 +3622,7 @@ class _RoomScreenState extends State<RoomScreen>
   Widget _buildPictureInPictureSurface() {
     return PictureInPicturePlaybackSurface(
       controller: _videoPlayerController,
+      browserAutoplay: _browserAutoplay,
       danmakuController: _danmakuController,
       overlayPreferences: _playbackOverlayPreferences,
       emptyState: PlaybackEmptyState(
@@ -3683,6 +3698,7 @@ class _RoomScreenState extends State<RoomScreen>
                         _videoPlayerController!.value.isInitialized
                     ? CustomVideoPlayer(
                         volumePreferences: _playerVolumePreferences,
+                        browserAutoplay: _browserAutoplay,
                         overlayPreferences: _playbackOverlayPreferences,
                         p2pMediaPreferences: _canUseP2pMedia
                             ? widget.p2pMediaPreferences
@@ -4190,6 +4206,7 @@ class _RoomScreenState extends State<RoomScreen>
             return CustomVideoPlayer(
               key: ValueKey(controller),
               volumePreferences: _playerVolumePreferences,
+              browserAutoplay: _browserAutoplay,
               overlayPreferences: _playbackOverlayPreferences,
               p2pMediaPreferences: _canUseP2pMedia
                   ? widget.p2pMediaPreferences

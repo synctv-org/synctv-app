@@ -22,6 +22,7 @@ import 'package:synctv_app/features/room/presentation/danmaku/acfun_danmaku_code
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
 import 'package:synctv_app/core/network/resource_url_resolver.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/browser_autoplay_controller.dart';
 import 'package:synctv_app/features/room/application/playback_overlay_preferences_controller.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_preferences_controller.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
@@ -417,6 +418,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final VideoPlayerInteractionMode interactionMode;
   final ResourceUrlResolver resourceUrlResolver;
   final PlayerVolumePreferencesController volumePreferences;
+  final BrowserAutoplayController? browserAutoplay;
   final PlaybackOverlayPreferencesController? overlayPreferences;
   final P2pMediaPreferencesController? p2pMediaPreferences;
   final SubtitleSource subtitleSource;
@@ -426,6 +428,7 @@ class CustomVideoPlayer extends StatefulWidget {
     required this.controller,
     required this.title,
     required this.volumePreferences,
+    this.browserAutoplay,
     this.overlayPreferences,
     this.p2pMediaPreferences,
     required this.subtitleSource,
@@ -992,6 +995,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
     this.onNext,
     this.onDragStart,
     this.onExit,
+    this.browserAutoplay,
   });
 
   final VideoPlayerController? controller;
@@ -1014,6 +1018,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
   final VoidCallback? onNext;
   final VoidCallback? onDragStart;
   final VoidCallback? onExit;
+  final BrowserAutoplayController? browserAutoplay;
 
   @override
   State<PictureInPicturePlaybackSurface> createState() =>
@@ -1033,6 +1038,21 @@ class _PictureInPicturePlaybackSurfaceState
         widget.overlayPreferences?.value ??
         const PlaybackOverlayPreferenceValues();
     widget.overlayPreferences?.addListener(_onOverlayPreferencesChanged);
+    widget.browserAutoplay?.addListener(_onBrowserAutoplayChanged);
+  }
+
+  void _onBrowserAutoplayChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _restoreAutoplayAudio() async {
+    final controller = widget.controller;
+    if (controller == null) return;
+    try {
+      await widget.browserAutoplay?.restoreForUserInteraction(controller);
+    } on Object catch (error) {
+      debugPrint('Restore browser autoplay audio failed: $error');
+    }
   }
 
   void _onOverlayPreferencesChanged() {
@@ -1072,11 +1092,16 @@ class _PictureInPicturePlaybackSurfaceState
           widget.overlayPreferences?.value ??
           const PlaybackOverlayPreferenceValues();
     }
+    if (widget.browserAutoplay != oldWidget.browserAutoplay) {
+      oldWidget.browserAutoplay?.removeListener(_onBrowserAutoplayChanged);
+      widget.browserAutoplay?.addListener(_onBrowserAutoplayChanged);
+    }
   }
 
   @override
   void dispose() {
     widget.overlayPreferences?.removeListener(_onOverlayPreferencesChanged);
+    widget.browserAutoplay?.removeListener(_onBrowserAutoplayChanged);
     super.dispose();
   }
 
@@ -1089,7 +1114,11 @@ class _PictureInPicturePlaybackSurfaceState
     }
     final nextIsPlaying = !controller.value.isPlaying;
     if (nextIsPlaying) {
-      await resumeVideoPlayback(controller, isLive: widget.isLive);
+      await resumeVideoPlayback(
+        controller,
+        isLive: widget.isLive,
+        browserAutoplay: widget.browserAutoplay,
+      );
     } else {
       await controller.pause();
     }
@@ -1111,6 +1140,7 @@ class _PictureInPicturePlaybackSurfaceState
       expectedToBePlaying:
           widget.isPlaybackExpectedToBePlaying?.call() ??
           controller.value.isPlaying,
+      browserAutoplay: widget.browserAutoplay,
     );
     if (mounted) setState(() => _pendingSeekSeconds = null);
     widget.onSeek?.call(target);
@@ -1448,6 +1478,9 @@ class _PictureInPicturePlaybackSurfaceState
   @override
   Widget build(BuildContext context) {
     final videoController = widget.controller;
+    final temporarilyMuted =
+        videoController != null &&
+        widget.browserAutoplay?.isTemporarilyMuted(videoController) == true;
     return ColoredBox(
       key: const Key('picture_in_picture_surface'),
       color: Colors.black,
@@ -1518,6 +1551,7 @@ class _PictureInPicturePlaybackSurfaceState
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 excludeFromSemantics: true,
+                onTapDown: (_) => unawaited(_restoreAutoplayAudio()),
                 onPanStart: widget.onDragStart == null
                     ? null
                     : (_) => widget.onDragStart?.call(),
@@ -1567,6 +1601,26 @@ class _PictureInPicturePlaybackSurfaceState
                 child: KeyedSubtree(
                   key: const Key('picture_in_picture_diagnostics'),
                   child: widget.diagnostics!,
+                ),
+              ),
+            if (temporarilyMuted)
+              Positioned(
+                top: 8,
+                left: widget.onExit == null ? 8 : 50,
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.62),
+                  shape: const CircleBorder(),
+                  child: _PlayerIconButton(
+                    key: const Key('picture_in_picture_autoplay_unmute'),
+                    onPressed: () => unawaited(_restoreAutoplayAudio()),
+                    tooltip: context.l10n.unmute,
+                    icon: Icons.volume_off_rounded,
+                    iconSize: 19,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 34,
+                      height: 34,
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -1733,22 +1787,26 @@ bool shouldRestartCompletedPlayback(
 Future<void> resumeVideoPlayback(
   VideoPlayerController controller, {
   required bool isLive,
+  BrowserAutoplayController? browserAutoplay,
 }) async {
   if (shouldRestartCompletedPlayback(controller.value, isLive: isLive)) {
     await controller.seekTo(Duration.zero);
   }
-  await controller.play();
+  await browserAutoplay?.restoreForUserInteraction(controller);
+  await (browserAutoplay?.play(controller) ?? controller.play());
 }
 
 Future<void> seekVideoPlayback(
   VideoPlayerController controller, {
   required Duration position,
   required bool expectedToBePlaying,
+  BrowserAutoplayController? browserAutoplay,
 }) async {
   await controller.seekTo(position);
   if (controller.value.isPlaying == expectedToBePlaying) return;
   if (expectedToBePlaying) {
-    await controller.play();
+    await browserAutoplay?.restoreForUserInteraction(controller);
+    await (browserAutoplay?.play(controller) ?? controller.play());
   } else {
     await controller.pause();
   }
@@ -1879,6 +1937,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     widget.danmakuController?.addListener(_onDanmakuUpdate);
     _p2pMediaEnabled = widget.p2pMediaPreferences?.enabled ?? false;
     widget.p2pMediaPreferences?.addListener(_onP2pPreferenceChanged);
+    widget.browserAutoplay?.addListener(_onBrowserAutoplayChanged);
     _overlayPreferences =
         widget.overlayPreferences?.value ??
         const PlaybackOverlayPreferenceValues();
@@ -1906,6 +1965,20 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void _onP2pPreferenceChanged() {
     if (!mounted || widget.p2pMediaPreferences == null) return;
     setState(() => _p2pMediaEnabled = widget.p2pMediaPreferences!.enabled);
+  }
+
+  void _onBrowserAutoplayChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _restoreAutoplayAudio() async {
+    try {
+      await widget.browserAutoplay?.restoreForUserInteraction(
+        widget.controller,
+      );
+    } on Object catch (error) {
+      debugPrint('Restore browser autoplay audio failed: $error');
+    }
   }
 
   @override
@@ -1939,6 +2012,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       oldWidget.p2pMediaPreferences?.removeListener(_onP2pPreferenceChanged);
       widget.p2pMediaPreferences?.addListener(_onP2pPreferenceChanged);
       _p2pMediaEnabled = widget.p2pMediaPreferences?.enabled ?? false;
+    }
+    if (widget.browserAutoplay != oldWidget.browserAutoplay) {
+      oldWidget.browserAutoplay?.removeListener(_onBrowserAutoplayChanged);
+      widget.browserAutoplay?.addListener(_onBrowserAutoplayChanged);
     }
 
     final oldSubtitleDelivery = _subtitleDelivery(
@@ -1977,6 +2054,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     widget.controller.removeListener(_videoListener);
     widget.danmakuController?.removeListener(_onDanmakuUpdate);
     widget.p2pMediaPreferences?.removeListener(_onP2pPreferenceChanged);
+    widget.browserAutoplay?.removeListener(_onBrowserAutoplayChanged);
     widget.overlayPreferences?.removeListener(_onOverlayPreferencesChanged);
     _hideTimer?.cancel();
     _closeVolumeMenu();
@@ -2626,7 +2704,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (widget.controller.value.isPlaying) {
       await widget.controller.pause();
     } else {
-      await resumeVideoPlayback(widget.controller, isLive: widget.isLive);
+      await resumeVideoPlayback(
+        widget.controller,
+        isLive: widget.isLive,
+        browserAutoplay: widget.browserAutoplay,
+      );
     }
     widget.onUserPlaybackStateChanged?.call(nextIsPlaying);
     if (mounted) {
@@ -2649,6 +2731,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       expectedToBePlaying:
           widget.isPlaybackExpectedToBePlaying?.call() ??
           widget.controller.value.isPlaying,
+      browserAutoplay: widget.browserAutoplay,
     );
     widget.onUserSeek?.call(clamped);
     _showDesktopControls();
@@ -3067,6 +3150,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (!_isDesktopMode || event is! KeyDownEvent) {
       return KeyEventResult.ignored;
     }
+    unawaited(_restoreAutoplayAudio());
     final key = event.logicalKey;
     if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.keyK) {
       if (!widget.canControlPlayback || widget.isLive) {
@@ -3278,7 +3362,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     try {
       final preferences = widget.volumePreferences.value;
       _lastAudibleVolume = preferences.lastAudibleVolume;
-      await widget.controller.setVolume(preferences.volume);
+      await (widget.browserAutoplay?.applyPreferredVolume(widget.controller) ??
+          widget.controller.setVolume(preferences.volume));
       if (mounted) setState(() {});
     } catch (e) {
       debugPrint('Restore player volume failed: $e');
@@ -4278,6 +4363,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   @override
   Widget build(BuildContext context) {
     final videoValue = widget.controller.value;
+    final temporarilyMuted =
+        widget.browserAutoplay?.isTemporarilyMuted(widget.controller) == true;
     return AppScaffold(
       backgroundColor: Colors.black,
       body: Focus(
@@ -4290,6 +4377,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             excludeFromSemantics: true,
+            onTapDown: (_) => unawaited(_restoreAutoplayAudio()),
             onSecondaryTapDown: (details) =>
                 unawaited(_showPlaybackContextMenu(details.globalPosition)),
             onLongPressStart: _isDesktopMode
@@ -4321,6 +4409,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
               alignment: Alignment.center,
               children: [
                 _buildVideoContent(videoValue),
+                if (temporarilyMuted)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Material(
+                      color: Colors.black.withValues(alpha: 0.68),
+                      shape: const CircleBorder(),
+                      child: _PlayerIconButton(
+                        key: const Key('playback_autoplay_unmute'),
+                        onPressed: () => unawaited(_restoreAutoplayAudio()),
+                        tooltip: context.l10n.unmute,
+                        icon: Icons.volume_off_rounded,
+                        iconSize: 20,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 38,
+                          height: 38,
+                        ),
+                      ),
+                    ),
+                  ),
                 if (_dragLabel.isNotEmpty)
                   AppPanelSurface(
                     padding: const EdgeInsets.all(16),

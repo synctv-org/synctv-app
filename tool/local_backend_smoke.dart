@@ -14,6 +14,8 @@ import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
@@ -129,6 +131,8 @@ Future<void> runSmoke(String baseUrl) async {
   final publish = await SyncTvService.createRtmpPublishKeyInfo(
     room.roomId,
     rtmpMediaId,
+    keyType: client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
+    expiresAt: DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000 + 3600,
   );
   final streamInfo = await SyncTvService.getRtmpStreamInfo(
     roomId: room.roomId,

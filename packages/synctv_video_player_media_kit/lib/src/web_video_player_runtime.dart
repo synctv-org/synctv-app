@@ -288,12 +288,18 @@ class WebVideoPlayerRuntime
     bool fatalOnly = false,
     bool singleArgument = false,
   }) {
-    _bindEngineEvent(engine, eventName, (_, data) {
+    _bindEngineEvent(engine, eventName, (event, data) {
       if (fatalOnly && _readBool(data, 'fatal') != true) return;
       final details = _readString(data, 'details');
       final type = _readString(data, 'type');
       final error = _readString(data, 'error');
-      final message = <String>[?type, ?details, ?error].join(': ');
+      final message = <String>[
+        ?type,
+        ?details,
+        ?error,
+        ?_readScalarString(event),
+        ?_readScalarString(data),
+      ].toSet().join(': ');
       reportOpenError(
         PlatformException(
           code: code,
@@ -309,11 +315,11 @@ class WebVideoPlayerRuntime
   void _bindEngineEvent(
     JSObject engine,
     JSAny eventName,
-    void Function(JSAny? event, JSObject? data) callback, {
+    void Function(JSAny? event, JSAny? data) callback, {
     bool singleArgument = false,
   }) {
     final jsCallback = singleArgument
-        ? ((JSObject? data) => callback(null, data)).toJS
+        ? ((JSAny? data) => callback(null, data)).toJS
         : callback.toJS;
     _engineCallbacks.add(jsCallback);
     engine.callMethod<JSAny?>('on'.toJS, eventName, jsCallback);
@@ -595,8 +601,15 @@ class WebVideoPlayerRuntime
   Future<void> play() async {
     try {
       await _video.play().toDart;
-    } catch (error, stackTrace) {
-      reportOpenError(error, stackTrace);
+    } catch (error) {
+      if (error is JSObject && error.isA<web.DOMException>()) {
+        final exception = error as web.DOMException;
+        throw PlatformException(
+          code: exception.name,
+          message: exception.message,
+        );
+      }
+      rethrow;
     }
   }
 
@@ -873,22 +886,36 @@ class _WebEngineLoader {
   }
 }
 
-int? _readInt(JSObject? object, String property) {
-  final value = object?.getProperty<JSAny?>(property.toJS)?.dartify();
-  return value is num ? value.round() : null;
+int? _readInt(JSAny? value, String property) {
+  final object = _asObject(value);
+  final propertyValue = object?.getProperty<JSAny?>(property.toJS)?.dartify();
+  return propertyValue is num ? propertyValue.round() : null;
 }
 
-double? _readDouble(JSObject? object, String property) {
-  final value = object?.getProperty<JSAny?>(property.toJS)?.dartify();
-  return value is num ? value.toDouble() : null;
+double? _readDouble(JSAny? value, String property) {
+  final object = _asObject(value);
+  final propertyValue = object?.getProperty<JSAny?>(property.toJS)?.dartify();
+  return propertyValue is num ? propertyValue.toDouble() : null;
 }
 
-String? _readString(JSObject? object, String property) {
-  final value = object?.getProperty<JSAny?>(property.toJS)?.dartify();
-  return value is String && value.isNotEmpty ? value : null;
+String? _readString(JSAny? value, String property) {
+  final object = _asObject(value);
+  final propertyValue = object?.getProperty<JSAny?>(property.toJS)?.dartify();
+  return propertyValue is String && propertyValue.isNotEmpty
+      ? propertyValue
+      : null;
 }
 
-bool? _readBool(JSObject? object, String property) {
-  final value = object?.getProperty<JSAny?>(property.toJS)?.dartify();
-  return value is bool ? value : null;
+bool? _readBool(JSAny? value, String property) {
+  final object = _asObject(value);
+  final propertyValue = object?.getProperty<JSAny?>(property.toJS)?.dartify();
+  return propertyValue is bool ? propertyValue : null;
+}
+
+JSObject? _asObject(JSAny? value) =>
+    value?.isA<JSObject>() == true ? value as JSObject : null;
+
+String? _readScalarString(JSAny? value) {
+  final dartValue = value?.dartify();
+  return dartValue is String && dartValue.isNotEmpty ? dartValue : null;
 }

@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/features/room/presentation/widgets/custom_video_player.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/browser_autoplay_controller.dart';
 import 'package:synctv_app/features/room/application/playback_overlay_preferences_controller.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_preferences_controller.dart';
 import 'package:synctv_app/features/media_p2p/domain/p2p_media_preferences.dart';
@@ -147,6 +148,7 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
   final List<Duration> seekPositions = [];
   var playCalls = 0;
   var pauseCalls = 0;
+  Object? nextPlayError;
   final List<double> volumes = [];
   final List<double> playbackSpeeds = [];
 
@@ -159,6 +161,10 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
   @override
   Future<void> play() async {
     playCalls++;
+    if (nextPlayError case final error?) {
+      nextPlayError = null;
+      throw error;
+    }
     value = value.copyWith(isPlaying: true, isCompleted: false);
   }
 
@@ -577,6 +583,59 @@ void main() {
     );
 
     expect(byAppTooltip('Playback speed'), findsNothing);
+  });
+
+  testWidgets('autoplay mute is visible and clears on player interaction', (
+    tester,
+  ) async {
+    final volumePreferences = _volumePreferences();
+    final autoplay = BrowserAutoplayController(
+      volumePreferences: volumePreferences,
+      enabled: true,
+    );
+    addTearDown(autoplay.dispose);
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 12),
+        isInitialized: true,
+        size: Size(1920, 1080),
+        volume: 0.65,
+      ),
+    )..nextPlayError = PlatformException(code: 'NotAllowedError');
+    addTearDown(controller.dispose);
+    await autoplay.play(controller);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 500,
+            child: CustomVideoPlayer(
+              volumePreferences: volumePreferences,
+              browserAutoplay: autoplay,
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('playback_autoplay_unmute')), findsOneWidget);
+    expect(controller.value.volume, 0);
+
+    await tester.tapAt(tester.getCenter(find.byType(CustomVideoPlayer)));
+    await tester.pump();
+
+    expect(find.byKey(const Key('playback_autoplay_unmute')), findsNothing);
+    expect(controller.value.volume, 0.65);
   });
 
   testWidgets('desktop secondary click opens playback context menu', (

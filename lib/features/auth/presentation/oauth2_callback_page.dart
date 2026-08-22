@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:synctv_app/features/auth/infrastructure/oauth2_callback_dispatcher.dart';
+import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 
 const oauth2CallbackPath = '/oauth2/callback';
 
-Route<dynamic>? generateOAuth2CallbackRoute(RouteSettings settings) {
+Route<dynamic>? generateOAuth2CallbackRoute(
+  RouteSettings settings, {
+  required OAuth2CallbackDispatcher dispatcher,
+}) {
   final uri = Uri.tryParse(settings.name ?? '');
   if (uri?.path != oauth2CallbackPath) return null;
 
   return MaterialPageRoute<void>(
     settings: settings,
-    builder: (_) => const OAuth2CallbackPage(),
+    builder: (_) => OAuth2CallbackPage(dispatcher: dispatcher),
   );
 }
 
 class OAuth2CallbackPage extends StatefulWidget {
-  const OAuth2CallbackPage({super.key, this.onLoaded = dispatchOAuth2Callback});
+  const OAuth2CallbackPage({super.key, required this.dispatcher});
 
-  final VoidCallback onLoaded;
+  final OAuth2CallbackDispatcher dispatcher;
 
   @override
   State<OAuth2CallbackPage> createState() => _OAuth2CallbackPageState();
@@ -27,7 +30,7 @@ class _OAuth2CallbackPageState extends State<OAuth2CallbackPage> {
   @override
   void initState() {
     super.initState();
-    widget.onLoaded();
+    widget.dispatcher.dispatch();
   }
 
   @override

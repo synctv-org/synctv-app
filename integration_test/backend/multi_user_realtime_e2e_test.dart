@@ -21,7 +21,7 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
-import '../../tool/local_backend_test_auth.dart';
+import 'local_backend_test_auth.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

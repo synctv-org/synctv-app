@@ -11,6 +11,7 @@ import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
+import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -169,10 +170,10 @@ Future<void> _exerciseWatchers(String roomId, int stamp) async {
 
   print('watchers_update_settings');
   final settings = await SyncTvService.getRoomSettings(roomId, refresh: true);
-  final originalDanmaku = settings.danmakuEnabled;
-  settings.danmakuEnabled = !originalDanmaku;
+  final originalP2pMedia = settings.p2pMediaEnabled;
+  settings.p2pMediaEnabled = !originalP2pMedia;
   await SyncTvService.updateRoomSettings(roomId, settings);
-  settings.danmakuEnabled = originalDanmaku;
+  settings.p2pMediaEnabled = originalP2pMedia;
   await SyncTvService.updateRoomSettings(roomId, settings);
 
   await _waitFor(
@@ -264,7 +265,12 @@ Future<void> _exerciseMediaAndRealtime(
     playlistId: nested.id,
     name: 'rtmp generated $stamp',
   );
-  final publish = await SyncTvService.createRtmpPublishKeyInfo(roomId, rtmpId);
+  final publish = await SyncTvService.createRtmpPublishKeyInfo(
+    roomId,
+    rtmpId,
+    keyType: client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
+    expiresAt: DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000 + 3600,
+  );
   if (publish.publishKey.isEmpty ||
       publish.rtmpUrl.isEmpty ||
       publish.streamKey.isEmpty) {
@@ -299,6 +305,8 @@ Future<void> _exerciseMediaAndRealtime(
     positionSeconds: 12.5,
   );
   print('playback_messages=${playbackMessages.length}');
+
+  await _exercisePlaybackHistory(roomId, nested.id, stamp);
 
   await SyncTvService.clearMediaLibrary(roomId, parentId: nested.id);
   final afterClear = await SyncTvService.listMediaLibrary(
@@ -365,6 +373,121 @@ Future<void> _exerciseMediaAndRealtime(
   print('media_realtime=ok');
 }
 
+Future<void> _exercisePlaybackHistory(
+  String roomId,
+  String playlistId,
+  int stamp,
+) async {
+  await SyncTvService.clearPlaybackHistory(roomId);
+
+  final mediaIds = <String>[];
+  for (var index = 0; index < 4; index++) {
+    final mediaId = await prepareDirectUrlAndAdd(
+      roomId,
+      playlistId: playlistId,
+      url: 'https://example.com/history-$stamp-$index.mp4',
+      playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
+      name: 'history $index $stamp',
+    );
+    mediaIds.add(mediaId);
+    await SyncTvService.switchMediaAndPlay(roomId, mediaId);
+  }
+
+  final newestPage = await SyncTvService.listPlaybackHistory(roomId, limit: 2);
+  _expectHistoryMedia(newestPage, [mediaIds[3], mediaIds[2]], 'newest page');
+  if (newestPage.nextCursorEntryId.isEmpty) {
+    throw StateError('newest playback history page has no next cursor');
+  }
+  final olderPage = await SyncTvService.listPlaybackHistory(
+    roomId,
+    cursorEntryId: newestPage.nextCursorEntryId,
+    limit: 2,
+  );
+  _expectHistoryMedia(olderPage, [mediaIds[1], mediaIds[0]], 'older page');
+  if (olderPage.nextCursorEntryId.isNotEmpty) {
+    throw StateError('final playback history page unexpectedly has a cursor');
+  }
+
+  final oldestPage = await SyncTvService.listPlaybackHistory(
+    roomId,
+    limit: 2,
+    sortDirection: client_enum.SortDirection.SORT_DIRECTION_ASC,
+  );
+  _expectHistoryMedia(oldestPage, [mediaIds[0], mediaIds[1]], 'oldest page');
+  final newerPage = await SyncTvService.listPlaybackHistory(
+    roomId,
+    cursorEntryId: oldestPage.nextCursorEntryId,
+    limit: 2,
+    sortDirection: client_enum.SortDirection.SORT_DIRECTION_ASC,
+  );
+  _expectHistoryMedia(newerPage, [mediaIds[2], mediaIds[3]], 'newer page');
+
+  final oldestEntryId = oldestPage.entries.first.id;
+  final newestEntryId = newestPage.entries.first.id;
+  final replayed = await SyncTvService.playHistoryEntry(roomId, oldestEntryId);
+  if (replayed.playingMediaId != mediaIds.first ||
+      replayed.historyCursorId != oldestEntryId) {
+    throw StateError(
+      'playing playback history entry selected the wrong source',
+    );
+  }
+
+  if (!await SyncTvService.deletePlaybackHistoryEntry(roomId, newestEntryId)) {
+    throw StateError('playback history entry was not deleted');
+  }
+  if (!await SyncTvService.deletePlaybackHistoryEntry(roomId, oldestEntryId)) {
+    throw StateError('current playback history entry was not deleted');
+  }
+  if (await SyncTvService.deletePlaybackHistoryEntry(roomId, oldestEntryId)) {
+    throw StateError('playback history deletion was not idempotent');
+  }
+
+  final afterCurrentDelete = await SyncTvService.listPlaybackHistory(roomId);
+  if (afterCurrentDelete.historyCursorId.isNotEmpty) {
+    throw StateError('deleted playback history cursor was not cleared');
+  }
+  final current = await SyncTvService.updatePlaybackState(
+    roomId,
+    action: PlaybackControlAction.pause,
+    isPlaying: false,
+  );
+  if (current.playingMediaId != mediaIds.first) {
+    throw StateError(
+      'deleting history unexpectedly changed the playback source',
+    );
+  }
+
+  final deletedCount = await SyncTvService.clearPlaybackHistory(roomId);
+  if (deletedCount != 2) {
+    throw StateError(
+      'cleared $deletedCount playback history entries instead of 2',
+    );
+  }
+  final empty = await SyncTvService.listPlaybackHistory(roomId);
+  if (empty.entries.isNotEmpty || empty.historyCursorId.isNotEmpty) {
+    throw StateError('playback history was not fully cleared');
+  }
+  print('playback_history=ok');
+}
+
+void _expectHistoryMedia(
+  client.ListPlaybackHistoryResponse page,
+  List<String> expectedMediaIds,
+  String context,
+) {
+  final actual = page.entries.map((entry) => entry.mediaId).toList();
+  if (actual.length != expectedMediaIds.length) {
+    throw StateError(
+      '$context length=${actual.length}, expected=${expectedMediaIds.length}',
+    );
+  }
+  for (var index = 0; index < actual.length; index++) {
+    if (actual[index] != expectedMediaIds[index]) {
+      throw StateError('$context media=$actual, expected=$expectedMediaIds');
+    }
+  }
+}
+
 Future<void> _exerciseRoomLifecycle(
   String roomId,
   _UserSeed owner,
@@ -397,6 +520,19 @@ Future<void> _exerciseRoomLifecycle(
     'update_room_password_clear',
   );
   await SyncTvService.setRoomAdmin(roomId, memberProfile.id);
+  await SyncTvService.updateRoomMemberPermissionOverrides(
+    roomId,
+    memberProfile.id,
+    adminAddedPermissions: RoomAdminPermissions.viewPlaybackHistory,
+    adminRemovedPermissions: RoomAdminPermissions.manageRoomSettings,
+  );
+  await _login(member);
+  await SyncTvService.listPlaybackHistory(roomId);
+  await _expectApiFailure(
+    () => SyncTvService.clearPlaybackHistory(roomId),
+    'playback_history_manage_permission',
+  );
+  await _login(owner);
   await SyncTvService.removeRoomAdmin(roomId, memberProfile.id);
   await SyncTvService.updateRoomMemberPermissionOverrides(
     roomId,
