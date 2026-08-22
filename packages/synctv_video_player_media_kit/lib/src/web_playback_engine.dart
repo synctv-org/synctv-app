@@ -42,3 +42,8 @@ WebPlaybackEngine selectWebPlaybackEngine({
   WebPlaybackTransport.flv ||
   WebPlaybackTransport.mpegTs => WebPlaybackEngine.mpegTsJs,
 };
+
+String hlsSelectedTrackId({int? manualLevel}) {
+  final selectedLevel = manualLevel ?? -1;
+  return selectedLevel < 0 ? 'auto' : 'hls:$selectedLevel';
+}

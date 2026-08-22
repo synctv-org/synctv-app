@@ -19443,12 +19443,6 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
     $core.Iterable<PlaybackMediaCapability>? mediaCapabilities,
     $core.bool? supportsCustomHttpHeaders,
     $core.bool? supportsProviderProxy,
-    $core.bool? supportsP2pMediaLoader,
-    $core.bool? supportsMediaSourceExtensions,
-    $core.bool? supportsManagedMediaSource,
-    $core.bool? supportsWebRtcDataChannel,
-    $core.bool? supportsIndexedDb,
-    $core.bool? supportsOpfs,
     $core.bool? supportsInsecureHttpMedia,
   }) {
     final result = create();
@@ -19473,16 +19467,6 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
       result.supportsCustomHttpHeaders = supportsCustomHttpHeaders;
     if (supportsProviderProxy != null)
       result.supportsProviderProxy = supportsProviderProxy;
-    if (supportsP2pMediaLoader != null)
-      result.supportsP2pMediaLoader = supportsP2pMediaLoader;
-    if (supportsMediaSourceExtensions != null)
-      result.supportsMediaSourceExtensions = supportsMediaSourceExtensions;
-    if (supportsManagedMediaSource != null)
-      result.supportsManagedMediaSource = supportsManagedMediaSource;
-    if (supportsWebRtcDataChannel != null)
-      result.supportsWebRtcDataChannel = supportsWebRtcDataChannel;
-    if (supportsIndexedDb != null) result.supportsIndexedDb = supportsIndexedDb;
-    if (supportsOpfs != null) result.supportsOpfs = supportsOpfs;
     if (supportsInsecureHttpMedia != null)
       result.supportsInsecureHttpMedia = supportsInsecureHttpMedia;
     return result;
@@ -19535,12 +19519,6 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
         subBuilder: PlaybackMediaCapability.create)
     ..aOB(12, _omitFieldNames ? '' : 'supportsCustomHttpHeaders')
     ..aOB(13, _omitFieldNames ? '' : 'supportsProviderProxy')
-    ..aOB(14, _omitFieldNames ? '' : 'supportsP2pMediaLoader')
-    ..aOB(15, _omitFieldNames ? '' : 'supportsMediaSourceExtensions')
-    ..aOB(16, _omitFieldNames ? '' : 'supportsManagedMediaSource')
-    ..aOB(17, _omitFieldNames ? '' : 'supportsWebRtcDataChannel')
-    ..aOB(18, _omitFieldNames ? '' : 'supportsIndexedDb')
-    ..aOB(19, _omitFieldNames ? '' : 'supportsOpfs')
     ..aOB(20, _omitFieldNames ? '' : 'supportsInsecureHttpMedia')
     ..hasRequiredFields = false;
 
@@ -19660,67 +19638,13 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
   @$pb.TagNumber(13)
   void clearSupportsProviderProxy() => $_clearField(13);
 
-  @$pb.TagNumber(14)
-  $core.bool get supportsP2pMediaLoader => $_getBF(13);
-  @$pb.TagNumber(14)
-  set supportsP2pMediaLoader($core.bool value) => $_setBool(13, value);
-  @$pb.TagNumber(14)
-  $core.bool hasSupportsP2pMediaLoader() => $_has(13);
-  @$pb.TagNumber(14)
-  void clearSupportsP2pMediaLoader() => $_clearField(14);
-
-  @$pb.TagNumber(15)
-  $core.bool get supportsMediaSourceExtensions => $_getBF(14);
-  @$pb.TagNumber(15)
-  set supportsMediaSourceExtensions($core.bool value) => $_setBool(14, value);
-  @$pb.TagNumber(15)
-  $core.bool hasSupportsMediaSourceExtensions() => $_has(14);
-  @$pb.TagNumber(15)
-  void clearSupportsMediaSourceExtensions() => $_clearField(15);
-
-  @$pb.TagNumber(16)
-  $core.bool get supportsManagedMediaSource => $_getBF(15);
-  @$pb.TagNumber(16)
-  set supportsManagedMediaSource($core.bool value) => $_setBool(15, value);
-  @$pb.TagNumber(16)
-  $core.bool hasSupportsManagedMediaSource() => $_has(15);
-  @$pb.TagNumber(16)
-  void clearSupportsManagedMediaSource() => $_clearField(16);
-
-  @$pb.TagNumber(17)
-  $core.bool get supportsWebRtcDataChannel => $_getBF(16);
-  @$pb.TagNumber(17)
-  set supportsWebRtcDataChannel($core.bool value) => $_setBool(16, value);
-  @$pb.TagNumber(17)
-  $core.bool hasSupportsWebRtcDataChannel() => $_has(16);
-  @$pb.TagNumber(17)
-  void clearSupportsWebRtcDataChannel() => $_clearField(17);
-
-  @$pb.TagNumber(18)
-  $core.bool get supportsIndexedDb => $_getBF(17);
-  @$pb.TagNumber(18)
-  set supportsIndexedDb($core.bool value) => $_setBool(17, value);
-  @$pb.TagNumber(18)
-  $core.bool hasSupportsIndexedDb() => $_has(17);
-  @$pb.TagNumber(18)
-  void clearSupportsIndexedDb() => $_clearField(18);
-
-  @$pb.TagNumber(19)
-  $core.bool get supportsOpfs => $_getBF(18);
-  @$pb.TagNumber(19)
-  set supportsOpfs($core.bool value) => $_setBool(18, value);
-  @$pb.TagNumber(19)
-  $core.bool hasSupportsOpfs() => $_has(18);
-  @$pb.TagNumber(19)
-  void clearSupportsOpfs() => $_clearField(19);
-
   /// True when the page/runtime may load http:// media without mixed-content blocking.
   @$pb.TagNumber(20)
-  $core.bool get supportsInsecureHttpMedia => $_getBF(19);
+  $core.bool get supportsInsecureHttpMedia => $_getBF(13);
   @$pb.TagNumber(20)
-  set supportsInsecureHttpMedia($core.bool value) => $_setBool(19, value);
+  set supportsInsecureHttpMedia($core.bool value) => $_setBool(13, value);
   @$pb.TagNumber(20)
-  $core.bool hasSupportsInsecureHttpMedia() => $_has(19);
+  $core.bool hasSupportsInsecureHttpMedia() => $_has(13);
   @$pb.TagNumber(20)
   void clearSupportsInsecureHttpMedia() => $_clearField(20);
 }

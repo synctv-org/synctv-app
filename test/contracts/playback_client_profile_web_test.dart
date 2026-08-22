@@ -18,7 +18,7 @@ void main() {
     );
     expect(profile.supportsCustomHttpHeaders, isFalse);
     expect(profile.supportsProviderProxy, isTrue);
-    expect(profile.supportsP2pMediaLoader, isTrue);
+    expect(supportsP2pMediaLoader(), isTrue);
     expect(
       profile.supportsInsecureHttpMedia,
       Uri.base.scheme.toLowerCase() == 'http',
@@ -27,7 +27,11 @@ void main() {
       transports,
       contains(PlaybackMediaTransport.PLAYBACK_MEDIA_TRANSPORT_PROGRESSIVE),
     );
-    if (profile.supportsMediaSourceExtensions) {
+    if (transports.any(
+      (transport) =>
+          transport !=
+          PlaybackMediaTransport.PLAYBACK_MEDIA_TRANSPORT_PROGRESSIVE,
+    )) {
       expect(
         transports,
         containsAll({

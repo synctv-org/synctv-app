@@ -128,7 +128,7 @@ class OAuth2CallbackService {
 
   @visibleForTesting
   static Uri webRedirectUri(Uri pageUri) {
-    return Uri.parse(pageUri.origin).replace(path: '/auth.html');
+    return Uri.parse(pageUri.origin).replace(path: '/oauth2/callback');
   }
 
   static bool _isLoopbackHost(String host) {

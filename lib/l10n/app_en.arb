@@ -279,6 +279,8 @@
   "continueWithProvider": "Continue with {provider}",
   "@continueWithProvider": {"placeholders": {"provider": {"type": "String"}}},
   "oauthCallbackUnavailable": "OAuth2 requires an App Link or desktop callback in this build.",
+  "oauth2CallbackCompleteTitle": "Authorization complete",
+  "oauth2CallbackCompleteMessage": "You can close this window and return to SyncTV.",
   "oauthAuthorizationTimedOut": "Authorization took too long. Please try again.",
   "providerReviewRequired": "{provider} (registration requires review)",
   "@providerReviewRequired": {"placeholders": {"provider": {"type": "String"}}},

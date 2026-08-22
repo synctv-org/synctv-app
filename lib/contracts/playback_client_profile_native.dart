@@ -4,6 +4,8 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 
 const _version = 2;
 
+bool supportsP2pMediaLoader() => true;
+
 client.PlaybackClientProfile buildPlaybackClientProfile() {
   final videoCodecs = [
     client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
@@ -63,7 +65,6 @@ client.PlaybackClientProfile buildPlaybackClientProfile() {
     ],
     supportsCustomHttpHeaders: true,
     supportsProviderProxy: true,
-    supportsP2pMediaLoader: true,
     supportsInsecureHttpMedia: true,
   );
 }

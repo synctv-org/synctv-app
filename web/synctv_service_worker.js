@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_CACHE = 'synctv-app-runtime-v2';
+const APP_CACHE = 'synctv-app-runtime-v3';
 const P2P_PREFIX = '/__synctv_p2p__/';
 const P2P_HEADER_TIMEOUT_MS = 35000;
 const STATIC_PREFIXES = ['/assets/', '/canvaskit/', '/icons/', '/playback/'];
@@ -10,7 +10,6 @@ const STATIC_PATHS = new Set([
   '/flutter_bootstrap.js',
   '/main.dart.js',
   '/manifest.json',
-  '/oauth2_callback.js',
   '/passkeys_bundle.js',
   '/provider_verification.css',
   '/provider_verification.js',

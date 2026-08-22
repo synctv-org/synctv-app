@@ -46,7 +46,9 @@ same origin and require no runtime CDN access.
 ## Browser features
 
 - Authentication supports OPAQUE, WebAuthn passkeys, OAuth2 through
-  `/auth.html`, email flows, TOTP, and recovery flows supported by the server.
+  `/oauth2/callback`, email flows, TOTP, and recovery flows supported by the
+  server. The callback uses the normal SPA entry point and is rendered as a
+  regular Flutter route.
 - Realtime room traffic uses the same protobuf protocol over browser
   WebSocket.
 - Picture-in-picture, fullscreen, volume, uploads, subtitles, danmaku, and
@@ -62,8 +64,8 @@ same origin and require no runtime CDN access.
 
 `synctv_service_worker.js` caches navigation and explicit application assets.
 It excludes API, WebSocket, media, and P2P gateway URLs, and it refuses to cache
-responses marked `private` or `no-store`. OAuth and provider-verification pages
-are served with `no-store`.
+responses marked `private` or `no-store`. SPA navigations are revalidated, and
+the provider-verification page is served with `no-store`.
 
 The embedded server applies the production CSP, frame, referrer, and
 permissions policies. Keep authentication bridges and playback engines

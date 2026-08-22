@@ -307,8 +307,7 @@ class _RoomScreenState extends State<RoomScreen>
   late final VoiceChatSessionFactory _voiceChatSessionFactory;
   late final PlayerVolumePreferencesController _playerVolumePreferences;
   late final PlaybackOverlayPreferencesController _playbackOverlayPreferences;
-  late final bool _supportsP2pMediaLoader =
-      defaultPlaybackClientProfile().supportsP2pMediaLoader;
+  late final bool _supportsP2pMediaLoader = supportsP2pMediaLoader();
 
   late TabController _tabController;
   late PlaybackModeConfig _playbackModeConfig;
@@ -3118,6 +3117,7 @@ class _RoomScreenState extends State<RoomScreen>
 
     var playbackUrl = url;
     var playbackHeaders = headers;
+    var localizedByP2p = false;
     final status = _currentStatus;
     final canUseP2p =
         widget.p2pMediaPreferences.enabled &&
@@ -3144,12 +3144,16 @@ class _RoomScreenState extends State<RoomScreen>
                   status.entry?.type ??
                   '',
             )).toString();
+            localizedByP2p = true;
             if (!isLatest()) return;
             await _setActiveP2pResource(_p2pMediaRole, delivery);
             if (!isLatest()) return;
             playbackHeaders = const {};
           } catch (error) {
             debugPrint('P2P media gateway setup failed, using HTTP: $error');
+            playbackUrl = url;
+            playbackHeaders = headers;
+            localizedByP2p = false;
             if (isLatest()) await _deactivateP2pMedia();
           }
         } else if (isLatest()) {
@@ -3165,21 +3169,45 @@ class _RoomScreenState extends State<RoomScreen>
         status?.entry?.selectedPlaybackUrlOption?.format ??
         status?.entry?.type ??
         '';
-    final controllerHeaders = <String, String>{
-      ...playbackHeaders,
+    Map<String, String> controllerHeaders(Map<String, String> sourceHeaders) => {
+      ...sourceHeaders,
       if (kIsWeb && mediaFormat.isNotEmpty)
         syncTvVideoFormatHeader: mediaFormat,
     };
-    final newController = VideoPlayerController.networkUrl(
-      Uri.parse(playbackUrl),
-      httpHeaders: controllerHeaders,
+    VideoPlayerController createController(
+      String sourceUrl,
+      Map<String, String> sourceHeaders,
+    ) => VideoPlayerController.networkUrl(
+      Uri.parse(sourceUrl),
+      httpHeaders: controllerHeaders(sourceHeaders),
       formatHint: _videoFormatHint(mediaFormat, Uri.parse(url)),
     );
+
+    var newController = createController(playbackUrl, playbackHeaders);
     _initializingVideoPlayerController = newController;
     _initializingVideoSourceKey = sourceKey;
 
     try {
-      await newController.initialize().timeout(const Duration(seconds: 20));
+      try {
+        await newController.initialize().timeout(const Duration(seconds: 20));
+      } catch (error) {
+        if (!localizedByP2p || !isLatest()) rethrow;
+        _disposeControllerEventually(newController);
+        debugPrint(
+          'P2P media playback failed, retrying the origin URL: $error',
+        );
+        try {
+          await _deactivateP2pMedia();
+        } catch (deactivationError) {
+          debugPrint('Failed to leave the P2P media swarm: $deactivationError');
+        }
+        if (!mounted || !isLatest()) return;
+        playbackUrl = url;
+        playbackHeaders = headers;
+        newController = createController(playbackUrl, playbackHeaders);
+        _initializingVideoPlayerController = newController;
+        await newController.initialize().timeout(const Duration(seconds: 20));
+      }
 
       if (!mounted || !isLatest()) {
         _disposeControllerEventually(newController);

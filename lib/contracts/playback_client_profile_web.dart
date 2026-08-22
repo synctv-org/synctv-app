@@ -8,14 +8,17 @@ import 'package:web/web.dart' as web;
 
 const _version = 2;
 
+bool supportsP2pMediaLoader() {
+  return globalContext.has('RTCPeerConnection') &&
+      globalContext.has('indexedDB') &&
+      web.window.navigator.has('serviceWorker') &&
+      web.window.isSecureContext;
+}
+
 client.PlaybackClientProfile buildPlaybackClientProfile() {
   final video = web.HTMLVideoElement();
   final hasMediaSource = globalContext.has('MediaSource');
   final hasManagedMediaSource = globalContext.has('ManagedMediaSource');
-  final hasWebRtc = globalContext.has('RTCPeerConnection');
-  final hasIndexedDb = globalContext.has('indexedDB');
-  final hasServiceWorker = web.window.navigator.has('serviceWorker');
-  final hasOpfs = web.window.navigator.storage.has('getDirectory');
   final capabilities = <client.PlaybackMediaCapability>[];
 
   void addNative(
@@ -211,16 +214,6 @@ client.PlaybackClientProfile buildPlaybackClientProfile() {
         .PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL,
     mediaCapabilities: capabilities,
     supportsProviderProxy: true,
-    supportsP2pMediaLoader:
-        hasWebRtc &&
-        hasIndexedDb &&
-        hasServiceWorker &&
-        web.window.isSecureContext,
-    supportsMediaSourceExtensions: hasMediaSource,
-    supportsManagedMediaSource: hasManagedMediaSource,
-    supportsWebRtcDataChannel: hasWebRtc,
-    supportsIndexedDb: hasIndexedDb,
-    supportsOpfs: hasOpfs,
     supportsInsecureHttpMedia: Uri.base.scheme.toLowerCase() == 'http',
   );
 }

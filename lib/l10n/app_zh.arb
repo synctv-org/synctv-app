@@ -228,6 +228,8 @@
   "thirdPartyLogin": "第三方登录",
   "continueWithProvider": "使用 {provider} 继续",
   "oauthCallbackUnavailable": "当前构建需要配置 App Link 或桌面回跳才能使用 OAuth2。",
+  "oauth2CallbackCompleteTitle": "授权完成",
+  "oauth2CallbackCompleteMessage": "现在可以关闭此窗口并返回 SyncTV。",
   "oauthAuthorizationTimedOut": "授权等待超时，请重试。",
   "providerReviewRequired": "{provider}（注册需审核）",
   "providerLoginOnly": "{provider}（仅登录）",

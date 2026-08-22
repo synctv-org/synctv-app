@@ -61,7 +61,7 @@ void main() {
         OAuth2CallbackService.webRedirectUri(
           Uri.parse('https://app.example.test/room?id=1#player'),
         ),
-        Uri.parse('https://app.example.test/auth.html'),
+        Uri.parse('https://app.example.test/oauth2/callback'),
       );
       expect(
         OAuth2CallbackService.canCreateWebSessionFor(
@@ -84,7 +84,7 @@ void main() {
     });
 
     test('accepts the exact Web callback URL and rejects another origin', () {
-      final redirectUri = Uri.parse('https://app.example.test/auth.html');
+      final redirectUri = Uri.parse('https://app.example.test/oauth2/callback');
       final payload = OAuth2CallbackParser.parse(
         redirectUri.replace(
           queryParameters: const {
@@ -101,7 +101,7 @@ void main() {
       expect(
         () => OAuth2CallbackParser.parse(
           Uri.parse(
-            'https://other.example.test/auth.html?code=code&state=expected-state',
+            'https://other.example.test/oauth2/callback?code=code&state=expected-state',
           ),
           expectedState: 'expected-state',
           expectedRedirectUri: redirectUri,

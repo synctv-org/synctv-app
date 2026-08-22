@@ -7930,42 +7930,6 @@ const PlaybackClientProfile$json = {
       '10': 'supportsProviderProxy'
     },
     {
-      '1': 'supports_p2p_media_loader',
-      '3': 14,
-      '4': 1,
-      '5': 8,
-      '10': 'supportsP2pMediaLoader'
-    },
-    {
-      '1': 'supports_media_source_extensions',
-      '3': 15,
-      '4': 1,
-      '5': 8,
-      '10': 'supportsMediaSourceExtensions'
-    },
-    {
-      '1': 'supports_managed_media_source',
-      '3': 16,
-      '4': 1,
-      '5': 8,
-      '10': 'supportsManagedMediaSource'
-    },
-    {
-      '1': 'supports_web_rtc_data_channel',
-      '3': 17,
-      '4': 1,
-      '5': 8,
-      '10': 'supportsWebRtcDataChannel'
-    },
-    {
-      '1': 'supports_indexed_db',
-      '3': 18,
-      '4': 1,
-      '5': 8,
-      '10': 'supportsIndexedDb'
-    },
-    {'1': 'supports_opfs', '3': 19, '4': 1, '5': 8, '10': 'supportsOpfs'},
-    {
       '1': 'supports_insecure_http_media',
       '3': 20,
       '4': 1,
@@ -7976,6 +7940,9 @@ const PlaybackClientProfile$json = {
   '8': [
     {'1': '_max_streaming_bitrate'},
     {'1': '_max_audio_channels'},
+  ],
+  '9': [
+    {'1': 14, '2': 20},
   ],
 };
 
@@ -8000,16 +7967,10 @@ final $typed_data.Uint8List playbackClientProfileDescriptor = $convert.base64Dec
     'bWVkaWFfY2FwYWJpbGl0aWVzGAsgAygLMiYuc3luY3R2LmNsaWVudC5QbGF5YmFja01lZGlhQ2'
     'FwYWJpbGl0eUIIukgFkgECEEBSEW1lZGlhQ2FwYWJpbGl0aWVzEj8KHHN1cHBvcnRzX2N1c3Rv'
     'bV9odHRwX2hlYWRlcnMYDCABKAhSGXN1cHBvcnRzQ3VzdG9tSHR0cEhlYWRlcnMSNgoXc3VwcG'
-    '9ydHNfcHJvdmlkZXJfcHJveHkYDSABKAhSFXN1cHBvcnRzUHJvdmlkZXJQcm94eRI5ChlzdXBw'
-    'b3J0c19wMnBfbWVkaWFfbG9hZGVyGA4gASgIUhZzdXBwb3J0c1AycE1lZGlhTG9hZGVyEkcKIH'
-    'N1cHBvcnRzX21lZGlhX3NvdXJjZV9leHRlbnNpb25zGA8gASgIUh1zdXBwb3J0c01lZGlhU291'
-    'cmNlRXh0ZW5zaW9ucxJBCh1zdXBwb3J0c19tYW5hZ2VkX21lZGlhX3NvdXJjZRgQIAEoCFIac3'
-    'VwcG9ydHNNYW5hZ2VkTWVkaWFTb3VyY2USQAodc3VwcG9ydHNfd2ViX3J0Y19kYXRhX2NoYW5u'
-    'ZWwYESABKAhSGXN1cHBvcnRzV2ViUnRjRGF0YUNoYW5uZWwSLgoTc3VwcG9ydHNfaW5kZXhlZF'
-    '9kYhgSIAEoCFIRc3VwcG9ydHNJbmRleGVkRGISIwoNc3VwcG9ydHNfb3BmcxgTIAEoCFIMc3Vw'
-    'cG9ydHNPcGZzEj8KHHN1cHBvcnRzX2luc2VjdXJlX2h0dHBfbWVkaWEYFCABKAhSGXN1cHBvcn'
-    'RzSW5zZWN1cmVIdHRwTWVkaWFCGAoWX21heF9zdHJlYW1pbmdfYml0cmF0ZUIVChNfbWF4X2F1'
-    'ZGlvX2NoYW5uZWxz');
+    '9ydHNfcHJvdmlkZXJfcHJveHkYDSABKAhSFXN1cHBvcnRzUHJvdmlkZXJQcm94eRI/ChxzdXBw'
+    'b3J0c19pbnNlY3VyZV9odHRwX21lZGlhGBQgASgIUhlzdXBwb3J0c0luc2VjdXJlSHR0cE1lZG'
+    'lhQhgKFl9tYXhfc3RyZWFtaW5nX2JpdHJhdGVCFQoTX21heF9hdWRpb19jaGFubmVsc0oECA4Q'
+    'FA==');
 
 @$core.Deprecated('Use getPlaybackRequestDescriptor instead')
 const GetPlaybackRequest$json = {

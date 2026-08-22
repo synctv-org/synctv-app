@@ -1464,6 +1464,18 @@ abstract class AppLocalizations {
   /// **'OAuth2 requires an App Link or desktop callback in this build.'**
   String get oauthCallbackUnavailable;
 
+  /// No description provided for @oauth2CallbackCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorization complete'**
+  String get oauth2CallbackCompleteTitle;
+
+  /// No description provided for @oauth2CallbackCompleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You can close this window and return to SyncTV.'**
+  String get oauth2CallbackCompleteMessage;
+
   /// No description provided for @oauthAuthorizationTimedOut.
   ///
   /// In en, this message translates to:

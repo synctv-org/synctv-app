@@ -204,7 +204,9 @@ class WebVideoPlayerRuntime
     ) {
       final level = _readInt(data, 'level');
       if (level != null) {
-        _selectedTrackId = level < 0 ? 'auto' : 'hls:$level';
+        _selectedTrackId = hlsSelectedTrackId(
+          manualLevel: _readInt(hls, 'manualLevel'),
+        );
         _emitAdaptiveTracks();
       }
     });
@@ -333,8 +335,9 @@ class WebVideoPlayerRuntime
           codec: _readString(value, 'videoCodec'),
         ),
     ];
-    final currentLevel = _readInt(hls, 'currentLevel') ?? -1;
-    _selectedTrackId = currentLevel < 0 ? 'auto' : 'hls:$currentLevel';
+    _selectedTrackId = hlsSelectedTrackId(
+      manualLevel: _readInt(hls, 'manualLevel'),
+    );
     _emitAdaptiveTracks();
   }
 

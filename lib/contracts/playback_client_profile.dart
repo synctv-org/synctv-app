@@ -6,3 +6,7 @@ import 'playback_client_profile_native.dart'
 client.PlaybackClientProfile defaultPlaybackClientProfile() {
   return platform.buildPlaybackClientProfile();
 }
+
+bool supportsP2pMediaLoader() {
+  return platform.supportsP2pMediaLoader();
+}

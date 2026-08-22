@@ -5062,7 +5062,7 @@ void main() {
       final encodedProfile = requestedUri!.queryParameters['clientProfile'];
       expect(encodedProfile, isNotNull);
       final decodedProfile = client.PlaybackClientProfile.fromBuffer(
-        base64Url.decode(encodedProfile!),
+        base64Url.decode(base64Url.normalize(encodedProfile!)),
       );
       expect(
         decodedProfile.writeToBuffer(),
