@@ -326,10 +326,31 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   ProviderAddTarget _bilibiliTarget = ProviderAddTarget.parse;
   bool _bilibiliPlaylistHasDraft = false;
 
-  List<String> _boundVendors = [];
-  bool _checkingVendors = true;
+  final Set<String> _loadingVendors = {};
+  final Map<String, int> _vendorLoadRevisions = {};
+  int _vendorErrorGeneration = 0;
+  int _notifiedVendorErrorGeneration = 0;
   PublicSettingsInfo? _publicSettings;
   bool _dependenciesInitialized = false;
+
+  bool get _checkingVendors => _loadingVendors.isNotEmpty;
+
+  List<String> get _boundVendors => [
+    if (_alistBinds.isNotEmpty) 'alist',
+    if (_embyBinds.isNotEmpty) 'emby',
+    if (_bilibiliBinds.isNotEmpty) 'bilibili',
+    if (_cloudreveBinds.isNotEmpty) 'cloudreve',
+    if (_twitchBinds.isNotEmpty) 'twitch',
+    if (_fnosBinds.isNotEmpty) 'fnos',
+    if (_qnapBinds.isNotEmpty) 'qnap',
+    if (_synologyBinds.isNotEmpty) 'synology',
+    if (_nextcloudBinds.isNotEmpty) 'nextcloud',
+    if (_seafileBinds.isNotEmpty) 'seafile',
+    if (_trueNasBinds.isNotEmpty) 'truenas',
+    if (_youtubeBinds.isNotEmpty) 'youtube',
+    if (_douyinBinds.isNotEmpty) 'douyin',
+    if (_tiktokBinds.isNotEmpty) 'tiktok',
+  ];
 
   @override
   void initState() {
@@ -353,97 +374,56 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Future<void> _checkVendors() async {
-    if (!widget.distributionPolicy.includesThirdPartyProviders) {
-      await _checkUserOwnedVendors();
-      return;
-    }
+    final errorGeneration = ++_vendorErrorGeneration;
+    final providerTypes = widget.distributionPolicy.includesThirdPartyProviders
+        ? const [
+            'alist',
+            'emby',
+            'bilibili',
+            'cloudreve',
+            'twitch',
+            'fnos',
+            'qnap',
+            'huya',
+            'douyu',
+            'acfun',
+            'cctv',
+            'publicSettings',
+            'synology',
+            'nextcloud',
+            'seafile',
+            'truenas',
+            'youtube',
+            'douyin',
+            'tiktok',
+          ]
+        : const [
+            'alist',
+            'emby',
+            'cloudreve',
+            'fnos',
+            'qnap',
+            'publicSettings',
+            'synology',
+            'nextcloud',
+            'seafile',
+            'truenas',
+          ];
     try {
-      final results = await Future.wait([
-        providerGateway.getAllAlistBindInfos(),
-        providerGateway.getAllEmbyBindInfos(),
-        providerGateway.getAllBilibiliBindInfos(),
-        providerGateway.getAllCloudreveBindInfos(),
-        providerGateway.getAllTwitchBindInfos(),
-        providerGateway.getAllFnosBindInfos(),
-        providerGateway.getAllQnapBindInfos(),
-        providerGateway.listAvailableProviderInstances(providerType: 'huya'),
-        providerGateway.listAvailableProviderInstances(providerType: 'douyu'),
-        providerGateway.listAvailableProviderInstances(providerType: 'acfun'),
-        providerGateway.listAvailableProviderInstances(providerType: 'cctv'),
-        providerGateway.getPublicSettings(),
-        providerGateway.getAllSynologyBindInfos(),
-        providerGateway.getAllNextcloudBindInfos(),
-        providerGateway.getAllSeafileBindInfos(),
-        providerGateway.getAllTrueNasBindInfos(),
-        providerGateway.getAllYoutubeBindInfos(),
-        providerGateway.getAllDouyinBindInfos(),
-        providerGateway.getAllTikTokBindInfos(),
-      ]);
-      final alistBinds = results[0] as List<AlistBindInfo>;
-      final embyBinds = results[1] as List<EmbyBindInfo>;
-      final bilibiliBinds = results[2] as List<BilibiliBindInfo>;
-      final cloudreveBinds = results[3] as List<CloudreveBindInfo>;
-      final twitchBinds = results[4] as List<TwitchBindInfo>;
-      final fnosBinds = results[5] as List<FnosBindInfo>;
-      final qnapBinds = results[6] as List<QnapBindInfo>;
-      final huyaInstances = results[7] as List<String>;
-      final douyuInstances = results[8] as List<String>;
-      final acfunInstances = results[9] as List<String>;
-      final cctvInstances = results[10] as List<String>;
-      final publicSettings = results[11] as PublicSettingsInfo;
-      final synologyBinds = results[12] as List<SynologyBindInfo>;
-      final nextcloudBinds = results[13] as List<NextcloudBindInfo>;
-      final seafileBinds = results[14] as List<SeafileBindInfo>;
-      final trueNasBinds = results[15] as List<TrueNasBindInfo>;
-      final youtubeBinds = results[16] as List<YoutubeBindInfo>;
-      final douyinBinds = results[17] as List<DouyinBindInfo>;
-      final tiktokBinds = results[18] as List<TikTokBindInfo>;
-      if (!mounted) return;
-      setState(() {
-        _alistBinds = alistBinds;
-        _embyBinds = embyBinds;
-        _bilibiliBinds = bilibiliBinds;
-        _cloudreveBinds = cloudreveBinds;
-        _twitchBinds = twitchBinds;
-        _fnosBinds = fnosBinds;
-        _qnapBinds = qnapBinds;
-        _synologyBinds = synologyBinds;
-        _nextcloudBinds = nextcloudBinds;
-        _seafileBinds = seafileBinds;
-        _trueNasBinds = trueNasBinds;
-        _youtubeBinds = youtubeBinds;
-        _douyinBinds = douyinBinds;
-        _tiktokBinds = tiktokBinds;
-        _huyaInstances = {'', ...huyaInstances}.toList();
-        _douyuInstances = {'', ...douyuInstances}.toList();
-        _acfunInstances = {'', ...acfunInstances}.toList();
-        _cctvInstances = {'', ...cctvInstances}.toList();
-        _publicSettings = publicSettings;
-        _boundVendors = [
-          if (alistBinds.isNotEmpty) 'alist',
-          if (embyBinds.isNotEmpty) 'emby',
-          if (bilibiliBinds.isNotEmpty) 'bilibili',
-          if (cloudreveBinds.isNotEmpty) 'cloudreve',
-          if (twitchBinds.isNotEmpty) 'twitch',
-          if (fnosBinds.isNotEmpty) 'fnos',
-          if (qnapBinds.isNotEmpty) 'qnap',
-          if (synologyBinds.isNotEmpty) 'synology',
-          if (nextcloudBinds.isNotEmpty) 'nextcloud',
-          if (seafileBinds.isNotEmpty) 'seafile',
-          if (trueNasBinds.isNotEmpty) 'truenas',
-          if (youtubeBinds.isNotEmpty) 'youtube',
-          if (douyinBinds.isNotEmpty) 'douyin',
-          if (tiktokBinds.isNotEmpty) 'tiktok',
-        ];
-        _applyDefaultProviderBindings();
-        _checkingVendors = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _checkingVendors = false);
+      await Future.wait(
+        providerTypes.map(
+          (providerType) =>
+              _refreshVendor(providerType, errorGeneration: errorGeneration),
+        ),
+      );
+    } catch (error) {
+      if (!mounted || _notifiedVendorErrorGeneration == errorGeneration) {
+        return;
+      }
+      _notifiedVendorErrorGeneration = errorGeneration;
       AppNotifications.showError(
         context,
-        context.l10n.loadMediaBindingsFailed('$e'),
+        context.l10n.loadMediaBindingsFailed('$error'),
       );
     }
   }
@@ -453,7 +433,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       context,
       initialProviderType: providerType,
     );
-    await _checkVendors();
+    await _refreshVendor(providerType);
     if (!mounted) return;
     switch (providerType) {
       case 'alist' when _alistBinds.isNotEmpty:
@@ -465,63 +445,151 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  Future<void> _checkUserOwnedVendors() async {
+  Future<void> _refreshVendor(String providerType, {int? errorGeneration}) {
+    final generation = errorGeneration ?? ++_vendorErrorGeneration;
+    return switch (providerType) {
+      'alist' => _loadVendor(
+        providerType,
+        providerGateway.getAllAlistBindInfos,
+        (value) => _alistBinds = value,
+        generation,
+      ),
+      'emby' => _loadVendor(
+        providerType,
+        providerGateway.getAllEmbyBindInfos,
+        (value) => _embyBinds = value,
+        generation,
+      ),
+      'bilibili' => _loadVendor(
+        providerType,
+        providerGateway.getAllBilibiliBindInfos,
+        (value) => _bilibiliBinds = value,
+        generation,
+      ),
+      'cloudreve' => _loadVendor(
+        providerType,
+        providerGateway.getAllCloudreveBindInfos,
+        (value) => _cloudreveBinds = value,
+        generation,
+      ),
+      'twitch' => _loadVendor(
+        providerType,
+        providerGateway.getAllTwitchBindInfos,
+        (value) => _twitchBinds = value,
+        generation,
+      ),
+      'fnos' => _loadVendor(
+        providerType,
+        providerGateway.getAllFnosBindInfos,
+        (value) => _fnosBinds = value,
+        generation,
+      ),
+      'qnap' => _loadVendor(
+        providerType,
+        providerGateway.getAllQnapBindInfos,
+        (value) => _qnapBinds = value,
+        generation,
+      ),
+      'synology' => _loadVendor(
+        providerType,
+        providerGateway.getAllSynologyBindInfos,
+        (value) => _synologyBinds = value,
+        generation,
+      ),
+      'nextcloud' => _loadVendor(
+        providerType,
+        providerGateway.getAllNextcloudBindInfos,
+        (value) => _nextcloudBinds = value,
+        generation,
+      ),
+      'seafile' => _loadVendor(
+        providerType,
+        providerGateway.getAllSeafileBindInfos,
+        (value) => _seafileBinds = value,
+        generation,
+      ),
+      'truenas' => _loadVendor(
+        providerType,
+        providerGateway.getAllTrueNasBindInfos,
+        (value) => _trueNasBinds = value,
+        generation,
+      ),
+      'youtube' => _loadVendor(
+        providerType,
+        providerGateway.getAllYoutubeBindInfos,
+        (value) => _youtubeBinds = value,
+        generation,
+      ),
+      'douyin' => _loadVendor(
+        providerType,
+        providerGateway.getAllDouyinBindInfos,
+        (value) => _douyinBinds = value,
+        generation,
+      ),
+      'tiktok' => _loadVendor(
+        providerType,
+        providerGateway.getAllTikTokBindInfos,
+        (value) => _tiktokBinds = value,
+        generation,
+      ),
+      'huya' || 'douyu' || 'acfun' || 'cctv' => _loadVendor(
+        providerType,
+        () => providerGateway.listAvailableProviderInstances(
+          providerType: providerType,
+        ),
+        (value) => _setProviderInstances(providerType, value),
+        generation,
+      ),
+      'publicSettings' => _loadVendor(
+        providerType,
+        providerGateway.getPublicSettings,
+        (value) => _publicSettings = value,
+        generation,
+      ),
+      _ => Future<void>.value(),
+    };
+  }
+
+  Future<void> _loadVendor<T>(
+    String providerType,
+    Future<T> Function() load,
+    void Function(T value) apply,
+    int errorGeneration,
+  ) async {
+    final revision = (_vendorLoadRevisions[providerType] ?? 0) + 1;
+    _vendorLoadRevisions[providerType] = revision;
+    if (mounted) setState(() => _loadingVendors.add(providerType));
     try {
-      final results = await Future.wait([
-        providerGateway.getAllAlistBindInfos(),
-        providerGateway.getAllEmbyBindInfos(),
-        providerGateway.getAllCloudreveBindInfos(),
-        providerGateway.getAllFnosBindInfos(),
-        providerGateway.getAllQnapBindInfos(),
-        providerGateway.getPublicSettings(),
-        providerGateway.getAllSynologyBindInfos(),
-        providerGateway.getAllNextcloudBindInfos(),
-        providerGateway.getAllSeafileBindInfos(),
-        providerGateway.getAllTrueNasBindInfos(),
-      ]);
-      final alistBinds = results[0] as List<AlistBindInfo>;
-      final embyBinds = results[1] as List<EmbyBindInfo>;
-      final cloudreveBinds = results[2] as List<CloudreveBindInfo>;
-      final fnosBinds = results[3] as List<FnosBindInfo>;
-      final qnapBinds = results[4] as List<QnapBindInfo>;
-      final publicSettings = results[5] as PublicSettingsInfo;
-      final synologyBinds = results[6] as List<SynologyBindInfo>;
-      final nextcloudBinds = results[7] as List<NextcloudBindInfo>;
-      final seafileBinds = results[8] as List<SeafileBindInfo>;
-      final trueNasBinds = results[9] as List<TrueNasBindInfo>;
-      if (!mounted) return;
+      final value = await load();
+      if (!mounted || _vendorLoadRevisions[providerType] != revision) return;
       setState(() {
-        _alistBinds = alistBinds;
-        _embyBinds = embyBinds;
-        _cloudreveBinds = cloudreveBinds;
-        _fnosBinds = fnosBinds;
-        _qnapBinds = qnapBinds;
-        _synologyBinds = synologyBinds;
-        _nextcloudBinds = nextcloudBinds;
-        _seafileBinds = seafileBinds;
-        _trueNasBinds = trueNasBinds;
-        _publicSettings = publicSettings;
-        _boundVendors = [
-          if (alistBinds.isNotEmpty) 'alist',
-          if (embyBinds.isNotEmpty) 'emby',
-          if (cloudreveBinds.isNotEmpty) 'cloudreve',
-          if (fnosBinds.isNotEmpty) 'fnos',
-          if (qnapBinds.isNotEmpty) 'qnap',
-          if (synologyBinds.isNotEmpty) 'synology',
-          if (nextcloudBinds.isNotEmpty) 'nextcloud',
-          if (seafileBinds.isNotEmpty) 'seafile',
-          if (trueNasBinds.isNotEmpty) 'truenas',
-        ];
+        apply(value);
         _applyDefaultProviderBindings();
-        _checkingVendors = false;
+        _loadingVendors.remove(providerType);
       });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _checkingVendors = false);
+    } catch (error) {
+      if (!mounted || _vendorLoadRevisions[providerType] != revision) return;
+      setState(() => _loadingVendors.remove(providerType));
+      if (_notifiedVendorErrorGeneration == errorGeneration) return;
+      _notifiedVendorErrorGeneration = errorGeneration;
       AppNotifications.showError(
         context,
-        context.l10n.loadMediaBindingsFailed('$e'),
+        context.l10n.loadMediaBindingsFailed('$error'),
       );
+    }
+  }
+
+  void _setProviderInstances(String providerType, List<String> instances) {
+    final available = {'', ...instances}.toList();
+    switch (providerType) {
+      case 'huya':
+        _huyaInstances = available;
+      case 'douyu':
+        _douyuInstances = available;
+      case 'acfun':
+        _acfunInstances = available;
+      case 'cctv':
+        _cctvInstances = available;
     }
   }
 
@@ -895,15 +963,16 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           ),
           if (!iconOnly) ...[
             const SizedBox(height: 8),
-            if (_checkingVendors)
-              const AppLinearProgress(minHeight: 2)
-            else
-              Text(
-                context.l10n.connectedMediaSources(_boundVendors.length),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+            Text(
+              context.l10n.connectedMediaSources(_boundVendors.length),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
+            ),
+            if (_checkingVendors) ...[
+              const SizedBox(height: 6),
+              const AppLinearProgress(minHeight: 2),
+            ],
           ],
         ],
       ),
@@ -1220,6 +1289,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           onDraftChanged: (value) => _cctvHasDraft = value,
         );
       case 12:
+        if (_fnosBinds.isEmpty && _loadingVendors.contains('fnos')) {
+          return const AppLoadingIndicator();
+        }
         return FnosAddMediaForm(
           roomId: widget.roomId,
           playlistId: widget.parentId ?? '',
@@ -1228,6 +1300,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           onOpenBinding: () => _openProviderBinding('fnos'),
         );
       case 13:
+        if (_qnapBinds.isEmpty && _loadingVendors.contains('qnap')) {
+          return const AppLoadingIndicator();
+        }
         return QnapAddMediaForm(
           roomId: widget.roomId,
           playlistId: widget.parentId ?? '',
@@ -1236,6 +1311,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           onOpenBinding: () => _openProviderBinding('qnap'),
         );
       case 14:
+        if (_synologyBinds.isEmpty && _loadingVendors.contains('synology')) {
+          return const AppLoadingIndicator();
+        }
         return SynologyAddMediaForm(
           roomId: widget.roomId,
           playlistId: widget.parentId ?? '',
@@ -1244,6 +1322,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           onOpenBinding: () => _openProviderBinding('synology'),
         );
       case 15:
+        if (_nextcloudBinds.isEmpty && _loadingVendors.contains('nextcloud')) {
+          return const AppLoadingIndicator();
+        }
         return NextcloudAddMediaForm(
           roomId: widget.roomId,
           playlistId: widget.parentId ?? '',
@@ -1252,6 +1333,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           onOpenBinding: () => _openProviderBinding('nextcloud'),
         );
       case 16:
+        if (_seafileBinds.isEmpty && _loadingVendors.contains('seafile')) {
+          return const AppLoadingIndicator();
+        }
         return SeafileAddMediaForm(
           roomId: widget.roomId,
           playlistId: widget.parentId ?? '',
@@ -1260,6 +1344,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           onOpenBinding: () => _openProviderBinding('seafile'),
         );
       case 17:
+        if (_trueNasBinds.isEmpty && _loadingVendors.contains('truenas')) {
+          return const AppLoadingIndicator();
+        }
         return TrueNasAddMediaForm(
           roomId: widget.roomId,
           playlistId: widget.parentId ?? '',
@@ -2413,7 +2500,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildAlistContent(ThemeData theme) {
-    if (_checkingVendors) {
+    if (_alistBinds.isEmpty && _loadingVendors.contains('alist')) {
       return const AppLoadingIndicator();
     }
     if (!_boundVendors.contains('alist')) {
@@ -2519,7 +2606,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildEmbyContent(ThemeData theme) {
-    if (_checkingVendors) return const AppLoadingIndicator();
+    if (_embyBinds.isEmpty && _loadingVendors.contains('emby')) {
+      return const AppLoadingIndicator();
+    }
     if (_embyBinds.isEmpty) return _buildBindGuide('Emby', theme);
     if (!_embyPlaylistMode) return _buildEmbyLibraryContent(theme);
     return EmbyPlaylistForm(
@@ -2571,7 +2660,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildEmbyLibraryContent(ThemeData theme) {
-    if (_checkingVendors) {
+    if (_embyBinds.isEmpty && _loadingVendors.contains('emby')) {
       return const AppLoadingIndicator();
     }
     if (!_boundVendors.contains('emby')) return _buildBindGuide('Emby', theme);
@@ -2692,7 +2781,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildCloudreveContent(ThemeData theme) {
-    if (_checkingVendors) return const AppLoadingIndicator();
+    if (_cloudreveBinds.isEmpty && _loadingVendors.contains('cloudreve')) {
+      return const AppLoadingIndicator();
+    }
     if (!_boundVendors.contains('cloudreve')) {
       return _buildBindGuide('Cloudreve', theme);
     }

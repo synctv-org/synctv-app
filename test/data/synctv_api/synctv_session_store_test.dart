@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +7,7 @@ import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_runtime_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_session_store.dart';
+import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
 SyncTvServerProfile _profile({
   required String id,
@@ -250,5 +252,76 @@ void main() {
     expect(restartedRuntime.activeServer?.allowInsecureTls, isTrue);
     expect(restartedRuntime.allowInsecureTls, isTrue);
     expect(restartedRuntime.api.allowInsecureTls, isTrue);
+  });
+
+  test('runtime init does not wait for a pending server probe', () async {
+    const endpoint = 'https://pending.example.com';
+    final pendingServer = SyncTvServerProfile(
+      endpoint: endpoint,
+      declaredServerId: '',
+      name: endpoint,
+    );
+    SharedPreferences.setMockInitialValues({
+      SyncTvSessionStore.serversKey: jsonEncode([pendingServer.toJson()]),
+      SyncTvSessionStore.activeServerKey: endpoint,
+    });
+    final probeStarted = Completer<void>();
+    final probeResponse = Completer<client.GetServerInfoResponse>();
+    final runtime = SyncTvRuntimeService(
+      serverInfoProbe: (_) {
+        probeStarted.complete();
+        return probeResponse.future;
+      },
+    );
+    addTearDown(runtime.api.close);
+
+    await runtime.init().timeout(const Duration(seconds: 1));
+
+    expect(runtime.activeServer?.endpoint, endpoint);
+    expect(probeStarted.isCompleted, isTrue);
+    expect(probeResponse.isCompleted, isFalse);
+    probeResponse.complete(client.GetServerInfoResponse());
+    await Future<void>.delayed(Duration.zero);
+  });
+
+  test('pending server probe cannot override a later selection', () async {
+    const pendingEndpoint = 'https://pending.example.com';
+    const selectedEndpoint = 'https://selected.example.com';
+    final pendingServer = SyncTvServerProfile(
+      endpoint: pendingEndpoint,
+      declaredServerId: '',
+      name: pendingEndpoint,
+    );
+    final selectedServer = _profile(id: 'selected', endpoint: selectedEndpoint);
+    SharedPreferences.setMockInitialValues({
+      SyncTvSessionStore.serversKey: jsonEncode([
+        pendingServer.toJson(),
+        selectedServer.toJson(),
+      ]),
+      SyncTvSessionStore.activeServerKey: pendingEndpoint,
+    });
+    final probeResponse = Completer<client.GetServerInfoResponse>();
+    final runtime = SyncTvRuntimeService(
+      serverInfoProbe: (_) => probeResponse.future,
+    );
+    addTearDown(runtime.api.close);
+
+    await runtime.init();
+    await runtime.activateServer(selectedEndpoint);
+    probeResponse.complete(
+      client.GetServerInfoResponse(
+        serverId: 'pending-id',
+        serverName: 'Pending server',
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(runtime.activeServer?.endpoint, selectedEndpoint);
+    expect(
+      runtime.servers
+          .singleWhere((server) => server.endpoint == pendingEndpoint)
+          .isPending,
+      isTrue,
+    );
   });
 }

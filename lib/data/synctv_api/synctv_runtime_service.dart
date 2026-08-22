@@ -6,19 +6,26 @@ import 'package:synctv_app/core/network/server_endpoint_identity.dart';
 import 'package:synctv_app/data/synctv_api/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
+typedef SyncTvServerInfoProbe =
+    Future<client.GetServerInfoResponse> Function(SyncTvApiClient api);
+
 class SyncTvRuntimeService {
-  SyncTvRuntimeService() : session = SyncTvSession() {
+  static const serverProbeTimeout = Duration(seconds: 8);
+
+  SyncTvRuntimeService({this.serverInfoProbe}) : session = SyncTvSession() {
     sessionStore = SyncTvSessionStore(session);
     _api = _createClient(SyncTvSessionStore.clientBootstrapBaseUrl);
   }
 
   final SyncTvSession session;
+  final SyncTvServerInfoProbe? serverInfoProbe;
   late final SyncTvSessionStore sessionStore;
   late SyncTvApiClient _api;
   final StreamController<void> _authErrorController =
       StreamController<void>.broadcast();
   final Set<({SyncTvApiClient source, int generation})> _authErrorsInFlight =
       {};
+  int _serverSelectionRevision = 0;
 
   SyncTvApiClient get api => _api;
   Stream<void> get onAuthError => _authErrorController.stream;
@@ -33,16 +40,20 @@ class SyncTvRuntimeService {
 
   Future<void> init() async {
     await sessionStore.load();
+    final previousApi = _api;
     _api = _createClient(
       sessionStore.baseUrl.isEmpty
           ? SyncTvSessionStore.clientBootstrapBaseUrl
           : sessionStore.baseUrl,
       allowInsecureTls: allowInsecureTls,
     );
-    await _promotePendingActiveServer();
+    previousApi.close();
+    final revision = ++_serverSelectionRevision;
+    unawaited(_promotePendingActiveServer(revision));
   }
 
   Future<void> setBaseUrl(String url) async {
+    _serverSelectionRevision++;
     _api.configureServer(url, allowInsecureTls: false);
     await sessionStore.setBaseUrl(_api.baseUrl);
   }
@@ -53,10 +64,11 @@ class SyncTvRuntimeService {
   }) async {
     final serverClient = _createClient(url, allowInsecureTls: allowInsecureTls);
     try {
-      final info = await serverClient.publicService.getServerInfo(
-        client.GetServerInfoRequest(),
-      );
+      final info = await _getServerInfo(
+        serverClient,
+      ).timeout(serverProbeTimeout);
       final declaredServerId = info.serverId.trim();
+      _serverSelectionRevision++;
       _api.configureServer(
         serverClient.baseUrl,
         allowInsecureTls: allowInsecureTls,
@@ -80,6 +92,7 @@ class SyncTvRuntimeService {
     final target = servers.firstWhere(
       (server) => server.endpoint == normalized,
     );
+    _serverSelectionRevision++;
     _api.configureServer(normalized, allowInsecureTls: target.allowInsecureTls);
     await sessionStore.activateServer(normalized);
   }
@@ -87,6 +100,7 @@ class SyncTvRuntimeService {
   Future<void> removeServer(String endpoint) async {
     final normalized = ServerEndpointIdentity.normalize(endpoint);
     if (activeServer?.endpoint == normalized) {
+      _serverSelectionRevision++;
       final next = servers
           .where((server) => server.endpoint != normalized)
           .firstOrNull;
@@ -225,28 +239,40 @@ class SyncTvRuntimeService {
     _handleAuthError(_api, _api.endpointGeneration);
   }
 
-  Future<void> _promotePendingActiveServer() async {
+  Future<client.GetServerInfoResponse> _getServerInfo(SyncTvApiClient api) =>
+      serverInfoProbe?.call(api) ??
+      api.publicService.getServerInfo(client.GetServerInfoRequest());
+
+  Future<void> _promotePendingActiveServer(int revision) async {
     final active = sessionStore.activeServer;
     if (active == null || !active.isPending) return;
+    final endpoint = active.endpoint;
+    final serverClient = _createClient(
+      endpoint,
+      allowInsecureTls: active.allowInsecureTls,
+    );
     try {
-      final info = await _api.publicService.getServerInfo(
-        client.GetServerInfoRequest(),
-      );
+      final info = await _getServerInfo(
+        serverClient,
+      ).timeout(serverProbeTimeout);
       final declaredServerId = info.serverId.trim();
       if (declaredServerId.isEmpty) return;
+      if (revision != _serverSelectionRevision ||
+          !servers.any((server) => server.endpoint == endpoint)) {
+        return;
+      }
       await sessionStore.addOrUpdateServer(
         declaredServerId: declaredServerId,
         name: info.serverName,
-        endpoint: _api.baseUrl,
+        endpoint: endpoint,
         allowInsecureTls: active.allowInsecureTls,
-      );
-      _api.configureServer(
-        sessionStore.baseUrl,
-        allowInsecureTls: active.allowInsecureTls,
+        activate: false,
       );
     } catch (_) {
       // Keep the pending profile usable offline; the next successful launch or
       // manual server edit can promote it to the server-provided identity.
+    } finally {
+      serverClient.close();
     }
   }
 }

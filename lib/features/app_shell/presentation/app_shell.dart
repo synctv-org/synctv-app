@@ -138,10 +138,10 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
-  Future<void> _checkLoginAndLoadData() async {
+  void _checkLoginAndLoadData() {
     unawaited(_loadRooms(silent: false));
     if (_isAccountSession) {
-      await _fetchUserInfo();
+      unawaited(_fetchUserInfo());
     }
     _openStartRoomIfRequested();
   }

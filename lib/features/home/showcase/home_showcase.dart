@@ -137,14 +137,17 @@ final homeShowcaseRooms = <SyncTvRoom>[
 
 HomeViewState homeShowcaseState({
   List<SyncTvRoom>? rooms,
+  List<SyncTvRoom>? featuredRooms,
   String selectedCategoryId = '',
+  bool isLoading = false,
 }) => HomeViewState(
   identity: const AccountSessionIdentity(),
   hasServer: true,
-  isLoading: false,
+  isLoading: isLoading,
   isLoadingTaxonomy: false,
   rooms: rooms ?? homeShowcaseRooms,
-  featuredRooms: homeShowcaseRooms.take(5).toList(growable: false),
+  featuredRooms:
+      featuredRooms ?? homeShowcaseRooms.take(5).toList(growable: false),
   joinedRooms: homeShowcaseRooms
       .where((room) => room.joined)
       .toList(growable: false),
@@ -164,12 +167,13 @@ HomeViewState homeShowcaseState({
 );
 
 HomeViewCallbacks homeShowcaseCallbacks({
+  VoidCallback? onOpenServerSettings,
   ValueChanged<SyncTvRoom>? onOpenRoom,
   ValueChanged<SyncTvRoom>? onToggleFavorite,
   ValueChanged<String>? onSearch,
   ValueChanged<String>? onSelectCategory,
 }) => HomeViewCallbacks(
-  openServerSettings: () {},
+  openServerSettings: onOpenServerSettings ?? () {},
   openLanguageSelector: () {},
   openLogin: () {},
   openJoinRoom: () {},

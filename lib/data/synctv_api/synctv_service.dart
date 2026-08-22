@@ -57,6 +57,8 @@ export 'package:synctv_app/contracts/room_media_models.dart';
 export 'package:synctv_app/data/synctv_api/synctv_file_upload_service.dart';
 
 class SyncTvService {
+  static const _serverTimeSyncTimeout = Duration(seconds: 5);
+
   static String get baseUrl => _runtime.baseUrl;
   static List<SyncTvServerProfile> get servers => _runtime.servers;
   static SyncTvServerProfile? get activeServer => _runtime.activeServer;
@@ -71,12 +73,14 @@ class SyncTvService {
   static final SyncTvRuntimeService _runtime = SyncTvRuntimeService();
   static SyncTvApiClient get _api => _runtime.api;
   static SyncTvDomainServices _domains = _createDomains();
+  static int _serverTimeSyncRevision = 0;
 
   static Stream<void> get onAuthError => _runtime.onAuthError;
 
   static Future<void> init() async {
     await _runtime.init();
     _domains = _createDomains();
+    _invalidateServerTime();
   }
 
   static SyncTvDomainServices _createDomains() {
@@ -86,6 +90,7 @@ class SyncTvService {
   static Future<void> setBaseUrl(String url) async {
     await _runtime.setBaseUrl(url);
     _domains = _createDomains();
+    _invalidateServerTime();
   }
 
   static Future<SyncTvServerProfile> addServer(
@@ -97,17 +102,23 @@ class SyncTvService {
       allowInsecureTls: allowInsecureTls,
     );
     _domains = _createDomains();
+    _invalidateServerTime();
     return profile;
   }
 
   static Future<void> activateServer(String endpoint) async {
     await _runtime.activateServer(endpoint);
     _domains = _createDomains();
+    _invalidateServerTime();
   }
 
   static Future<void> removeServer(String endpoint) async {
+    final previousEndpoint = activeServer?.endpoint;
     await _runtime.removeServer(endpoint);
     _domains = _createDomains();
+    if (activeServer?.endpoint != previousEndpoint) {
+      _invalidateServerTime();
+    }
   }
 
   static Future<String?> getToken() => _runtime.getToken();
@@ -382,10 +393,18 @@ class SyncTvService {
 
   static Future<void> syncServerTime({bool refresh = false}) async {
     if (!refresh && SyncedClock.isSynced) return;
+    final revision = ++_serverTimeSyncRevision;
+    final endpointGeneration = _api.endpointGeneration;
     try {
       final sentAt = SyncedClock.localUnixNanos();
-      final response = await getServerTime(clientSentAtNanos: sentAt);
+      final response = await getServerTime(
+        clientSentAtNanos: sentAt,
+      ).timeout(_serverTimeSyncTimeout);
       final receivedAt = SyncedClock.localUnixNanos();
+      if (revision != _serverTimeSyncRevision ||
+          !_api.isEndpointGenerationCurrent(endpointGeneration)) {
+        return;
+      }
       SyncedClock.updateFromServerTime(
         clientSentAtNanos: response.clientSentAtNanos.toInt(),
         clientReceivedAtNanos: receivedAt,
@@ -393,8 +412,16 @@ class SyncTvService {
         serverSentAtNanos: response.serverSentAtNanos.toInt(),
       );
     } catch (_) {
-      SyncedClock.reset();
+      if (revision == _serverTimeSyncRevision &&
+          _api.isEndpointGenerationCurrent(endpointGeneration)) {
+        SyncedClock.reset();
+      }
     }
+  }
+
+  static void _invalidateServerTime() {
+    _serverTimeSyncRevision++;
+    SyncedClock.reset();
   }
 
   static Future<List<RoomCategoryInfo>> listRoomCategories({

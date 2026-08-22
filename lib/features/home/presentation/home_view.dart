@@ -118,13 +118,23 @@ class HomeView extends StatelessWidget {
         elevation: 0,
         title: _HomeHeader(state: state, callbacks: callbacks),
       ),
-      body: state.isLoading
-          ? const AppLoadingIndicator()
-          : _DiscoveryBody(
+      body: Column(
+        children: [
+          SizedBox(
+            height: 2,
+            child: state.isLoading
+                ? const AppLinearProgress(minHeight: 2)
+                : null,
+          ),
+          Expanded(
+            child: _DiscoveryBody(
               state: state,
               callbacks: callbacks,
               searchController: searchController,
             ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -729,6 +739,26 @@ class _RoomGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    if (state.isLoading && state.rooms.isEmpty) {
+      return SizedBox(
+        height: 280,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AppLoadingIndicator(),
+              const SizedBox(height: 20),
+              AppActionButton(
+                onPressed: callbacks.openServerSettings,
+                icon: Icons.dns_rounded,
+                label: context.l10n.server,
+                style: AppActionButtonStyle.tonal,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     if (state.rooms.isEmpty) {
       return SizedBox(
         height: 280,

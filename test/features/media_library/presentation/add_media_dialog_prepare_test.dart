@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:fixnum/fixnum.dart';
@@ -9,6 +10,7 @@ import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
+import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media_dialog.dart';
 import 'package:synctv_app/features/providers/application/provider_gateway.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -25,6 +27,47 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
 import '../../../test_app.dart';
 
 void main() {
+  testWidgets('slow provider does not block another media source', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const ui.Size(1300, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final gateway = _PartiallyHangingGateway();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => buildThemedTestApp(
+          context,
+          DependencyScope<ProviderGateway>(value: gateway, child: child!),
+        ),
+        home: const Scaffold(
+          body: AddMediaDialog(roomId: 'room_nonblocking_test'),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.enterText(
+      find.byType(TextField).at(1),
+      'https://media.example.test/video.mp4',
+    );
+    expect(find.byKey(const Key('direct-url-preview')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('add-media-source-tile-4')));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Directory password'), findsOneWidget);
+    expect(find.text('No files'), findsOneWidget);
+    expect(find.byType(AppLinearProgress), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('direct links require prepare and support partial selection', (
     tester,
   ) async {
@@ -612,6 +655,42 @@ class _PrepareGateway implements ProviderGateway {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName}');
+}
+
+class _PartiallyHangingGateway extends _PrepareGateway {
+  final Completer<List<EmbyBindInfo>> _embyBinds = Completer();
+
+  @override
+  Future<List<AlistBindInfo>> getAllAlistBindInfos() async => const [
+    AlistBindInfo(
+      id: 'alist-bind',
+      serverId: 'alist-server',
+      host: 'https://alist.example.test',
+      username: 'tester',
+      createdAt: 1,
+      providerInstanceName: '',
+    ),
+  ];
+
+  @override
+  Future<List<EmbyBindInfo>> getAllEmbyBindInfos() => _embyBinds.future;
+
+  @override
+  Future<AlistListPage> listAlistPage(
+    String path, {
+    String? keyword,
+    int page = 1,
+    int max = 20,
+    String password = '',
+    String serverId = '',
+    String instanceName = '',
+  }) async => AlistListPage(
+    serverId: serverId,
+    providerInstanceName: instanceName,
+    items: const [],
+    total: 0,
+    source: null,
+  );
 }
 
 class _BilibiliPolicyGateway extends _PrepareGateway {

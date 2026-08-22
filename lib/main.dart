@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:accessibility_tools/accessibility_tools.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/foundation.dart';
@@ -54,68 +56,38 @@ void main(List<String> args) async {
   if (runWebViewTitleBarWidget(args)) {
     return;
   }
-  await appLocaleController.load();
-  await SyncTvService.init();
-  if (SyncTvService.activeServer != null) {
-    await SyncTvService.syncServerTime();
-  }
-  const oauth2Callbacks = FlutterWebAuth2CallbackClient();
   final p2pMediaPreferences = P2pMediaPreferencesController(
     store: const SharedPreferencesP2pMediaPreferencesStore(),
   );
-  await p2pMediaPreferences.load();
   final playbackModePreferences = PlaybackModePreferencesController(
     store: const SharedPreferencesPlaybackModeStore(),
   );
-  await playbackModePreferences.load();
   final playerVolumePreferences = PlayerVolumePreferencesController(
     store: const SharedPreferencesPlayerVolumeStore(),
   );
-  await playerVolumePreferences.load();
   final playbackOverlayPreferences = PlaybackOverlayPreferencesController(
     store: const SharedPreferencesPlaybackOverlayStore(),
   );
-  await playbackOverlayPreferences.load();
   final realtimeEventLogPreferences = RealtimeEventLogPreferencesController(
     store: const SharedPreferencesRealtimeEventLogStore(),
   );
-  await realtimeEventLogPreferences.load();
+  await Future.wait([
+    appLocaleController.load(),
+    SyncTvService.init(),
+    p2pMediaPreferences.load(),
+    playbackModePreferences.load(),
+    playerVolumePreferences.load(),
+    playbackOverlayPreferences.load(),
+    realtimeEventLogPreferences.load(),
+    _configureDesktopWindow(),
+  ]);
+
+  const oauth2Callbacks = FlutterWebAuth2CallbackClient();
   final opaqueAuthenticator = OpaqueAuthenticatorService(
     gateway: const SyncTvOpaqueAuthGateway(),
   );
   const roomSessionGateway = SyncTvRoomSessionGateway();
 
-  if (!kIsWeb &&
-      const {
-        TargetPlatform.macOS,
-        TargetPlatform.windows,
-        TargetPlatform.linux,
-      }.contains(defaultTargetPlatform)) {
-    await windowManager.ensureInitialized();
-    await windowManager.setTitleBarStyle(
-      TitleBarStyle.normal,
-      windowButtonVisibility: true,
-    );
-    await windowManager.setMinimumSize(desktopWindowMinimumSize);
-    final windowSize = await windowManager.getSize();
-    if (windowSize.width < desktopWindowMinimumSize.width ||
-        windowSize.height < desktopWindowMinimumSize.height) {
-      await windowManager.setSize(desktopWindowDefaultSize);
-      await windowManager.center();
-    }
-  }
-
-  try {
-    SyncTvVideoPlayerMediaKit.ensureInitialized(
-      android: true,
-      iOS: false,
-      windows: true,
-      macOS: true,
-      linux: true,
-    );
-  } catch (e) {
-    debugPrint('Failed to initialize media playback: $e');
-  }
   final dependencies = AppDependencies(
     accountGateway: const SyncTvAccountGateway(),
     adminGateway: const SyncTvAdminGateway(),
@@ -152,6 +124,49 @@ void main(List<String> args) async {
     voiceChatSessionFactory: const NativeVoiceChatSessionFactory(),
   );
   runApp(MyApp(dependencies: dependencies));
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _initializeDeferredRuntime();
+  });
+}
+
+Future<void> _configureDesktopWindow() async {
+  if (kIsWeb ||
+      !const {
+        TargetPlatform.macOS,
+        TargetPlatform.windows,
+        TargetPlatform.linux,
+      }.contains(defaultTargetPlatform)) {
+    return;
+  }
+  await windowManager.ensureInitialized();
+  await windowManager.setTitleBarStyle(
+    TitleBarStyle.normal,
+    windowButtonVisibility: true,
+  );
+  await windowManager.setMinimumSize(desktopWindowMinimumSize);
+  final windowSize = await windowManager.getSize();
+  if (windowSize.width < desktopWindowMinimumSize.width ||
+      windowSize.height < desktopWindowMinimumSize.height) {
+    await windowManager.setSize(desktopWindowDefaultSize);
+    await windowManager.center();
+  }
+}
+
+void _initializeDeferredRuntime() {
+  if (SyncTvService.activeServer != null) {
+    unawaited(SyncTvService.syncServerTime());
+  }
+  try {
+    SyncTvVideoPlayerMediaKit.ensureInitialized(
+      android: true,
+      iOS: false,
+      windows: true,
+      macOS: true,
+      linux: true,
+    );
+  } catch (error) {
+    debugPrint('Failed to initialize media playback: $error');
+  }
 }
 
 const _enableAccessibilityTools = bool.fromEnvironment(

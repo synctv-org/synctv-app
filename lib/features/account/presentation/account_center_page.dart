@@ -222,6 +222,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   bool _loadingRooms = false;
   int _blockedUsersPage = 1;
   bool _loadingBlockedUsers = false;
+  int _loadRevision = 0;
+  int _notificationLoadRevision = 0;
+  int _roomLoadRevision = 0;
+  int _blockedUserLoadRevision = 0;
   client_enum.MyRoomRelation _roomRelationFilter =
       client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL;
   client_enum.MyRoomListSortBy _roomSortBy =
@@ -268,6 +272,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   @override
   void dispose() {
+    _loadRevision++;
     _tabController.dispose();
     _notificationSearchController.dispose();
     _roomSearchController.dispose();
@@ -276,121 +281,162 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _load({bool refresh = false}) async {
-    setState(() => _loading = true);
-    try {
-      final errors = <String, String>{};
-      final user = await _gateway.getCurrentUser(refresh: refresh);
-      final publicSettings = await _loadOptional(
-        errors,
-        _modulePublicSettings,
-        () => _gateway.getPublicSettings(refresh: refresh),
-      );
-      final serverPasskeyEnabled = publicSettings?.enableWebauthn == true;
-      final results = await Future.wait<dynamic>([
-        _loadOptional(
-          errors,
-          _moduleAccountPreferences,
-          () => _gateway.getPreferences(refresh: refresh),
+    final revision = ++_loadRevision;
+    final notificationRevision = ++_notificationLoadRevision;
+    final roomRevision = ++_roomLoadRevision;
+    final blockedUserRevision = ++_blockedUserLoadRevision;
+    setState(() {
+      _loading = true;
+      _loadingNotifications = true;
+      _loadingRooms = true;
+      _loadingBlockedUsers = true;
+      _loadErrors = const {};
+    });
+
+    final publicSettings = _loadModule<PublicSettingsInfo>(
+      revision: revision,
+      label: _modulePublicSettings,
+      load: () => _gateway.getPublicSettings(refresh: refresh),
+      apply: (value) => _publicSettings = value,
+    );
+    final operations = <Future<void>>[
+      _loadCurrentUser(revision, refresh: refresh),
+      _loadModule<AccountPreferences>(
+        revision: revision,
+        label: _moduleAccountPreferences,
+        load: () => _gateway.getPreferences(refresh: refresh),
+        apply: (value) => _preferences = value,
+      ),
+      _loadModule<UserNotificationsPage>(
+        revision: revision,
+        label: _moduleNotifications,
+        load: () => _gateway.listNotifications(
+          page: _notificationPage,
+          pageSize: _notificationPageSize,
+          refresh: refresh,
         ),
-        _loadOptional(
-          errors,
-          _moduleNotifications,
-          () => _gateway.listNotifications(
-            page: _notificationPage,
-            pageSize: _notificationPageSize,
-            refresh: refresh,
+        apply: (value) => _notifications = value,
+        onComplete: () => _loadingNotifications = false,
+        isModuleCurrent: () =>
+            notificationRevision == _notificationLoadRevision,
+      ),
+      _loadModule<RoomsPage>(
+        revision: revision,
+        label: _moduleRooms,
+        load: () => _gateway.getRooms(
+          page: _roomsPage,
+          pageSize: _roomsPageSize,
+          relation: _roomRelationFilter,
+          sortBy: _roomSortBy,
+        ),
+        apply: (value) => _myRooms = value,
+        onComplete: () => _loadingRooms = false,
+        isModuleCurrent: () => roomRevision == _roomLoadRevision,
+      ),
+      _loadModule<BlockedUsersPage>(
+        revision: revision,
+        label: _moduleBlockedUsers,
+        load: () => _gateway.listBlockedUsers(
+          page: _blockedUsersPage,
+          pageSize: _blockedUsersPageSize,
+          search: _blockedUserSearchController.text.trim(),
+        ),
+        apply: (value) => _blockedUsers = value,
+        onComplete: () => _loadingBlockedUsers = false,
+        isModuleCurrent: () => blockedUserRevision == _blockedUserLoadRevision,
+      ),
+      if (ProviderDistributionPolicy.current.allowsOAuth2) ...[
+        _loadModule<List<OAuth2ProviderOption>>(
+          revision: revision,
+          label: _moduleOAuthProviders,
+          load: _gateway.listOAuth2Providers,
+          apply: (value) => _availableOAuth2 = value,
+        ),
+        _loadModule<List<OAuth2LinkedAccount>>(
+          revision: revision,
+          label: _moduleOAuthLinks,
+          load: _gateway.getLinkedOAuth2Accounts,
+          apply: (value) => _linkedOAuth2 = value,
+        ),
+      ],
+      publicSettings.then((settings) async {
+        if (!_isCurrentLoad(revision)) return;
+        if (settings?.enableWebauthn != true) {
+          setState(() {
+            _passkeys = const [];
+            _passkeyAvailable = false;
+          });
+          return;
+        }
+        await Future.wait([
+          _loadModule<List<PasskeyCredentialInfo>>(
+            revision: revision,
+            label: _modulePasskeys,
+            load: () => _gateway.listPasskeys(refresh: refresh),
+            apply: (value) => _passkeys = value,
           ),
-        ),
-        _loadOptional(
-          errors,
-          _moduleRooms,
-          () => _gateway.getRooms(
-            page: _roomsPage,
-            pageSize: _roomsPageSize,
-            relation: _roomRelationFilter,
-            sortBy: _roomSortBy,
-          ),
-        ),
-        if (ProviderDistributionPolicy.current.allowsOAuth2)
-          _loadOptional(
-            errors,
-            _moduleOAuthProviders,
-            _gateway.listOAuth2Providers,
-          )
-        else
-          Future<List<OAuth2ProviderOption>?>.value(const []),
-        if (ProviderDistributionPolicy.current.allowsOAuth2)
-          _loadOptional(
-            errors,
-            _moduleOAuthLinks,
-            _gateway.getLinkedOAuth2Accounts,
-          )
-        else
-          Future<List<OAuth2LinkedAccount>?>.value(const []),
-        if (serverPasskeyEnabled)
-          _loadOptional(
-            errors,
-            _modulePasskeys,
-            () => _gateway.listPasskeys(refresh: refresh),
-          )
-        else
-          Future<List<PasskeyCredentialInfo>?>.value(const []),
-        if (serverPasskeyEnabled)
-          _loadOptional(
-            errors,
-            _moduleLocalPasskey,
-            () => _passkeysClient.isSupported(
+          _loadModule<bool>(
+            revision: revision,
+            label: _moduleLocalPasskey,
+            load: () => _passkeysClient.isSupported(
               serverBaseUrl: _gateway.serverBaseUrl,
-              rpId: publicSettings!.webauthnRpId,
+              rpId: settings!.webauthnRpId,
             ),
-          )
-        else
-          Future<bool?>.value(false),
-        _loadOptional(
-          errors,
-          _moduleBlockedUsers,
-          () => _gateway.listBlockedUsers(
-            page: _blockedUsersPage,
-            pageSize: _blockedUsersPageSize,
-            search: _blockedUserSearchController.text.trim(),
+            apply: (value) => _passkeyAvailable = value,
           ),
-        ),
-      ]);
-      if (!mounted) return;
-      setState(() {
-        _user = user;
-        _publicSettings = publicSettings;
-        _preferences = results[0] as AccountPreferences?;
-        _notifications = results[1] as UserNotificationsPage?;
-        _myRooms = results[2] as RoomsPage?;
-        _availableOAuth2 =
-            results[3] as List<OAuth2ProviderOption>? ?? const [];
-        _linkedOAuth2 = results[4] as List<OAuth2LinkedAccount>? ?? const [];
-        _passkeys = results[5] as List<PasskeyCredentialInfo>? ?? const [];
-        _passkeyAvailable = results[6] as bool? ?? false;
-        _blockedUsers = results[7] as BlockedUsersPage?;
-        _loadErrors = Map.unmodifiable(errors);
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      AppNotifications.showError(context, context.l10n.loadAccountFailed('$e'));
+        ]);
+      }),
+    ];
+
+    await Future.wait(operations);
+    if (_isCurrentLoad(revision)) setState(() => _loading = false);
+  }
+
+  bool _isCurrentLoad(int revision) => mounted && revision == _loadRevision;
+
+  Future<void> _loadCurrentUser(int revision, {required bool refresh}) async {
+    try {
+      final user = await _gateway.getCurrentUser(refresh: refresh);
+      if (_isCurrentLoad(revision)) setState(() => _user = user);
+    } catch (error) {
+      if (!mounted || revision != _loadRevision) return;
+      AppNotifications.showError(
+        context,
+        context.l10n.loadAccountFailed('$error'),
+      );
     }
   }
 
-  Future<T?> _loadOptional<T>(
-    Map<String, String> errors,
-    String label,
-    Future<T> Function() load,
-  ) async {
+  Future<T?> _loadModule<T>({
+    required int revision,
+    required String label,
+    required Future<T> Function() load,
+    required ValueChanged<T> apply,
+    VoidCallback? onComplete,
+    bool Function()? isModuleCurrent,
+  }) async {
+    bool isCurrent() =>
+        _isCurrentLoad(revision) && (isModuleCurrent?.call() ?? true);
     try {
-      return await load();
+      final value = await load();
+      if (isCurrent()) {
+        setState(() {
+          apply(value);
+          _clearLoadError(label);
+        });
+      }
+      return value;
     } catch (e, stackTrace) {
       debugPrint('Account center optional load failed [$label]: $e');
       debugPrint('$stackTrace');
-      errors[label] = e.toString();
+      if (isCurrent()) {
+        setState(() => _setLoadError(label, e));
+      }
       return null;
+    } finally {
+      if (isCurrent() && onComplete != null) {
+        setState(onComplete);
+      }
     }
   }
 
@@ -1004,6 +1050,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _reloadNotifications({int? page, bool refresh = true}) async {
+    final revision = ++_notificationLoadRevision;
     var targetPage = page ?? _notificationPage;
     if (targetPage < 1) targetPage = 1;
     setState(() => _loadingNotifications = true);
@@ -1021,7 +1068,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           refresh: refresh,
         );
       }
-      if (!mounted) return;
+      if (!mounted || revision != _notificationLoadRevision) return;
       setState(() {
         _notifications = notifications;
         _notificationPage = actualPage;
@@ -1034,7 +1081,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _selectedNotificationIds.removeWhere((id) => !visibleIds.contains(id));
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || revision != _notificationLoadRevision) return;
       setState(() {
         _loadingNotifications = false;
         _setLoadError(_moduleNotifications, e);
@@ -1255,6 +1302,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _reloadRooms({int? page, bool refresh = true}) async {
+    final revision = ++_roomLoadRevision;
     var targetPage = page ?? _roomsPage;
     if (targetPage < 1) targetPage = 1;
     setState(() => _loadingRooms = true);
@@ -1266,7 +1314,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         actualPage = maxPage;
         rooms = await _fetchRoomsPage(actualPage, refresh: refresh);
       }
-      if (!mounted) return;
+      if (!mounted || revision != _roomLoadRevision) return;
       setState(() {
         _myRooms = rooms;
         _roomsPage = actualPage;
@@ -1274,7 +1322,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _clearLoadError(_moduleRooms);
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || revision != _roomLoadRevision) return;
       setState(() {
         _loadingRooms = false;
         _setLoadError(_moduleRooms, e);
@@ -1284,6 +1332,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _reloadBlockedUsers({int? page}) async {
+    final revision = ++_blockedUserLoadRevision;
     var targetPage = page ?? _blockedUsersPage;
     if (targetPage < 1) targetPage = 1;
     setState(() => _loadingBlockedUsers = true);
@@ -1295,7 +1344,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         actualPage = maxPage;
         blockedUsers = await _fetchBlockedUsersPage(actualPage);
       }
-      if (!mounted) return;
+      if (!mounted || revision != _blockedUserLoadRevision) return;
       setState(() {
         _blockedUsers = blockedUsers;
         _blockedUsersPage = actualPage;
@@ -1303,7 +1352,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _clearLoadError(_moduleBlockedUsers);
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || revision != _blockedUserLoadRevision) return;
       setState(() {
         _loadingBlockedUsers = false;
         _setLoadError(_moduleBlockedUsers, e);
@@ -1584,9 +1633,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       body: LayoutBuilder(
         builder: (context, constraints) {
           final useRail = constraints.maxWidth >= 900;
-          final content = _loading
-              ? const AppLoadingIndicator()
-              : _buildTabView(theme);
+          final content = Column(
+            children: [
+              SizedBox(
+                height: 2,
+                child: _loading ? const AppLinearProgress(minHeight: 2) : null,
+              ),
+              Expanded(child: _buildTabView(theme)),
+            ],
+          );
 
           if (!useRail) {
             return Column(
@@ -1826,19 +1881,19 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               _MetricTile(
                 icon: Icons.meeting_room_outlined,
                 label: context.l10n.myRooms,
-                value: '$roomCount',
+                value: rooms == null ? '-' : '$roomCount',
                 tone: theme.colorScheme.primary,
               ),
               _MetricTile(
                 icon: Icons.notifications_none_rounded,
                 label: context.l10n.unreadNotifications,
-                value: '$unread',
+                value: _notifications == null ? '-' : '$unread',
                 tone: const Color(0xFF0F766E),
               ),
               _MetricTile(
                 icon: Icons.security_rounded,
                 label: context.l10n.loginFactors,
-                value: '$activeFactors',
+                value: preferences == null ? '-' : '$activeFactors',
                 tone: const Color(0xFFB45309),
               ),
               if (_showEmailBindingControls)
@@ -2287,7 +2342,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           ),
         ),
         Expanded(
-          child: loadError != null && page == null
+          child: _loadingRooms && page == null
+              ? const AppLoadingIndicator()
+              : loadError != null && page == null
               ? Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
@@ -2423,7 +2480,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           ),
         ),
         Expanded(
-          child: loadError != null && page == null
+          child: _loadingBlockedUsers && page == null
+              ? const AppLoadingIndicator()
+              : loadError != null && page == null
               ? Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
@@ -2963,7 +3022,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           ),
         ),
         Expanded(
-          child: loadError != null && page == null
+          child: _loadingNotifications && page == null
+              ? const AppLoadingIndicator()
+              : loadError != null && page == null
               ? Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
@@ -3460,7 +3521,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         children: [
           _InfoRow(
             label: context.l10n.multiFactorAuthentication,
-            value: preferences?.twoFactorEnabled == true
+            value: preferences == null
+                ? '-'
+                : preferences.twoFactorEnabled
                 ? context.l10n.enabled
                 : context.l10n.disabled,
           ),
@@ -3497,7 +3560,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (rooms.isEmpty)
+          if (_loadingRooms && _myRooms == null)
+            const AppLoadingIndicator(size: AppLoadingSize.sm, centered: false)
+          else if (rooms.isEmpty)
             AppEmptyMessage(
               message: context.l10n.noRooms,
               centered: false,

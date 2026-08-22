@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -163,6 +165,77 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('slow server metadata does not block repeated server switches', (
+    tester,
+  ) async {
+    final gateway = _SlowMetadataServerConnectionGateway();
+    var serverChangedCalls = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          ...AppLocalizations.localizationsDelegates,
+        ],
+        builder: (context, child) => DependencyScope<ServerConnectionGateway>(
+          value: gateway,
+          child: buildThemedTestApp(context, child),
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showServerSettingsDialog(
+                context: context,
+                onServerChanged: () => serverChangedCalls++,
+              ),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.byIcon(Icons.login_rounded));
+    await tester.pump();
+    expect(gateway.activeServer.name, 'Second server');
+    expect(serverChangedCalls, 1);
+    expect(
+      tester
+          .widget<AppActionButton>(
+            find.widgetWithText(AppActionButton, 'Add server'),
+          )
+          .onPressed,
+      isNotNull,
+    );
+    expect(
+      tester
+          .widget<AppIconButton>(
+            find.ancestor(
+              of: find.byIcon(Icons.login_rounded),
+              matching: find.byType(AppIconButton),
+            ),
+          )
+          .onPressed,
+      isNotNull,
+    );
+
+    await tester.tap(find.byIcon(Icons.login_rounded));
+    await tester.pump();
+    expect(gateway.activeServer.name, 'First server');
+    expect(serverChangedCalls, 2);
+
+    gateway.completeBackgroundRequests();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.tap(find.widgetWithText(AppActionButton, 'Done'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('server list and add dialog stay distinct at mobile width', (
     tester,
   ) async {
@@ -290,4 +363,66 @@ final class _EmptyServerConnectionGateway implements ServerConnectionGateway {
 
   @override
   Future<void> syncServerTime({bool refresh = false}) async {}
+}
+
+final class _SlowMetadataServerConnectionGateway
+    implements ServerConnectionGateway {
+  static const _first = ServerConnectionProfile(
+    endpoint: 'https://first.example.test',
+    declaredServerId: 'first',
+    name: 'First server',
+    isBuiltIn: false,
+    allowInsecureTls: false,
+  );
+  static const _second = ServerConnectionProfile(
+    endpoint: 'https://second.example.test',
+    declaredServerId: 'second',
+    name: 'Second server',
+    isBuiltIn: false,
+    allowInsecureTls: false,
+  );
+
+  final Completer<ServerInfo> _serverInfo = Completer<ServerInfo>();
+  final Completer<void> _serverTime = Completer<void>();
+  ServerConnectionProfile _activeServer = _first;
+
+  @override
+  ServerConnectionProfile get activeServer => _activeServer;
+
+  @override
+  String get serverBaseUrl => _activeServer.endpoint;
+
+  @override
+  List<ServerConnectionProfile> get servers => const [_first, _second];
+
+  @override
+  Future<ServerConnectionProfile> addServer(
+    String address, {
+    bool allowInsecureTls = false,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> activateServer(String endpoint) async {
+    _activeServer = servers.firstWhere((server) => server.endpoint == endpoint);
+  }
+
+  @override
+  Future<ServerInfo> getServerInfo({bool refresh = false}) =>
+      _serverInfo.future;
+
+  @override
+  Future<void> removeServer(String endpoint) async {}
+
+  @override
+  Future<void> syncServerTime({bool refresh = false}) => _serverTime.future;
+
+  void completeBackgroundRequests() {
+    _serverInfo.complete(
+      ServerInfo(
+        serverId: _activeServer.declaredServerId,
+        serverName: _activeServer.name,
+      ),
+    );
+    _serverTime.complete();
+  }
 }

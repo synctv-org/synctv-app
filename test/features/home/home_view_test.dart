@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/home/showcase/home_showcase.dart';
 import 'package:synctv_app/features/home/presentation/home_view.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
@@ -86,6 +87,37 @@ void main() {
     expect(find.text('Featured rooms'), findsOneWidget);
     expect(find.text('Popular rooms'), findsNothing);
     expect(find.text('No rooms match the current filters'), findsNothing);
+  });
+
+  testWidgets('loading keeps discovery controls and server switching usable', (
+    tester,
+  ) async {
+    await setViewport(tester, const Size(390, 844));
+    var openServerCalls = 0;
+    await tester.pumpWidget(
+      HomeShowcaseApp(
+        state: homeShowcaseState(
+          rooms: const [],
+          featuredRooms: const [],
+          isLoading: true,
+        ),
+        callbacks: homeShowcaseCallbacks(
+          onOpenServerSettings: () => openServerCalls++,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(AppLinearProgress), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+    final serverButton = find.widgetWithText(AppActionButton, 'Server');
+    expect(serverButton, findsOneWidget);
+
+    await tester.ensureVisible(serverButton);
+    await tester.pump();
+    await tester.tap(serverButton);
+    expect(openServerCalls, 1);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('room created by the current user has an ownership badge', (

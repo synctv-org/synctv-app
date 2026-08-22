@@ -74,6 +74,7 @@ class _ContentReportsViewState extends State<ContentReportsView>
   List<AdminContentReport> _reports = const [];
   final _searchController = TextEditingController();
   TabController? _targetTypeTabController;
+  int _loadRevision = 0;
 
   static const _targetTypeTabs = <_ReportTargetTypeTab>[
     _ReportTargetTypeTab(
@@ -139,6 +140,7 @@ class _ContentReportsViewState extends State<ContentReportsView>
 
   @override
   void dispose() {
+    _loadRevision++;
     _targetTypeTabController?.removeListener(_handleTargetTypeTabChanged);
     _targetTypeTabController?.dispose();
     _searchController.dispose();
@@ -158,6 +160,7 @@ class _ContentReportsViewState extends State<ContentReportsView>
   }
 
   Future<void> _loadReports({bool silent = false}) async {
+    final revision = ++_loadRevision;
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = await _gateway.list(
@@ -178,14 +181,14 @@ class _ContentReportsViewState extends State<ContentReportsView>
           search: _search,
         ),
       );
-      if (!mounted) return;
+      if (!mounted || revision != _loadRevision) return;
       setState(() {
         _reports = data.reports;
         _total = data.total;
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || revision != _loadRevision) return;
       setState(() => _isLoading = false);
       AppNotifications.showError(context, context.l10n.loadReportsFailed('$e'));
     }
@@ -589,8 +592,14 @@ class _ContentReportsViewState extends State<ContentReportsView>
                   _loadReports();
                 },
         ),
+        SizedBox(
+          height: 2,
+          child: _isLoading && _reports.isNotEmpty
+              ? const AppLinearProgress(minHeight: 2)
+              : null,
+        ),
         Expanded(
-          child: _isLoading
+          child: _isLoading && _reports.isEmpty
               ? const AppLoadingIndicator()
               : _reports.isEmpty
               ? Center(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -43,6 +45,8 @@ class _ServerSettingsSheet extends StatefulWidget {
 }
 
 class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
+  static const _serverInfoTimeout = Duration(seconds: 8);
+
   ServerConnectionGateway get _gateway =>
       DependencyScope.read<ServerConnectionGateway>(context);
 
@@ -51,6 +55,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   ServerInfo? _serverInfo;
   Object? _serverInfoError;
   var _loadingServerInfo = true;
+  var _serverInfoRequestRevision = 0;
 
   @override
   void initState() {
@@ -62,24 +67,63 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     }
   }
 
+  @override
+  void dispose() {
+    _serverInfoRequestRevision++;
+    super.dispose();
+  }
+
   Future<void> _loadServerInfo({bool refresh = false}) async {
+    final endpoint = _gateway.activeServer?.endpoint;
+    if (endpoint == null) {
+      if (mounted) {
+        setState(() {
+          _serverInfo = null;
+          _serverInfoError = null;
+          _loadingServerInfo = false;
+        });
+      }
+      return;
+    }
+    final requestRevision = ++_serverInfoRequestRevision;
     setState(() {
+      _serverInfo = null;
       _loadingServerInfo = true;
       _serverInfoError = null;
     });
     try {
-      final info = await _gateway.getServerInfo(refresh: refresh);
-      if (!mounted) return;
+      final info = await _gateway
+          .getServerInfo(refresh: refresh)
+          .timeout(_serverInfoTimeout);
+      if (!_isCurrentServerInfoRequest(requestRevision, endpoint)) return;
       setState(() {
         _serverInfo = info;
         _loadingServerInfo = false;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!_isCurrentServerInfoRequest(requestRevision, endpoint)) return;
       setState(() {
         _serverInfoError = error;
         _loadingServerInfo = false;
       });
+    }
+  }
+
+  bool _isCurrentServerInfoRequest(int revision, String endpoint) =>
+      mounted &&
+      revision == _serverInfoRequestRevision &&
+      _gateway.activeServer?.endpoint == endpoint;
+
+  void _refreshActiveServerMetadata() {
+    unawaited(_loadServerInfo(refresh: true));
+    unawaited(_syncServerTime());
+  }
+
+  Future<void> _syncServerTime() async {
+    try {
+      await _gateway.syncServerTime(refresh: true);
+    } catch (error) {
+      debugPrint('Failed to synchronize server time: $error');
     }
   }
 
@@ -100,10 +144,11 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
         context,
         context.l10n.serverConnected(profile.name),
       );
-      await _loadServerInfo(refresh: true);
-      if (!mounted) return;
+      unawaited(_syncServerTime());
       if (widget.requireServer) {
         Navigator.pop(context, true);
+      } else {
+        unawaited(_loadServerInfo(refresh: true));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -111,20 +156,19 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   }
 
   Future<void> _activateServer(ServerConnectionProfile profile) async {
+    if (_busy) return;
     setState(() => _busy = true);
     try {
       await _gateway.activateServer(profile.endpoint);
-      await _gateway.syncServerTime(refresh: true);
-      await _loadServerInfo(refresh: true);
+      if (!mounted) return;
       _changed = true;
       widget.onServerChanged?.call();
-      if (mounted) {
-        AppNotifications.showSuccess(
-          context,
-          context.l10n.serverSwitched(profile.name),
-        );
-      }
-      setState(() {});
+      AppNotifications.showSuccess(
+        context,
+        context.l10n.serverSwitched(profile.name),
+      );
+      setState(() => _busy = false);
+      _refreshActiveServerMetadata();
     } catch (error) {
       if (mounted) {
         AppNotifications.showError(
@@ -133,7 +177,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted && _busy) {
         setState(() => _busy = false);
       }
     }
@@ -150,12 +194,21 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     setState(() => _busy = true);
     try {
       await _gateway.removeServer(profile.endpoint);
+      if (!mounted) return;
       _changed = true;
       widget.onServerChanged?.call();
-      if (mounted) {
-        AppNotifications.showSuccess(context, context.l10n.serverRemoved);
+      AppNotifications.showSuccess(context, context.l10n.serverRemoved);
+      setState(() => _busy = false);
+      if (_gateway.activeServer != null) {
+        _refreshActiveServerMetadata();
+      } else {
+        _serverInfoRequestRevision++;
+        setState(() {
+          _serverInfo = null;
+          _serverInfoError = null;
+          _loadingServerInfo = false;
+        });
       }
-      setState(() {});
     } catch (error) {
       if (mounted) {
         AppNotifications.showError(
@@ -304,7 +357,6 @@ class _AddServerDialogState extends State<_AddServerDialog> {
         input,
         allowInsecureTls: _allowInsecureTls,
       );
-      await _gateway.syncServerTime(refresh: true);
       if (mounted) Navigator.pop(context, profile);
     } on ServerConnectionException catch (error) {
       if (mounted) AppNotifications.showError(context, error.message);
