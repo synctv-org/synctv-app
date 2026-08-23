@@ -83,6 +83,30 @@ void main() {
       expect(result.version, 8);
     });
 
+    test('reuses a loaded entry for a matching playback state update', () {
+      final result = mergePlaybackStatusSnapshot(
+        current: current,
+        incoming: SyncTvPlaybackStatus(
+          isPlaying: false,
+          currentTime: 18,
+          playbackRate: 1,
+          generatedAtMillis: 2000,
+          version: 8,
+          playingMediaId: 'med_11',
+          playingPlaylistId: 'pl_6',
+          targetHash: 'target',
+          historyCursorId: 'history_166',
+        ),
+        incomingHasTiming: true,
+      );
+
+      expect(result.entry, same(currentEntry));
+      expect(result.isPlaying, isFalse);
+      expect(result.currentTime, 18);
+      expect(result.version, 8);
+      expect(result.historyCursorId, 'history_166');
+    });
+
     test('does not reuse an entry for a different playback source', () {
       final result = mergePlaybackStatusSnapshot(
         current: current,

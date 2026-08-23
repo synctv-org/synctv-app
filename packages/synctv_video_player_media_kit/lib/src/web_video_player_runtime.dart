@@ -24,6 +24,16 @@ const _engineAssetBase = String.fromEnvironment(
 VideoPlayerRuntime createPlatformWebVideoPlayerRuntime(int textureId) =>
     WebVideoPlayerRuntime(textureId);
 
+@visibleForTesting
+void restoreMountedWebVideoStyle(web.HTMLVideoElement video) {
+  video.style
+    ..position = ''
+    ..left = ''
+    ..top = ''
+    ..width = '100%'
+    ..height = '100%';
+}
+
 class WebVideoPlayerRuntime
     implements
         VideoPlayerRuntime,
@@ -42,10 +52,7 @@ class WebVideoPlayerRuntime
         ..controls = false
         ..playsInline = true {
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (viewId) {
-      _video.style
-        ..position = ''
-        ..left = ''
-        ..top = '';
+      restoreMountedWebVideoStyle(_video);
       return _video;
     });
     // Adaptive engines can begin fetching a manifest before Flutter mounts the

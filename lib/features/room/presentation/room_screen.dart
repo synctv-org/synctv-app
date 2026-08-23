@@ -2181,25 +2181,37 @@ class _RoomScreenState extends State<RoomScreen>
 
     final status = _currentStatus;
     final controller = _videoPlayerController;
-    if (status?.entry?.live != false ||
+    if (status?.entry == null ||
         controller == null ||
         !controller.value.isInitialized) {
       return;
     }
 
-    final target = _playbackSyncTarget(status!, controller);
-    final currentPositionSeconds =
-        controller.value.position.inMilliseconds / 1000.0;
-    if (!shouldAutoSeekToPlaybackSyncTarget(
-      currentPositionSeconds: currentPositionSeconds,
-      target: target,
-      driftThresholdSeconds: _playbackModeConfig.autoSeekDriftThresholdSeconds,
-      freeModeEnabled: _playbackModeConfig.freeModeEnabled,
-    )) {
-      return;
+    final isLive = status!.entry!.live;
+    var targetIsPlaying = status.isPlaying;
+    var positionRequiresCorrection = false;
+    if (!isLive) {
+      final target = _playbackSyncTarget(status, controller);
+      targetIsPlaying = target.isAtEnd ? false : status.isPlaying;
+      final currentPositionSeconds =
+          controller.value.position.inMilliseconds / 1000.0;
+      positionRequiresCorrection = shouldAutoSeekToPlaybackSyncTarget(
+        currentPositionSeconds: currentPositionSeconds,
+        target: target,
+        driftThresholdSeconds:
+            _playbackModeConfig.autoSeekDriftThresholdSeconds,
+        freeModeEnabled: _playbackModeConfig.freeModeEnabled,
+      );
     }
 
-    unawaited(_performSync(status));
+    if (playbackSyncCorrectionRequired(
+      isLive: isLive,
+      targetIsPlaying: targetIsPlaying,
+      playerIsPlaying: controller.value.isPlaying,
+      positionRequiresCorrection: positionRequiresCorrection,
+    )) {
+      unawaited(_performSync(status));
+    }
   }
 
   double? _playbackDeviationSeconds() {

@@ -1342,7 +1342,7 @@ SyncTvPlaybackStatus mergePlaybackStatusSnapshot({
     // the resource bound to the newest state when an older snapshot arrives.
     mergedEntry = currentEntry;
   } else if (incomingEntry == null) {
-    mergedEntry = !incomingHasTiming && hasSameSource ? currentEntry : null;
+    mergedEntry = hasSameSource ? currentEntry : null;
   } else if (incomingEntry.url.isEmpty &&
       currentEntry != null &&
       currentEntry.url.isNotEmpty &&
