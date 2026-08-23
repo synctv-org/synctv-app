@@ -14,6 +14,11 @@ dependencies:
   # Flutter 3.44.8 pins meta to 1.18.0, so keep the compatible release.
   hooks: ^2.0.2
   ristretto255: ^1.0.2
+  web: ^1.1.1
 
 dev_dependencies:
   test: ^1.31.2
+
+flutter:
+  assets:
+    - assets/argon2_wasm.wasm
