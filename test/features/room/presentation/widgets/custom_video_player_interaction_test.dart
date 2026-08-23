@@ -554,6 +554,60 @@ void main() {
     },
   );
 
+  testWidgets('progress slider seeks and reports the same millisecond target', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(seconds: 100),
+        position: Duration(seconds: 10),
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+    final reportedSeeks = <Duration>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 500,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              onUserSeek: reportedSeeks.add,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final slider = tester.widget<Slider>(
+      find.descendant(
+        of: find.byKey(const Key('playback_progress_slider')),
+        matching: find.byType(Slider),
+      ),
+    );
+    const targetMilliseconds = 73250.0;
+    slider.onChangeStart!(targetMilliseconds);
+    slider.onChanged!(targetMilliseconds);
+    slider.onChangeEnd!(targetMilliseconds);
+    await tester.pump();
+
+    const target = Duration(milliseconds: 73250);
+    expect(controller.seekPositions, [target]);
+    expect(reportedSeeks, [target]);
+  });
+
   testWidgets('live playback hides playback speed control', (tester) async {
     final controller = VideoPlayerController.networkUrl(
       Uri.parse('https://example.com/live.m3u8'),
