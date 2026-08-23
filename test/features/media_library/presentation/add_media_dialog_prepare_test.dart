@@ -141,14 +141,6 @@ void main() {
     await _selectSource(tester, 1);
 
     final submit = find.byKey(const Key('rtmp-submit'));
-    expect(tester.widget<FilledButton>(submit).onPressed, isNull);
-    await _tapVisible(tester, find.byKey(const Key('rtmp-preview')));
-    await tester.pumpAndSettle();
-
-    expect(gateway.rtmpModes, [
-      source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
-    ]);
-    expect(find.text('RTMP preview'), findsOneWidget);
     expect(tester.widget<FilledButton>(submit).onPressed, isNotNull);
 
     await tester.enterText(find.byType(EditableText).first, 'Studio camera');
@@ -157,6 +149,9 @@ void main() {
     await _tapVisible(tester, submit);
     await tester.pump();
 
+    expect(gateway.rtmpModes, [
+      source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
+    ]);
     expect(gateway.publishMediaIds, ['media_server_42']);
     expect(gateway.publishKeyTypes, [
       client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
@@ -177,8 +172,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('rtmp-publish-key-expiration')), findsNothing);
-    await _tapVisible(tester, find.byKey(const Key('rtmp-preview')));
-    await tester.pumpAndSettle();
     await _tapVisible(tester, find.byKey(const Key('rtmp-submit')));
     await tester.pump();
 
@@ -193,8 +186,6 @@ void main() {
     var now = DateTime(2026, 1, 1, 12);
     await _pumpDialog(tester, gateway, now: () => now);
     await _selectSource(tester, 1);
-    await _tapVisible(tester, find.byKey(const Key('rtmp-preview')));
-    await tester.pumpAndSettle();
 
     now = now.add(const Duration(hours: 2));
     await _tapVisible(tester, find.byKey(const Key('rtmp-submit')));
@@ -649,7 +640,7 @@ class _PrepareGateway implements ProviderGateway {
         emailWhitelistEnabled: false,
         emailWhitelistDomains: [],
         tsDisguisedAsPng: false,
-        customPublishHost: null,
+        rtmpAdvertiseAddress: null,
       );
 
   @override

@@ -27,7 +27,7 @@ class PublicSettingsInfo {
   final bool emailWhitelistEnabled;
   final List<String> emailWhitelistDomains;
   final bool tsDisguisedAsPng;
-  final String? customPublishHost;
+  final String? rtmpAdvertiseAddress;
 
   const PublicSettingsInfo({
     required this.roomCreationEnabled,
@@ -48,7 +48,7 @@ class PublicSettingsInfo {
     required this.emailWhitelistEnabled,
     required this.emailWhitelistDomains,
     required this.tsDisguisedAsPng,
-    required this.customPublishHost,
+    required this.rtmpAdvertiseAddress,
   });
 
   List<String> get authPolicyHints {

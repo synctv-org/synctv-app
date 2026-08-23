@@ -1502,6 +1502,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get publishKeyType => '发布密钥类型';
 
   @override
+  String get generatePublishKey => '生成推流密钥';
+
+  @override
+  String generatePublishKeyFailed(String error) {
+    return '生成推流密钥失败：$error';
+  }
+
+  @override
+  String get streamKey => '流密钥';
+
+  @override
+  String get publishKey => '发布密钥';
+
+  @override
   String get singleUsePublishKey => '一次性密钥';
 
   @override
@@ -6001,10 +6015,11 @@ class AppLocalizationsZh extends AppLocalizations {
       'OAuth2 配置会影响登录入口，错误的回调地址、密钥或端点会导致第三方登录不可用。';
 
   @override
-  String get rtmpPublishAddress => '推流发布地址';
+  String get rtmpAdvertiseAddress => 'RTMP 对外地址';
 
   @override
-  String get rtmpPublishAddressDescription => '覆盖对外展示的 RTMP 发布主机，留空使用服务端地址。';
+  String get rtmpAdvertiseAddressDescription =>
+      '对外展示的 RTMP 或 RTMPS 地址，不包含业务路径，例如 rtmps://live.example.com。留空使用服务端默认地址。';
 
   @override
   String get tsSegmentsAsPng => 'TS 分片伪装为 PNG';

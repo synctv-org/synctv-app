@@ -19,6 +19,7 @@ import 'package:synctv_app/features/room/presentation/models/playlist_source_pre
 import 'package:synctv_app/features/room/presentation/models/playback_player_update.dart';
 import 'package:synctv_app/features/room/presentation/models/room_ui_capabilities.dart';
 import 'package:synctv_app/features/room/presentation/models/playlist_selection_policy.dart';
+import 'package:synctv_app/features/room/presentation/models/rtmp_publish_key_policy.dart';
 import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_target.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
@@ -61,6 +62,8 @@ import 'package:synctv_app/features/room/presentation/playback_error_messages.da
 import 'package:synctv_app/core/identifiers/client_operation_id.dart';
 import 'package:synctv_app/features/room/presentation/room_settings_page.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media_dialog.dart';
+import 'package:synctv_app/features/media_library/presentation/rtmp_publish_key_dialog.dart';
+import 'package:synctv_app/features/providers/application/provider_gateway.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/room/presentation/widgets/custom_video_player.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_diagnostics.dart';
@@ -471,6 +474,7 @@ class _RoomScreenState extends State<RoomScreen>
   bool _isSelectionMode = false;
   final Set<String> _selectedMediaEntryIds = {};
   final Map<String, RoomMediaEntry> _selectedMediaEntries = {};
+  final Set<String> _rtmpPublishKeyLoadingIds = {};
   String _mediaEntriesScopeKey = '';
   String _selectionObservationScopeKey = '';
   int _roomTabIndex = 0;
@@ -524,6 +528,7 @@ class _RoomScreenState extends State<RoomScreen>
   bool get _canManageOwnMedia => _capabilities.canManageOwnMedia;
   bool get _canDeleteMedia => _capabilities.canDeleteMedia;
   bool get _canClearMedia => _capabilities.canClearMedia;
+  bool get _canManageLiveStreams => _capabilities.canManageLiveStreams;
   bool get _canRemoveMembers => _capabilities.canRemoveMembers;
   bool get _canManageMemberPermissions =>
       _capabilities.canManageMemberPermissions;
@@ -6520,11 +6525,9 @@ class _RoomScreenState extends State<RoomScreen>
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      suffix: _buildPlaylistSelectionIcon(
-        isSelected,
-        selectionMode,
-        primaryColor,
-      ),
+      suffix: selectionMode
+          ? _buildPlaylistSelectionIcon(isSelected, true, primaryColor)
+          : _buildRtmpPublishKeyButton(entry),
       onPressed: _playlistEntryTapHandler(entry, selectionMode),
       onLongPress: _playlistEntryLongPressHandler(entry, selectionMode),
     );
@@ -6538,6 +6541,9 @@ class _RoomScreenState extends State<RoomScreen>
     final theme = Theme.of(context);
     final isCurrent = _currentStatus?.entry?.id == entry.id;
     final isSelected = _selectedMediaEntryIds.contains(entry.id);
+    final publishKeyButton = selectionMode
+        ? null
+        : _buildRtmpPublishKeyButton(entry);
 
     return AppPanelSurface(
       margin: const EdgeInsets.only(bottom: 8),
@@ -6584,6 +6590,10 @@ class _RoomScreenState extends State<RoomScreen>
                             size: 18,
                             color: primaryColor,
                           ),
+                        if (publishKeyButton case final button?) ...[
+                          const SizedBox(width: 4),
+                          button,
+                        ],
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -6629,6 +6639,9 @@ class _RoomScreenState extends State<RoomScreen>
     final theme = Theme.of(context);
     final isCurrent = _currentStatus?.entry?.id == entry.id;
     final isSelected = _selectedMediaEntryIds.contains(entry.id);
+    final publishKeyButton = selectionMode
+        ? null
+        : _buildRtmpPublishKeyButton(entry);
 
     return AppPanelSurface(
       color: isSelected
@@ -6673,6 +6686,8 @@ class _RoomScreenState extends State<RoomScreen>
                         primaryColor,
                       )!,
                     ),
+                  if (publishKeyButton case final button?)
+                    Positioned(right: 6, top: 6, child: button),
                   if (isCurrent)
                     Positioned(
                       right: 8,
@@ -6799,6 +6814,70 @@ class _RoomScreenState extends State<RoomScreen>
       isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
       color: isSelected ? primaryColor : Colors.grey,
     );
+  }
+
+  Widget? _buildRtmpPublishKeyButton(RoomMediaEntry entry) {
+    final viewerId = _currentUser?.id ?? '';
+    if (!canGenerateRtmpPublishKey(
+      entry: entry,
+      viewerId: viewerId,
+      canManageLiveStreams: _canManageLiveStreams,
+    )) {
+      return null;
+    }
+    if (_rtmpPublishKeyLoadingIds.contains(entry.id)) {
+      return const SizedBox.square(
+        dimension: 36,
+        child: Center(
+          child: AppLoadingIndicator(size: AppLoadingSize.sm, centered: false),
+        ),
+      );
+    }
+    return AppIconButton(
+      key: ValueKey('rtmp-publish-key-${entry.id}'),
+      icon: Icons.key_rounded,
+      size: AppIconButtonSize.sm,
+      style: AppIconButtonStyle.tonal,
+      onPressed: () => _generateRtmpPublishKey(entry),
+      tooltip: context.l10n.generatePublishKey,
+    );
+  }
+
+  Future<void> _generateRtmpPublishKey(RoomMediaEntry entry) async {
+    final options = await showRtmpPublishKeyOptionsDialog(context);
+    if (!mounted || options == null) return;
+
+    setState(() => _rtmpPublishKeyLoadingIds.add(entry.id));
+    try {
+      final gateway = DependencyScope.read<ProviderGateway>(context);
+      final publish = await gateway.createRtmpPublishKeyInfo(
+        widget.room.roomId,
+        entry.id,
+        keyType: options.keyType,
+        expiresAt: options.expiresAt,
+      );
+      final streamInfo = await gateway.getRtmpStreamInfo(
+        roomId: widget.room.roomId,
+        mediaId: entry.id,
+      );
+      if (!mounted) return;
+      await showRtmpPublishCredentialsDialog(
+        context,
+        publish: publish,
+        streamInfo: streamInfo,
+      );
+    } catch (error) {
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.generatePublishKeyFailed('$error'),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _rtmpPublishKeyLoadingIds.remove(entry.id));
+      }
+    }
   }
 
   VoidCallback? _playlistEntryTapHandler(

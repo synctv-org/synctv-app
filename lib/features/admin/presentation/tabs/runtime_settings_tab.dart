@@ -839,11 +839,11 @@ _SettingDescriptor _settingDescriptor(
       icon: Icons.link_rounded,
       kind: _SettingEditorKind.stringList,
     ),
-    'rtmp.customPublishHost': _SettingDescriptor(
+    'rtmp.advertiseAddress': _SettingDescriptor(
       group: 'rtmp',
-      key: 'customPublishHost',
-      title: l10n.rtmpPublishAddress,
-      description: l10n.rtmpPublishAddressDescription,
+      key: 'advertiseAddress',
+      title: l10n.rtmpAdvertiseAddress,
+      description: l10n.rtmpAdvertiseAddressDescription,
       icon: Icons.podcasts_outlined,
       kind: _SettingEditorKind.optionalText,
     ),

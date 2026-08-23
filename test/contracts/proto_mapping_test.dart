@@ -119,7 +119,7 @@ void main() {
 
     expect(
       runtimeSettingsSectionToJson(settings, 'rtmp'),
-      containsPair('customPublishHost', isNull),
+      containsPair('advertiseAddress', isNull),
     );
     expect(
       runtimeSettingsSectionToJson(settings, 'rtmp'),

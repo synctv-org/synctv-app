@@ -1329,12 +1329,12 @@ const RtmpSettings$json = {
   '1': 'RtmpSettings',
   '2': [
     {
-      '1': 'custom_publish_host',
+      '1': 'advertise_address',
       '3': 1,
       '4': 1,
       '5': 9,
       '9': 0,
-      '10': 'customPublishHost',
+      '10': 'advertiseAddress',
       '17': true
     },
     {
@@ -1346,15 +1346,15 @@ const RtmpSettings$json = {
     },
   ],
   '8': [
-    {'1': '_custom_publish_host'},
+    {'1': '_advertise_address'},
   ],
 };
 
 /// Descriptor for `RtmpSettings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List rtmpSettingsDescriptor = $convert.base64Decode(
-    'CgxSdG1wU2V0dGluZ3MSMwoTY3VzdG9tX3B1Ymxpc2hfaG9zdBgBIAEoCUgAUhFjdXN0b21QdW'
-    'JsaXNoSG9zdIgBARItChN0c19kaXNndWlzZWRfYXNfcG5nGAIgASgIUhB0c0Rpc2d1aXNlZEFz'
-    'UG5nQhYKFF9jdXN0b21fcHVibGlzaF9ob3N0');
+    'CgxSdG1wU2V0dGluZ3MSMAoRYWR2ZXJ0aXNlX2FkZHJlc3MYASABKAlIAFIQYWR2ZXJ0aXNlQW'
+    'RkcmVzc4gBARItChN0c19kaXNndWlzZWRfYXNfcG5nGAIgASgIUhB0c0Rpc2d1aXNlZEFzUG5n'
+    'QhQKEl9hZHZlcnRpc2VfYWRkcmVzcw==');
 
 @$core.Deprecated('Use emailSettingsDescriptor instead')
 const EmailSettings$json = {
@@ -2021,12 +2021,12 @@ const RtmpSettingsPatch$json = {
   '1': 'RtmpSettingsPatch',
   '2': [
     {
-      '1': 'custom_publish_host',
+      '1': 'advertise_address',
       '3': 1,
       '4': 1,
       '5': 9,
       '9': 0,
-      '10': 'customPublishHost',
+      '10': 'advertiseAddress',
       '17': true
     },
     {
@@ -2040,17 +2040,17 @@ const RtmpSettingsPatch$json = {
     },
   ],
   '8': [
-    {'1': '_custom_publish_host'},
+    {'1': '_advertise_address'},
     {'1': '_ts_disguised_as_png'},
   ],
 };
 
 /// Descriptor for `RtmpSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List rtmpSettingsPatchDescriptor = $convert.base64Decode(
-    'ChFSdG1wU2V0dGluZ3NQYXRjaBIzChNjdXN0b21fcHVibGlzaF9ob3N0GAEgASgJSABSEWN1c3'
-    'RvbVB1Ymxpc2hIb3N0iAEBEjIKE3RzX2Rpc2d1aXNlZF9hc19wbmcYAiABKAhIAVIQdHNEaXNn'
-    'dWlzZWRBc1BuZ4gBAUIWChRfY3VzdG9tX3B1Ymxpc2hfaG9zdEIWChRfdHNfZGlzZ3Vpc2VkX2'
-    'FzX3BuZw==');
+    'ChFSdG1wU2V0dGluZ3NQYXRjaBIwChFhZHZlcnRpc2VfYWRkcmVzcxgBIAEoCUgAUhBhZHZlcn'
+    'Rpc2VBZGRyZXNziAEBEjIKE3RzX2Rpc2d1aXNlZF9hc19wbmcYAiABKAhIAVIQdHNEaXNndWlz'
+    'ZWRBc1BuZ4gBAUIUChJfYWR2ZXJ0aXNlX2FkZHJlc3NCFgoUX3RzX2Rpc2d1aXNlZF9hc19wbm'
+    'c=');
 
 @$core.Deprecated('Use emailSettingsPatchDescriptor instead')
 const EmailSettingsPatch$json = {

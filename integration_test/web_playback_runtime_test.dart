@@ -4,11 +4,19 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:synctv_app/features/room/application/browser_autoplay_controller.dart';
+import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
 import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 import 'package:video_player/video_player.dart';
+import 'package:web/web.dart' as web;
 
 const _mediaBaseUrl = String.fromEnvironment('SYNCTV_WEB_MEDIA_TEST_BASE');
 const _onlyFixture = String.fromEnvironment('SYNCTV_WEB_MEDIA_TEST_ONLY');
+const _liveMediaUrl = String.fromEnvironment('SYNCTV_WEB_LIVE_MEDIA_TEST_URL');
+const _liveMediaFormat = String.fromEnvironment(
+  'SYNCTV_WEB_LIVE_MEDIA_TEST_FORMAT',
+  defaultValue: 'hls',
+);
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +71,81 @@ void main() {
       skip: _mediaBaseUrl.isEmpty,
     );
   }
+
+  testWidgets(
+    'plays a live stream after browser autoplay falls back to mute',
+    (tester) async {
+      final volumePreferences = PlayerVolumePreferencesController(
+        store: _MemoryVolumeStore(),
+      );
+      await volumePreferences.load();
+      final autoplay = BrowserAutoplayController(
+        volumePreferences: volumePreferences,
+        enabled: true,
+      );
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(_liveMediaUrl),
+        httpHeaders: {syncTvVideoFormatHeader: _liveMediaFormat},
+      );
+      String? playerError;
+      controller.addListener(() {
+        playerError = controller.value.errorDescription ?? playerError;
+      });
+      addTearDown(() async {
+        autoplay.dispose();
+        await controller.dispose();
+      });
+
+      await tester.runAsync(
+        () => controller.initialize().timeout(const Duration(seconds: 20)),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: AspectRatio(
+              aspectRatio: controller.value.aspectRatio,
+              child: VideoPlayer(controller),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.runAsync(() async {
+        await autoplay.applyPreferredVolume(controller);
+        await autoplay.play(controller);
+        final deadline = DateTime.now().add(const Duration(seconds: 10));
+        final video =
+            web.document.querySelector('video') as web.HTMLVideoElement?;
+        while ((video == null || video.currentTime <= 0) &&
+            playerError == null &&
+            DateTime.now().isBefore(deadline)) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+      });
+      await tester.pump();
+
+      final video =
+          web.document.querySelector('video') as web.HTMLVideoElement?;
+      final diagnostics =
+          'controllerPosition=${controller.value.position}, '
+          'controllerPlaying=${controller.value.isPlaying}, '
+          'temporarilyMuted=${autoplay.isTemporarilyMuted(controller)}, '
+          'videoPaused=${video?.paused}, currentTime=${video?.currentTime}, '
+          'readyState=${video?.readyState}, networkState=${video?.networkState}, '
+          'buffered=${video?.buffered.length}, mediaError=${video?.error?.message}, '
+          'playerError=$playerError';
+      expect(playerError, isNull);
+      expect(controller.value.isInitialized, isTrue);
+      expect(controller.value.isPlaying, isTrue, reason: diagnostics);
+      expect(video, isNotNull, reason: diagnostics);
+      expect(video!.paused, isFalse, reason: diagnostics);
+      expect(video.currentTime, greaterThan(0), reason: diagnostics);
+      expect(autoplay.isTemporarilyMuted(controller), isTrue);
+      expect(controller.value.volume, 0);
+    },
+    skip: _liveMediaUrl.isEmpty,
+  );
 }
 
 class _WebPlaybackFixture {
@@ -71,4 +154,19 @@ class _WebPlaybackFixture {
   final String name;
   final String path;
   final String format;
+}
+
+final class _MemoryVolumeStore implements PlayerVolumePreferencesStore {
+  PlayerVolumePreferenceValues value = const PlayerVolumePreferenceValues(
+    volume: 0.7,
+    lastAudibleVolume: 0.7,
+  );
+
+  @override
+  Future<PlayerVolumePreferenceValues> load() async => value;
+
+  @override
+  Future<void> save(PlayerVolumePreferenceValues values) async {
+    value = values;
+  }
 }

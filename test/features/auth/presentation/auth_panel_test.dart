@@ -115,7 +115,7 @@ final class _OAuth2AuthGateway implements AuthGateway {
         emailWhitelistEnabled: false,
         emailWhitelistDomains: [],
         tsDisguisedAsPng: false,
-        customPublishHost: null,
+        rtmpAdvertiseAddress: null,
       );
 
   @override

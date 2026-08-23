@@ -1615,6 +1615,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publishKeyType => 'Publish key type';
 
   @override
+  String get generatePublishKey => 'Generate publish key';
+
+  @override
+  String generatePublishKeyFailed(String error) {
+    return 'Could not generate the publish key: $error';
+  }
+
+  @override
+  String get streamKey => 'Stream Key';
+
+  @override
+  String get publishKey => 'Publish Key';
+
+  @override
   String get singleUsePublishKey => 'One-time key';
 
   @override
@@ -6410,11 +6424,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'OAuth2 settings affect login entry points. Invalid callbacks, secrets, or endpoints prevent external login.';
 
   @override
-  String get rtmpPublishAddress => 'RTMP publish address';
+  String get rtmpAdvertiseAddress => 'RTMP advertise address';
 
   @override
-  String get rtmpPublishAddressDescription =>
-      'Override the public RTMP publish host. Leave empty to use the server default.';
+  String get rtmpAdvertiseAddressDescription =>
+      'Public RTMP or RTMPS address without a path, for example rtmps://live.example.com. Leave empty to use the server default.';
 
   @override
   String get tsSegmentsAsPng => 'Expose TS segments as PNG';

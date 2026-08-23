@@ -2696,11 +2696,11 @@ class OAuth2GiteeProviderConfig extends $pb.GeneratedMessage {
 
 class RtmpSettings extends $pb.GeneratedMessage {
   factory RtmpSettings({
-    $core.String? customPublishHost,
+    $core.String? advertiseAddress,
     $core.bool? tsDisguisedAsPng,
   }) {
     final result = create();
-    if (customPublishHost != null) result.customPublishHost = customPublishHost;
+    if (advertiseAddress != null) result.advertiseAddress = advertiseAddress;
     if (tsDisguisedAsPng != null) result.tsDisguisedAsPng = tsDisguisedAsPng;
     return result;
   }
@@ -2718,7 +2718,7 @@ class RtmpSettings extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'RtmpSettings',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'customPublishHost')
+    ..aOS(1, _omitFieldNames ? '' : 'advertiseAddress')
     ..aOB(2, _omitFieldNames ? '' : 'tsDisguisedAsPng')
     ..hasRequiredFields = false;
 
@@ -2742,13 +2742,13 @@ class RtmpSettings extends $pb.GeneratedMessage {
   static RtmpSettings? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get customPublishHost => $_getSZ(0);
+  $core.String get advertiseAddress => $_getSZ(0);
   @$pb.TagNumber(1)
-  set customPublishHost($core.String value) => $_setString(0, value);
+  set advertiseAddress($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasCustomPublishHost() => $_has(0);
+  $core.bool hasAdvertiseAddress() => $_has(0);
   @$pb.TagNumber(1)
-  void clearCustomPublishHost() => $_clearField(1);
+  void clearAdvertiseAddress() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.bool get tsDisguisedAsPng => $_getBF(1);
@@ -4113,11 +4113,11 @@ class OAuth2SettingsPatch extends $pb.GeneratedMessage {
 
 class RtmpSettingsPatch extends $pb.GeneratedMessage {
   factory RtmpSettingsPatch({
-    $core.String? customPublishHost,
+    $core.String? advertiseAddress,
     $core.bool? tsDisguisedAsPng,
   }) {
     final result = create();
-    if (customPublishHost != null) result.customPublishHost = customPublishHost;
+    if (advertiseAddress != null) result.advertiseAddress = advertiseAddress;
     if (tsDisguisedAsPng != null) result.tsDisguisedAsPng = tsDisguisedAsPng;
     return result;
   }
@@ -4135,7 +4135,7 @@ class RtmpSettingsPatch extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'RtmpSettingsPatch',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'customPublishHost')
+    ..aOS(1, _omitFieldNames ? '' : 'advertiseAddress')
     ..aOB(2, _omitFieldNames ? '' : 'tsDisguisedAsPng')
     ..hasRequiredFields = false;
 
@@ -4159,13 +4159,13 @@ class RtmpSettingsPatch extends $pb.GeneratedMessage {
   static RtmpSettingsPatch? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get customPublishHost => $_getSZ(0);
+  $core.String get advertiseAddress => $_getSZ(0);
   @$pb.TagNumber(1)
-  set customPublishHost($core.String value) => $_setString(0, value);
+  set advertiseAddress($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasCustomPublishHost() => $_has(0);
+  $core.bool hasAdvertiseAddress() => $_has(0);
   @$pb.TagNumber(1)
-  void clearCustomPublishHost() => $_clearField(1);
+  void clearAdvertiseAddress() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.bool get tsDisguisedAsPng => $_getBF(1);

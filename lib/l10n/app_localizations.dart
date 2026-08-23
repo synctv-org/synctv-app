@@ -2832,6 +2832,30 @@ abstract class AppLocalizations {
   /// **'Publish key type'**
   String get publishKeyType;
 
+  /// No description provided for @generatePublishKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate publish key'**
+  String get generatePublishKey;
+
+  /// No description provided for @generatePublishKeyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not generate the publish key: {error}'**
+  String generatePublishKeyFailed(String error);
+
+  /// No description provided for @streamKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Stream Key'**
+  String get streamKey;
+
+  /// No description provided for @publishKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish Key'**
+  String get publishKey;
+
   /// No description provided for @singleUsePublishKey.
   ///
   /// In en, this message translates to:
@@ -10846,17 +10870,17 @@ abstract class AppLocalizations {
   /// **'OAuth2 settings affect login entry points. Invalid callbacks, secrets, or endpoints prevent external login.'**
   String get externalLoginWarning;
 
-  /// No description provided for @rtmpPublishAddress.
+  /// No description provided for @rtmpAdvertiseAddress.
   ///
   /// In en, this message translates to:
-  /// **'RTMP publish address'**
-  String get rtmpPublishAddress;
+  /// **'RTMP advertise address'**
+  String get rtmpAdvertiseAddress;
 
-  /// No description provided for @rtmpPublishAddressDescription.
+  /// No description provided for @rtmpAdvertiseAddressDescription.
   ///
   /// In en, this message translates to:
-  /// **'Override the public RTMP publish host. Leave empty to use the server default.'**
-  String get rtmpPublishAddressDescription;
+  /// **'Public RTMP or RTMPS address without a path, for example rtmps://live.example.com. Leave empty to use the server default.'**
+  String get rtmpAdvertiseAddressDescription;
 
   /// No description provided for @tsSegmentsAsPng.
   ///
