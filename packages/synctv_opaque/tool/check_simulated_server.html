@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+<body>
+<pre id="output">pending</pre>
+<script>
+  globalThis.dartPrint = (message) => {
+    const output = document.getElementById('output');
+    output.textContent = output.textContent === 'pending'
+        ? message
+        : output.textContent + '\n' + message;
+  };
+</script>
+<script src="/tmp/check_simulated_server_web.js"></script>
+</body>
+</html>
