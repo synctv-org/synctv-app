@@ -36,7 +36,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   cupertino_icons: ^1.0.9
-  intl: ^0.20.2
+  intl: ^0.20.3
 
   video_player: ^2.14.0
   protobuf: ^6.0.0
