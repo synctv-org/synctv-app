@@ -9,6 +9,7 @@ import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart
 import 'package:synctv_app/features/auth/application/native_apple_sign_in_client.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_config.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_parser.dart';
+import 'package:synctv_app/features/auth/infrastructure/oauth2_web_callback_session.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_to_front/window_to_front.dart';
 
@@ -56,10 +57,9 @@ class OAuth2CallbackService {
         );
       }
       final redirectUri = webRedirectUri(Uri.base);
-      return _FlutterWebAuth2CallbackSession(
+      return createOAuth2WebCallbackSession(
         redirectUri: redirectUri,
-        callbackUrlScheme: redirectUri.scheme,
-        options: optionsFor(redirectUri),
+        authorizationTimeout: authorizationTimeout,
       );
     }
 

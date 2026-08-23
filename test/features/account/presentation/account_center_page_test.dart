@@ -89,8 +89,9 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final gateway = _OAuth2BindingAccountGateway();
-    final callbacks = _OAuth2Callbacks();
+    final events = <String>[];
+    final gateway = _OAuth2BindingAccountGateway(events);
+    final callbacks = _OAuth2Callbacks(events);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -144,6 +145,7 @@ void main() {
     expect(gateway.finishedState, 'bind-state');
     expect(callbacks.session.expectedState, 'bind-state');
     expect(callbacks.session.closeCount, 1);
+    expect(events, containsAllInOrder(['session', 'verification', 'start']));
     expect(tester.takeException(), isNull);
     await tester.pump(const Duration(seconds: 4));
   });
@@ -169,6 +171,9 @@ class _HangingAccountGateway implements AccountGateway {
 }
 
 final class _OAuth2BindingAccountGateway extends _HangingAccountGateway {
+  _OAuth2BindingAccountGateway(this.events);
+
+  final List<String> events;
   String? redirectUrl;
   String? finishedCode;
   String? finishedState;
@@ -208,10 +213,12 @@ final class _OAuth2BindingAccountGateway extends _HangingAccountGateway {
 
   @override
   Future<SensitiveOperationVerificationInfo>
-  startSensitiveOperationVerification() async =>
-      const SensitiveOperationVerificationComplete(
-        verificationId: 'verification-id',
-      );
+  startSensitiveOperationVerification() async {
+    events.add('verification');
+    return const SensitiveOperationVerificationComplete(
+      verificationId: 'verification-id',
+    );
+  }
 
   @override
   Future<OAuth2AuthorizationStart> startOAuth2Bind(
@@ -220,6 +227,7 @@ final class _OAuth2BindingAccountGateway extends _HangingAccountGateway {
     required String verificationId,
     bool native = false,
   }) async {
+    events.add('start');
     this.redirectUrl = redirectUrl;
     return const OAuth2AuthorizationStart(
       provider: 'github',
@@ -240,13 +248,19 @@ final class _OAuth2BindingAccountGateway extends _HangingAccountGateway {
 }
 
 final class _OAuth2Callbacks implements OAuth2CallbackClient {
+  _OAuth2Callbacks(this.events);
+
+  final List<String> events;
   final session = _OAuth2CallbackSession();
 
   @override
   bool get canCreateSession => true;
 
   @override
-  Future<OAuth2CallbackSession> createSession() async => session;
+  Future<OAuth2CallbackSession> createSession() async {
+    events.add('session');
+    return session;
+  }
 }
 
 final class _OAuth2CallbackSession implements OAuth2CallbackSession {

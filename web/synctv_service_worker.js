@@ -4,6 +4,7 @@ const APP_CACHE = 'synctv-app-runtime-v3';
 const P2P_PREFIX = '/__synctv_p2p__/';
 const P2P_HEADER_TIMEOUT_MS = 35000;
 const STATIC_PREFIXES = ['/assets/', '/canvaskit/', '/icons/', '/playback/'];
+const VERSIONED_STATIC_PREFIXES = ['/playback/'];
 const STATIC_PATHS = new Set([
   '/favicon.png',
   '/flutter.js',
@@ -44,7 +45,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (isStaticAssetPath(url.pathname)) {
-    event.respondWith(cacheFirstStaticAsset(event));
+    event.respondWith(isVersionedStaticAssetPath(url.pathname)
+      ? cacheFirstStaticAsset(event)
+      : networkFirstStaticAsset(event));
   }
 });
 
@@ -61,6 +64,10 @@ function isAppNavigationPath(path) {
 function isStaticAssetPath(path) {
   return STATIC_PATHS.has(path) ||
     STATIC_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
+function isVersionedStaticAssetPath(path) {
+  return VERSIONED_STATIC_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
 function isCacheable(response) {
@@ -98,6 +105,21 @@ async function cacheFirstStaticAsset(event) {
     return cached;
   }
   return update;
+}
+
+async function networkFirstStaticAsset(event) {
+  const cache = await caches.open(APP_CACHE);
+  try {
+    const response = await fetch(event.request);
+    if (isCacheable(response)) {
+      event.waitUntil(cache.put(event.request, response.clone()).catch(() => {}));
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(event.request);
+    if (cached) return cached;
+    throw error;
+  }
 }
 
 async function handleP2pFetch(event) {

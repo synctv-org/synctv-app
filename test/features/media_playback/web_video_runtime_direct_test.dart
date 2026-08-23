@@ -12,6 +12,24 @@ import 'package:web/web.dart' as web;
 const _baseUrl = String.fromEnvironment('SYNCTV_WEB_MEDIA_TEST_BASE');
 
 void main() {
+  test('dispose invalidates a pending adaptive media open', () async {
+    final runtime = WebVideoPlayerRuntime(9901);
+    final events = runtime.events.listen((_) {});
+    addTearDown(events.cancel);
+    final opening = runtime.open(
+      Media(
+        'https://media.example.test/live/master.m3u8',
+        extras: const {'formatHint': 'hls'},
+      ),
+    );
+
+    await runtime.dispose();
+    await opening.timeout(const Duration(seconds: 1));
+
+    expect(runtime.hasActiveEngineForTesting, isFalse);
+    expect(web.document.getElementById('synctv-video-element-9901'), isNull);
+  });
+
   test('DASH runtime setup', () async {
     final runtime = WebVideoPlayerRuntime(9902);
     final errors = <Object>[];

@@ -1138,17 +1138,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         bindAttempt <= oauth2CallbackBindMaxAttempts;
         bindAttempt++
       ) {
-        final verificationId = await _verifySensitiveOperation();
-        if (verificationId == null) {
-          if (mounted && _bindProvider != null) {
-            setState(() => _bindProvider = null);
-          }
-          return;
-        }
         try {
           await withOAuth2CallbackSession(oauth2Callbacks, (
             callbackSession,
           ) async {
+            final verificationId = await _verifySensitiveOperation();
+            if (verificationId == null) {
+              if (mounted && _bindProvider != null) {
+                setState(() => _bindProvider = null);
+              }
+              return;
+            }
             final start = await _gateway.startOAuth2Bind(
               provider.name,
               redirectUrl: callbackSession.redirectUrl,

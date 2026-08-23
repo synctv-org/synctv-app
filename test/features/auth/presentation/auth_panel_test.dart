@@ -21,8 +21,9 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final gateway = _OAuth2AuthGateway();
-    final callbacks = _OAuth2Callbacks();
+    final events = <String>[];
+    final gateway = _OAuth2AuthGateway(events);
+    final callbacks = _OAuth2Callbacks(events);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -74,10 +75,14 @@ void main() {
     expect(gateway.finishedState, 'oauth-state');
     expect(callbacks.session.expectedState, 'oauth-state');
     expect(callbacks.session.closeCount, 1);
+    expect(events, containsAllInOrder(['session', 'start']));
   });
 }
 
 final class _OAuth2AuthGateway implements AuthGateway {
+  _OAuth2AuthGateway(this.events);
+
+  final List<String> events;
   String? redirectUrl;
   String? finishedCode;
   String? finishedState;
@@ -132,6 +137,7 @@ final class _OAuth2AuthGateway implements AuthGateway {
     String? redirectUrl,
     bool native = false,
   }) async {
+    events.add('start');
     this.redirectUrl = redirectUrl;
     return const OAuth2AuthorizationStart(
       provider: 'github',
@@ -163,13 +169,19 @@ final class _OAuth2AuthGateway implements AuthGateway {
 }
 
 final class _OAuth2Callbacks implements OAuth2CallbackClient {
+  _OAuth2Callbacks(this.events);
+
+  final List<String> events;
   final session = _OAuth2CallbackSession();
 
   @override
   bool get canCreateSession => true;
 
   @override
-  Future<OAuth2CallbackSession> createSession() async => session;
+  Future<OAuth2CallbackSession> createSession() async {
+    events.add('session');
+    return session;
+  }
 }
 
 final class _OAuth2CallbackSession implements OAuth2CallbackSession {

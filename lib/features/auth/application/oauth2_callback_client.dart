@@ -4,6 +4,12 @@ abstract interface class OAuth2CallbackDispatcher {
   void dispatch();
 }
 
+const oauth2WebCallbackMessageKey = 'flutter-web-auth-2';
+const _oauth2WebCallbackStoragePrefix = 'synctv-oauth2-callback:';
+
+String oauth2WebCallbackStorageKey(String state) =>
+    '$_oauth2WebCallbackStoragePrefix$state';
+
 abstract interface class OAuth2CallbackClient {
   bool get canCreateSession;
 
@@ -54,6 +60,14 @@ final class OAuth2AuthorizationCanceled implements Exception {
 
 final class OAuth2AuthorizationTimedOut implements Exception {
   const OAuth2AuthorizationTimedOut();
+}
+
+final class OAuth2AuthorizationWindowBlocked implements Exception {
+  const OAuth2AuthorizationWindowBlocked();
+
+  @override
+  String toString() =>
+      'The browser blocked the OAuth2 authorization window. Allow pop-ups and try again.';
 }
 
 final class OAuth2CallbackBindFailed implements Exception {

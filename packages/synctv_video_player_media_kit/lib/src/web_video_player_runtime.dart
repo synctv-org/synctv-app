@@ -92,6 +92,7 @@ class WebVideoPlayerRuntime
   bool _initialized = false;
   bool _buffering = false;
   bool _disposed = false;
+  int _mediaGeneration = 0;
   Timer? _initializationTimeoutTimer;
   web.EventHandler? _onContextMenu;
   web.EventHandler? _onEnterPictureInPicture;
@@ -120,6 +121,9 @@ class WebVideoPlayerRuntime
       browserPictureInPictureAvailable &&
       web.document.pictureInPictureElement == _video;
 
+  @visibleForTesting
+  bool get hasActiveEngineForTesting => _engine != null;
+
   @override
   Duration get position => Duration(
     milliseconds: (_video.currentTime * Duration.millisecondsPerSecond).round(),
@@ -136,7 +140,9 @@ class WebVideoPlayerRuntime
       );
     }
 
+    final generation = ++_mediaGeneration;
     await _resetMedia();
+    if (!_isCurrentMediaGeneration(generation)) return;
     final resolvedUri = _resolveMediaUri(media.uri);
     final uri = Uri.parse(resolvedUri);
     final transport = detectWebPlaybackTransport(
@@ -153,24 +159,31 @@ class WebVideoPlayerRuntime
       case WebPlaybackEngine.progressive || WebPlaybackEngine.nativeHls:
         _openNative(resolvedUri);
       case WebPlaybackEngine.hlsJs:
-        await _openHls(resolvedUri);
-        _scheduleInitializationTimeout();
+        if (await _openHls(resolvedUri, generation)) {
+          _scheduleInitializationTimeout();
+        }
       case WebPlaybackEngine.dashJs:
-        await _openDash(resolvedUri);
-        _scheduleInitializationTimeout();
+        if (await _openDash(resolvedUri, generation)) {
+          _scheduleInitializationTimeout();
+        }
       case WebPlaybackEngine.mpegTsJs:
-        await _openMpegTs(resolvedUri, transport);
-        _scheduleInitializationTimeout();
+        if (await _openMpegTs(resolvedUri, transport, generation)) {
+          _scheduleInitializationTimeout();
+        }
     }
   }
+
+  bool _isCurrentMediaGeneration(int generation) =>
+      !_disposed && generation == _mediaGeneration;
 
   void _openNative(String uri) {
     _video.src = uri;
     _video.load();
   }
 
-  Future<void> _openHls(String uri) async {
+  Future<bool> _openHls(String uri, int generation) async {
     final constructor = await _WebEngineLoader.load(_hlsBundle) as JSFunction;
+    if (!_isCurrentMediaGeneration(generation)) return false;
     final supported = constructor.callMethod<JSBoolean>('isSupported'.toJS);
     if (!supported.toDart) {
       throw PlatformException(
@@ -212,10 +225,12 @@ class WebVideoPlayerRuntime
     });
     hls.callMethod<JSAny?>('loadSource'.toJS, uri.toJS);
     hls.callMethod<JSAny?>('attachMedia'.toJS, _video);
+    return true;
   }
 
-  Future<void> _openDash(String uri) async {
+  Future<bool> _openDash(String uri, int generation) async {
     final dashjs = await _WebEngineLoader.load(_dashBundle);
+    if (!_isCurrentMediaGeneration(generation)) return false;
     final mediaPlayerFactory = dashjs.getProperty<JSFunction>(
       'MediaPlayer'.toJS,
     );
@@ -242,10 +257,16 @@ class WebVideoPlayerRuntime
       singleArgument: true,
     );
     player.callMethod<JSAny?>('initialize'.toJS, _video, uri.toJS, false.toJS);
+    return true;
   }
 
-  Future<void> _openMpegTs(String uri, WebPlaybackTransport transport) async {
+  Future<bool> _openMpegTs(
+    String uri,
+    WebPlaybackTransport transport,
+    int generation,
+  ) async {
     final mpegts = await _WebEngineLoader.load(_mpegTsBundle);
+    if (!_isCurrentMediaGeneration(generation)) return false;
     final supported = mpegts.callMethod<JSBoolean>('isSupported'.toJS);
     if (!supported.toDart) {
       throw PlatformException(
@@ -279,6 +300,7 @@ class WebVideoPlayerRuntime
     }
     player.callMethod<JSAny?>('attachMediaElement'.toJS, _video);
     player.callMethod<JSAny?>('load'.toJS);
+    return true;
   }
 
   void _bindEngineError(
@@ -780,9 +802,17 @@ class WebVideoPlayerRuntime
   @override
   Future<void> dispose() async {
     if (_disposed) return;
-    await exitPictureInPicture();
-    await _resetMedia();
+    final shouldExitPictureInPicture = _isPictureInPictureActive;
     _disposed = true;
+    _mediaGeneration++;
+    if (shouldExitPictureInPicture) {
+      try {
+        await web.document.exitPictureInPicture().toDart;
+      } on Object {
+        // Continue releasing the player when the browser rejects PiP exit.
+      }
+    }
+    await _resetMedia();
     _resetWebOptions();
     if (_onEnterPictureInPicture != null) {
       _video.removeEventListener(

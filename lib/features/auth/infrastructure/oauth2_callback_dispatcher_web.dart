@@ -3,8 +3,6 @@ import 'dart:js_interop';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
 import 'package:web/web.dart' as web;
 
-const _storageKey = 'flutter-web-auth-2';
-
 final class PlatformOAuth2CallbackDispatcher
     implements OAuth2CallbackDispatcher {
   const PlatformOAuth2CallbackDispatcher();
@@ -12,7 +10,8 @@ final class PlatformOAuth2CallbackDispatcher
   @override
   void dispatch() {
     final callbackUrl = web.window.location.href;
-    final message = {_storageKey: callbackUrl}.jsify();
+    final state = Uri.tryParse(callbackUrl)?.queryParameters['state'];
+    final message = {oauth2WebCallbackMessageKey: callbackUrl}.jsify();
     final targetOrigin = web.window.location.origin.toJS;
     final opener = web.window.openerCrossOrigin;
 
@@ -30,7 +29,13 @@ final class PlatformOAuth2CallbackDispatcher
       return;
     }
 
-    web.window.localStorage.setItem(_storageKey, callbackUrl);
+    web.window.localStorage.setItem(oauth2WebCallbackMessageKey, callbackUrl);
+    if (state != null && state.isNotEmpty) {
+      web.window.localStorage.setItem(
+        oauth2WebCallbackStorageKey(state),
+        callbackUrl,
+      );
+    }
     web.window.close();
   }
 }
