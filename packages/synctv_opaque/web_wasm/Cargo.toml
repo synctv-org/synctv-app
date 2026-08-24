@@ -1,0 +1,21 @@
+[package]
+name = "synctv_opaque_web_wasm"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+opaque-ke = { version = "4.0.1", default-features = false, features = ["argon2", "ristretto255"] }
+rand = { version = "0.8", default-features = false }
+rand_chacha = "0.3"
+sha2 = "0.10"
+
+[profile.release]
+opt-level = "z"
+codegen-units = 1
+lto = true
+strip = "symbols"
+panic = "abort"

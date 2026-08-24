@@ -2,22 +2,32 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'opaque/opaque_client.dart' as protocol;
+import 'opaque/wasm_opaque.dart';
 import 'synctv_opaque_api.dart' as api;
 
 class SyncTvOpaqueClient implements api.SyncTvOpaqueClient {
   SyncTvOpaqueClient();
 
-  final protocol.OpaqueProtocolClient _client = protocol.OpaqueProtocolClient();
-
+  final protocol.OpaqueProtocolClient _fallback =
+      protocol.OpaqueProtocolClient();
   @override
   Future<api.OpaqueRegistrationStart> startRegistration(String password) {
     return _run(() async {
-      final result = await _client.startRegistration(
-        Uint8List.fromList(utf8.encode(password)),
+      final bytes = Uint8List.fromList(utf8.encode(password));
+      final result = await _wasmOrFallback(
+        wasm: (backend) => backend.registrationStart(bytes),
+        fallback: () => _fallback
+            .startRegistration(bytes)
+            .then(
+              (value) => OpaqueWasmPair(
+                first: value.registrationRequest,
+                second: value.state,
+              ),
+            ),
       );
       return api.OpaqueRegistrationStart(
-        registrationRequest: result.registrationRequest,
-        state: result.state,
+        registrationRequest: result.first,
+        state: result.second,
       );
     });
   }
@@ -29,26 +39,48 @@ class SyncTvOpaqueClient implements api.SyncTvOpaqueClient {
     required Uint8List registrationResponse,
   }) {
     return _run(() async {
-      final result = await _client.finishRegistration(
-        password: Uint8List.fromList(utf8.encode(password)),
-        state: state,
-        registrationResponse: registrationResponse,
+      final bytes = Uint8List.fromList(utf8.encode(password));
+      final result = await _wasmOrFallback(
+        wasm: (backend) => backend.registrationFinish(
+          password: bytes,
+          state: state,
+          response: registrationResponse,
+        ),
+        fallback: () => _fallback
+            .finishRegistration(
+              password: bytes,
+              state: state,
+              registrationResponse: registrationResponse,
+            )
+            .then(
+              (value) => OpaqueWasmPair(
+                first: value.registrationUpload,
+                second: Uint8List(0),
+              ),
+            ),
       );
-      return api.OpaqueRegistrationFinish(
-        registrationUpload: result.registrationUpload,
-      );
+      return api.OpaqueRegistrationFinish(registrationUpload: result.first);
     });
   }
 
   @override
   Future<api.OpaqueLoginStart> startLogin(String password) {
     return _run(() async {
-      final result = await _client.startLogin(
-        Uint8List.fromList(utf8.encode(password)),
+      final bytes = Uint8List.fromList(utf8.encode(password));
+      final result = await _wasmOrFallback(
+        wasm: (backend) => backend.loginStart(bytes),
+        fallback: () => _fallback
+            .startLogin(bytes)
+            .then(
+              (value) => OpaqueWasmPair(
+                first: value.credentialRequest,
+                second: value.state,
+              ),
+            ),
       );
       return api.OpaqueLoginStart(
-        credentialRequest: result.credentialRequest,
-        state: result.state,
+        credentialRequest: result.first,
+        state: result.second,
       );
     });
   }
@@ -60,16 +92,42 @@ class SyncTvOpaqueClient implements api.SyncTvOpaqueClient {
     required Uint8List credentialResponse,
   }) {
     return _run(() async {
-      final result = await _client.finishLogin(
-        password: Uint8List.fromList(utf8.encode(password)),
-        state: state,
-        credentialResponse: credentialResponse,
+      final bytes = Uint8List.fromList(utf8.encode(password));
+      final result = await _wasmOrFallback(
+        wasm: (backend) => backend.loginFinish(
+          password: bytes,
+          state: state,
+          response: credentialResponse,
+        ),
+        fallback: () => _fallback
+            .finishLogin(
+              password: bytes,
+              state: state,
+              credentialResponse: credentialResponse,
+            )
+            .then(
+              (value) => OpaqueWasmPair(
+                first: value.credentialFinalization,
+                second: value.sessionKey,
+              ),
+            ),
       );
       return api.OpaqueLoginFinish(
-        credentialFinalization: result.credentialFinalization,
-        sessionKey: result.sessionKey,
+        credentialFinalization: result.first,
+        sessionKey: result.second,
       );
     });
+  }
+}
+
+Future<OpaqueWasmPair> _wasmOrFallback({
+  required Future<OpaqueWasmPair> Function(OpaqueWasmBackend backend) wasm,
+  required Future<OpaqueWasmPair> Function() fallback,
+}) async {
+  try {
+    return await wasm(await OpaqueWasmBackend.create());
+  } on Object {
+    return fallback();
   }
 }
 
