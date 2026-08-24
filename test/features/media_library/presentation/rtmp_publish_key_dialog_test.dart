@@ -136,4 +136,35 @@ void main() {
     expect(find.text('Never expires'), findsNWidgets(2));
     expect(find.text('Inactive'), findsOneWidget);
   });
+
+  testWidgets('credentials remain available without stream status', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        Builder(
+          builder: (context) => FilledButton(
+            onPressed: () => showRtmpPublishCredentialsDialog(
+              context,
+              publish: const RtmpPublishKeyInfo(
+                publishKey: 'one-time-secret',
+                rtmpUrl: 'rtmps://live.example.com/room_123',
+                streamKey: 'media_456?token=one-time-secret',
+                expiresAt: 1900000000,
+                keyType: client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
+              ),
+            ),
+            child: const Text('Open credentials'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open credentials'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('one-time-secret'), findsOneWidget);
+    expect(find.text('media_456?token=one-time-secret'), findsOneWidget);
+    expect(find.text('Status'), findsNothing);
+  });
 }

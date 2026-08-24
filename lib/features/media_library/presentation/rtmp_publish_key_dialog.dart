@@ -213,7 +213,7 @@ class RtmpPublishKeyOptionsForm extends StatelessWidget {
 Future<void> showRtmpPublishCredentialsDialog(
   BuildContext context, {
   required RtmpPublishKeyInfo publish,
-  required RoomStreamEntryInfo streamInfo,
+  RoomStreamEntryInfo? streamInfo,
 }) => AppDialogs.showStyledDialog<void>(
   context: context,
   title: context.l10n.rtmpPublishing,
@@ -249,12 +249,13 @@ Future<void> showRtmpPublishCredentialsDialog(
               ? context.l10n.noExpiration
               : formatRtmpPublishTimestamp(publish.expiresAt!),
         ),
-        _RtmpInfoRow(
-          label: context.l10n.currentStatus,
-          value: streamInfo.active
-              ? context.l10n.active
-              : context.l10n.inactive,
-        ),
+        if (streamInfo != null)
+          _RtmpInfoRow(
+            label: context.l10n.currentStatus,
+            value: streamInfo.active
+                ? context.l10n.active
+                : context.l10n.inactive,
+          ),
       ],
     ),
   ),

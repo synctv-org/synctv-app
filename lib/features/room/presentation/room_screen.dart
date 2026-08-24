@@ -6862,15 +6862,21 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() => _rtmpPublishKeyLoadingIds.add(entry.id));
     try {
       final gateway = DependencyScope.read<ProviderGateway>(context);
+      RoomStreamEntryInfo? streamInfo;
+      try {
+        streamInfo = await gateway.getRtmpStreamInfo(
+          roomId: widget.room.roomId,
+          mediaId: entry.id,
+        );
+      } on Object {
+        // A failed optional status lookup must not prevent key generation.
+      }
+      if (!mounted) return;
       final publish = await gateway.createRtmpPublishKeyInfo(
         widget.room.roomId,
         entry.id,
         keyType: options.keyType,
         expiresAt: options.expiresAt,
-      );
-      final streamInfo = await gateway.getRtmpStreamInfo(
-        roomId: widget.room.roomId,
-        mediaId: entry.id,
       );
       if (!mounted) return;
       await showRtmpPublishCredentialsDialog(

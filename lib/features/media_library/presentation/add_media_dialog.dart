@@ -3607,49 +3607,60 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       return;
     }
     setState(() => _isLoading = true);
+    late final String mediaId;
     try {
       final prepared = await providerGateway.prepareRtmp(_rtmpPublishMode);
       if (!prepared.hasSource()) {
         throw StateError('RTMP provider returned no media source');
       }
       final name = _nameController.text.trim();
-      final mediaId = await providerGateway.addDiscoveredSource(
+      mediaId = await providerGateway.addDiscoveredSource(
         widget.roomId,
         playlistId: widget.parentId ?? '',
         source: prepared.source,
         name: name.isEmpty ? prepared.suggestedName : name,
       );
-      final publish = await providerGateway.createRtmpPublishKeyInfo(
-        widget.roomId,
-        mediaId,
-        keyType: _rtmpPublishKeyType,
-        expiresAt:
-            _rtmpPublishKeyType ==
-                client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT
-            ? null
-            : _rtmpPublishExpiresAt.millisecondsSinceEpoch ~/ 1000,
-      );
-      final streamInfo = await providerGateway.getRtmpStreamInfo(
-        roomId: widget.roomId,
-        mediaId: mediaId,
-      );
+    } catch (error) {
       if (mounted) {
-        Navigator.pop(context);
-        await showRtmpPublishCredentialsDialog(
+        setState(() => _isLoading = false);
+        AppNotifications.showError(
           context,
-          publish: publish,
-          streamInfo: streamInfo,
+          context.l10n.createPublishingEntryFailed('$error'),
         );
       }
-    } catch (e) {
+      return;
+    }
+    if (!mounted) return;
+
+    final roomId = widget.roomId;
+    final keyType = _rtmpPublishKeyType;
+    final expiresAt =
+        keyType == client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT
+        ? null
+        : _rtmpPublishExpiresAt.millisecondsSinceEpoch ~/ 1000;
+    final gateway = providerGateway;
+    try {
+      final publish = await gateway.createRtmpPublishKeyInfo(
+        roomId,
+        mediaId,
+        keyType: keyType,
+        expiresAt: expiresAt,
+      );
+      if (!mounted) return;
+      await showRtmpPublishCredentialsDialog(
+        context,
+        publish: publish,
+        streamInfo: RoomStreamEntryInfo(mediaId: mediaId, active: false),
+      );
+      if (mounted) Navigator.pop(context);
+    } catch (error) {
       if (mounted) {
         AppNotifications.showError(
           context,
-          context.l10n.createPublishingEntryFailed('$e'),
+          context.l10n.generatePublishKeyFailed('$error'),
         );
+        Navigator.pop(context);
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 

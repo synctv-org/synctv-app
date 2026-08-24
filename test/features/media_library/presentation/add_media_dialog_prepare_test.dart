@@ -157,7 +157,7 @@ void main() {
       client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
     ]);
     expect(gateway.publishExpiresAt.single, isNotNull);
-    expect(gateway.streamInfoMediaIds, ['media_server_42']);
+    expect(gateway.streamInfoMediaIds, isEmpty);
     expect(gateway.addedNames, ['Studio camera']);
   });
 
@@ -179,6 +179,22 @@ void main() {
       client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT,
     ]);
     expect(gateway.publishExpiresAt, [null]);
+  });
+
+  testWidgets('RTMP key failure does not leave a duplicate creation form', (
+    tester,
+  ) async {
+    final gateway = _PrepareGateway(publishKeyError: StateError('offline'));
+    await _pumpDialog(tester, gateway);
+    await _selectSource(tester, 1);
+
+    await _tapVisible(tester, find.byKey(const Key('rtmp-submit')));
+    await tester.pumpAndSettle();
+
+    expect(gateway.addedSources, hasLength(1));
+    expect(gateway.publishMediaIds, ['media_server_42']);
+    expect(find.byKey(const Key('rtmp-submit')), findsNothing);
+    await tester.pump(const Duration(seconds: 4));
   });
 
   testWidgets('RTMP expired key does not create media', (tester) async {
@@ -392,6 +408,9 @@ Future<void> _selectProxyMode(WidgetTester tester, String label) async {
 }
 
 class _PrepareGateway implements ProviderGateway {
+  _PrepareGateway({this.publishKeyError});
+
+  final Object? publishKeyError;
   final List<provider_common.PrepareDirectUrlRequest> directIntents = [];
   final List<provider_common.PrepareLiveProxyRequest> liveIntents = [];
   final List<source_enum.RtmpStreamMode> rtmpModes = [];
@@ -499,6 +518,7 @@ class _PrepareGateway implements ProviderGateway {
     publishMediaIds.add(mediaId);
     publishKeyTypes.add(keyType);
     publishExpiresAt.add(expiresAt);
+    if (publishKeyError case final error?) throw error;
     return const RtmpPublishKeyInfo(
       publishKey: 'publish-key',
       rtmpUrl: 'rtmp://publish.example.test/live',
