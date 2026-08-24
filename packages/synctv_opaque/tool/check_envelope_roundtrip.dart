@@ -32,8 +32,16 @@ Future<void> main() async {
       'ac13171b2f17bc2c74997f0fce1e1f35bec6b91fe2e12dbd323d23ba7a38dfec',
     ),
   );
-  final maskingKey = takeBytes(registrationFinish.registrationUpload, 64, offset: 32);
-  final envelope = takeBytes(registrationFinish.registrationUpload, 96, offset: 96);
+  final maskingKey = takeBytes(
+    registrationFinish.registrationUpload,
+    64,
+    offset: 32,
+  );
+  final envelope = takeBytes(
+    registrationFinish.registrationUpload,
+    96,
+    offset: 96,
+  );
   final maskingNonce = Uint8List.fromList(List.generate(32, (i) => i));
   final pad = await hkdfExpandMultiInfo(
     prk: maskingKey,

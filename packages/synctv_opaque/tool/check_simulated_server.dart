@@ -20,10 +20,7 @@ Future<void> main() async {
   );
   final oprfKeyMaterial = await hkdfExpandMultiInfo(
     prk: oprfSeed,
-    infos: [
-      utf8.encode('credIdentifier'),
-      utf8.encode('OprfKey'),
-    ],
+    infos: [utf8.encode('credIdentifier'), utf8.encode('OprfKey')],
     length: 32,
   );
   final oprfKey = await deriveKeyPair(
@@ -164,8 +161,7 @@ Future<Uint8List> _serverEvaluate(
   Uint8List blindedElement,
 ) async {
   final scalar = Scalar()..setCanonicalBytes(scalarBytes);
-  final point = Element.newIdentityElement()
-    ..setCanonicalBytes(blindedElement);
+  final point = Element.newIdentityElement()..setCanonicalBytes(blindedElement);
   final output = Element.newIdentityElement()..scalarMult(scalar, point);
   return Uint8List.fromList(output.encode());
 }
@@ -175,7 +171,11 @@ Future<_ServerKeys> _serverDeriveKeys({
   required Uint8List transcriptHash,
 }) async {
   final prk = await hkdfExtract(salt: Uint8List(0), ikm: concat(sharedSecrets));
-  final handshakeSecret = await _expandLabel(prk, 'HandshakeSecret', transcriptHash);
+  final handshakeSecret = await _expandLabel(
+    prk,
+    'HandshakeSecret',
+    transcriptHash,
+  );
   final sessionKey = await _expandLabel(prk, 'SessionKey', transcriptHash);
   final km2 = await _expandLabel(handshakeSecret, 'ServerMAC', Uint8List(0));
   return _ServerKeys(sessionKey: sessionKey, km2: km2);
