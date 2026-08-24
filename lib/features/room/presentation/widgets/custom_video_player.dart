@@ -694,45 +694,48 @@ class _PlayerOverflowActionRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onPressed,
+    this.trailing,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onPressed;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
+    final row = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(4),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
+        ),
+      ),
+    );
+    if (trailing != null) return row;
     return Semantics(
       button: true,
       enabled: onPressed != null,
       label: label,
       onTap: onPressed,
-      child: ExcludeSemantics(
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(4),
-            onTap: onPressed,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  Icon(icon, size: 18, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      child: ExcludeSemantics(child: row),
     );
   }
 }
@@ -3032,6 +3035,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                           setMenuState(() {});
                                         }
                                       },
+                                trailing: controls[index].onPressed == null
+                                    ? controls[index].build(
+                                        () => setMenuState(() {}),
+                                      )
+                                    : null,
                               ),
                             ),
                         ],

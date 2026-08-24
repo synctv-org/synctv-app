@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/features/room/presentation/widgets/custom_video_player.dart';
+import 'package:synctv_app/features/room/presentation/widgets/playback_options_control.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/browser_autoplay_controller.dart';
 import 'package:synctv_app/features/room/application/playback_overlay_preferences_controller.dart';
@@ -21,6 +22,7 @@ import 'package:synctv_app/features/room/infrastructure/picture_in_picture_servi
 import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:synctv_app/features/room/presentation/widgets/danmaku_overlay.dart';
+import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 
 import '../../../../test_app.dart';
 
@@ -1169,6 +1171,92 @@ void main() {
     for (var index = 1; index < rows.length; index++) {
       expect(rows[index].top, greaterThan(rows[index - 1].bottom));
     }
+  });
+
+  testWidgets('playback routes stay interactive in more actions', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        size: Size(1920, 1080),
+      ),
+    );
+    addTearDown(controller.dispose);
+    SyncTvPlaybackModeOption? selectedMode;
+    const modes = [
+      SyncTvPlaybackModeOption(
+        key: 'hls',
+        urls: [
+          SyncTvPlaybackUrlOption(
+            name: 'HLS',
+            url: 'https://example.test/live.m3u8',
+            format: 'm3u8',
+          ),
+        ],
+      ),
+      SyncTvPlaybackModeOption(
+        key: 'flv',
+        urls: [
+          SyncTvPlaybackUrlOption(
+            name: 'FLV',
+            url: 'https://example.test/live.flv',
+            format: 'flv',
+          ),
+        ],
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 300,
+            height: 400,
+            child: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              extraBottomWidget: PlaybackOptionsControl(
+                modes: modes,
+                selectedModeKey: 'hls',
+                selectedMediaIndex: 0,
+                adaptiveTracks: const AdaptiveVideoTrackSnapshot(),
+                tooltip: 'Playback route',
+                compact: true,
+                onMediaSelected: (mode, _) async => selectedMode = mode,
+                onAdaptiveTrackSelected: (_) async {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('playback_route_button_compact')),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const Key('playback_overflow_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('playback_route_button_compact')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('playback_route_selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('playback_route_option_flv')));
+    await tester.pumpAndSettle();
+
+    expect(selectedMode?.key, 'flv');
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('subtitle selection and subtitle style are separate controls', (
