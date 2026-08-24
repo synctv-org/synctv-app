@@ -124,11 +124,13 @@ Future<OpaqueWasmPair> _wasmOrFallback({
   required Future<OpaqueWasmPair> Function(OpaqueWasmBackend backend) wasm,
   required Future<OpaqueWasmPair> Function() fallback,
 }) async {
+  late final OpaqueWasmBackend backend;
   try {
-    return await wasm(await OpaqueWasmBackend.create());
+    backend = await OpaqueWasmBackend.create();
   } on Object {
     return fallback();
   }
+  return wasm(backend);
 }
 
 Future<T> _run<T>(Future<T> Function() operation) async {
