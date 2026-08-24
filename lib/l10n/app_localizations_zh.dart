@@ -1977,6 +1977,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginCredentials => '登录凭据';
 
   @override
+  String get noPassword => '无密码';
+
+  @override
   String get twoFactorAuthentication => '双因素验证';
 
   @override

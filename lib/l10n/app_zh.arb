@@ -599,6 +599,7 @@
   "providerAddressHint": "127.0.0.1 或 https://example.com",
   "port": "端口",
   "loginCredentials": "登录凭据",
+  "noPassword": "无密码",
   "twoFactorAuthentication": "双因素验证",
   "oneTimeCode": "一次性验证码",
   "oneTimeCodeHint": "启用 2FA 时填写",

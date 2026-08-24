@@ -2124,6 +2124,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginCredentials => 'Login credentials';
 
   @override
+  String get noPassword => 'No password';
+
+  @override
   String get twoFactorAuthentication => 'Two-factor authentication';
 
   @override

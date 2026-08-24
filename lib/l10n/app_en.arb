@@ -702,6 +702,7 @@
   "providerAddressHint": "127.0.0.1 or https://example.com",
   "port": "Port",
   "loginCredentials": "Login credentials",
+  "noPassword": "No password",
   "twoFactorAuthentication": "Two-factor authentication",
   "oneTimeCode": "One-time code",
   "oneTimeCodeHint": "Enter when 2FA is enabled",

@@ -437,6 +437,7 @@ abstract interface class ProviderGateway {
     String username,
     String password, {
     String apiKey = '',
+    bool passwordless = false,
     String instanceName = '',
   });
 

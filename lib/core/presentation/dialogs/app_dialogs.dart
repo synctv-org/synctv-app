@@ -60,6 +60,7 @@ class AppDialogs {
   }
 
   static Widget createFormField({
+    Key? key,
     required BuildContext context,
     required String label,
     required TextEditingController controller,
@@ -78,6 +79,7 @@ class AppDialogs {
     void Function(String)? onSubmitted,
   }) {
     return AppTextField(
+      key: key,
       controller: controller,
       label: label,
       hintText: hintText,

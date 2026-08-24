@@ -3678,6 +3678,12 @@ abstract class AppLocalizations {
   /// **'Login credentials'**
   String get loginCredentials;
 
+  /// No description provided for @noPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'No password'**
+  String get noPassword;
+
   /// No description provided for @twoFactorAuthentication.
   ///
   /// In en, this message translates to:
