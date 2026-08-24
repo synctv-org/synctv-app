@@ -97,6 +97,7 @@ ContentType _contentType(String path) =>
       'mpd' => ContentType('application', 'dash+xml'),
       'flv' => ContentType('video', 'x-flv'),
       'ts' => ContentType('video', 'mp2t'),
+      'png' => ContentType('image', 'png'),
       'js' => ContentType('application', 'javascript'),
       _ => ContentType.binary,
     };

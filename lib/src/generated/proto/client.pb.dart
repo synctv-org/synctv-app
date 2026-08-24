@@ -46400,7 +46400,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     $core.bool? webauthnSignupNeedReview,
     $fixnum.Int64? maxPinnedChatMessagesPerRoom,
     $core.bool? tsDisguisedAsPng,
-    $core.String? customPublishHost,
+    $core.String? advertiseAddress,
     $core.bool? emailWhitelistEnabled,
     $core.Iterable<$core.String>? emailWhitelistDomains,
   }) {
@@ -46432,7 +46432,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     if (maxPinnedChatMessagesPerRoom != null)
       result.maxPinnedChatMessagesPerRoom = maxPinnedChatMessagesPerRoom;
     if (tsDisguisedAsPng != null) result.tsDisguisedAsPng = tsDisguisedAsPng;
-    if (customPublishHost != null) result.customPublishHost = customPublishHost;
+    if (advertiseAddress != null) result.advertiseAddress = advertiseAddress;
     if (emailWhitelistEnabled != null)
       result.emailWhitelistEnabled = emailWhitelistEnabled;
     if (emailWhitelistDomains != null)
@@ -46476,7 +46476,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
         $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOB(18, _omitFieldNames ? '' : 'tsDisguisedAsPng')
-    ..aOS(19, _omitFieldNames ? '' : 'customPublishHost')
+    ..aOS(19, _omitFieldNames ? '' : 'advertiseAddress')
     ..aOB(20, _omitFieldNames ? '' : 'emailWhitelistEnabled')
     ..pPS(21, _omitFieldNames ? '' : 'emailWhitelistDomains')
     ..hasRequiredFields = false;
@@ -46668,13 +46668,13 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   void clearTsDisguisedAsPng() => $_clearField(18);
 
   @$pb.TagNumber(19)
-  $core.String get customPublishHost => $_getSZ(18);
+  $core.String get advertiseAddress => $_getSZ(18);
   @$pb.TagNumber(19)
-  set customPublishHost($core.String value) => $_setString(18, value);
+  set advertiseAddress($core.String value) => $_setString(18, value);
   @$pb.TagNumber(19)
-  $core.bool hasCustomPublishHost() => $_has(18);
+  $core.bool hasAdvertiseAddress() => $_has(18);
   @$pb.TagNumber(19)
-  void clearCustomPublishHost() => $_clearField(19);
+  void clearAdvertiseAddress() => $_clearField(19);
 
   /// Email settings
   @$pb.TagNumber(20)

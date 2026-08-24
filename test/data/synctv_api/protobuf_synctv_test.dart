@@ -651,7 +651,7 @@ void main() {
         emailWhitelistEnabled: true,
         emailWhitelistDomains: ['example.com'],
         tsDisguisedAsPng: true,
-        customPublishHost: 'rtmp://publish.example.test/app',
+        rtmpAdvertiseAddress: 'rtmp://publish.example.test',
       );
 
       expect(settings.authPolicyHints, [
@@ -7116,7 +7116,7 @@ void main() {
         'credentials': {'username': 'proxy-user'},
       });
       expect(rtmpSection, isNotNull);
-      expect(rtmpSection!.settings['customPublishHost'], isNull);
+      expect(rtmpSection!.settings['advertiseAddress'], isNull);
       expect(playbackHistorySection?.settings, {
         'retentionDays': 30,
         'maxEntriesPerRoom': '100',
@@ -7217,12 +7217,12 @@ void main() {
       );
       await SyncTvService.runtimeUpdateSettingInSection(
         'rtmp',
-        'customPublishHost',
+        'advertiseAddress',
         'rtmp://live.example.test',
       );
       await SyncTvService.runtimeUpdateSettingInSection(
         'rtmp',
-        'customPublishHost',
+        'advertiseAddress',
         null,
       );
       await SyncTvService.runtimeUpdateSettingInSection(
@@ -7298,13 +7298,13 @@ void main() {
       },
       {
         'settings': {
-          'rtmp': {'customPublishHost': 'rtmp://live.example.test'},
+          'rtmp': {'advertiseAddress': 'rtmp://live.example.test'},
         },
-        'updateMask': 'rtmp.customPublishHost',
+        'updateMask': 'rtmp.advertiseAddress',
       },
       {
         'settings': {'rtmp': <String, dynamic>{}},
-        'updateMask': 'rtmp.customPublishHost',
+        'updateMask': 'rtmp.advertiseAddress',
       },
       {
         'settings': {
@@ -10379,7 +10379,7 @@ void main() {
             'enableWebauthnSignup': true,
             'webauthnSignupNeedReview': false,
             'tsDisguisedAsPng': true,
-            'customPublishHost': 'rtmp://publish.example.test/live',
+            'advertiseAddress': 'rtmp://publish.example.test',
             'emailWhitelistEnabled': true,
             'emailWhitelistDomains': ['example.com', 'corp.test'],
           }),
@@ -10402,7 +10402,7 @@ void main() {
       common.RoomPasswordPolicy.ROOM_PASSWORD_POLICY_OPTIONAL,
     );
     expect(settings.tsDisguisedAsPng, isTrue);
-    expect(settings.customPublishHost, 'rtmp://publish.example.test/live');
+    expect(settings.advertiseAddress, 'rtmp://publish.example.test');
     expect(settings.emailWhitelistEnabled, isTrue);
     expect(settings.enableEmail, isTrue);
     expect(settings.enableWebauthn, isTrue);
@@ -10434,7 +10434,7 @@ void main() {
             'enableWebauthnSignup': true,
             'webauthnSignupNeedReview': true,
             'tsDisguisedAsPng': true,
-            'customPublishHost': 'rtmp://publish.example.test/app',
+            'advertiseAddress': 'rtmp://publish.example.test',
             'emailWhitelistEnabled': false,
             'emailWhitelistDomains': [],
           }),
@@ -10449,7 +10449,7 @@ void main() {
       );
       final settings = await SyncTvService.getPublicSettings();
       expect(settings.tsDisguisedAsPng, isTrue);
-      expect(settings.customPublishHost, 'rtmp://publish.example.test/app');
+      expect(settings.rtmpAdvertiseAddress, 'rtmp://publish.example.test');
       expect(settings.enableEmail, isTrue);
       expect(settings.enableWebauthn, isFalse);
     } finally {

@@ -18272,12 +18272,12 @@ const GetPublicSettingsResponse$json = {
       '10': 'tsDisguisedAsPng'
     },
     {
-      '1': 'custom_publish_host',
+      '1': 'advertise_address',
       '3': 19,
       '4': 1,
       '5': 9,
       '9': 0,
-      '10': 'customPublishHost',
+      '10': 'advertiseAddress',
       '17': true
     },
     {
@@ -18296,7 +18296,7 @@ const GetPublicSettingsResponse$json = {
     },
   ],
   '8': [
-    {'1': '_custom_publish_host'},
+    {'1': '_advertise_address'},
   ],
 };
 
@@ -18319,10 +18319,10 @@ final $typed_data.Uint8List getPublicSettingsResponseDescriptor = $convert.base6
     'dGhuU2lnbnVwEj0KG3dlYmF1dGhuX3NpZ251cF9uZWVkX3JldmlldxgQIAEoCFIYd2ViYXV0aG'
     '5TaWdudXBOZWVkUmV2aWV3EkcKIW1heF9waW5uZWRfY2hhdF9tZXNzYWdlc19wZXJfcm9vbRgR'
     'IAEoBFIcbWF4UGlubmVkQ2hhdE1lc3NhZ2VzUGVyUm9vbRItChN0c19kaXNndWlzZWRfYXNfcG'
-    '5nGBIgASgIUhB0c0Rpc2d1aXNlZEFzUG5nEjMKE2N1c3RvbV9wdWJsaXNoX2hvc3QYEyABKAlI'
-    'AFIRY3VzdG9tUHVibGlzaEhvc3SIAQESNgoXZW1haWxfd2hpdGVsaXN0X2VuYWJsZWQYFCABKA'
-    'hSFWVtYWlsV2hpdGVsaXN0RW5hYmxlZBI2ChdlbWFpbF93aGl0ZWxpc3RfZG9tYWlucxgVIAMo'
-    'CVIVZW1haWxXaGl0ZWxpc3REb21haW5zQhYKFF9jdXN0b21fcHVibGlzaF9ob3N0');
+    '5nGBIgASgIUhB0c0Rpc2d1aXNlZEFzUG5nEjAKEWFkdmVydGlzZV9hZGRyZXNzGBMgASgJSABS'
+    'EGFkdmVydGlzZUFkZHJlc3OIAQESNgoXZW1haWxfd2hpdGVsaXN0X2VuYWJsZWQYFCABKAhSFW'
+    'VtYWlsV2hpdGVsaXN0RW5hYmxlZBI2ChdlbWFpbF93aGl0ZWxpc3RfZG9tYWlucxgVIAMoCVIV'
+    'ZW1haWxXaGl0ZWxpc3REb21haW5zQhQKEl9hZHZlcnRpc2VfYWRkcmVzcw==');
 
 @$core.Deprecated('Use getServerInfoRequestDescriptor instead')
 const GetServerInfoRequest$json = {

@@ -2694,6 +2694,7 @@ class SyncTvService {
     String username,
     String password, {
     String apiKey = '',
+    bool passwordless = false,
     String instanceName = '',
   }) async {
     return _domains.providers.loginEmbyInfo(
@@ -2701,6 +2702,7 @@ class SyncTvService {
       username,
       password,
       apiKey: apiKey,
+      passwordless: passwordless,
       instanceName: instanceName,
     );
   }

@@ -18,6 +18,48 @@ RoomPlaybackEntry liveEntry({
 }
 
 void main() {
+  test('live playback retries a missed play-state synchronization', () {
+    expect(
+      playbackSyncCorrectionRequired(
+        isLive: true,
+        targetIsPlaying: true,
+        playerIsPlaying: false,
+        positionRequiresCorrection: false,
+      ),
+      isTrue,
+    );
+    expect(
+      playbackSyncCorrectionRequired(
+        isLive: true,
+        targetIsPlaying: true,
+        playerIsPlaying: true,
+        positionRequiresCorrection: true,
+      ),
+      isFalse,
+    );
+  });
+
+  test('on-demand playback retries state and position mismatches', () {
+    expect(
+      playbackSyncCorrectionRequired(
+        isLive: false,
+        targetIsPlaying: false,
+        playerIsPlaying: true,
+        positionRequiresCorrection: false,
+      ),
+      isTrue,
+    );
+    expect(
+      playbackSyncCorrectionRequired(
+        isLive: false,
+        targetIsPlaying: true,
+        playerIsPlaying: true,
+        positionRequiresCorrection: true,
+      ),
+      isTrue,
+    );
+  });
+
   test('live providers without managed RTMP state remain playable', () {
     final entry = RoomPlaybackEntry(
       id: 'med_provider_live',

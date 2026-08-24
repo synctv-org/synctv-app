@@ -140,8 +140,8 @@ class SyncTvPublicRoomDomainService {
         growable: false,
       ),
       tsDisguisedAsPng: settings.tsDisguisedAsPng,
-      customPublishHost: settings.hasCustomPublishHost()
-          ? settings.customPublishHost
+      rtmpAdvertiseAddress: settings.hasAdvertiseAddress()
+          ? settings.advertiseAddress
           : null,
     );
   }

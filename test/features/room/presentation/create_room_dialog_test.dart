@@ -178,7 +178,7 @@ PublicSettingsInfo _settings(common.RoomPasswordPolicy passwordPolicy) =>
       emailWhitelistEnabled: false,
       emailWhitelistDomains: const [],
       tsDisguisedAsPng: false,
-      customPublishHost: null,
+      rtmpAdvertiseAddress: null,
     );
 
 final class _FakeRoomCreationGateway implements RoomCreationGateway {

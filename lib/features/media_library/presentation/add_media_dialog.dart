@@ -38,6 +38,7 @@ import 'package:synctv_app/features/media_library/presentation/add_media/twitch_
 import 'package:synctv_app/features/media_library/presentation/add_media/truenas_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/youtube_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/synology_add_media_form.dart';
+import 'package:synctv_app/features/media_library/presentation/rtmp_publish_key_dialog.dart';
 import 'package:synctv_app/features/providers/presentation/binding/platform_binding_dialog.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
@@ -230,7 +231,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   List<provider_common.PreparedMediaSource> _directPreview = const [];
   source_enum.RtmpStreamMode _rtmpPublishMode =
       source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT;
-  provider_common.PreparedMediaSource? _rtmpPreview;
   client_enum.PublishKeyType _rtmpPublishKeyType =
       client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE;
   late DateTime _rtmpPublishExpiresAt;
@@ -1746,10 +1746,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           enabled: !_isLoading,
           onChanged: (value) {
             if (value != null) {
-              setState(() {
-                _rtmpPublishMode = value;
-                _rtmpPreview = null;
-              });
+              setState(() => _rtmpPublishMode = value);
             }
           },
         ),
@@ -1804,23 +1801,11 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           subtitle: context.l10n.copyToStreamingToolDescription,
           color: Colors.deepOrange.shade600,
         ),
-        if (_rtmpPreview case final preview?) ...[
-          const SizedBox(height: 16),
-          _buildPreparedSourceCard(preview, icon: Icons.live_tv_rounded),
-        ],
       ],
       actions: [
-        OutlinedButton.icon(
-          key: const Key('rtmp-preview'),
-          onPressed: _isLoading ? null : _prepareRtmpPublish,
-          icon: const Icon(Icons.preview_outlined),
-          label: Text(context.l10n.preview),
-        ),
         FilledButton.icon(
           key: const Key('rtmp-submit'),
-          onPressed: _isLoading || _rtmpPreview == null
-              ? null
-              : _addRtmpPublish,
+          onPressed: _isLoading ? null : _addRtmpPublish,
           icon: const Icon(Icons.live_tv_rounded),
           label: Text(context.l10n.createPublishingEntry),
         ),
@@ -3611,23 +3596,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
-  Future<void> _prepareRtmpPublish() async {
-    setState(() => _isLoading = true);
-    try {
-      final preview = await providerGateway.prepareRtmp(_rtmpPublishMode);
-      if (mounted) setState(() => _rtmpPreview = preview);
-    } catch (error) {
-      if (mounted) {
-        AppNotifications.showError(context, context.l10n.parseFailed('$error'));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _addRtmpPublish() async {
-    final preview = _rtmpPreview;
-    if (preview == null || !preview.hasSource()) return;
     if (_rtmpPublishKeyType !=
             client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT &&
         !_rtmpPublishExpiresAt.isAfter(widget.now())) {
@@ -3638,41 +3607,60 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       return;
     }
     setState(() => _isLoading = true);
+    late final String mediaId;
     try {
+      final prepared = await providerGateway.prepareRtmp(_rtmpPublishMode);
+      if (!prepared.hasSource()) {
+        throw StateError('RTMP provider returned no media source');
+      }
       final name = _nameController.text.trim();
-      final mediaId = await providerGateway.addDiscoveredSource(
+      mediaId = await providerGateway.addDiscoveredSource(
         widget.roomId,
         playlistId: widget.parentId ?? '',
-        source: preview.source,
-        name: name.isEmpty ? preview.suggestedName : name,
+        source: prepared.source,
+        name: name.isEmpty ? prepared.suggestedName : name,
       );
-      final publish = await providerGateway.createRtmpPublishKeyInfo(
-        widget.roomId,
-        mediaId,
-        keyType: _rtmpPublishKeyType,
-        expiresAt:
-            _rtmpPublishKeyType ==
-                client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT
-            ? null
-            : _rtmpPublishExpiresAt.millisecondsSinceEpoch ~/ 1000,
-      );
-      final streamInfo = await providerGateway.getRtmpStreamInfo(
-        roomId: widget.roomId,
-        mediaId: mediaId,
-      );
+    } catch (error) {
       if (mounted) {
-        Navigator.pop(context);
-        await _showRtmpPublishDialog(publish: publish, streamInfo: streamInfo);
+        setState(() => _isLoading = false);
+        AppNotifications.showError(
+          context,
+          context.l10n.createPublishingEntryFailed('$error'),
+        );
       }
-    } catch (e) {
+      return;
+    }
+    if (!mounted) return;
+
+    final roomId = widget.roomId;
+    final keyType = _rtmpPublishKeyType;
+    final expiresAt =
+        keyType == client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT
+        ? null
+        : _rtmpPublishExpiresAt.millisecondsSinceEpoch ~/ 1000;
+    final gateway = providerGateway;
+    try {
+      final publish = await gateway.createRtmpPublishKeyInfo(
+        roomId,
+        mediaId,
+        keyType: keyType,
+        expiresAt: expiresAt,
+      );
+      if (!mounted) return;
+      await showRtmpPublishCredentialsDialog(
+        context,
+        publish: publish,
+        streamInfo: RoomStreamEntryInfo(mediaId: mediaId, active: false),
+      );
+      if (mounted) Navigator.pop(context);
+    } catch (error) {
       if (mounted) {
         AppNotifications.showError(
           context,
-          context.l10n.createPublishingEntryFailed('$e'),
+          context.l10n.generatePublishKeyFailed('$error'),
         );
+        Navigator.pop(context);
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -3788,81 +3776,11 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     return index;
   }
 
-  Future<void> _showRtmpPublishDialog({
-    required RtmpPublishKeyInfo publish,
-    required RoomStreamEntryInfo streamInfo,
-  }) {
-    final publicSettings = _publicSettings;
-    return AppDialogs.showStyledDialog<void>(
-      context: context,
-      title: context.l10n.rtmpPublishing,
-      icon: const Icon(Icons.live_tv_rounded, color: Color(0xFF5D5FEF)),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildRtmpInfoRow(
-              context.l10n.publishingAddress,
-              publish.rtmpUrl,
-              copyable: true,
-            ),
-            _buildRtmpInfoRow('Stream Key', publish.streamKey, copyable: true),
-            _buildRtmpInfoRow(
-              'Publish Key',
-              publish.publishKey,
-              copyable: true,
-            ),
-            if (publicSettings?.customPublishHost?.isNotEmpty == true)
-              _buildRtmpInfoRow(
-                context.l10n.publishingHost,
-                publicSettings!.customPublishHost!,
-                copyable: true,
-              ),
-            if (publicSettings != null)
-              _buildRtmpInfoRow(
-                context.l10n.tsDisguise,
-                publicSettings.tsDisguisedAsPng
-                    ? context.l10n.pngDisguiseEnabled
-                    : context.l10n.disabled,
-              ),
-            _buildRtmpInfoRow(
-              context.l10n.publishKeyType,
-              _publishKeyTypeLabel(publish.keyType),
-            ),
-            if (publish.expiresAt case final expiresAt?)
-              _buildRtmpInfoRow(
-                context.l10n.expirationTime,
-                _formatTimestamp(expiresAt),
-              )
-            else
-              _buildRtmpInfoRow(
-                context.l10n.expirationTime,
-                context.l10n.noExpiration,
-              ),
-            _buildRtmpInfoRow(
-              context.l10n.currentStatus,
-              streamInfo.active ? context.l10n.active : context.l10n.inactive,
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context),
-          text: context.l10n.done,
-        ),
-      ],
-    );
-  }
-
   Widget _buildRtmpPublicSettingsPanel(
     ThemeData theme,
     PublicSettingsInfo settings,
   ) {
-    final publishHost = settings.customPublishHost?.trim();
+    final advertiseAddress = settings.rtmpAdvertiseAddress?.trim();
     return AppPanelSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -3873,8 +3791,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            publishHost?.isNotEmpty == true
-                ? publishHost!
+            advertiseAddress?.isNotEmpty == true
+                ? advertiseAddress!
                 : context.l10n.useServerPublishingHost,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -3892,45 +3810,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
-  Widget _buildRtmpInfoRow(
-    String label,
-    String value, {
-    bool copyable = false,
-  }) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 88,
-            child: Text(label, style: TextStyle(color: theme.hintColor)),
-          ),
-          Expanded(
-            child: AppSelectableText(
-              value.isEmpty ? '-' : value,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          if (copyable) ...[
-            const SizedBox(width: 8),
-            AppIconButton(
-              tooltip: context.l10n.copy,
-              icon: Icons.copy_rounded,
-              iconSize: 18,
-              size: AppIconButtonSize.sm,
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: value));
-                AppNotifications.showSuccess(context, context.l10n.copied);
-              },
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   String _formatTimestamp(int timestamp) {
     if (timestamp <= 0) return '-';
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
@@ -3943,20 +3822,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   String _formatDateTime(DateTime value) =>
       _formatTimestamp(value.millisecondsSinceEpoch ~/ 1000);
-
-  String _publishKeyTypeLabel(client_enum.PublishKeyType value) {
-    switch (value) {
-      case client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE:
-        return context.l10n.singleUsePublishKey;
-      case client_enum.PublishKeyType.PUBLISH_KEY_TYPE_EXPIRING:
-        return context.l10n.expiringPublishKey;
-      case client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT:
-        return context.l10n.permanentPublishKey;
-      case client_enum.PublishKeyType.PUBLISH_KEY_TYPE_UNSPECIFIED:
-        return context.l10n.publishKeyType;
-    }
-    return context.l10n.publishKeyType;
-  }
 
   Future<void> _selectRtmpPublishExpiration() async {
     final now = widget.now();

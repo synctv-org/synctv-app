@@ -2394,17 +2394,25 @@ class SyncTvProviderDomainService {
     String username,
     String password, {
     String apiKey = '',
+    bool passwordless = false,
     String instanceName = '',
   }) async {
+    final hasApiKey = apiKey.trim().isNotEmpty;
+    if (hasApiKey && passwordless) {
+      throw ArgumentError('API Key 和无密码登录不能同时启用');
+    }
+    if (!hasApiKey && !passwordless && password.isEmpty) {
+      throw ArgumentError.value(password, 'password', '不能为空');
+    }
     final request = emby.LoginRequest(
       host: host,
       username: username,
       instanceName: instanceName,
     );
-    if (apiKey.trim().isNotEmpty) {
+    if (hasApiKey) {
       request.apiKey = apiKey;
     } else {
-      request.password = password;
+      request.password = passwordless ? '' : password;
     }
     final response = await _api.embyProvider.login(request);
     return EmbyLoginInfo(

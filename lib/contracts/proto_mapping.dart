@@ -858,8 +858,8 @@ Map<String, dynamic> _rtmpRuntimeSettingsToJson(
 ) {
   final rtmp = settings.hasRtmp() ? settings.rtmp : admin.RtmpSettings();
   final defaults = <String, dynamic>{
-    'customPublishHost': rtmp.hasCustomPublishHost()
-        ? rtmp.customPublishHost
+    'advertiseAddress': rtmp.hasAdvertiseAddress()
+        ? rtmp.advertiseAddress
         : null,
     'tsDisguisedAsPng': rtmp.tsDisguisedAsPng,
   };

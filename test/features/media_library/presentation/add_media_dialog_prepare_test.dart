@@ -141,14 +141,6 @@ void main() {
     await _selectSource(tester, 1);
 
     final submit = find.byKey(const Key('rtmp-submit'));
-    expect(tester.widget<FilledButton>(submit).onPressed, isNull);
-    await _tapVisible(tester, find.byKey(const Key('rtmp-preview')));
-    await tester.pumpAndSettle();
-
-    expect(gateway.rtmpModes, [
-      source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
-    ]);
-    expect(find.text('RTMP preview'), findsOneWidget);
     expect(tester.widget<FilledButton>(submit).onPressed, isNotNull);
 
     await tester.enterText(find.byType(EditableText).first, 'Studio camera');
@@ -157,12 +149,15 @@ void main() {
     await _tapVisible(tester, submit);
     await tester.pump();
 
+    expect(gateway.rtmpModes, [
+      source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
+    ]);
     expect(gateway.publishMediaIds, ['media_server_42']);
     expect(gateway.publishKeyTypes, [
       client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
     ]);
     expect(gateway.publishExpiresAt.single, isNotNull);
-    expect(gateway.streamInfoMediaIds, ['media_server_42']);
+    expect(gateway.streamInfoMediaIds, isEmpty);
     expect(gateway.addedNames, ['Studio camera']);
   });
 
@@ -177,8 +172,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('rtmp-publish-key-expiration')), findsNothing);
-    await _tapVisible(tester, find.byKey(const Key('rtmp-preview')));
-    await tester.pumpAndSettle();
     await _tapVisible(tester, find.byKey(const Key('rtmp-submit')));
     await tester.pump();
 
@@ -188,13 +181,27 @@ void main() {
     expect(gateway.publishExpiresAt, [null]);
   });
 
+  testWidgets('RTMP key failure does not leave a duplicate creation form', (
+    tester,
+  ) async {
+    final gateway = _PrepareGateway(publishKeyError: StateError('offline'));
+    await _pumpDialog(tester, gateway);
+    await _selectSource(tester, 1);
+
+    await _tapVisible(tester, find.byKey(const Key('rtmp-submit')));
+    await tester.pumpAndSettle();
+
+    expect(gateway.addedSources, hasLength(1));
+    expect(gateway.publishMediaIds, ['media_server_42']);
+    expect(find.byKey(const Key('rtmp-submit')), findsNothing);
+    await tester.pump(const Duration(seconds: 4));
+  });
+
   testWidgets('RTMP expired key does not create media', (tester) async {
     final gateway = _PrepareGateway();
     var now = DateTime(2026, 1, 1, 12);
     await _pumpDialog(tester, gateway, now: () => now);
     await _selectSource(tester, 1);
-    await _tapVisible(tester, find.byKey(const Key('rtmp-preview')));
-    await tester.pumpAndSettle();
 
     now = now.add(const Duration(hours: 2));
     await _tapVisible(tester, find.byKey(const Key('rtmp-submit')));
@@ -401,6 +408,9 @@ Future<void> _selectProxyMode(WidgetTester tester, String label) async {
 }
 
 class _PrepareGateway implements ProviderGateway {
+  _PrepareGateway({this.publishKeyError});
+
+  final Object? publishKeyError;
   final List<provider_common.PrepareDirectUrlRequest> directIntents = [];
   final List<provider_common.PrepareLiveProxyRequest> liveIntents = [];
   final List<source_enum.RtmpStreamMode> rtmpModes = [];
@@ -508,6 +518,7 @@ class _PrepareGateway implements ProviderGateway {
     publishMediaIds.add(mediaId);
     publishKeyTypes.add(keyType);
     publishExpiresAt.add(expiresAt);
+    if (publishKeyError case final error?) throw error;
     return const RtmpPublishKeyInfo(
       publishKey: 'publish-key',
       rtmpUrl: 'rtmp://publish.example.test/live',
@@ -649,7 +660,7 @@ class _PrepareGateway implements ProviderGateway {
         emailWhitelistEnabled: false,
         emailWhitelistDomains: [],
         tsDisguisedAsPng: false,
-        customPublishHost: null,
+        rtmpAdvertiseAddress: null,
       );
 
   @override

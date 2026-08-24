@@ -772,12 +772,14 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String username,
     String password, {
     String apiKey = '',
+    bool passwordless = false,
     String instanceName = '',
   }) => SyncTvService.loginEmbyInfo(
     host,
     username,
     password,
     apiKey: apiKey,
+    passwordless: passwordless,
     instanceName: instanceName,
   );
 

@@ -839,15 +839,56 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
   }
 }
 
+class EmbyAccountBindingForm extends StatelessWidget {
+  const EmbyAccountBindingForm({
+    super.key,
+    required this.instanceNamesLoader,
+    required this.onSuccess,
+    this.onBind,
+  });
+
+  final Future<List<String>> Function() instanceNamesLoader;
+  final VoidCallback onSuccess;
+  final Future<void> Function({
+    required String host,
+    required String username,
+    required String password,
+    required String apiKey,
+    required bool passwordless,
+    required String instanceName,
+  })?
+  onBind;
+
+  @override
+  Widget build(BuildContext context) {
+    return _PasswordAccountDialog(
+      kind: _ProviderKind.emby,
+      instanceNamesLoader: instanceNamesLoader,
+      onSuccess: onSuccess,
+      onLoginEmby: onBind,
+    );
+  }
+}
+
 class _PasswordAccountDialog extends StatefulWidget {
   final _ProviderKind kind;
   final Future<List<String>> Function() instanceNamesLoader;
   final VoidCallback onSuccess;
+  final Future<void> Function({
+    required String host,
+    required String username,
+    required String password,
+    required String apiKey,
+    required bool passwordless,
+    required String instanceName,
+  })?
+  onLoginEmby;
 
   const _PasswordAccountDialog({
     required this.kind,
     required this.instanceNamesLoader,
     required this.onSuccess,
+    this.onLoginEmby,
   });
 
   @override
@@ -864,7 +905,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   final _otpSecretController = TextEditingController();
   List<String> _instanceNames = const [''];
   String _instanceName = '';
-  bool _useApiKey = false;
+  _EmbyCredentialMode _embyCredentialMode = _EmbyCredentialMode.password;
   bool _loadingInstances = true;
   bool _isLoading = false;
 
@@ -872,6 +913,11 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   bool get _isEmby => widget.kind == _ProviderKind.emby;
   bool get _isCloudreve => widget.kind == _ProviderKind.cloudreve;
   bool get _isTrueNas => widget.kind == _ProviderKind.truenas;
+  bool get _isEmbyCredentialMissing => switch (_embyCredentialMode) {
+    _EmbyCredentialMode.password => _passwordController.text.isEmpty,
+    _EmbyCredentialMode.apiKey => _secretController.text.trim().isEmpty,
+    _EmbyCredentialMode.passwordless => false,
+  };
   String get _label => switch (widget.kind) {
     _ProviderKind.alist => 'AList',
     _ProviderKind.cloudreve => 'Cloudreve',
@@ -941,9 +987,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
         (_isTrueNas
             ? apiKey.isEmpty
             : username.isEmpty ||
-                  (_isEmby && _useApiKey
-                      ? apiKey.isEmpty
-                      : password.isEmpty))) {
+                  (_isEmby ? _isEmbyCredentialMissing : password.isEmpty))) {
       AppNotifications.showError(context, context.l10n.completeAllFields);
       return;
     }
@@ -979,14 +1023,31 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
           apiKey: apiKey,
           instanceName: _instanceName,
         );
-      } else {
-        await providerGateway.loginEmbyInfo(
-          host,
-          username,
-          password,
-          apiKey: _useApiKey ? apiKey : '',
-          instanceName: _instanceName,
-        );
+      } else if (_isEmby) {
+        final passwordless =
+            _embyCredentialMode == _EmbyCredentialMode.passwordless;
+        final selectedApiKey = _embyCredentialMode == _EmbyCredentialMode.apiKey
+            ? apiKey
+            : '';
+        if (widget.onLoginEmby case final login?) {
+          await login(
+            host: host,
+            username: username,
+            password: passwordless ? '' : password,
+            apiKey: selectedApiKey,
+            passwordless: passwordless,
+            instanceName: _instanceName,
+          );
+        } else {
+          await providerGateway.loginEmbyInfo(
+            host,
+            username,
+            passwordless ? '' : password,
+            apiKey: selectedApiKey,
+            passwordless: passwordless,
+            instanceName: _instanceName,
+          );
+        }
       }
       if (!mounted) return;
       Navigator.pop(context);
@@ -1064,6 +1125,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                       ),
                       const SizedBox(height: 12),
                       AppDialogs.createFormField(
+                        key: _isEmby ? const Key('emby-bind-host') : null,
                         context: context,
                         label: context.l10n.providerAddress(_label),
                         controller: _hostController,
@@ -1077,6 +1139,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                       ),
                       const SizedBox(height: 12),
                       AppDialogs.createFormField(
+                        key: _isEmby ? const Key('emby-bind-port') : null,
                         context: context,
                         label: context.l10n.port,
                         controller: _portController,
@@ -1104,6 +1167,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                     children: [
                       if (!_isTrueNas) ...[
                         AppDialogs.createFormField(
+                          key: _isEmby ? const Key('emby-bind-username') : null,
                           context: context,
                           label: _isCloudreve ? 'Email' : context.l10n.username,
                           controller: _usernameController,
@@ -1112,38 +1176,67 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                         const SizedBox(height: 12),
                       ],
                       if (_isEmby) ...[
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: AppSegmentedControl<bool>(
-                            segments: [
-                              ButtonSegment(
-                                value: false,
-                                icon: const Icon(Icons.lock_outline_rounded),
-                                label: Text(context.l10n.password),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final compact = constraints.maxWidth < 360;
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: AppSegmentedControl<_EmbyCredentialMode>(
+                                key: const Key('emby-bind-credential-mode'),
+                                segments: [
+                                  ButtonSegment(
+                                    value: _EmbyCredentialMode.password,
+                                    icon: const Icon(
+                                      Icons.lock_outline_rounded,
+                                    ),
+                                    label: compact
+                                        ? null
+                                        : Text(context.l10n.password),
+                                    tooltip: context.l10n.password,
+                                  ),
+                                  ButtonSegment(
+                                    value: _EmbyCredentialMode.apiKey,
+                                    icon: const Icon(Icons.key_rounded),
+                                    label: compact
+                                        ? null
+                                        : const Text('API Key'),
+                                    tooltip: 'API Key',
+                                  ),
+                                  ButtonSegment(
+                                    value: _EmbyCredentialMode.passwordless,
+                                    icon: const Icon(Icons.lock_open_rounded),
+                                    label: compact
+                                        ? null
+                                        : Text(context.l10n.noPassword),
+                                    tooltip: context.l10n.noPassword,
+                                  ),
+                                ],
+                                value: _embyCredentialMode,
+                                onChanged: (selected) => setState(
+                                  () => _embyCredentialMode = selected,
+                                ),
                               ),
-                              const ButtonSegment(
-                                value: true,
-                                icon: Icon(Icons.key_rounded),
-                                label: Text('API Key'),
-                              ),
-                            ],
-                            value: _useApiKey,
-                            onChanged: (selected) =>
-                                setState(() => _useApiKey = selected),
-                          ),
+                            );
+                          },
                         ),
                         const SizedBox(height: 12),
                       ],
-                      if (_useApiKey || _isTrueNas)
+                      if ((_isEmby &&
+                              _embyCredentialMode ==
+                                  _EmbyCredentialMode.apiKey) ||
+                          _isTrueNas)
                         AppDialogs.createFormField(
+                          key: _isEmby ? const Key('emby-bind-api-key') : null,
                           context: context,
                           label: 'API Key',
                           controller: _secretController,
                           prefixIcon: Icons.key_rounded,
                           obscureText: true,
                         )
-                      else
+                      else if (!_isEmby ||
+                          _embyCredentialMode == _EmbyCredentialMode.password)
                         AppDialogs.createFormField(
+                          key: _isEmby ? const Key('emby-bind-password') : null,
                           context: context,
                           label: context.l10n.password,
                           controller: _passwordController,

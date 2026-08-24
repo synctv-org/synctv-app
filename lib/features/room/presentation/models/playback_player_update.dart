@@ -2,6 +2,16 @@ import 'package:synctv_app/contracts/synctv_models.dart';
 
 enum PlaybackPlayerUpdateAction { dispose, drain, keep, initialize, reload }
 
+bool playbackSyncCorrectionRequired({
+  required bool isLive,
+  required bool targetIsPlaying,
+  required bool playerIsPlaying,
+  required bool positionRequiresCorrection,
+}) {
+  return targetIsPlaying != playerIsPlaying ||
+      (!isLive && positionRequiresCorrection);
+}
+
 bool activePlaybackSourceCanContinue({
   required int? expireAt,
   required DateTime now,

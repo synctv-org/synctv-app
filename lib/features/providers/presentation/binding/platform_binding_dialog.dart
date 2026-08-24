@@ -41,6 +41,8 @@ enum _ProviderKind {
   tiktok,
 }
 
+enum _EmbyCredentialMode { password, apiKey, passwordless }
+
 String _providerKindType(_ProviderKind kind) {
   return switch (kind) {
     _ProviderKind.alist => 'alist',
@@ -574,6 +576,22 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
         icon: const Icon(Icons.live_tv_rounded, color: Color(0xFF9146FF)),
         iconColor: const Color(0xFF9146FF),
         content: TwitchAccountBindingForm(
+          instanceNamesLoader: () =>
+              providerGateway.listAvailableProviderInstances(
+                providerType: _providerType(kind),
+              ),
+          onSuccess: () => _loadBinds(kind, showLoading: false),
+        ),
+      );
+      return;
+    }
+    if (kind == _ProviderKind.emby) {
+      _showProviderFormDialog(
+        context: context,
+        title: context.l10n.bindProvider('Emby'),
+        icon: Icon(provider.icon, color: provider.color),
+        iconColor: provider.color,
+        content: EmbyAccountBindingForm(
           instanceNamesLoader: () =>
               providerGateway.listAvailableProviderInstances(
                 providerType: _providerType(kind),

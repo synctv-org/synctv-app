@@ -94,3 +94,12 @@ flutter drive --driver=test_driver/integration_test.dart \
   --target=integration_test/web_p2p_gateway_test.dart -d chrome \
   --dart-define=SYNCTV_WEB_P2P_E2E=true
 ```
+
+Use the same finite media fixture to verify playback and seeking in a native
+application runner:
+
+```bash
+flutter test integration_test/native_playback_runtime_test.dart -d macos \
+  --dart-define=SYNCTV_NATIVE_MEDIA_TEST_URL=http://127.0.0.1:18181/sample.ts \
+  --dart-define=SYNCTV_NATIVE_MEDIA_TEST_FORMAT=mpeg-ts
+```
