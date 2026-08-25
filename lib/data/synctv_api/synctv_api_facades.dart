@@ -2578,6 +2578,41 @@ class SyncTvAdminApi {
     );
   }
 
+  Future<void> moderateRoomChatUser(
+    admin.ModerateRoomChatUserRequest request,
+  ) async {
+    await _api._send(
+      'POST',
+      '/api/admin/rooms/${request.roomId}/chat/users/${request.userId}/moderate',
+      admin.ModerateRoomChatUserResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.GetChatHistoryResponse> getRoomChatHistory(
+    String roomId,
+    client.GetChatHistoryRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/admin/rooms/$roomId/chat/history',
+      client.GetChatHistoryResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.GetChatMessageContextResponse> getRoomChatMessageContext(
+    String roomId,
+    client.GetChatMessageContextRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/admin/rooms/$roomId/chat/messages/${request.messageId}/context',
+      client.GetChatMessageContextResponse.create,
+      query: _api._messageQuery(request)..remove('messageId'),
+    );
+  }
+
   Future<admin.AdminUser> unbanUser(admin.UnbanUserRequest request) {
     return _api._send(
       'POST',

@@ -494,6 +494,30 @@ class SyncTvRoomMediaDomainService {
         includeMessageTypes: includeMessageTypes,
       ),
     );
+    return chatHistoryPageFromProto(response);
+  }
+
+  Future<ChatHistoryPage> getChatHistoryAsAdmin(
+    String roomId, {
+    int limit = 50,
+    String cursor = '',
+    List<client_enum.ChatMessageType> includeMessageTypes =
+        chatTimelineMessageTypes,
+  }) async {
+    final response = await _api.adminService.getRoomChatHistory(
+      roomId,
+      client.GetChatHistoryRequest(
+        limit: limit,
+        cursor: cursor,
+        includeMessageTypes: includeMessageTypes,
+      ),
+    );
+    return chatHistoryPageFromProto(response);
+  }
+
+  ChatHistoryPage chatHistoryPageFromProto(
+    client.GetChatHistoryResponse response,
+  ) {
     return ChatHistoryPage(
       messages: response.messages.map(_chatMessageFromProto).toList(),
       nextCursor: response.nextCursor,
@@ -815,6 +839,31 @@ class SyncTvRoomMediaDomainService {
         includeDeleted: includeDeleted,
       ),
     );
+    return _chatMessageContextFromProto(response);
+  }
+
+  Future<ChatMessageContextInfo> getChatMessageContextAsAdmin(
+    String roomId,
+    String messageId, {
+    int beforeLimit = 20,
+    int afterLimit = 20,
+    bool includeDeleted = false,
+  }) async {
+    final response = await _api.adminService.getRoomChatMessageContext(
+      roomId,
+      client.GetChatMessageContextRequest(
+        messageId: messageId,
+        beforeLimit: beforeLimit,
+        afterLimit: afterLimit,
+        includeDeleted: includeDeleted,
+      ),
+    );
+    return _chatMessageContextFromProto(response);
+  }
+
+  ChatMessageContextInfo _chatMessageContextFromProto(
+    client.GetChatMessageContextResponse response,
+  ) {
     return ChatMessageContextInfo(
       before: response.before.map(_chatMessageFromProto).toList(),
       message: _chatMessageFromProto(response.message),

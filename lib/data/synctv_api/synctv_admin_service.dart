@@ -194,6 +194,28 @@ class SyncTvAdminDomainService {
     }
   }
 
+  Future<void> moderateRoomChatUser(
+    String roomId,
+    String userId, {
+    required bool deleteAllMessages,
+    required bool deleteAllReactions,
+    required bool ban,
+    String messageId = '',
+    String reason = '',
+  }) async {
+    await _api.adminService.moderateRoomChatUser(
+      admin.ModerateRoomChatUserRequest(
+        roomId: roomId,
+        userId: userId,
+        deleteAllMessages: deleteAllMessages,
+        deleteAllReactions: deleteAllReactions,
+        banUser: ban,
+        messageId: messageId,
+        reason: reason,
+      ),
+    );
+  }
+
   Future<AdminBatchOperationResult> batchBanUsers(
     List<String> userIds, {
     String reason = '',

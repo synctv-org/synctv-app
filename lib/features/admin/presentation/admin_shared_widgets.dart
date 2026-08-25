@@ -128,6 +128,8 @@ class _RoomChatHistoryDialog extends StatefulWidget {
 
 class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
   final ScrollController _scrollController = ScrollController();
+  final AdminChatModerationOptimisticState _moderationOptimism =
+      AdminChatModerationOptimisticState();
   final Map<String, RoomChatMessageInfo> _messageIndex = {};
   final List<RoomChatMessageInfo> _messages = [];
   bool _loading = true;
@@ -152,6 +154,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
       _loading = true;
       _messages.clear();
       _messageIndex.clear();
+      _moderationOptimism.clearServerMessages();
       _nextCursor = '';
     });
     await _loadPage(cursor: '');
@@ -175,10 +178,16 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
       if (!mounted) return;
       setState(() {
         for (final message in page.messages) {
-          if (!_messageIndex.containsKey(message.id)) {
-            _messages.add(message);
+          final displayMessage = _moderationOptimism.recordServerMessage(
+            message,
+          );
+          final index = _messages.indexWhere((entry) => entry.id == message.id);
+          if (index < 0) {
+            _messages.add(displayMessage);
+          } else {
+            _messages[index] = displayMessage;
           }
-          _messageIndex[message.id] = message;
+          _messageIndex[message.id] = displayMessage;
         }
         _nextCursor = page.nextCursor;
       });
@@ -213,19 +222,95 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
       username: message.username,
       missingUsername: context.l10n.deletedUser,
     );
-    final confirmed = await showAppDialog<bool>(
+    var deleteAllMessages = false;
+    var deleteAllReactions = false;
+    var banUser = false;
+    final choice = await showAppDialog<bool>(
       context: context,
-      builder: (context) => AppConfirmDialog(
-        title: context.l10n.deleteMessage,
-        icon: const Icon(Icons.delete_outline_rounded),
-        content: Text(context.l10n.confirmDeleteUserMessage(authorName)),
-        confirmLabel: context.l10n.delete,
-        confirmIcon: Icons.delete_outline_rounded,
-        destructive: true,
-        onConfirm: () => Navigator.pop(context, true),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AppConfirmDialog(
+          title: context.l10n.deleteMessage,
+          icon: const Icon(Icons.delete_outline_rounded),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.confirmDeleteUserMessage(authorName)),
+              if (message.userId.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  initiallyExpanded: false,
+                  leading: Checkbox(
+                    tristate: true,
+                    value: deleteAllMessages && deleteAllReactions
+                        ? true
+                        : (deleteAllMessages || deleteAllReactions
+                              ? null
+                              : false),
+                    onChanged: (value) {
+                      final selected = value ?? false;
+                      setDialogState(() {
+                        deleteAllMessages = selected;
+                        deleteAllReactions = selected;
+                      });
+                    },
+                  ),
+                  title: Text(context.l10n.deleteUserContent),
+                  children: [
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: deleteAllMessages,
+                      title: Text(context.l10n.deleteAllMessagesFromUser),
+                      onChanged: (value) => setDialogState(
+                        () => deleteAllMessages = value ?? false,
+                      ),
+                    ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: deleteAllReactions,
+                      title: Text(context.l10n.deleteAllReactionsFromUser),
+                      onChanged: (value) => setDialogState(
+                        () => deleteAllReactions = value ?? false,
+                      ),
+                    ),
+                  ],
+                ),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: banUser,
+                  title: Text(context.l10n.banUserFromChat),
+                  onChanged: (value) =>
+                      setDialogState(() => banUser = value ?? false),
+                ),
+              ],
+            ],
+          ),
+          confirmLabel: context.l10n.delete,
+          confirmIcon: Icons.delete_outline_rounded,
+          destructive: true,
+          onConfirm: () => Navigator.pop(context, true),
+        ),
       ),
     );
-    if (confirmed != true) return;
+    if (choice != true) return;
+    if (!mounted) return;
+    if (message.userId.isNotEmpty) {
+      final intentId = _applyOptimisticModeration(
+        message,
+        deleteAllMessages: deleteAllMessages,
+      );
+      unawaited(
+        _submitModeration(
+          message,
+          intentId: intentId,
+          deleteAllMessages: deleteAllMessages,
+          deleteAllReactions: deleteAllReactions,
+          banUser: banUser,
+        ),
+      );
+      return;
+    }
     try {
       final updated = await adminGateway.deleteChatMessage(
         widget.room.roomId,
@@ -233,11 +318,12 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
         expectedVersion: message.version,
         reason: 'admin_deleted',
       );
+      final displayMessage = _moderationOptimism.recordServerMessage(updated);
+      _messageIndex[updated.id] = displayMessage;
       if (!mounted) return;
       setState(() {
         final index = _messages.indexWhere((entry) => entry.id == message.id);
-        if (index >= 0) _messages[index] = updated;
-        _messageIndex[updated.id] = updated;
+        if (index >= 0) _messages[index] = displayMessage;
       });
       AppNotifications.showSuccess(context, context.l10n.messageDeleted);
     } catch (e) {
@@ -245,6 +331,72 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
         AppNotifications.showError(
           context,
           context.l10n.deleteMessageFailed('$e'),
+        );
+      }
+    }
+  }
+
+  int _applyOptimisticModeration(
+    RoomChatMessageInfo message, {
+    required bool deleteAllMessages,
+  }) {
+    final intentId = _moderationOptimism.begin(
+      messageId: message.id,
+      userId: message.userId,
+      deleteAllMessages: deleteAllMessages,
+    );
+    setState(() {
+      for (var index = 0; index < _messages.length; index++) {
+        final displayMessage = _moderationOptimism.messageForDisplay(
+          _messages[index].id,
+        );
+        if (displayMessage == null) continue;
+        _messages[index] = displayMessage;
+        _messageIndex[displayMessage.id] = displayMessage;
+      }
+    });
+    return intentId;
+  }
+
+  void _discardOptimisticModeration(int intentId) {
+    _moderationOptimism.discard(intentId);
+    if (!mounted) return;
+    setState(() {
+      for (var index = 0; index < _messages.length; index++) {
+        final displayMessage = _moderationOptimism.messageForDisplay(
+          _messages[index].id,
+        );
+        if (displayMessage == null) continue;
+        _messages[index] = displayMessage;
+        _messageIndex[displayMessage.id] = displayMessage;
+      }
+    });
+  }
+
+  Future<void> _submitModeration(
+    RoomChatMessageInfo message, {
+    required int intentId,
+    required bool deleteAllMessages,
+    required bool deleteAllReactions,
+    required bool banUser,
+  }) async {
+    try {
+      await adminGateway.moderateRoomChatUser(
+        widget.room.roomId,
+        message.userId,
+        deleteAllMessages: deleteAllMessages,
+        deleteAllReactions: deleteAllReactions,
+        ban: banUser,
+        messageId: message.id,
+        reason: 'chat_moderation',
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Failed to submit chat moderation: $error\n$stackTrace');
+      _discardOptimisticModeration(intentId);
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.deleteMessageFailed('$error'),
         );
       }
     }

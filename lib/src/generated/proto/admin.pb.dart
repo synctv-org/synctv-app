@@ -42,6 +42,12 @@ class AdminUser extends $pb.GeneratedMessage {
     $core.String? bannedReason,
     $core.String? avatarUrl,
     $0.UserPresenceStats? presence,
+    $fixnum.Int64? deletedAt,
+    $core.String? deletionReason,
+    $fixnum.Int64? restoredAt,
+    $core.String? deletionSource,
+    $core.String? deletedBy,
+    $core.String? restoredBy,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -57,6 +63,12 @@ class AdminUser extends $pb.GeneratedMessage {
     if (bannedReason != null) result.bannedReason = bannedReason;
     if (avatarUrl != null) result.avatarUrl = avatarUrl;
     if (presence != null) result.presence = presence;
+    if (deletedAt != null) result.deletedAt = deletedAt;
+    if (deletionReason != null) result.deletionReason = deletionReason;
+    if (restoredAt != null) result.restoredAt = restoredAt;
+    if (deletionSource != null) result.deletionSource = deletionSource;
+    if (deletedBy != null) result.deletedBy = deletedBy;
+    if (restoredBy != null) result.restoredBy = restoredBy;
     return result;
   }
 
@@ -89,6 +101,12 @@ class AdminUser extends $pb.GeneratedMessage {
     ..aOS(12, _omitFieldNames ? '' : 'avatarUrl')
     ..aOM<$0.UserPresenceStats>(13, _omitFieldNames ? '' : 'presence',
         subBuilder: $0.UserPresenceStats.create)
+    ..aInt64(14, _omitFieldNames ? '' : 'deletedAt')
+    ..aOS(15, _omitFieldNames ? '' : 'deletionReason')
+    ..aInt64(16, _omitFieldNames ? '' : 'restoredAt')
+    ..aOS(17, _omitFieldNames ? '' : 'deletionSource')
+    ..aOS(18, _omitFieldNames ? '' : 'deletedBy')
+    ..aOS(19, _omitFieldNames ? '' : 'restoredBy')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -227,6 +245,60 @@ class AdminUser extends $pb.GeneratedMessage {
   void clearPresence() => $_clearField(13);
   @$pb.TagNumber(13)
   $0.UserPresenceStats ensurePresence() => $_ensure(12);
+
+  @$pb.TagNumber(14)
+  $fixnum.Int64 get deletedAt => $_getI64(13);
+  @$pb.TagNumber(14)
+  set deletedAt($fixnum.Int64 value) => $_setInt64(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasDeletedAt() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearDeletedAt() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $core.String get deletionReason => $_getSZ(14);
+  @$pb.TagNumber(15)
+  set deletionReason($core.String value) => $_setString(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasDeletionReason() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearDeletionReason() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $fixnum.Int64 get restoredAt => $_getI64(15);
+  @$pb.TagNumber(16)
+  set restoredAt($fixnum.Int64 value) => $_setInt64(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasRestoredAt() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearRestoredAt() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $core.String get deletionSource => $_getSZ(16);
+  @$pb.TagNumber(17)
+  set deletionSource($core.String value) => $_setString(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasDeletionSource() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearDeletionSource() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $core.String get deletedBy => $_getSZ(17);
+  @$pb.TagNumber(18)
+  set deletedBy($core.String value) => $_setString(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasDeletedBy() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearDeletedBy() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $core.String get restoredBy => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set restoredBy($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasRestoredBy() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearRestoredBy() => $_clearField(19);
 }
 
 class Room extends $pb.GeneratedMessage {
@@ -6186,6 +6258,149 @@ class DeleteUserResponse extends $pb.GeneratedMessage {
   void clearSuccess() => $_clearField(1);
 }
 
+class RestoreUserRequest extends $pb.GeneratedMessage {
+  factory RestoreUserRequest({
+    $core.String? userId,
+    $core.bool? ignoreIdentityConflicts,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (ignoreIdentityConflicts != null)
+      result.ignoreIdentityConflicts = ignoreIdentityConflicts;
+    return result;
+  }
+
+  RestoreUserRequest._();
+
+  factory RestoreUserRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RestoreUserRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RestoreUserRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..aOB(2, _omitFieldNames ? '' : 'ignoreIdentityConflicts')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RestoreUserRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RestoreUserRequest copyWith(void Function(RestoreUserRequest) updates) =>
+      super.copyWith((message) => updates(message as RestoreUserRequest))
+          as RestoreUserRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RestoreUserRequest create() => RestoreUserRequest._();
+  @$core.override
+  RestoreUserRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RestoreUserRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RestoreUserRequest>(create);
+  static RestoreUserRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get ignoreIdentityConflicts => $_getBF(1);
+  @$pb.TagNumber(2)
+  set ignoreIdentityConflicts($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIgnoreIdentityConflicts() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIgnoreIdentityConflicts() => $_clearField(2);
+}
+
+class RestoreUserResponse extends $pb.GeneratedMessage {
+  factory RestoreUserResponse({
+    $core.bool? success,
+    AdminUser? user,
+    $core.Iterable<$core.String>? releasedIdentities,
+  }) {
+    final result = create();
+    if (success != null) result.success = success;
+    if (user != null) result.user = user;
+    if (releasedIdentities != null)
+      result.releasedIdentities.addAll(releasedIdentities);
+    return result;
+  }
+
+  RestoreUserResponse._();
+
+  factory RestoreUserResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RestoreUserResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RestoreUserResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'success')
+    ..aOM<AdminUser>(2, _omitFieldNames ? '' : 'user',
+        subBuilder: AdminUser.create)
+    ..pPS(3, _omitFieldNames ? '' : 'releasedIdentities')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RestoreUserResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RestoreUserResponse copyWith(void Function(RestoreUserResponse) updates) =>
+      super.copyWith((message) => updates(message as RestoreUserResponse))
+          as RestoreUserResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RestoreUserResponse create() => RestoreUserResponse._();
+  @$core.override
+  RestoreUserResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RestoreUserResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RestoreUserResponse>(create);
+  static RestoreUserResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  AdminUser get user => $_getN(1);
+  @$pb.TagNumber(2)
+  set user(AdminUser value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUser() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUser() => $_clearField(2);
+  @$pb.TagNumber(2)
+  AdminUser ensureUser() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $pb.PbList<$core.String> get releasedIdentities => $_getList(2);
+}
+
 class ListUsersRequest extends $pb.GeneratedMessage {
   factory ListUsersRequest({
     $core.int? page,
@@ -6196,6 +6411,7 @@ class ListUsersRequest extends $pb.GeneratedMessage {
     UserListSortBy? sortBy,
     SortDirection? sortDirection,
     $core.bool? isBanned,
+    $core.bool? includeDeleted,
   }) {
     final result = create();
     if (page != null) result.page = page;
@@ -6206,6 +6422,7 @@ class ListUsersRequest extends $pb.GeneratedMessage {
     if (sortBy != null) result.sortBy = sortBy;
     if (sortDirection != null) result.sortDirection = sortDirection;
     if (isBanned != null) result.isBanned = isBanned;
+    if (includeDeleted != null) result.includeDeleted = includeDeleted;
     return result;
   }
 
@@ -6234,6 +6451,7 @@ class ListUsersRequest extends $pb.GeneratedMessage {
     ..aE<SortDirection>(7, _omitFieldNames ? '' : 'sortDirection',
         enumValues: SortDirection.values)
     ..aOB(8, _omitFieldNames ? '' : 'isBanned')
+    ..aOB(9, _omitFieldNames ? '' : 'includeDeleted')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6326,6 +6544,15 @@ class ListUsersRequest extends $pb.GeneratedMessage {
   $core.bool hasIsBanned() => $_has(7);
   @$pb.TagNumber(8)
   void clearIsBanned() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.bool get includeDeleted => $_getBF(8);
+  @$pb.TagNumber(9)
+  set includeDeleted($core.bool value) => $_setBool(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasIncludeDeleted() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearIncludeDeleted() => $_clearField(9);
 }
 
 class ListUsersResponse extends $pb.GeneratedMessage {
@@ -7219,6 +7446,177 @@ class UnbanUserRequest extends $pb.GeneratedMessage {
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
   void clearUserId() => $_clearField(1);
+}
+
+class ModerateRoomChatUserRequest extends $pb.GeneratedMessage {
+  factory ModerateRoomChatUserRequest({
+    $core.String? roomId,
+    $core.String? userId,
+    $core.bool? deleteAllMessages,
+    $core.bool? banUser,
+    $core.String? reason,
+    $core.bool? deleteAllReactions,
+    $core.String? messageId,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    if (userId != null) result.userId = userId;
+    if (deleteAllMessages != null) result.deleteAllMessages = deleteAllMessages;
+    if (banUser != null) result.banUser = banUser;
+    if (reason != null) result.reason = reason;
+    if (deleteAllReactions != null)
+      result.deleteAllReactions = deleteAllReactions;
+    if (messageId != null) result.messageId = messageId;
+    return result;
+  }
+
+  ModerateRoomChatUserRequest._();
+
+  factory ModerateRoomChatUserRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModerateRoomChatUserRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModerateRoomChatUserRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..aOS(2, _omitFieldNames ? '' : 'userId')
+    ..aOB(3, _omitFieldNames ? '' : 'deleteAllMessages')
+    ..aOB(4, _omitFieldNames ? '' : 'banUser')
+    ..aOS(5, _omitFieldNames ? '' : 'reason')
+    ..aOB(6, _omitFieldNames ? '' : 'deleteAllReactions')
+    ..aOS(7, _omitFieldNames ? '' : 'messageId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModerateRoomChatUserRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModerateRoomChatUserRequest copyWith(
+          void Function(ModerateRoomChatUserRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as ModerateRoomChatUserRequest))
+          as ModerateRoomChatUserRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModerateRoomChatUserRequest create() =>
+      ModerateRoomChatUserRequest._();
+  @$core.override
+  ModerateRoomChatUserRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModerateRoomChatUserRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModerateRoomChatUserRequest>(create);
+  static ModerateRoomChatUserRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get userId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set userId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUserId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get deleteAllMessages => $_getBF(2);
+  @$pb.TagNumber(3)
+  set deleteAllMessages($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDeleteAllMessages() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDeleteAllMessages() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get banUser => $_getBF(3);
+  @$pb.TagNumber(4)
+  set banUser($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasBanUser() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearBanUser() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get reason => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set reason($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasReason() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearReason() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get deleteAllReactions => $_getBF(5);
+  @$pb.TagNumber(6)
+  set deleteAllReactions($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasDeleteAllReactions() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearDeleteAllReactions() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get messageId => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set messageId($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasMessageId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearMessageId() => $_clearField(7);
+}
+
+class ModerateRoomChatUserResponse extends $pb.GeneratedMessage {
+  factory ModerateRoomChatUserResponse() => create();
+
+  ModerateRoomChatUserResponse._();
+
+  factory ModerateRoomChatUserResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModerateRoomChatUserResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModerateRoomChatUserResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModerateRoomChatUserResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModerateRoomChatUserResponse copyWith(
+          void Function(ModerateRoomChatUserResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ModerateRoomChatUserResponse))
+          as ModerateRoomChatUserResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModerateRoomChatUserResponse create() =>
+      ModerateRoomChatUserResponse._();
+  @$core.override
+  ModerateRoomChatUserResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModerateRoomChatUserResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModerateRoomChatUserResponse>(create);
+  static ModerateRoomChatUserResponse? _defaultInstance;
 }
 
 class GetUserRoomsRequest extends $pb.GeneratedMessage {
@@ -14406,6 +14804,10 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, DeleteUserRequest request) =>
       _client.invoke<DeleteUserResponse>(
           ctx, 'AdminService', 'DeleteUser', request, DeleteUserResponse());
+  $async.Future<RestoreUserResponse> restoreUser(
+          $pb.ClientContext? ctx, RestoreUserRequest request) =>
+      _client.invoke<RestoreUserResponse>(
+          ctx, 'AdminService', 'RestoreUser', request, RestoreUserResponse());
   $async.Future<ListUsersResponse> listUsers(
           $pb.ClientContext? ctx, ListUsersRequest request) =>
       _client.invoke<ListUsersResponse>(
@@ -14442,6 +14844,10 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, UnbanUserRequest request) =>
       _client.invoke<AdminUser>(
           ctx, 'AdminService', 'UnbanUser', request, AdminUser());
+  $async.Future<ModerateRoomChatUserResponse> moderateRoomChatUser(
+          $pb.ClientContext? ctx, ModerateRoomChatUserRequest request) =>
+      _client.invoke<ModerateRoomChatUserResponse>(ctx, 'AdminService',
+          'ModerateRoomChatUser', request, ModerateRoomChatUserResponse());
   $async.Future<GetUserRoomsResponse> getUserRooms(
           $pb.ClientContext? ctx, GetUserRoomsRequest request) =>
       _client.invoke<GetUserRoomsResponse>(

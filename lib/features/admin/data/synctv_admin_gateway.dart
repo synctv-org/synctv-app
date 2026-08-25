@@ -594,13 +594,34 @@ final class SyncTvAdminGateway implements AdminGateway {
   );
 
   @override
+  Future<void> moderateRoomChatUser(
+    String roomId,
+    String userId, {
+    required bool deleteAllMessages,
+    required bool deleteAllReactions,
+    required bool ban,
+    String messageId = '',
+    String reason = '',
+  }) {
+    return SyncTvService.adminModerateRoomChatUser(
+      roomId,
+      userId,
+      deleteAllMessages: deleteAllMessages,
+      deleteAllReactions: deleteAllReactions,
+      ban: ban,
+      messageId: messageId,
+      reason: reason,
+    );
+  }
+
+  @override
   Future<ChatHistoryPage> getChatHistory(
     String roomId, {
     int limit = 50,
     String cursor = '',
     List<client_enum.ChatMessageType> includeMessageTypes =
         chatTimelineMessageTypes,
-  }) => SyncTvService.getChatHistory(
+  }) => SyncTvService.getAdminChatHistory(
     roomId,
     limit: limit,
     cursor: cursor,
@@ -614,7 +635,7 @@ final class SyncTvAdminGateway implements AdminGateway {
     int beforeLimit = 20,
     int afterLimit = 20,
     bool includeDeleted = false,
-  }) => SyncTvService.getChatMessageContext(
+  }) => SyncTvService.getAdminChatMessageContext(
     roomId,
     messageId,
     beforeLimit: beforeLimit,

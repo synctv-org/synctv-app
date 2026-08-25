@@ -344,6 +344,16 @@ abstract interface class AdminGateway {
     String reason = '',
   });
 
+  Future<void> moderateRoomChatUser(
+    String roomId,
+    String userId, {
+    required bool deleteAllMessages,
+    required bool deleteAllReactions,
+    required bool ban,
+    String messageId = '',
+    String reason = '',
+  });
+
   Future<ChatHistoryPage> getChatHistory(
     String roomId, {
     int limit = 50,

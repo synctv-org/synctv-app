@@ -3978,6 +3978,30 @@ abstract class AppLocalizations {
   /// **'Message deleted'**
   String get messageDeleted;
 
+  /// No description provided for @deleteUserContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete content from this user'**
+  String get deleteUserContent;
+
+  /// No description provided for @deleteAllMessagesFromUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all messages from this user'**
+  String get deleteAllMessagesFromUser;
+
+  /// No description provided for @deleteAllReactionsFromUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all reactions from this user'**
+  String get deleteAllReactionsFromUser;
+
+  /// No description provided for @banUserFromChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Ban user'**
+  String get banUserFromChat;
+
   /// No description provided for @imageMessage.
   ///
   /// In en, this message translates to:

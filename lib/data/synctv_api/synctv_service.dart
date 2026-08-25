@@ -1329,6 +1329,37 @@ class SyncTvService {
     );
   }
 
+  static Future<ChatHistoryPage> getAdminChatHistory(
+    String roomId, {
+    int limit = 50,
+    String cursor = '',
+    List<client_enum.ChatMessageType> includeMessageTypes =
+        chatTimelineMessageTypes,
+  }) {
+    return _domains.roomMedia.getChatHistoryAsAdmin(
+      roomId,
+      limit: limit,
+      cursor: cursor,
+      includeMessageTypes: includeMessageTypes,
+    );
+  }
+
+  static Future<ChatMessageContextInfo> getAdminChatMessageContext(
+    String roomId,
+    String messageId, {
+    int beforeLimit = 20,
+    int afterLimit = 20,
+    bool includeDeleted = false,
+  }) {
+    return _domains.roomMedia.getChatMessageContextAsAdmin(
+      roomId,
+      messageId,
+      beforeLimit: beforeLimit,
+      afterLimit: afterLimit,
+      includeDeleted: includeDeleted,
+    );
+  }
+
   static Future<ChatSearchPage> searchChatMessages(
     String roomId, {
     required String query,
@@ -3079,6 +3110,26 @@ class SyncTvService {
     String reason = '',
   }) {
     return _domains.admin.banUser(userId, ban, reason: reason);
+  }
+
+  static Future<void> adminModerateRoomChatUser(
+    String roomId,
+    String userId, {
+    required bool deleteAllMessages,
+    required bool deleteAllReactions,
+    required bool ban,
+    String messageId = '',
+    String reason = '',
+  }) {
+    return _domains.admin.moderateRoomChatUser(
+      roomId,
+      userId,
+      deleteAllMessages: deleteAllMessages,
+      deleteAllReactions: deleteAllReactions,
+      ban: ban,
+      messageId: messageId,
+      reason: reason,
+    );
   }
 
   static Future<AdminBatchOperationResult> adminBatchBanUsers(

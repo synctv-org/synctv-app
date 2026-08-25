@@ -2137,6 +2137,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageDeleted => '消息已删除';
 
   @override
+  String get deleteUserContent => '删除该用户的内容';
+
+  @override
+  String get deleteAllMessagesFromUser => '删除该用户的全部消息';
+
+  @override
+  String get deleteAllReactionsFromUser => '删除该用户的全部表情回应';
+
+  @override
+  String get banUserFromChat => '封禁该用户';
+
+  @override
   String get imageMessage => '[图片]';
 
   @override

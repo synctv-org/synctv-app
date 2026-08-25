@@ -2297,6 +2297,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageDeleted => 'Message deleted';
 
   @override
+  String get deleteUserContent => 'Delete content from this user';
+
+  @override
+  String get deleteAllMessagesFromUser => 'Delete all messages from this user';
+
+  @override
+  String get deleteAllReactionsFromUser =>
+      'Delete all reactions from this user';
+
+  @override
+  String get banUserFromChat => 'Ban user';
+
+  @override
   String get imageMessage => '[Image]';
 
   @override
