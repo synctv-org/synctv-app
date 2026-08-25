@@ -132,7 +132,7 @@ final class _ChatModerationAdminGateway implements AdminGateway {
   }
 
   @override
-  Future<void> moderateRoomChatUser(
+  Future<void> adminModerateRoomChatUser(
     String roomId,
     String userId, {
     required bool deleteAllMessages,

@@ -226,6 +226,16 @@ abstract interface class AdminGateway {
         admin_enum.SortDirection.SORT_DIRECTION_DESC,
   });
 
+  Future<void> adminModerateRoomChatUser(
+    String roomId,
+    String userId, {
+    required bool deleteAllMessages,
+    required bool deleteAllReactions,
+    required bool ban,
+    String messageId = '',
+    String reason = '',
+  });
+
   Future<AdminSliceCacheOperationResult> adminPurgeSliceCache({
     String nodeId = '',
     bool allNodes = false,
@@ -341,16 +351,6 @@ abstract interface class AdminGateway {
     String roomId,
     String messageId, {
     required int expectedVersion,
-    String reason = '',
-  });
-
-  Future<void> moderateRoomChatUser(
-    String roomId,
-    String userId, {
-    required bool deleteAllMessages,
-    required bool deleteAllReactions,
-    required bool ban,
-    String messageId = '',
     String reason = '',
   });
 

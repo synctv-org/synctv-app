@@ -241,18 +241,13 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
                 ExpansionTile(
                   tilePadding: EdgeInsets.zero,
                   initiallyExpanded: false,
-                  leading: Checkbox(
-                    tristate: true,
-                    value: deleteAllMessages && deleteAllReactions
-                        ? true
-                        : (deleteAllMessages || deleteAllReactions
-                              ? null
-                              : false),
+                  leading: AppCheckbox(
+                    value: deleteAllMessages || deleteAllReactions,
+                    semanticsLabel: context.l10n.deleteUserContent,
                     onChanged: (value) {
-                      final selected = value ?? false;
                       setDialogState(() {
-                        deleteAllMessages = selected;
-                        deleteAllReactions = selected;
+                        deleteAllMessages = value;
+                        deleteAllReactions = value;
                       });
                     },
                   ),
@@ -381,7 +376,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
     required bool banUser,
   }) async {
     try {
-      await adminGateway.moderateRoomChatUser(
+      await adminGateway.adminModerateRoomChatUser(
         widget.room.roomId,
         message.userId,
         deleteAllMessages: deleteAllMessages,

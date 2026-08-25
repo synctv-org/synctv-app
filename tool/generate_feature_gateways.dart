@@ -310,6 +310,7 @@ const _adminMethods = <String>{
   'adminListRoomMembersPage',
   'adminListRoomsPage',
   'adminListUserRoomsPage',
+  'adminModerateRoomChatUser',
   'adminListUsersPage',
   'adminPurgeSliceCache',
   'adminReconnectProviderInstance',

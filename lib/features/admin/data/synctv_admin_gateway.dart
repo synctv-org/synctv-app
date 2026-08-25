@@ -397,6 +397,25 @@ final class SyncTvAdminGateway implements AdminGateway {
   );
 
   @override
+  Future<void> adminModerateRoomChatUser(
+    String roomId,
+    String userId, {
+    required bool deleteAllMessages,
+    required bool deleteAllReactions,
+    required bool ban,
+    String messageId = '',
+    String reason = '',
+  }) => SyncTvService.adminModerateRoomChatUser(
+    roomId,
+    userId,
+    deleteAllMessages: deleteAllMessages,
+    deleteAllReactions: deleteAllReactions,
+    ban: ban,
+    messageId: messageId,
+    reason: reason,
+  );
+
+  @override
   Future<AdminSliceCacheOperationResult> adminPurgeSliceCache({
     String nodeId = '',
     bool allNodes = false,
@@ -594,34 +613,13 @@ final class SyncTvAdminGateway implements AdminGateway {
   );
 
   @override
-  Future<void> moderateRoomChatUser(
-    String roomId,
-    String userId, {
-    required bool deleteAllMessages,
-    required bool deleteAllReactions,
-    required bool ban,
-    String messageId = '',
-    String reason = '',
-  }) {
-    return SyncTvService.adminModerateRoomChatUser(
-      roomId,
-      userId,
-      deleteAllMessages: deleteAllMessages,
-      deleteAllReactions: deleteAllReactions,
-      ban: ban,
-      messageId: messageId,
-      reason: reason,
-    );
-  }
-
-  @override
   Future<ChatHistoryPage> getChatHistory(
     String roomId, {
     int limit = 50,
     String cursor = '',
     List<client_enum.ChatMessageType> includeMessageTypes =
         chatTimelineMessageTypes,
-  }) => SyncTvService.getAdminChatHistory(
+  }) => SyncTvService.getChatHistory(
     roomId,
     limit: limit,
     cursor: cursor,
@@ -635,7 +633,7 @@ final class SyncTvAdminGateway implements AdminGateway {
     int beforeLimit = 20,
     int afterLimit = 20,
     bool includeDeleted = false,
-  }) => SyncTvService.getAdminChatMessageContext(
+  }) => SyncTvService.getChatMessageContext(
     roomId,
     messageId,
     beforeLimit: beforeLimit,
