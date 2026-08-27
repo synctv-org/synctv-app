@@ -132,6 +132,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.source_config.RtspTrackSelection': $1.RtspTrackSelection$json,
   '.synctv.source_config.HttpFlvPullSourceConfig':
       $1.HttpFlvPullSourceConfig$json,
+  '.synctv.source_config.WhepPullSourceConfig': $1.WhepPullSourceConfig$json,
   '.synctv.source_config.CloudreveMediaSourceConfig':
       $1.CloudreveMediaSourceConfig$json,
   '.synctv.source_config.TwitchMediaSourceConfig':
@@ -331,6 +332,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       $0.PrepareRtspTrackIntent$json,
   '.synctv.provider.common.PrepareHttpFlvPullIntent':
       $0.PrepareHttpFlvPullIntent$json,
+  '.synctv.provider.common.PrepareWhepPullIntent':
+      $0.PrepareWhepPullIntent$json,
   '.synctv.provider.common.PrepareRtmpRequest': $0.PrepareRtmpRequest$json,
   '.synctv.provider.common.ResolvePlaybackProxyPolicyRequest':
       $0.ResolvePlaybackProxyPolicyRequest$json,

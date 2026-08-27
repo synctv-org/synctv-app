@@ -239,6 +239,12 @@ Future<void> showRtmpPublishCredentialsDialog(
           value: publish.publishKey,
           copyable: true,
         ),
+        if (publish.whipUrl.isNotEmpty)
+          _RtmpInfoRow(
+            label: context.l10n.whipUrl,
+            value: publish.whipUrl,
+            copyable: true,
+          ),
         _RtmpInfoRow(
           label: context.l10n.publishKeyType,
           value: rtmpPublishKeyTypeLabel(context, publish.keyType),

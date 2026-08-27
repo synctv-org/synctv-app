@@ -1703,7 +1703,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get livePullSupportDescription =>
-      'Supports RTMP, RTSP, and HTTP-FLV sources.';
+      'Supports RTMP, RTSP, HTTP-FLV, and WHEP sources.';
+
+  @override
+  String get whipUrl => 'WHIP URL';
+
+  @override
+  String get whepAuthorization => 'WHEP authorization header (optional)';
+
+  @override
+  String get whepAuthorizationHint => 'For example, Bearer upstream-token';
 
   @override
   String get addLivePull => 'Add live stream pull';

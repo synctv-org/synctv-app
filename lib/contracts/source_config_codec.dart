@@ -1903,6 +1903,12 @@ class SourceConfigCodec {
       'http-flv' => source_config.LiveProxyMediaSourceConfig(
         httpFlv: source_config.HttpFlvPullSourceConfig(url: url),
       ),
+      'whep' => source_config.LiveProxyMediaSourceConfig(
+        whep: source_config.WhepPullSourceConfig(
+          url: url,
+          authorization: _optionalString(source['authorization']),
+        ),
+      ),
       _ => source_config.LiveProxyMediaSourceConfig(),
     };
   }
@@ -1952,6 +1958,12 @@ class SourceConfigCodec {
       source_config.LiveProxyMediaSourceConfig_Source.httpFlv => {
         'protocol': 'httpFlv',
         'url': config.httpFlv.url,
+      },
+      source_config.LiveProxyMediaSourceConfig_Source.whep => {
+        'protocol': 'whep',
+        'url': config.whep.url,
+        if (config.whep.hasAuthorization())
+          'authorization': config.whep.authorization,
       },
       source_config.LiveProxyMediaSourceConfig_Source.notSet =>
         <String, dynamic>{},

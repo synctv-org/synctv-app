@@ -2991,8 +2991,26 @@ abstract class AppLocalizations {
   /// No description provided for @livePullSupportDescription.
   ///
   /// In en, this message translates to:
-  /// **'Supports RTMP, RTSP, and HTTP-FLV sources.'**
+  /// **'Supports RTMP, RTSP, HTTP-FLV, and WHEP sources.'**
   String get livePullSupportDescription;
+
+  /// No description provided for @whipUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'WHIP URL'**
+  String get whipUrl;
+
+  /// No description provided for @whepAuthorization.
+  ///
+  /// In en, this message translates to:
+  /// **'WHEP authorization header (optional)'**
+  String get whepAuthorization;
+
+  /// No description provided for @whepAuthorizationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example, Bearer upstream-token'**
+  String get whepAuthorizationHint;
 
   /// No description provided for @addLivePull.
   ///

@@ -588,6 +588,33 @@ final $typed_data.Uint8List prepareHttpFlvPullIntentDescriptor =
     $convert.base64Decode(
         'ChhQcmVwYXJlSHR0cEZsdlB1bGxJbnRlbnQSGQoDdXJsGAEgASgJQge6SARyAhABUgN1cmw=');
 
+@$core.Deprecated('Use prepareWhepPullIntentDescriptor instead')
+const PrepareWhepPullIntent$json = {
+  '1': 'PrepareWhepPullIntent',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'url'},
+    {
+      '1': 'authorization',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 0,
+      '10': 'authorization',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_authorization'},
+  ],
+};
+
+/// Descriptor for `PrepareWhepPullIntent`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List prepareWhepPullIntentDescriptor = $convert.base64Decode(
+    'ChVQcmVwYXJlV2hlcFB1bGxJbnRlbnQSGQoDdXJsGAEgASgJQge6SARyAhABUgN1cmwSMwoNYX'
+    'V0aG9yaXphdGlvbhgCIAEoCUIIukgFcgMYgCBIAFINYXV0aG9yaXphdGlvbogBAUIQCg5fYXV0'
+    'aG9yaXphdGlvbg==');
+
 @$core.Deprecated('Use prepareLiveProxyRequestDescriptor instead')
 const PrepareLiveProxyRequest$json = {
   '1': 'PrepareLiveProxyRequest',
@@ -619,6 +646,15 @@ const PrepareLiveProxyRequest$json = {
       '9': 0,
       '10': 'httpFlv'
     },
+    {
+      '1': 'whep',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.provider.common.PrepareWhepPullIntent',
+      '9': 0,
+      '10': 'whep'
+    },
   ],
   '8': [
     {'1': 'source', '2': {}},
@@ -631,7 +667,8 @@ final $typed_data.Uint8List prepareLiveProxyRequestDescriptor = $convert.base64D
     'VyLmNvbW1vbi5QcmVwYXJlUnRtcFB1bGxJbnRlbnRIAFIEcnRtcBJDCgRydHNwGAIgASgLMi0u'
     'c3luY3R2LnByb3ZpZGVyLmNvbW1vbi5QcmVwYXJlUnRzcFB1bGxJbnRlbnRIAFIEcnRzcBJNCg'
     'hodHRwX2ZsdhgDIAEoCzIwLnN5bmN0di5wcm92aWRlci5jb21tb24uUHJlcGFyZUh0dHBGbHZQ'
-    'dWxsSW50ZW50SABSB2h0dHBGbHZCDwoGc291cmNlEgW6SAIIAQ==');
+    'dWxsSW50ZW50SABSB2h0dHBGbHYSQwoEd2hlcBgEIAEoCzItLnN5bmN0di5wcm92aWRlci5jb2'
+    '1tb24uUHJlcGFyZVdoZXBQdWxsSW50ZW50SABSBHdoZXBCDwoGc291cmNlEgW6SAIIAQ==');
 
 @$core.Deprecated('Use prepareRtmpRequestDescriptor instead')
 const PrepareRtmpRequest$json = {

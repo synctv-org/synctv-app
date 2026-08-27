@@ -885,16 +885,20 @@ class PlaybackLiveTransport extends $pb.ProtobufEnum {
   static const PlaybackLiveTransport PLAYBACK_LIVE_TRANSPORT_FLV =
       PlaybackLiveTransport._(
           2, _omitEnumNames ? '' : 'PLAYBACK_LIVE_TRANSPORT_FLV');
+  static const PlaybackLiveTransport PLAYBACK_LIVE_TRANSPORT_WHEP =
+      PlaybackLiveTransport._(
+          3, _omitEnumNames ? '' : 'PLAYBACK_LIVE_TRANSPORT_WHEP');
 
   static const $core.List<PlaybackLiveTransport> values =
       <PlaybackLiveTransport>[
     PLAYBACK_LIVE_TRANSPORT_UNSPECIFIED,
     PLAYBACK_LIVE_TRANSPORT_HLS,
     PLAYBACK_LIVE_TRANSPORT_FLV,
+    PLAYBACK_LIVE_TRANSPORT_WHEP,
   ];
 
   static final $core.List<PlaybackLiveTransport?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 2);
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
   static PlaybackLiveTransport? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -981,6 +985,9 @@ class PlaybackMediaTransport extends $pb.ProtobufEnum {
   static const PlaybackMediaTransport PLAYBACK_MEDIA_TRANSPORT_MPEG_TS =
       PlaybackMediaTransport._(
           5, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_TRANSPORT_MPEG_TS');
+  static const PlaybackMediaTransport PLAYBACK_MEDIA_TRANSPORT_WEB_RTC =
+      PlaybackMediaTransport._(
+          6, _omitEnumNames ? '' : 'PLAYBACK_MEDIA_TRANSPORT_WEB_RTC');
 
   static const $core.List<PlaybackMediaTransport> values =
       <PlaybackMediaTransport>[
@@ -990,10 +997,11 @@ class PlaybackMediaTransport extends $pb.ProtobufEnum {
     PLAYBACK_MEDIA_TRANSPORT_DASH,
     PLAYBACK_MEDIA_TRANSPORT_FLV,
     PLAYBACK_MEDIA_TRANSPORT_MPEG_TS,
+    PLAYBACK_MEDIA_TRANSPORT_WEB_RTC,
   ];
 
   static final $core.List<PlaybackMediaTransport?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 5);
+      $pb.ProtobufEnum.$_initByValueList(values, 6);
   static PlaybackMediaTransport? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

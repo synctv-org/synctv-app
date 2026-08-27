@@ -301,7 +301,7 @@ void main() {
       });
     });
 
-    test('round trips RTMP, RTSP, and HTTP-FLV pull sources', () {
+    test('round trips RTMP, RTSP, HTTP-FLV, and WHEP pull sources', () {
       final cases = <Map<String, dynamic>>[
         {
           'source': {
@@ -323,6 +323,13 @@ void main() {
           'source': {
             'protocol': 'httpFlv',
             'url': 'https://example.test/live/stream.flv',
+          },
+        },
+        {
+          'source': {
+            'protocol': 'whep',
+            'url': 'https://example.test/live/whep',
+            'authorization': 'Bearer upstream-token',
           },
         },
       ];

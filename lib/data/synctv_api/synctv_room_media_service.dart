@@ -1016,6 +1016,7 @@ class SyncTvRoomMediaDomainService {
       publishKey: response.publishKey,
       rtmpUrl: response.rtmpUrl,
       streamKey: response.streamKey,
+      whipUrl: response.whipUrl,
       expiresAt: response.hasExpiresAt() ? response.expiresAt.toInt() : null,
       keyType:
           response.type ==

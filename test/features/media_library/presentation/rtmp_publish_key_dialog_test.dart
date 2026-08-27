@@ -113,6 +113,8 @@ void main() {
                 publishKey: 'publish-secret',
                 rtmpUrl: 'rtmps://live.example.com/room_123',
                 streamKey: 'media_456?token=publish-secret',
+                whipUrl:
+                    'https://live.example.com/api/rooms/room_123/streams/media_456/whip',
                 expiresAt: null,
                 keyType: client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT,
               ),
@@ -133,6 +135,12 @@ void main() {
     expect(find.text('rtmps://live.example.com/room_123'), findsOneWidget);
     expect(find.text('media_456?token=publish-secret'), findsOneWidget);
     expect(find.text('publish-secret'), findsOneWidget);
+    expect(
+      find.text(
+        'https://live.example.com/api/rooms/room_123/streams/media_456/whip',
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Never expires'), findsNWidgets(2));
     expect(find.text('Inactive'), findsOneWidget);
   });

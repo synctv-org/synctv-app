@@ -14057,6 +14057,7 @@ class CreateRoomPublishKeyResponse extends $pb.GeneratedMessage {
     $core.String? streamKey,
     $fixnum.Int64? expiresAt,
     PublishKeyType? type,
+    $core.String? whipUrl,
   }) {
     final result = create();
     if (publishKey != null) result.publishKey = publishKey;
@@ -14064,6 +14065,7 @@ class CreateRoomPublishKeyResponse extends $pb.GeneratedMessage {
     if (streamKey != null) result.streamKey = streamKey;
     if (expiresAt != null) result.expiresAt = expiresAt;
     if (type != null) result.type = type;
+    if (whipUrl != null) result.whipUrl = whipUrl;
     return result;
   }
 
@@ -14086,6 +14088,7 @@ class CreateRoomPublishKeyResponse extends $pb.GeneratedMessage {
     ..aInt64(4, _omitFieldNames ? '' : 'expiresAt')
     ..aE<PublishKeyType>(5, _omitFieldNames ? '' : 'type',
         enumValues: PublishKeyType.values)
+    ..aOS(6, _omitFieldNames ? '' : 'whipUrl')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -14154,6 +14157,17 @@ class CreateRoomPublishKeyResponse extends $pb.GeneratedMessage {
   $core.bool hasType() => $_has(4);
   @$pb.TagNumber(5)
   void clearType() => $_clearField(5);
+
+  /// WHIP resource used with Authorization: Bearer <publish_key>.
+  /// This is origin-relative unless livestream.public_webrtc_base_url is set.
+  @$pb.TagNumber(6)
+  $core.String get whipUrl => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set whipUrl($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasWhipUrl() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearWhipUrl() => $_clearField(6);
 }
 
 class GetRoomStreamInfoRequest extends $pb.GeneratedMessage {

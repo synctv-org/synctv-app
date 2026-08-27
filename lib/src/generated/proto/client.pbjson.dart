@@ -535,6 +535,7 @@ const PlaybackLiveTransport$json = {
     {'1': 'PLAYBACK_LIVE_TRANSPORT_UNSPECIFIED', '2': 0},
     {'1': 'PLAYBACK_LIVE_TRANSPORT_HLS', '2': 1},
     {'1': 'PLAYBACK_LIVE_TRANSPORT_FLV', '2': 2},
+    {'1': 'PLAYBACK_LIVE_TRANSPORT_WHEP', '2': 3},
   ],
 };
 
@@ -542,7 +543,7 @@ const PlaybackLiveTransport$json = {
 final $typed_data.Uint8List playbackLiveTransportDescriptor = $convert.base64Decode(
     'ChVQbGF5YmFja0xpdmVUcmFuc3BvcnQSJwojUExBWUJBQ0tfTElWRV9UUkFOU1BPUlRfVU5TUE'
     'VDSUZJRUQQABIfChtQTEFZQkFDS19MSVZFX1RSQU5TUE9SVF9ITFMQARIfChtQTEFZQkFDS19M'
-    'SVZFX1RSQU5TUE9SVF9GTFYQAg==');
+    'SVZFX1RSQU5TUE9SVF9GTFYQAhIgChxQTEFZQkFDS19MSVZFX1RSQU5TUE9SVF9XSEVQEAM=');
 
 @$core.Deprecated('Use playbackAudioCapabilityDescriptor instead')
 const PlaybackAudioCapability$json = {
@@ -588,6 +589,7 @@ const PlaybackMediaTransport$json = {
     {'1': 'PLAYBACK_MEDIA_TRANSPORT_DASH', '2': 3},
     {'1': 'PLAYBACK_MEDIA_TRANSPORT_FLV', '2': 4},
     {'1': 'PLAYBACK_MEDIA_TRANSPORT_MPEG_TS', '2': 5},
+    {'1': 'PLAYBACK_MEDIA_TRANSPORT_WEB_RTC', '2': 6},
   ],
 };
 
@@ -597,7 +599,8 @@ final $typed_data.Uint8List playbackMediaTransportDescriptor = $convert.base64De
     'NQRUNJRklFRBAAEigKJFBMQVlCQUNLX01FRElBX1RSQU5TUE9SVF9QUk9HUkVTU0lWRRABEiAK'
     'HFBMQVlCQUNLX01FRElBX1RSQU5TUE9SVF9ITFMQAhIhCh1QTEFZQkFDS19NRURJQV9UUkFOU1'
     'BPUlRfREFTSBADEiAKHFBMQVlCQUNLX01FRElBX1RSQU5TUE9SVF9GTFYQBBIkCiBQTEFZQkFD'
-    'S19NRURJQV9UUkFOU1BPUlRfTVBFR19UUxAF');
+    'S19NRURJQV9UUkFOU1BPUlRfTVBFR19UUxAFEiQKIFBMQVlCQUNLX01FRElBX1RSQU5TUE9SVF'
+    '9XRUJfUlRDEAY=');
 
 @$core.Deprecated('Use playbackMediaPipelineDescriptor instead')
 const PlaybackMediaPipeline$json = {
@@ -5774,6 +5777,7 @@ const CreateRoomPublishKeyResponse$json = {
       '6': '.synctv.client.PublishKeyType',
       '10': 'type'
     },
+    {'1': 'whip_url', '3': 6, '4': 1, '5': 9, '10': 'whipUrl'},
   ],
   '8': [
     {'1': '_expires_at'},
@@ -5785,8 +5789,8 @@ final $typed_data.Uint8List createRoomPublishKeyResponseDescriptor = $convert.ba
     'ChxDcmVhdGVSb29tUHVibGlzaEtleVJlc3BvbnNlEh8KC3B1Ymxpc2hfa2V5GAEgASgJUgpwdW'
     'JsaXNoS2V5EhkKCHJ0bXBfdXJsGAIgASgJUgdydG1wVXJsEh0KCnN0cmVhbV9rZXkYAyABKAlS'
     'CXN0cmVhbUtleRIiCgpleHBpcmVzX2F0GAQgASgDSABSCWV4cGlyZXNBdIgBARIxCgR0eXBlGA'
-    'UgASgOMh0uc3luY3R2LmNsaWVudC5QdWJsaXNoS2V5VHlwZVIEdHlwZUINCgtfZXhwaXJlc19h'
-    'dA==');
+    'UgASgOMh0uc3luY3R2LmNsaWVudC5QdWJsaXNoS2V5VHlwZVIEdHlwZRIZCgh3aGlwX3VybBgG'
+    'IAEoCVIHd2hpcFVybEINCgtfZXhwaXJlc19hdA==');
 
 @$core.Deprecated('Use getRoomStreamInfoRequestDescriptor instead')
 const GetRoomStreamInfoRequest$json = {
@@ -21313,6 +21317,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.source_config.RtspTrackSelection': $1.RtspTrackSelection$json,
   '.synctv.source_config.HttpFlvPullSourceConfig':
       $1.HttpFlvPullSourceConfig$json,
+  '.synctv.source_config.WhepPullSourceConfig': $1.WhepPullSourceConfig$json,
   '.synctv.source_config.CloudreveMediaSourceConfig':
       $1.CloudreveMediaSourceConfig$json,
   '.synctv.source_config.TwitchMediaSourceConfig':

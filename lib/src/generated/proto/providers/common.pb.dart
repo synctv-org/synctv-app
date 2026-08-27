@@ -1119,18 +1119,88 @@ class PrepareHttpFlvPullIntent extends $pb.GeneratedMessage {
   void clearUrl() => $_clearField(1);
 }
 
-enum PrepareLiveProxyRequest_Source { rtmp, rtsp, httpFlv, notSet }
+class PrepareWhepPullIntent extends $pb.GeneratedMessage {
+  factory PrepareWhepPullIntent({
+    $core.String? url,
+    $core.String? authorization,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    if (authorization != null) result.authorization = authorization;
+    return result;
+  }
+
+  PrepareWhepPullIntent._();
+
+  factory PrepareWhepPullIntent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PrepareWhepPullIntent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PrepareWhepPullIntent',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.provider.common'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..aOS(2, _omitFieldNames ? '' : 'authorization')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareWhepPullIntent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PrepareWhepPullIntent copyWith(
+          void Function(PrepareWhepPullIntent) updates) =>
+      super.copyWith((message) => updates(message as PrepareWhepPullIntent))
+          as PrepareWhepPullIntent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PrepareWhepPullIntent create() => PrepareWhepPullIntent._();
+  @$core.override
+  PrepareWhepPullIntent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PrepareWhepPullIntent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PrepareWhepPullIntent>(create);
+  static PrepareWhepPullIntent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get authorization => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set authorization($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAuthorization() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAuthorization() => $_clearField(2);
+}
+
+enum PrepareLiveProxyRequest_Source { rtmp, rtsp, httpFlv, whep, notSet }
 
 class PrepareLiveProxyRequest extends $pb.GeneratedMessage {
   factory PrepareLiveProxyRequest({
     PrepareRtmpPullIntent? rtmp,
     PrepareRtspPullIntent? rtsp,
     PrepareHttpFlvPullIntent? httpFlv,
+    PrepareWhepPullIntent? whep,
   }) {
     final result = create();
     if (rtmp != null) result.rtmp = rtmp;
     if (rtsp != null) result.rtsp = rtsp;
     if (httpFlv != null) result.httpFlv = httpFlv;
+    if (whep != null) result.whep = whep;
     return result;
   }
 
@@ -1148,6 +1218,7 @@ class PrepareLiveProxyRequest extends $pb.GeneratedMessage {
     1: PrepareLiveProxyRequest_Source.rtmp,
     2: PrepareLiveProxyRequest_Source.rtsp,
     3: PrepareLiveProxyRequest_Source.httpFlv,
+    4: PrepareLiveProxyRequest_Source.whep,
     0: PrepareLiveProxyRequest_Source.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -1155,13 +1226,15 @@ class PrepareLiveProxyRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.common'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3])
+    ..oo(0, [1, 2, 3, 4])
     ..aOM<PrepareRtmpPullIntent>(1, _omitFieldNames ? '' : 'rtmp',
         subBuilder: PrepareRtmpPullIntent.create)
     ..aOM<PrepareRtspPullIntent>(2, _omitFieldNames ? '' : 'rtsp',
         subBuilder: PrepareRtspPullIntent.create)
     ..aOM<PrepareHttpFlvPullIntent>(3, _omitFieldNames ? '' : 'httpFlv',
         subBuilder: PrepareHttpFlvPullIntent.create)
+    ..aOM<PrepareWhepPullIntent>(4, _omitFieldNames ? '' : 'whep',
+        subBuilder: PrepareWhepPullIntent.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1187,11 +1260,13 @@ class PrepareLiveProxyRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
   PrepareLiveProxyRequest_Source whichSource() =>
       _PrepareLiveProxyRequest_SourceByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
   void clearSource() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -1226,6 +1301,17 @@ class PrepareLiveProxyRequest extends $pb.GeneratedMessage {
   void clearHttpFlv() => $_clearField(3);
   @$pb.TagNumber(3)
   PrepareHttpFlvPullIntent ensureHttpFlv() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  PrepareWhepPullIntent get whep => $_getN(3);
+  @$pb.TagNumber(4)
+  set whep(PrepareWhepPullIntent value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasWhep() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearWhep() => $_clearField(4);
+  @$pb.TagNumber(4)
+  PrepareWhepPullIntent ensureWhep() => $_ensure(3);
 }
 
 class PrepareRtmpRequest extends $pb.GeneratedMessage {

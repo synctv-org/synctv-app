@@ -1020,6 +1020,32 @@ final $typed_data.Uint8List httpFlvPullSourceConfigDescriptor =
     $convert.base64Decode(
         'ChdIdHRwRmx2UHVsbFNvdXJjZUNvbmZpZxIQCgN1cmwYASABKAlSA3VybA==');
 
+@$core.Deprecated('Use whepPullSourceConfigDescriptor instead')
+const WhepPullSourceConfig$json = {
+  '1': 'WhepPullSourceConfig',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '10': 'url'},
+    {
+      '1': 'authorization',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 0,
+      '10': 'authorization',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_authorization'},
+  ],
+};
+
+/// Descriptor for `WhepPullSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List whepPullSourceConfigDescriptor = $convert.base64Decode(
+    'ChRXaGVwUHVsbFNvdXJjZUNvbmZpZxIQCgN1cmwYASABKAlSA3VybBIzCg1hdXRob3JpemF0aW'
+    '9uGAIgASgJQgi6SAVyAxiAIEgAUg1hdXRob3JpemF0aW9uiAEBQhAKDl9hdXRob3JpemF0aW9u');
+
 @$core.Deprecated('Use liveProxyMediaSourceConfigDescriptor instead')
 const LiveProxyMediaSourceConfig$json = {
   '1': 'LiveProxyMediaSourceConfig',
@@ -1051,6 +1077,15 @@ const LiveProxyMediaSourceConfig$json = {
       '9': 0,
       '10': 'httpFlv'
     },
+    {
+      '1': 'whep',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.WhepPullSourceConfig',
+      '9': 0,
+      '10': 'whep'
+    },
   ],
   '8': [
     {'1': 'source'},
@@ -1063,7 +1098,8 @@ final $typed_data.Uint8List liveProxyMediaSourceConfigDescriptor = $convert.base
     'JjZV9jb25maWcuUnRtcFB1bGxTb3VyY2VDb25maWdIAFIEcnRtcBJACgRydHNwGAIgASgLMiou'
     'c3luY3R2LnNvdXJjZV9jb25maWcuUnRzcFB1bGxTb3VyY2VDb25maWdIAFIEcnRzcBJKCghodH'
     'RwX2ZsdhgDIAEoCzItLnN5bmN0di5zb3VyY2VfY29uZmlnLkh0dHBGbHZQdWxsU291cmNlQ29u'
-    'ZmlnSABSB2h0dHBGbHZCCAoGc291cmNl');
+    'ZmlnSABSB2h0dHBGbHYSQAoEd2hlcBgEIAEoCzIqLnN5bmN0di5zb3VyY2VfY29uZmlnLldoZX'
+    'BQdWxsU291cmNlQ29uZmlnSABSBHdoZXBCCAoGc291cmNl');
 
 @$core.Deprecated('Use bilibiliVideoSourceConfigDescriptor instead')
 const BilibiliVideoSourceConfig$json = {

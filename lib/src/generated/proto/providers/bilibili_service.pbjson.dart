@@ -147,6 +147,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.source_config.RtspTrackSelection': $2.RtspTrackSelection$json,
   '.synctv.source_config.HttpFlvPullSourceConfig':
       $2.HttpFlvPullSourceConfig$json,
+  '.synctv.source_config.WhepPullSourceConfig': $2.WhepPullSourceConfig$json,
   '.synctv.source_config.CloudreveMediaSourceConfig':
       $2.CloudreveMediaSourceConfig$json,
   '.synctv.source_config.TwitchMediaSourceConfig':

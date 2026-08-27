@@ -242,6 +242,34 @@ void main() {
     expect(find.text('Live proxy preview'), findsNothing);
   });
 
+  testWidgets('WHEP live proxy preserves an optional authorization header', (
+    tester,
+  ) async {
+    final gateway = _PrepareGateway();
+    await _pumpDialog(tester, gateway);
+    await _selectSource(tester, 2);
+
+    await _tapVisible(tester, find.text('WHEP'));
+    await tester.enterText(
+      find.byType(EditableText).first,
+      'https://upstream.example.test/live/whep',
+    );
+    await tester.enterText(
+      find.byType(EditableText).at(1),
+      'Bearer upstream-token',
+    );
+    await _tapVisible(tester, find.byKey(const Key('live-proxy-preview')));
+    await tester.pumpAndSettle();
+
+    final intent = gateway.liveIntents.single;
+    expect(
+      intent.whichSource(),
+      provider_common.PrepareLiveProxyRequest_Source.whep,
+    );
+    expect(intent.whep.url, 'https://upstream.example.test/live/whep');
+    expect(intent.whep.authorization, 'Bearer upstream-token');
+  });
+
   testWidgets('Bilibili parse playlist lists items before multi-select add', (
     tester,
   ) async {

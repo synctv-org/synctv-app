@@ -188,7 +188,7 @@ class _DirectHeaderDraft {
   }
 }
 
-enum _LivePullProtocol { rtmp, rtsp, httpFlv }
+enum _LivePullProtocol { rtmp, rtsp, httpFlv, whep }
 
 enum _RtspTrackMode { firstCompatible, explicitIndex, disabled }
 
@@ -199,6 +199,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   final _urlFocusNode = FocusNode();
   final _nameController = TextEditingController();
   final _liveProxyUrlController = TextEditingController();
+  final _liveProxyAuthorizationController = TextEditingController();
   final _liveProxyNameController = TextEditingController();
   final _liveProxyVideoTrackIndexController = TextEditingController(text: '0');
   final _liveProxyAudioTrackIndexController = TextEditingController(text: '0');
@@ -599,6 +600,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     _urlFocusNode.dispose();
     _nameController.dispose();
     _liveProxyUrlController.dispose();
+    _liveProxyAuthorizationController.dispose();
     _liveProxyNameController.dispose();
     _liveProxyVideoTrackIndexController.dispose();
     _liveProxyAudioTrackIndexController.dispose();
@@ -1833,6 +1835,11 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               label: Text('HTTP-FLV'),
               icon: Icon(Icons.http_rounded),
             ),
+            const ButtonSegment(
+              value: _LivePullProtocol.whep,
+              label: Text('WHEP'),
+              icon: Icon(Icons.live_tv_rounded),
+            ),
           ],
           selected: {_liveProxyProtocol},
           onSelectionChanged: _isLoading
@@ -1858,6 +1865,23 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           enabled: !_isLoading,
           onChanged: (_) => setState(() => _liveProxyPreview = null),
         ),
+        if (_liveProxyProtocol == _LivePullProtocol.whep) ...[
+          const SizedBox(height: 12),
+          AppTextField(
+            controller: _liveProxyAuthorizationController,
+            label: context.l10n.whepAuthorization,
+            hintText: context.l10n.whepAuthorizationHint,
+            prefixIcon: Icons.lock_outline_rounded,
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.next,
+            autocorrect: false,
+            smartDashesType: SmartDashesType.disabled,
+            smartQuotesType: SmartQuotesType.disabled,
+            obscureText: true,
+            enabled: !_isLoading,
+            onChanged: (_) => setState(() => _liveProxyPreview = null),
+          ),
+        ],
         if (_liveProxyProtocol == _LivePullProtocol.rtmp) ...[
           const SizedBox(height: 12),
           AppSelect<source_enum.RtmpStreamMode>(
@@ -3726,6 +3750,14 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       _LivePullProtocol.rtsp => _rtspLiveProxyIntent(url),
       _LivePullProtocol.httpFlv => provider_common.PrepareLiveProxyRequest(
         httpFlv: provider_common.PrepareHttpFlvPullIntent(url: url),
+      ),
+      _LivePullProtocol.whep => provider_common.PrepareLiveProxyRequest(
+        whep: provider_common.PrepareWhepPullIntent(
+          url: url,
+          authorization: _liveProxyAuthorizationController.text.trim().isEmpty
+              ? null
+              : _liveProxyAuthorizationController.text.trim(),
+        ),
       ),
     };
   }

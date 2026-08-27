@@ -1582,7 +1582,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverPullsUpstreamLiveSource => 'SyncTV 服务端会拉取上游直播源';
 
   @override
-  String get livePullSupportDescription => '支持 RTMP、RTSP 和 HTTP-FLV 直播源。';
+  String get livePullSupportDescription => '支持 RTMP、RTSP、HTTP-FLV 和 WHEP 直播源。';
+
+  @override
+  String get whipUrl => 'WHIP 地址';
+
+  @override
+  String get whepAuthorization => 'WHEP 授权请求头（可选）';
+
+  @override
+  String get whepAuthorizationHint => '例如 Bearer upstream-token';
 
   @override
   String get addLivePull => '添加直播拉流';

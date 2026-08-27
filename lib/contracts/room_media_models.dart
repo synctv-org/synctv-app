@@ -6,6 +6,7 @@ class RtmpPublishKeyInfo {
   final String publishKey;
   final String rtmpUrl;
   final String streamKey;
+  final String whipUrl;
   final int? expiresAt;
   final client_enum.PublishKeyType keyType;
 
@@ -13,6 +14,7 @@ class RtmpPublishKeyInfo {
     required this.publishKey,
     required this.rtmpUrl,
     required this.streamKey,
+    this.whipUrl = '',
     required this.expiresAt,
     required this.keyType,
   });
