@@ -6363,7 +6363,8 @@ void main() {
               'publishKey': 'pub_1',
               'rtmpUrl': 'rtmp://example.test/live',
               'streamKey': 'stream_1',
-              'whipUrl': '/api/rooms/room_1/streams/med_1/whip',
+              'whipUrl':
+                  '/api/playback-providers/room_1/rtmp/med_1/whip',
               'expiresAt': '1760000100',
               'type': 'PUBLISH_KEY_TYPE_SINGLE_USE',
             }),
@@ -6396,7 +6397,10 @@ void main() {
     );
 
     expect(publish.publishKey, 'pub_1');
-    expect(publish.whipUrl, '/api/rooms/room_1/streams/med_1/whip');
+    expect(
+      publish.whipUrl,
+      '/api/playback-providers/room_1/rtmp/med_1/whip',
+    );
     expect(info.active, isTrue);
     expect(info.publisher.userId, 'user_1');
     expect(requests.first.method, 'POST');
