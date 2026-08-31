@@ -64,8 +64,7 @@ void main() {
 
   test('debug payload redacts URLs and credentials from text fields', () {
     final text = _snapshot(
-      errorDescription:
-          'GET https://media.example.test/live.m3u8 Authorization: Bearer secret Cookie: sid=private',
+      errorDescription: 'GET https://media.example.test/live.m3u8 Authorization: Bearer secret Cookie: sid=private',
     ).toPrettyJson();
 
     expect(text, contains('[redacted-url]'));

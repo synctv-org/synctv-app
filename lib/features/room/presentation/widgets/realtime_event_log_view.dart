@@ -51,9 +51,8 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
   }
 
   Future<void> _copy(BuildContext context) async {
-    final text = const JsonEncoder.withIndent(
-      '  ',
-    ).convert(events.map((event) => event.toJson()).toList(growable: false));
+    final text = const JsonEncoder.withIndent('  ')
+        .convert(events.map((event) => event.toJson()).toList(growable: false));
     await Clipboard.setData(ClipboardData(text: text));
     if (context.mounted) {
       AppNotifications.showSuccess(context, context.l10n.realtimeEventsCopied);
@@ -617,9 +616,8 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                   valueListenable: _preferences.grouped,
                   builder: (context, grouped, _) {
                     if (grouped) {
-                      final groups = _buildGroups(
-                        filteredEvents,
-                      ).reversed.toList();
+                      final groups = _buildGroups(filteredEvents).reversed
+                          .toList();
                       return AppListView.separated(
                         padding: padding,
                         itemCount: groups.length,

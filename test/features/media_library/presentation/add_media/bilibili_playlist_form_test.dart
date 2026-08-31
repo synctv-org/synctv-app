@@ -190,9 +190,8 @@ void main() {
       of: find.text('Popular').last,
       matching: find.byType(PopupMenuItem<BilibiliPlaylistMode>),
     );
-    Navigator.of(
-      tester.element(popularMenuItem),
-    ).pop(BilibiliPlaylistMode.popular);
+    Navigator.of(tester.element(popularMenuItem))
+        .pop(BilibiliPlaylistMode.popular);
     await tester.pumpAndSettle();
 
     expect(requestedModes.last, BilibiliPlaylistListMode.popular);

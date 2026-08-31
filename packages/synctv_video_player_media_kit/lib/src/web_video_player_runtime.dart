@@ -142,8 +142,7 @@ class WebVideoPlayerRuntime
     if (media.httpHeaders?.isNotEmpty ?? false) {
       throw PlatformException(
         code: 'web_media_headers_unsupported',
-        message:
-            'The browser cannot attach custom headers to media requests. Use a provider proxy route.',
+        message: 'The browser cannot attach custom headers to media requests. Use a provider proxy route.',
       );
     }
 

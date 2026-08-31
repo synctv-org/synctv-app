@@ -32,14 +32,13 @@ class LatestAsyncOperationCoordinator {
     final generation = ++_generation;
     late final Future<void> trackedOperation;
     trackedOperation =
-        Future<void>.sync(
-          () => operation(() => generation == _generation),
-        ).whenComplete(() {
-          if (identical(_activeOperation, trackedOperation)) {
-            _activeOperation = null;
-            _activeKey = null;
-          }
-        });
+        Future<void>.sync(() => operation(() => generation == _generation))
+            .whenComplete(() {
+              if (identical(_activeOperation, trackedOperation)) {
+                _activeOperation = null;
+                _activeKey = null;
+              }
+            });
     _activeOperation = trackedOperation;
     _activeKey = key;
     await trackedOperation;

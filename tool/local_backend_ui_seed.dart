@@ -99,8 +99,7 @@ const _rooms = [
   _RoomSeed(
     key: 'friday-film-club',
     name: 'Friday Film Club',
-    description:
-        'A relaxed Friday-night watch party for contemporary cinema and festival favorites.',
+    description: 'A relaxed Friday-night watch party for contemporary cinema and festival favorites.',
     owner: 'olivia',
     categoryKey: 'showcase-film-tv',
     labelKeys: ['showcase-weekly-pick', 'showcase-film-open-to-guests'],
@@ -120,8 +119,7 @@ const _rooms = [
   _RoomSeed(
     key: 'animation-after-dark',
     name: 'Animation After Dark',
-    description:
-        'Late-night animation picks, from independent shorts to modern classics.',
+    description: 'Late-night animation picks, from independent shorts to modern classics.',
     owner: 'maya',
     categoryKey: 'showcase-animation',
     labelKeys: ['showcase-independent', 'showcase-animation-open-to-guests'],
@@ -178,103 +176,93 @@ const _rooms = [
 ];
 
 void main() {
-  test(
-    'seed realistic English showcase content',
-    () async {
-      const baseUrl = String.fromEnvironment('SYNCTV_SMOKE_BASE_URL');
-      const rootPassword = String.fromEnvironment('SYNCTV_SMOKE_ROOT_PASSWORD');
-      const coverDirectory = String.fromEnvironment(
-        'SYNCTV_SHOWCASE_COVER_DIR',
-      );
-      const mediaOrigin = String.fromEnvironment(
-        'SYNCTV_SHOWCASE_MEDIA_ORIGIN',
-      );
-      const allowReset = bool.fromEnvironment('SYNCTV_SHOWCASE_ALLOW_RESET');
+  test('seed realistic English showcase content', () async {
+    const baseUrl = String.fromEnvironment('SYNCTV_SMOKE_BASE_URL');
+    const rootPassword = String.fromEnvironment('SYNCTV_SMOKE_ROOT_PASSWORD');
+    const coverDirectory = String.fromEnvironment('SYNCTV_SHOWCASE_COVER_DIR');
+    const mediaOrigin = String.fromEnvironment('SYNCTV_SHOWCASE_MEDIA_ORIGIN');
+    const allowReset = bool.fromEnvironment('SYNCTV_SHOWCASE_ALLOW_RESET');
 
-      if (baseUrl.isEmpty ||
-          rootPassword.isEmpty ||
-          mediaOrigin.isEmpty ||
-          _password.isEmpty) {
-        throw StateError(
-          'SYNCTV_SMOKE_BASE_URL, SYNCTV_SMOKE_ROOT_PASSWORD, '
-          'SYNCTV_SHOWCASE_MEDIA_ORIGIN, and SYNCTV_SHOWCASE_USER_PASSWORD '
-          'are required',
-        );
-      }
+    if (baseUrl.isEmpty ||
+        rootPassword.isEmpty ||
+        mediaOrigin.isEmpty ||
+        _password.isEmpty) {
+      throw StateError(
+        'SYNCTV_SMOKE_BASE_URL, SYNCTV_SMOKE_ROOT_PASSWORD, '
+        'SYNCTV_SHOWCASE_MEDIA_ORIGIN, and SYNCTV_SHOWCASE_USER_PASSWORD '
+        'are required',
+      );
+    }
 
-      validateLocalShowcaseConfiguration(
-        baseUrl: baseUrl,
-        coverDirectory: coverDirectory,
-        allowReset: allowReset,
-        requiredCoverFiles: _rooms
-            .map((room) => room.coverFile)
-            .toSet()
+    validateLocalShowcaseConfiguration(
+      baseUrl: baseUrl,
+      coverDirectory: coverDirectory,
+      allowReset: allowReset,
+      requiredCoverFiles: _rooms
+          .map((room) => room.coverFile)
+          .toSet()
+          .toList(growable: false),
+    );
+    SharedPreferences.setMockInitialValues({});
+    await SyncTvService.init();
+    await SyncTvService.setBaseUrl(baseUrl);
+    await _loginRoot(rootPassword);
+
+    await _clearExistingShowcase();
+    final taxonomy = await _createTaxonomy();
+    await SyncTvService.logout();
+
+    await _createUsers();
+    await _loginRoot(rootPassword);
+    final usersByName = await _loadUsers();
+    await SyncTvService.logout();
+
+    final roomIds = <String, String>{};
+    for (final room in _rooms) {
+      await _login(room.owner, _password);
+      final created = await SyncTvService.createRoom(
+        room.name,
+        description: room.description,
+        categoryId: taxonomy.categories[room.categoryKey]!,
+        labelIds: room.labelKeys
+            .map((key) => taxonomy.labels[key]!)
             .toList(growable: false),
       );
-      SharedPreferences.setMockInitialValues({});
-      await SyncTvService.init();
-      await SyncTvService.setBaseUrl(baseUrl);
-      await _loginRoot(rootPassword);
+      roomIds[room.key] = created.roomId;
 
-      await _clearExistingShowcase();
-      final taxonomy = await _createTaxonomy();
-      await SyncTvService.logout();
-
-      await _createUsers();
-      await _loginRoot(rootPassword);
-      final usersByName = await _loadUsers();
-      await SyncTvService.logout();
-
-      final roomIds = <String, String>{};
-      for (final room in _rooms) {
-        await _login(room.owner, _password);
-        final created = await SyncTvService.createRoom(
-          room.name,
-          description: room.description,
-          categoryId: taxonomy.categories[room.categoryKey]!,
-          labelIds: room.labelKeys
-              .map((key) => taxonomy.labels[key]!)
-              .toList(growable: false),
-        );
-        roomIds[room.key] = created.roomId;
-
-        await SyncTvService.updateRoomCover(
+      await SyncTvService.updateRoomCover(
+        created.roomId,
+        await _imageUpload('$coverDirectory/${room.coverFile}'),
+      );
+      for (final username in room.members.where((name) => name != room.owner)) {
+        await SyncTvService.addRoomMember(
           created.roomId,
-          await _imageUpload('$coverDirectory/${room.coverFile}'),
+          usersByName[username]!.id,
+          notify: false,
         );
-        for (final username in room.members.where(
-          (name) => name != room.owner,
-        )) {
-          await SyncTvService.addRoomMember(
-            created.roomId,
-            usersByName[username]!.id,
-            notify: false,
-          );
-        }
-        await SyncTvService.favoriteRoom(created.roomId);
-
-        if (room.primary) {
-          await _createPrimaryRoomMedia(
-            created.roomId,
-            '$mediaOrigin/sintel-trailer.mp4',
-            '$coverDirectory/${room.coverFile}',
-          );
-        }
-        await SyncTvService.logout();
       }
+      await SyncTvService.favoriteRoom(created.roomId);
 
-      await _seedChat(roomIds['animation-after-dark']!);
-      await _seedSecondaryRoomChat(roomIds);
-      await _seedOliviaFavorites(roomIds);
-
-      print('SHOWCASE_USERNAME=olivia');
-      print('SHOWCASE_PRIMARY_ROOM_ID=${roomIds['animation-after-dark']}');
-      for (final room in _rooms) {
-        print('SHOWCASE_ROOM_${room.key.toUpperCase()}=${roomIds[room.key]}');
+      if (room.primary) {
+        await _createPrimaryRoomMedia(
+          created.roomId,
+          '$mediaOrigin/sintel-trailer.mp4',
+          '$coverDirectory/${room.coverFile}',
+        );
       }
-    },
-    timeout: const Timeout(Duration(minutes: 8)),
-  );
+      await SyncTvService.logout();
+    }
+
+    await _seedChat(roomIds['animation-after-dark']!);
+    await _seedSecondaryRoomChat(roomIds);
+    await _seedOliviaFavorites(roomIds);
+
+    print('SHOWCASE_USERNAME=olivia');
+    print('SHOWCASE_PRIMARY_ROOM_ID=${roomIds['animation-after-dark']}');
+    for (final room in _rooms) {
+      print('SHOWCASE_ROOM_${room.key.toUpperCase()}=${roomIds[room.key]}');
+    }
+  }, timeout: const Timeout(Duration(minutes: 8)));
 }
 
 Future<void> _clearExistingShowcase() async {

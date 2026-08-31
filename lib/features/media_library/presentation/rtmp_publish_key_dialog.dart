@@ -142,9 +142,8 @@ class RtmpPublishKeyOptionsForm extends StatelessWidget {
               client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT)
             AppPanelSurface(
               padding: const EdgeInsets.all(12),
-              color: Theme.of(
-                context,
-              ).colorScheme.errorContainer.withValues(alpha: 0.35),
+              color: Theme.of(context).colorScheme.errorContainer
+                  .withValues(alpha: 0.35),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

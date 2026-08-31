@@ -14,14 +14,13 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
-typedef QnapFileLoader =
-    Future<QnapFileListPage> Function(
-      QnapBindInfo bind,
-      String path,
-      int page,
-      int pageSize,
-      String search,
-    );
+typedef QnapFileLoader = Future<QnapFileListPage> Function(
+  QnapBindInfo bind,
+  String path,
+  int page,
+  int pageSize,
+  String search,
+);
 
 class QnapAddMediaForm extends StatefulWidget {
   const QnapAddMediaForm({
@@ -198,9 +197,8 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
             _path.isEmpty ? context.l10n.shares : _path,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         AppIconButton(

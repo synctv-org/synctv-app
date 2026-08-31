@@ -3644,9 +3644,8 @@ class AppTile extends StatelessWidget {
       trailing: suffix,
       enabled: enabled,
       selected: selected,
-      selectedTileColor: Theme.of(
-        context,
-      ).colorScheme.primaryContainer.withValues(alpha: 0.45),
+      selectedTileColor: Theme.of(context).colorScheme.primaryContainer
+          .withValues(alpha: 0.45),
       iconColor: destructive ? Theme.of(context).colorScheme.error : null,
       textColor: destructive ? Theme.of(context).colorScheme.error : null,
       autofocus: autofocus,

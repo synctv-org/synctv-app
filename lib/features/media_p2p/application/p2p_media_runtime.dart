@@ -1,12 +1,17 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:synctv_app/features/media_p2p/domain/p2p_media_preferences.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
 
-typedef P2pMediaSignalingCallback =
-    void Function(String type, Map<String, dynamic> data);
-typedef P2pCachedPieceLoader =
-    Future<Uint8List?> Function(String swarmId, String pieceKey);
+typedef P2pMediaSignalingCallback = void Function(
+  String type,
+  Map<String, dynamic> data,
+);
+typedef P2pCachedPieceLoader = Future<Uint8List?> Function(
+  String swarmId,
+  String pieceKey,
+);
 typedef P2pIceServersLoader = Future<List<IceServerInfo>> Function();
 
 final class P2pPieceRequestCancellation {

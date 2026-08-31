@@ -73,9 +73,10 @@ void main() {
         );
         final observeIds = received
             .map(
-              (frame) => client.ClientMessage.fromJson(
-                frame,
-              ).observeResource.observeId,
+              (frame) =>
+                  client.ClientMessage.fromJson(frame)
+                      .observeResource
+                      .observeId,
             )
             .toList(growable: false);
         expect(observeIds.where((id) => id == 'playback_state'), hasLength(1));

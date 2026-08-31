@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'dart:math';
 import 'dart:async';
+
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';

@@ -724,9 +724,8 @@ class SyncTvApiClient {
   }
 
   Map<String, Object?> _messageQuery(GeneratedMessage message) {
-    return _messageJson(
-      message,
-    ).map((key, value) => MapEntry(key, _queryValue(value)));
+    return _messageJson(message)
+        .map((key, value) => MapEntry(key, _queryValue(value)));
   }
 
   Map<String, dynamic> _protoFieldJson(GeneratedMessage message) {
@@ -1307,9 +1306,8 @@ class SyncTvApiClient {
   ) {
     if (profile.profileVersion >= 2) {
       return {
-        'clientProfile': base64UrlEncode(
-          profile.writeToBuffer(),
-        ).replaceAll('=', ''),
+        'clientProfile': base64UrlEncode(profile.writeToBuffer())
+            .replaceAll('=', ''),
       };
     }
     return {

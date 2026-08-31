@@ -95,16 +95,14 @@ Iterable<_Violation> _checkFile(String path, List<String> lines) sync* {
 }
 
 String? _packageImport(String line) {
-  final match = RegExp(
-    r'''^\s*import\s+['"]package:synctv_app/([^'"]+)['"]''',
-  ).firstMatch(line);
+  final match = RegExp(r'''^\s*import\s+['"]package:synctv_app/([^'"]+)['"]''')
+      .firstMatch(line);
   return match?.group(1);
 }
 
 String? _invalidDependency(String source, String imported) {
-  final presentation = RegExp(
-    r'^lib/features/[^/]+/presentation/',
-  ).hasMatch(source);
+  final presentation = RegExp(r'^lib/features/[^/]+/presentation/')
+      .hasMatch(source);
   if (presentation && imported.startsWith('data/')) {
     return 'presentation cannot depend on the shared data plane: $imported';
   }
@@ -152,9 +150,8 @@ String? _invalidDependency(String source, String imported) {
   if (featureLayer != null) {
     final feature = featureLayer.group(1)!;
     final layer = featureLayer.group(2)!;
-    final importedFeature = RegExp(
-      r'^features/([^/]+)/(.+)$',
-    ).firstMatch(imported);
+    final importedFeature = RegExp(r'^features/([^/]+)/(.+)$')
+        .firstMatch(imported);
     if (importedFeature != null && importedFeature.group(1) != feature) {
       return '$feature $layer cannot depend on another feature: $imported';
     }

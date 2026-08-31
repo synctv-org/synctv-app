@@ -113,8 +113,7 @@ void main() {
                 publishKey: 'publish-secret',
                 rtmpUrl: 'rtmps://live.example.com/room_123',
                 streamKey: 'media_456?token=publish-secret',
-                whipUrl:
-                    'https://live.example.com/api/playback-providers/room_123/rtmp/media_456/whip',
+                whipUrl: 'https://live.example.com/api/playback-providers/room_123/rtmp/media_456/whip',
                 expiresAt: null,
                 keyType: client_enum.PublishKeyType.PUBLISH_KEY_TYPE_PERMANENT,
               ),

@@ -45,9 +45,8 @@ void main() {
         }),
       );
 
-      final result = await SyncTvProviderDomainService(
-        api,
-      ).resolveYoutube('https://youtu.be/abcdefghijk', instanceName: 'edge');
+      final result = await SyncTvProviderDomainService(api)
+          .resolveYoutube('https://youtu.be/abcdefghijk', instanceName: 'edge');
 
       expect(result.metadata.title, 'Video');
       expect(result.formats.single.itag, 22);

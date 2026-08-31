@@ -14,14 +14,13 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
-typedef TrueNasPageLoader =
-    Future<TrueNasFileListPage> Function(
-      TrueNasBindInfo bind,
-      String path,
-      String search,
-      int page,
-      int pageSize,
-    );
+typedef TrueNasPageLoader = Future<TrueNasFileListPage> Function(
+  TrueNasBindInfo bind,
+  String path,
+  String search,
+  int page,
+  int pageSize,
+);
 
 class TrueNasAddMediaForm extends StatefulWidget {
   const TrueNasAddMediaForm({

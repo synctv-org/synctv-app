@@ -7,9 +7,8 @@ final class LocalizedPlaybackResource {
   final Map<String, String> headers;
 }
 
-typedef PlaybackResourceLocalizer =
-    Future<LocalizedPlaybackResource> Function(
-      String url,
-      Map<String, String> headers,
-      P2pResourceDelivery delivery,
-    );
+typedef PlaybackResourceLocalizer = Future<LocalizedPlaybackResource> Function(
+  String url,
+  Map<String, String> headers,
+  P2pResourceDelivery delivery,
+);

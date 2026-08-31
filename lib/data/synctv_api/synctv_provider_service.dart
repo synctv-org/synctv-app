@@ -518,9 +518,8 @@ class SyncTvProviderDomainService {
   Future<List<FnosBindInfo>> getAllFnosBindInfos() async {
     final instances = await _availableInstanceNames('fnos');
     final lists = await Future.wait(
-      _withDefaultInstance(
-        instances,
-      ).map((instanceName) => getFnosBindInfos(instanceName: instanceName)),
+      _withDefaultInstance(instances)
+          .map((instanceName) => getFnosBindInfos(instanceName: instanceName)),
     );
     return _dedupeBy(
       lists.expand((list) => list),
@@ -736,9 +735,8 @@ class SyncTvProviderDomainService {
   Future<List<QnapBindInfo>> getAllQnapBindInfos() async {
     final instances = await _availableInstanceNames('qnap');
     final lists = await Future.wait(
-      _withDefaultInstance(
-        instances,
-      ).map((instanceName) => getQnapBindInfos(instanceName: instanceName)),
+      _withDefaultInstance(instances)
+          .map((instanceName) => getQnapBindInfos(instanceName: instanceName)),
     );
     return _dedupeBy(
       lists.expand((list) => list),
@@ -1283,9 +1281,8 @@ class SyncTvProviderDomainService {
   Future<List<TrueNasBindInfo>> getAllTrueNasBindInfos() async {
     final instances = await _availableInstanceNames('truenas');
     final lists = await Future.wait(
-      _withDefaultInstance(
-        instances,
-      ).map((name) => getTrueNasBindInfos(instanceName: name)),
+      _withDefaultInstance(instances)
+          .map((name) => getTrueNasBindInfos(instanceName: name)),
     );
     return _dedupeBy(
       lists.expand((list) => list),

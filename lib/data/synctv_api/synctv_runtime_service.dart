@@ -7,8 +7,9 @@ import 'package:synctv_app/core/network/server_endpoint_identity.dart';
 import 'package:synctv_app/data/synctv_api/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
-typedef SyncTvServerInfoProbe =
-    Future<client.GetServerInfoResponse> Function(SyncTvApiClient api);
+typedef SyncTvServerInfoProbe = Future<client.GetServerInfoResponse> Function(
+  SyncTvApiClient api,
+);
 
 class SyncTvRuntimeService {
   static const serverProbeTimeout = Duration(seconds: 8);
@@ -79,9 +80,8 @@ class SyncTvRuntimeService {
     }
     final serverClient = _createClient(url, allowInsecureTls: allowInsecureTls);
     try {
-      final info = await _getServerInfo(
-        serverClient,
-      ).timeout(serverProbeTimeout);
+      final info = await _getServerInfo(serverClient)
+          .timeout(serverProbeTimeout);
       final declaredServerId = info.serverId.trim();
       _serverSelectionRevision++;
       _api.configureServer(
@@ -296,9 +296,8 @@ class SyncTvRuntimeService {
       allowInsecureTls: active.allowInsecureTls,
     );
     try {
-      final info = await _getServerInfo(
-        serverClient,
-      ).timeout(serverProbeTimeout);
+      final info = await _getServerInfo(serverClient)
+          .timeout(serverProbeTimeout);
       final declaredServerId = info.serverId.trim();
       if (declaredServerId.isEmpty) return;
       if (revision != _serverSelectionRevision ||

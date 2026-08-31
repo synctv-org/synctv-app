@@ -581,16 +581,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       ),
                     const SizedBox(height: 16),
                     AppDivider(
-                      color: Theme.of(
-                        context,
-                      ).dividerColor.withValues(alpha: 0.65),
+                      color: Theme.of(context).dividerColor
+                          .withValues(alpha: 0.65),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       context.l10n.roomPassword,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 8),
                     AppSelect<_RoomPasswordAction>(

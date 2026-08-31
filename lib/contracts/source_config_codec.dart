@@ -2002,13 +2002,13 @@ class SourceConfigCodec {
     return source_config.DirectUrlMediaSourceConfig(
       medias: medias,
       defaultMediaIndex: _optionalInt(config['defaultMediaIndex']),
-      subtitles: _listMaps(
-        config['subtitles'],
-      ).map(_directUrlSubtitleSourceConfig).toList(),
+      subtitles: _listMaps(config['subtitles'])
+          .map(_directUrlSubtitleSourceConfig)
+          .toList(),
       defaultSubtitleIndex: _optionalInt(config['defaultSubtitleIndex']),
-      danmakus: _listMaps(
-        config['danmakus'],
-      ).map(_directUrlDanmakuSourceConfig).toList(),
+      danmakus: _listMaps(config['danmakus'])
+          .map(_directUrlDanmakuSourceConfig)
+          .toList(),
       defaultDanmakuIndex: _optionalInt(config['defaultDanmakuIndex']),
       playbackKind: _playbackKindFromValue(config['playbackKind']),
       durationSeconds: _optionalDouble(config['durationSeconds']),

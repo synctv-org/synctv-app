@@ -24,10 +24,8 @@ class _ProviderNotice extends StatelessWidget {
       border: Border.all(color: color.withValues(alpha: 0.24)),
       title: Text(
         text,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: color, fontWeight: FontWeight.w600),
       ),
     );
   }

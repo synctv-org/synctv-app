@@ -23,16 +23,12 @@ import 'local_backend_test_auth.dart';
 import 'local_backend_media_helpers.dart';
 
 void main() {
-  test(
-    'local_backend_deep_business_test',
-    () async {
-      await runDeepBusinessTest(
-        const String.fromEnvironment('SYNCTV_SMOKE_BASE_URL'),
-        const String.fromEnvironment('SYNCTV_SMOKE_ROOT_PASSWORD'),
-      );
-    },
-    timeout: const Timeout(Duration(minutes: 5)),
-  );
+  test('local_backend_deep_business_test', () async {
+    await runDeepBusinessTest(
+      const String.fromEnvironment('SYNCTV_SMOKE_BASE_URL'),
+      const String.fromEnvironment('SYNCTV_SMOKE_ROOT_PASSWORD'),
+    );
+  }, timeout: const Timeout(Duration(minutes: 5)));
 }
 
 Future<void> runDeepBusinessTest(String baseUrl, String rootPassword) async {

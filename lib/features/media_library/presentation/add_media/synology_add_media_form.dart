@@ -16,26 +16,25 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
 
 enum _SynologyBrowseMode { files, videoStation }
 
-typedef SynologyFileLoader =
-    Future<SynologyFileListPage> Function(
-      SynologyBindInfo bind,
-      String path,
-      int page,
-      int pageSize,
-      String search,
-    );
-typedef SynologyLibraryLoader =
-    Future<List<SynologyVideoLibraryInfo>> Function(SynologyBindInfo bind);
-typedef SynologyVideoLoader =
-    Future<SynologyVideoListPage> Function(
-      SynologyBindInfo bind,
-      SynologyVideoCollection collection,
-      int libraryId,
-      int? tvShowId,
-      int page,
-      int pageSize,
-      String search,
-    );
+typedef SynologyFileLoader = Future<SynologyFileListPage> Function(
+  SynologyBindInfo bind,
+  String path,
+  int page,
+  int pageSize,
+  String search,
+);
+typedef SynologyLibraryLoader = Future<List<SynologyVideoLibraryInfo>> Function(
+  SynologyBindInfo bind,
+);
+typedef SynologyVideoLoader = Future<SynologyVideoListPage> Function(
+  SynologyBindInfo bind,
+  SynologyVideoCollection collection,
+  int libraryId,
+  int? tvShowId,
+  int page,
+  int pageSize,
+  String search,
+);
 
 class SynologyAddMediaForm extends StatefulWidget {
   const SynologyAddMediaForm({
@@ -264,9 +263,8 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
             _path.isEmpty ? 'Shared folders' : _path,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         AppIconButton(

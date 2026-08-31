@@ -316,9 +316,9 @@ class SyncTvUserApi {
   Future<client.LogoutResponse> logout(client.LogoutRequest request) async {
     final generation = _api._requestGeneration();
     var response = client.LogoutResponse();
-    if (_api.session.identity case AccountSessionIdentity(
-      accessToken: final token,
-    ) when token != null) {
+    if (_api.session.identity
+        case AccountSessionIdentity(accessToken: final token)
+        when token != null) {
       try {
         response = await _api._send(
           'POST',

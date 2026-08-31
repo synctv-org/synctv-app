@@ -183,12 +183,14 @@ class _UserManagementTabState extends State<UserManagementTab> {
       context: context,
       title: l10n.deleteUser,
       icon: const Icon(Icons.warning, color: Colors.red),
-      content:
-          _destructiveDialogContent(l10n.permanentlyDeleteUser(user.username), [
-            l10n.deleteUserClearsAccountData,
-            l10n.deleteUserAffectsRelatedData,
-            l10n.deleteUserRevokesOnlineAccess,
-          ]),
+      content: _destructiveDialogContent(
+        l10n.permanentlyDeleteUser(user.username),
+        [
+          l10n.deleteUserClearsAccountData,
+          l10n.deleteUserAffectsRelatedData,
+          l10n.deleteUserRevokesOnlineAccess,
+        ],
+      ),
       actions: [
         AppDialogs.createCancelButton(context),
         const SizedBox(width: 8),

@@ -988,9 +988,8 @@ class RoomMediaEntry {
           fps: metadata?.hasFps() == true ? metadata!.fps : null,
           metadata: metadata == null
               ? const {}
-              : protoMessageToJsonMap(
-                  metadata,
-                ).map((key, value) => MapEntry(key, value.toString())),
+              : protoMessageToJsonMap(metadata)
+                    .map((key, value) => MapEntry(key, value.toString())),
           p2pDelivery: p2pDelivery,
         );
       }).toList();

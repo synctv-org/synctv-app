@@ -397,9 +397,8 @@ class SyncTvService {
     final endpointGeneration = _api.endpointGeneration;
     try {
       final sentAt = SyncedClock.localUnixNanos();
-      final response = await getServerTime(
-        clientSentAtNanos: sentAt,
-      ).timeout(_serverTimeSyncTimeout);
+      final response = await getServerTime(clientSentAtNanos: sentAt)
+          .timeout(_serverTimeSyncTimeout);
       final receivedAt = SyncedClock.localUnixNanos();
       if (revision != _serverTimeSyncRevision ||
           !_api.isEndpointGenerationCurrent(endpointGeneration)) {

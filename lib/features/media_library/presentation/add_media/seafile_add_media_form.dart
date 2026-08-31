@@ -16,23 +16,21 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
 
 enum SeafileBrowseMode { folder, starred, search }
 
-typedef SeafilePageLoader =
-    Future<SeafileFileListPage> Function(
-      SeafileBindInfo bind,
-      SeafileBrowseMode mode,
-      String repositoryId,
-      String path,
-      String query,
-      int page,
-      int pageSize,
-    );
+typedef SeafilePageLoader = Future<SeafileFileListPage> Function(
+  SeafileBindInfo bind,
+  SeafileBrowseMode mode,
+  String repositoryId,
+  String path,
+  String query,
+  int page,
+  int pageSize,
+);
 
-typedef SeafileLibraryUnlocker =
-    Future<void> Function(
-      SeafileBindInfo bind,
-      String repositoryId,
-      String password,
-    );
+typedef SeafileLibraryUnlocker = Future<void> Function(
+  SeafileBindInfo bind,
+  String repositoryId,
+  String password,
+);
 
 class SeafileAddMediaForm extends StatefulWidget {
   const SeafileAddMediaForm({
@@ -249,9 +247,8 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
           _locationTitle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
       AppIconButton(
@@ -643,9 +640,8 @@ class _SeafileUnlockDialogState extends State<_SeafileUnlockDialog> {
                   children: [
                     AppActionButton(
                       onPressed: () => Navigator.pop(context),
-                      label: MaterialLocalizations.of(
-                        context,
-                      ).cancelButtonLabel,
+                      label: MaterialLocalizations.of(context)
+                          .cancelButtonLabel,
                       style: AppActionButtonStyle.text,
                     ),
                     const SizedBox(width: 8),

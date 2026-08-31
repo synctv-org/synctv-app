@@ -62,9 +62,8 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
   }
 
   int _compareLabels(RoomLabelInfo a, RoomLabelInfo b) {
-    final category = _categoryDisplayById(
-      a.categoryId,
-    ).compareTo(_categoryDisplayById(b.categoryId));
+    final category = _categoryDisplayById(a.categoryId)
+        .compareTo(_categoryDisplayById(b.categoryId));
     if (category != 0) return category;
     final order = a.sortOrder.compareTo(b.sortOrder);
     if (order != 0) return order;

@@ -998,9 +998,8 @@ class _AdminChatImageGrid extends StatelessWidget {
           height: 86,
           borderRadius: BorderRadius.circular(7),
           errorChild: ColoredBox(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.8),
             child: const Icon(Icons.broken_image_outlined),
           ),
         );

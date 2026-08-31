@@ -296,9 +296,8 @@ class _ContentReportsViewState extends State<ContentReportsView>
               if (detail.metadata.isNotEmpty)
                 _ReportDetailRow(
                   label: context.l10n.metadata,
-                  value: const JsonEncoder.withIndent(
-                    '  ',
-                  ).convert(detail.metadata),
+                  value: const JsonEncoder.withIndent('  ')
+                      .convert(detail.metadata),
                 ),
             ],
           ),

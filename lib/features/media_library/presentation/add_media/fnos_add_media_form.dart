@@ -16,26 +16,25 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
 
 enum FnosBrowseMode { files, mediaLibrary }
 
-typedef FnosFileLoader =
-    Future<FnosFileListPage> Function(
-      FnosBindInfo bind,
-      String path,
-      int page,
-      int pageSize,
-      String search,
-    );
-typedef FnosLibraryLoader =
-    Future<List<FnosMediaLibraryInfo>> Function(FnosBindInfo bind);
-typedef FnosMediaItemLoader =
-    Future<FnosMediaListPage> Function(
-      FnosBindInfo bind,
-      FnosMediaCollection collection,
-      String libraryGuid,
-      String parentGuid,
-      int page,
-      int pageSize,
-      String search,
-    );
+typedef FnosFileLoader = Future<FnosFileListPage> Function(
+  FnosBindInfo bind,
+  String path,
+  int page,
+  int pageSize,
+  String search,
+);
+typedef FnosLibraryLoader = Future<List<FnosMediaLibraryInfo>> Function(
+  FnosBindInfo bind,
+);
+typedef FnosMediaItemLoader = Future<FnosMediaListPage> Function(
+  FnosBindInfo bind,
+  FnosMediaCollection collection,
+  String libraryGuid,
+  String parentGuid,
+  int page,
+  int pageSize,
+  String search,
+);
 
 class FnosAddMediaForm extends StatefulWidget {
   const FnosAddMediaForm({
@@ -271,9 +270,8 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         AppIconButton(

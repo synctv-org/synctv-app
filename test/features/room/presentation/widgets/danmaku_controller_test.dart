@@ -290,9 +290,8 @@ void main() {
       '/gzip': gzip.encode(utf8.encode(document)),
       '/zlib': ZLibEncoder().convert(utf8.encode(document)),
       '/raw-deflate': ZLibEncoder(raw: true).convert(utf8.encode(document)),
-      '/unlabelled-raw-deflate': ZLibEncoder(
-        raw: true,
-      ).convert(utf8.encode(document)),
+      '/unlabelled-raw-deflate': ZLibEncoder(raw: true)
+          .convert(utf8.encode(document)),
     };
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final serverSubscription = server.listen((request) async {

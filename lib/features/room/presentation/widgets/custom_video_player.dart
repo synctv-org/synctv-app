@@ -1261,9 +1261,8 @@ class _PictureInPicturePlaybackSurfaceState
             width: menuWidth,
             height: menuHeight,
             child: ScrollConfiguration(
-              behavior: ScrollConfiguration.of(
-                context,
-              ).copyWith(scrollbars: false),
+              behavior: ScrollConfiguration.of(context)
+                  .copyWith(scrollbars: false),
               child: ListView.builder(
                 key: const Key('picture_in_picture_speed_options_list'),
                 padding: const EdgeInsets.symmetric(vertical: 4),
@@ -2491,9 +2490,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
               // Extract color from tags if present {\c&HBBGGRR&}
               Color color = Colors.white;
-              final colorMatch = RegExp(
-                r'\\c&H([0-9a-fA-F]{6})&',
-              ).firstMatch(rawText);
+              final colorMatch = RegExp(r'\\c&H([0-9a-fA-F]{6})&')
+                  .firstMatch(rawText);
               if (colorMatch != null) {
                 final hex = colorMatch.group(1)!; // BBGGRR
                 final b = int.parse(hex.substring(0, 2), radix: 16);
@@ -2521,8 +2519,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                   DanmakuItem(
                     text: text,
                     startTime: start,
-                    endTime:
-                        end, // DanmakuOverlay uses internal duration usually, but we can pass it
+                    endTime: end, // DanmakuOverlay uses internal duration usually, but we can pass it
                     color: color,
                     type: type,
                   ),
@@ -4522,8 +4519,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         right: 0,
                         child: AppSafeArea(
                           top: false,
-                          bottom:
-                              false, // 无论是全屏还是非全屏，都禁用 SafeArea 的底部填充，完全由 Positioned 控制
+                          bottom: false, // 无论是全屏还是非全屏，都禁用 SafeArea 的底部填充，完全由 Positioned 控制
                           child: AppPanelSurface(
                             padding: const EdgeInsets.symmetric(
                               vertical: 8,

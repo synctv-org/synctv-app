@@ -399,15 +399,13 @@ void main() {
     );
 
     expect(
-      cloudreve.ListRequest.fromBuffer(
-        pageRequest.writeToBuffer(),
-      ).whichPagination(),
+      cloudreve.ListRequest.fromBuffer(pageRequest.writeToBuffer())
+          .whichPagination(),
       cloudreve.ListRequest_Pagination.page,
     );
     expect(
-      cloudreve.ListRequest.fromBuffer(
-        cursorRequest.writeToBuffer(),
-      ).whichPagination(),
+      cloudreve.ListRequest.fromBuffer(cursorRequest.writeToBuffer())
+          .whichPagination(),
       cloudreve.ListRequest_Pagination.cursor,
     );
 
@@ -820,48 +818,45 @@ void main() {
     expect(update.playbackStateUpdate.speed, 1.25);
   });
 
-  test(
-    'guarded playback state update uses source guard without version lock',
-    () {
-      final message = RoomRealtimeCodec.buildGuardedPlaybackStateUpdateMessage(
-        PlaybackControlAction.pause,
-        SyncTvPlaybackStatus(
-          playbackRate: 1,
-          version: 7,
-          playingMediaId: 'med_1',
-          playingPlaylistId: '',
-          targetHash:
-              'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-        ),
-        isPlaying: false,
-        position: 0.658,
+  test('guarded playback state update uses source guard without version lock', () {
+    final message = RoomRealtimeCodec.buildGuardedPlaybackStateUpdateMessage(
+      PlaybackControlAction.pause,
+      SyncTvPlaybackStatus(
         playbackRate: 1,
-        clientOperationId: '3d918f61-3959-49ef-a962-5d94b8ac8470',
-        clientTimeMillis: 123456,
-      );
+        version: 7,
+        playingMediaId: 'med_1',
+        playingPlaylistId: '',
+        targetHash:
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      ),
+      isPlaying: false,
+      position: 0.658,
+      playbackRate: 1,
+      clientOperationId: '3d918f61-3959-49ef-a962-5d94b8ac8470',
+      clientTimeMillis: 123456,
+    );
 
-      expect(message.hasPlaybackStateUpdate(), isTrue);
-      expect(
-        message.playbackStateUpdate.type,
-        client.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PAUSE,
-      );
-      expect(message.playbackStateUpdate.playing, isFalse);
-      expect(message.playbackStateUpdate.position, 0.658);
-      expect(message.playbackStateUpdate.speed, 1);
-      expect(message.playbackStateUpdate.hasVersion(), isFalse);
-      expect(message.playbackStateUpdate.expectedMediaId, 'med_1');
-      expect(message.playbackStateUpdate.hasExpectedPlaylistId(), isFalse);
-      expect(
-        message.playbackStateUpdate.expectedTargetHash,
-        'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      );
-      expect(
-        message.playbackStateUpdate.clientOperationId,
-        '3d918f61-3959-49ef-a962-5d94b8ac8470',
-      );
-      expect(message.playbackStateUpdate.clientTimeMillis, Int64(123456));
-    },
-  );
+    expect(message.hasPlaybackStateUpdate(), isTrue);
+    expect(
+      message.playbackStateUpdate.type,
+      client.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PAUSE,
+    );
+    expect(message.playbackStateUpdate.playing, isFalse);
+    expect(message.playbackStateUpdate.position, 0.658);
+    expect(message.playbackStateUpdate.speed, 1);
+    expect(message.playbackStateUpdate.hasVersion(), isFalse);
+    expect(message.playbackStateUpdate.expectedMediaId, 'med_1');
+    expect(message.playbackStateUpdate.hasExpectedPlaylistId(), isFalse);
+    expect(
+      message.playbackStateUpdate.expectedTargetHash,
+      'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    );
+    expect(
+      message.playbackStateUpdate.clientOperationId,
+      '3d918f61-3959-49ef-a962-5d94b8ac8470',
+    );
+    expect(message.playbackStateUpdate.clientTimeMillis, Int64(123456));
+  });
 
   test('realtime chat messages preserve danmaku presentation fields', () {
     final chat = client.ClientMessage.fromBuffer(
@@ -2026,9 +2021,8 @@ void main() {
       }),
     );
 
-    final updated = await SyncTvFileUploadDomainService(
-      api,
-    ).updateUserAvatar(upload);
+    final updated = await SyncTvFileUploadDomainService(api)
+        .updateUserAvatar(upload);
 
     expect(updated.id, 'usr_1');
     expect(uploadSessionRequests, 2);
@@ -2048,14 +2042,17 @@ void main() {
       _expectedOwnershipProof(
         upload.bytes,
         nonce: 'nonce_1',
-        contentManifestSha256:
-            _expectedContentManifestSha256(upload.sizeBytes, upload.sizeBytes, [
-              (
-                partNumber: 1,
-                sizeBytes: upload.sizeBytes,
-                checksum: upload.checksumSha256,
-              ),
-            ]),
+        contentManifestSha256: _expectedContentManifestSha256(
+          upload.sizeBytes,
+          upload.sizeBytes,
+          [
+            (
+              partNumber: 1,
+              sizeBytes: upload.sizeBytes,
+              checksum: upload.checksumSha256,
+            ),
+          ],
+        ),
         ranges: const [(offset: 1, length: 3)],
       ),
     );
@@ -2426,9 +2423,8 @@ void main() {
       }),
     );
 
-    final updated = await SyncTvFileUploadDomainService(
-      api,
-    ).updateVideoThumbnail('room_1', 'med_1', upload);
+    final updated = await SyncTvFileUploadDomainService(api)
+        .updateVideoThumbnail('room_1', 'med_1', upload);
 
     expect(updated.id, 'med_1');
     expect(uploadSessionRequests, 2);
@@ -2550,9 +2546,8 @@ void main() {
         }),
       );
 
-      final updated = await SyncTvFileUploadDomainService(
-        api,
-      ).updateUserAvatar(upload);
+      final updated = await SyncTvFileUploadDomainService(api)
+          .updateUserAvatar(upload);
 
       expect(updated.id, 'usr_1');
       expect(uploadSessionRequests, 2);
@@ -2666,9 +2661,8 @@ void main() {
         }),
       );
 
-      final updated = await SyncTvFileUploadDomainService(
-        api,
-      ).updateUserAvatar(upload);
+      final updated = await SyncTvFileUploadDomainService(api)
+          .updateUserAvatar(upload);
 
       expect(updated.id, 'usr_1');
       expect(uploadSessionRequests, 2);
@@ -2930,235 +2924,218 @@ void main() {
     );
   });
 
-  test(
-    'provider bind aggregation follows available instance protobuf API',
-    () async {
-      final requests = <http.Request>[];
-      final server = await io.HttpServer.bind(
-        io.InternetAddress.loopbackIPv4,
-        0,
-      );
-      final subscription = server.listen((request) async {
-        requests.add(http.Request(request.method, request.uri));
-        request.response.headers.contentType = io.ContentType.json;
+  test('provider bind aggregation follows available instance protobuf API', () async {
+    final requests = <http.Request>[];
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      requests.add(http.Request(request.method, request.uri));
+      request.response.headers.contentType = io.ContentType.json;
 
-        final instanceName = request.uri.queryParameters['instanceName'] ?? '';
-        if (request.uri.path == '/api/providers/instances/available') {
-          request.response.write(
-            jsonEncode({
-              'instances': ['', 'edge', 'edge'],
-            }),
-          );
-        } else if (request.uri.path == '/api/providers/alist/binds') {
-          request.response.write(
-            jsonEncode({
-              'binds': instanceName == 'edge'
-                  ? [
-                      {
-                        'id': 'alist_edge',
-                        'serverId': 'alist_server_edge',
-                        'host': 'https://alist-edge.example.test',
-                        'username': 'edge-user',
-                        'createdAt': 2,
-                        'providerInstanceName': 'edge',
-                      },
-                    ]
-                  : [
-                      {
-                        'id': 'alist_default_a',
-                        'serverId': 'alist_server_default',
-                        'host': 'https://alist.example.test',
-                        'username': 'default-user',
-                        'createdAt': 1,
-                        'providerInstanceName': '',
-                      },
-                      {
-                        'id': 'alist_default_b',
-                        'serverId': 'alist_server_default',
-                        'host': 'https://alist.example.test',
-                        'username': 'default-user',
-                        'createdAt': 1,
-                        'providerInstanceName': '',
-                      },
-                    ],
-            }),
-          );
-        } else if (request.uri.path == '/api/providers/emby/binds') {
-          request.response.write(
-            jsonEncode({
-              'binds': [
-                {
-                  'id': instanceName == 'edge' ? 'emby_edge' : 'emby_default',
-                  'serverId': instanceName == 'edge'
-                      ? 'emby_server_edge'
-                      : 'emby_server',
-                  'host': instanceName == 'edge'
-                      ? 'https://emby-edge.example.test'
-                      : 'https://emby.example.test',
-                  'userId': instanceName == 'edge'
-                      ? 'edge-user'
-                      : 'default-user',
-                  'createdAt': instanceName == 'edge' ? 4 : 3,
-                  'providerInstanceName': instanceName,
-                },
-              ],
-            }),
-          );
-        } else if (request.uri.path == '/api/providers/bilibili/binds') {
-          request.response.write(
-            jsonEncode({
-              'binds': [
-                {
-                  'id': instanceName == 'edge' ? 'bili_edge' : 'bili_default',
-                  'serverId': instanceName == 'edge'
-                      ? 'bili_server_edge'
-                      : 'bili_server',
-                  'createdAt': instanceName == 'edge' ? 6 : 5,
-                  'providerInstanceName': instanceName,
-                },
-              ],
-            }),
-          );
-        } else {
-          request.response
-            ..statusCode = 404
-            ..write('{}');
-        }
-        await request.response.close();
-      });
-
-      try {
-        SharedPreferences.setMockInitialValues({});
-        await SyncTvService.init();
-        await SyncTvService.setBaseUrl(
-          'http://${server.address.host}:${server.port}',
+      final instanceName = request.uri.queryParameters['instanceName'] ?? '';
+      if (request.uri.path == '/api/providers/instances/available') {
+        request.response.write(
+          jsonEncode({
+            'instances': ['', 'edge', 'edge'],
+          }),
         );
-
-        final alistBinds = await SyncTvService.getAllAlistBindInfos();
-        final embyBinds = await SyncTvService.getAllEmbyBindInfos();
-        final bilibiliBinds = await SyncTvService.getAllBilibiliBindInfos();
-
-        expect(alistBinds.map((bind) => bind.serverId), [
-          'alist_server_default',
-          'alist_server_edge',
-        ]);
-        expect(alistBinds.last.providerInstanceName, 'edge');
-        expect(embyBinds.map((bind) => bind.providerInstanceName), [
-          '',
-          'edge',
-        ]);
-        expect(bilibiliBinds.map((bind) => bind.providerInstanceName), [
-          '',
-          'edge',
-        ]);
-
-        final availableRequests = requests.where(
-          (request) => request.url.path == '/api/providers/instances/available',
+      } else if (request.uri.path == '/api/providers/alist/binds') {
+        request.response.write(
+          jsonEncode({
+            'binds': instanceName == 'edge'
+                ? [
+                    {
+                      'id': 'alist_edge',
+                      'serverId': 'alist_server_edge',
+                      'host': 'https://alist-edge.example.test',
+                      'username': 'edge-user',
+                      'createdAt': 2,
+                      'providerInstanceName': 'edge',
+                    },
+                  ]
+                : [
+                    {
+                      'id': 'alist_default_a',
+                      'serverId': 'alist_server_default',
+                      'host': 'https://alist.example.test',
+                      'username': 'default-user',
+                      'createdAt': 1,
+                      'providerInstanceName': '',
+                    },
+                    {
+                      'id': 'alist_default_b',
+                      'serverId': 'alist_server_default',
+                      'host': 'https://alist.example.test',
+                      'username': 'default-user',
+                      'createdAt': 1,
+                      'providerInstanceName': '',
+                    },
+                  ],
+          }),
         );
-        expect(
-          availableRequests.map(
-            (request) => request.url.queryParameters['providerType'],
-          ),
-          ['alist', 'emby', 'bilibili'],
+      } else if (request.uri.path == '/api/providers/emby/binds') {
+        request.response.write(
+          jsonEncode({
+            'binds': [
+              {
+                'id': instanceName == 'edge' ? 'emby_edge' : 'emby_default',
+                'serverId': instanceName == 'edge'
+                    ? 'emby_server_edge'
+                    : 'emby_server',
+                'host': instanceName == 'edge'
+                    ? 'https://emby-edge.example.test'
+                    : 'https://emby.example.test',
+                'userId': instanceName == 'edge' ? 'edge-user' : 'default-user',
+                'createdAt': instanceName == 'edge' ? 4 : 3,
+                'providerInstanceName': instanceName,
+              },
+            ],
+          }),
         );
-        expect(
-          requests.map(
-            (request) =>
-                '${request.url.path}?${request.url.queryParameters['instanceName'] ?? ''}',
-          ),
-          containsAll([
-            '/api/providers/alist/binds?',
-            '/api/providers/alist/binds?edge',
-            '/api/providers/emby/binds?',
-            '/api/providers/emby/binds?edge',
-            '/api/providers/bilibili/binds?',
-            '/api/providers/bilibili/binds?edge',
-          ]),
+      } else if (request.uri.path == '/api/providers/bilibili/binds') {
+        request.response.write(
+          jsonEncode({
+            'binds': [
+              {
+                'id': instanceName == 'edge' ? 'bili_edge' : 'bili_default',
+                'serverId': instanceName == 'edge'
+                    ? 'bili_server_edge'
+                    : 'bili_server',
+                'createdAt': instanceName == 'edge' ? 6 : 5,
+                'providerInstanceName': instanceName,
+              },
+            ],
+          }),
         );
-        expect(
-          requests
-              .where(
-                (request) =>
-                    request.url.path == '/api/providers/alist/binds' &&
-                    !request.url.queryParameters.containsKey('instanceName'),
-              )
-              .length,
-          1,
-        );
-      } finally {
-        await subscription.cancel();
-        await server.close(force: true);
+      } else {
+        request.response
+          ..statusCode = 404
+          ..write('{}');
       }
-    },
-  );
+      await request.response.close();
+    });
 
-  test(
-    'provider bind aggregation includes default local instance when discovery is empty',
-    () async {
-      final requests = <http.Request>[];
-      final server = await io.HttpServer.bind(
-        io.InternetAddress.loopbackIPv4,
-        0,
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
       );
-      final subscription = server.listen((request) async {
-        requests.add(http.Request(request.method, request.uri));
-        request.response.headers.contentType = io.ContentType.json;
-        if (request.uri.path == '/api/providers/instances/available') {
-          request.response.write(jsonEncode({'instances': []}));
-        } else if (request.uri.path == '/api/providers/alist/binds') {
-          request.response.write(
-            jsonEncode({
-              'binds': [
-                {
-                  'id': 'alist_default',
-                  'serverId': 'alist_server_default',
-                  'host': 'https://alist.example.test',
-                  'username': 'default-user',
-                  'createdAt': 1,
-                  'providerInstanceName': '',
-                },
-              ],
-            }),
-          );
-        } else {
-          request.response
-            ..statusCode = 404
-            ..write('{}');
-        }
-        await request.response.close();
-      });
 
-      try {
-        SharedPreferences.setMockInitialValues({});
-        await SyncTvService.init();
-        await SyncTvService.setBaseUrl(
-          'http://${server.address.host}:${server.port}',
+      final alistBinds = await SyncTvService.getAllAlistBindInfos();
+      final embyBinds = await SyncTvService.getAllEmbyBindInfos();
+      final bilibiliBinds = await SyncTvService.getAllBilibiliBindInfos();
+
+      expect(alistBinds.map((bind) => bind.serverId), [
+        'alist_server_default',
+        'alist_server_edge',
+      ]);
+      expect(alistBinds.last.providerInstanceName, 'edge');
+      expect(embyBinds.map((bind) => bind.providerInstanceName), ['', 'edge']);
+      expect(bilibiliBinds.map((bind) => bind.providerInstanceName), [
+        '',
+        'edge',
+      ]);
+
+      final availableRequests = requests.where(
+        (request) => request.url.path == '/api/providers/instances/available',
+      );
+      expect(
+        availableRequests.map(
+          (request) => request.url.queryParameters['providerType'],
+        ),
+        ['alist', 'emby', 'bilibili'],
+      );
+      expect(
+        requests.map(
+          (request) =>
+              '${request.url.path}?${request.url.queryParameters['instanceName'] ?? ''}',
+        ),
+        containsAll([
+          '/api/providers/alist/binds?',
+          '/api/providers/alist/binds?edge',
+          '/api/providers/emby/binds?',
+          '/api/providers/emby/binds?edge',
+          '/api/providers/bilibili/binds?',
+          '/api/providers/bilibili/binds?edge',
+        ]),
+      );
+      expect(
+        requests
+            .where(
+              (request) =>
+                  request.url.path == '/api/providers/alist/binds' &&
+                  !request.url.queryParameters.containsKey('instanceName'),
+            )
+            .length,
+        1,
+      );
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+  });
+
+  test('provider bind aggregation includes default local instance when discovery is empty', () async {
+    final requests = <http.Request>[];
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      requests.add(http.Request(request.method, request.uri));
+      request.response.headers.contentType = io.ContentType.json;
+      if (request.uri.path == '/api/providers/instances/available') {
+        request.response.write(jsonEncode({'instances': []}));
+      } else if (request.uri.path == '/api/providers/alist/binds') {
+        request.response.write(
+          jsonEncode({
+            'binds': [
+              {
+                'id': 'alist_default',
+                'serverId': 'alist_server_default',
+                'host': 'https://alist.example.test',
+                'username': 'default-user',
+                'createdAt': 1,
+                'providerInstanceName': '',
+              },
+            ],
+          }),
         );
-
-        final binds = await SyncTvService.getAllAlistBindInfos();
-
-        expect(binds.map((bind) => bind.serverId), ['alist_server_default']);
-        expect(binds.single.providerInstanceName, isEmpty);
-
-        final paths = requests.map((request) => request.url.path);
-        expect(paths, contains('/api/providers/instances/available'));
-        expect(paths, contains('/api/providers/alist/binds'));
-        expect(
-          requests
-              .where(
-                (request) => request.url.path == '/api/providers/alist/binds',
-              )
-              .single
-              .url
-              .queryParameters,
-          isNot(contains('instanceName')),
-        );
-      } finally {
-        await subscription.cancel();
-        await server.close(force: true);
+      } else {
+        request.response
+          ..statusCode = 404
+          ..write('{}');
       }
-    },
-  );
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      final binds = await SyncTvService.getAllAlistBindInfos();
+
+      expect(binds.map((bind) => bind.serverId), ['alist_server_default']);
+      expect(binds.single.providerInstanceName, isEmpty);
+
+      final paths = requests.map((request) => request.url.path);
+      expect(paths, contains('/api/providers/instances/available'));
+      expect(paths, contains('/api/providers/alist/binds'));
+      expect(
+        requests
+            .where(
+              (request) => request.url.path == '/api/providers/alist/binds',
+            )
+            .single
+            .url
+            .queryParameters,
+        isNot(contains('instanceName')),
+      );
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+  });
 
   test(
     'API client refreshes access token once before retrying request',
@@ -4560,80 +4537,74 @@ void main() {
     expect(selectedAlternateFormat.type, 'dash');
   });
 
-  test(
-    'playback mapping keeps static danmaku delivery bound to the selected resource',
-    () {
-      final entry = RoomMediaEntry.fromPlaybackProto(
-        client.Playback(
-          mediaId: 'med_danmaku',
-          name: 'Danmaku source',
-          playbackInfos: [
-            MapEntry(
-              'direct',
-              client.PlaybackInfo(
-                medias: [
-                  client.PlaybackMedia(
-                    name: 'Video',
-                    url: 'https://origin.test/video.mp4',
-                    format: 'mp4',
+  test('playback mapping keeps static danmaku delivery bound to the selected resource', () {
+    final entry = RoomMediaEntry.fromPlaybackProto(
+      client.Playback(
+        mediaId: 'med_danmaku',
+        name: 'Danmaku source',
+        playbackInfos: [
+          MapEntry(
+            'direct',
+            client.PlaybackInfo(
+              medias: [
+                client.PlaybackMedia(
+                  name: 'Video',
+                  url: 'https://origin.test/video.mp4',
+                  format: 'mp4',
+                ),
+              ],
+              danmakus: [
+                client.PlaybackDanmaku(
+                  name: 'Preferred static danmaku',
+                  url: 'https://origin.test/preferred.xml',
+                  headers: const {'X-Danmaku': 'preferred'}.entries,
+                  format: 'xml',
+                  delivery: client
+                      .PlaybackDanmakuDelivery
+                      .PLAYBACK_DANMAKU_DELIVERY_DOCUMENT,
+                ),
+                client.PlaybackDanmaku(
+                  name: 'Alternate static danmaku',
+                  url: 'https://origin.test/alternate.xml',
+                  headers: const {'X-Danmaku': 'alternate'}.entries,
+                  format: 'xml',
+                  delivery: client
+                      .PlaybackDanmakuDelivery
+                      .PLAYBACK_DANMAKU_DELIVERY_DOCUMENT,
+                  p2pDelivery: client.P2pResourceDelivery(
+                    swarmId: 'sm3_alternate',
+                    swarmTicket: 'alternate-ticket',
                   ),
-                ],
-                danmakus: [
-                  client.PlaybackDanmaku(
-                    name: 'Preferred static danmaku',
-                    url: 'https://origin.test/preferred.xml',
-                    headers: const {'X-Danmaku': 'preferred'}.entries,
-                    format: 'xml',
-                    delivery: client
-                        .PlaybackDanmakuDelivery
-                        .PLAYBACK_DANMAKU_DELIVERY_DOCUMENT,
+                ),
+                client.PlaybackDanmaku(
+                  name: 'Live danmaku',
+                  url: '/live-danmaku/med_danmaku',
+                  headers: const {'X-Danmaku': 'live'}.entries,
+                  format: 'synctv-bilibili-live',
+                  delivery: client
+                      .PlaybackDanmakuDelivery
+                      .PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM,
+                  p2pDelivery: client.P2pResourceDelivery(
+                    swarmId: 'sm3_live',
+                    swarmTicket: 'live-ticket',
                   ),
-                  client.PlaybackDanmaku(
-                    name: 'Alternate static danmaku',
-                    url: 'https://origin.test/alternate.xml',
-                    headers: const {'X-Danmaku': 'alternate'}.entries,
-                    format: 'xml',
-                    delivery: client
-                        .PlaybackDanmakuDelivery
-                        .PLAYBACK_DANMAKU_DELIVERY_DOCUMENT,
-                    p2pDelivery: client.P2pResourceDelivery(
-                      swarmId: 'sm3_alternate',
-                      swarmTicket: 'alternate-ticket',
-                    ),
-                  ),
-                  client.PlaybackDanmaku(
-                    name: 'Live danmaku',
-                    url: '/live-danmaku/med_danmaku',
-                    headers: const {'X-Danmaku': 'live'}.entries,
-                    format: 'synctv-bilibili-live',
-                    delivery: client
-                        .PlaybackDanmakuDelivery
-                        .PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM,
-                    p2pDelivery: client.P2pResourceDelivery(
-                      swarmId: 'sm3_live',
-                      swarmTicket: 'live-ticket',
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-          defaultMode: 'direct',
-        ),
-        resolveUrl: (url) =>
-            url.startsWith('/') ? 'https://example.test$url' : url,
-      );
+          ),
+        ],
+        defaultMode: 'direct',
+      ),
+      resolveUrl: (url) =>
+          url.startsWith('/') ? 'https://example.test$url' : url,
+    );
 
-      expect(entry.danmu, 'https://origin.test/preferred.xml');
-      expect(entry.danmuHeaders, {'X-Danmaku': 'preferred'});
-      expect(entry.danmuP2pDelivery, isNull);
-      expect(
-        entry.streamDanmu,
-        'https://example.test/live-danmaku/med_danmaku',
-      );
-      expect(entry.streamDanmuHeaders, {'X-Danmaku': 'live'});
-    },
-  );
+    expect(entry.danmu, 'https://origin.test/preferred.xml');
+    expect(entry.danmuHeaders, {'X-Danmaku': 'preferred'});
+    expect(entry.danmuP2pDelivery, isNull);
+    expect(entry.streamDanmu, 'https://example.test/live-danmaku/med_danmaku');
+    expect(entry.streamDanmuHeaders, {'X-Danmaku': 'live'});
+  });
 
   test('playback mapping preserves Bilibili live start time', () {
     final entry = RoomMediaEntry.fromPlaybackProto(
@@ -4705,16 +4676,14 @@ void main() {
               medias: [
                 client.PlaybackMedia(
                   name: 'Live',
-                  url:
-                      '/api/playback-providers/r/bilibili/v1/media-streams/live/0?sig=s&uid=u&exp=1',
+                  url: '/api/playback-providers/r/bilibili/v1/media-streams/live/0?sig=s&uid=u&exp=1',
                   format: 'flv',
                 ),
               ],
               danmakus: [
                 client.PlaybackDanmaku(
                   name: 'Live Danmaku',
-                  url:
-                      '/api/playback-providers/r/bilibili/live-danmaku/med_public',
+                  url: '/api/playback-providers/r/bilibili/live-danmaku/med_public',
                   headers: const {'X-Live': '1'}.entries,
                   format: 'synctv-bilibili-live',
                   delivery: client
@@ -4822,8 +4791,7 @@ void main() {
               medias: [
                 client.PlaybackMedia(
                   name: 'HLS',
-                  url:
-                      '/api/playback-providers/room/live-proxy/ver_1/hls-master',
+                  url: '/api/playback-providers/room/live-proxy/ver_1/hls-master',
                   format: 'hls',
                 ),
               ],
@@ -4835,8 +4803,7 @@ void main() {
               medias: [
                 client.PlaybackMedia(
                   name: 'FLV',
-                  url:
-                      '/api/playback-providers/room/live-proxy/ver_1/flv-stream',
+                  url: '/api/playback-providers/room/live-proxy/ver_1/flv-stream',
                   format: 'flv',
                 ),
               ],
@@ -5906,81 +5873,73 @@ void main() {
     });
   });
 
-  test(
-    'admin room service preserves pagination sorting ban filter and total',
-    () async {
-      Uri? requestedUri;
-      final server = await io.HttpServer.bind(
-        io.InternetAddress.loopbackIPv4,
-        0,
+  test('admin room service preserves pagination sorting ban filter and total', () async {
+    Uri? requestedUri;
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      requestedUri = request.uri;
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType.json
+        ..write(
+          jsonEncode({
+            'rooms': [
+              {
+                'id': 'room_1',
+                'name': 'Room',
+                'createdBy': 'usr_1',
+                'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
+                'isBanned': false,
+              },
+            ],
+            'total': 7,
+          }),
+        );
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
       );
-      final subscription = server.listen((request) async {
-        requestedUri = request.uri;
-        request.response
-          ..statusCode = 200
-          ..headers.contentType = io.ContentType.json
-          ..write(
-            jsonEncode({
-              'rooms': [
-                {
-                  'id': 'room_1',
-                  'name': 'Room',
-                  'createdBy': 'usr_1',
-                  'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
-                  'isBanned': false,
-                },
-              ],
-              'total': 7,
-            }),
-          );
-        await request.response.close();
-      });
 
-      try {
-        SharedPreferences.setMockInitialValues({});
-        await SyncTvService.init();
-        await SyncTvService.setBaseUrl(
-          'http://${server.address.host}:${server.port}',
-        );
+      final page = await SyncTvService.adminListRoomsPage(
+        page: 3,
+        pageSize: 50,
+        search: 'Room',
+        categoryId: 'roomcat_anime',
+        labelIds: const ['roomlbl_weekly'],
+        status: common.RoomStatus.ROOM_STATUS_ACTIVE,
+        isBanned: false,
+        sortBy: admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+        sortDirection: admin_enum.SortDirection.SORT_DIRECTION_ASC,
+      );
 
-        final page = await SyncTvService.adminListRoomsPage(
-          page: 3,
-          pageSize: 50,
-          search: 'Room',
-          categoryId: 'roomcat_anime',
-          labelIds: const ['roomlbl_weekly'],
-          status: common.RoomStatus.ROOM_STATUS_ACTIVE,
-          isBanned: false,
-          sortBy: admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-          sortDirection: admin_enum.SortDirection.SORT_DIRECTION_ASC,
-        );
+      expect(page.total, 7);
+      expect(page.rooms.single.roomId, 'room_1');
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
 
-        expect(page.total, 7);
-        expect(page.rooms.single.roomId, 'room_1');
-      } finally {
-        await subscription.cancel();
-        await server.close(force: true);
-      }
-
-      expect(requestedUri, isNotNull);
-      expect(requestedUri!.path, '/api/admin/rooms');
-      expect(requestedUri!.queryParametersAll, {
-        'page': ['3'],
-        'pageSize': ['50'],
-        'status': ['${common.RoomStatus.ROOM_STATUS_ACTIVE.value}'],
-        'search': ['Room'],
-        'categoryId': ['roomcat_anime'],
-        'labelIds': ['roomlbl_weekly'],
-        'isBanned': ['false'],
-        'sortBy': [
-          '${admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT.value}',
-        ],
-        'sortDirection': [
-          '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
-        ],
-      });
-    },
-  );
+    expect(requestedUri, isNotNull);
+    expect(requestedUri!.path, '/api/admin/rooms');
+    expect(requestedUri!.queryParametersAll, {
+      'page': ['3'],
+      'pageSize': ['50'],
+      'status': ['${common.RoomStatus.ROOM_STATUS_ACTIVE.value}'],
+      'search': ['Room'],
+      'categoryId': ['roomcat_anime'],
+      'labelIds': ['roomlbl_weekly'],
+      'isBanned': ['false'],
+      'sortBy': [
+        '${admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT.value}',
+      ],
+      'sortDirection': ['${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}'],
+    });
+  });
 
   test('admin user rooms service preserves protobuf query and total', () async {
     Uri? requestedUri;
@@ -6363,8 +6322,7 @@ void main() {
               'publishKey': 'pub_1',
               'rtmpUrl': 'rtmp://example.test/live',
               'streamKey': 'stream_1',
-              'whipUrl':
-                  '/api/playback-providers/room_1/rtmp/med_1/whip',
+              'whipUrl': '/api/playback-providers/room_1/rtmp/med_1/whip',
               'expiresAt': '1760000100',
               'type': 'PUBLISH_KEY_TYPE_SINGLE_USE',
             }),
@@ -6397,10 +6355,7 @@ void main() {
     );
 
     expect(publish.publishKey, 'pub_1');
-    expect(
-      publish.whipUrl,
-      '/api/playback-providers/room_1/rtmp/med_1/whip',
-    );
+    expect(publish.whipUrl, '/api/playback-providers/room_1/rtmp/med_1/whip');
     expect(info.active, isTrue);
     expect(info.publisher.userId, 'user_1');
     expect(requests.first.method, 'POST');
@@ -6901,87 +6856,81 @@ void main() {
     expect(jsonDecode(requestBody!), {'to': 'ops@example.test'});
   });
 
-  test(
-    'room settings update keeps typed service model and protobuf bytes body',
-    () async {
-      String? requestBody;
-      Uri? requestedUri;
-      final server = await io.HttpServer.bind(
-        io.InternetAddress.loopbackIPv4,
-        0,
-      );
-      final origin = 'http://${server.address.host}:${server.port}';
-      final requests = server.listen((request) async {
-        requestedUri = request.uri;
-        requestBody = await utf8.decoder.bind(request).join();
-        request.response
-          ..statusCode = 200
-          ..headers.contentType = io.ContentType.json
-          ..write(
-            jsonEncode({
-              'room': {
-                'roomId': 'room_1',
-                'room_name': 'Room 1',
-                'creatorId': 'user_1',
-                'settings': {'allowGuestJoin': true},
-              },
-            }),
-          );
-        await request.response.close();
-      });
-
-      try {
-        SharedPreferences.setMockInitialValues({});
-        await SyncTvService.init();
-        await SyncTvService.setBaseUrl(origin);
-
-        await SyncTvService.updateRoomSettings(
-          'room_1',
-          SyncTvRoomSettings(
-            allowGuestJoin: true,
-            requireApproval: true,
-            maxMembers: 42,
-            chatEnabled: false,
-            voiceChatEnabled: false,
-            p2pMediaEnabled: false,
-            guestAddedPermissions: RoomGuestPermissions.viewMembers,
-          ),
+  test('room settings update keeps typed service model and protobuf bytes body', () async {
+    String? requestBody;
+    Uri? requestedUri;
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final origin = 'http://${server.address.host}:${server.port}';
+    final requests = server.listen((request) async {
+      requestedUri = request.uri;
+      requestBody = await utf8.decoder.bind(request).join();
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType.json
+        ..write(
+          jsonEncode({
+            'room': {
+              'roomId': 'room_1',
+              'room_name': 'Room 1',
+              'creatorId': 'user_1',
+              'settings': {'allowGuestJoin': true},
+            },
+          }),
         );
-      } finally {
-        await requests.cancel();
-        await server.close(force: true);
-      }
+      await request.response.close();
+    });
 
-      expect(requestedUri, isNotNull);
-      expect(requestedUri!.path, '/api/rooms/room_1/settings');
-      final body = jsonDecode(requestBody!) as Map<String, dynamic>;
-      final settings = body['settings'] as Map<String, dynamic>;
-      expect(settings['allowGuestJoin'], isTrue);
-      expect(settings['requireApproval'], isTrue);
-      expect(settings['maxMembers'], '42');
-      expect(settings['chatEnabled'], isFalse);
-      expect(settings['voiceChatEnabled'], isFalse);
-      expect(settings['p2pMediaEnabled'], isFalse);
-      expect(settings['autoPlay'], {
-        'enabled': true,
-        'mode': client.PlayMode.PLAY_MODE_SEQUENTIAL.value,
-        'delay': 3,
-      });
-      expect(
-        settings['guestAddedPermissions'],
-        RoomGuestPermissions.viewMembers.toString(),
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(origin);
+
+      await SyncTvService.updateRoomSettings(
+        'room_1',
+        SyncTvRoomSettings(
+          allowGuestJoin: true,
+          requireApproval: true,
+          maxMembers: 42,
+          chatEnabled: false,
+          voiceChatEnabled: false,
+          p2pMediaEnabled: false,
+          guestAddedPermissions: RoomGuestPermissions.viewMembers,
+        ),
       );
-      expect(
-        body['updateMask'],
-        'allowGuestJoin,maxMembers,requireApproval,allowAutoJoin,chatEnabled,'
-        'voiceChatEnabled,p2pMediaEnabled,autoPlay.enabled,autoPlay.mode,'
-        'autoPlay.delay,'
-        'adminAddedPermissions,adminRemovedPermissions,memberAddedPermissions,'
-        'memberRemovedPermissions,guestAddedPermissions,guestRemovedPermissions',
-      );
-      expect(body.containsKey('roomId'), isFalse);
-    },
-  );
+    } finally {
+      await requests.cancel();
+      await server.close(force: true);
+    }
+
+    expect(requestedUri, isNotNull);
+    expect(requestedUri!.path, '/api/rooms/room_1/settings');
+    final body = jsonDecode(requestBody!) as Map<String, dynamic>;
+    final settings = body['settings'] as Map<String, dynamic>;
+    expect(settings['allowGuestJoin'], isTrue);
+    expect(settings['requireApproval'], isTrue);
+    expect(settings['maxMembers'], '42');
+    expect(settings['chatEnabled'], isFalse);
+    expect(settings['voiceChatEnabled'], isFalse);
+    expect(settings['p2pMediaEnabled'], isFalse);
+    expect(settings['autoPlay'], {
+      'enabled': true,
+      'mode': client.PlayMode.PLAY_MODE_SEQUENTIAL.value,
+      'delay': 3,
+    });
+    expect(
+      settings['guestAddedPermissions'],
+      RoomGuestPermissions.viewMembers.toString(),
+    );
+    expect(
+      body['updateMask'],
+      'allowGuestJoin,maxMembers,requireApproval,allowAutoJoin,chatEnabled,'
+      'voiceChatEnabled,p2pMediaEnabled,autoPlay.enabled,autoPlay.mode,'
+      'autoPlay.delay,'
+      'adminAddedPermissions,adminRemovedPermissions,memberAddedPermissions,'
+      'memberRemovedPermissions,guestAddedPermissions,guestRemovedPermissions',
+    );
+    expect(body.containsKey('roomId'), isFalse);
+  });
 
   test(
     'room visibility update uses its dedicated authenticated endpoint',
@@ -8235,114 +8184,108 @@ void main() {
     expect(adminBody['notify'], isFalse);
   });
 
-  test(
-    'admin room member service preserves protobuf filters and options',
-    () async {
-      final requests = <http.Request>[];
-      final server = await io.HttpServer.bind(
-        io.InternetAddress.loopbackIPv4,
-        0,
-      );
-      final subscription = server.listen((request) async {
-        final body = await utf8.decoder.bind(request).join();
-        requests.add(http.Request(request.method, request.uri)..body = body);
-        request.response
-          ..statusCode = 200
-          ..headers.contentType = io.ContentType.json;
-        if (request.method == 'GET') {
-          request.response.write(
-            jsonEncode({
-              'members': [
-                {
-                  'roomId': 'room_1',
-                  'userId': 'usr_1',
-                  'username': 'alice',
-                  'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
-                  'joinedAt': '1700000000',
-                  'isOnline': true,
-                },
-              ],
-              'total': 1,
-            }),
-          );
-        } else if (request.method == 'POST') {
-          request.response.write(
-            jsonEncode({
-              'member': {
+  test('admin room member service preserves protobuf filters and options', () async {
+    final requests = <http.Request>[];
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      final body = await utf8.decoder.bind(request).join();
+      requests.add(http.Request(request.method, request.uri)..body = body);
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType.json;
+      if (request.method == 'GET') {
+        request.response.write(
+          jsonEncode({
+            'members': [
+              {
                 'roomId': 'room_1',
-                'userId': 'usr_2',
-                'username': 'bob',
-                'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+                'userId': 'usr_1',
+                'username': 'alice',
+                'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
+                'joinedAt': '1700000000',
+                'isOnline': true,
               },
-            }),
-          );
-        } else {
-          request.response.write(jsonEncode({'success': true}));
-        }
-        await request.response.close();
-      });
-
-      try {
-        SharedPreferences.setMockInitialValues({});
-        await SyncTvService.init();
-        await SyncTvService.setBaseUrl(
-          'http://${server.address.host}:${server.port}',
+            ],
+            'total': 1,
+          }),
         );
-
-        final page = await SyncTvService.adminListRoomMembersPage(
-          'room_1',
-          page: 2,
-          pageSize: 20,
-          search: 'alice',
-          role: common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
-          sortBy:
-              admin_enum.RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_USERNAME,
-          sortDirection: admin_enum.SortDirection.SORT_DIRECTION_ASC,
+      } else if (request.method == 'POST') {
+        request.response.write(
+          jsonEncode({
+            'member': {
+              'roomId': 'room_1',
+              'userId': 'usr_2',
+              'username': 'bob',
+              'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+            },
+          }),
         );
-        await SyncTvService.adminAddRoomMember(
-          'room_1',
-          'usr_2',
-          role: common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
-          notify: false,
-        );
-        await SyncTvService.adminKickRoomMember(
-          'room_1',
-          'usr_1',
-          kickCooldownSeconds: 900,
-        );
-
-        expect(page.total, 1);
-        expect(page.members.single.userId, 'usr_1');
-      } finally {
-        await subscription.cancel();
-        await server.close(force: true);
+      } else {
+        request.response.write(jsonEncode({'success': true}));
       }
+      await request.response.close();
+    });
 
-      expect(requests, hasLength(3));
-      expect(requests[0].method, 'GET');
-      expect(requests[0].url.path, '/api/admin/rooms/room_1/members');
-      expect(requests[0].url.queryParameters, {
-        'page': '2',
-        'pageSize': '20',
-        'search': 'alice',
-        'role': '${common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value}',
-        'sortBy':
-            '${admin_enum.RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_USERNAME.value}',
-        'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
-      });
-      expect(jsonDecode(requests[1].body), {
-        'roomId': 'room_1',
-        'userId': 'usr_2',
-        'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
-        'notify': false,
-      });
-      expect(jsonDecode(requests[2].body), {
-        'roomId': 'room_1',
-        'userId': 'usr_1',
-        'kickCooldownSeconds': '900',
-      });
-    },
-  );
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      final page = await SyncTvService.adminListRoomMembersPage(
+        'room_1',
+        page: 2,
+        pageSize: 20,
+        search: 'alice',
+        role: common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+        sortBy:
+            admin_enum.RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_USERNAME,
+        sortDirection: admin_enum.SortDirection.SORT_DIRECTION_ASC,
+      );
+      await SyncTvService.adminAddRoomMember(
+        'room_1',
+        'usr_2',
+        role: common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+        notify: false,
+      );
+      await SyncTvService.adminKickRoomMember(
+        'room_1',
+        'usr_1',
+        kickCooldownSeconds: 900,
+      );
+
+      expect(page.total, 1);
+      expect(page.members.single.userId, 'usr_1');
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+
+    expect(requests, hasLength(3));
+    expect(requests[0].method, 'GET');
+    expect(requests[0].url.path, '/api/admin/rooms/room_1/members');
+    expect(requests[0].url.queryParameters, {
+      'page': '2',
+      'pageSize': '20',
+      'search': 'alice',
+      'role': '${common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value}',
+      'sortBy':
+          '${admin_enum.RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_USERNAME.value}',
+      'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+    });
+    expect(jsonDecode(requests[1].body), {
+      'roomId': 'room_1',
+      'userId': 'usr_2',
+      'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+      'notify': false,
+    });
+    expect(jsonDecode(requests[2].body), {
+      'roomId': 'room_1',
+      'userId': 'usr_1',
+      'kickCooldownSeconds': '900',
+    });
+  });
 
   test('admin list admins service preserves pagination and total', () async {
     Uri? requestedUri;
@@ -8933,64 +8876,57 @@ void main() {
     },
   );
 
-  test(
-    'emby list maps server thumbnail proxy url from protobuf response',
-    () async {
-      Uri? requestedUri;
-      final server = await io.HttpServer.bind(
-        io.InternetAddress.loopbackIPv4,
-        0,
-      );
-      final origin = 'http://${server.address.host}:${server.port}';
-      final requests = server.listen((request) async {
-        requestedUri = request.uri;
-        request.response
-          ..statusCode = 200
-          ..headers.contentType = io.ContentType.json
-          ..write(
-            jsonEncode({
-              'items': [
-                {
-                  'id': 'emby-item-1',
-                  'name': 'Episode 1',
-                  'type': 'Episode',
-                  'description': 'Pilot episode',
-                  'thumbnail':
-                      '/api/providers/emby/thumbnail/emby-item-1?server_id=srv_1&credential_owner_id=usr_1&max_height=300',
-                },
-              ],
-              'total': '1',
-            }),
-          );
-        await request.response.close();
-      });
-
-      late final EmbyListPage page;
-      try {
-        SharedPreferences.setMockInitialValues({});
-        await SyncTvService.init();
-        await SyncTvService.setBaseUrl(origin);
-
-        page = await SyncTvService.listEmbyPage(
-          EmbyListMode.folder,
-          targetId: '/',
-          serverId: 'srv_1',
+  test('emby list maps server thumbnail proxy url from protobuf response', () async {
+    Uri? requestedUri;
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final origin = 'http://${server.address.host}:${server.port}';
+    final requests = server.listen((request) async {
+      requestedUri = request.uri;
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType.json
+        ..write(
+          jsonEncode({
+            'items': [
+              {
+                'id': 'emby-item-1',
+                'name': 'Episode 1',
+                'type': 'Episode',
+                'description': 'Pilot episode',
+                'thumbnail': '/api/providers/emby/thumbnail/emby-item-1?server_id=srv_1&credential_owner_id=usr_1&max_height=300',
+              },
+            ],
+            'total': '1',
+          }),
         );
-      } finally {
-        await requests.cancel();
-        await server.close(force: true);
-      }
+      await request.response.close();
+    });
 
-      expect(requestedUri, isNotNull);
-      expect(requestedUri!.path, '/api/providers/emby/list');
-      expect(page.items, hasLength(1));
-      expect(
-        page.items.single.thumbnail,
-        '$origin/api/providers/emby/thumbnail/emby-item-1?server_id=srv_1&credential_owner_id=usr_1&max_height=300',
+    late final EmbyListPage page;
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(origin);
+
+      page = await SyncTvService.listEmbyPage(
+        EmbyListMode.folder,
+        targetId: '/',
+        serverId: 'srv_1',
       );
-      expect(page.items.single.description, 'Pilot episode');
-    },
-  );
+    } finally {
+      await requests.cancel();
+      await server.close(force: true);
+    }
+
+    expect(requestedUri, isNotNull);
+    expect(requestedUri!.path, '/api/providers/emby/list');
+    expect(page.items, hasLength(1));
+    expect(
+      page.items.single.thumbnail,
+      '$origin/api/providers/emby/thumbnail/emby-item-1?server_id=srv_1&credential_owner_id=usr_1&max_height=300',
+    );
+    expect(page.items.single.description, 'Pilot episode');
+  });
 
   test('provider instance query is generated from protobuf request', () async {
     Uri? requestedUri;
@@ -10806,73 +10742,70 @@ void main() {
     expect(RoomInviteService.parse('room_plain').roomId, 'room_plain');
   });
 
-  test(
-    'create room sends visibility and defaults a missing response field to public',
-    () async {
-      http.Request? capturedRequest;
-      const roomCredential = 'not-real-room-credential';
-      final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
-        session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
-        httpClient: MockClient((request) async {
-          capturedRequest = request;
-          return http.Response(
-            jsonEncode({
-              'id': 'room_pending',
-              'name': 'Review Room',
-              'createdBy': 'usr_1',
-              'status': common.RoomStatus.ROOM_STATUS_UNSPECIFIED.value,
-              'settings': {'allowGuestJoin': true},
-              'description': '',
-            }),
-            200,
-            headers: {'content-type': 'application/json'},
-          );
-        }),
-      );
-      final sessionStore = SyncTvSessionStore(api.session);
-      final service = SyncTvPublicRoomDomainService(
+  test('create room sends visibility and defaults a missing response field to public', () async {
+    http.Request? capturedRequest;
+    const roomCredential = 'not-real-room-credential';
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
+      httpClient: MockClient((request) async {
+        capturedRequest = request;
+        return http.Response(
+          jsonEncode({
+            'id': 'room_pending',
+            'name': 'Review Room',
+            'createdBy': 'usr_1',
+            'status': common.RoomStatus.ROOM_STATUS_UNSPECIFIED.value,
+            'settings': {'allowGuestJoin': true},
+            'description': '',
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final sessionStore = SyncTvSessionStore(api.session);
+    final service = SyncTvPublicRoomDomainService(
+      api: api,
+      authService: SyncTvAuthDomainService(
         api: api,
-        authService: SyncTvAuthDomainService(
-          api: api,
-          sessionStore: sessionStore,
-        ),
-      );
+        sessionStore: sessionStore,
+      ),
+    );
 
-      final room = await service.createRoom(
-        'Review Room',
-        password: roomCredential,
-        categoryId: 'roomcat_anime',
-        labelIds: const ['roomlbl_weekly'],
-        isPublic: false,
-      );
+    final room = await service.createRoom(
+      'Review Room',
+      password: roomCredential,
+      categoryId: 'roomcat_anime',
+      labelIds: const ['roomlbl_weekly'],
+      isPublic: false,
+    );
 
-      expect(capturedRequest, isNotNull);
-      expect(capturedRequest!.url.path, '/api/rooms');
-      expect(jsonDecode(capturedRequest!.body), {
-        'name': 'Review Room',
-        'password': roomCredential,
-        'categoryId': 'roomcat_anime',
-        'labelIds': ['roomlbl_weekly'],
-        'isPublic': false,
-      });
-      expect(room.roomId, 'room_pending');
-      expect(room.status, common.RoomStatus.ROOM_STATUS_UNSPECIFIED);
-      expect(room.isActive, isFalse);
-      expect(room.joined, isTrue);
-      expect(room.canJoin, isFalse);
-      expect(
-        room.discoveryAccess,
-        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_ENTER,
-      );
-      expect(
-        room.myRelation,
-        client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED,
-      );
-      expect(room.needPassword, isFalse);
-      expect(room.isPublic, isTrue);
-    },
-  );
+    expect(capturedRequest, isNotNull);
+    expect(capturedRequest!.url.path, '/api/rooms');
+    expect(jsonDecode(capturedRequest!.body), {
+      'name': 'Review Room',
+      'password': roomCredential,
+      'categoryId': 'roomcat_anime',
+      'labelIds': ['roomlbl_weekly'],
+      'isPublic': false,
+    });
+    expect(room.roomId, 'room_pending');
+    expect(room.status, common.RoomStatus.ROOM_STATUS_UNSPECIFIED);
+    expect(room.isActive, isFalse);
+    expect(room.joined, isTrue);
+    expect(room.canJoin, isFalse);
+    expect(
+      room.discoveryAccess,
+      client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_ENTER,
+    );
+    expect(
+      room.myRelation,
+      client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED,
+    );
+    expect(room.needPassword, isFalse);
+    expect(room.isPublic, isTrue);
+  });
 
   test('room discovery maps live presence and member counts', () async {
     Uri? requestedUri;
@@ -12458,145 +12391,142 @@ void main() {
     });
   });
 
-  test(
-    'opaque password management sends protocol bytes without plaintext',
-    () async {
-      final requests = <http.Request>[];
-      const emailResetToken = 'not-real-email-reset-token';
-      final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
-        session: SyncTvSession()..updateAccountTokens(accessToken: 'access'),
-        httpClient: MockClient((request) async {
-          requests.add(request);
-          switch (request.url.path) {
-            case '/api/user/opaque-password/update/start':
-              return http.Response(
-                jsonEncode({
-                  'sessionId': 'update_session',
-                  'credentialResponse': base64Encode([9, 8, 7]),
-                  'registrationResponse': base64Encode([6, 5, 4]),
-                  'passkeySessionId': 'passkey_session',
-                  'passkeyOptions': {'challenge': 'opaque-update-passkey'},
-                }),
-                200,
-                headers: {'content-type': 'application/json'},
-              );
-            case '/api/user/opaque-password/update/finish':
-              return http.Response(
-                jsonEncode({
-                  'user': {
-                    'id': 'usr_1',
-                    'username': 'alice',
-                    'email': 'alice@example.test',
-                  },
-                }),
-                200,
-                headers: {'content-type': 'application/json'},
-              );
-            case '/api/email/password/reset':
-              return http.Response(
-                jsonEncode({'message': 'sent'}),
-                200,
-                headers: {'content-type': 'application/json'},
-              );
-            case '/api/email/password/opaque/start':
-              return http.Response(
-                jsonEncode({
-                  'sessionId': 'reset_session',
-                  'registrationResponse': base64Encode([11, 12, 13]),
-                }),
-                200,
-                headers: {'content-type': 'application/json'},
-              );
-            case '/api/email/password/opaque/finish':
-              return http.Response(
-                jsonEncode({'message': 'reset', 'userId': 'usr_1'}),
-                200,
-                headers: {'content-type': 'application/json'},
-              );
-          }
-          return http.Response('not found', 404);
-        }),
-      );
+  test('opaque password management sends protocol bytes without plaintext', () async {
+    final requests = <http.Request>[];
+    const emailResetToken = 'not-real-email-reset-token';
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..updateAccountTokens(accessToken: 'access'),
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        switch (request.url.path) {
+          case '/api/user/opaque-password/update/start':
+            return http.Response(
+              jsonEncode({
+                'sessionId': 'update_session',
+                'credentialResponse': base64Encode([9, 8, 7]),
+                'registrationResponse': base64Encode([6, 5, 4]),
+                'passkeySessionId': 'passkey_session',
+                'passkeyOptions': {'challenge': 'opaque-update-passkey'},
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/user/opaque-password/update/finish':
+            return http.Response(
+              jsonEncode({
+                'user': {
+                  'id': 'usr_1',
+                  'username': 'alice',
+                  'email': 'alice@example.test',
+                },
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/email/password/reset':
+            return http.Response(
+              jsonEncode({'message': 'sent'}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/email/password/opaque/start':
+            return http.Response(
+              jsonEncode({
+                'sessionId': 'reset_session',
+                'registrationResponse': base64Encode([11, 12, 13]),
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/email/password/opaque/finish':
+            return http.Response(
+              jsonEncode({'message': 'reset', 'userId': 'usr_1'}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response('not found', 404);
+      }),
+    );
 
-      await api.user.startOpaquePasswordUpdate(
-        client.StartOpaquePasswordUpdateRequest(
-          credentialRequest: [1, 2, 3],
-          registrationRequest: [4, 5, 6],
-          verificationMethod: client_enum
-              .OpaquePasswordUpdateVerificationMethod
-              .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD,
-          emailToken: '',
-        ),
-      );
-      await api.user.finishOpaquePasswordUpdate(
-        client.FinishOpaquePasswordUpdateRequest(
-          sessionId: 'update_session',
-          credentialFinalization: [7, 8, 9],
-          registrationUpload: [10, 11, 12],
-          passkeySessionId: '',
-        ),
-      );
-      await api.emailService.requestPasswordReset(
-        client.RequestPasswordResetRequest(email: 'alice@example.test'),
-      );
-      await api.emailService.startOpaquePasswordReset(
-        client.StartOpaquePasswordResetRequest(
-          email: 'alice@example.test',
-          token: emailResetToken,
-          registrationRequest: [13, 14, 15],
-        ),
-      );
-      await api.emailService.finishOpaquePasswordReset(
-        client.FinishOpaquePasswordResetRequest(
-          sessionId: 'reset_session',
-          registrationUpload: [16, 17, 18],
-        ),
-      );
-
-      expect(requests.map((request) => request.url.path), [
-        '/api/user/opaque-password/update/start',
-        '/api/user/opaque-password/update/finish',
-        '/api/email/password/reset',
-        '/api/email/password/opaque/start',
-        '/api/email/password/opaque/finish',
-      ]);
-
-      final bodies = requests
-          .map((request) => jsonDecode(request.body) as Map<String, dynamic>)
-          .toList();
-      expect(bodies[0], {
-        'credentialRequest': base64Encode([1, 2, 3]),
-        'registrationRequest': base64Encode([4, 5, 6]),
-        'verificationMethod': client_enum
+    await api.user.startOpaquePasswordUpdate(
+      client.StartOpaquePasswordUpdateRequest(
+        credentialRequest: [1, 2, 3],
+        registrationRequest: [4, 5, 6],
+        verificationMethod: client_enum
             .OpaquePasswordUpdateVerificationMethod
-            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD
-            .value,
-        'emailToken': '',
-      });
-      expect(bodies[1], {
-        'sessionId': 'update_session',
-        'credentialFinalization': base64Encode([7, 8, 9]),
-        'registrationUpload': base64Encode([10, 11, 12]),
-        'passkeySessionId': '',
-      });
-      expect(bodies[1].containsKey('passkeyCredential'), isFalse);
-      expect(bodies[2], {'email': 'alice@example.test'});
-      expect(bodies[3], {
-        'email': 'alice@example.test',
-        'token': emailResetToken,
-        'registrationRequest': base64Encode([13, 14, 15]),
-      });
-      expect(bodies[4], {
-        'sessionId': 'reset_session',
-        'registrationUpload': base64Encode([16, 17, 18]),
-      });
-      for (final body in bodies) {
-        expect(body.containsKey('password'), isFalse);
-        expect(body.values, isNot(contains('not-real-provider-credential')));
-      }
-    },
-  );
+            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD,
+        emailToken: '',
+      ),
+    );
+    await api.user.finishOpaquePasswordUpdate(
+      client.FinishOpaquePasswordUpdateRequest(
+        sessionId: 'update_session',
+        credentialFinalization: [7, 8, 9],
+        registrationUpload: [10, 11, 12],
+        passkeySessionId: '',
+      ),
+    );
+    await api.emailService.requestPasswordReset(
+      client.RequestPasswordResetRequest(email: 'alice@example.test'),
+    );
+    await api.emailService.startOpaquePasswordReset(
+      client.StartOpaquePasswordResetRequest(
+        email: 'alice@example.test',
+        token: emailResetToken,
+        registrationRequest: [13, 14, 15],
+      ),
+    );
+    await api.emailService.finishOpaquePasswordReset(
+      client.FinishOpaquePasswordResetRequest(
+        sessionId: 'reset_session',
+        registrationUpload: [16, 17, 18],
+      ),
+    );
+
+    expect(requests.map((request) => request.url.path), [
+      '/api/user/opaque-password/update/start',
+      '/api/user/opaque-password/update/finish',
+      '/api/email/password/reset',
+      '/api/email/password/opaque/start',
+      '/api/email/password/opaque/finish',
+    ]);
+
+    final bodies = requests
+        .map((request) => jsonDecode(request.body) as Map<String, dynamic>)
+        .toList();
+    expect(bodies[0], {
+      'credentialRequest': base64Encode([1, 2, 3]),
+      'registrationRequest': base64Encode([4, 5, 6]),
+      'verificationMethod': client_enum
+          .OpaquePasswordUpdateVerificationMethod
+          .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD
+          .value,
+      'emailToken': '',
+    });
+    expect(bodies[1], {
+      'sessionId': 'update_session',
+      'credentialFinalization': base64Encode([7, 8, 9]),
+      'registrationUpload': base64Encode([10, 11, 12]),
+      'passkeySessionId': '',
+    });
+    expect(bodies[1].containsKey('passkeyCredential'), isFalse);
+    expect(bodies[2], {'email': 'alice@example.test'});
+    expect(bodies[3], {
+      'email': 'alice@example.test',
+      'token': emailResetToken,
+      'registrationRequest': base64Encode([13, 14, 15]),
+    });
+    expect(bodies[4], {
+      'sessionId': 'reset_session',
+      'registrationUpload': base64Encode([16, 17, 18]),
+    });
+    for (final body in bodies) {
+      expect(body.containsKey('password'), isFalse);
+      expect(body.values, isNot(contains('not-real-provider-credential')));
+    }
+  });
 }
 
 String _expectedOwnershipProof(

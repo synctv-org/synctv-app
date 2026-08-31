@@ -6,60 +6,48 @@ import 'package:xml/xml.dart';
 
 void main() {
   group('Apple entitlement generator', () {
-    test(
-      'adds both services required by an HTTPS OAuth callback',
-      () async {
-        final domains = await _generateAssociatedDomains(
-          oauth2Origin: 'https://syncs.tv',
-        );
+    test('adds both services required by an HTTPS OAuth callback', () async {
+      final domains = await _generateAssociatedDomains(
+        oauth2Origin: 'https://syncs.tv',
+      );
 
-        expect(domains, contains('applinks:syncs.tv'));
-        expect(domains, contains('webcredentials:syncs.tv'));
-      },
-      skip: Platform.isWindows,
-    );
+      expect(domains, contains('applinks:syncs.tv'));
+      expect(domains, contains('webcredentials:syncs.tv'));
+    }, skip: Platform.isWindows);
 
-    test(
-      'deduplicates OAuth and passkey web credential domains',
-      () async {
-        final domains = await _generateAssociatedDomains(
-          oauth2Origin: 'https://syncs.tv',
-          passkeyRpIds: 'syncs.tv',
-        );
+    test('deduplicates OAuth and passkey web credential domains', () async {
+      final domains = await _generateAssociatedDomains(
+        oauth2Origin: 'https://syncs.tv',
+        passkeyRpIds: 'syncs.tv',
+      );
 
-        expect(
-          domains.where((domain) => domain == 'webcredentials:syncs.tv'),
-          hasLength(1),
-        );
-      },
-      skip: Platform.isWindows,
-    );
+      expect(
+        domains.where((domain) => domain == 'webcredentials:syncs.tv'),
+        hasLength(1),
+      );
+    }, skip: Platform.isWindows);
 
-    test(
-      'preserves an unchanged entitlement file timestamp',
-      () async {
-        final outputDirectory = await Directory.systemTemp.createTemp(
-          'synctv-entitlements-idempotence-test-',
-        );
-        addTearDown(() => outputDirectory.delete(recursive: true));
-        final output = File('${outputDirectory.path}/Generated.entitlements');
-        final defines = _encodeDefines(
-          oauth2Origin: 'https://syncs.tv',
-          passkeyRpIds: 'syncs.tv',
-        );
+    test('preserves an unchanged entitlement file timestamp', () async {
+      final outputDirectory = await Directory.systemTemp.createTemp(
+        'synctv-entitlements-idempotence-test-',
+      );
+      addTearDown(() => outputDirectory.delete(recursive: true));
+      final output = File('${outputDirectory.path}/Generated.entitlements');
+      final defines = _encodeDefines(
+        oauth2Origin: 'https://syncs.tv',
+        passkeyRpIds: 'syncs.tv',
+      );
 
-        await _runGenerator(output: output, defines: defines);
-        final fixedTimestamp = DateTime.utc(2000);
-        await output.setLastModified(fixedTimestamp);
-        await _runGenerator(output: output, defines: defines);
+      await _runGenerator(output: output, defines: defines);
+      final fixedTimestamp = DateTime.utc(2000);
+      await output.setLastModified(fixedTimestamp);
+      await _runGenerator(output: output, defines: defines);
 
-        expect(
-          (await output.lastModified()).millisecondsSinceEpoch,
-          fixedTimestamp.millisecondsSinceEpoch,
-        );
-      },
-      skip: Platform.isWindows,
-    );
+      expect(
+        (await output.lastModified()).millisecondsSinceEpoch,
+        fixedTimestamp.millisecondsSinceEpoch,
+      );
+    }, skip: Platform.isWindows);
 
     test(
       'omits native Apple entitlement for Developer ID macOS builds',
@@ -89,33 +77,29 @@ void main() {
       skip: Platform.isWindows,
     );
 
-    test(
-      'includes native Apple entitlement when explicitly enabled',
-      () async {
-        final outputDirectory = await Directory.systemTemp.createTemp(
-          'synctv-entitlements-native-apple-test-',
-        );
-        addTearDown(() => outputDirectory.delete(recursive: true));
-        final output = File('${outputDirectory.path}/Generated.entitlements');
+    test('includes native Apple entitlement when explicitly enabled', () async {
+      final outputDirectory = await Directory.systemTemp.createTemp(
+        'synctv-entitlements-native-apple-test-',
+      );
+      addTearDown(() => outputDirectory.delete(recursive: true));
+      final output = File('${outputDirectory.path}/Generated.entitlements');
 
-        await _runGenerator(
-          output: output,
-          defines: _encodeDefines(
-            oauth2Origin: '',
-            passkeyRpIds: '',
-            nativeAppleSignIn: true,
-          ),
-        );
+      await _runGenerator(
+        output: output,
+        defines: _encodeDefines(
+          oauth2Origin: '',
+          passkeyRpIds: '',
+          nativeAppleSignIn: true,
+        ),
+      );
 
-        final document = XmlDocument.parse(await output.readAsString());
-        final keys = document
-            .findAllElements('key')
-            .map((element) => element.innerText)
-            .toList(growable: false);
-        expect(keys, contains('com.apple.developer.applesignin'));
-      },
-      skip: Platform.isWindows,
-    );
+      final document = XmlDocument.parse(await output.readAsString());
+      final keys = document
+          .findAllElements('key')
+          .map((element) => element.innerText)
+          .toList(growable: false);
+      expect(keys, contains('com.apple.developer.applesignin'));
+    }, skip: Platform.isWindows);
   });
 }
 

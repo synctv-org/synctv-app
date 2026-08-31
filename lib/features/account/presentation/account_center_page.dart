@@ -1245,9 +1245,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _bindAttempt++;
       });
       final attempt = _bindAttempt;
-      final parsed = await _nativeAppleSignIn(
-        context,
-      ).authorize(expectedState: start.state, nonce: nonce);
+      final parsed = await _nativeAppleSignIn(context)
+          .authorize(expectedState: start.state, nonce: nonce);
       if (!mounted || attempt != _bindAttempt) return;
       await _gateway.finishOAuth2Bind(code: parsed.code, state: parsed.state);
       final linked = await _gateway.getLinkedOAuth2Accounts();
@@ -2585,9 +2584,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   title: Text(context.l10n.multiFactorAuthentication),
                   subtitle: Text(
                     context.l10n.availableFactors(
-                      _factorLabels(
-                        preferences,
-                      ).join(context.l10n.listSeparator),
+                      _factorLabels(preferences)
+                          .join(context.l10n.listSeparator),
                     ),
                   ),
                 ),
@@ -3706,8 +3704,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   String _formatTimestamp(int seconds) {
     if (seconds <= 0) return '-';
-    return DateFormat(
-      'yyyy-MM-dd HH:mm',
-    ).format(DateTime.fromMillisecondsSinceEpoch(seconds * 1000));
+    return DateFormat('yyyy-MM-dd HH:mm')
+        .format(DateTime.fromMillisecondsSinceEpoch(seconds * 1000));
   }
 }

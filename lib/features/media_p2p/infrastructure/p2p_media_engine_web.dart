@@ -25,14 +25,15 @@ const _originSampleRate = 0.10;
 const _maxResourceMappings = 8192;
 const _resourceIdleTtl = Duration(minutes: 30);
 
-typedef P2pPieceRequester =
-    Future<P2pPeerPiece?> Function(
-      String swarmId,
-      String pieceKey,
-      P2pPieceRequestCancellation cancellation,
-    );
-typedef P2pIntegrityReporter =
-    Future<void> Function(P2pPeerSource source, bool valid);
+typedef P2pPieceRequester = Future<P2pPeerPiece?> Function(
+  String swarmId,
+  String pieceKey,
+  P2pPieceRequestCancellation cancellation,
+);
+typedef P2pIntegrityReporter = Future<void> Function(
+  P2pPeerSource source,
+  bool valid,
+);
 typedef P2pPeerAvailability = bool Function(String swarmId);
 
 class P2pMediaEngine implements P2pMediaPlaybackEngine {
@@ -610,9 +611,8 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       abort.headersReceived();
       resource.originAcceptsRanges = response.statusCode == 206;
       if (response.statusCode == 206) {
-        final match = RegExp(
-          r'^bytes \d+-\d+/(\d+)$',
-        ).firstMatch(response.headers['content-range'] ?? '');
+        final match = RegExp(r'^bytes \d+-\d+/(\d+)$')
+            .firstMatch(response.headers['content-range'] ?? '');
         return int.tryParse(match?.group(1) ?? '') ?? -1;
       }
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -1071,9 +1071,8 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }
 
   _RequestedRange? _parseRange(String? raw) {
-    final match = RegExp(
-      r'^bytes=(?:(\d+)-(\d*)|-(\d+))$',
-    ).firstMatch(raw ?? '');
+    final match = RegExp(r'^bytes=(?:(\d+)-(\d*)|-(\d+))$')
+        .firstMatch(raw ?? '');
     if (match == null) return null;
     if (match.group(3) case final suffix?) {
       final length = int.tryParse(suffix);

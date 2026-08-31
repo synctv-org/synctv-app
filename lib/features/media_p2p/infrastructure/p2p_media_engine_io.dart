@@ -13,14 +13,15 @@ import 'package:synctv_app/features/media_p2p/infrastructure/p2p_max_resource_le
 import 'package:synctv_app/features/media_p2p/infrastructure/p2p_length_metadata.dart';
 import 'package:synctv_app/features/media_p2p/domain/p2p_media_preferences.dart';
 
-typedef P2pPieceRequester =
-    Future<P2pPeerPiece?> Function(
-      String swarmId,
-      String pieceKey,
-      P2pPieceRequestCancellation cancellation,
-    );
-typedef P2pIntegrityReporter =
-    Future<void> Function(P2pPeerSource source, bool valid);
+typedef P2pPieceRequester = Future<P2pPeerPiece?> Function(
+  String swarmId,
+  String pieceKey,
+  P2pPieceRequestCancellation cancellation,
+);
+typedef P2pIntegrityReporter = Future<void> Function(
+  P2pPeerSource source,
+  bool valid,
+);
 typedef P2pPeerAvailability = bool Function(String swarmId);
 
 Future<void> _ignorePeerIntegrity(P2pPeerSource source, bool valid) async {}
@@ -1938,9 +1939,8 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }
 
   static _RequestedByteRange? _parseRange(String? value) {
-    final match = RegExp(
-      r'^bytes=(?:(\d+)-(\d*)|-(\d+))$',
-    ).firstMatch(value ?? '');
+    final match = RegExp(r'^bytes=(?:(\d+)-(\d*)|-(\d+))$')
+        .firstMatch(value ?? '');
     if (match == null) return null;
     final suffixValue = match.group(3);
     if (suffixValue != null) {
@@ -1956,9 +1956,8 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }
 
   static int _totalLength(String? contentRange) {
-    final match = RegExp(
-      r'^bytes \d+-\d+/(\d+)$',
-    ).firstMatch(contentRange ?? '');
+    final match = RegExp(r'^bytes \d+-\d+/(\d+)$')
+        .firstMatch(contentRange ?? '');
     return match == null ? -1 : int.tryParse(match.group(1)!) ?? -1;
   }
 

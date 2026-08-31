@@ -68,9 +68,8 @@ void main() {
         }),
       );
 
-      final result = await SyncTvProviderDomainService(
-        api,
-      ).parseBilibiliInfo('https://b23.tv/typed', instanceName: 'remote');
+      final result = await SyncTvProviderDomainService(api)
+          .parseBilibiliInfo('https://b23.tv/typed', instanceName: 'remote');
 
       expect(result.normalizedUrl, response.normalizedUrl);
       expect(result.candidates, hasLength(2));

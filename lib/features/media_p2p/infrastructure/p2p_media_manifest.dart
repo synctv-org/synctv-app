@@ -20,8 +20,9 @@ final class P2pMediaResourceRegistration {
   final bool isDirectory;
 }
 
-typedef P2pMediaResourceRegistrar =
-    Uri Function(P2pMediaResourceRegistration registration);
+typedef P2pMediaResourceRegistrar = Uri Function(
+  P2pMediaResourceRegistration registration,
+);
 
 P2pManifestKind p2pManifestKind(String format, Uri upstream) {
   final normalizedFormat = format.trim().toLowerCase();

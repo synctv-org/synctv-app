@@ -24,29 +24,31 @@ final class _NativeResult extends Struct {
   external _NativeBuffer second;
 }
 
-typedef _StartNative =
-    _NativeResult Function(Pointer<Uint8> password, Size passwordLen);
-typedef _StartDart =
-    _NativeResult Function(Pointer<Uint8> password, int passwordLen);
+typedef _StartNative = _NativeResult Function(
+  Pointer<Uint8> password,
+  Size passwordLen,
+);
+typedef _StartDart = _NativeResult Function(
+  Pointer<Uint8> password,
+  int passwordLen,
+);
 
-typedef _FinishNative =
-    _NativeResult Function(
-      Pointer<Uint8> password,
-      Size passwordLen,
-      Pointer<Uint8> state,
-      Size stateLen,
-      Pointer<Uint8> response,
-      Size responseLen,
-    );
-typedef _FinishDart =
-    _NativeResult Function(
-      Pointer<Uint8> password,
-      int passwordLen,
-      Pointer<Uint8> state,
-      int stateLen,
-      Pointer<Uint8> response,
-      int responseLen,
-    );
+typedef _FinishNative = _NativeResult Function(
+  Pointer<Uint8> password,
+  Size passwordLen,
+  Pointer<Uint8> state,
+  Size stateLen,
+  Pointer<Uint8> response,
+  Size responseLen,
+);
+typedef _FinishDart = _NativeResult Function(
+  Pointer<Uint8> password,
+  int passwordLen,
+  Pointer<Uint8> state,
+  int stateLen,
+  Pointer<Uint8> response,
+  int responseLen,
+);
 
 typedef _FreeBufferNative = Void Function(_NativeBuffer buffer);
 

@@ -15,9 +15,9 @@ void main() {
 
   test('Apple platforms share the generated Icon Composer package', () {
     final iconDirectory = Directory('assets/icon/AppIcon.icon');
-    final definition =
-        jsonDecode(File('${iconDirectory.path}/icon.json').readAsStringSync())
-            as Map<String, dynamic>;
+    final definition = jsonDecode(
+      File('${iconDirectory.path}/icon.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
 
     expect(
       File('${iconDirectory.path}/Assets/background.svg').existsSync(),
@@ -145,9 +145,8 @@ void main() {
     );
     expect(launcherConfig, isNot(contains('adaptive_icon_')));
     expect(
-      File(
-        'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
-      ).existsSync(),
+      File('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml')
+          .existsSync(),
       isFalse,
     );
     expect(
@@ -166,9 +165,8 @@ void main() {
         );
       }
       expect(
-        File(
-          'android/app/src/main/res/mipmap-$density/ic_launcher.png',
-        ).existsSync(),
+        File('android/app/src/main/res/mipmap-$density/ic_launcher.png')
+            .existsSync(),
         isTrue,
       );
     }

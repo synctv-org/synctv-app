@@ -49,9 +49,8 @@ class ProviderWorkspace extends StatelessWidget {
             ),
             AppVerticalDivider(
               width: 1,
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.7),
+              color: Theme.of(context).colorScheme.outlineVariant
+                  .withValues(alpha: 0.7),
             ),
             const SizedBox(width: 12),
             Expanded(child: results),

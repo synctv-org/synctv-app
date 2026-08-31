@@ -210,9 +210,8 @@ Future<({int width, int height})?> _decodeImageDimensions(
   Uint8List bytes,
 ) async {
   try {
-    final descriptor = await ui.ImmutableBuffer.fromUint8List(
-      bytes,
-    ).then(ui.ImageDescriptor.encoded);
+    final descriptor = await ui.ImmutableBuffer.fromUint8List(bytes)
+        .then(ui.ImageDescriptor.encoded);
     final width = descriptor.width;
     final height = descriptor.height;
     descriptor.dispose();

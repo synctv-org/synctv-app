@@ -26,16 +26,15 @@ enum EmbyCollectionMode {
   genres,
 }
 
-typedef EmbyDiscoveryLoader =
-    Future<EmbyListPage> Function(
-      EmbyBindInfo bind,
-      EmbyListMode mode,
-      String targetId,
-      List<String> itemTypes,
-      String search,
-      int page,
-      int pageSize,
-    );
+typedef EmbyDiscoveryLoader = Future<EmbyListPage> Function(
+  EmbyBindInfo bind,
+  EmbyListMode mode,
+  String targetId,
+  List<String> itemTypes,
+  String search,
+  int page,
+  int pageSize,
+);
 
 class EmbyPlaylistForm extends StatefulWidget {
   const EmbyPlaylistForm({

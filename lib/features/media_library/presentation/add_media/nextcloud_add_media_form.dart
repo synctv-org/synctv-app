@@ -16,15 +16,14 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
 
 enum NextcloudBrowseMode { folder, favorites, search }
 
-typedef NextcloudFileLoader =
-    Future<NextcloudFileListPage> Function(
-      NextcloudBindInfo bind,
-      NextcloudBrowseMode mode,
-      String path,
-      String query,
-      int page,
-      int pageSize,
-    );
+typedef NextcloudFileLoader = Future<NextcloudFileListPage> Function(
+  NextcloudBindInfo bind,
+  NextcloudBrowseMode mode,
+  String path,
+  String query,
+  int page,
+  int pageSize,
+);
 
 class NextcloudAddMediaForm extends StatefulWidget {
   const NextcloudAddMediaForm({
@@ -252,9 +251,8 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         AppIconButton(

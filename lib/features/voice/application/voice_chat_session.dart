@@ -1,7 +1,9 @@
 import 'package:synctv_app/contracts/room_management_models.dart';
 
-typedef VoiceSignalingCallback =
-    void Function(String type, Map<String, dynamic> data);
+typedef VoiceSignalingCallback = void Function(
+  String type,
+  Map<String, dynamic> data,
+);
 typedef VoiceIceServersLoader = Future<List<IceServerInfo>> Function();
 
 abstract interface class VoiceChatSession {

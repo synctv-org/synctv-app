@@ -9,9 +9,9 @@ import 'package:synctv_app/core/presentation/notifications/app_notifications.dar
 
 Future<void> copyRoomInviteLink(BuildContext context, SyncTvRoom room) async {
   try {
-    final endpoint = DependencyScope.read<ServerConnectionGateway>(
-      context,
-    ).activeServer?.endpoint;
+    final endpoint = DependencyScope.read<ServerConnectionGateway>(context)
+        .activeServer
+        ?.endpoint;
     if (endpoint == null) throw StateError('No active server');
     final link = RoomInviteService.createInviteLink(
       room: room,

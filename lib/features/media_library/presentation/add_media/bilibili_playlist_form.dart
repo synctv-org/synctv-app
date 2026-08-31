@@ -39,36 +39,33 @@ enum BilibiliPlaylistMode {
 
 enum BilibiliHistoryFilter { all, archive, live }
 
-typedef BilibiliPgcTimelineLoader =
-    Future<BilibiliPgcTimelineInfo> Function(
-      BilibiliPgcTimelineKind type,
-      int beforeDays,
-      int afterDays,
-      String instanceName,
-    );
+typedef BilibiliPgcTimelineLoader = Future<BilibiliPgcTimelineInfo> Function(
+  BilibiliPgcTimelineKind type,
+  int beforeDays,
+  int afterDays,
+  String instanceName,
+);
 
-typedef BilibiliPgcSeasonLoader =
-    Future<BilibiliPgcSeasonPage> Function(
-      BilibiliPgcSeasonKind type,
-      int page,
-      BilibiliPgcSeasonOrder order,
-      bool ascending,
-      bool? finished,
-      String? area,
-      String? year,
-      int? styleId,
-      String instanceName,
-    );
+typedef BilibiliPgcSeasonLoader = Future<BilibiliPgcSeasonPage> Function(
+  BilibiliPgcSeasonKind type,
+  int page,
+  BilibiliPgcSeasonOrder order,
+  bool ascending,
+  bool? finished,
+  String? area,
+  String? year,
+  int? styleId,
+  String instanceName,
+);
 
-typedef BilibiliPlaylistLoader =
-    Future<BilibiliPlaylistListPage> Function(
-      BilibiliPlaylistListIntent intent,
-      int page,
-      int pageSize,
-      String? cursor,
-      String instanceName,
-      bool shared,
-    );
+typedef BilibiliPlaylistLoader = Future<BilibiliPlaylistListPage> Function(
+  BilibiliPlaylistListIntent intent,
+  int page,
+  int pageSize,
+  String? cursor,
+  String instanceName,
+  bool shared,
+);
 
 class BilibiliPlaylistForm extends StatefulWidget {
   const BilibiliPlaylistForm({

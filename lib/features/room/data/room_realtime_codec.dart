@@ -995,8 +995,7 @@ class RoomRealtimeCodec {
           error: RoomRealtimeError(
             message: '服务端未推送资源快照: ${changed.observeId}',
             code: 0,
-            detail:
-                'ResourceEvent used changed_only while the client requested PUSH_SNAPSHOT.',
+            detail: 'ResourceEvent used changed_only while the client requested PUSH_SNAPSHOT.',
           ),
         );
       default:

@@ -47,9 +47,9 @@ void _generate({
   }
   final aliases = <String>{
     for (final declaration in declarations)
-      ...RegExp(
-        r'\b([a-z][A-Za-z0-9_]*)\.',
-      ).allMatches(declaration.signature).map((match) => match.group(1)!),
+      ...RegExp(r'\b([a-z][A-Za-z0-9_]*)\.')
+          .allMatches(declaration.signature)
+          .map((match) => match.group(1)!),
   };
   final aliasImports = <String>[];
   for (final alias in aliases.toList()..sort()) {
@@ -113,9 +113,8 @@ _MethodDeclaration _extractMethod(String source, String name) {
       start.start,
       next < 0 ? source.length : next,
     );
-    final nameMatch = RegExp(
-      '\\b${RegExp.escape(name)}\\s*\\(',
-    ).firstMatch(segment);
+    final nameMatch = RegExp('\\b${RegExp.escape(name)}\\s*\\(')
+        .firstMatch(segment);
     if (nameMatch == null) continue;
     final openParen = segment.indexOf('(', nameMatch.start);
     final closeParen = _matchingParen(segment, openParen);
@@ -228,9 +227,8 @@ String _forwardArguments(String parameters) {
   return parts
       .map((part) {
         final withoutDefault = part.value.split('=').first.trim();
-        final match = RegExp(
-          r'([A-Za-z_][A-Za-z0-9_]*)\s*$',
-        ).firstMatch(withoutDefault);
+        final match = RegExp(r'([A-Za-z_][A-Za-z0-9_]*)\s*$')
+            .firstMatch(withoutDefault);
         if (match == null)
           throw FormatException('Cannot parse parameter: ${part.value}');
         final name = match.group(1)!;

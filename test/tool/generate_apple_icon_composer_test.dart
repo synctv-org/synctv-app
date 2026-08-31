@@ -26,9 +26,9 @@ void main() {
       expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
       expect(source.readAsStringSync(), sourceBefore);
 
-      final definition =
-          jsonDecode(File('${output.path}/icon.json').readAsStringSync())
-              as Map<String, dynamic>;
+      final definition = jsonDecode(
+        File('${output.path}/icon.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
       expect(definition['fill'], 'automatic');
       expect(definition['groups'], hasLength(1));
       expect(

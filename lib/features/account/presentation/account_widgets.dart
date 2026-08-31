@@ -425,9 +425,8 @@ class _ProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final imageUrl = DependencyScope.read<ResourceUrlResolver>(
-      context,
-    ).resolve(avatarUrl);
+    final imageUrl = DependencyScope.read<ResourceUrlResolver>(context)
+        .resolve(avatarUrl);
     return AppAvatar(
       name: username,
       imageUrl: imageUrl,
@@ -1021,9 +1020,8 @@ class _RoomCreatorLine extends StatelessWidget {
       children: [
         AppAvatar(
           name: creatorName,
-          imageUrl: DependencyScope.read<ResourceUrlResolver>(
-            context,
-          ).resolve(room.creatorAvatarUrl),
+          imageUrl: DependencyScope.read<ResourceUrlResolver>(context)
+              .resolve(room.creatorAvatarUrl),
           radius: 12,
           backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.10),
           foregroundColor: theme.colorScheme.primary,
