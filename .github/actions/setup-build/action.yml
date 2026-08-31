@@ -5,11 +5,11 @@ inputs:
   flutter-version:
     description: Flutter SDK version.
     required: false
-    default: "3.44.8"
+    default: "3.47.2"
   flutter-revision:
     description: Immutable Flutter framework revision for source installations.
     required: false
-    default: "058e0af2c2b57e369d905a03ac9748b0ebf543c6"
+    default: "d3b14c876900e553bc736ca19295fc09e3853e8e"
   flutter-architecture:
     description: Flutter SDK host architecture.
     required: false
@@ -17,7 +17,7 @@ inputs:
   rust-version:
     description: Rust toolchain version used by the OPAQUE native asset.
     required: false
-    default: "1.97.1"
+    default: "1.98.0"
   rust-targets:
     description: Optional comma-separated Rust compilation targets.
     required: false
