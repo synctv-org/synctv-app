@@ -88,7 +88,7 @@ class SyncTvRuntimeService {
         serverClient.baseUrl,
         allowInsecureTls: allowInsecureTls,
       );
-      return sessionStore.addOrUpdateServer(
+      return await sessionStore.addOrUpdateServer(
         declaredServerId: declaredServerId,
         name: info.serverName,
         endpoint: serverClient.baseUrl,
