@@ -9,9 +9,9 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 opaque-ke = { version = "4.0.1", default-features = false, features = ["argon2", "ristretto255"] }
-rand = { version = "0.8", default-features = false }
-rand_chacha = "0.3"
-sha2 = "0.10"
+rand = { version = "0.8.8", default-features = false }
+rand_chacha = "0.3.1"
+sha2 = "0.10.9"
 
 [profile.release]
 opt-level = "z"

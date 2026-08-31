@@ -4,8 +4,8 @@ version: 0.1.0
 publish_to: none
 
 environment:
-  sdk: ^3.12.2
-  flutter: ">=3.44.8"
+  sdk: ^3.13.2
+  flutter: ">=3.47.2"
 
 dependencies:
   flutter:
@@ -14,7 +14,7 @@ dependencies:
   media_kit_video: ^2.0.1
   http: ^1.6.0
   video_player: ^2.14.0
-  video_player_platform_interface: ^6.6.0
+  video_player_platform_interface: ^6.9.0
   web: ^1.1.1
 
 dev_dependencies:

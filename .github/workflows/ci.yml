@@ -24,10 +24,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: "3.44.8"
+  FLUTTER_VERSION: "3.47.2"
   NODE_VERSION: "24"
-  PROTOC_VERSION: "35.1"
-  RUST_VERSION: "1.97.1"
+  PROTOC_VERSION: "36.0"
+  RUST_VERSION: "1.98.0"
 
 jobs:
   quality:
@@ -50,7 +50,7 @@ jobs:
       - name: Set up Protobuf compiler
         uses: taiki-e/install-action@cb33e69fad06166ca28a42b2575e4dadabf62ee8 # v2.85.8
         with:
-          # install-action represents protoc 35.1 with its semver-compatible 3.35.1 alias.
+          # install-action represents protoc 36.0 with its semver-compatible 3.36.0 alias.
           tool: protoc@3.${{ env.PROTOC_VERSION }}
           fallback: none
 

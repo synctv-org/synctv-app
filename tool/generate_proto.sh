@@ -5,7 +5,10 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROTO_ROOT="$ROOT_DIR"
 OUT_DIR="$ROOT_DIR/lib/src/generated"
 
-export PATH="$HOME/fvm/versions/stable/bin:$PATH:$HOME/.pub-cache/bin"
+if [ -x "$ROOT_DIR/.fvm/flutter_sdk/bin/dart" ]; then
+  export PATH="$ROOT_DIR/.fvm/flutter_sdk/bin:$PATH"
+fi
+export PATH="$PATH:$HOME/.pub-cache/bin"
 
 if ! command -v protoc >/dev/null 2>&1; then
   echo "protoc is required to generate Dart protobuf files" >&2

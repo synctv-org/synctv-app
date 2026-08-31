@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/synctv-org/synctv-app?display_name=tag&sort=semver" alt="最新版本"></a>
-  <img src="https://img.shields.io/badge/Flutter-3.44.8-02569B?logo=flutter&logoColor=white" alt="Flutter 3.44.8">
+  <img src="https://img.shields.io/badge/Flutter-3.47.2-02569B?logo=flutter&logoColor=white" alt="Flutter 3.47.2">
   <img src="https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux-495057" alt="支持平台">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-2F855A" alt="Apache-2.0 协议"></a>
 </p>
@@ -94,9 +94,9 @@ flowchart LR
 
 ### 环境要求
 
-- 使用 [FVM](https://fvm.app/) 管理 Flutter `3.44.8` 与 Dart `3.12.2`。
-- OPAQUE 原生资产使用 Rust `1.97.1`。
-- 重新生成 API 代码时需要 Protobuf compiler `35.1` 和 Dart `protoc_plugin 25.0.0`。
+- 使用 [FVM](https://fvm.app/) 管理 Flutter `3.47.2` 与 Dart `3.13.2`。
+- OPAQUE 原生资产使用 Rust `1.98.0`。
+- 重新生成 API 代码时需要 Protobuf compiler `36.0` 和 Dart `protoc_plugin 25.0.0`。
 - 重新生成应用图标时需要 librsvg 和 FFmpeg。
 - 目标平台对应的原生工具链：Java 17 与 Android SDK、Xcode、Visual Studio，或 Linux GTK/WebKit/MPV 开发包。
 

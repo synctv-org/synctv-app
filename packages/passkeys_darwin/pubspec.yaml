@@ -25,12 +25,12 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
-  meta: ^1.18.0
+  meta: ^1.19.0
   passkeys_platform_interface: ^2.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  pigeon: ^27.3.1
-  plugin_platform_interface: ^2.0.0
+  pigeon: ^28.0.0
+  plugin_platform_interface: ^2.1.8
   very_good_analysis: ^10.3.0
