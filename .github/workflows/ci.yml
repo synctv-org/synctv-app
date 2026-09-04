@@ -48,7 +48,7 @@ jobs:
           rust-version: ${{ env.RUST_VERSION }}
 
       - name: Set up Protobuf compiler
-        uses: taiki-e/install-action@cb33e69fad06166ca28a42b2575e4dadabf62ee8 # v2.85.8
+        uses: taiki-e/install-action@0758d235715de2f3551eacc980d9ae8fce9342c3 # v2.87.3
         with:
           # install-action represents protoc 35.1 with its semver-compatible 3.35.1 alias.
           tool: protoc@3.${{ env.PROTOC_VERSION }}
@@ -111,7 +111,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Java
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
           java-version: "17"
