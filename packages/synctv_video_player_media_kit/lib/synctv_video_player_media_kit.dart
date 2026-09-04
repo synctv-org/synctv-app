@@ -5,12 +5,16 @@ import 'src/cancellable_media_kit_video_player.dart';
 
 export 'src/cancellable_media_kit_video_player.dart'
     show
+        AdaptiveAudioTrackController,
         AdaptiveVideoTrackController,
         BrowserPictureInPictureController,
         CancellableMediaKitVideoPlayer,
         syncTvVideoFormatHeader;
 export 'src/video_player_runtime.dart'
     show
+        AdaptiveAudioTrackInfo,
+        AdaptiveAudioTrackRuntime,
+        AdaptiveAudioTrackSnapshot,
         AdaptiveVideoTrackInfo,
         AdaptiveVideoTrackRuntime,
         AdaptiveVideoTrackSnapshot,

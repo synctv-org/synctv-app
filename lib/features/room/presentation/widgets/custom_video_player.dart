@@ -378,6 +378,18 @@ class DanmakuController extends ChangeNotifier {
   }
 }
 
+class PlayerExtraControl {
+  const PlayerExtraControl({
+    required this.label,
+    required this.icon,
+    required this.control,
+  });
+
+  final String label;
+  final IconData icon;
+  final Widget control;
+}
+
 class CustomVideoPlayer extends StatefulWidget {
   final VideoPlayerController controller;
   final String title;
@@ -405,7 +417,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final Function(String)? onSendDanmaku;
   final IconData? fullScreenIcon;
   final IconData? exitFullScreenIcon;
-  final Widget? extraBottomWidget;
+  final List<PlayerExtraControl> extraBottomControls;
   final Widget? Function(BuildContext context)? diagnosticsBuilder;
   final PlaybackDiagnosticsContext diagnostics;
   final ValueGetter<PlaybackDiagnosticsContext>? diagnosticsProvider;
@@ -456,7 +468,7 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onSendDanmaku,
     this.fullScreenIcon,
     this.exitFullScreenIcon,
-    this.extraBottomWidget,
+    this.extraBottomControls = const [],
     this.diagnosticsBuilder,
     this.diagnostics = const PlaybackDiagnosticsContext(),
     this.diagnosticsProvider,
@@ -849,11 +861,17 @@ class PictureInPicturePlaybackOptionsControl extends StatelessWidget {
   const PictureInPicturePlaybackOptionsControl({
     super.key,
     required this.tooltip,
+    required this.icon,
+    required this.buttonKey,
+    required this.optionKeyPrefix,
     required this.choices,
     required this.onSelected,
   });
 
   final String tooltip;
+  final IconData icon;
+  final Key buttonKey;
+  final String optionKeyPrefix;
   final List<PictureInPicturePlaybackChoice> choices;
   final ValueChanged<String> onSelected;
 
@@ -868,12 +886,12 @@ class PictureInPicturePlaybackOptionsControl extends StatelessWidget {
           message: tooltip,
           child: ExcludeSemantics(
             child: GestureDetector(
-              key: const Key('picture_in_picture_playback_options_toggle'),
+              key: buttonKey,
               behavior: HitTestBehavior.opaque,
               onTap: () => unawaited(_openMenu(anchorContext)),
-              child: const SizedBox.square(
+              child: SizedBox.square(
                 dimension: 30,
-                child: Icon(Icons.route_rounded, color: Colors.white, size: 18),
+                child: Icon(icon, color: Colors.white, size: 18),
               ),
             ),
           ),
@@ -943,7 +961,7 @@ class PictureInPicturePlaybackOptionsControl extends StatelessWidget {
       }
       children.add(
         PopupMenuItem<String>(
-          key: ValueKey('picture_in_picture_playback_option_${choice.value}'),
+          key: ValueKey('${optionKeyPrefix}_${choice.value}'),
           value: choice.value,
           height: 36,
           child: Row(
@@ -984,7 +1002,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
     required this.emptyState,
     this.exitTooltip,
     this.volumeTooltip,
-    this.playbackOptionsControl,
+    this.playbackOptionsControls = const [],
     this.diagnostics,
     this.isLive = false,
     this.liveStartedAt,
@@ -1007,7 +1025,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
   final Widget emptyState;
   final String? exitTooltip;
   final String? volumeTooltip;
-  final Widget? playbackOptionsControl;
+  final List<Widget> playbackOptionsControls;
   final Widget? diagnostics;
   final bool isLive;
   final int? liveStartedAt;
@@ -1449,12 +1467,16 @@ class _PictureInPicturePlaybackSurfaceState
                           : null,
                     ),
                   ),
-                if (widget.playbackOptionsControl != null)
+                for (
+                  var index = 0;
+                  index < widget.playbackOptionsControls.length;
+                  index++
+                )
                   KeyedSubtree(
-                    key: const Key(
-                      'picture_in_picture_playback_options_button',
+                    key: ValueKey(
+                      'picture_in_picture_playback_options_button_$index',
                     ),
-                    child: widget.playbackOptionsControl!,
+                    child: widget.playbackOptionsControls[index],
                   ),
                 const Spacer(),
                 if (value != null)
@@ -1686,7 +1708,7 @@ class PlayerControlVisibility {
     required this.showFullscreen,
     required this.showVolume,
     required this.showSync,
-    required this.showPlaybackRoute,
+    required this.showExtraControls,
     required this.showSpeed,
     required this.showVideoDanmaku,
     required this.showChatDanmaku,
@@ -1705,7 +1727,7 @@ class PlayerControlVisibility {
       showFullscreen: true,
       showVolume: desktop && width >= 460,
       showSync: width >= 520,
-      showPlaybackRoute: width >= 600,
+      showExtraControls: width >= 600,
       showSpeed: width >= 680,
       showVideoDanmaku: width >= 740,
       showChatDanmaku: false,
@@ -1720,7 +1742,7 @@ class PlayerControlVisibility {
   final bool showFullscreen;
   final bool showVolume;
   final bool showSync;
-  final bool showPlaybackRoute;
+  final bool showExtraControls;
   final bool showSpeed;
   final bool showVideoDanmaku;
   final bool showChatDanmaku;
@@ -4780,17 +4802,17 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                           dismissOnSwitch: false,
                                           visible: visibility.showSync,
                                         ),
-                                      if (widget.extraBottomWidget
-                                          case final control?)
+                                      for (final extraControl
+                                          in widget.extraBottomControls)
                                         (
-                                          label: context.l10n.playbackRoute,
-                                          icon: Icons.route_rounded,
-                                          build: (_) => control,
+                                          label: extraControl.label,
+                                          icon: extraControl.icon,
+                                          build: (_) => extraControl.control,
                                           onPressed: null,
                                           switchValue: null,
                                           onSwitchChanged: null,
                                           dismissOnSwitch: false,
-                                          visible: visibility.showPlaybackRoute,
+                                          visible: visibility.showExtraControls,
                                         ),
                                       if (widget.isFullScreen &&
                                           widget.onSendDanmaku != null)

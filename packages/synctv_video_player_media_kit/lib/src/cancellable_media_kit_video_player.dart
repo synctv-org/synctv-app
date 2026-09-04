@@ -37,6 +37,19 @@ extension AdaptiveVideoTrackController on VideoPlayerController {
   }
 }
 
+extension AdaptiveAudioTrackController on VideoPlayerController {
+  Stream<AdaptiveAudioTrackSnapshot> get adaptiveAudioTracks {
+    // ignore: invalid_use_of_visible_for_testing_member
+    return CancellableMediaKitVideoPlayer.adaptiveAudioTracksFor(playerId);
+  }
+
+  Future<void> selectAdaptiveAudioTrack(String trackId) {
+    // ignore: invalid_use_of_visible_for_testing_member
+    final id = playerId;
+    return CancellableMediaKitVideoPlayer.selectAdaptiveAudioTrack(id, trackId);
+  }
+}
+
 extension BrowserPictureInPictureController on VideoPlayerController {
   Stream<bool> get browserPictureInPictureEvents {
     // The backend session uses the same identifier assigned by video_player.
@@ -124,6 +137,28 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
     final runtime = platform._sessions[playerId]?.runtime;
     if (runtime is AdaptiveVideoTrackRuntime) {
       await (runtime as AdaptiveVideoTrackRuntime).selectAdaptiveVideoTrack(
+        trackId,
+      );
+    }
+  }
+
+  static Stream<AdaptiveAudioTrackSnapshot> adaptiveAudioTracksFor(
+    int playerId,
+  ) {
+    final runtime = _runtimeFor(playerId);
+    if (runtime is! AdaptiveAudioTrackRuntime) {
+      return const Stream<AdaptiveAudioTrackSnapshot>.empty();
+    }
+    return (runtime as AdaptiveAudioTrackRuntime).adaptiveAudioTracks;
+  }
+
+  static Future<void> selectAdaptiveAudioTrack(
+    int playerId,
+    String trackId,
+  ) async {
+    final runtime = _runtimeFor(playerId);
+    if (runtime is AdaptiveAudioTrackRuntime) {
+      await (runtime as AdaptiveAudioTrackRuntime).selectAdaptiveAudioTrack(
         trackId,
       );
     }
@@ -267,7 +302,10 @@ class _VideoPlayerSession {
 }
 
 class _MediaKitVideoPlayerRuntime
-    implements VideoPlayerRuntime, AdaptiveVideoTrackRuntime {
+    implements
+        VideoPlayerRuntime,
+        AdaptiveVideoTrackRuntime,
+        AdaptiveAudioTrackRuntime {
   _MediaKitVideoPlayerRuntime(int textureId)
     : _player = Player(),
       _events = StreamController<VideoEvent>() {
@@ -279,6 +317,8 @@ class _MediaKitVideoPlayerRuntime
   final StreamController<VideoEvent> _events;
   final StreamController<AdaptiveVideoTrackSnapshot> _adaptiveTracks =
       StreamController<AdaptiveVideoTrackSnapshot>.broadcast();
+  final StreamController<AdaptiveAudioTrackSnapshot> _adaptiveAudioTracks =
+      StreamController<AdaptiveAudioTrackSnapshot>.broadcast();
   final List<StreamSubscription<Object?>> _subscriptions = [];
   late final VideoController _videoController;
   bool _initialized = false;
@@ -302,6 +342,12 @@ class _MediaKitVideoPlayerRuntime
   }
 
   @override
+  Stream<AdaptiveAudioTrackSnapshot> get adaptiveAudioTracks async* {
+    yield _adaptiveAudioTrackSnapshot();
+    yield* _adaptiveAudioTracks.stream;
+  }
+
+  @override
   Future<void> selectAdaptiveVideoTrack(String trackId) async {
     if (_manifestTracks.any((track) => track.id == trackId) ||
         (trackId == 'auto' && _manifestTracks.isNotEmpty)) {
@@ -314,6 +360,16 @@ class _MediaKitVideoPlayerRuntime
               .where((track) => track.id == trackId)
               .firstOrNull;
     if (track != null) await _player.setVideoTrack(track);
+  }
+
+  @override
+  Future<void> selectAdaptiveAudioTrack(String trackId) async {
+    final track = trackId == 'auto'
+        ? AudioTrack.auto()
+        : _player.state.tracks.audio
+              .where((track) => track.id == trackId)
+              .firstOrNull;
+    if (track != null) await _player.setAudioTrack(track);
   }
 
   @override
@@ -397,6 +453,7 @@ class _MediaKitVideoPlayerRuntime
     _subscriptions.clear();
     await _events.close();
     await _adaptiveTracks.close();
+    await _adaptiveAudioTracks.close();
     try {
       await _player.stop();
     } finally {
@@ -430,10 +487,14 @@ class _MediaKitVideoPlayerRuntime
           _notifyInitialized();
         }
         _emitAdaptiveVideoTracks();
+        _emitAdaptiveAudioTracks();
       }),
     );
     _subscriptions.add(
-      _player.stream.track.listen((_) => _emitAdaptiveVideoTracks()),
+      _player.stream.track.listen((_) {
+        _emitAdaptiveVideoTracks();
+        _emitAdaptiveAudioTracks();
+      }),
     );
     _subscriptions.add(
       _player.stream.playing.listen((playing) {
@@ -519,6 +580,32 @@ class _MediaKitVideoPlayerRuntime
   void _emitAdaptiveVideoTracks() {
     if (!_disposed && !_adaptiveTracks.isClosed) {
       _adaptiveTracks.add(_adaptiveVideoTrackSnapshot());
+    }
+  }
+
+  AdaptiveAudioTrackSnapshot _adaptiveAudioTrackSnapshot() {
+    return AdaptiveAudioTrackSnapshot(
+      tracks: _player.state.tracks.audio
+          .where((track) => track.id != 'auto' && track.id != 'no')
+          .map(
+            (track) => AdaptiveAudioTrackInfo(
+              id: track.id,
+              title: track.title,
+              language: track.language,
+              bitrate: track.bitrate,
+              codec: track.codec,
+              channels: track.channelscount ?? track.audiochannels,
+              sampleRate: track.samplerate,
+            ),
+          )
+          .toList(growable: false),
+      selectedTrackId: _player.state.track.audio.id,
+    );
+  }
+
+  void _emitAdaptiveAudioTracks() {
+    if (!_disposed && !_adaptiveAudioTracks.isClosed) {
+      _adaptiveAudioTracks.add(_adaptiveAudioTrackSnapshot());
     }
   }
 

@@ -10,6 +10,9 @@ const _mediaFormat = String.fromEnvironment(
   'SYNCTV_NATIVE_MEDIA_TEST_FORMAT',
   defaultValue: 'mpeg-ts',
 );
+const _verifyAdaptiveTrackSelection = bool.fromEnvironment(
+  'SYNCTV_NATIVE_ADAPTIVE_TRACK_SELECTION_E2E',
+);
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +39,9 @@ void main() {
     );
     await tester.pump();
     await initializing.timeout(const Duration(seconds: 20));
+    if (_verifyAdaptiveTrackSelection) {
+      await _verifyAdaptiveTracks(controller);
+    }
     await controller.play();
     await Future<void>.delayed(const Duration(seconds: 2));
     final playedPosition = await VideoPlayerPlatform.instance.getPosition(
@@ -52,4 +58,34 @@ void main() {
     );
     expect(seekedPosition, greaterThan(const Duration(seconds: 6)));
   }, skip: _mediaUrl.isEmpty);
+}
+
+Future<void> _verifyAdaptiveTracks(VideoPlayerController controller) async {
+  final video = await controller.adaptiveVideoTracks
+      .firstWhere((snapshot) => snapshot.tracks.length >= 2)
+      .timeout(const Duration(seconds: 10));
+  final audio = await controller.adaptiveAudioTracks
+      .firstWhere((snapshot) => snapshot.tracks.length >= 2)
+      .timeout(const Duration(seconds: 10));
+
+  final alternateVideo = video.tracks.firstWhere(
+    (track) => track.id != video.selectedTrackId,
+  );
+  await controller.selectAdaptiveVideoTrack(alternateVideo.id);
+  await controller.adaptiveVideoTracks
+      .firstWhere((snapshot) => snapshot.selectedTrackId == alternateVideo.id)
+      .timeout(const Duration(seconds: 10));
+
+  final alternateAudio = audio.tracks.firstWhere(
+    (track) => track.id != audio.selectedTrackId,
+  );
+  await controller.selectAdaptiveAudioTrack(alternateAudio.id);
+  await controller.adaptiveAudioTracks
+      .firstWhere((snapshot) => snapshot.selectedTrackId == alternateAudio.id)
+      .timeout(const Duration(seconds: 10));
+
+  await controller.selectAdaptiveVideoTrack('auto');
+  await controller.adaptiveVideoTracks
+      .firstWhere((snapshot) => snapshot.selectedTrackId == 'auto')
+      .timeout(const Duration(seconds: 10));
 }

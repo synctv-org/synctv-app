@@ -22,7 +22,6 @@ import 'package:synctv_app/features/room/infrastructure/picture_in_picture_servi
 import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:synctv_app/features/room/presentation/widgets/danmaku_overlay.dart';
-import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 
 import '../../../../test_app.dart';
 
@@ -392,7 +391,7 @@ void main() {
     expect(visibility.showFullscreen, isTrue);
     expect(visibility.showVolume, isFalse);
     expect(visibility.showSync, isFalse);
-    expect(visibility.showPlaybackRoute, isFalse);
+    expect(visibility.showExtraControls, isFalse);
     expect(visibility.showSpeed, isFalse);
     expect(visibility.showVideoDanmaku, isFalse);
     expect(visibility.showChatDanmaku, isFalse);
@@ -408,7 +407,7 @@ void main() {
     expect(visibility.showFullscreen, isTrue);
     expect(visibility.showVolume, isTrue);
     expect(visibility.showSync, isTrue);
-    expect(visibility.showPlaybackRoute, isFalse);
+    expect(visibility.showExtraControls, isFalse);
     expect(visibility.showSpeed, isFalse);
     expect(visibility.showSettings, isTrue);
   });
@@ -420,7 +419,7 @@ void main() {
     expect(visibility.showFullscreen, isTrue);
     expect(visibility.showVolume, isTrue);
     expect(visibility.showSync, isTrue);
-    expect(visibility.showPlaybackRoute, isTrue);
+    expect(visibility.showExtraControls, isTrue);
     expect(visibility.showSpeed, isTrue);
     expect(visibility.showVideoDanmaku, isTrue);
     expect(visibility.showChatDanmaku, isFalse);
@@ -1225,16 +1224,36 @@ void main() {
               controller: controller,
               title: 'Video',
               interactionMode: VideoPlayerInteractionMode.desktop,
-              extraBottomWidget: PlaybackOptionsControl(
-                modes: modes,
-                selectedModeKey: 'hls',
-                selectedMediaIndex: 0,
-                adaptiveTracks: const AdaptiveVideoTrackSnapshot(),
-                tooltip: 'Playback route',
-                compact: true,
-                onMediaSelected: (mode, _) async => selectedMode = mode,
-                onAdaptiveTrackSelected: (_) async {},
-              ),
+              extraBottomControls: [
+                PlayerExtraControl(
+                  label: 'Playback route',
+                  icon: Icons.route_rounded,
+                  control: PlaybackRouteControl(
+                    modes: modes,
+                    selectedModeKey: 'hls',
+                    selectedMediaIndex: 0,
+                    tooltip: 'Playback route',
+                    compact: true,
+                    onMediaSelected: (mode, _) async => selectedMode = mode,
+                  ),
+                ),
+                const PlayerExtraControl(
+                  label: 'Video track',
+                  icon: Icons.high_quality_rounded,
+                  control: SizedBox.square(
+                    key: Key('adaptive_video_track_stub'),
+                    dimension: 40,
+                  ),
+                ),
+                const PlayerExtraControl(
+                  label: 'Audio track',
+                  icon: Icons.audiotrack_rounded,
+                  control: SizedBox.square(
+                    key: Key('adaptive_audio_track_stub'),
+                    dimension: 40,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1248,11 +1267,12 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('playback_overflow_button')));
     await tester.pumpAndSettle();
+    expect(find.text('Playback route'), findsOneWidget);
+    expect(find.text('Video track'), findsOneWidget);
+    expect(find.text('Audio track'), findsOneWidget);
     await tester.tap(find.byKey(const Key('playback_route_button_compact')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('playback_route_selector')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('playback_route_option_flv')));
+    await tester.tap(find.byKey(const Key('playback_route_option_flv_0')));
     await tester.pumpAndSettle();
 
     expect(selectedMode?.key, 'flv');
@@ -1579,11 +1599,35 @@ void main() {
               controller: controller,
               title: 'Video',
               interactionMode: VideoPlayerInteractionMode.desktop,
-              extraBottomWidget: const SizedBox.square(
-                key: Key('playback_route_stub'),
-                dimension: 40,
-                child: Icon(Icons.route_rounded),
-              ),
+              extraBottomControls: const [
+                PlayerExtraControl(
+                  label: 'Playback route',
+                  icon: Icons.route_rounded,
+                  control: SizedBox.square(
+                    key: Key('playback_route_stub'),
+                    dimension: 40,
+                    child: Icon(Icons.route_rounded),
+                  ),
+                ),
+                PlayerExtraControl(
+                  label: 'Video track',
+                  icon: Icons.high_quality_rounded,
+                  control: SizedBox.square(
+                    key: Key('adaptive_video_track_stub'),
+                    dimension: 40,
+                    child: Icon(Icons.high_quality_rounded),
+                  ),
+                ),
+                PlayerExtraControl(
+                  label: 'Audio track',
+                  icon: Icons.audiotrack_rounded,
+                  control: SizedBox.square(
+                    key: Key('adaptive_audio_track_stub'),
+                    dimension: 40,
+                    child: Icon(Icons.audiotrack_rounded),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1592,10 +1636,19 @@ void main() {
     await tester.pump();
 
     final route = tester.getRect(find.byKey(const Key('playback_route_stub')));
+    final videoTrack = tester.getRect(
+      find.byKey(const Key('adaptive_video_track_stub')),
+    );
+    final audioTrack = tester.getRect(
+      find.byKey(const Key('adaptive_audio_track_stub')),
+    );
     final moreActions = tester.getRect(
       find.byKey(const Key('playback_overflow_button')),
     );
-    expect(moreActions.left - route.right, closeTo(4, 0.01));
+    expect(videoTrack.left - route.right, closeTo(4, 0.01));
+    expect(audioTrack.left - videoTrack.right, closeTo(4, 0.01));
+    expect(moreActions.left - audioTrack.right, closeTo(4, 0.01));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('playback speed menu opens upward on desktop hover', (
@@ -2188,6 +2241,9 @@ void main() {
           body: Center(
             child: PictureInPicturePlaybackOptionsControl(
               tooltip: 'Playback route',
+              icon: Icons.route_rounded,
+              buttonKey: const Key('picture_in_picture_playback_route_toggle'),
+              optionKeyPrefix: 'picture_in_picture_playback_route_option',
               choices: const [
                 PictureInPicturePlaybackChoice(
                   value: 'direct|0',
@@ -2217,13 +2273,15 @@ void main() {
 
     expect(find.text('Direct'), findsNothing);
     await tester.tap(
-      find.byKey(const Key('picture_in_picture_playback_options_toggle')),
+      find.byKey(const Key('picture_in_picture_playback_route_toggle')),
     );
     await tester.pumpAndSettle();
     expect(find.text('Direct'), findsOneWidget);
     expect(find.text('Proxy'), findsOneWidget);
     await tester.tap(
-      find.byKey(const ValueKey('picture_in_picture_playback_option_direct|1')),
+      find.byKey(
+        const ValueKey('picture_in_picture_playback_route_option_direct|1'),
+      ),
     );
     await tester.pumpAndSettle();
     expect(selected, 'direct|1');
@@ -2352,9 +2410,9 @@ void main() {
           danmakuController: danmakuController,
           emptyState: const Text('Waiting for playback'),
           exitTooltip: 'Return to room',
-          playbackOptionsControl: const SizedBox(
-            key: Key('test_playback_options'),
-          ),
+          playbackOptionsControls: const [
+            SizedBox(key: Key('test_playback_options')),
+          ],
           diagnostics: const SizedBox(key: Key('test_playback_diagnostics')),
           onPrevious: () => previousCount++,
           onNext: () => nextCount++,
@@ -2385,7 +2443,7 @@ void main() {
     );
     expect(find.byKey(const Key('test_playback_options')), findsOneWidget);
     expect(
-      find.byKey(const Key('picture_in_picture_playback_options_button')),
+      find.byKey(const Key('picture_in_picture_playback_options_button_0')),
       findsOneWidget,
     );
     expect(find.byKey(const Key('test_playback_diagnostics')), findsOneWidget);

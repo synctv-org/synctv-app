@@ -42,5 +42,29 @@ void main() {
         }),
       );
     }
+
+    final dashCapabilities = profile.mediaCapabilities.where(
+      (capability) =>
+          capability.transport ==
+          PlaybackMediaTransport.PLAYBACK_MEDIA_TRANSPORT_DASH,
+    );
+    final h264DashCodecs = dashCapabilities
+        .where(
+          (capability) =>
+              capability.videoCodec ==
+              PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+        )
+        .map((capability) => capability.codecString.toLowerCase())
+        .toSet();
+    if (h264DashCodecs.isNotEmpty) {
+      expect(h264DashCodecs, contains('avc1.64001f,mp4a.40.2'));
+      expect(
+        dashCapabilities.every(
+          (capability) =>
+              capability.container == PlaybackContainer.PLAYBACK_CONTAINER_MP4,
+        ),
+        isTrue,
+      );
+    }
   });
 }

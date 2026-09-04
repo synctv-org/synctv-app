@@ -16,18 +16,25 @@ String playbackLoadErrorMessage(AppLocalizations l10n, Object error) {
   if (_containsStatus(lower, 429) || lower.contains('rate limit')) {
     return l10n.playbackRateLimited;
   }
-  if (lower.contains('unsupported') ||
-      lower.contains('format') ||
-      lower.contains('codec') ||
-      lower.contains('decode')) {
-    return l10n.playbackFormatUnsupported;
-  }
   if (lower.contains('timed out') ||
       lower.contains('timeout') ||
       lower.contains('network') ||
       lower.contains('connection') ||
-      lower.contains('failed host lookup')) {
+      lower.contains('failed host lookup') ||
+      lower.contains('manifesterror') ||
+      lower.contains('downloaderror') ||
+      lower.contains('failed to download') ||
+      lower.contains('failed to load manifest') ||
+      lower.contains('failed loading manifest')) {
     return l10n.playbackConnectionFailed;
+  }
+  if (lower.contains('unsupported') ||
+      lower.contains('not supported') ||
+      lower.contains('format not supported') ||
+      lower.contains('codec') ||
+      lower.contains('decode') ||
+      lower.contains('media_err_src_not_supported')) {
+    return l10n.playbackFormatUnsupported;
   }
 
   return l10n.playbackLoadFailed;

@@ -37,6 +37,7 @@ void restoreMountedWebVideoStyle(web.HTMLVideoElement video) {
 class WebVideoPlayerRuntime
     implements
         VideoPlayerRuntime,
+        AdaptiveAudioTrackRuntime,
         AdaptiveVideoTrackRuntime,
         WebVideoPlayerOptionsRuntime,
         PictureInPictureRuntime {
@@ -89,6 +90,8 @@ class WebVideoPlayerRuntime
   final StreamController<VideoEvent> _events = StreamController<VideoEvent>();
   final StreamController<AdaptiveVideoTrackSnapshot> _adaptiveTracks =
       StreamController<AdaptiveVideoTrackSnapshot>.broadcast();
+  final StreamController<AdaptiveAudioTrackSnapshot> _adaptiveAudioTracks =
+      StreamController<AdaptiveAudioTrackSnapshot>.broadcast();
   final StreamController<bool> _pictureInPictureEvents =
       StreamController<bool>.broadcast();
   final List<StreamSubscription<Object?>> _subscriptions = [];
@@ -105,9 +108,15 @@ class WebVideoPlayerRuntime
   web.EventHandler? _onEnterPictureInPicture;
   web.EventHandler? _onLeavePictureInPicture;
   List<AdaptiveVideoTrackInfo> _tracks = const [];
+  List<AdaptiveAudioTrackInfo> _audioTracks = const [];
   final Map<String, String> _dashRepresentationIds = {};
+  final Map<String, JSObject> _dashVideoTrackObjects = {};
+  final Map<String, JSObject> _dashAudioTrackObjects = {};
   String _selectedTrackId = 'auto';
+  String _selectedAudioTrackId = 'auto';
   bool _dashAutomaticSelection = true;
+  String? _dashAutomaticVideoAdaptationId;
+  String? _pendingDashVideoTrackId;
 
   @override
   Stream<VideoEvent> get events => _events.stream;
@@ -116,6 +125,12 @@ class WebVideoPlayerRuntime
   Stream<AdaptiveVideoTrackSnapshot> get adaptiveVideoTracks async* {
     yield _adaptiveTrackSnapshot;
     yield* _adaptiveTracks.stream;
+  }
+
+  @override
+  Stream<AdaptiveAudioTrackSnapshot> get adaptiveAudioTracks async* {
+    yield _adaptiveAudioTrackSnapshot;
+    yield* _adaptiveAudioTracks.stream;
   }
 
   @override
@@ -142,7 +157,8 @@ class WebVideoPlayerRuntime
     if (media.httpHeaders?.isNotEmpty ?? false) {
       throw PlatformException(
         code: 'web_media_headers_unsupported',
-        message: 'The browser cannot attach custom headers to media requests. Use a provider proxy route.',
+        message:
+            'The browser cannot attach custom headers to media requests. Use a provider proxy route.',
       );
     }
 
@@ -262,6 +278,10 @@ class WebVideoPlayerRuntime
       (_, _) => _refreshDashTracks(),
       singleArgument: true,
     );
+    _bindEngineEvent(player, 'trackChangeRendered'.toJS, (_, _) {
+      _applyPendingDashVideoRepresentation();
+      _refreshDashTracks();
+    }, singleArgument: true);
     player.callMethod<JSAny?>('initialize'.toJS, _video, uri.toJS, false.toJS);
     return true;
   }
@@ -378,33 +398,68 @@ class WebVideoPlayerRuntime
   void _refreshDashTracks() {
     final player = _engine;
     if (player == null || _engineKind != WebPlaybackEngine.dashJs) return;
-    final representations = player
-        .callMethod<JSArray<JSObject>>(
-          'getRepresentationsByType'.toJS,
-          'video'.toJS,
-        )
-        .toDart;
     _dashRepresentationIds.clear();
-    _tracks = [
-      for (final (index, representation) in representations.indexed)
-        if (_readString(representation, 'id') case final representationId?)
+    _dashVideoTrackObjects.clear();
+    final videoTracks = player
+        .callMethod<JSArray<JSObject>>('getTracksFor'.toJS, 'video'.toJS)
+        .toDart;
+    final nextVideoTracks = <AdaptiveVideoTrackInfo>[];
+    for (final (trackIndex, track) in videoTracks.indexed) {
+      final adaptationId = _dashAdaptationId(track, trackIndex);
+      final codec = _readDashCodec(track);
+      final title = _readDashLabel(track) ?? codec ?? adaptationId;
+      final representations = _readObjectArray(track, 'bitrateList');
+      for (final (representationIndex, representation)
+          in representations.indexed) {
+        final representationId =
+            _readString(representation, 'id') ??
+            '$adaptationId-$representationIndex';
+        final trackId = _dashTrackId(adaptationId, representationId);
+        _dashRepresentationIds[trackId] = representationId;
+        _dashVideoTrackObjects[trackId] = track;
+        nextVideoTracks.add(
           AdaptiveVideoTrackInfo(
-            id: _dashTrackId(index, representationId),
-            title: representationId,
+            id: trackId,
+            title: title,
             width: _readInt(representation, 'width'),
             height: _readInt(representation, 'height'),
-            fps: _readDouble(representation, 'frameRate'),
-            bitrate: _readInt(representation, 'bandwidth'),
-            codec: _readString(representation, 'codecs'),
+            fps:
+                _readDouble(representation, 'frameRate') ??
+                _readDouble(track, 'frameRate'),
+            bitrate:
+                _readInt(representation, 'bitrate') ??
+                _readInt(representation, 'bandwidth'),
+            codec: codec ?? _readDashCodec(representation),
           ),
-    ];
-    for (final (index, representation) in representations.indexed) {
-      final representationId = _readString(representation, 'id');
-      if (representationId != null) {
-        _dashRepresentationIds[_dashTrackId(index, representationId)] =
-            representationId;
+        );
       }
     }
+    _tracks = nextVideoTracks;
+
+    final currentVideoTrack = player.callMethod<JSObject?>(
+      'getCurrentTrackFor'.toJS,
+      'video'.toJS,
+    );
+    final currentVideoAdaptationId = _readString(currentVideoTrack, 'id');
+    if (_dashAutomaticSelection && _dashAutomaticVideoAdaptationId == null) {
+      _dashAutomaticVideoAdaptationId = currentVideoAdaptationId;
+    }
+
+    _dashAudioTrackObjects.clear();
+    final audioTracks = player
+        .callMethod<JSArray<JSObject>>('getTracksFor'.toJS, 'audio'.toJS)
+        .toDart;
+    _audioTracks = [
+      for (final (index, track) in audioTracks.indexed)
+        _dashAudioTrackInfo(track, index),
+    ];
+    for (final (index, track) in audioTracks.indexed) {
+      _dashAudioTrackObjects[_dashAudioTrackId(
+            _dashAdaptationId(track, index),
+          )] =
+          track;
+    }
+
     if (_dashAutomaticSelection) {
       _selectedTrackId = 'auto';
     } else {
@@ -415,16 +470,59 @@ class WebVideoPlayerRuntime
       final currentId = _readString(current, 'id');
       _selectedTrackId =
           _dashRepresentationIds.entries
-              .where((entry) => entry.value == currentId)
+              .where(
+                (entry) =>
+                    entry.value == currentId &&
+                    _readString(_dashVideoTrackObjects[entry.key], 'id') ==
+                        currentVideoAdaptationId,
+              )
               .map((entry) => entry.key)
               .firstOrNull ??
           'auto';
     }
+    final currentAudio = player.callMethod<JSObject?>(
+      'getCurrentTrackFor'.toJS,
+      'audio'.toJS,
+    );
+    final currentAudioId = _readString(currentAudio, 'id');
+    _selectedAudioTrackId =
+        _dashAudioTrackObjects.entries
+            .where((entry) => _readString(entry.value, 'id') == currentAudioId)
+            .map((entry) => entry.key)
+            .firstOrNull ??
+        'auto';
     _emitAdaptiveTracks();
+    _emitAdaptiveAudioTracks();
   }
 
-  String _dashTrackId(int index, String representationId) =>
-      'dash:$index:$representationId';
+  String _dashTrackId(String adaptationId, String representationId) =>
+      'dash:$adaptationId:$representationId';
+
+  String _dashAudioTrackId(String adaptationId) => 'dash-audio:$adaptationId';
+
+  AdaptiveAudioTrackInfo _dashAudioTrackInfo(JSObject track, int index) {
+    final adaptationId = _dashAdaptationId(track, index);
+    final representations = _readObjectArray(track, 'bitrateList');
+    final representation = representations.firstOrNull;
+    return AdaptiveAudioTrackInfo(
+      id: _dashAudioTrackId(adaptationId),
+      title: _readDashLabel(track) ?? _readDashCodec(track) ?? adaptationId,
+      language: _readString(track, 'lang'),
+      bitrate: representation == null
+          ? null
+          : _readInt(representation, 'bitrate') ??
+                _readInt(representation, 'bandwidth'),
+      codec:
+          _readDashCodec(track) ??
+          (representation == null ? null : _readDashCodec(representation)),
+      channels: _readDashAudioChannels(track),
+      sampleRate:
+          _readInt(track, 'audioSamplingRate') ??
+          (representation == null
+              ? null
+              : _readInt(representation, 'audioSamplingRate')),
+    );
+  }
 
   @override
   Future<void> selectAdaptiveVideoTrack(String trackId) async {
@@ -454,17 +552,80 @@ class WebVideoPlayerRuntime
           },
         }.jsify(),
       );
-      if (representationId != null) {
-        engine.callMethod<JSAny?>(
-          'setRepresentationForTypeById'.toJS,
+      if (trackId == 'auto') {
+        _pendingDashVideoTrackId = null;
+        final automaticTrack = _dashVideoTrackObjects.values
+            .where(
+              (track) =>
+                  _readString(track, 'id') == _dashAutomaticVideoAdaptationId,
+            )
+            .firstOrNull;
+        final currentTrack = engine.callMethod<JSObject?>(
+          'getCurrentTrackFor'.toJS,
           'video'.toJS,
-          representationId.toJS,
-          true.toJS,
         );
+        if (automaticTrack != null &&
+            _readString(automaticTrack, 'id') !=
+                _readString(currentTrack, 'id')) {
+          engine.callMethod<JSAny?>('setCurrentTrack'.toJS, automaticTrack);
+        }
+      }
+      if (representationId != null) {
+        final targetTrack = _dashVideoTrackObjects[trackId];
+        final currentTrack = engine.callMethod<JSObject?>(
+          'getCurrentTrackFor'.toJS,
+          'video'.toJS,
+        );
+        if (targetTrack != null &&
+            _readString(targetTrack, 'id') != _readString(currentTrack, 'id')) {
+          _pendingDashVideoTrackId = trackId;
+          engine.callMethod<JSAny?>('setCurrentTrack'.toJS, targetTrack);
+        } else {
+          _setDashVideoRepresentation(engine, representationId);
+        }
       }
       _selectedTrackId = trackId;
       _emitAdaptiveTracks();
     }
+  }
+
+  void _applyPendingDashVideoRepresentation() {
+    final player = _engine;
+    final trackId = _pendingDashVideoTrackId;
+    if (player == null || trackId == null) return;
+    final targetTrack = _dashVideoTrackObjects[trackId];
+    final currentTrack = player.callMethod<JSObject?>(
+      'getCurrentTrackFor'.toJS,
+      'video'.toJS,
+    );
+    if (targetTrack == null ||
+        _readString(targetTrack, 'id') != _readString(currentTrack, 'id')) {
+      return;
+    }
+    final representationId = _dashRepresentationIds[trackId];
+    if (representationId == null) return;
+    _pendingDashVideoTrackId = null;
+    _setDashVideoRepresentation(player, representationId);
+  }
+
+  void _setDashVideoRepresentation(JSObject player, String representationId) {
+    player.callMethod<JSAny?>(
+      'setRepresentationForTypeById'.toJS,
+      'video'.toJS,
+      representationId.toJS,
+      true.toJS,
+    );
+  }
+
+  @override
+  Future<void> selectAdaptiveAudioTrack(String trackId) async {
+    final engine = _engine;
+    if (engine == null || _engineKind != WebPlaybackEngine.dashJs) return;
+    final track = _dashAudioTrackObjects[trackId];
+    if (track == null) return;
+    engine.callMethod<JSAny?>('setCurrentTrack'.toJS, track);
+    _selectedAudioTrackId = trackId;
+    _emitAdaptiveAudioTracks();
   }
 
   AdaptiveVideoTrackSnapshot get _adaptiveTrackSnapshot =>
@@ -473,9 +634,22 @@ class WebVideoPlayerRuntime
         selectedTrackId: _selectedTrackId,
       );
 
+  AdaptiveAudioTrackSnapshot get _adaptiveAudioTrackSnapshot =>
+      AdaptiveAudioTrackSnapshot(
+        tracks: _audioTracks,
+        selectedTrackId: _selectedAudioTrackId,
+        automaticSelectionAvailable: false,
+      );
+
   void _emitAdaptiveTracks() {
     if (!_disposed && !_adaptiveTracks.isClosed) {
       _adaptiveTracks.add(_adaptiveTrackSnapshot);
+    }
+  }
+
+  void _emitAdaptiveAudioTracks() {
+    if (!_disposed && !_adaptiveAudioTracks.isClosed) {
+      _adaptiveAudioTracks.add(_adaptiveAudioTrackSnapshot);
     }
   }
 
@@ -754,10 +928,17 @@ class WebVideoPlayerRuntime
     _initializationTimeoutTimer = null;
     _buffering = false;
     _tracks = const [];
+    _audioTracks = const [];
     _dashRepresentationIds.clear();
+    _dashVideoTrackObjects.clear();
+    _dashAudioTrackObjects.clear();
     _selectedTrackId = 'auto';
+    _selectedAudioTrackId = 'auto';
     _dashAutomaticSelection = true;
+    _dashAutomaticVideoAdaptationId = null;
+    _pendingDashVideoTrackId = null;
     _emitAdaptiveTracks();
+    _emitAdaptiveAudioTracks();
     final engine = _engine;
     final engineKind = _engineKind;
     _engine = null;
@@ -841,6 +1022,7 @@ class WebVideoPlayerRuntime
     _video.remove();
     await _pictureInPictureEvents.close();
     await _adaptiveTracks.close();
+    await _adaptiveAudioTracks.close();
     await _events.close();
   }
 }
@@ -940,6 +1122,62 @@ String? _readString(JSAny? value, String property) {
   return propertyValue is String && propertyValue.isNotEmpty
       ? propertyValue
       : null;
+}
+
+List<JSObject> _readObjectArray(JSAny? value, String property) {
+  final object = _asObject(value);
+  final propertyValue = object?.getProperty<JSAny?>(property.toJS);
+  if (propertyValue == null || !propertyValue.isA<JSArray>()) return const [];
+  return (propertyValue as JSArray<JSAny?>).toDart.whereType<JSObject>().toList(
+    growable: false,
+  );
+}
+
+String _dashAdaptationId(JSObject track, int index) {
+  return _readString(track, 'id') ??
+      [
+        _readString(track, 'type') ?? 'track',
+        _readString(track, 'lang') ?? '',
+        _readString(track, 'codec') ?? '',
+        '$index',
+      ].join(':');
+}
+
+String? _readDashLabel(JSObject track) {
+  final direct = _readString(track, 'label');
+  if (direct != null) return direct;
+  for (final label in _readObjectArray(track, 'labels')) {
+    final text = _readString(label, 'text') ?? _readString(label, 'label');
+    if (text != null) return text;
+  }
+  return null;
+}
+
+String? _readDashCodec(JSObject value) {
+  final raw = _readString(value, 'codec') ?? _readString(value, 'codecs');
+  if (raw == null) return null;
+  final match = RegExp(
+    r'''codecs\s*=\s*["']?([^"';]+)''',
+    caseSensitive: false,
+  ).firstMatch(raw);
+  final codecs = (match?.group(1) ?? raw).trim();
+  if (codecs.isEmpty) return null;
+  return codecs.split(',').first.trim();
+}
+
+int? _readDashAudioChannels(JSObject track) {
+  for (final configuration in _readObjectArray(
+    track,
+    'audioChannelConfiguration',
+  )) {
+    final value =
+        _readString(configuration, 'value') ??
+        _readString(configuration, 'audioChannelValue');
+    if (value == null) continue;
+    final channels = int.tryParse(value);
+    if (channels != null && channels > 0) return channels;
+  }
+  return _readInt(track, 'channels');
 }
 
 bool? _readBool(JSAny? value, String property) {

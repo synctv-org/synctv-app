@@ -45,6 +45,44 @@ abstract interface class AdaptiveVideoTrackRuntime {
   Future<void> selectAdaptiveVideoTrack(String trackId);
 }
 
+class AdaptiveAudioTrackInfo {
+  const AdaptiveAudioTrackInfo({
+    required this.id,
+    this.title,
+    this.language,
+    this.bitrate,
+    this.codec,
+    this.channels,
+    this.sampleRate,
+  });
+
+  final String id;
+  final String? title;
+  final String? language;
+  final int? bitrate;
+  final String? codec;
+  final int? channels;
+  final int? sampleRate;
+}
+
+class AdaptiveAudioTrackSnapshot {
+  const AdaptiveAudioTrackSnapshot({
+    this.tracks = const [],
+    this.selectedTrackId = 'auto',
+    this.automaticSelectionAvailable = true,
+  });
+
+  final List<AdaptiveAudioTrackInfo> tracks;
+  final String selectedTrackId;
+  final bool automaticSelectionAvailable;
+}
+
+abstract interface class AdaptiveAudioTrackRuntime {
+  Stream<AdaptiveAudioTrackSnapshot> get adaptiveAudioTracks;
+
+  Future<void> selectAdaptiveAudioTrack(String trackId);
+}
+
 abstract interface class WebVideoPlayerOptionsRuntime {
   Future<void> setWebOptions(VideoPlayerWebOptions options);
 }

@@ -1701,6 +1701,7 @@ segment.ts?token=secret
 
   test('DASH gateway rewrites BaseURL and shares expanded segments', () async {
     var segmentRequests = 0;
+    final requestedPieces = <String>[];
     final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     origin.listen((request) async {
       if (request.uri.path == '/manifest.mpd') {
@@ -1710,7 +1711,7 @@ segment.ts?token=secret
         );
         request.response.write(
           '<MPD><Period><AdaptationSet><Representation>'
-          '<SegmentTemplate media="video/seg-\$Number\$.m4s" />'
+          '<SegmentTemplate media="video/seg-\$Number\$.m4s?deadline=100&amp;sq=\$Number\$" />'
           '</Representation></AdaptationSet></Period></MPD>',
         );
       } else if (request.uri.path == '/video/seg-1.m4s') {
@@ -1722,7 +1723,10 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
-      requestPeerPiece: (swarm, key, cancellation) async => null,
+      requestPeerPiece: (swarm, key, cancellation) async {
+        requestedPieces.add('$swarm|$key');
+        return null;
+      },
     );
     addTearDown(() async {
       await engine.dispose();
@@ -1738,13 +1742,55 @@ segment.ts?token=secret
     );
 
     final manifest = await _getText(local);
-    final baseUrl = RegExp(r'<BaseURL>([^<]+)</BaseURL>')
-        .firstMatch(manifest)!
-        .group(1)!;
-    final segment = Uri.parse(baseUrl).resolve('video/seg-1.m4s');
+    final document = XmlDocument.parse(manifest);
+    final baseUrl = Uri.parse(
+      document.findAllElements('BaseURL').first.innerText,
+    );
+    final template = document
+        .findAllElements('SegmentTemplate')
+        .single
+        .getAttribute('media')!;
+    final segment = baseUrl.resolve(template.replaceAll(r'$Number$', '1'));
     expect(await _getBytes(segment), [7, 8, 9]);
     expect(await _getBytes(segment), [7, 8, 9]);
     expect(segmentRequests, 1);
+    expect(
+      requestedPieces,
+      contains('sm2_dash|root:mpd:root-base:video/seg-1.m4s?sq=1'),
+    );
+  });
+
+  test('DASH manifests always load from origin outside the swarm', () async {
+    var originRequests = 0;
+    var peerRequests = 0;
+    final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    origin.listen((request) async {
+      originRequests++;
+      request.response.write('<MPD><Period id="0" /></MPD>');
+      await request.response.close();
+    });
+    final engine = P2pMediaEngine(
+      requestPeerPiece: (swarm, key, cancellation) async {
+        peerRequests++;
+        return null;
+      },
+    );
+    addTearDown(() async {
+      await engine.dispose();
+      await origin.close(force: true);
+    });
+    final local = await engine.localize(
+      upstream: Uri.parse(
+        'http://${origin.address.address}:${origin.port}/manifest.mpd',
+      ),
+      headers: const {},
+      swarmId: 'sm2_dash_manifest_origin',
+      format: 'dash',
+    );
+
+    expect(await _getText(local), contains('<MPD>'));
+    expect(originRequests, 1);
+    expect(peerRequests, 0);
   });
 
   test('DASH segments bypass peer lookup without a connected peer', () async {
@@ -1784,12 +1830,13 @@ segment.ts?token=secret
       format: 'dash',
     );
     final manifest = await _getText(local);
-    final baseUrl = RegExp(r'<BaseURL>([^<]+)</BaseURL>')
-        .firstMatch(manifest)!
-        .group(1)!;
+    final baseUrl = RegExp(
+      r'<BaseURL>([^<]+)</BaseURL>',
+    ).firstMatch(manifest)!.group(1)!;
 
-    final segment = await _getBytes(Uri.parse(baseUrl).resolve('seg-1.m4s'))
-        .timeout(const Duration(seconds: 1));
+    final segment = await _getBytes(
+      Uri.parse(baseUrl).resolve('seg-1.m4s'),
+    ).timeout(const Duration(seconds: 1));
 
     expect(segment, [4, 2]);
     expect(peerRequests, 0);
@@ -1902,12 +1949,13 @@ segment.ts?token=secret
         format: 'dash',
       );
       final manifest = await _getText(local);
-      final baseUrl = RegExp(r'<BaseURL>([^<]+)</BaseURL>')
-          .firstMatch(manifest)!
-          .group(1)!;
+      final baseUrl = RegExp(
+        r'<BaseURL>([^<]+)</BaseURL>',
+      ).firstMatch(manifest)!.group(1)!;
 
-      final segment = await _getBytes(Uri.parse(baseUrl).resolve('seg-1.m4s'))
-          .timeout(const Duration(seconds: 1));
+      final segment = await _getBytes(
+        Uri.parse(baseUrl).resolve('seg-1.m4s'),
+      ).timeout(const Duration(seconds: 1));
 
       expect(segment, [4, 2]);
       expect(peerRequests, 0);
@@ -1957,12 +2005,13 @@ segment.ts?token=secret
         format: 'dash',
       );
       final manifest = await _getText(local);
-      final baseUrl = RegExp(r'<BaseURL>([^<]+)</BaseURL>')
-          .firstMatch(manifest)!
-          .group(1)!;
+      final baseUrl = RegExp(
+        r'<BaseURL>([^<]+)</BaseURL>',
+      ).firstMatch(manifest)!.group(1)!;
 
-      final segment = await _getBytes(Uri.parse(baseUrl).resolve('seg-1.m4s'))
-          .timeout(const Duration(seconds: 1));
+      final segment = await _getBytes(
+        Uri.parse(baseUrl).resolve('seg-1.m4s'),
+      ).timeout(const Duration(seconds: 1));
 
       expect(segment, [4, 2]);
       expect(peerRequests, 0);
@@ -2023,10 +2072,9 @@ segment.ts?token=secret
     );
 
     final manifest = await _getText(local);
-    final baseUrls = RegExp(r'<BaseURL>([^<]+)</BaseURL>')
-        .allMatches(manifest)
-        .map((match) => match.group(1)!)
-        .toList();
+    final baseUrls = RegExp(
+      r'<BaseURL>([^<]+)</BaseURL>',
+    ).allMatches(manifest).map((match) => match.group(1)!).toList();
     expect(baseUrls, hasLength(2));
     expect(baseUrls.last, startsWith('http://127.0.0.1:'));
     final response = await _getResponse(
@@ -2212,8 +2260,9 @@ segment.ts?token=secret
         await request.response.close();
         return;
       }
-      final match = RegExp(r'^bytes=(\d+)-(\d+)$')
-          .firstMatch(request.headers.value(HttpHeaders.rangeHeader) ?? '');
+      final match = RegExp(
+        r'^bytes=(\d+)-(\d+)$',
+      ).firstMatch(request.headers.value(HttpHeaders.rangeHeader) ?? '');
       if (match == null) {
         request.response.statusCode = HttpStatus.badRequest;
         await request.response.close();

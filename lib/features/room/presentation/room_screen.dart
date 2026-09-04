@@ -323,6 +323,10 @@ class _RoomScreenState extends State<RoomScreen>
   _adaptiveVideoTracksSubscription;
   AdaptiveVideoTrackSnapshot _adaptiveVideoTracks =
       const AdaptiveVideoTrackSnapshot();
+  StreamSubscription<AdaptiveAudioTrackSnapshot>?
+  _adaptiveAudioTracksSubscription;
+  AdaptiveAudioTrackSnapshot _adaptiveAudioTracks =
+      const AdaptiveAudioTrackSnapshot();
   String? _videoPlayerSourceKey;
   int? _videoPlayerSourceExpireAt;
   String? _initializingVideoSourceKey;
@@ -3250,6 +3254,7 @@ class _RoomScreenState extends State<RoomScreen>
       _videoPlaybackHasProgress = false;
       _videoPlayerController!.addListener(_videoListener);
       _observeAdaptiveVideoTracks(newController);
+      _observeAdaptiveAudioTracks(newController);
 
       if (mounted) {
         setState(() {
@@ -3348,6 +3353,19 @@ class _RoomScreenState extends State<RoomScreen>
     });
   }
 
+  void _observeAdaptiveAudioTracks(VideoPlayerController controller) {
+    unawaited(_adaptiveAudioTracksSubscription?.cancel());
+    _adaptiveAudioTracks = const AdaptiveAudioTrackSnapshot();
+    _adaptiveAudioTracksSubscription = controller.adaptiveAudioTracks.listen((
+      snapshot,
+    ) {
+      if (!mounted || !identical(_videoPlayerController, controller)) {
+        return;
+      }
+      setState(() => _adaptiveAudioTracks = snapshot);
+    });
+  }
+
   Future<void> _selectAdaptiveVideoTrack(String trackId) async {
     final controller = _videoPlayerController;
     if (controller == null) return;
@@ -3359,26 +3377,68 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Widget? _buildPlaybackOptionButton({bool compact = false}) {
-    final entry = _currentStatus?.entry;
-    if (entry == null ||
-        (!entry.hasPlaybackChoices &&
-            _adaptiveVideoTracks.tracks.length <= 1)) {
-      return null;
+  Future<void> _selectAdaptiveAudioTrack(String trackId) async {
+    final controller = _videoPlayerController;
+    if (controller == null) return;
+    try {
+      await controller.selectAdaptiveAudioTrack(trackId);
+    } catch (error) {
+      debugPrint('Adaptive audio track selection failed: $error');
+      if (mounted) AppNotifications.showError(context, error.toString());
     }
-    return PlaybackOptionsControl(
-      key: ValueKey(
-        'playback_options_${entry.id}_${entry.selectedPlaybackMode}_$compact',
-      ),
-      modes: entry.playbackModes,
-      selectedModeKey: entry.selectedPlaybackMode,
-      selectedMediaIndex: entry.selectedPlaybackUrlIndex,
-      adaptiveTracks: _adaptiveVideoTracks,
-      tooltip: context.l10n.playbackRoute,
-      compact: compact,
-      onMediaSelected: _selectPlaybackOption,
-      onAdaptiveTrackSelected: _selectAdaptiveVideoTrack,
-    );
+  }
+
+  List<PlayerExtraControl> _buildPlaybackOptionControls({
+    bool compact = false,
+  }) {
+    final entry = _currentStatus?.entry;
+    if (entry == null) return const [];
+    return [
+      if (entry.hasPlaybackChoices)
+        PlayerExtraControl(
+          label: context.l10n.playbackRoute,
+          icon: Icons.route_rounded,
+          control: PlaybackRouteControl(
+            key: ValueKey(
+              'playback_route_${entry.id}_${entry.selectedPlaybackMode}_$compact',
+            ),
+            modes: entry.playbackModes,
+            selectedModeKey: entry.selectedPlaybackMode,
+            selectedMediaIndex: entry.selectedPlaybackUrlIndex,
+            tooltip: context.l10n.playbackRoute,
+            compact: compact,
+            onMediaSelected: _selectPlaybackOption,
+          ),
+        ),
+      if (_adaptiveVideoTracks.tracks.length > 1)
+        PlayerExtraControl(
+          label: context.l10n.videoTrack,
+          icon: Icons.high_quality_rounded,
+          control: AdaptiveVideoTrackControl(
+            key: ValueKey(
+              'adaptive_video_track_${entry.id}_${_adaptiveVideoTracks.selectedTrackId}_$compact',
+            ),
+            tracks: _adaptiveVideoTracks,
+            tooltip: context.l10n.videoTrack,
+            compact: compact,
+            onTrackSelected: _selectAdaptiveVideoTrack,
+          ),
+        ),
+      if (_adaptiveAudioTracks.tracks.length > 1)
+        PlayerExtraControl(
+          label: context.l10n.audioTrack,
+          icon: Icons.audiotrack_rounded,
+          control: AdaptiveAudioTrackControl(
+            key: ValueKey(
+              'adaptive_audio_track_${entry.id}_${_adaptiveAudioTracks.selectedTrackId}_$compact',
+            ),
+            tracks: _adaptiveAudioTracks,
+            tooltip: context.l10n.audioTrack,
+            compact: compact,
+            onTrackSelected: _selectAdaptiveAudioTrack,
+          ),
+        ),
+    ];
   }
 
   void _selectPlaybackOptionValue(RoomMediaEntry entry, String value) {
@@ -3392,55 +3452,87 @@ class _RoomScreenState extends State<RoomScreen>
     unawaited(_selectPlaybackOption(mode, index));
   }
 
-  Widget? _buildPictureInPicturePlaybackOptions() {
+  List<Widget> _buildPictureInPicturePlaybackOptions() {
     final entry = _currentStatus?.entry;
     final hasAdaptiveQualities = _adaptiveVideoTracks.tracks.length > 1;
-    if (entry == null || (!entry.hasPlaybackChoices && !hasAdaptiveQualities)) {
-      return null;
-    }
-    return PictureInPicturePlaybackOptionsControl(
-      tooltip: context.l10n.playbackRoute,
-      choices: [
-        for (final mode in entry.playbackModes)
-          for (var index = 0; index < mode.urls.length; index++)
-            PictureInPicturePlaybackChoice(
-              value: '${mode.key}|$index',
-              groupLabel: mode.label,
-              label: mode.urls[index].label(index),
-              selected:
-                  mode.key == entry.selectedPlaybackMode &&
-                  index == entry.selectedPlaybackUrlIndex,
-            ),
-        if (hasAdaptiveQualities)
-          PictureInPicturePlaybackChoice(
-            value: 'track:auto',
-            groupLabel: '清单内画质',
-            label: '自动',
-            selected: _adaptiveVideoTracks.selectedTrackId == 'auto',
+    final hasAudioTracks = _adaptiveAudioTracks.tracks.length > 1;
+    if (entry == null) return const [];
+    return [
+      if (entry.hasPlaybackChoices)
+        PictureInPicturePlaybackOptionsControl(
+          tooltip: context.l10n.playbackRoute,
+          icon: Icons.route_rounded,
+          buttonKey: const Key('picture_in_picture_playback_route_toggle'),
+          optionKeyPrefix: 'picture_in_picture_playback_route_option',
+          choices: [
+            for (final mode in entry.playbackModes)
+              for (var index = 0; index < mode.urls.length; index++)
+                PictureInPicturePlaybackChoice(
+                  value: '${mode.key}|$index',
+                  groupLabel: playbackModeLabel(context, mode),
+                  label: mode.urls[index].label(index),
+                  selected:
+                      mode.key == entry.selectedPlaybackMode &&
+                      index == entry.selectedPlaybackUrlIndex,
+                ),
+          ],
+          onSelected: (value) => _selectPlaybackOptionValue(entry, value),
+        ),
+      if (hasAdaptiveQualities)
+        PictureInPicturePlaybackOptionsControl(
+          tooltip: context.l10n.videoTrack,
+          icon: Icons.high_quality_rounded,
+          buttonKey: const Key(
+            'picture_in_picture_adaptive_video_track_toggle',
           ),
-        if (hasAdaptiveQualities)
-          for (final track in _adaptiveVideoTracks.tracks)
-            PictureInPicturePlaybackChoice(
-              value: 'track:${track.id}',
-              groupLabel: '清单内画质',
-              label: track.resolution.isEmpty
-                  ? (track.title?.trim().isNotEmpty == true
-                        ? track.title!.trim()
-                        : '画质 ${track.id}')
-                  : track.resolution,
-              selected: _adaptiveVideoTracks.selectedTrackId == track.id,
-            ),
-      ],
-      onSelected: (value) {
-        if (value.startsWith('track:')) {
-          unawaited(
-            _selectAdaptiveVideoTrack(value.substring('track:'.length)),
-          );
-        } else {
-          _selectPlaybackOptionValue(entry, value);
-        }
-      },
-    );
+          optionKeyPrefix: 'picture_in_picture_adaptive_video_track_option',
+          choices: [
+            if (_adaptiveVideoTracks.automaticSelectionAvailable)
+              PictureInPicturePlaybackChoice(
+                value: 'auto',
+                groupLabel: context.l10n.videoTrack,
+                label: context.l10n.automatic,
+                selected: _adaptiveVideoTracks.selectedTrackId == 'auto',
+              ),
+            for (final track in _adaptiveVideoTracks.tracks)
+              PictureInPicturePlaybackChoice(
+                value: track.id,
+                groupLabel: context.l10n.videoTrack,
+                label: adaptiveVideoTrackLabel(context, track),
+                selected: _adaptiveVideoTracks.selectedTrackId == track.id,
+              ),
+          ],
+          onSelected: (trackId) =>
+              unawaited(_selectAdaptiveVideoTrack(trackId)),
+        ),
+      if (hasAudioTracks)
+        PictureInPicturePlaybackOptionsControl(
+          tooltip: context.l10n.audioTrack,
+          icon: Icons.audiotrack_rounded,
+          buttonKey: const Key(
+            'picture_in_picture_adaptive_audio_track_toggle',
+          ),
+          optionKeyPrefix: 'picture_in_picture_adaptive_audio_track_option',
+          choices: [
+            if (_adaptiveAudioTracks.automaticSelectionAvailable)
+              PictureInPicturePlaybackChoice(
+                value: 'auto',
+                groupLabel: context.l10n.audioTrack,
+                label: context.l10n.automatic,
+                selected: _adaptiveAudioTracks.selectedTrackId == 'auto',
+              ),
+            for (final track in _adaptiveAudioTracks.tracks)
+              PictureInPicturePlaybackChoice(
+                value: track.id,
+                groupLabel: context.l10n.audioTrack,
+                label: adaptiveAudioTrackLabel(context, track),
+                selected: _adaptiveAudioTracks.selectedTrackId == track.id,
+              ),
+          ],
+          onSelected: (trackId) =>
+              unawaited(_selectAdaptiveAudioTrack(trackId)),
+        ),
+    ];
   }
 
   Widget _buildVideoEmptyState() {
@@ -3473,6 +3565,9 @@ class _RoomScreenState extends State<RoomScreen>
     unawaited(_adaptiveVideoTracksSubscription?.cancel());
     _adaptiveVideoTracksSubscription = null;
     _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
+    unawaited(_adaptiveAudioTracksSubscription?.cancel());
+    _adaptiveAudioTracksSubscription = null;
+    _adaptiveAudioTracks = const AdaptiveAudioTrackSnapshot();
     _videoPlayerController = null;
     _videoPresentationRevision.value++;
     _videoPlayerSourceKey = null;
@@ -3509,6 +3604,9 @@ class _RoomScreenState extends State<RoomScreen>
     await _adaptiveVideoTracksSubscription?.cancel();
     _adaptiveVideoTracksSubscription = null;
     _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
+    await _adaptiveAudioTracksSubscription?.cancel();
+    _adaptiveAudioTracksSubscription = null;
+    _adaptiveAudioTracks = const AdaptiveAudioTrackSnapshot();
     _videoPlayerController = null;
     _videoPresentationRevision.value++;
     _videoPlayerSourceKey = null;
@@ -3652,7 +3750,7 @@ class _RoomScreenState extends State<RoomScreen>
       ),
       exitTooltip: context.l10n.exitPictureInPicture,
       volumeTooltip: context.l10n.volume,
-      playbackOptionsControl: _buildPictureInPicturePlaybackOptions(),
+      playbackOptionsControls: _buildPictureInPicturePlaybackOptions(),
       diagnostics: _buildPlaybackDiagnosticsBadges(
         compact: true,
         videoStyle: true,
@@ -3804,7 +3902,7 @@ class _RoomScreenState extends State<RoomScreen>
                               compact: true,
                               videoStyle: true,
                             ),
-                        extraBottomWidget: _buildPlaybackOptionButton(
+                        extraBottomControls: _buildPlaybackOptionControls(
                           compact: true,
                         ),
                       )
@@ -3843,7 +3941,15 @@ class _RoomScreenState extends State<RoomScreen>
                 Positioned(
                   right: 12,
                   bottom: 12,
-                  child: _buildPlaybackOptionButton(compact: true)!,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final item in _buildPlaybackOptionControls(
+                        compact: true,
+                      ))
+                        item.control,
+                    ],
+                  ),
                 ),
             ],
           );
@@ -4298,7 +4404,7 @@ class _RoomScreenState extends State<RoomScreen>
                 includeLatency: true,
                 videoStyle: true,
               ),
-              extraBottomWidget: _buildPlaybackOptionButton(compact: true),
+              extraBottomControls: _buildPlaybackOptionControls(compact: true),
             );
           },
         ),
@@ -6185,8 +6291,9 @@ class _RoomScreenState extends State<RoomScreen>
                           : _playlistNameStack.last,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   if (_isRefreshingMediaEntries)

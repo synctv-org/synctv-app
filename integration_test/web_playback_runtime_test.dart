@@ -12,6 +12,9 @@ import 'package:web/web.dart' as web;
 
 const _mediaBaseUrl = String.fromEnvironment('SYNCTV_WEB_MEDIA_TEST_BASE');
 const _onlyFixture = String.fromEnvironment('SYNCTV_WEB_MEDIA_TEST_ONLY');
+const _verifyDashTrackSelection = bool.fromEnvironment(
+  'SYNCTV_WEB_DASH_TRACK_SELECTION_E2E',
+);
 const _liveMediaUrl = String.fromEnvironment('SYNCTV_WEB_LIVE_MEDIA_TEST_URL');
 const _liveMediaFormat = String.fromEnvironment(
   'SYNCTV_WEB_LIVE_MEDIA_TEST_FORMAT',
@@ -67,6 +70,10 @@ void main() {
         expect(controller.value.isInitialized, isTrue);
         expect(controller.value.size.width, greaterThan(0));
         expect(controller.value.size.height, greaterThan(0));
+
+        if (source.format == 'dash' && _verifyDashTrackSelection) {
+          await tester.runAsync(() => _verifyAdaptiveDashTracks(controller));
+        }
       },
       skip: _mediaBaseUrl.isEmpty,
     );
@@ -145,6 +152,54 @@ void main() {
       expect(controller.value.volume, 0);
     },
     skip: _liveMediaUrl.isEmpty,
+  );
+}
+
+Future<void> _verifyAdaptiveDashTracks(VideoPlayerController controller) async {
+  final video = await controller.adaptiveVideoTracks
+      .firstWhere((snapshot) => snapshot.tracks.length >= 2)
+      .timeout(const Duration(seconds: 10));
+  final audio = await controller.adaptiveAudioTracks
+      .firstWhere((snapshot) => snapshot.tracks.length >= 2)
+      .timeout(const Duration(seconds: 10));
+
+  expect(
+    video.tracks.map((track) => track.codec?.toLowerCase()),
+    containsAll(<String>['avc1.64001e', 'vp09.00.21.08']),
+  );
+  expect(
+    audio.tracks.map((track) => track.codec?.toLowerCase()),
+    containsAll(<String>['mp4a.40.2', 'opus']),
+  );
+
+  final vp9 = video.tracks.firstWhere(
+    (track) => track.codec?.toLowerCase().startsWith('vp09') == true,
+  );
+  await controller.selectAdaptiveVideoTrack(vp9.id);
+  expect(
+    await controller.adaptiveVideoTracks
+        .firstWhere((snapshot) => snapshot.selectedTrackId == vp9.id)
+        .timeout(const Duration(seconds: 10)),
+    isNotNull,
+  );
+
+  final opus = audio.tracks.firstWhere(
+    (track) => track.codec?.toLowerCase() == 'opus',
+  );
+  await controller.selectAdaptiveAudioTrack(opus.id);
+  expect(
+    await controller.adaptiveAudioTracks
+        .firstWhere((snapshot) => snapshot.selectedTrackId == opus.id)
+        .timeout(const Duration(seconds: 10)),
+    isNotNull,
+  );
+
+  await controller.selectAdaptiveVideoTrack('auto');
+  expect(
+    await controller.adaptiveVideoTracks
+        .firstWhere((snapshot) => snapshot.selectedTrackId == 'auto')
+        .timeout(const Duration(seconds: 10)),
+    isNotNull,
   );
 }
 

@@ -82,6 +82,45 @@ client.PlaybackClientProfile buildPlaybackClientProfile() {
     }
   }
 
+  void addDashCapabilities(
+    String constructorName,
+    client_enum.PlaybackMediaPipeline pipeline,
+  ) {
+    final supportedAudio = _dashAudioCandidates
+        .where(
+          (candidate) => _isTypeSupported(
+            constructorName,
+            'audio/mp4; codecs="${candidate.codecString}"',
+          ),
+        )
+        .toList();
+    if (supportedAudio.isEmpty) return;
+
+    for (final videoCandidate in _dashVideoCandidates) {
+      if (!_isTypeSupported(
+        constructorName,
+        'video/mp4; codecs="${videoCandidate.codecString}"',
+      )) {
+        continue;
+      }
+      for (final audioCandidate in supportedAudio) {
+        capabilities.add(
+          client.PlaybackMediaCapability(
+            transport: client_enum
+                .PlaybackMediaTransport
+                .PLAYBACK_MEDIA_TRANSPORT_DASH,
+            container: client_enum.PlaybackContainer.PLAYBACK_CONTAINER_MP4,
+            videoCodec: videoCandidate.videoCodec,
+            audioCodec: audioCandidate.audioCodec,
+            pipeline: pipeline,
+            codecString:
+                '${videoCandidate.codecString},${audioCandidate.codecString}',
+          ),
+        );
+      }
+    }
+  }
+
   const candidates = [
     _WebMediaCandidate(
       mimeType: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
@@ -122,19 +161,29 @@ client.PlaybackClientProfile buildPlaybackClientProfile() {
       candidate.audioCodec,
       candidate.codecString,
     );
-    for (final transport in [
+    addMediaSource(
+      candidate.mimeType,
       client_enum.PlaybackMediaTransport.PLAYBACK_MEDIA_TRANSPORT_HLS,
-      client_enum.PlaybackMediaTransport.PLAYBACK_MEDIA_TRANSPORT_DASH,
-    ]) {
-      addMediaSource(
-        candidate.mimeType,
-        transport,
-        candidate.container,
-        candidate.videoCodec,
-        candidate.audioCodec,
-        candidate.codecString,
-      );
-    }
+      candidate.container,
+      candidate.videoCodec,
+      candidate.audioCodec,
+      candidate.codecString,
+    );
+  }
+
+  if (hasMediaSource) {
+    addDashCapabilities(
+      'MediaSource',
+      client_enum.PlaybackMediaPipeline.PLAYBACK_MEDIA_PIPELINE_MEDIA_SOURCE,
+    );
+  }
+  if (hasManagedMediaSource) {
+    addDashCapabilities(
+      'ManagedMediaSource',
+      client_enum
+          .PlaybackMediaPipeline
+          .PLAYBACK_MEDIA_PIPELINE_MANAGED_MEDIA_SOURCE,
+    );
   }
 
   final h264 = candidates.first;
@@ -247,4 +296,116 @@ class _WebMediaCandidate {
   final client_enum.PlaybackVideoCodec videoCodec;
   final client_enum.PlaybackAudioCodec audioCodec;
   final String codecString;
+}
+
+const _dashVideoCandidates = [
+  _WebDashVideoCandidate(
+    'avc1.42E01E',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+  ),
+  _WebDashVideoCandidate(
+    'avc1.64001E',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+  ),
+  _WebDashVideoCandidate(
+    'avc1.64001F',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+  ),
+  _WebDashVideoCandidate(
+    'avc1.640028',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+  ),
+  _WebDashVideoCandidate(
+    'avc1.64002A',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+  ),
+  _WebDashVideoCandidate(
+    'avc1.640032',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+  ),
+  _WebDashVideoCandidate(
+    'avc1.640033',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+  ),
+  _WebDashVideoCandidate(
+    'hvc1.1.6.L93.B0',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
+  ),
+  _WebDashVideoCandidate(
+    'hvc1.1.6.L120.90',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
+  ),
+  _WebDashVideoCandidate(
+    'hvc1.1.6.L150.90',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
+  ),
+  _WebDashVideoCandidate(
+    'hvc1.1.6.L153.90',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
+  ),
+  _WebDashVideoCandidate(
+    'hev1.1.6.L93.B0',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
+  ),
+  _WebDashVideoCandidate(
+    'hev1.1.6.L120.90',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
+  ),
+  _WebDashVideoCandidate(
+    'hev1.1.6.L150.90',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
+  ),
+  _WebDashVideoCandidate(
+    'hev1.1.6.L153.90',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
+  ),
+  _WebDashVideoCandidate(
+    'vp09.00.10.08',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_VP9,
+  ),
+  _WebDashVideoCandidate(
+    'vp09.00.21.08',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_VP9,
+  ),
+  _WebDashVideoCandidate(
+    'av01.0.08M.08',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_AV1,
+  ),
+  _WebDashVideoCandidate(
+    'av01.0.08M.08.0.110.01.01.01.0',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_AV1,
+  ),
+  _WebDashVideoCandidate(
+    'av01.0.12M.08.0.110.01.01.01.0',
+    client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_AV1,
+  ),
+];
+
+const _dashAudioCandidates = [
+  _WebDashAudioCandidate(
+    'mp4a.40.2',
+    client_enum.PlaybackAudioCodec.PLAYBACK_AUDIO_CODEC_AAC,
+  ),
+  _WebDashAudioCandidate(
+    'ec-3',
+    client_enum.PlaybackAudioCodec.PLAYBACK_AUDIO_CODEC_EAC3,
+  ),
+  _WebDashAudioCandidate(
+    'fLaC',
+    client_enum.PlaybackAudioCodec.PLAYBACK_AUDIO_CODEC_FLAC,
+  ),
+];
+
+class _WebDashVideoCandidate {
+  const _WebDashVideoCandidate(this.codecString, this.videoCodec);
+
+  final String codecString;
+  final client_enum.PlaybackVideoCodec videoCodec;
+}
+
+class _WebDashAudioCandidate {
+  const _WebDashAudioCandidate(this.codecString, this.audioCodec);
+
+  final String codecString;
+  final client_enum.PlaybackAudioCodec audioCodec;
 }

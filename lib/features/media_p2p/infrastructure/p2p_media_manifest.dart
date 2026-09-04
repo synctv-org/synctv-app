@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:xml/xml.dart';
 
 enum P2pManifestKind { progressive, hls, dash }
@@ -20,9 +21,8 @@ final class P2pMediaResourceRegistration {
   final bool isDirectory;
 }
 
-typedef P2pMediaResourceRegistrar = Uri Function(
-  P2pMediaResourceRegistration registration,
-);
+typedef P2pMediaResourceRegistrar =
+    Uri Function(P2pMediaResourceRegistration registration);
 
 P2pManifestKind p2pManifestKind(String format, Uri upstream) {
   final normalizedFormat = format.trim().toLowerCase();
@@ -82,6 +82,10 @@ String rewriteP2pHlsManifest({
               line.startsWith('#EXT-X-KEY:') ||
               line.startsWith('#EXT-X-SESSION-KEY:');
           final childUpstream = upstream.resolve(raw);
+          final isManifest =
+              !isKey &&
+              (attributeUriIsPlaylist ||
+                  looksLikeP2pHlsManifest(childUpstream));
           final childLogicalKey = isKey
               ? '$logicalKey:key:${resourceIndex++}'
               : '$logicalKey:resource:$discontinuitySequence:'
@@ -90,11 +94,8 @@ String rewriteP2pHlsManifest({
             P2pMediaResourceRegistration(
               upstream: childUpstream,
               logicalKey: childLogicalKey,
-              shareable: !isKey,
-              manifestKind:
-                  !isKey &&
-                      (attributeUriIsPlaylist ||
-                          looksLikeP2pHlsManifest(childUpstream))
+              shareable: !isKey && !isManifest,
+              manifestKind: isManifest
                   ? P2pManifestKind.hls
                   : P2pManifestKind.progressive,
               isDirectory: false,
@@ -140,8 +141,6 @@ String rewriteP2pDashManifest({
   final rootBaseUrls = root.childElements
       .where((element) => element.name.local == 'BaseURL')
       .toList(growable: false);
-  var baseIndex = 0;
-  var resourceIndex = 0;
 
   String registerReference({
     required Uri reference,
@@ -207,7 +206,12 @@ String rewriteP2pDashManifest({
         : local.toString();
   }
 
-  void rewriteElement(XmlElement element, Uri inheritedBase) {
+  void rewriteElement(
+    XmlElement element,
+    Uri inheritedBase,
+    String inheritedScope,
+  ) {
+    final scope = _dashElementScope(element, inheritedScope);
     for (final attribute in element.attributes) {
       final kind = _dashAttributeKind(element, attribute);
       if (kind == null) continue;
@@ -219,7 +223,14 @@ String rewriteP2pDashManifest({
       }
       attribute.value = registerReference(
         reference: inheritedBase.resolve(raw),
-        childLogicalKey: '$logicalKey:dash-resource:${resourceIndex++}',
+        childLogicalKey: _dashReferenceLogicalKey(
+          logicalKey: logicalKey,
+          scope: scope,
+          element: element,
+          attribute: attribute,
+          reference: inheritedBase.resolve(raw),
+          kind: kind,
+        ),
         kind: kind,
       );
     }
@@ -229,7 +240,7 @@ String rewriteP2pDashManifest({
       if (raw.isNotEmpty) {
         final local = registerReference(
           reference: inheritedBase.resolve(raw),
-          childLogicalKey: '$logicalKey:dash-resource:${resourceIndex++}',
+          childLogicalKey: '$logicalKey:$scope:manifest-location',
           kind: _DashReferenceKind.manifest,
         );
         element.children
@@ -242,22 +253,20 @@ String rewriteP2pDashManifest({
     final baseUrls = element.childElements
         .where((child) => child.name.local == 'BaseURL')
         .toList(growable: false);
-    for (var index = 0; index < baseUrls.length; index++) {
-      final baseUrl = baseUrls[index];
+    for (final baseUrl in baseUrls) {
       final raw = baseUrl.innerText.trim();
       if (raw.isEmpty) continue;
       final reference = inheritedBase.resolve(raw);
-      if (index == 0) descendantBase = reference;
+      if (identical(baseUrl, baseUrls.first)) descendantBase = reference;
       if (!identical(element, root) && _isSafeRelativeDashReference(raw)) {
         continue;
       }
-      final childLogicalKey = '$logicalKey:dash-base:${baseIndex++}';
       final local = register(
         P2pMediaResourceRegistration(
           upstream: reference.path.endsWith('/')
               ? _directoryUri(reference)
               : reference,
-          logicalKey: childLogicalKey,
+          logicalKey: '$logicalKey:$scope:base',
           shareable: true,
           manifestKind: P2pManifestKind.progressive,
           isDirectory: raw.endsWith('/') || reference.path.endsWith('/'),
@@ -269,17 +278,17 @@ String rewriteP2pDashManifest({
     }
     for (final child in element.childElements) {
       if (child.name.local != 'BaseURL') {
-        rewriteElement(child, descendantBase);
+        rewriteElement(child, descendantBase, scope);
       }
     }
   }
 
-  rewriteElement(root, upstream);
+  rewriteElement(root, upstream, 'mpd');
   if (rootBaseUrls.isEmpty) {
     final local = register(
       P2pMediaResourceRegistration(
         upstream: _directoryUri(upstream.resolve('.')),
-        logicalKey: '$logicalKey:dash-root',
+        logicalKey: '$logicalKey:mpd:root-base',
         shareable: true,
         manifestKind: P2pManifestKind.progressive,
         isDirectory: true,
@@ -295,7 +304,190 @@ String rewriteP2pDashManifest({
   return document.toXmlString();
 }
 
+String _dashElementScope(XmlElement element, String inheritedScope) {
+  final name = element.name.local;
+  return switch (name) {
+    'Period' => '$inheritedScope:period:${_dashElementIdentity(element)}',
+    'AdaptationSet' =>
+      '$inheritedScope:adaptation:${_dashElementIdentity(element)}',
+    'Representation' =>
+      '$inheritedScope:representation:${_dashElementIdentity(element)}',
+    _ => inheritedScope,
+  };
+}
+
+String _dashElementIdentity(XmlElement element) {
+  final id = element.getAttribute('id')?.trim() ?? '';
+  if (id.isNotEmpty) return Uri.encodeComponent(id);
+  final attributes = switch (element.name.local) {
+    'Period' => const ['start', 'duration'],
+    'AdaptationSet' => const [
+      'contentType',
+      'mimeType',
+      'codecs',
+      'lang',
+      'group',
+    ],
+    'Representation' => const [
+      'codecs',
+      'mimeType',
+      'width',
+      'height',
+      'frameRate',
+      'audioSamplingRate',
+      'bandwidth',
+    ],
+    _ => const <String>[],
+  };
+  final identity = attributes
+      .map((name) => '$name=${element.getAttribute(name)?.trim() ?? ''}')
+      .join(',');
+  final referenceIdentity = _dashLocalReferenceIdentity(element);
+  final attributeIdentity = identity.isEmpty ? element.name.local : identity;
+  if (referenceIdentity.isEmpty) return Uri.encodeComponent(attributeIdentity);
+  final referenceDigest = sha256
+      .convert(utf8.encode(referenceIdentity))
+      .toString()
+      .substring(0, 16);
+  return '${Uri.encodeComponent(attributeIdentity)}@$referenceDigest';
+}
+
+String _dashLocalReferenceIdentity(XmlElement element) {
+  final references = <String>{};
+
+  void visit(XmlElement current) {
+    if (!identical(current, element) &&
+        const {'Period', 'AdaptationSet', 'Representation'}.contains(
+          current.name.local,
+        )) {
+      return;
+    }
+    if (current.name.local == 'BaseURL') {
+      final raw = current.innerText.trim();
+      if (raw.isNotEmpty) references.add(_stableDashReferenceIdentity(raw));
+    }
+    for (final attribute in current.attributes) {
+      if (_dashAttributeKind(current, attribute) != _DashReferenceKind.media) {
+        continue;
+      }
+      final raw = attribute.value.trim();
+      if (raw.isEmpty) continue;
+      var reference = _stableDashReferenceIdentity(raw);
+      final rangeName = switch ((current.name.local, attribute.name.local)) {
+        ('SegmentURL', 'media') => 'mediaRange',
+        ('SegmentURL', 'index') => 'indexRange',
+        ('Initialization', 'sourceURL') ||
+        ('RepresentationIndex', 'sourceURL') ||
+        ('BitstreamSwitching', 'sourceURL') =>
+          'range',
+        _ => null,
+      };
+      final byteRange = rangeName == null
+          ? null
+          : current.getAttribute(rangeName)?.trim();
+      if (byteRange != null && byteRange.isNotEmpty) {
+        reference = '$reference#range=$byteRange';
+      }
+      references.add('${current.name.local}:${attribute.name.local}:$reference');
+    }
+    for (final child in current.childElements) {
+      visit(child);
+    }
+  }
+
+  visit(element);
+  final sorted = references.toList()..sort();
+  return sorted.join('|');
+}
+
+String _stableDashReferenceIdentity(String raw) {
+  final reference = Uri.tryParse(raw);
+  if (reference == null) return raw;
+  final stableQuery = _stableMediaQuery(reference);
+  return stableQuery.isEmpty
+      ? reference.path
+      : '${reference.path}?$stableQuery';
+}
+
+String _dashReferenceLogicalKey({
+  required String logicalKey,
+  required String scope,
+  required XmlElement element,
+  required XmlAttribute attribute,
+  required Uri reference,
+  required _DashReferenceKind kind,
+}) {
+  final elementName = element.name.local;
+  final attributeName = attribute.name.local;
+  final role = switch ((elementName, attributeName, kind)) {
+    ('SegmentTemplate', 'initialization', _) => 'initialization-template',
+    ('SegmentTemplate', 'media', _) => 'media-template',
+    ('SegmentTemplate', 'bitstreamSwitching', _) =>
+      'bitstream-switching-template',
+    ('Initialization', 'sourceURL', _) => 'initialization',
+    ('RepresentationIndex', 'sourceURL', _) => 'representation-index',
+    ('BitstreamSwitching', 'sourceURL', _) => 'bitstream-switching',
+    ('SegmentURL', 'media', _) =>
+      'media:${_dashReferenceResourceIdentity(reference, element, attribute)}',
+    ('SegmentURL', 'index', _) =>
+      'index:${_dashReferenceResourceIdentity(reference, element, attribute)}',
+    (_, _, _DashReferenceKind.manifest) => 'manifest-xlink',
+    (_, _, _DashReferenceKind.utcTiming) => 'utc-timing',
+    _ => '$elementName-$attributeName',
+  };
+  return '$logicalKey:$scope:$role';
+}
+
+String _dashReferenceResourceIdentity(
+  Uri reference,
+  XmlElement element,
+  XmlAttribute attribute,
+) {
+  final path = Uri.encodeComponent(reference.path);
+  final stableQuery = _stableMediaQuery(reference);
+  final rangeAttribute = switch (attribute.name.local) {
+    'media' => 'mediaRange',
+    'index' => 'indexRange',
+    _ => null,
+  };
+  final byteRange = rangeAttribute == null
+      ? null
+      : element.getAttribute(rangeAttribute)?.trim();
+  final query = stableQuery.isEmpty ? '' : '?$stableQuery';
+  final range = byteRange == null || byteRange.isEmpty
+      ? ''
+      : '${stableQuery.isEmpty ? '?' : '&'}range=${Uri.encodeComponent(byteRange)}';
+  return '$path$query$range';
+}
+
 bool looksLikeP2pHlsManifest(Uri uri) => p2pMediaPath(uri).endsWith('.m3u8');
+
+String p2pDirectoryChildLogicalKey(String directoryLogicalKey, Uri relative) {
+  final stableQuery = _stableMediaQuery(relative);
+  final resourceIdentity = stableQuery.isEmpty
+      ? relative.path
+      : '${relative.path}?$stableQuery';
+  return '$directoryLogicalKey:$resourceIdentity';
+}
+
+String _stableMediaQuery(Uri uri) {
+  final query =
+      <MapEntry<String, String>>[
+        for (final entry in uri.queryParametersAll.entries)
+          if (!_isVolatileMediaQueryParameter(entry.key))
+            for (final value in entry.value) MapEntry(entry.key, value),
+      ]..sort((left, right) {
+        final keyOrder = left.key.compareTo(right.key);
+        return keyOrder != 0 ? keyOrder : left.value.compareTo(right.value);
+      });
+  return query
+      .map(
+        (entry) =>
+            '${Uri.encodeQueryComponent(entry.key)}='
+            '${Uri.encodeQueryComponent(entry.value)}',
+      )
+      .join('&');
+}
 
 String p2pMediaPath(Uri uri) {
   final path = uri.path.toLowerCase();
@@ -311,6 +503,27 @@ String p2pMediaPath(Uri uri) {
 
 Uri _directoryUri(Uri value) =>
     value.path.endsWith('/') ? value : value.resolve('.');
+
+bool _isVolatileMediaQueryParameter(String name) {
+  final normalized = name.trim().toLowerCase();
+  return normalized == 'token' ||
+      normalized == 'sign' ||
+      normalized == 'signature' ||
+      normalized == 'deadline' ||
+      normalized == 'expires' ||
+      normalized == 'expire' ||
+      normalized == 'expiry' ||
+      normalized == 'auth_key' ||
+      normalized == 'authkey' ||
+      normalized == 'upsig' ||
+      normalized == 'policy' ||
+      normalized == 'key-pair-id' ||
+      normalized == 'wssecret' ||
+      normalized == 'wstime' ||
+      normalized == 'hdnea' ||
+      normalized.startsWith('x-amz-') ||
+      normalized.startsWith('x-goog-');
+}
 
 enum _DashReferenceKind { media, manifest, utcTiming }
 
