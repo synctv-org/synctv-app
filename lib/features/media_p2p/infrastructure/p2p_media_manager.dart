@@ -942,9 +942,8 @@ class P2pMediaManager implements P2pMediaSession {
     final probes = peers
         .map((peer) => _ensureLatencyProbe(peer.key, peer.value))
         .toList(growable: false);
-    await Future.wait(
-      probes,
-    ).timeout(_initialLatencyProbeWait, onTimeout: () => const <void>[]);
+    await Future.wait(probes)
+        .timeout(_initialLatencyProbeWait, onTimeout: () => const <void>[]);
   }
 
   Future<void> _ensureLatencyProbe(_PeerKey key, RTCDataChannel channel) async {

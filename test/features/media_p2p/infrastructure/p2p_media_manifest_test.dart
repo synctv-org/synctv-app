@@ -152,7 +152,8 @@ nested.m3u8
     Map<String, String> plan(String firstToken, String secondToken) {
       final registrations = <P2pMediaResourceRegistration>[];
       rewriteP2pDashManifest(
-        manifest: '''
+        manifest:
+            '''
 <MPD><Period><AdaptationSet contentType="video">
   <Representation bandwidth="1000">
     <BaseURL>https://cdn.example/first.m4s?token=$firstToken</BaseURL>

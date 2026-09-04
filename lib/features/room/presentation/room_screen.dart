@@ -6291,9 +6291,8 @@ class _RoomScreenState extends State<RoomScreen>
                           : _playlistNameStack.last,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
                   if (_isRefreshingMediaEntries)

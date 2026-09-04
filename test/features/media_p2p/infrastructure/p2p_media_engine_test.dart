@@ -1830,13 +1830,12 @@ segment.ts?token=secret
       format: 'dash',
     );
     final manifest = await _getText(local);
-    final baseUrl = RegExp(
-      r'<BaseURL>([^<]+)</BaseURL>',
-    ).firstMatch(manifest)!.group(1)!;
+    final baseUrl = RegExp(r'<BaseURL>([^<]+)</BaseURL>')
+        .firstMatch(manifest)!
+        .group(1)!;
 
-    final segment = await _getBytes(
-      Uri.parse(baseUrl).resolve('seg-1.m4s'),
-    ).timeout(const Duration(seconds: 1));
+    final segment = await _getBytes(Uri.parse(baseUrl).resolve('seg-1.m4s'))
+        .timeout(const Duration(seconds: 1));
 
     expect(segment, [4, 2]);
     expect(peerRequests, 0);
@@ -1949,13 +1948,12 @@ segment.ts?token=secret
         format: 'dash',
       );
       final manifest = await _getText(local);
-      final baseUrl = RegExp(
-        r'<BaseURL>([^<]+)</BaseURL>',
-      ).firstMatch(manifest)!.group(1)!;
+      final baseUrl = RegExp(r'<BaseURL>([^<]+)</BaseURL>')
+          .firstMatch(manifest)!
+          .group(1)!;
 
-      final segment = await _getBytes(
-        Uri.parse(baseUrl).resolve('seg-1.m4s'),
-      ).timeout(const Duration(seconds: 1));
+      final segment = await _getBytes(Uri.parse(baseUrl).resolve('seg-1.m4s'))
+          .timeout(const Duration(seconds: 1));
 
       expect(segment, [4, 2]);
       expect(peerRequests, 0);
@@ -2005,13 +2003,12 @@ segment.ts?token=secret
         format: 'dash',
       );
       final manifest = await _getText(local);
-      final baseUrl = RegExp(
-        r'<BaseURL>([^<]+)</BaseURL>',
-      ).firstMatch(manifest)!.group(1)!;
+      final baseUrl = RegExp(r'<BaseURL>([^<]+)</BaseURL>')
+          .firstMatch(manifest)!
+          .group(1)!;
 
-      final segment = await _getBytes(
-        Uri.parse(baseUrl).resolve('seg-1.m4s'),
-      ).timeout(const Duration(seconds: 1));
+      final segment = await _getBytes(Uri.parse(baseUrl).resolve('seg-1.m4s'))
+          .timeout(const Duration(seconds: 1));
 
       expect(segment, [4, 2]);
       expect(peerRequests, 0);
@@ -2072,9 +2069,10 @@ segment.ts?token=secret
     );
 
     final manifest = await _getText(local);
-    final baseUrls = RegExp(
-      r'<BaseURL>([^<]+)</BaseURL>',
-    ).allMatches(manifest).map((match) => match.group(1)!).toList();
+    final baseUrls = RegExp(r'<BaseURL>([^<]+)</BaseURL>')
+        .allMatches(manifest)
+        .map((match) => match.group(1)!)
+        .toList();
     expect(baseUrls, hasLength(2));
     expect(baseUrls.last, startsWith('http://127.0.0.1:'));
     final response = await _getResponse(
@@ -2260,9 +2258,8 @@ segment.ts?token=secret
         await request.response.close();
         return;
       }
-      final match = RegExp(
-        r'^bytes=(\d+)-(\d+)$',
-      ).firstMatch(request.headers.value(HttpHeaders.rangeHeader) ?? '');
+      final match = RegExp(r'^bytes=(\d+)-(\d+)$')
+          .firstMatch(request.headers.value(HttpHeaders.rangeHeader) ?? '');
       if (match == null) {
         request.response.statusCode = HttpStatus.badRequest;
         await request.response.close();

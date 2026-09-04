@@ -21,8 +21,9 @@ final class P2pMediaResourceRegistration {
   final bool isDirectory;
 }
 
-typedef P2pMediaResourceRegistrar =
-    Uri Function(P2pMediaResourceRegistration registration);
+typedef P2pMediaResourceRegistrar = Uri Function(
+  P2pMediaResourceRegistration registration,
+);
 
 P2pManifestKind p2pManifestKind(String format, Uri upstream) {
   final normalizedFormat = format.trim().toLowerCase();
@@ -357,9 +358,11 @@ String _dashLocalReferenceIdentity(XmlElement element) {
 
   void visit(XmlElement current) {
     if (!identical(current, element) &&
-        const {'Period', 'AdaptationSet', 'Representation'}.contains(
-          current.name.local,
-        )) {
+        const {
+          'Period',
+          'AdaptationSet',
+          'Representation',
+        }.contains(current.name.local)) {
       return;
     }
     if (current.name.local == 'BaseURL') {
@@ -378,8 +381,7 @@ String _dashLocalReferenceIdentity(XmlElement element) {
         ('SegmentURL', 'index') => 'indexRange',
         ('Initialization', 'sourceURL') ||
         ('RepresentationIndex', 'sourceURL') ||
-        ('BitstreamSwitching', 'sourceURL') =>
-          'range',
+        ('BitstreamSwitching', 'sourceURL') => 'range',
         _ => null,
       };
       final byteRange = rangeName == null
@@ -388,7 +390,9 @@ String _dashLocalReferenceIdentity(XmlElement element) {
       if (byteRange != null && byteRange.isNotEmpty) {
         reference = '$reference#range=$byteRange';
       }
-      references.add('${current.name.local}:${attribute.name.local}:$reference');
+      references.add(
+        '${current.name.local}:${attribute.name.local}:$reference',
+      );
     }
     for (final child in current.childElements) {
       visit(child);
