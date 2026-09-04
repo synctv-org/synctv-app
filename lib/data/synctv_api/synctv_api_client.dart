@@ -1303,38 +1303,10 @@ class SyncTvApiClient {
 
   Map<String, String> _playbackClientProfileQuery(
     client.PlaybackClientProfile profile,
-  ) {
-    if (profile.profileVersion >= 2) {
-      return {
-        'clientProfile': base64UrlEncode(profile.writeToBuffer())
-            .replaceAll('=', ''),
-      };
-    }
-    return {
-      if (profile.hasStreamPreference())
-        'streamPreference': profile.streamPreference.value.toString(),
-      if (profile.hasMaxStreamingBitrate())
-        'maxStreamingBitrate': profile.maxStreamingBitrate.toString(),
-      if (profile.hasMaxAudioChannels())
-        'maxAudioChannels': profile.maxAudioChannels.toString(),
-      if (profile.supportedVideoCodecs.isNotEmpty)
-        'videoCodecs': profile.supportedVideoCodecs
-            .map((codec) => codec.value)
-            .join(','),
-      if (profile.supportedContainers.isNotEmpty)
-        'containers': profile.supportedContainers
-            .map((container) => container.value)
-            .join(','),
-      if (profile.supportedLiveTransports.isNotEmpty)
-        'liveTransports': profile.supportedLiveTransports
-            .map((transport) => transport.value)
-            .join(','),
-      if (profile.hasAudioCapability())
-        'audioCapability': profile.audioCapability.value.toString(),
-      if (profile.hasSubtitlePreference())
-        'subtitlePreference': profile.subtitlePreference.value.toString(),
-    };
-  }
+  ) => {
+    'clientProfile': base64UrlEncode(profile.writeToBuffer())
+        .replaceAll('=', ''),
+  };
 
   Map<String, Object?> _watchQuery({
     client_enum.ResourceDeliveryMode deliveryMode =

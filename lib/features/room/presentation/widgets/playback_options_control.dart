@@ -7,8 +7,10 @@ import 'package:synctv_app/features/room/presentation/widgets/player_control_pop
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 
-typedef PlaybackMediaSelection =
-    Future<void> Function(SyncTvPlaybackModeOption mode, int mediaIndex);
+typedef PlaybackMediaSelection = Future<void> Function(
+  SyncTvPlaybackModeOption mode,
+  int mediaIndex,
+);
 
 class PlaybackRouteControl extends StatelessWidget {
   const PlaybackRouteControl({
@@ -436,9 +438,6 @@ String _modeKeyLabel(BuildContext context, String key) {
     'proxied' ||
     'proxy_direct' ||
     'direct_proxy' => context.l10n.proxy,
-    'h264' => 'H.264',
-    'av1' => 'AV1',
-    'hevc' => 'HEVC',
     'dash' => 'DASH',
     'hls' => 'HLS',
     'mp4' => 'MP4',

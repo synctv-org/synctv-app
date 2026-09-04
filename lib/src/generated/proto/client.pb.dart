@@ -19611,8 +19611,7 @@ class PlaybackClientProfile extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   $pb.PbList<PlaybackLiveTransport> get supportedLiveTransports => $_getList(7);
 
-  /// Version 0 preserves the legacy defaults of fields 1-8. Version 2 gives
-  /// repeated capability fields explicit empty-set semantics.
+  /// Must match the server's current playback client profile version.
   @$pb.TagNumber(9)
   $core.int get profileVersion => $_getIZ(8);
   @$pb.TagNumber(9)
