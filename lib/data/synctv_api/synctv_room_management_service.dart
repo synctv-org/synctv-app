@@ -147,31 +147,6 @@ class SyncTvRoomManagementDomainService {
         });
   }
 
-  Stream<RoomResourceWatchEvent<List<SyncTvUser>>> watchRoomUsers(
-    String roomId, {
-    String version = '',
-  }) {
-    return watchRoomMembers(roomId, version: version).map((event) {
-      return switch (event) {
-        RoomResourceObserved(:final version, :final changed) =>
-          RoomResourceWatchEvent<List<SyncTvUser>>.observed(
-            version: version,
-            changed: changed,
-          ),
-        RoomResourceChanged(:final version, :final snapshot) =>
-          RoomResourceWatchEvent<List<SyncTvUser>>.changed(
-            version: version,
-            snapshot: snapshot?.map(roomMemberToUser).toList(growable: false),
-          ),
-        RoomResourceWatchFailed(:final message, :final code) =>
-          RoomResourceWatchEvent<List<SyncTvUser>>.error(
-            message: message,
-            code: code,
-          ),
-      };
-    });
-  }
-
   Future<List<IceServerInfo>> getIceServers(String roomId) async {
     final response = await _api.room.getIceServers(
       roomId,
@@ -539,18 +514,6 @@ AdminRoomMember roomMemberFromProto(common.RoomMember member) {
     adminRemovedPermissions: member.adminRemovedPermissions.toInt(),
     joinedAt: member.joinedAt.toInt(),
     isOnline: member.isOnline,
-    connectionCount: member.connectionCount,
-  );
-}
-
-SyncTvUser roomMemberToUser(AdminRoomMember member) {
-  return SyncTvUser(
-    id: member.userId,
-    username: member.username,
-    role: RoomMembershipRole(member.role),
-    createdAt: member.joinedAt,
-    status: common_enum.UserStatus.USER_STATUS_ACTIVE,
-    onlineCount: member.isOnline ? 1 : 0,
     connectionCount: member.connectionCount,
   );
 }

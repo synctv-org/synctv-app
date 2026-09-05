@@ -1573,7 +1573,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       '$lengthKey:length',
       recordStats: false,
     );
-    if (metadata != null && metadata.length >= 8) {
+    if (metadata != null) {
       final length = decodeP2pResourceLength(metadata);
       if (length != null && length > 0) {
         resource.originAcceptsRanges = decodeP2pRangeCapability(metadata);
@@ -1631,7 +1631,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
           cancellation,
         );
         final bytes = peer?.bytes;
-        if (bytes != null && bytes.length >= 8) {
+        if (bytes != null) {
           final length = decodeP2pResourceLength(bytes);
           if (length != null && length > 0 && length <= maxP2pResourceLength) {
             resource.originAcceptsRanges = decodeP2pRangeCapability(bytes);
@@ -1660,25 +1660,15 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     final lengthKey = _cacheKey(resource.swarmId, resource.logicalKey);
     _progressiveLengths[lengthKey] = _CachedLength(length, now);
     final metadataKey = '$lengthKey:length';
-    final rangeCapability = switch (resource.originAcceptsRanges) {
-      true => 1,
-      false => 2,
-      null => 0,
-    };
     final cached = await _readCachedPiece(metadataKey, recordStats: false);
     if (cached != null &&
-        cached.length >= 9 &&
         decodeP2pResourceLength(cached) == length &&
-        cached[8] == rangeCapability) {
+        decodeP2pRangeCapability(cached) == resource.originAcceptsRanges) {
       return;
     }
     final metadata = encodeP2pResourceLength(
       length,
-      acceptsRanges: switch (rangeCapability) {
-        1 => true,
-        2 => false,
-        _ => null,
-      },
+      acceptsRanges: resource.originAcceptsRanges,
     );
     _memoryCache.put(metadataKey, metadata);
     _memoryCache.evictTo(_memoryCacheLimit);

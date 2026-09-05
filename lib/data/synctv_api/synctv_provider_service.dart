@@ -1768,23 +1768,6 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<bilibili.ListHistoryResponse> listBilibiliHistory({
-    source_enum.BilibiliHistoryType type =
-        source_enum.BilibiliHistoryType.BILIBILI_HISTORY_TYPE_ALL,
-    String? cursor,
-    int pageSize = 30,
-    String instanceName = '',
-    bool shared = false,
-  }) => _api.bilibiliProvider.listHistory(
-    bilibili.ListHistoryRequest(
-      type: type,
-      cursor: cursor,
-      pageSize: pageSize,
-      instanceName: instanceName,
-      shared: shared,
-    ),
-  );
-
   Future<BilibiliPgcTimelineInfo> listBilibiliPgcTimeline({
     required BilibiliPgcTimelineKind type,
     int beforeDays = 3,

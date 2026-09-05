@@ -71,7 +71,6 @@ void main() {
           room: _room(myPermissions: RoomAdminPermissions.all),
           currentUser: _user(),
           selfMember: null,
-          allowDiscoveryFallback: false,
         );
 
         expect(capabilities.canBrowseLibrary, isTrue);

@@ -241,40 +241,6 @@ class SyncTvPublicRoomDomainService {
     );
   }
 
-  Future<RoomsPage> getFavoriteRoomsPage({
-    int page = 1,
-    int pageSize = 100,
-    String? search,
-  }) async {
-    if (_api.session.identity is GuestSessionIdentity) {
-      return RoomsPage(
-        rooms: const <SyncTvRoom>[],
-        total: 0,
-        page: page,
-        pageSize: pageSize,
-      );
-    }
-    final response = await _api.user.listFavoriteRooms(
-      client.ListFavoriteRoomsRequest(
-        page: page,
-        pageSize: pageSize,
-        search: search ?? '',
-      ),
-    );
-    return RoomsPage(
-      rooms: response.rooms
-          .map(
-            (room) => _api
-                .mapRoom(room)
-                .copyWith(joined: true, canJoin: false, isFavorite: true),
-          )
-          .toList(growable: false),
-      total: response.total,
-      page: page,
-      pageSize: pageSize,
-    );
-  }
-
   Future<SyncTvRoom> favoriteRoom(String roomId) async {
     final response = await _api.user.favoriteRoom(
       client.FavoriteRoomRequest(roomId: roomId),

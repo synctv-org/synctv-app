@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/contracts/public_models.dart';
+import 'package:synctv_app/core/time/synced_clock.dart';
 import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
 import 'package:synctv_app/features/room/data/room_realtime_connection.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
@@ -90,7 +91,7 @@ Future<void> runSmoke(String baseUrl) async {
   );
   print('media=$mediaId page_total=${mediaPage.total}');
 
-  await SyncTvService.switchMediaAndPlay(room.roomId, mediaId);
+  await SyncTvService.switchMedia(room.roomId, mediaId);
   await SyncTvService.updatePlaybackState(
     room.roomId,
     action: PlaybackControlAction.pause,
@@ -229,7 +230,7 @@ class _RealtimeSmokeProbe {
       createWebSocketUri: SyncTvService.createRoomWebSocketUri,
       encodeMessage: SyncTvService.encodeRealtimeMessageJson,
       decodeMessage: SyncTvService.decodeRealtimeMessageJson,
-      nowMillis: SyncTvService.serverNowMillis,
+      nowMillis: SyncedClock.nowMillis,
       initialMessages: [
         ...RoomRealtimeCodec.encodeInitialObservations(),
         RoomRealtimeCodec.encodePlaylistObservation(),

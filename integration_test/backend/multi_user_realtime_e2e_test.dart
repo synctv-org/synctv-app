@@ -88,7 +88,7 @@ void main() {
           source: preview.source,
           name: 'Multi-user bee',
         );
-        await SyncTvService.switchMediaAndPlay(roomId, mediaId);
+        await SyncTvService.switchMedia(roomId, mediaId);
         await SyncTvService.updatePlaybackState(
           roomId,
           isPlaying: true,

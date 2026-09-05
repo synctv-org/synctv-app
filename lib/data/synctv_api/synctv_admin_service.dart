@@ -663,11 +663,6 @@ class SyncTvAdminDomainService {
     );
   }
 
-  Future<List<SyncTvUser>> listAdmins({String search = ''}) async {
-    final page = await listAdminsPage(page: 1, pageSize: 100, search: search);
-    return page.admins;
-  }
-
   Future<void> addAdmin(String userId) async {
     await _api.adminService.addAdmin(admin.AddAdminRequest(userId: userId));
   }
@@ -840,31 +835,6 @@ class SyncTvAdminDomainService {
     );
   }
 
-  Future<List<AdminProviderInstance>> listProviderInstances({
-    String providerType = '',
-    String search = '',
-    bool? enabled,
-    bool? tls,
-    provider_common_enum.ProviderInstanceListSortBy sortBy =
-        provider_common_enum
-            .ProviderInstanceListSortBy
-            .PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
-    provider_common_enum.SortDirection sortDirection =
-        provider_common_enum.SortDirection.SORT_DIRECTION_ASC,
-  }) async {
-    final page = await listProviderInstancesPage(
-      page: 1,
-      pageSize: 100,
-      providerType: providerType,
-      search: search,
-      enabled: enabled,
-      tls: tls,
-      sortBy: sortBy,
-      sortDirection: sortDirection,
-    );
-    return page.instances;
-  }
-
   Future<List<String>> listAvailableProviderInstances({
     String providerType = '',
   }) async {
@@ -997,31 +967,6 @@ class SyncTvAdminDomainService {
       streams: response.streams.map(_activeStreamFromProto).toList(),
       total: response.total,
     );
-  }
-
-  Future<List<AdminActiveStream>> listActiveStreams({
-    int page = 1,
-    int pageSize = 50,
-    String roomId = '',
-    String userId = '',
-    String nodeId = '',
-    String search = '',
-    admin_enum.ActiveStreamListSortBy sortBy =
-        admin_enum.ActiveStreamListSortBy.ACTIVE_STREAM_LIST_SORT_BY_STARTED_AT,
-    admin_enum.SortDirection sortDirection =
-        admin_enum.SortDirection.SORT_DIRECTION_DESC,
-  }) async {
-    final pageResult = await listActiveStreamsPage(
-      page: page,
-      pageSize: pageSize,
-      roomId: roomId,
-      userId: userId,
-      nodeId: nodeId,
-      search: search,
-      sortBy: sortBy,
-      sortDirection: sortDirection,
-    );
-    return pageResult.streams;
   }
 
   Future<void> kickStream(AdminActiveStream stream) async {

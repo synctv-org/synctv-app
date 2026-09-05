@@ -4330,7 +4330,7 @@ void main() {
         'http://${server.address.host}:${server.port}',
       );
 
-      final playback = await SyncTvService.switchMediaAndPlay(
+      final playback = await SyncTvService.switchMedia(
         'room_1',
         'med_1',
       );
@@ -4730,22 +4730,13 @@ void main() {
     );
   });
 
-  test('playback mapping recognizes legacy live danmaku delivery', () {
-    final legacySources = <(String, String)>[
-      ('synctv-bilibili-live', 'https://example.test/bilibili'),
-      ('synctv-twitch-live', 'https://example.test/twitch'),
-      ('synctv-huya-live', 'https://example.test/huya'),
-      ('synctv-douyu-live', 'https://example.test/douyu'),
-      ('synctv-douyin-live', 'https://example.test/douyin'),
-      ('synctv-acfun-live', 'https://example.test/acfun'),
-      ('legacy', 'https://example.test/live-danmaku/stream'),
-    ];
-
-    for (final (format, url) in legacySources) {
+  test('playback mapping uses the explicit danmaku delivery contract', () {
+    const url = 'https://example.test/live-danmaku/stream';
+    for (final delivery in client.PlaybackDanmakuDelivery.values) {
       final entry = RoomMediaEntry.fromPlaybackProto(
         client.Playback(
-          mediaId: 'med_legacy',
-          name: 'Legacy live danmaku',
+          mediaId: 'med_danmaku',
+          name: 'Danmaku delivery',
           playbackInfos: [
             MapEntry(
               'live',
@@ -4759,9 +4750,10 @@ void main() {
                 ],
                 danmakus: [
                   client.PlaybackDanmaku(
-                    name: 'Legacy',
+                    name: 'Danmaku',
                     url: url,
-                    format: format,
+                    format: 'synctv-bilibili-live',
+                    delivery: delivery,
                   ),
                 ],
               ),
@@ -4771,8 +4763,22 @@ void main() {
         ),
       );
 
-      expect(entry.streamDanmu, url, reason: format);
-      expect(entry.danmu, isNull, reason: format);
+      expect(
+        entry.streamDanmu,
+        delivery ==
+                client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM
+            ? url
+            : null,
+        reason: delivery.name,
+      );
+      expect(
+        entry.danmu,
+        delivery ==
+                client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_DOCUMENT
+            ? url
+            : null,
+        reason: delivery.name,
+      );
     }
   });
 
@@ -6368,17 +6374,18 @@ void main() {
     expect(requests.last.url.path, '/api/rooms/room_1/streams/med_1');
   });
 
-  test('legacy publish key responses default to single-use', () async {
+  test('publish key info preserves the server key type', () async {
     final api = SyncTvApiClient(
       baseUrl: 'https://example.test/api',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         return http.Response(
           jsonEncode({
-            'publishKey': 'pub_legacy',
+            'publishKey': 'pub_1',
             'rtmpUrl': 'rtmp://example.test/live',
-            'streamKey': 'stream_legacy',
+            'streamKey': 'stream_1',
             'expiresAt': '1760000100',
+            'type': client_enum.PublishKeyType.PUBLISH_KEY_TYPE_EXPIRING.value,
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -6395,7 +6402,7 @@ void main() {
 
     expect(
       publish.keyType,
-      client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE,
+      client_enum.PublishKeyType.PUBLISH_KEY_TYPE_EXPIRING,
     );
     expect(publish.expiresAt, 1760000100);
   });

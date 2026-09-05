@@ -74,10 +74,7 @@ final class DanmakuOverlayStyle {
     'hideScroll': hideScroll,
   };
 
-  factory DanmakuOverlayStyle.fromJson(
-    Map<String, Object?> json, {
-    DanmakuOverlayStyle fallback = const DanmakuOverlayStyle(),
-  }) {
+  factory DanmakuOverlayStyle.fromJson(Map<String, Object?> json) {
     double number(String key, double defaultValue) {
       final value = json[key];
       return value is num ? value.toDouble() : defaultValue;
@@ -86,15 +83,15 @@ final class DanmakuOverlayStyle {
     bool flag(String key, bool defaultValue) =>
         json[key] is bool ? json[key] as bool : defaultValue;
     return DanmakuOverlayStyle(
-      fontSize: number('fontSize', fallback.fontSize),
-      opacity: number('opacity', fallback.opacity),
-      duration: number('duration', fallback.duration),
-      area: number('area', fallback.area),
-      strokeWidth: number('strokeWidth', fallback.strokeWidth),
-      massiveMode: flag('massiveMode', fallback.massiveMode),
-      hideTop: flag('hideTop', fallback.hideTop),
-      hideBottom: flag('hideBottom', fallback.hideBottom),
-      hideScroll: flag('hideScroll', fallback.hideScroll),
+      fontSize: number('fontSize', 25),
+      opacity: number('opacity', 0.8),
+      duration: number('duration', 8),
+      area: number('area', 1),
+      strokeWidth: number('strokeWidth', 1.5),
+      massiveMode: flag('massiveMode', false),
+      hideTop: flag('hideTop', false),
+      hideBottom: flag('hideBottom', false),
+      hideScroll: flag('hideScroll', false),
     ).normalized();
   }
 }
@@ -203,17 +200,6 @@ final class PlaybackOverlayPreferenceValues {
 
     bool flag(String key, bool fallback) =>
         json[key] is bool ? json[key] as bool : fallback;
-    final legacyStyle = DanmakuOverlayStyle(
-      fontSize: number('danmakuFontSize', 25),
-      opacity: number('danmakuOpacity', 0.8),
-      duration: number('danmakuDuration', 8),
-      area: number('danmakuArea', 1),
-      strokeWidth: number('danmakuStrokeWidth', 1.5),
-      massiveMode: flag('danmakuMassiveMode', false),
-      hideTop: flag('danmakuHideTop', false),
-      hideBottom: flag('danmakuHideBottom', false),
-      hideScroll: flag('danmakuHideScroll', false),
-    );
     Map<String, Object?> objectMap(Object? value) => value is Map
         ? Map<String, Object?>.from(value)
         : const <String, Object?>{};
@@ -233,11 +219,9 @@ final class PlaybackOverlayPreferenceValues {
       chatDanmakuEnabled: flag('chatDanmakuEnabled', true),
       videoDanmakuStyle: DanmakuOverlayStyle.fromJson(
         objectMap(json['videoDanmakuStyle']),
-        fallback: legacyStyle,
       ),
       chatDanmakuStyle: DanmakuOverlayStyle.fromJson(
         objectMap(json['chatDanmakuStyle']),
-        fallback: legacyStyle,
       ),
     ).normalized();
   }

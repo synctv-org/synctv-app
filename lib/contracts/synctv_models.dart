@@ -1005,12 +1005,15 @@ class RoomMediaEntry {
           : info.medias[formatMediaIndex].format;
       final staticDanmaku = _danmakuFromProto(
         info.danmakus,
-        stream: false,
+        delivery:
+            client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_DOCUMENT,
         resolveUrl: resolveUrl,
       );
       final streamDanmaku = _danmakuFromProto(
         info.danmakus,
-        stream: true,
+        delivery: client
+            .PlaybackDanmakuDelivery
+            .PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM,
         resolveUrl: resolveUrl,
       );
 
@@ -1071,14 +1074,14 @@ class RoomMediaEntry {
   })?
   _danmakuFromProto(
     Iterable<client.PlaybackDanmaku> danmakus, {
-    required bool stream,
+    required client.PlaybackDanmakuDelivery delivery,
     String Function(String url)? resolveUrl,
   }) {
     for (final danmaku in danmakus) {
       final url = danmaku.url.trim();
       if (url.isEmpty) continue;
-      if (_isStreamDanmu(danmaku) != stream) continue;
-      final delivery = danmaku.hasP2pDelivery()
+      if (danmaku.delivery != delivery) continue;
+      final p2pDelivery = danmaku.hasP2pDelivery()
           ? P2pResourceDelivery(
               swarmId: danmaku.p2pDelivery.swarmId,
               swarmTicket: danmaku.p2pDelivery.swarmTicket,
@@ -1087,31 +1090,10 @@ class RoomMediaEntry {
       return (
         url: resolveUrl == null ? url : resolveUrl(url),
         headers: Map<String, String>.from(danmaku.headers),
-        p2pDelivery: delivery,
+        p2pDelivery: p2pDelivery,
       );
     }
     return null;
-  }
-
-  static bool _isStreamDanmu(client.PlaybackDanmaku danmaku) {
-    final delivery = danmaku.delivery;
-    if (delivery ==
-        client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM) {
-      return true;
-    }
-    if (delivery ==
-        client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_DOCUMENT) {
-      return false;
-    }
-
-    final format = danmaku.format.trim().toLowerCase();
-    if (format == 'synctv-bilibili-live') return true;
-    if (format == 'synctv-twitch-live') return true;
-    if (format == 'synctv-huya-live') return true;
-    if (format == 'synctv-douyu-live') return true;
-    if (format == 'synctv-douyin-live') return true;
-    if (format == 'synctv-acfun-live') return true;
-    return danmaku.url.contains('/live-danmaku/');
   }
 }
 

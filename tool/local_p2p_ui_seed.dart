@@ -40,7 +40,7 @@ void main() {
     }
     const switchMediaId = String.fromEnvironment('SYNCTV_P2P_SWITCH_MEDIA_ID');
     if (switchMediaId.isNotEmpty) {
-      await SyncTvService.switchMediaAndPlay(roomId, switchMediaId);
+      await SyncTvService.switchMedia(roomId, switchMediaId);
       if (const bool.fromEnvironment('SYNCTV_P2P_PAUSE_AFTER_SWITCH')) {
         await SyncTvService.updatePlaybackState(
           roomId,
@@ -149,7 +149,7 @@ void main() {
       ),
     );
 
-    await SyncTvService.switchMediaAndPlay(roomId, vodId);
+    await SyncTvService.switchMedia(roomId, vodId);
     print('P2P_SEED_PLAYLIST_ID=${playlist.id}');
     print('P2P_SEED_VOD_ID=$vodId');
     print('P2P_SEED_LIVE_ID=$liveId');

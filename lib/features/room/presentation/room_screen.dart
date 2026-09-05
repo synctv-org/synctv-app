@@ -382,7 +382,6 @@ class _RoomScreenState extends State<RoomScreen>
   List<SyncTvUser> _mentionCandidates = [];
   List<ChatMentionInfo> _pendingChatMentions = [];
   AdminRoomMember? _selfMember;
-  bool _membershipObservationStarted = false;
   SyncTvRoomSettings _roomSettings = SyncTvRoomSettings();
   bool _playModeUpdateInFlight = false;
   int _onlineMemberCount = 0;
@@ -491,7 +490,6 @@ class _RoomScreenState extends State<RoomScreen>
     room: widget.room,
     currentUser: _currentUser,
     selfMember: _selfMember,
-    allowDiscoveryFallback: !_membershipObservationStarted,
   );
 
   bool get _canManageRoom => _capabilities.canManageRoomSettings;
@@ -1398,7 +1396,6 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _invalidateRealtimeMembership() {
-    _membershipObservationStarted = true;
     if (_selfMember == null) return;
     if (mounted) {
       setState(() => _selfMember = null);

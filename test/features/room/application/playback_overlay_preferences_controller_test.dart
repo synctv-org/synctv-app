@@ -86,19 +86,6 @@ void main() {
     expect(restored.chatDanmakuStyle.opacity, 0.9);
   });
 
-  test('legacy danmaku style initializes both independent styles', () {
-    final restored = PlaybackOverlayPreferenceValues.fromJson({
-      'danmakuFontSize': 31,
-      'danmakuOpacity': 0.6,
-      'danmakuHideTop': true,
-    });
-
-    expect(restored.videoDanmakuStyle.fontSize, 31);
-    expect(restored.chatDanmakuStyle.fontSize, 31);
-    expect(restored.videoDanmakuStyle.opacity, 0.6);
-    expect(restored.chatDanmakuStyle.hideTop, isTrue);
-  });
-
   test(
     'video content rectangle stays within viewport at every aspect ratio',
     () {

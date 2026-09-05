@@ -11,7 +11,6 @@ import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
-import 'package:synctv_app/features/auth/domain/oauth2_callback_parser.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/core/time/synced_clock.dart';
 import 'package:synctv_app/data/synctv_api/synctv_domain_services.dart';
@@ -27,8 +26,6 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pbenum.dart'
     as bilibili_enum;
-import 'package:synctv_app/src/generated/proto/providers/bilibili.pb.dart'
-    as bilibili;
 import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
     as provider_common_enum;
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
@@ -387,10 +384,6 @@ class SyncTvService {
     );
   }
 
-  static DateTime serverNow() => SyncedClock.now();
-
-  static int serverNowMillis() => SyncedClock.nowMillis();
-
   static Future<void> syncServerTime({bool refresh = false}) async {
     if (!refresh && SyncedClock.isSynced) return;
     final revision = ++_serverTimeSyncRevision;
@@ -468,11 +461,6 @@ class SyncTvService {
       native: native,
     );
   }
-
-  static OAuth2CallbackPayload parseOAuth2Callback(
-    Uri uri, {
-    String expectedState = '',
-  }) => OAuth2CallbackParser.parse(uri, expectedState: expectedState);
 
   static Future<AuthResult> finishOAuth2Login({
     required String code,
@@ -824,40 +812,14 @@ class SyncTvService {
     );
   }
 
-  static Future<RoomsPage> getFavoriteRoomsPage({
-    int page = 1,
-    int pageSize = 100,
-    String? search,
-    bool refresh = false,
-  }) async {
-    final key = [
-      'account:favorite-rooms',
-      page,
-      pageSize,
-      search ?? '',
-    ].join('|');
-    return _domains.cache.get<RoomsPage>(
-      key,
-      ttl: const Duration(seconds: 45),
-      refresh: refresh,
-      loader: () => _domains.publicRooms.getFavoriteRoomsPage(
-        page: page,
-        pageSize: pageSize,
-        search: search,
-      ),
-    );
-  }
-
   static Future<SyncTvRoom> favoriteRoom(String roomId) async {
     final room = await _domains.publicRooms.favoriteRoom(roomId);
-    _domains.cache.invalidatePrefix('account:favorite-rooms');
     _domains.cache.invalidatePrefix('account:rooms');
     return room;
   }
 
   static Future<SyncTvRoom> unfavoriteRoom(String roomId) async {
     final room = await _domains.publicRooms.unfavoriteRoom(roomId);
-    _domains.cache.invalidatePrefix('account:favorite-rooms');
     _domains.cache.invalidatePrefix('account:rooms');
     return room;
   }
@@ -1025,13 +987,6 @@ class SyncTvService {
     String version = '',
   }) {
     return _domains.roomManagement.watchRoomMembers(roomId, version: version);
-  }
-
-  static Stream<RoomResourceWatchEvent<List<SyncTvUser>>> watchRoomUsers(
-    String roomId, {
-    String version = '',
-  }) {
-    return _domains.roomManagement.watchRoomUsers(roomId, version: version);
   }
 
   static Future<RoomMediaLibraryPage> listMediaLibrary(
@@ -1325,37 +1280,6 @@ class SyncTvService {
       limit: limit,
       cursor: cursor,
       includeMessageTypes: includeMessageTypes,
-    );
-  }
-
-  static Future<ChatHistoryPage> getAdminChatHistory(
-    String roomId, {
-    int limit = 50,
-    String cursor = '',
-    List<client_enum.ChatMessageType> includeMessageTypes =
-        chatTimelineMessageTypes,
-  }) {
-    return _domains.roomMedia.getChatHistoryAsAdmin(
-      roomId,
-      limit: limit,
-      cursor: cursor,
-      includeMessageTypes: includeMessageTypes,
-    );
-  }
-
-  static Future<ChatMessageContextInfo> getAdminChatMessageContext(
-    String roomId,
-    String messageId, {
-    int beforeLimit = 20,
-    int afterLimit = 20,
-    bool includeDeleted = false,
-  }) {
-    return _domains.roomMedia.getChatMessageContextAsAdmin(
-      roomId,
-      messageId,
-      beforeLimit: beforeLimit,
-      afterLimit: afterLimit,
-      includeDeleted: includeDeleted,
     );
   }
 
@@ -1734,20 +1658,6 @@ class SyncTvService {
     );
   }
 
-  static Future<SyncTvPlaybackStatus> switchMediaAndPlay(
-    String roomId,
-    String entryId, {
-    String? subPath,
-    String? playlistId,
-  }) {
-    return switchMedia(
-      roomId,
-      entryId,
-      subPath: subPath,
-      playlistId: playlistId,
-    );
-  }
-
   static Future<SyncTvPlaybackStatus> updatePlaybackState(
     String roomId, {
     PlaybackControlAction? action,
@@ -1764,20 +1674,6 @@ class SyncTvService {
       speed: speed,
       version: version,
     );
-  }
-
-  static Duration? resourceWatchReconnectDelay(Object error) {
-    if (error is SyncTvApiException) {
-      if (error.statusCode == 401 ||
-          error.statusCode == 403 ||
-          error.statusCode == 404) {
-        return null;
-      }
-      if (error.statusCode == 429) return const Duration(seconds: 30);
-      if (error.statusCode >= 400 && error.statusCode < 500) return null;
-      return const Duration(seconds: 10);
-    }
-    return const Duration(seconds: 5);
   }
 
   static Future<AlistLoginInfo> loginAList(
@@ -2523,66 +2419,28 @@ class SyncTvService {
     );
   }
 
-  static Future<List<AlistBindInfo>> getAlistBindInfos({
-    String instanceName = '',
-  }) async {
-    return _domains.providers.getAlistBindInfos(instanceName: instanceName);
-  }
-
   static Future<List<AlistBindInfo>> getAllAlistBindInfos() async {
     return _domains.providers.getAllAlistBindInfos();
-  }
-
-  static Future<List<EmbyBindInfo>> getEmbyBindInfos({
-    String instanceName = '',
-  }) async {
-    return _domains.providers.getEmbyBindInfos(instanceName: instanceName);
   }
 
   static Future<List<EmbyBindInfo>> getAllEmbyBindInfos() async {
     return _domains.providers.getAllEmbyBindInfos();
   }
 
-  static Future<List<CloudreveBindInfo>> getCloudreveBindInfos({
-    String instanceName = '',
-  }) => _domains.providers.getCloudreveBindInfos(instanceName: instanceName);
-
   static Future<List<CloudreveBindInfo>> getAllCloudreveBindInfos() =>
       _domains.providers.getAllCloudreveBindInfos();
-
-  static Future<List<TwitchBindInfo>> getTwitchBindInfos({
-    String instanceName = '',
-  }) => _domains.providers.getTwitchBindInfos(instanceName: instanceName);
 
   static Future<List<TwitchBindInfo>> getAllTwitchBindInfos() =>
       _domains.providers.getAllTwitchBindInfos();
 
-  static Future<List<YoutubeBindInfo>> getYoutubeBindInfos({
-    String instanceName = '',
-  }) => _domains.providers.getYoutubeBindInfos(instanceName: instanceName);
-
   static Future<List<YoutubeBindInfo>> getAllYoutubeBindInfos() =>
       _domains.providers.getAllYoutubeBindInfos();
-
-  static Future<List<DouyinBindInfo>> getDouyinBindInfos({
-    String instanceName = '',
-  }) => _domains.providers.getDouyinBindInfos(instanceName: instanceName);
 
   static Future<List<DouyinBindInfo>> getAllDouyinBindInfos() =>
       _domains.providers.getAllDouyinBindInfos();
 
-  static Future<List<TikTokBindInfo>> getTikTokBindInfos({
-    String instanceName = '',
-  }) => _domains.providers.getTikTokBindInfos(instanceName: instanceName);
-
   static Future<List<TikTokBindInfo>> getAllTikTokBindInfos() =>
       _domains.providers.getAllTikTokBindInfos();
-
-  static Future<List<BilibiliBindInfo>> getBilibiliBindInfos({
-    String instanceName = '',
-  }) async {
-    return _domains.providers.getBilibiliBindInfos(instanceName: instanceName);
-  }
 
   static Future<List<BilibiliBindInfo>> getAllBilibiliBindInfos() async {
     return _domains.providers.getAllBilibiliBindInfos();
@@ -2613,19 +2471,6 @@ class SyncTvService {
     String instanceName = '',
   }) => _domains.providers.getCloudreveAccount(
     serverId,
-    instanceName: instanceName,
-  );
-
-  static Future<bilibili.ListHistoryResponse> listBilibiliHistory({
-    source_enum.BilibiliHistoryType type =
-        source_enum.BilibiliHistoryType.BILIBILI_HISTORY_TYPE_ALL,
-    String? cursor,
-    int pageSize = 30,
-    String instanceName = '',
-  }) => _domains.providers.listBilibiliHistory(
-    type: type,
-    cursor: cursor,
-    pageSize: pageSize,
     instanceName: instanceName,
   );
 
@@ -2806,7 +2651,6 @@ class SyncTvService {
       isPublic,
     );
     _domains.cache.invalidatePrefix('account:rooms');
-    _domains.cache.invalidatePrefix('account:favorite-rooms');
     return room;
   }
 
@@ -3363,10 +3207,6 @@ class SyncTvService {
     );
   }
 
-  static Future<List<SyncTvUser>> adminListAdmins({String search = ''}) {
-    return _domains.admin.listAdmins(search: search);
-  }
-
   static Future<void> adminAddAdmin(String userId) {
     return _domains.admin.addAdmin(userId);
   }
@@ -3503,28 +3343,6 @@ class SyncTvService {
     );
   }
 
-  static Future<List<AdminProviderInstance>> adminListProviderInstances({
-    String providerType = '',
-    String search = '',
-    bool? enabled,
-    bool? tls,
-    provider_common_enum.ProviderInstanceListSortBy sortBy =
-        provider_common_enum
-            .ProviderInstanceListSortBy
-            .PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
-    provider_common_enum.SortDirection sortDirection =
-        provider_common_enum.SortDirection.SORT_DIRECTION_ASC,
-  }) {
-    return _domains.admin.listProviderInstances(
-      providerType: providerType,
-      search: search,
-      enabled: enabled,
-      tls: tls,
-      sortBy: sortBy,
-      sortDirection: sortDirection,
-    );
-  }
-
   static Future<List<String>> listAvailableProviderInstances({
     String providerType = '',
   }) {
@@ -3619,30 +3437,6 @@ class SyncTvService {
         admin_enum.SortDirection.SORT_DIRECTION_DESC,
   }) {
     return _domains.admin.listActiveStreamsPage(
-      page: page,
-      pageSize: pageSize,
-      roomId: roomId,
-      userId: userId,
-      nodeId: nodeId,
-      search: search,
-      sortBy: sortBy,
-      sortDirection: sortDirection,
-    );
-  }
-
-  static Future<List<AdminActiveStream>> adminListActiveStreams({
-    int page = 1,
-    int pageSize = 50,
-    String roomId = '',
-    String userId = '',
-    String nodeId = '',
-    String search = '',
-    admin_enum.ActiveStreamListSortBy sortBy =
-        admin_enum.ActiveStreamListSortBy.ACTIVE_STREAM_LIST_SORT_BY_STARTED_AT,
-    admin_enum.SortDirection sortDirection =
-        admin_enum.SortDirection.SORT_DIRECTION_DESC,
-  }) {
-    return _domains.admin.listActiveStreams(
       page: page,
       pageSize: pageSize,
       roomId: roomId,

@@ -162,7 +162,7 @@ Future<void> _exerciseWatchers(String roomId, int stamp) async {
   print('watchers_pin_chat');
   await SyncTvService.pinChatMessage(roomId, msg.id, note: 'watch pin');
   print('watchers_switch_playback');
-  await SyncTvService.switchMediaAndPlay(roomId, mediaId);
+  await SyncTvService.switchMedia(roomId, mediaId);
 
   print('watchers_update_settings');
   final settings = await SyncTvService.getRoomSettings(roomId, refresh: true);
@@ -287,7 +287,7 @@ Future<void> _exerciseMediaAndRealtime(
     playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
     name: 'playback direct $stamp',
   );
-  await SyncTvService.switchMediaAndPlay(roomId, directId);
+  await SyncTvService.switchMedia(roomId, directId);
   await SyncTvService.updatePlaybackState(
     roomId,
     action: PlaybackControlAction.seek,
@@ -386,7 +386,7 @@ Future<void> _exercisePlaybackHistory(
       name: 'history $index $stamp',
     );
     mediaIds.add(mediaId);
-    await SyncTvService.switchMediaAndPlay(roomId, mediaId);
+    await SyncTvService.switchMedia(roomId, mediaId);
   }
 
   final newestPage = await SyncTvService.listPlaybackHistory(roomId, limit: 2);
@@ -654,7 +654,9 @@ Future<void> _exerciseAdminLifecycle({
     () => SyncTvService.adminReconnectProviderInstance(providerName),
     'provider_reconnect_missing',
   );
-  final listed = await SyncTvService.adminListProviderInstances();
+  final listed = await SyncTvService.adminListProviderInstancesPage(
+    pageSize: 100,
+  );
   final availableAlist = await SyncTvService.listAvailableProviderInstances(
     providerType: 'alist',
   );
@@ -663,7 +665,7 @@ Future<void> _exerciseAdminLifecycle({
     throw StateError('provider discovery incomplete');
   }
   print(
-    'provider_instances=${listed.length} alist_available=$availableAlist alist_backends=$alistBackends',
+    'provider_instances=${listed.instances.length} alist_available=$availableAlist alist_backends=$alistBackends',
   );
 
   final settings = await SyncTvService.runtimeGetSettings(refresh: true);
@@ -691,8 +693,8 @@ Future<void> _exerciseAdminLifecycle({
     );
   }
 
-  final streams = await SyncTvService.adminListActiveStreams(roomId: roomId);
-  print('active_streams=${streams.length}');
+  final streams = await SyncTvService.adminListActiveStreamsPage(roomId: roomId);
+  print('active_streams=${streams.streams.length}');
   final stats = await SyncTvService.adminGetServiceState();
   if (stats.totalUsers < 1 || stats.totalRooms < 1) {
     throw StateError('admin stats incomplete');

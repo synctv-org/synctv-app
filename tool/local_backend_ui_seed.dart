@@ -417,7 +417,7 @@ Future<void> _createPrimaryRoomMedia(
     mediaId,
     await _imageUpload(coverPath),
   );
-  await SyncTvService.switchMediaAndPlay(
+  await SyncTvService.switchMedia(
     roomId,
     mediaId,
     playlistId: playlist.id,

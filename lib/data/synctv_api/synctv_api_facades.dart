@@ -768,17 +768,6 @@ class SyncTvUserApi {
       client.UnfavoriteRoomResponse.create,
     );
   }
-
-  Future<client.ListFavoriteRoomsResponse> listFavoriteRooms(
-    client.ListFavoriteRoomsRequest request,
-  ) {
-    return _api._send(
-      'GET',
-      '/api/user/favorite-rooms',
-      client.ListFavoriteRoomsResponse.create,
-      query: _api._messageQuery(request),
-    );
-  }
 }
 
 class SyncTvRoomApi {
@@ -2589,30 +2578,6 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<client.GetChatHistoryResponse> getRoomChatHistory(
-    String roomId,
-    client.GetChatHistoryRequest request,
-  ) {
-    return _api._send(
-      'GET',
-      '/api/admin/rooms/$roomId/chat/history',
-      client.GetChatHistoryResponse.create,
-      query: _api._messageQuery(request),
-    );
-  }
-
-  Future<client.GetChatMessageContextResponse> getRoomChatMessageContext(
-    String roomId,
-    client.GetChatMessageContextRequest request,
-  ) {
-    return _api._send(
-      'GET',
-      '/api/admin/rooms/$roomId/chat/messages/${request.messageId}/context',
-      client.GetChatMessageContextResponse.create,
-      query: _api._messageQuery(request)..remove('messageId'),
-    );
-  }
-
   Future<admin.AdminUser> unbanUser(admin.UnbanUserRequest request) {
     return _api._send(
       'POST',
@@ -4079,17 +4044,6 @@ class SyncTvBilibiliProviderApi {
       'POST',
       '/api/providers/bilibili/pgc/followed',
       bilibili.ListFollowedPgcResponse.create,
-      body: request,
-    );
-  }
-
-  Future<bilibili.ListHistoryResponse> listHistory(
-    bilibili.ListHistoryRequest request,
-  ) {
-    return _api._send(
-      'POST',
-      '/api/providers/bilibili/history',
-      bilibili.ListHistoryResponse.create,
       body: request,
     );
   }

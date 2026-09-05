@@ -5,6 +5,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/features/media_p2p/infrastructure/p2p_length_metadata.dart';
 import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_cache.dart';
 import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_engine.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_runtime.dart';
@@ -2543,8 +2544,7 @@ segment.ts?token=secret
     origin.listen((request) async {
       // Keep the origin header phase pending; the peer owns both metadata and data.
     });
-    final lengthBytes = Uint8List(8);
-    ByteData.sublistView(lengthBytes).setUint64(0, 4);
+    final lengthBytes = encodeP2pResourceLength(4);
     final requestedPieces = <String>[];
     final engine = P2pMediaEngine(
       originHeaderPeerRetryDelay: const Duration(milliseconds: 20),
@@ -2644,8 +2644,7 @@ segment.ts?token=secret
       );
 
       final body = Uint8List.fromList([4, 3, 2, 1]);
-      final lengthBytes = Uint8List(8);
-      ByteData.sublistView(lengthBytes).setUint64(0, body.length);
+      final lengthBytes = encodeP2pResourceLength(body.length);
       var lengthRequests = 0;
       final engine = P2pMediaEngine(
         originHeaderPeerRetryDelay: const Duration(milliseconds: 10),
@@ -2677,7 +2676,7 @@ segment.ts?token=secret
       expect(head.acceptRanges, 'bytes');
       expect(await _getBytes(local), body);
       expect(lengthRequests, 2);
-      expect(engine.stats.value.p2pBytes, body.length + 8);
+      expect(engine.stats.value.p2pBytes, body.length + lengthBytes.length);
     },
   );
 

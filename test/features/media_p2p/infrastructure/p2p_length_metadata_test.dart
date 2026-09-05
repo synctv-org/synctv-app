@@ -19,15 +19,20 @@ void main() {
     }
   });
 
-  test('length metadata preserves range capability and legacy records', () {
+  test('length metadata preserves range capability', () {
     final unsupported = encodeP2pResourceLength(42, acceptsRanges: false);
     expect(decodeP2pRangeCapability(unsupported), isFalse);
 
     final unknown = encodeP2pResourceLength(42);
     expect(decodeP2pRangeCapability(unknown), isNull);
+  });
 
-    final legacy = Uint8List.sublistView(unknown, 0, 8);
-    expect(decodeP2pResourceLength(legacy), 42);
-    expect(decodeP2pRangeCapability(legacy), isNull);
+  test('length metadata rejects incomplete and oversized records', () {
+    expect(decodeP2pResourceLength(null), isNull);
+    for (final size in [0, 7, 8, 10]) {
+      final metadata = Uint8List(size);
+      expect(decodeP2pResourceLength(metadata), isNull);
+      expect(decodeP2pRangeCapability(metadata), isNull);
+    }
   });
 }

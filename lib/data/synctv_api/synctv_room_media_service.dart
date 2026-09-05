@@ -497,24 +497,6 @@ class SyncTvRoomMediaDomainService {
     return chatHistoryPageFromProto(response);
   }
 
-  Future<ChatHistoryPage> getChatHistoryAsAdmin(
-    String roomId, {
-    int limit = 50,
-    String cursor = '',
-    List<client_enum.ChatMessageType> includeMessageTypes =
-        chatTimelineMessageTypes,
-  }) async {
-    final response = await _api.adminService.getRoomChatHistory(
-      roomId,
-      client.GetChatHistoryRequest(
-        limit: limit,
-        cursor: cursor,
-        includeMessageTypes: includeMessageTypes,
-      ),
-    );
-    return chatHistoryPageFromProto(response);
-  }
-
   ChatHistoryPage chatHistoryPageFromProto(
     client.GetChatHistoryResponse response,
   ) {
@@ -842,25 +824,6 @@ class SyncTvRoomMediaDomainService {
     return _chatMessageContextFromProto(response);
   }
 
-  Future<ChatMessageContextInfo> getChatMessageContextAsAdmin(
-    String roomId,
-    String messageId, {
-    int beforeLimit = 20,
-    int afterLimit = 20,
-    bool includeDeleted = false,
-  }) async {
-    final response = await _api.adminService.getRoomChatMessageContext(
-      roomId,
-      client.GetChatMessageContextRequest(
-        messageId: messageId,
-        beforeLimit: beforeLimit,
-        afterLimit: afterLimit,
-        includeDeleted: includeDeleted,
-      ),
-    );
-    return _chatMessageContextFromProto(response);
-  }
-
   ChatMessageContextInfo _chatMessageContextFromProto(
     client.GetChatMessageContextResponse response,
   ) {
@@ -1018,11 +981,7 @@ class SyncTvRoomMediaDomainService {
       streamKey: response.streamKey,
       whipUrl: response.whipUrl,
       expiresAt: response.hasExpiresAt() ? response.expiresAt.toInt() : null,
-      keyType:
-          response.type ==
-              client_enum.PublishKeyType.PUBLISH_KEY_TYPE_UNSPECIFIED
-          ? client_enum.PublishKeyType.PUBLISH_KEY_TYPE_SINGLE_USE
-          : response.type,
+      keyType: response.type,
     );
   }
 
