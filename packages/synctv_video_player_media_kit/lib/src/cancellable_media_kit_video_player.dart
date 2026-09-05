@@ -117,11 +117,7 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
   static Stream<AdaptiveVideoTrackSnapshot> adaptiveVideoTracksFor(
     int playerId,
   ) {
-    final platform = VideoPlayerPlatform.instance;
-    if (platform is! CancellableMediaKitVideoPlayer) {
-      return const Stream<AdaptiveVideoTrackSnapshot>.empty();
-    }
-    final runtime = platform._sessions[playerId]?.runtime;
+    final runtime = _runtimeFor(playerId);
     if (runtime is! AdaptiveVideoTrackRuntime) {
       return const Stream<AdaptiveVideoTrackSnapshot>.empty();
     }
@@ -132,9 +128,7 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
     int playerId,
     String trackId,
   ) async {
-    final platform = VideoPlayerPlatform.instance;
-    if (platform is! CancellableMediaKitVideoPlayer) return;
-    final runtime = platform._sessions[playerId]?.runtime;
+    final runtime = _runtimeFor(playerId);
     if (runtime is AdaptiveVideoTrackRuntime) {
       await (runtime as AdaptiveVideoTrackRuntime).selectAdaptiveVideoTrack(
         trackId,

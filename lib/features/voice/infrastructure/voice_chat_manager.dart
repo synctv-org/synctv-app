@@ -31,7 +31,6 @@ class VoiceChatManager implements VoiceChatSession {
   final WebRtcNegotiationState<String, RTCIceCandidate> _negotiation =
       WebRtcNegotiationState();
   MediaStream? _localStream;
-  final Map<String, MediaStream> _remoteStreams = {};
   final Set<String> _connectedPeers = {};
   final VoiceSignalingCallback onSignalingMessage;
   final VoidCallback onStateChange;
@@ -266,14 +265,7 @@ class VoiceChatManager implements VoiceChatSession {
     }
   }
 
-  Future<void> handleLeave(String fromId) async {
-    await _closePeer(fromId);
-
-    // Cleanup remote stream
-    final stream = _remoteStreams.remove(fromId);
-    stream?.getTracks().forEach((track) => track.stop());
-    await stream?.dispose();
-  }
+  Future<void> handleLeave(String fromId) => _closePeer(fromId);
 
   Future<RTCPeerConnection> _replacePeerConnection(String remoteId) async {
     final pending = _negotiation.takeCandidates(remoteId);
@@ -315,12 +307,6 @@ class VoiceChatManager implements VoiceChatSession {
     _localStream?.getTracks().forEach((track) => track.stop());
     await _localStream?.dispose();
     _localStream = null;
-
-    for (var stream in _remoteStreams.values) {
-      stream.getTracks().forEach((track) => track.stop());
-      await stream.dispose();
-    }
-    _remoteStreams.clear();
 
     for (var pc in _peerConnections.values) {
       await pc.close();

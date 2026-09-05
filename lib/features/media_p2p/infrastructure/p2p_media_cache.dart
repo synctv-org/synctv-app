@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:synctv_app/core/async/async_operation_coordinator.dart';
 
 typedef P2pMediaCacheClock = DateTime Function();
 
@@ -40,7 +41,8 @@ class P2pMediaPersistentCache {
   final Duration cleanupInterval;
   final P2pMediaCacheClock _clock;
   final Map<String, _PersistentCacheEntry> _entries = {};
-  Future<void> _operationTail = Future.value();
+  final SerialAsyncOperationCoordinator _operations =
+      SerialAsyncOperationCoordinator();
   Future<void>? _initializing;
   Timer? _cleanupTimer;
   bool _closed = false;
@@ -156,15 +158,7 @@ class P2pMediaPersistentCache {
     if (_closed && !allowClosed) {
       return Future.error(StateError('P2P media cache is closed'));
     }
-    final result = Completer<T>();
-    _operationTail = _operationTail.then((_) async {
-      try {
-        result.complete(await operation());
-      } catch (error, stackTrace) {
-        result.completeError(error, stackTrace);
-      }
-    });
-    return result.future;
+    return _operations.run(operation);
   }
 
   Future<void> _initializeUnlocked() async {
@@ -219,6 +213,7 @@ class P2pMediaPersistentCache {
     for (final entry in _entries.values.toList(growable: false)) {
       if (_isExpired(entry, now)) await _removeEntry(entry);
     }
+    if (totalBytes <= maxBytes) return;
     final oldest = _entries.values.toList(growable: false)
       ..sort((left, right) => left.lastAccessed.compareTo(right.lastAccessed));
     for (final entry in oldest) {

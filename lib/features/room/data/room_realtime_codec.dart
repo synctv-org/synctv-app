@@ -782,43 +782,10 @@ class RoomRealtimeCodec {
       chatDisplayColor: chat.displayColor,
       resourceObserveId: observeId,
       resourceVersion: version,
-      reactions: chat.reactions
-          .map(
-            (reaction) => ChatReactionSummaryInfo(
-              key: reaction.key,
-              count: reaction.count.toInt(),
-              reactedByMe: reaction.reactedByMe,
-            ),
-          )
-          .toList(),
+      reactions: chat.reactions.map(ChatReactionSummaryInfo.fromProto).toList(),
       reactionCount: chat.reactionCount,
-      mentions: chat.mentions
-          .map(
-            (mention) => ChatMentionInfo(
-              userId: mention.userId,
-              username: mention.username,
-              start: mention.start,
-              length: mention.length,
-            ),
-          )
-          .toList(),
-      images: chat.attachments
-          .map(
-            (attachment) => StoredImageInfo(
-              id: attachment.id,
-              storageBackend: '',
-              objectKey: '',
-              url: attachment.url,
-              mimeType: attachment.mimeType,
-              sizeBytes: attachment.sizeBytes.toInt(),
-              width: attachment.width,
-              height: attachment.height,
-              metadata: utf8.encode(
-                jsonEncode(fileMetadataToJson(attachment.metadata)),
-              ),
-            ),
-          )
-          .toList(),
+      mentions: chat.mentions.map(ChatMentionInfo.fromProto).toList(),
+      images: chat.attachments.map(StoredImageInfo.fromChatAttachment).toList(),
     );
   }
 
@@ -1031,81 +998,13 @@ class RoomRealtimeCodec {
         eventId: event.eventId,
         roomId: event.roomId,
         kind: event.kind,
-        message: _chatMessageInfoFromProto(event.message),
-        pin: event.hasPin() ? _chatPinFromProto(event.pin) : null,
+        message: RoomChatMessageInfo.fromProto(event.message),
+        pin: event.hasPin() ? ChatPinInfo.fromProto(event.pin) : null,
         occurredAt: event.occurredAt.toInt(),
         sequence: event.sequence.toInt(),
       ),
       resourceObserveId: observeId,
       resourceVersion: version.isEmpty ? event.sequence.toString() : version,
-    );
-  }
-
-  static RoomChatMessageInfo _chatMessageInfoFromProto(
-    client.ChatMessageReceive message,
-  ) {
-    return RoomChatMessageInfo(
-      id: message.id,
-      roomId: message.roomId,
-      userId: message.userId,
-      username: message.hasUsername() ? message.username : null,
-      content: message.content,
-      timestamp: message.timestamp.toInt(),
-      messageType: message.messageType,
-      displayPosition: message.displayPosition,
-      displayColor: message.displayColor,
-      version: message.version.toInt(),
-      editedAt: message.editedAt.toInt(),
-      deletedAt: message.deletedAt.toInt(),
-      status: message.status,
-      replyToMessageId: message.replyToMessageId,
-      images: message.attachments
-          .map(
-            (attachment) => StoredImageInfo(
-              id: attachment.id,
-              storageBackend: '',
-              objectKey: '',
-              url: attachment.url,
-              mimeType: attachment.mimeType,
-              sizeBytes: attachment.sizeBytes.toInt(),
-              width: attachment.width,
-              height: attachment.height,
-              metadata: utf8.encode(
-                jsonEncode(fileMetadataToJson(attachment.metadata)),
-              ),
-            ),
-          )
-          .toList(),
-      reactions: message.reactions
-          .map(
-            (reaction) => ChatReactionSummaryInfo(
-              key: reaction.key,
-              count: reaction.count.toInt(),
-              reactedByMe: reaction.reactedByMe,
-            ),
-          )
-          .toList(),
-      reactionCount: message.reactionCount,
-      mentions: message.mentions
-          .map(
-            (mention) => ChatMentionInfo(
-              userId: mention.userId,
-              username: mention.username,
-              start: mention.start,
-              length: mention.length,
-            ),
-          )
-          .toList(),
-      pin: message.hasPin() ? _chatPinFromProto(message.pin) : null,
-    );
-  }
-
-  static ChatPinInfo _chatPinFromProto(client.ChatMessagePin pin) {
-    return ChatPinInfo(
-      pinnedByUserId: pin.pinnedByUserId,
-      pinnedByUsername: pin.pinnedByUsername,
-      note: pin.note,
-      pinnedAt: pin.pinnedAt.toInt(),
     );
   }
 

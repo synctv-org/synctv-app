@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 
@@ -54,7 +58,7 @@ class RoomMediaLibraryPage {
   bool hasNextPage(int pageSize) {
     if (usesCursor) return nextCursor.isNotEmpty;
     if (total case final total?) return page * pageSize < total;
-    return entries.length >= pageSize;
+    return playlists.length + media.length + dynamicItems.length >= pageSize;
   }
 
   int get effectivePlaylistCount =>
@@ -126,6 +130,23 @@ class StoredImageInfo {
     required this.height,
     this.metadata = const [],
   });
+
+  factory StoredImageInfo.fromChatAttachment(
+    client.ChatAttachment image, {
+    String Function(String)? resolveUrl,
+  }) {
+    return StoredImageInfo(
+      id: image.id,
+      storageBackend: '',
+      objectKey: '',
+      url: resolveUrl?.call(image.url) ?? image.url,
+      mimeType: image.mimeType,
+      sizeBytes: image.sizeBytes.toInt(),
+      width: image.width,
+      height: image.height,
+      metadata: utf8.encode(jsonEncode(fileMetadataToJson(image.metadata))),
+    );
+  }
 }
 
 class ChatHistoryPage {
@@ -191,6 +212,16 @@ class ChatReactionSummaryInfo {
     required this.reactedByMe,
   });
 
+  factory ChatReactionSummaryInfo.fromProto(
+    client.ChatReactionSummary reaction,
+  ) {
+    return ChatReactionSummaryInfo(
+      key: reaction.key,
+      count: reaction.count.toInt(),
+      reactedByMe: reaction.reactedByMe,
+    );
+  }
+
   final String key;
   final int count;
   final bool reactedByMe;
@@ -249,6 +280,15 @@ class ChatPinInfo {
     required this.pinnedAt,
   });
 
+  factory ChatPinInfo.fromProto(client.ChatMessagePin pin) {
+    return ChatPinInfo(
+      pinnedByUserId: pin.pinnedByUserId,
+      pinnedByUsername: pin.pinnedByUsername,
+      note: pin.note,
+      pinnedAt: pin.pinnedAt.toInt(),
+    );
+  }
+
   final String pinnedByUserId;
   final String pinnedByUsername;
   final String note;
@@ -272,6 +312,24 @@ class ChatPinEventInfo {
     required this.occurredAt,
     required this.sequence,
   });
+
+  factory ChatPinEventInfo.fromProto(
+    client.ChatPinEvent event, {
+    String Function(String)? resolveUrl,
+  }) {
+    return ChatPinEventInfo(
+      eventId: event.eventId,
+      roomId: event.roomId,
+      kind: event.kind,
+      message: RoomChatMessageInfo.fromProto(
+        event.message,
+        resolveUrl: resolveUrl,
+      ),
+      pin: event.hasPin() ? ChatPinInfo.fromProto(event.pin) : null,
+      occurredAt: event.occurredAt.toInt(),
+      sequence: event.sequence.toInt(),
+    );
+  }
 
   final String eventId;
   final String roomId;
@@ -324,6 +382,42 @@ class RoomChatMessageInfo {
     this.mentions = const [],
     this.pin,
   });
+
+  factory RoomChatMessageInfo.fromProto(
+    client.ChatMessageReceive message, {
+    String Function(String)? resolveUrl,
+  }) {
+    return RoomChatMessageInfo(
+      id: message.id,
+      roomId: message.roomId,
+      userId: message.userId,
+      username: message.hasUsername() ? message.username : null,
+      content: message.content,
+      timestamp: message.timestamp.toInt(),
+      messageType: message.messageType,
+      displayPosition: message.displayPosition,
+      displayColor: message.displayColor,
+      version: message.version.toInt(),
+      editedAt: message.editedAt.toInt(),
+      deletedAt: message.deletedAt.toInt(),
+      status: message.status,
+      replyToMessageId: message.replyToMessageId,
+      images: message.attachments
+          .map(
+            (image) => StoredImageInfo.fromChatAttachment(
+              image,
+              resolveUrl: resolveUrl,
+            ),
+          )
+          .toList(),
+      reactions: message.reactions
+          .map(ChatReactionSummaryInfo.fromProto)
+          .toList(),
+      reactionCount: message.reactionCount,
+      mentions: message.mentions.map(ChatMentionInfo.fromProto).toList(),
+      pin: message.hasPin() ? ChatPinInfo.fromProto(message.pin) : null,
+    );
+  }
 
   double? get position => double.tryParse(displayPosition);
   String? get color => displayColor.isEmpty ? null : displayColor;
@@ -401,4 +495,13 @@ class ChatMentionInfo {
     required this.start,
     required this.length,
   });
+
+  factory ChatMentionInfo.fromProto(client.ChatMention mention) {
+    return ChatMentionInfo(
+      userId: mention.userId,
+      username: mention.username,
+      start: mention.start,
+      length: mention.length,
+    );
+  }
 }
