@@ -693,7 +693,9 @@ Future<void> _exerciseAdminLifecycle({
     );
   }
 
-  final streams = await SyncTvService.adminListActiveStreamsPage(roomId: roomId);
+  final streams = await SyncTvService.adminListActiveStreamsPage(
+    roomId: roomId,
+  );
   print('active_streams=${streams.streams.length}');
   final stats = await SyncTvService.adminGetServiceState();
   if (stats.totalUsers < 1 || stats.totalRooms < 1) {

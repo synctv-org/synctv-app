@@ -4330,10 +4330,7 @@ void main() {
         'http://${server.address.host}:${server.port}',
       );
 
-      final playback = await SyncTvService.switchMedia(
-        'room_1',
-        'med_1',
-      );
+      final playback = await SyncTvService.switchMedia('room_1', 'med_1');
 
       expect(playback.isPlaying, isTrue);
       expect(playback.playingMediaId, 'med_1');
@@ -4766,7 +4763,9 @@ void main() {
       expect(
         entry.streamDanmu,
         delivery ==
-                client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM
+                client
+                    .PlaybackDanmakuDelivery
+                    .PLAYBACK_DANMAKU_DELIVERY_EVENT_STREAM
             ? url
             : null,
         reason: delivery.name,
@@ -4774,7 +4773,9 @@ void main() {
       expect(
         entry.danmu,
         delivery ==
-                client.PlaybackDanmakuDelivery.PLAYBACK_DANMAKU_DELIVERY_DOCUMENT
+                client
+                    .PlaybackDanmakuDelivery
+                    .PLAYBACK_DANMAKU_DELIVERY_DOCUMENT
             ? url
             : null,
         reason: delivery.name,

@@ -417,11 +417,7 @@ Future<void> _createPrimaryRoomMedia(
     mediaId,
     await _imageUpload(coverPath),
   );
-  await SyncTvService.switchMedia(
-    roomId,
-    mediaId,
-    playlistId: playlist.id,
-  );
+  await SyncTvService.switchMedia(roomId, mediaId, playlistId: playlist.id);
 }
 
 Future<void> _seedChat(String roomId) async {
