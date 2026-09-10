@@ -70,6 +70,7 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
   int _page = 1;
   bool _hasMore = false;
   bool _loading = false;
+  int _loadGeneration = 0;
   List<SeafileFileItemInfo> _items = const [];
   provider_common.DiscoveredSource? _listSource;
   source_enum.PlaybackProxyMode _proxyMode =
@@ -89,9 +90,18 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
   @override
   void didUpdateWidget(covariant SeafileAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
-        widget.binds.isNotEmpty) {
-      _bind = widget.binds.first;
+    if (_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) {
+      ++_loadGeneration;
+      _loading = false;
+      _bind = widget.binds.firstOrNull;
+      _repositoryId = '';
+      _mode = SeafileBrowseMode.folder;
+      _repositoryName = '';
+      _path = '';
+      _page = 1;
+      _items = const [];
+      _listSource = null;
+      _selection.clear();
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
   }
@@ -424,11 +434,12 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
 
   Future<void> _load() async {
     final bind = _bind;
-    if (bind == null || _loading) return;
+    if (!mounted || bind == null) return;
     if (_mode == SeafileBrowseMode.search &&
         (_repositoryId.isEmpty || _searchController.text.trim().isEmpty)) {
       return;
     }
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _listSource = null;
@@ -444,7 +455,7 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
         _page,
         _pageSize,
       );
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _items = page.items;
         _page = page.page;
@@ -452,9 +463,13 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
         _listSource = page.source;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted && generation == _loadGeneration) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loading = false);
+      }
     }
   }
 

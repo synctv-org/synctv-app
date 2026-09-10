@@ -14,21 +14,24 @@ extension DiscoveredSourceAccess on provider_common.DiscoveredSource {
       whichSourceConfig() ==
       provider_common.DiscoveredSource_SourceConfig.playlist;
 
+  bool get hasMediaSource =>
+      isMedia &&
+      media.whichProvider() != source_config.MediaSourceConfig_Provider.notSet;
+
+  bool get hasPlaylistSource =>
+      isPlaylist &&
+      playlist.whichProvider() !=
+          source_config.PlaylistSourceConfig_Provider.notSet;
+
   source_config.MediaSourceConfig requireMedia() {
-    if (!isMedia ||
-        !hasMedia() ||
-        media.whichProvider() ==
-            source_config.MediaSourceConfig_Provider.notSet) {
+    if (!hasMediaSource) {
       throw StateError('Provider discovery returned no media source');
     }
     return media.deepCopy();
   }
 
   source_config.PlaylistSourceConfig requirePlaylist() {
-    if (!isPlaylist ||
-        !hasPlaylist() ||
-        playlist.whichProvider() ==
-            source_config.PlaylistSourceConfig_Provider.notSet) {
+    if (!hasPlaylistSource) {
       throw StateError('Provider discovery returned no playlist source');
     }
     return playlist.deepCopy();

@@ -134,8 +134,22 @@ class SyncTvStaleEndpointException implements Exception {
   String toString() => 'The request belongs to a previously active server';
 }
 
+class SyncTvStaleSessionException implements Exception {
+  const SyncTvStaleSessionException();
+
+  @override
+  String toString() => 'The request belongs to a previously active session';
+}
+
 class SyncTvSession {
   SyncTvSessionIdentity _identity = const AnonymousSessionIdentity();
+  int _generation = 0;
+
+  int get generation => _generation;
+
+  void ensureCurrent(int generation) {
+    if (generation != _generation) throw const SyncTvStaleSessionException();
+  }
 
   SyncTvSessionIdentity get identity => _identity;
   String? get accessToken => switch (_identity) {
@@ -152,7 +166,11 @@ class SyncTvSession {
   bool get hasRefreshToken => refreshToken != null;
   bool get hasRecoverableCredentials => hasAccessToken || hasRefreshToken;
 
-  void updateAccountTokens({String? accessToken, String? refreshToken}) {
+  void updateAccountTokens({
+    String? accessToken,
+    String? refreshToken,
+    bool isRefresh = false,
+  }) {
     final current = _identity;
     final currentAccess = current is AccountSessionIdentity
         ? current.accessToken
@@ -165,6 +183,7 @@ class SyncTvSession {
     if (nextAccess == null && nextRefresh == null) {
       throw ArgumentError('Account session requires at least one token');
     }
+    if (!isRefresh) _generation++;
     _identity = AccountSessionIdentity(
       accessToken: nextAccess,
       refreshToken: nextRefresh,
@@ -182,6 +201,7 @@ class SyncTvSession {
     if (token == null || guestRoomId == null || guestDisplayName == null) {
       throw ArgumentError('Guest session fields must be non-empty');
     }
+    _generation++;
     _identity = GuestSessionIdentity(
       accessToken: token,
       roomId: guestRoomId,
@@ -190,6 +210,7 @@ class SyncTvSession {
   }
 
   void clear() {
+    _generation++;
     _identity = const AnonymousSessionIdentity();
   }
 
@@ -200,6 +221,7 @@ class SyncTvSession {
 }
 
 class SyncTvApiClient {
+  /// [baseUrl] is the deployment root, including any reverse-proxy path.
   SyncTvApiClient({
     required String baseUrl,
     required this.session,
@@ -226,7 +248,8 @@ class SyncTvApiClient {
   Uri _baseUri;
   bool _allowInsecureTls;
   int _endpointGeneration = 0;
-  ({int generation, Future<bool> future})? _refreshInFlight;
+  ({int generation, int sessionGeneration, Future<bool> future})?
+  _refreshInFlight;
   final Expando<int> _responseGenerations = Expando<int>(
     'SyncTv response endpoint generation',
   );
@@ -437,23 +460,34 @@ class SyncTvApiClient {
     if (parts.length != 2) return null;
     final rangeParts = parts[0].split('-');
     if (rangeParts.length != 2) return null;
-    final start = int.tryParse(rangeParts[0].trim());
-    final endInclusive = int.tryParse(rangeParts[1].trim());
-    final totalSize = int.tryParse(parts[1].trim());
-    if (start == null || endInclusive == null || totalSize == null) {
+    final start = _parseFileSize(rangeParts[0]);
+    final endInclusive = _parseFileSize(rangeParts[1]);
+    final totalSize = _parseFileSize(parts[1]);
+    if (start == null ||
+        endInclusive == null ||
+        totalSize == null ||
+        start > endInclusive ||
+        endInclusive >= totalSize) {
       return null;
     }
     return (
-      range: client.FileByteRange(
-        start: Int64(start),
-        endInclusive: Int64(endInclusive),
-      ),
-      totalSize: Int64(totalSize),
+      range: client.FileByteRange(start: start, endInclusive: endInclusive),
+      totalSize: totalSize,
     );
   }
 
   Int64 _parseInt64(String value, {int fallback = 0}) {
-    return Int64(int.tryParse(value.trim()) ?? fallback);
+    return _parseFileSize(value) ?? Int64(fallback);
+  }
+
+  Int64? _parseFileSize(String value) {
+    final decimal = value.trim();
+    if (!RegExp(r'^[0-9]+$').hasMatch(decimal)) return null;
+    final parsed = BigInt.tryParse(decimal);
+    if (parsed == null || parsed > BigInt.from(2).pow(63) - BigInt.one) {
+      return null;
+    }
+    return Int64.parseInt(decimal);
   }
 
   List<int> _parseIntListHeader(String value) {
@@ -548,6 +582,7 @@ class SyncTvApiClient {
     bool auth = true,
   }) async {
     final generation = _endpointGeneration;
+    final sessionGeneration = session.generation;
     final uri = _uri(path, query);
     final encodedBody = _encodeBody(body);
     final response = await _sendHttp(
@@ -557,10 +592,12 @@ class SyncTvApiClient {
       body: encodedBody,
     );
     _ensureCurrentEndpoint(generation);
+    if (auth) session.ensureCurrent(sessionGeneration);
 
     if (_shouldRefresh(response, auth: auth, path: path)) {
       final refreshed = await _tryRefreshToken(generation);
       _ensureCurrentEndpoint(generation);
+      session.ensureCurrent(sessionGeneration);
       if (refreshed) {
         final retry = await _sendHttp(
           method,
@@ -568,6 +605,8 @@ class SyncTvApiClient {
           headers: _headers(auth: auth),
           body: encodedBody,
         );
+        _ensureCurrentEndpoint(generation);
+        session.ensureCurrent(sessionGeneration);
         return _decodeCurrentResponse(
           retry,
           create,
@@ -624,13 +663,20 @@ class SyncTvApiClient {
   Future<bool> _tryRefreshToken([int? expectedGeneration]) async {
     final generation = expectedGeneration ?? _endpointGeneration;
     _ensureCurrentEndpoint(generation);
+    final sessionGeneration = session.generation;
     final inFlight = _refreshInFlight;
-    if (inFlight != null && inFlight.generation == generation) {
+    if (inFlight != null &&
+        inFlight.generation == generation &&
+        inFlight.sessionGeneration == sessionGeneration) {
       return inFlight.future;
     }
 
     final refresh = _refreshTokenOnce(generation);
-    _refreshInFlight = (generation: generation, future: refresh);
+    _refreshInFlight = (
+      generation: generation,
+      sessionGeneration: sessionGeneration,
+      future: refresh,
+    );
     try {
       return await refresh;
     } finally {
@@ -641,6 +687,7 @@ class SyncTvApiClient {
   }
 
   Future<bool> _refreshTokenOnce(int generation) async {
+    final sessionGeneration = session.generation;
     try {
       _ensureCurrentEndpoint(generation);
       final refreshToken = session.refreshToken;
@@ -651,10 +698,14 @@ class SyncTvApiClient {
         client.RefreshTokenRequest(refreshToken: refreshToken),
       );
       _ensureCurrentEndpoint(generation);
+      session.ensureCurrent(sessionGeneration);
       await onTokenRefresh?.call(generation);
       _ensureCurrentEndpoint(generation);
+      session.ensureCurrent(sessionGeneration);
       return session.hasAccessToken;
     } on SyncTvStaleEndpointException {
+      rethrow;
+    } on SyncTvStaleSessionException {
       rethrow;
     } catch (_) {
       return false;
@@ -976,27 +1027,15 @@ class SyncTvApiClient {
     required Uri uri,
   }) {
     final responseBody = response.body.trim();
-    var message = responseBody.isEmpty
-        ? 'HTTP ${response.statusCode}'
-        : response.body;
+    // Proxies and wrong endpoints may return entire HTML/debug documents.
+    // Only the API's structured message belongs in user-facing errors.
+    var message = 'HTTP ${response.statusCode}';
     int? code;
     int? grpcCode;
     String? requestId;
     oauth2_enum.OAuth2Operation? oauth2Operation;
     try {
-      if (responseBody.isEmpty) {
-        return SyncTvApiException(
-          message,
-          statusCode: response.statusCode,
-          code: code,
-          grpcCode: grpcCode,
-          requestId: requestId,
-          oauth2Operation: oauth2Operation,
-          requestMethod: method,
-          requestUri: uri,
-        );
-      }
-      final decoded = jsonDecode(response.body);
+      final decoded = responseBody.isEmpty ? null : jsonDecode(responseBody);
       if (decoded is Map<String, dynamic>) {
         message = _stringValue(decoded['message']) ?? message;
         grpcCode = _intValue(decoded['code']);
@@ -1016,8 +1055,8 @@ class SyncTvApiClient {
           }
         }
       }
-    } catch (e) {
-      debugPrint('API error response parse failed: $e');
+    } on FormatException {
+      // An unstructured error response uses the HTTP status fallback.
     }
     return SyncTvApiException(
       message,
@@ -1032,8 +1071,8 @@ class SyncTvApiClient {
   }
 
   String? _stringValue(Object? value) {
-    if (value == null) return null;
-    final text = value.toString();
+    if (value is! String) return null;
+    final text = value.trim();
     return text.isEmpty ? null : text;
   }
 
@@ -1063,19 +1102,23 @@ class SyncTvApiClient {
     Map<String, Object?> query = const {},
   }) async* {
     final generation = _endpointGeneration;
+    final sessionGeneration = session.generation;
     var request = _sseRequest(path, query, generation);
     var response = await _http.send(request);
     _ensureCurrentEndpoint(generation);
+    session.ensureCurrent(sessionGeneration);
     var refreshedSession = false;
     var authErrorNotified = false;
     if (_shouldRefresh(response, auth: true, path: path)) {
       final refreshed = await _tryRefreshToken(generation);
       _ensureCurrentEndpoint(generation);
+      session.ensureCurrent(sessionGeneration);
       if (refreshed) {
         refreshedSession = true;
         request = _sseRequest(path, query, generation);
         response = await _http.send(request);
         _ensureCurrentEndpoint(generation);
+        session.ensureCurrent(sessionGeneration);
       } else {
         _notifyAuthError(generation);
         authErrorNotified = true;
@@ -1098,7 +1141,12 @@ class SyncTvApiClient {
       );
     }
 
-    yield* _decodeSseStream(response.stream, create, generation);
+    yield* _decodeSseStream(
+      response.stream,
+      create,
+      generation,
+      sessionGeneration,
+    );
   }
 
   http.Request _sseRequest(
@@ -1117,12 +1165,14 @@ class SyncTvApiClient {
     Stream<List<int>> stream,
     T Function() create,
     int generation,
+    int sessionGeneration,
   ) async* {
     var eventName = '';
     final dataLines = <String>[];
     await for (final line
         in stream.transform(utf8.decoder).transform(const LineSplitter())) {
       _ensureCurrentEndpoint(generation);
+      session.ensureCurrent(sessionGeneration);
       if (line.isEmpty) {
         final event = _decodeSseEvent(eventName, dataLines, create);
         eventName = '';
@@ -1141,6 +1191,7 @@ class SyncTvApiClient {
     }
 
     _ensureCurrentEndpoint(generation);
+    session.ensureCurrent(sessionGeneration);
     final event = _decodeSseEvent(eventName, dataLines, create);
     if (event != null) yield event;
   }
@@ -1333,8 +1384,9 @@ class SyncTvApiClient {
   void _storeLogin(
     GeneratedMessage response,
     String accessToken,
-    String refreshToken,
-  ) {
+    String refreshToken, {
+    bool isRefresh = false,
+  }) {
     final generation = _responseGenerations[response];
     if (generation == null) {
       throw StateError(
@@ -1346,6 +1398,7 @@ class SyncTvApiClient {
     session.updateAccountTokens(
       accessToken: accessToken,
       refreshToken: refreshToken,
+      isRefresh: isRefresh,
     );
   }
 
@@ -1365,8 +1418,9 @@ class SyncTvApiClient {
 
   int _requestGeneration() => _endpointGeneration;
 
-  void _clearSessionForGeneration(int generation) {
+  void _clearSessionForGeneration(int generation, int sessionGeneration) {
     _ensureCurrentEndpoint(generation);
+    session.ensureCurrent(sessionGeneration);
     session.clear();
   }
 }
@@ -1464,7 +1518,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       version: room.version.toInt(),
       creatorStatus: room.creatorStatus,
       coverUrl: resolveResourceUrl(room.hasCover() ? room.cover.url : ''),
-      needPassword: settings['requirePassword'] == true,
+      needPassword: room.passwordEnabled,
       needVerify: settings['requireApproval'] == true,
       guestCanPause: true,
       guestCanAdd: true,
@@ -1498,7 +1552,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       isBanned: room.isBanned,
       availability: room.availability,
       version: room.version.toInt(),
-      needPassword: settings['requirePassword'] == true,
+      needPassword: room.passwordEnabled,
       needVerify: settings['requireApproval'] == true,
       guestCanPause: true,
       guestCanAdd: true,

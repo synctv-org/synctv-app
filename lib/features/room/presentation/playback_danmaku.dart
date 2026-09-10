@@ -9,6 +9,52 @@ import 'package:synctv_app/features/room/domain/chat_reactions.dart';
 typedef PlaybackDanmakuMessageLoader =
     Future<List<RoomChatMessageInfo>> Function(PlaybackDanmakuQuery query);
 
+/// Serializes playback polling and prevents failed requests from retrying on
+/// every player position notification.
+class PlaybackDanmakuLoader {
+  PlaybackDanmakuLoader({DateTime Function()? now})
+    : _now = now ?? DateTime.now;
+
+  final DateTime Function() _now;
+  bool _loading = false;
+  String? _failedSource;
+  DateTime? _retryAt;
+
+  Future<PlaybackDanmakuFetchResult?> load({
+    required bool canViewChatHistory,
+    required PlaybackDanmakuMessageLoader loadMessages,
+    required String roomId,
+    required RoomMediaEntry? entry,
+    required double positionSeconds,
+  }) async {
+    if (!canViewChatHistory || _loading) return null;
+    final source = playbackDanmakuSourceKey(entry);
+    if (source == _failedSource &&
+        _retryAt != null &&
+        _now().isBefore(_retryAt!)) {
+      return null;
+    }
+    _loading = true;
+    try {
+      final result = await fetchPlaybackDanmakuWindow(
+        loadMessages: loadMessages,
+        roomId: roomId,
+        entry: entry,
+        positionSeconds: positionSeconds,
+      );
+      _failedSource = null;
+      _retryAt = null;
+      return result;
+    } catch (_) {
+      _failedSource = source;
+      _retryAt = _now().add(const Duration(seconds: 30));
+      rethrow;
+    } finally {
+      _loading = false;
+    }
+  }
+}
+
 class PlaybackDanmakuQuery {
   const PlaybackDanmakuQuery({
     required this.roomId,

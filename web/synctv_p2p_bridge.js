@@ -2,8 +2,9 @@
 
 (() => {
   const DB_NAME = 'synctv-p2p-media';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   const STORE = 'pieces';
+  const METADATA_INDEX = 'namespaceAccessSize';
   let requestHandler = null;
   let databasePromise = null;
   const cacheTails = new Map();
@@ -39,40 +40,89 @@
 
   async function registerWorker() {
     if (!serviceWorkerSupported) return false;
-    try {
-      await navigator.serviceWorker.register('/synctv_service_worker.js', {
-        scope: '/',
-        updateViaCache: 'none',
-      });
-      await navigator.serviceWorker.ready;
-      if (navigator.serviceWorker.controller) return true;
-      return await new Promise((resolve) => {
-        const timeout = setTimeout(() => resolve(false), 5000);
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          clearTimeout(timeout);
-          resolve(Boolean(navigator.serviceWorker.controller));
-        }, { once: true });
-      });
-    } catch (error) {
-      console.warn('SyncTV service worker registration failed:', error);
-      return false;
-    }
+    return await new Promise((resolve) => {
+      const worker = navigator.serviceWorker;
+      let settled = false;
+      const finish = (ready) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        worker.removeEventListener('controllerchange', onControllerChange);
+        resolve(ready);
+      };
+      const onControllerChange = () => {
+        if (worker.controller) finish(true);
+      };
+      // Registration and activation can both remain pending indefinitely.
+      const timeout = setTimeout(() => finish(false), 5000);
+      (async () => {
+        try {
+          await worker.register('/synctv_service_worker.js', {
+            scope: '/',
+            updateViaCache: 'none',
+          });
+          if (settled) return;
+          await worker.ready;
+          if (settled) return;
+          worker.addEventListener('controllerchange', onControllerChange);
+          onControllerChange();
+        } catch (error) {
+          if (settled) return;
+          console.warn('SyncTV service worker registration failed:', error);
+          finish(false);
+        }
+      })();
+    });
   }
 
   function openDatabase() {
     if (databasePromise) return databasePromise;
-    databasePromise = new Promise((resolve, reject) => {
+    const opening = new Promise((resolve, reject) => {
+      let settled = false;
       const request = indexedDB.open(DB_NAME, DB_VERSION);
+      const fail = (error) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+      };
       request.onupgradeneeded = () => {
         const database = request.result;
-        const store = database.createObjectStore(STORE, { keyPath: 'id' });
-        store.createIndex('namespace', 'namespace', { unique: false });
+        const store = database.objectStoreNames.contains(STORE)
+          ? request.transaction.objectStore(STORE)
+          : database.createObjectStore(STORE, { keyPath: 'id' });
+        if (!store.indexNames.contains('namespace')) {
+          store.createIndex('namespace', 'namespace', { unique: false });
+        }
+        if (!store.indexNames.contains(METADATA_INDEX)) {
+          store.createIndex(METADATA_INDEX, ['namespace', 'lastAccessed', 'size']);
+        }
       };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-      request.onblocked = () => reject(new Error('P2P cache database upgrade is blocked.'));
+      request.onsuccess = () => {
+        const database = request.result;
+        // An open request cannot be cancelled after reporting a blocked upgrade.
+        if (settled) {
+          database.close();
+          return;
+        }
+        settled = true;
+        const forget = () => {
+          if (databasePromise === opening) databasePromise = null;
+        };
+        database.onversionchange = () => {
+          database.close();
+          forget();
+        };
+        database.onclose = forget;
+        resolve(database);
+      };
+      request.onerror = () => fail(request.error || new Error('P2P cache database could not be opened.'));
+      request.onblocked = () => fail(new Error('P2P cache database upgrade is blocked.'));
     });
-    return databasePromise;
+    databasePromise = opening;
+    opening.catch(() => {
+      if (databasePromise === opening) databasePromise = null;
+    });
+    return opening;
   }
 
   function requestResult(request) {
@@ -93,16 +143,36 @@
   function enqueueCache(namespace, operation) {
     const previous = cacheTails.get(namespace) || Promise.resolve();
     const current = previous.catch(() => {}).then(operation);
-    const tail = current.finally(() => {
+    const cleanup = () => {
       if (cacheTails.get(namespace) === tail) cacheTails.delete(namespace);
-    });
+    };
+    const tail = current.then(cleanup, cleanup);
     cacheTails.set(namespace, tail);
     return current;
   }
 
   async function cacheEntries(namespace, transaction) {
-    const index = transaction.objectStore(STORE).index('namespace');
-    return await requestResult(index.getAll(IDBKeyRange.only(namespace)));
+    const index = transaction.objectStore(STORE).index(METADATA_INDEX);
+    // Index keys expose eviction metadata without cloning the stored media bytes.
+    const range = IDBKeyRange.bound([namespace], [namespace, []]);
+    return await new Promise((resolve, reject) => {
+      const entries = [];
+      const request = index.openKeyCursor(range);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) {
+          resolve(entries);
+          return;
+        }
+        entries.push({
+          id: cursor.primaryKey,
+          lastAccessed: cursor.key[1],
+          size: cursor.key[2],
+        });
+        cursor.continue();
+      };
+    });
   }
 
   async function evict(namespace, maxBytes, ttlMs) {
@@ -134,6 +204,9 @@
   window.SyncTvP2pBridge = Object.freeze({
     ready: () => workerReady,
     setRequestHandler: (handler) => { requestHandler = handler || null; },
+    clearRequestHandler: (handler) => {
+      if (requestHandler === handler) requestHandler = null;
+    },
     cacheGet: (namespace, key, ttlMs) => enqueueCache(namespace, async () => {
       const database = await openDatabase();
       const transaction = database.transaction(STORE, 'readwrite');
@@ -151,17 +224,22 @@
       return new Uint8Array(entry.bytes);
     }),
     cachePut: (namespace, key, bytes, maxBytes, ttlMs) => enqueueCache(namespace, async () => {
-      if (bytes.byteLength > maxBytes) return await evict(namespace, maxBytes, ttlMs);
       const database = await openDatabase();
       const transaction = database.transaction(STORE, 'readwrite');
-      transaction.objectStore(STORE).put({
-        id: `${namespace}|${key}`,
-        namespace,
-        key,
-        bytes: bytes.slice().buffer,
-        size: bytes.byteLength,
-        lastAccessed: Date.now(),
-      });
+      const store = transaction.objectStore(STORE);
+      const id = `${namespace}|${key}`;
+      if (bytes.byteLength > maxBytes) {
+        store.delete(id);
+      } else {
+        store.put({
+          id,
+          namespace,
+          key,
+          bytes: bytes.slice().buffer,
+          size: bytes.byteLength,
+          lastAccessed: Date.now(),
+        });
+      }
       await transactionDone(transaction);
       return await evict(namespace, maxBytes, ttlMs);
     }),

@@ -10,18 +10,153 @@ class _AdminPanelCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppPanelSurface(
       margin: const EdgeInsets.only(bottom: 12),
-      color: isDark ? Colors.grey.shade900 : Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
-        ),
-      ],
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       child: child,
     );
   }
+}
+
+class _AdminRecordTile extends StatelessWidget {
+  const _AdminRecordTile({
+    required this.prefix,
+    required this.title,
+    required this.subtitle,
+    required this.actions,
+    required this.contentPadding,
+  });
+
+  final Widget prefix;
+  final Widget title;
+  final Widget subtitle;
+  final List<Widget> actions;
+  final EdgeInsets contentPadding;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+      final compact = constraints.maxWidth < 760 * math.max(1, textScale);
+      final content = Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          prefix,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [title, subtitle],
+            ),
+          ),
+        ],
+      );
+      final controls = Wrap(spacing: 4, runSpacing: 4, children: actions);
+      return Padding(
+        padding: contentPadding,
+        child: compact
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [content, const SizedBox(height: 12), controls],
+              )
+            : Row(
+                children: [
+                  Expanded(child: content),
+                  const SizedBox(width: 16),
+                  controls,
+                ],
+              ),
+      );
+    },
+  );
+}
+
+class _AdminBatchBar extends StatelessWidget {
+  const _AdminBatchBar({
+    required this.label,
+    required this.onClear,
+    required this.onBan,
+    required this.onDelete,
+    this.banning = false,
+    this.deleting = false,
+  });
+
+  final String label;
+  final VoidCallback onClear;
+  final VoidCallback? onBan;
+  final VoidCallback? onDelete;
+  final bool banning;
+  final bool deleting;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+    child: Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        AppBadge(icon: Icons.checklist_rounded, label: Text(label)),
+        AppActionButton(
+          onPressed: onClear,
+          label: context.l10n.clear,
+          style: AppActionButtonStyle.text,
+        ),
+        AppActionButton(
+          onPressed: onBan,
+          loading: banning,
+          icon: Icons.block_rounded,
+          label: context.l10n.ban,
+          style: AppActionButtonStyle.tonal,
+        ),
+        AppActionButton(
+          onPressed: onDelete,
+          loading: deleting,
+          icon: Icons.delete_outline_rounded,
+          label: context.l10n.delete,
+          style: AppActionButtonStyle.destructive,
+        ),
+      ],
+    ),
+  );
+}
+
+class _AdminPagedList extends StatelessWidget {
+  const _AdminPagedList({
+    required this.header,
+    required this.loading,
+    required this.itemCount,
+    required this.itemBuilder,
+    required this.emptyMessage,
+  });
+
+  final List<Widget> header;
+  final bool loading;
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+  final String emptyMessage;
+
+  @override
+  Widget build(BuildContext context) => CustomScrollView(
+    slivers: [
+      for (final child in header) SliverToBoxAdapter(child: child),
+      if (loading || itemCount == 0)
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: loading
+              ? const AppLoadingIndicator()
+              : AppEmptyMessage(message: emptyMessage),
+        )
+      else
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          sliver: SliverList.builder(
+            itemCount: itemCount,
+            itemBuilder: itemBuilder,
+          ),
+        ),
+    ],
+  );
 }
 
 class _AdminPager extends StatelessWidget {
@@ -134,6 +269,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
   final List<RoomChatMessageInfo> _messages = [];
   bool _loading = true;
   bool _loadingMore = false;
+  int _historyGeneration = 0;
   String _nextCursor = '';
   String? _highlightedMessageId;
 
@@ -150,32 +286,42 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
   }
 
   Future<void> _loadInitial() async {
+    final generation = ++_historyGeneration;
     setState(() {
       _loading = true;
+      _loadingMore = false;
       _messages.clear();
       _messageIndex.clear();
       _moderationOptimism.clearServerMessages();
       _nextCursor = '';
     });
-    await _loadPage(cursor: '');
-    if (mounted) setState(() => _loading = false);
+    await _loadPage(cursor: '', generation: generation);
+    if (mounted && generation == _historyGeneration) {
+      setState(() => _loading = false);
+    }
   }
 
   Future<void> _loadMore() async {
-    if (_nextCursor.isEmpty || _loadingMore) return;
+    if (_loading || _nextCursor.isEmpty || _loadingMore) return;
+    final generation = _historyGeneration;
     setState(() => _loadingMore = true);
-    await _loadPage(cursor: _nextCursor);
-    if (mounted) setState(() => _loadingMore = false);
+    await _loadPage(cursor: _nextCursor, generation: generation);
+    if (mounted && generation == _historyGeneration) {
+      setState(() => _loadingMore = false);
+    }
   }
 
-  Future<void> _loadPage({required String cursor}) async {
+  Future<void> _loadPage({
+    required String cursor,
+    required int generation,
+  }) async {
     try {
       final page = await adminGateway.getChatHistory(
         widget.room.roomId,
         limit: 40,
         cursor: cursor,
       );
-      if (!mounted) return;
+      if (!mounted || generation != _historyGeneration) return;
       setState(() {
         for (final message in page.messages) {
           final displayMessage = _moderationOptimism.recordServerMessage(
@@ -192,7 +338,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
         _nextCursor = page.nextCursor;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || generation != _historyGeneration) return;
       AppNotifications.showError(
         context,
         context.l10n.loadChatHistoryFailed('$e'),
@@ -385,6 +531,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
         messageId: message.id,
         reason: 'chat_moderation',
       );
+      _moderationOptimism.accept(intentId);
     } catch (error, stackTrace) {
       debugPrint('Failed to submit chat moderation: $error\n$stackTrace');
       _discardOptimisticModeration(intentId);
@@ -563,19 +710,20 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-              child: Row(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   AppBadge(
                     icon: Icons.message_outlined,
                     label: Text(context.l10n.messagesLoaded(_messages.length)),
                   ),
-                  const SizedBox(width: 8),
                   if (_nextCursor.isNotEmpty)
                     AppBadge(
                       icon: Icons.more_horiz_rounded,
                       label: Text(context.l10n.olderMessagesAvailable),
                     ),
-                  const Spacer(),
                   AppIconButton(
                     tooltip: context.l10n.refresh,
                     icon: Icons.refresh_rounded,
@@ -992,7 +1140,7 @@ class _AdminChatImageGrid extends StatelessWidget {
       runSpacing: 8,
       children: images.map((image) {
         final url = context.resourceUrlResolver.resolve(image.url);
-        return AppImageThumbnail(
+        return AppImagePreview(
           url: url,
           width: 116,
           height: 86,
@@ -1030,28 +1178,22 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 156,
-      child: _AdminPanelCard(
-        isDark: isDark,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: color),
-              const SizedBox(height: 12),
-              Text(
-                value.toString(),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(label, style: TextStyle(color: Theme.of(context).hintColor)),
-            ],
-          ),
+    return _AdminPanelCard(
+      isDark: isDark,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 12),
+            Text(
+              value.toString(),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 4),
+            Text(label, style: TextStyle(color: Theme.of(context).hintColor)),
+          ],
         ),
       ),
     );
@@ -1155,22 +1297,6 @@ String _roomMemberRoleText(
 }
 
 enum _RoomPasswordAction { keep, update, clear }
-
-enum _PermissionOverrideMode { inherit, allow, deny }
-
-class _PermissionOverrideResult {
-  final int addedPermissions;
-  final int removedPermissions;
-  final int adminAddedPermissions;
-  final int adminRemovedPermissions;
-
-  const _PermissionOverrideResult({
-    required this.addedPermissions,
-    required this.removedPermissions,
-    required this.adminAddedPermissions,
-    required this.adminRemovedPermissions,
-  });
-}
 
 Widget _closeButton(BuildContext context) {
   return AppActionButton(

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:synctv_app/core/media/local_image_upload.dart';
 import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/contracts/admin_models.dart';
@@ -71,13 +72,16 @@ class SyncTvService {
   static SyncTvApiClient get _api => _runtime.api;
   static SyncTvDomainServices _domains = _createDomains();
   static int _serverTimeSyncRevision = 0;
+  static bool _initialized = false;
 
   static Stream<void> get onAuthError => _runtime.onAuthError;
 
   static Future<void> init() async {
     await _runtime.init();
+    if (_initialized) return;
     _domains = _createDomains();
     _invalidateServerTime();
+    _initialized = true;
   }
 
   static SyncTvDomainServices _createDomains() {
@@ -393,12 +397,14 @@ class SyncTvService {
       final response = await getServerTime(clientSentAtNanos: sentAt)
           .timeout(_serverTimeSyncTimeout);
       final receivedAt = SyncedClock.localUnixNanos();
+      // Compare the protocol value before lossy integer conversion on the Web.
       if (revision != _serverTimeSyncRevision ||
-          !_api.isEndpointGenerationCurrent(endpointGeneration)) {
+          !_api.isEndpointGenerationCurrent(endpointGeneration) ||
+          response.clientSentAtNanos != Int64(sentAt)) {
         return;
       }
       SyncedClock.updateFromServerTime(
-        clientSentAtNanos: response.clientSentAtNanos.toInt(),
+        clientSentAtNanos: sentAt,
         clientReceivedAtNanos: receivedAt,
         serverReceivedAtNanos: response.serverReceivedAtNanos.toInt(),
         serverSentAtNanos: response.serverSentAtNanos.toInt(),
@@ -582,12 +588,14 @@ class SyncTvService {
   }
 
   static Future<UserNotificationItem> getNotification(
-    int notificationId,
+    String notificationId,
   ) async {
     return _domains.notifications.getNotification(notificationId);
   }
 
-  static Future<void> markNotificationsAsRead(List<int> notificationIds) async {
+  static Future<void> markNotificationsAsRead(
+    List<String> notificationIds,
+  ) async {
     await _domains.notifications.markNotificationsAsRead(notificationIds);
   }
 
@@ -3485,7 +3493,7 @@ class SyncTvService {
     String targetUserId = '',
     String targetMemberRoomId = '',
     String targetMemberUserId = '',
-    int targetChatMessageId = 0,
+    String targetChatMessageId = '0',
     admin_enum.ContentReportScope scope =
         admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED,
     String search = '',
@@ -3533,7 +3541,7 @@ class SyncTvService {
         .ContentReportTargetType
         .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
     String targetMemberUserId = '',
-    int targetChatMessageId = 0,
+    String targetChatMessageId = '0',
     String search = '',
   }) {
     return _domains.admin.listRoomContentReportsPage(

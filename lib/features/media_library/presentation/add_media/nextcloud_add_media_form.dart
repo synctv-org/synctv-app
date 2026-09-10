@@ -60,6 +60,7 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   int _page = 1;
   bool _hasMore = false;
   bool _loading = false;
+  int _loadGeneration = 0;
   List<NextcloudFileItemInfo> _items = const [];
   provider_common.DiscoveredSource? _listSource;
   source_enum.PlaybackProxyMode _proxyMode =
@@ -79,9 +80,15 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
   @override
   void didUpdateWidget(covariant NextcloudAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
-        widget.binds.isNotEmpty) {
-      _bind = widget.binds.first;
+    if (_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) {
+      ++_loadGeneration;
+      _loading = false;
+      _bind = widget.binds.firstOrNull;
+      _path = '';
+      _page = 1;
+      _items = const [];
+      _listSource = null;
+      _selection.clear();
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
   }
@@ -405,7 +412,8 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
 
   Future<void> _load() async {
     final bind = _bind;
-    if (bind == null || _loading || !_canLoad) return;
+    if (!mounted || bind == null || !_canLoad) return;
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _listSource = null;
@@ -421,7 +429,7 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
         _page,
         _pageSize,
       );
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _items = result.items;
         _page = result.page;
@@ -429,9 +437,13 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
         _listSource = result.source;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted && generation == _loadGeneration) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loading = false);
+      }
     }
   }
 

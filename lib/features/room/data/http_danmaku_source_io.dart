@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
+import 'package:synctv_app/features/room/data/danmaku_event_decoder.dart';
 
 final class HttpDanmakuSource implements DanmakuSource {
   const HttpDanmakuSource();
@@ -85,11 +86,8 @@ final class HttpDanmakuSource implements DanmakuSource {
         throw HttpException(response.statusCode);
       }
       try {
-        await for (final line
-            in response.stream
-                .transform(utf8.decoder)
-                .transform(const LineSplitter())) {
-          if (line.startsWith('data: ')) yield line.substring(6);
+        await for (final data in decodeDanmakuEvents(response.stream)) {
+          yield data;
         }
       } on http.ClientException {
         // The application controller owns reconnection after an SSE response

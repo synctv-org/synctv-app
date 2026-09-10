@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
+import 'package:synctv_app/core/identifiers/event_sequence.dart';
 import 'package:protobuf/protobuf.dart';
 import 'package:synctv_app/contracts/playback_client_profile.dart';
 import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
@@ -1088,14 +1089,12 @@ class RoomRealtimeCodec {
   }
 
   static Int64? _watchSequence(String version) {
-    if (version.isEmpty) return null;
-    final parsed = int.tryParse(version);
-    return parsed == null ? null : Int64(parsed);
+    return parseEventSequence(version);
   }
 
   static String _cursorVersion(client.EventCursor cursor) {
-    final sequence = cursor.sequence.toInt();
-    return sequence == 0 ? cursor.eventId : sequence.toString();
+    final sequence = cursor.sequence;
+    return sequence == Int64.ZERO ? cursor.eventId : sequence.toString();
   }
 
   static RoomMediaLibraryPage _mediaLibraryPageFromProto(

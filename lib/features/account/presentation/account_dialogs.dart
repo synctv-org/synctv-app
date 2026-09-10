@@ -23,8 +23,9 @@ class _TotpSetupDialogState extends State<_TotpSetupDialog> {
   }
 
   void _submit() {
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     final code = _codeController.text.trim();
-    if (code.length != 6 || int.tryParse(code) == null) {
+    if (!RegExp(r'^[0-9]{6}$').hasMatch(code)) {
       AppNotifications.showWarning(
         context,
         context.l10n.enterAuthenticatorCode,
@@ -114,7 +115,7 @@ class _TotpRecoveryCodesDialog extends StatelessWidget {
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
-          child: Padding(
+          child: AppSingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -122,7 +123,7 @@ class _TotpRecoveryCodesDialog extends StatelessWidget {
               children: [
                 Text(
                   context.l10n.saveRecoveryCodes,
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -138,16 +139,33 @@ class _TotpRecoveryCodesDialog extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
-                  child: AppSelectableText(
-                    codes.join('\n'),
-                    monospace: true,
-                    style: const TextStyle(height: 1.6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var index = 0; index < codes.length; index++) ...[
+                        if (index > 0)
+                          AppDivider(
+                            height: 24,
+                            thickness: 1,
+                            color: theme.colorScheme.outline,
+                          ),
+                        AppSelectableText(
+                          codes[index],
+                          monospace: true,
+                          style: const TextStyle(height: 1.6),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(height: 14),
-                Row(
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
                     AppActionButton(
+                      wrapLabel: true,
                       onPressed: () async {
                         await Clipboard.setData(
                           ClipboardData(text: codes.join('\n')),
@@ -163,9 +181,15 @@ class _TotpRecoveryCodesDialog extends StatelessWidget {
                       label: context.l10n.copyAll,
                       style: AppActionButtonStyle.outlined,
                     ),
-                    const Spacer(),
                     AppActionButton(
-                      onPressed: () => Navigator.pop(context),
+                      wrapLabel: true,
+                      onPressed: () {
+                        if (!context.mounted ||
+                            ModalRoute.of(context)?.isCurrent != true) {
+                          return;
+                        }
+                        Navigator.pop(context);
+                      },
                       icon: Icons.check_rounded,
                       label: context.l10n.savedRecoveryCodes,
                     ),
@@ -219,6 +243,7 @@ class _PasswordUpdateDialog extends StatefulWidget {
 }
 
 class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
+  final _formKey = GlobalKey<FormState>();
   late _PasswordUpdateMethod _method;
   final _currentPasswordController = TextEditingController();
   final _emailTokenController = TextEditingController();
@@ -245,13 +270,12 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
   }
 
   void _submit() {
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    if (!_formKey.currentState!.validate()) return;
     final newPassword = _newPasswordController.text;
-    final confirmPassword = _confirmPasswordController.text;
-    if (newPassword.isEmpty || newPassword != confirmPassword) return;
     switch (_method) {
       case _PasswordUpdateMethod.currentPassword:
         final currentPassword = _currentPasswordController.text;
-        if (currentPassword.isEmpty) return;
         Navigator.pop(
           context,
           _PasswordUpdateInput(
@@ -262,7 +286,6 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
         );
       case _PasswordUpdateMethod.emailToken:
         final emailToken = _emailTokenController.text.trim();
-        if (emailToken.isEmpty) return;
         Navigator.pop(
           context,
           _PasswordUpdateInput(
@@ -312,76 +335,93 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
       title: context.l10n.changePassword,
       subtitle: context.l10n.changePasswordDescription,
       maxWidth: 560,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (methods.length > 1) ...[
-            _DialogFieldGroup(
-              title: context.l10n.verificationMethod,
-              subtitle: methodDescriptions[_method] ?? '',
-              child: AppSingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: AppSegmentedControl<_PasswordUpdateMethod>(
-                  segments: methods,
-                  value: _method,
-                  onChanged: (selected) => setState(() => _method = selected),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (methods.length > 1) ...[
+              _DialogFieldGroup(
+                title: context.l10n.verificationMethod,
+                subtitle: methodDescriptions[_method] ?? '',
+                child: AppSingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: AppSegmentedControl<_PasswordUpdateMethod>(
+                    segments: methods,
+                    value: _method,
+                    onChanged: (selected) => setState(() => _method = selected),
+                  ),
                 ),
               ),
+              const SizedBox(height: 16),
+            ],
+            _DialogFieldGroup(
+              title: context.l10n.identityVerification,
+              children: [
+                if (_method == _PasswordUpdateMethod.currentPassword)
+                  _DialogTextField(
+                    controller: _currentPasswordController,
+                    validator: (value) => (value ?? '').isEmpty
+                        ? context.l10n.enterCurrentPassword
+                        : null,
+                    obscureText: true,
+                    autofocus: true,
+                    label: context.l10n.currentPassword,
+                    icon: Icons.lock_outline_rounded,
+                    textInputAction: TextInputAction.next,
+                  ),
+                if (_method == _PasswordUpdateMethod.emailToken)
+                  _DialogTextField(
+                    controller: _emailTokenController,
+                    validator: (value) => (value ?? '').trim().isEmpty
+                        ? context.l10n.enterEmailCode
+                        : null,
+                    autofocus: true,
+                    label: context.l10n.emailVerificationCode,
+                    icon: Icons.mark_email_read_outlined,
+                    textInputAction: TextInputAction.next,
+                  ),
+                if (_method == _PasswordUpdateMethod.passkey)
+                  _DialogNotice(
+                    icon: Icons.fingerprint_rounded,
+                    title: context.l10n.passkeyVerification,
+                    message: context.l10n.passkeyPasswordUpdateDescription,
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
-          ],
-          _DialogFieldGroup(
-            title: context.l10n.identityVerification,
-            children: [
-              if (_method == _PasswordUpdateMethod.currentPassword)
+            _DialogFieldGroup(
+              title: context.l10n.newPassword,
+              children: [
                 _DialogTextField(
-                  controller: _currentPasswordController,
+                  controller: _newPasswordController,
+                  validator: (value) => (value ?? '').isEmpty
+                      ? context.l10n.passwordRequired
+                      : null,
                   obscureText: true,
-                  autofocus: true,
-                  label: context.l10n.currentPassword,
-                  icon: Icons.lock_outline_rounded,
+                  label: context.l10n.newPassword,
+                  icon: Icons.lock_reset_rounded,
                   textInputAction: TextInputAction.next,
                 ),
-              if (_method == _PasswordUpdateMethod.emailToken)
+                const SizedBox(height: 12),
                 _DialogTextField(
-                  controller: _emailTokenController,
-                  autofocus: true,
-                  label: context.l10n.emailVerificationCode,
-                  icon: Icons.mark_email_read_outlined,
-                  textInputAction: TextInputAction.next,
+                  controller: _confirmPasswordController,
+                  validator: (value) => (value ?? '').isEmpty
+                      ? context.l10n.passwordRequired
+                      : value != _newPasswordController.text
+                      ? context.l10n.newPasswordsMismatch
+                      : null,
+                  obscureText: true,
+                  label: context.l10n.confirmNewPassword,
+                  icon: Icons.check_circle_outline_rounded,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _submit(),
                 ),
-              if (_method == _PasswordUpdateMethod.passkey)
-                _DialogNotice(
-                  icon: Icons.fingerprint_rounded,
-                  title: context.l10n.passkeyVerification,
-                  message: context.l10n.passkeyPasswordUpdateDescription,
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _DialogFieldGroup(
-            title: context.l10n.newPassword,
-            children: [
-              _DialogTextField(
-                controller: _newPasswordController,
-                obscureText: true,
-                label: context.l10n.newPassword,
-                icon: Icons.lock_reset_rounded,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 12),
-              _DialogTextField(
-                controller: _confirmPasswordController,
-                obscureText: true,
-                label: context.l10n.confirmNewPassword,
-                icon: Icons.check_circle_outline_rounded,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
       primaryLabel: context.l10n.savePassword,
       onPrimary: _submit,
@@ -437,6 +477,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
   }
 
   void _submit() {
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     final token = _tokenController.text.trim();
     final newPassword = _newPasswordController.text;
     final confirmPassword = _confirmPasswordController.text;
@@ -470,40 +511,27 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
         children: [
           _DialogFieldGroup(
             title: context.l10n.recipientEmail,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 420;
-                final emailField = _DialogReadOnlyField(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _DialogReadOnlyField(
                   label: context.l10n.email,
                   value: widget.email,
                   icon: Icons.email_outlined,
-                );
-                final sendButton = AppActionButton(
-                  onPressed: _requestResetEmail,
-                  loading: _requesting,
-                  icon: Icons.send_rounded,
-                  label: context.l10n.sendVerificationCode,
-                  style: AppActionButtonStyle.outlined,
-                );
-                if (compact) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      emailField,
-                      const SizedBox(height: 10),
-                      sendButton,
-                    ],
-                  );
-                }
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: emailField),
-                    const SizedBox(width: 10),
-                    SizedBox(height: 48, child: sendButton),
-                  ],
-                );
-              },
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: AppActionButton(
+                    wrapLabel: true,
+                    onPressed: _requestResetEmail,
+                    loading: _requesting,
+                    icon: Icons.send_rounded,
+                    label: context.l10n.send,
+                    style: AppActionButtonStyle.outlined,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -948,7 +976,7 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
       return;
     }
     if (method == _SensitiveOperationMethod.totp &&
-        _totpController.text.trim().length != 6) {
+        !RegExp(r'^[0-9]{6}$').hasMatch(_totpController.text.trim())) {
       AppNotifications.showWarning(
         context,
         context.l10n.enterAuthenticatorCode,
@@ -1375,6 +1403,11 @@ class _AccountActionDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    void dismiss() {
+      if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) return;
+      Navigator.pop(context);
+    }
+
     return AppDialogFrame(
       maxWidth: maxWidth,
       backgroundColor: Colors.transparent,
@@ -1384,91 +1417,91 @@ class _AccountActionDialog extends StatelessWidget {
         borderSide: BorderSide(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.72),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 12, 16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppIconBadge(
-                    icon: icon,
-                    color: theme.colorScheme.primary,
-                    size: 42,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        child: AppSingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 12, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
                       children: [
-                        Text(
-                          title,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        AppIconBadge(
+                          icon: icon,
+                          color: theme.colorScheme.primary,
+                          size: 42,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.62,
-                            ),
-                          ),
+                        const Spacer(),
+                        AppIconButton(
+                          tooltip: context.l10n.close,
+                          onPressed: dismiss,
+                          icon: Icons.close_rounded,
                         ),
                       ],
                     ),
-                  ),
-                  AppIconButton(
-                    tooltip: context.l10n.close,
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icons.close_rounded,
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.62,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Flexible(
-              child: AppSingleChildScrollView(
+              Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
                 child: content,
               ),
-            ),
-            AppPanelSurface(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.42,
-              ),
-              borderRadius: BorderRadius.zero,
-              border: Border(
-                top: BorderSide(
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.6,
+              AppPanelSurface(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.42,
+                ),
+                borderRadius: BorderRadius.zero,
+                border: Border(
+                  top: BorderSide(
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.6,
+                    ),
                   ),
                 ),
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AppActionButton(
+                      wrapLabel: true,
+                      onPressed: primaryLoading ? null : dismiss,
+                      label: context.l10n.cancel,
+                      style: AppActionButtonStyle.text,
+                    ),
+                    AppActionButton(
+                      wrapLabel: true,
+                      onPressed: onPrimary,
+                      loading: primaryLoading,
+                      icon: Icons.check_rounded,
+                      label: primaryLabel,
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                children: [
-                  const Spacer(),
-                  AppActionButton(
-                    onPressed: primaryLoading
-                        ? null
-                        : () => Navigator.pop(context),
-                    label: context.l10n.cancel,
-                    style: AppActionButtonStyle.text,
-                  ),
-                  const SizedBox(width: 10),
-                  AppActionButton(
-                    onPressed: onPrimary,
-                    loading: primaryLoading,
-                    icon: Icons.check_rounded,
-                    label: primaryLabel,
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1476,6 +1509,8 @@ class _AccountActionDialog extends StatelessWidget {
 }
 
 class _SingleTextInputDialog extends StatefulWidget {
+  final String? requiredError;
+  final Future<String?> Function(String value)? onSave;
   final String title;
   final String subtitle;
   final IconData icon;
@@ -1485,6 +1520,8 @@ class _SingleTextInputDialog extends StatefulWidget {
   final String primaryLabel;
 
   const _SingleTextInputDialog({
+    this.requiredError,
+    this.onSave,
     required this.title,
     required this.subtitle,
     required this.icon,
@@ -1499,6 +1536,9 @@ class _SingleTextInputDialog extends StatefulWidget {
 }
 
 class _SingleTextInputDialogState extends State<_SingleTextInputDialog> {
+  final _formKey = GlobalKey<FormState>();
+  bool _saving = false;
+  String? _saveError;
   late final TextEditingController _controller;
 
   @override
@@ -1513,7 +1553,30 @@ class _SingleTextInputDialogState extends State<_SingleTextInputDialog> {
     super.dispose();
   }
 
-  void _submit() => Navigator.pop(context, _controller.text.trim());
+  Future<void> _submit() async {
+    if (!mounted || _saving || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    _saveError = null;
+    if (!_formKey.currentState!.validate()) return;
+    final value = _controller.text.trim();
+    final save = widget.onSave;
+    if (save != null) {
+      setState(() => _saving = true);
+      final error = await save(value);
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _saveError = error;
+      });
+      if (error != null) {
+        _formKey.currentState!.validate();
+        return;
+      }
+      if (ModalRoute.of(context)?.isCurrent != true) return;
+    }
+    if (mounted) Navigator.pop(context, value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1522,15 +1585,22 @@ class _SingleTextInputDialogState extends State<_SingleTextInputDialog> {
       title: widget.title,
       subtitle: widget.subtitle,
       primaryLabel: widget.primaryLabel,
-      onPrimary: _submit,
-      content: _DialogTextField(
-        controller: _controller,
-        label: widget.label,
-        hintText: widget.hintText,
-        icon: widget.icon,
-        autofocus: true,
-        textInputAction: TextInputAction.done,
-        onSubmitted: (_) => _submit(),
+      onPrimary: _saving ? null : _submit,
+      primaryLoading: _saving,
+      content: Form(
+        key: _formKey,
+        child: _DialogTextField(
+          enabled: !_saving,
+          controller: _controller,
+          label: widget.label,
+          hintText: widget.hintText,
+          icon: widget.icon,
+          autofocus: true,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _submit(),
+          validator: (value) =>
+              (value ?? '').trim().isEmpty ? widget.requiredError : _saveError,
+        ),
       ),
     );
   }
@@ -1592,6 +1662,8 @@ class _DialogFieldGroup extends StatelessWidget {
 }
 
 class _DialogTextField extends StatelessWidget {
+  final bool enabled;
+  final FormFieldValidator<String>? validator;
   final TextEditingController controller;
   final String label;
   final String hintText;
@@ -1603,6 +1675,8 @@ class _DialogTextField extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
 
   const _DialogTextField({
+    this.enabled = true,
+    this.validator,
     required this.controller,
     required this.label,
     required this.icon,
@@ -1617,8 +1691,11 @@ class _DialogTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppTextField(
+      enabled: enabled,
+      validator: validator,
       controller: controller,
       label: label,
+      labelAbove: true,
       hintText: hintText.isEmpty ? null : hintText,
       prefixIcon: icon,
       autofocus: autofocus,
@@ -1646,7 +1723,13 @@ class _DialogReadOnlyField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppReadOnlyField(label: label, value: value, prefixIcon: icon);
+    return AppReadOnlyField(
+      label: label,
+      value: value,
+      prefixIcon: icon,
+      labelAbove: true,
+      maxLines: null,
+    );
   }
 }
 
@@ -1664,29 +1747,53 @@ class _DialogNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AppInfoBanner(
-      padding: const EdgeInsets.all(12),
-      icon: icon,
-      color: theme.colorScheme.primary,
-      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(
-        color: theme.colorScheme.primary.withValues(alpha: 0.18),
+    final heading = Text(
+      title,
+      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+    );
+    final description = Text(
+      message,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
       ),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      iconSize: 22,
-      title: Text(
-        title,
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-      message: Text(
-        message,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
-        ),
-      ),
+    );
+    final border = Border.all(
+      color: theme.colorScheme.primary.withValues(alpha: 0.18),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth <
+            MediaQuery.textScalerOf(context).scale(280)) {
+          return AppPanelSurface(
+            padding: const EdgeInsets.all(12),
+            color: theme.colorScheme.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: border,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: theme.colorScheme.primary, size: 22),
+                const SizedBox(height: 8),
+                heading,
+                const SizedBox(height: 2),
+                description,
+              ],
+            ),
+          );
+        }
+        return AppInfoBanner(
+          padding: const EdgeInsets.all(12),
+          icon: icon,
+          color: theme.colorScheme.primary,
+          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: border,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          iconSize: 22,
+          title: heading,
+          message: description,
+        );
+      },
     );
   }
 }

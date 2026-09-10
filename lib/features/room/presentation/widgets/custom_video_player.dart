@@ -14,6 +14,7 @@ import 'package:screen_brightness/screen_brightness.dart';
 import 'package:volume_controller/volume_controller.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/application/subtitle_source.dart';
+import 'package:synctv_app/features/room/application/subtitle_selection_controller.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/room/presentation/widgets/danmaku_overlay.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
@@ -396,6 +397,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final DanmakuController? danmakuController;
   final Map<String, dynamic>? subtitles;
   final String playbackResourceIdentity;
+  final SubtitleSelectionController? subtitleSelection;
   final PlaybackResourceLocalizer? resolveSubtitleResource;
   final VoidCallback? onSubtitleP2pDeactivated;
   final VoidCallback? onToggleFullScreen;
@@ -447,6 +449,7 @@ class CustomVideoPlayer extends StatefulWidget {
     this.danmakuController,
     this.subtitles,
     this.playbackResourceIdentity = '',
+    this.subtitleSelection,
     this.resolveSubtitleResource,
     this.onSubtitleP2pDeactivated,
     this.onToggleFullScreen,
@@ -587,7 +590,10 @@ class _PlayerIconButton extends StatelessWidget {
       onPressed: onPressed,
       padding: padding,
       constraints: const BoxConstraints(),
-      icon: Icon(icon),
+      icon: Semantics(
+        label: tooltip,
+        child: ExcludeSemantics(child: Icon(icon)),
+      ),
       style: IconButton.styleFrom(
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -603,14 +609,13 @@ class _PlayerIconButton extends StatelessWidget {
     if (constraints != null) {
       button = ConstrainedBox(constraints: constraints!, child: button);
     }
-    button = ExcludeSemantics(child: button);
-    return Semantics(
-      button: true,
-      enabled: onPressed != null,
-      label: tooltip,
-      onTap: onPressed,
-      child: showTooltip ? AppTooltip(message: tooltip, child: button) : button,
-    );
+    return showTooltip
+        ? AppTooltip(
+            message: tooltip,
+            excludeFromSemantics: true,
+            child: button,
+          )
+        : button;
   }
 }
 
@@ -1910,7 +1915,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   double _lastAudibleVolume = 1.0;
   Timer? _volumeOverlayHideTimer;
   final GlobalKey _volumeAnchorKey = GlobalKey();
-  final GlobalKey<_PlaybackSpeedMenuButtonState> _speedMenuKey = GlobalKey();
   OverlayEntry? _volumeOverlayEntry;
   bool _isVolumeButtonHovered = false;
   bool _isVolumeMenuHovered = false;
@@ -1970,7 +1974,28 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     widget.overlayPreferences?.addListener(_onOverlayPreferencesChanged);
     _restorePersistedVolume();
     _startHideTimer();
-    unawaited(_loadDefaultSubtitles());
+    widget.subtitleSelection?.addListener(_restoreSubtitleSelection);
+    _restoreSubtitleSelection();
+  }
+
+  void _restoreSubtitleSelection() {
+    final selection = widget.subtitleSelection?.selectionFor(
+      widget.playbackResourceIdentity,
+    );
+    _selectedSubtitleKey = selection?.key;
+    _subtitlesDisabled = selection?.disabled ?? false;
+    unawaited(_reloadSubtitleForPlaybackSelection());
+  }
+
+  void _selectSubtitle(String? key) {
+    final selection = widget.subtitleSelection;
+    if (selection != null) {
+      selection.select(widget.playbackResourceIdentity, key);
+    } else {
+      _selectedSubtitleKey = key;
+      _subtitlesDisabled = key == null;
+      unawaited(_reloadSubtitleForPlaybackSelection());
+    }
   }
 
   void _onDanmakuUpdate() {
@@ -2042,6 +2067,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       widget.browserAutoplay?.addListener(_onBrowserAutoplayChanged);
     }
 
+    if (widget.subtitleSelection != oldWidget.subtitleSelection) {
+      oldWidget.subtitleSelection?.removeListener(_restoreSubtitleSelection);
+      widget.subtitleSelection?.addListener(_restoreSubtitleSelection);
+      _restoreSubtitleSelection();
+    }
+
     final oldSubtitleDelivery = _subtitleDelivery(
       oldWidget.subtitles,
       _selectedSubtitleKey,
@@ -2054,8 +2085,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         oldSubtitleDelivery != null &&
         nextSubtitleDelivery != null &&
         oldSubtitleDelivery.swarmId != nextSubtitleDelivery.swarmId;
-    if (widget.playbackResourceIdentity != oldWidget.playbackResourceIdentity ||
-        subtitleResourceChanged) {
+    if (widget.playbackResourceIdentity != oldWidget.playbackResourceIdentity) {
+      _restoreSubtitleSelection();
+    } else if (subtitleResourceChanged) {
       unawaited(_reloadSubtitleForPlaybackSelection());
     } else if (widget.subtitles != oldWidget.subtitles &&
         !_subtitlesDisabled &&
@@ -2072,6 +2104,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   @override
   void dispose() {
+    widget.subtitleSelection?.removeListener(_restoreSubtitleSelection);
     if (widget.isFullScreen) {
       _applyFullScreenSystemUi(fullScreen: false);
     }
@@ -2108,22 +2141,18 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void _videoListener() {
     if (mounted) {
       _rememberAudibleVolume();
-      setState(() {});
-      if (_subtitleItems.isNotEmpty) {
-        final position = widget.controller.value.position;
-        try {
-          final current = _subtitleItems.firstWhere(
-            (item) => item.start <= position && item.end >= position,
-            orElse: () => _SubtitleItem(Duration.zero, Duration.zero, ''),
-          );
-          if (_currentSubtitle != current.text) {
-            _currentSubtitle = current.text;
-          }
-        } catch (_) {
-          // ignore any lookup errors
-        }
-      }
+      setState(_updateCurrentSubtitle);
     }
+  }
+
+  void _updateCurrentSubtitle() {
+    final position = widget.controller.value.position;
+    _currentSubtitle = _subtitleItems
+        .firstWhere(
+          (item) => item.start <= position && item.end >= position,
+          orElse: () => _SubtitleItem(Duration.zero, Duration.zero, ''),
+        )
+        .text;
   }
 
   Future<void> _reloadSubtitleForPlaybackSelection() async {
@@ -2245,7 +2274,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         }
 
         _subtitleLoaded = true;
-        if (mounted) setState(() {});
+        setState(_updateCurrentSubtitle);
       }
     } catch (e) {
       debugPrint('Failed to load subtitles: $e');
@@ -2778,6 +2807,34 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     ];
   }
 
+  Future<void> _showOverflowPlaybackSpeed() async {
+    final speed = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(context.l10n.playbackSpeed),
+        children: [
+          for (final option in _playbackSpeedOptions())
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(dialogContext).pop(option.speed),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 32,
+                    child: widget.controller.value.playbackSpeed == option.speed
+                        ? const Icon(Icons.check_rounded)
+                        : null,
+                  ),
+                  Text(option.label),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+    if (!mounted || speed == null) return;
+    await _setPlaybackSpeedFromUser(speed);
+  }
+
   Widget _buildSubtitleControl(double iconSize) {
     return _PlayerIconButton(
       key: const Key('playback_subtitles_button'),
@@ -3213,6 +3270,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyF && widget.onToggleFullScreen != null) {
+      widget.onToggleFullScreen?.call();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.escape &&
+        widget.isFullScreen &&
+        widget.onToggleFullScreen != null) {
       widget.onToggleFullScreen?.call();
       return KeyEventResult.handled;
     }
@@ -3652,10 +3715,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                   label: context.l10n.disableSubtitles,
                   selected: _subtitlesDisabled || _selectedSubtitleKey == null,
                   onPressed: () {
-                    _subtitlesDisabled = true;
-                    _selectedSubtitleKey = null;
-                    _clearSubtitles();
-                    widget.onSubtitleP2pDeactivated?.call();
+                    _selectSubtitle(null);
                     Navigator.pop(context);
                   },
                 ),
@@ -3666,7 +3726,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                     selected:
                         !_subtitlesDisabled && _selectedSubtitleKey == e.key,
                     onPressed: () {
-                      unawaited(_loadSubtitleByKey(e.key));
+                      _selectSubtitle(e.key);
                       Navigator.pop(context);
                     },
                   ),
@@ -4649,11 +4709,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                 widget.controller.value,
                                                 iconSize,
                                                 onChanged: onChanged,
-                                                key: _speedMenuKey,
                                               ),
-                                          onPressed: () => _speedMenuKey
-                                              .currentState
-                                              ?.openMenuFromOverflow(),
+                                          onPressed: () => unawaited(
+                                            _showOverflowPlaybackSpeed(),
+                                          ),
                                           switchValue: null,
                                           onSwitchChanged: null,
                                           dismissOnSwitch: false,
@@ -5314,10 +5373,6 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
     _menuOverlayEntry = entry;
     overlay.insert(entry);
     widget.onMenuVisibilityChanged(true);
-  }
-
-  void openMenuFromOverflow() {
-    _openMenu();
   }
 
   void _closeMenu() {

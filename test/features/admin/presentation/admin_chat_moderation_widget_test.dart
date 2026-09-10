@@ -20,50 +20,121 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
 import '../../../test_app.dart';
 
 void main() {
-  testWidgets('failed moderation submission restores optimistic messages', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1400, 1000));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    final gateway = _ChatModerationAdminGateway();
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        builder: (context, child) => DependencyScope<AdminGateway>(
-          value: gateway,
-          child: buildThemedTestApp(context, child),
+  for (final failOld in [false, true]) {
+    testWidgets('chat refresh ignores older pagination, failure=$failOld', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final gateway = _ChatModerationAdminGateway()..controlHistory = true;
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          builder: (context, child) => DependencyScope<AdminGateway>(
+            value: gateway,
+            child: buildThemedTestApp(context, child),
+          ),
+          home: const Scaffold(body: RoomManagementTab()),
         ),
-        home: const Scaffold(body: RoomManagementTab()),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(byAppTooltip('Chat history'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Load older messages'));
+      await tester.pump();
+      await tester.tap(byAppTooltip('Refresh').last);
+      await tester.pump();
+      gateway.freshHistory.complete(
+        const ChatHistoryPage(messages: [], nextCursor: ''),
+      );
+      await tester.pumpAndSettle();
+      if (failOld) {
+        gateway.olderHistory.completeError(StateError('stale history error'));
+      } else {
+        gateway.olderHistory.complete(
+          const ChatHistoryPage(
+            messages: [
+              RoomChatMessageInfo(
+                id: 'old',
+                roomId: 'room_test',
+                userId: 'user',
+                content: 'stale body',
+                timestamp: 1,
+              ),
+            ],
+            nextCursor: 'stale-cursor',
+          ),
+        );
+      }
+      await tester.pumpAndSettle();
+      expect(find.text('stale body'), findsNothing);
+      expect(find.text('Load older messages'), findsNothing);
+      expect(find.textContaining('stale history error'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+  for (final accepted in [false, true]) {
+    testWidgets('moderation restores server state, accepted=$accepted', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final gateway = _ChatModerationAdminGateway();
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          builder: (context, child) => DependencyScope<AdminGateway>(
+            value: gateway,
+            child: buildThemedTestApp(context, child),
+          ),
+          home: const Scaffold(body: RoomManagementTab()),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.tap(byAppTooltip('Chat history'));
-    await tester.pumpAndSettle();
-    expect(find.text('message body'), findsOneWidget);
+      await tester.tap(byAppTooltip('Chat history'));
+      await tester.pumpAndSettle();
+      expect(find.text('message body'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(AppActionButton, 'Delete'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(AppActionButton, 'Delete').last);
-    await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(AppActionButton, 'Delete'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(AppActionButton, 'Delete').last);
+      await tester.pumpAndSettle();
 
-    expect(find.text('This message was deleted'), findsOneWidget);
-    expect(find.text('message body'), findsNothing);
+      expect(find.text('This message was deleted'), findsOneWidget);
+      expect(find.text('message body'), findsNothing);
 
-    gateway.submission.completeError(StateError('queue unavailable'));
-    await tester.pumpAndSettle();
+      if (accepted) {
+        gateway.submission.complete();
+      } else {
+        gateway.submission.completeError(StateError('queue unavailable'));
+      }
+      await tester.pumpAndSettle();
 
-    expect(find.text('message body'), findsOneWidget);
-    expect(find.text('This message was deleted'), findsNothing);
-    expect(gateway.moderationCalls, 1);
-    await tester.pump(const Duration(seconds: 4));
-    expect(tester.takeException(), isNull);
-  });
+      if (accepted) {
+        expect(find.text('This message was deleted'), findsOneWidget);
+        await tester.tap(byAppTooltip('Refresh').last);
+        await tester.pumpAndSettle();
+        expect(gateway.historyCalls, 2);
+      }
+      expect(find.text('message body'), findsOneWidget);
+      expect(find.text('This message was deleted'), findsNothing);
+      expect(gateway.moderationCalls, 1);
+      await tester.pump(const Duration(seconds: 4));
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
 
 final class _ChatModerationAdminGateway implements AdminGateway {
+  bool controlHistory = false;
+  int historyCalls = 0;
+  final olderHistory = Completer<ChatHistoryPage>();
+  final freshHistory = Completer<ChatHistoryPage>();
   final Completer<void> submission = Completer<void>();
   int moderationCalls = 0;
 
@@ -115,7 +186,11 @@ final class _ChatModerationAdminGateway implements AdminGateway {
     List<client_enum.ChatMessageType> includeMessageTypes =
         chatTimelineMessageTypes,
   }) async {
-    return const ChatHistoryPage(
+    historyCalls++;
+    if (controlHistory && historyCalls > 1) {
+      return cursor.isEmpty ? freshHistory.future : olderHistory.future;
+    }
+    return ChatHistoryPage(
       messages: [
         RoomChatMessageInfo(
           id: '10',
@@ -127,7 +202,7 @@ final class _ChatModerationAdminGateway implements AdminGateway {
           version: 4,
         ),
       ],
-      nextCursor: '',
+      nextCursor: controlHistory ? 'older' : '',
     );
   }
 

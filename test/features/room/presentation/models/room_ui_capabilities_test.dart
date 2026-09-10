@@ -7,6 +7,35 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
 
 void main() {
   group('RoomUiCapabilities', () {
+    test(
+      'room chat switch blocks sending for members, creators and admins',
+      () {
+        for (final kind in ['member', 'creator', 'admin']) {
+          RoomUiCapabilities capabilities(bool enabled) => RoomUiCapabilities(
+            room: _room(creatorId: kind == 'creator' ? 'user-1' : 'creator'),
+            currentUser: _user(
+              role: kind == 'admin'
+                  ? common_enum.UserRole.USER_ROLE_ADMIN
+                  : null,
+            ),
+            selfMember: _member(
+              permissions:
+                  RoomEffectivePermissions.sendChatMessages |
+                  RoomEffectivePermissions.viewChatHistory,
+            ),
+            chatEnabled: enabled,
+          );
+          expect(
+            capabilities(false).canSendChatMessages,
+            isFalse,
+            reason: kind,
+          );
+          expect(capabilities(false).canViewChatHistory, isTrue, reason: kind);
+          expect(capabilities(true).canSendChatMessages, isTrue, reason: kind);
+        }
+      },
+    );
+
     test('uses the latest self member effective permissions', () {
       final restricted = _capabilities(
         permissions: RoomEffectivePermissions.viewChatHistory,

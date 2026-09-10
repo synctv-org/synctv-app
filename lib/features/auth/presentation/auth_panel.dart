@@ -18,6 +18,7 @@ import 'package:synctv_app/features/auth/presentation/auth_recovery_code_fallbac
 import 'package:synctv_app/features/auth/presentation/oauth_provider_widgets.dart';
 import 'package:synctv_app/core/presentation/widgets/synctv_brand_mark.dart';
 import 'package:synctv_app/features/auth/presentation/user_agreement_dialog.dart';
+import 'package:synctv_app/features/auth/presentation/password_reset_dialog.dart';
 
 class AuthPanel extends StatefulWidget {
   const AuthPanel({
@@ -112,6 +113,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   String? _oauthProvider;
   String _suggestedPasskeyName = '';
   int _oauthAttempt = 0;
+  bool _agreementDialogOpen = false;
 
   @override
   void initState() {
@@ -247,7 +249,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     _AuthAction action,
     Future<void> Function() operation,
   ) async {
-    if (_loading) return;
+    if (!mounted || _loading) return;
     setState(() => _activeAction = action);
     try {
       await operation();
@@ -285,8 +287,20 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             : context.l10n.registrationSubmittedWithId(reviewId);
         AppNotifications.showInfo(context, message);
       case Authenticated():
-        AppNotifications.dismissAll();
-        Navigator.pop(context, true);
+        _closeAuthenticatedRoute();
+    }
+  }
+
+  void _closeAuthenticatedRoute() {
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    if (route == null || !route.isActive) return;
+    AppNotifications.dismissAll();
+    final navigator = Navigator.of(context);
+    if (route.isCurrent) {
+      navigator.pop(true);
+    } else {
+      navigator.removeRoute(route, true);
     }
   }
 
@@ -358,10 +372,12 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       final start = await widget.gateway.startPasskeyLogin(
         loginSessionId: login.sessionId,
       );
+      if (!mounted) return;
       final credential = await widget.passkeyClient.getCredential(
         start.options,
         serverBaseUrl: widget.gateway.serverBaseUrl,
       );
+      if (!mounted) return;
       final result = await widget.gateway.finishPasskeyLogin(
         sessionId: start.sessionId,
         credential: credential,
@@ -473,10 +489,12 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         email: email,
         name: _passkeyNameController.text.trim(),
       );
+      if (!mounted) return;
       final credential = await widget.passkeyClient.createCredential(
         start.options,
         serverBaseUrl: widget.gateway.serverBaseUrl,
       );
+      if (!mounted) return;
       final result = await widget.gateway.finishPasskeyRegistration(
         sessionId: start.sessionId,
         credential: credential,
@@ -494,10 +512,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     }
     await _withLoading(_AuthAction.guestLogin, () async {
       await widget.gateway.createGuestSession(roomId);
-      if (mounted) {
-        AppNotifications.dismissAll();
-        Navigator.pop(context, true);
-      }
+      _closeAuthenticatedRoute();
     });
   }
 
@@ -637,14 +652,11 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(_AuthAction.mfaEmail, () async {
-      await widget.gateway.verifyMfaEmailCode(
+      final result = await widget.gateway.verifyMfaEmailCode(
         mfaSessionId: challenge.sessionId,
         emailToken: token,
       );
-      if (mounted) {
-        AppNotifications.dismissAll();
-        Navigator.pop(context, true);
-      }
+      _finishAuth(result);
     });
   }
 
@@ -657,26 +669,25 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     }
     await _withLoading(_AuthAction.mfaPasskey, () async {
       final start = await widget.gateway.startMfaPasskey(challenge.sessionId);
+      if (!mounted) return;
       final credential = await widget.passkeyClient.getCredential(
         start.options,
         serverBaseUrl: widget.gateway.serverBaseUrl,
       );
-      await widget.gateway.finishMfaPasskey(
+      if (!mounted) return;
+      final result = await widget.gateway.finishMfaPasskey(
         mfaSessionId: challenge.sessionId,
         passkeySessionId: start.passkeySessionId,
         credential: credential,
       );
-      if (mounted) {
-        AppNotifications.dismissAll();
-        Navigator.pop(context, true);
-      }
+      _finishAuth(result);
     });
   }
 
   Future<void> _submitMfaTotp() async {
     final challenge = _mfaChallenge;
     final code = _mfaTotpController.text.trim();
-    if (challenge == null || code.length != 6) {
+    if (challenge == null || !RegExp(r'^[0-9]{6}$').hasMatch(code)) {
       AppNotifications.showWarning(
         context,
         context.l10n.enterAuthenticatorCode,
@@ -684,14 +695,11 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(_AuthAction.mfaTotp, () async {
-      await widget.gateway.verifyMfaTotp(
+      final result = await widget.gateway.verifyMfaTotp(
         mfaSessionId: challenge.sessionId,
         code: code,
       );
-      if (mounted) {
-        AppNotifications.dismissAll();
-        Navigator.pop(context, true);
-      }
+      _finishAuth(result);
     });
   }
 
@@ -703,27 +711,21 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(_AuthAction.mfaRecoveryCode, () async {
-      await widget.gateway.verifyMfaRecoveryCode(
+      final result = await widget.gateway.verifyMfaRecoveryCode(
         mfaSessionId: challenge.sessionId,
         recoveryCode: code,
       );
-      if (mounted) {
-        AppNotifications.dismissAll();
-        Navigator.pop(context, true);
-      }
+      _finishAuth(result);
     });
   }
 
   Future<void> _resetPassword() async {
     if (!_ensureTermsAccepted()) return;
-    final reset =
-        await showAppDialog<({String email, String token, String password})>(
-          context: context,
-          builder: (context) => _PasswordResetDialog(
-            initialEmail: _loginIdentifierController.text.trim(),
-            gateway: widget.gateway,
-          ),
-        );
+    final reset = await showPasswordResetDialog(
+      context: context,
+      initialEmail: _loginIdentifierController.text.trim(),
+      gateway: widget.gateway,
+    );
     if (reset == null) return;
     await _withLoading(_AuthAction.passwordReset, () async {
       await _opaqueAuthenticator.resetWithEmailToken(
@@ -738,11 +740,19 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   Future<void> _showUserAgreement() async {
-    await showAppDialog<void>(
-      context: context,
-      builder: (context) =>
-          UserAgreementDialog(agreementContent: context.l10n.agreementContent),
-    );
+    if (!mounted || _agreementDialogOpen) return;
+    _agreementDialogOpen = true;
+    try {
+      final accepted = await showAppDialog<bool>(
+        context: context,
+        builder: (context) => UserAgreementDialog(
+          agreementContent: context.l10n.agreementContent,
+        ),
+      );
+      if (mounted && accepted == true) setState(() => _agreedToTerms = true);
+    } finally {
+      _agreementDialogOpen = false;
+    }
   }
 
   void _normalizeControllerSelection(TextEditingController controller) {
@@ -762,9 +772,20 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final size = media.size;
     final keyboardInset = media.viewInsets.bottom;
     final isDesktopSheet = size.width >= 720;
+    final scrollWholePanel =
+        media.textScaler.scale(14) > 21 || size.height - keyboardInset < 500;
+    Widget panelContent(List<Widget> children) {
+      final column = Column(mainAxisSize: MainAxisSize.min, children: children);
+      return scrollWholePanel
+          ? AppSingleChildScrollView(child: column)
+          : column;
+    }
+
+    Widget formContent(Widget child) =>
+        scrollWholePanel ? child : Flexible(fit: FlexFit.loose, child: child);
     final panelWidth = isDesktopSheet ? 520.0 : size.width;
     final maxPanelHeight = (size.height - keyboardInset - 24)
-        .clamp(360.0, isDesktopSheet ? 680.0 : size.height * 0.92)
+        .clamp(0.0, isDesktopSheet ? 680.0 : size.height * 0.92)
         .toDouble();
     final panelRadius = isDesktopSheet
         ? BorderRadius.circular(20)
@@ -796,106 +817,120 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 offset: const Offset(0, -8),
               ),
             ],
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
-                  child: Row(
-                    children: [
-                      SyncTvBrandMark(
-                        semanticLabel: l10n.appTitle,
-                        size: 38,
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.connectToSyncTv,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            Text(
-                              widget.gateway.activeServerName ??
-                                  l10n.noServerConnected,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      AppIconButton(
-                        tooltip: l10n.close,
-                        onPressed: () => Navigator.pop(context),
-                        icon: Icons.close_rounded,
-                      ),
-                    ],
-                  ),
-                ),
-                if (_loadingOptions) const AppLinearProgress(minHeight: 2),
-                if (_mfaChallenge == null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: AppTabBar(
-                      controller: _tabController,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      dividerColor: theme.dividerColor.withValues(alpha: 0.45),
-                      tabs: [
-                        Tab(
-                          icon: const Icon(Icons.login_rounded),
-                          text: l10n.login,
-                        ),
-                        Tab(
-                          icon: const Icon(Icons.person_add_alt_1_rounded),
-                          text: l10n.register,
-                        ),
-                        Tab(
-                          icon: const Icon(Icons.meeting_room_outlined),
-                          text: l10n.guest,
-                        ),
-                      ],
+            child: panelContent([
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
+                child: Row(
+                  children: [
+                    SyncTvBrandMark(
+                      semanticLabel: l10n.appTitle,
+                      size: 38,
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
-                  ),
-                Flexible(
-                  fit: FlexFit.loose,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    switchInCurve: Curves.easeOut,
-                    switchOutCurve: Curves.easeOut,
-                    child: _mfaChallenge == null
-                        ? _PanelScroll(
-                            key: ValueKey('tab-${_tabController.index}'),
-                            child: _buildCurrentTab(theme),
-                          )
-                        : _PanelScroll(
-                            key: const ValueKey('mfa'),
-                            child: _buildMfaPanel(theme),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.connectToSyncTv,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                  ),
+                          Text(
+                            widget.gateway.activeServerName ??
+                                l10n.noServerConnected,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    AppIconButton(
+                      tooltip: l10n.close,
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icons.close_rounded,
+                    ),
+                  ],
                 ),
-                if (_loading)
-                  const AppLinearProgress(minHeight: 2)
-                else
-                  const SizedBox(height: 2),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
-                  child: _AgreementRow(
-                    agreed: _agreedToTerms,
-                    isDark: isDark,
-                    onChanged: (value) =>
-                        setState(() => _agreedToTerms = value),
-                    onOpenAgreement: _showUserAgreement,
-                  ),
+              ),
+              if (_loadingOptions) const AppLinearProgress(minHeight: 2),
+              if (_mfaChallenge == null)
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final textScale =
+                        MediaQuery.textScalerOf(context).scale(14) / 14;
+                    final scrollable =
+                        constraints.maxWidth < 480 || textScale > 1.25;
+                    final tabHeight =
+                        72.0 + (textScale - 1).clamp(0, double.infinity) * 20;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: AppTabBar(
+                        controller: _tabController,
+                        isScrollable: scrollable,
+                        tabAlignment: scrollable ? TabAlignment.start : null,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        dividerColor: theme.dividerColor.withValues(
+                          alpha: 0.45,
+                        ),
+                        tabs: [
+                          Tab(
+                            height: tabHeight,
+                            icon: const Icon(Icons.login_rounded),
+                            text: l10n.login,
+                          ),
+                          Tab(
+                            height: tabHeight,
+                            icon: const Icon(Icons.person_add_alt_1_rounded),
+                            text: l10n.register,
+                          ),
+                          Tab(
+                            height: tabHeight,
+                            icon: const Icon(Icons.meeting_room_outlined),
+                            text: l10n.guest,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
+              formContent(
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeOut,
+                  child: _mfaChallenge == null
+                      ? _PanelScroll(
+                          key: ValueKey('tab-${_tabController.index}'),
+                          scrollable: !scrollWholePanel,
+                          child: _buildCurrentTab(theme),
+                        )
+                      : _PanelScroll(
+                          key: const ValueKey('mfa'),
+                          scrollable: !scrollWholePanel,
+                          child: _buildMfaPanel(theme),
+                        ),
+                ),
+              ),
+              if (_loading)
+                const AppLinearProgress(minHeight: 2)
+              else
+                const SizedBox(height: 2),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+                child: _AgreementRow(
+                  agreed: _agreedToTerms,
+                  isDark: isDark,
+                  onChanged: (value) => setState(() => _agreedToTerms = value),
+                  onOpenAgreement: _showUserAgreement,
+                ),
+              ),
+            ]),
           ),
         ),
       ),
@@ -1236,32 +1271,20 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    controller: _emailTokenController,
-                    label: _emailTokenRequested
-                        ? l10n.verificationCode
-                        : l10n.getCodeFirst,
-                    icon: Icons.pin_outlined,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                AppActionButton(
-                  onPressed: _loading ? null : _requestEmailToken,
-                  icon: Icons.send_outlined,
-                  label: l10n.send,
-                  loading: _isLoading(_AuthAction.requestEmailLogin),
-                  style: AppActionButtonStyle.outlined,
-                ),
-              ],
+            _buildEmailCodeField(
+              controller: _emailTokenController,
+              label: _emailTokenRequested
+                  ? l10n.verificationCode
+                  : l10n.getCodeFirst,
+              onRequest: _requestEmailToken,
+              action: _AuthAction.requestEmailLogin,
             ),
             const SizedBox(height: 14),
             AppActionButton(
               onPressed: _loading ? null : _submitEmailLogin,
               icon: Icons.mark_email_read_outlined,
               label: l10n.emailCodeLogin,
+              wrapLabel: true,
               loading: _isLoading(_AuthAction.emailLogin),
             ),
           ],
@@ -1548,27 +1571,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               ),
             ] else if (selectedMethod ==
                 _RegistrationMethod.emailVerification) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      key: const ValueKey('email-registration-code-field'),
-                      controller: _registerEmailTokenController,
-                      label: _registerEmailTokenRequested
-                          ? l10n.verificationCode
-                          : l10n.getCodeFirst,
-                      icon: Icons.pin_outlined,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  AppActionButton(
-                    onPressed: _loading ? null : _requestEmailRegistrationToken,
-                    icon: Icons.send_outlined,
-                    label: l10n.send,
-                    loading: _isLoading(_AuthAction.requestEmailRegistration),
-                    style: AppActionButtonStyle.outlined,
-                  ),
-                ],
+              _buildEmailCodeField(
+                key: const ValueKey('email-registration-code-field'),
+                controller: _registerEmailTokenController,
+                label: _registerEmailTokenRequested
+                    ? l10n.verificationCode
+                    : l10n.getCodeFirst,
+                onRequest: _requestEmailRegistrationToken,
+                action: _AuthAction.requestEmailRegistration,
               ),
               const SizedBox(height: 12),
               _buildTextField(
@@ -1582,6 +1592,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 onPressed: _loading ? null : _submitEmailRegistration,
                 icon: Icons.mark_email_read_outlined,
                 label: l10n.createAccountWithEmailCode,
+                wrapLabel: true,
                 loading: _isLoading(_AuthAction.emailRegistration),
               ),
             ] else if (selectedMethod == _RegistrationMethod.passkey) ...[
@@ -1772,6 +1783,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           onPressed: _loading ? null : _submitMfaRecoveryCode,
           icon: Icons.key_rounded,
           label: l10n.verifyWithRecoveryCode,
+          wrapLabel: true,
           loading: _isLoading(_AuthAction.mfaRecoveryCode),
         ),
       ],
@@ -1810,39 +1822,58 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       _MfaMethod.email => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: _mfaTokenController,
-                  label: _mfaEmailRequested
-                      ? l10n.verificationCode
-                      : l10n.getMfaCodeFirst,
-                  icon: Icons.pin_outlined,
-                  enabled: !_loading,
-                ),
-              ),
-              const SizedBox(width: 8),
-              AppActionButton(
-                onPressed: _loading ? null : _requestMfaEmailToken,
-                icon: Icons.send_outlined,
-                label: l10n.send,
-                loading: _isLoading(_AuthAction.requestMfaEmail),
-                style: AppActionButtonStyle.outlined,
-              ),
-            ],
+          _buildEmailCodeField(
+            controller: _mfaTokenController,
+            label: _mfaEmailRequested
+                ? l10n.verificationCode
+                : l10n.getMfaCodeFirst,
+            enabled: !_loading,
+            onRequest: _requestMfaEmailToken,
+            action: _AuthAction.requestMfaEmail,
           ),
           const SizedBox(height: 10),
           AppActionButton(
             onPressed: _loading ? null : _submitMfaEmailToken,
             icon: Icons.mark_email_read_outlined,
             label: l10n.verifyWithEmail,
+            wrapLabel: true,
             loading: _isLoading(_AuthAction.mfaEmail),
           ),
         ],
       ),
     };
   }
+
+  Widget _buildEmailCodeField({
+    Key? key,
+    required TextEditingController controller,
+    required String label,
+    required VoidCallback onRequest,
+    required _AuthAction action,
+    bool enabled = true,
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      _buildTextField(
+        key: key,
+        controller: controller,
+        label: label,
+        icon: Icons.pin_outlined,
+        enabled: enabled,
+      ),
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerRight,
+        child: AppActionButton(
+          onPressed: _loading ? null : onRequest,
+          icon: Icons.send_outlined,
+          label: context.l10n.send,
+          loading: _isLoading(action),
+          style: AppActionButtonStyle.outlined,
+        ),
+      ),
+    ],
+  );
 
   String _mfaMethodLabel(_MfaMethod method) {
     return switch (method) {
@@ -1867,12 +1898,16 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         Row(
           children: [
             Expanded(child: AppDivider(color: theme.dividerColor)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                context.l10n.thirdPartyLogin,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  context.l10n.thirdPartyLogin,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
@@ -1944,6 +1979,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               label: context.l10n.continueWithProvider(
                 _oauth2ProviderLabel(provider),
               ),
+              wrapLabel: true,
               style: AppActionButtonStyle.outlined,
             ),
           const SizedBox(height: 8),
@@ -1981,7 +2017,17 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   Widget _buildPolicyHints(ThemeData theme) {
-    final hints = _settings?.authPolicyHints ?? const <String>[];
+    final hints = _settings?.authPolicyHints ?? const <AuthPolicyHint>[];
+    final l10n = context.l10n;
+    String hintLabel(AuthPolicyHint hint) => switch (hint) {
+      AuthPolicyHint.passwordReview =>
+        l10n.passwordSignupRequiresReviewDescription,
+      AuthPolicyHint.emailReview => l10n.emailSignupRequiresReviewDescription,
+      AuthPolicyHint.passkeyReview =>
+        l10n.passkeySignupRequiresReviewDescription,
+      AuthPolicyHint.emailWhitelist => l10n.registrationEmailWhitelistHint,
+      AuthPolicyHint.guestDisabled => l10n.guestAccessDisabled,
+    };
     if (hints.isEmpty) return const SizedBox.shrink();
     return AppPanelSurface(
       margin: const EdgeInsets.only(bottom: 14),
@@ -2004,7 +2050,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      hint,
+                      hintLabel(hint),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -2050,17 +2096,16 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 }
 
 class _PanelScroll extends StatelessWidget {
-  const _PanelScroll({super.key, required this.child});
+  const _PanelScroll({super.key, required this.child, this.scrollable = true});
 
   final Widget child;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
-    return AppListView(
-      shrinkWrap: true,
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
-      children: [child],
-    );
+    const padding = EdgeInsets.fromLTRB(18, 14, 18, 14);
+    if (!scrollable) return Padding(padding: padding, child: child);
+    return AppListView(shrinkWrap: true, padding: padding, children: [child]);
   }
 }
 
@@ -2081,10 +2126,12 @@ class _SectionLabel extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: color),
         const SizedBox(width: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.titleSmall
-              ?.copyWith(fontWeight: FontWeight.w700),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
         ),
       ],
     );
@@ -2131,160 +2178,6 @@ class _AgreementRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _PasswordResetDialog extends StatefulWidget {
-  const _PasswordResetDialog({
-    required this.initialEmail,
-    required this.gateway,
-  });
-
-  final String initialEmail;
-  final AuthGateway gateway;
-
-  @override
-  State<_PasswordResetDialog> createState() => _PasswordResetDialogState();
-}
-
-class _PasswordResetDialogState extends State<_PasswordResetDialog> {
-  late final TextEditingController _emailController;
-  final _tokenController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
-  bool _requesting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _emailController = TextEditingController(text: widget.initialEmail);
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _tokenController.dispose();
-    _passwordController.dispose();
-    _confirmController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _requestResetEmail() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      AppNotifications.showWarning(context, context.l10n.emailRequired);
-      return;
-    }
-    setState(() => _requesting = true);
-    try {
-      final message = await widget.gateway.requestPasswordReset(email);
-      if (!mounted) return;
-      AppNotifications.showSuccess(
-        context,
-        message.isEmpty ? context.l10n.passwordResetEmailSent : message,
-      );
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(
-          context,
-          context.l10n.passwordResetEmailFailed(e.toString()),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _requesting = false);
-    }
-  }
-
-  void _submit() {
-    final email = _emailController.text.trim();
-    final token = _tokenController.text.trim();
-    final password = _passwordController.text;
-    if (email.isEmpty || token.isEmpty || password.isEmpty) {
-      AppNotifications.showWarning(context, context.l10n.resetFieldsRequired);
-      return;
-    }
-    if (password != _confirmController.text) {
-      AppNotifications.showWarning(context, context.l10n.newPasswordsMismatch);
-      return;
-    }
-    Navigator.pop(context, (email: email, token: token, password: password));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AppDialog(
-      title: Text(context.l10n.resetPassword),
-      body: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: AppTextField(
-                    controller: _emailController,
-                    label: context.l10n.email,
-                    prefixIcon: Icons.mail_outline_rounded,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    autocorrect: false,
-                    smartDashesType: SmartDashesType.disabled,
-                    smartQuotesType: SmartQuotesType.disabled,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                AppActionButton(
-                  onPressed: _requesting ? null : _requestResetEmail,
-                  icon: Icons.send_outlined,
-                  label: context.l10n.send,
-                  loading: _requesting,
-                  style: AppActionButtonStyle.outlined,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _tokenController,
-              label: context.l10n.resetCode,
-              prefixIcon: Icons.pin_outlined,
-              textInputAction: TextInputAction.next,
-              autocorrect: false,
-              smartDashesType: SmartDashesType.disabled,
-              smartQuotesType: SmartQuotesType.disabled,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _passwordController,
-              label: context.l10n.newPassword,
-              prefixIcon: Icons.lock_reset_rounded,
-              obscureText: true,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _confirmController,
-              label: context.l10n.confirmNewPassword,
-              prefixIcon: Icons.check_circle_outline_rounded,
-              obscureText: true,
-              onSubmitted: (_) => _submit(),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        AppActionButton(
-          onPressed: () => Navigator.pop(context),
-          label: context.l10n.cancel,
-          style: AppActionButtonStyle.outlined,
-        ),
-        AppActionButton(
-          onPressed: _submit,
-          icon: Icons.lock_reset_rounded,
-          label: context.l10n.reset,
-        ),
-      ],
     );
   }
 }

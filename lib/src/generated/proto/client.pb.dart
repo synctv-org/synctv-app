@@ -4233,6 +4233,7 @@ class Room extends $pb.GeneratedMessage {
     $core.Iterable<RoomLabel>? labels,
     $core.bool? isPublic,
     $core.bool? creatorBlocked,
+    $core.bool? passwordEnabled,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -4254,6 +4255,7 @@ class Room extends $pb.GeneratedMessage {
     if (labels != null) result.labels.addAll(labels);
     if (isPublic != null) result.isPublic = isPublic;
     if (creatorBlocked != null) result.creatorBlocked = creatorBlocked;
+    if (passwordEnabled != null) result.passwordEnabled = passwordEnabled;
     return result;
   }
 
@@ -4297,6 +4299,7 @@ class Room extends $pb.GeneratedMessage {
         subBuilder: RoomLabel.create)
     ..aOB(18, _omitFieldNames ? '' : 'isPublic')
     ..aOB(19, _omitFieldNames ? '' : 'creatorBlocked')
+    ..aOB(20, _omitFieldNames ? '' : 'passwordEnabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4491,6 +4494,16 @@ class Room extends $pb.GeneratedMessage {
   $core.bool hasCreatorBlocked() => $_has(18);
   @$pb.TagNumber(19)
   void clearCreatorBlocked() => $_clearField(19);
+
+  /// Current OPAQUE credential state, independent of room policy settings.
+  @$pb.TagNumber(20)
+  $core.bool get passwordEnabled => $_getBF(19);
+  @$pb.TagNumber(20)
+  set passwordEnabled($core.bool value) => $_setBool(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasPasswordEnabled() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearPasswordEnabled() => $_clearField(20);
 }
 
 class RoomCategory extends $pb.GeneratedMessage {

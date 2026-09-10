@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +32,7 @@ class HomeViewState {
     required this.favoriteRoomIdsInFlight,
     this.currentUser,
     this.isAdmin = false,
+    this.loadError,
   });
 
   final SyncTvSessionIdentity identity;
@@ -48,6 +51,7 @@ class HomeViewState {
   final Set<String> favoriteRoomIdsInFlight;
   final SyncTvUser? currentUser;
   final bool isAdmin;
+  final String? loadError;
 
   bool get isAccount => identity is AccountSessionIdentity;
 }
@@ -153,52 +157,58 @@ class _HomeHeader extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 1100;
-        final extraCompact = constraints.maxWidth < 560;
+        final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+        final availableWidth = constraints.maxWidth / textScale;
+        final compact = availableWidth < 1100;
+        final extraCompact = availableWidth < 560;
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 12),
           child: Row(
             children: [
-              AppInkSurface(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                onLongPress: callbacks.openServerSettings,
-                semanticLabel: l10n.openServerSettings,
-                child: Row(
-                  children: [
-                    SyncTvBrandMark(semanticLabel: l10n.appTitle, size: 36),
-                    if (!extraCompact) ...[
-                      const SizedBox(width: 12),
-                      Text(
-                        l10n.appTitle,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF111827),
-                        ),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: AppInkSurface(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      onLongPress: callbacks.openServerSettings,
+                      semanticLabel: l10n.openServerSettings,
+                      child: Row(
+                        children: [
+                          SyncTvBrandMark(
+                            semanticLabel: l10n.appTitle,
+                            size: 36,
+                          ),
+                          ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.appTitle,
+                              style: TextStyle(
+                                fontSize: extraCompact ? 20 : 22,
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF111827),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
-                  ],
+                    ),
+                  ),
                 ),
               ),
-              const Spacer(),
-              if (!state.isAccount && compact)
-                AppActionButton(
-                  onPressed: callbacks.openServerSettings,
-                  icon: kIsWeb ? Icons.info_outline_rounded : Icons.dns_rounded,
-                  label: l10n.server,
-                  style: AppActionButtonStyle.tonal,
-                )
-              else
+              if (!state.isAccount || !extraCompact) ...[
                 AppIconButton(
                   tooltip: l10n.serverSettings,
                   onPressed: callbacks.openServerSettings,
                   icon: kIsWeb ? Icons.info_outline_rounded : Icons.dns_rounded,
                   style: AppIconButtonStyle.tonal,
                 ),
-              SizedBox(width: compact ? 8 : 12),
+                SizedBox(width: compact ? 4 : 12),
+              ],
               if (!state.isAccount) ...[
                 AppIconButton(
                   tooltip: l10n.language,
@@ -206,24 +216,24 @@ class _HomeHeader extends StatelessWidget {
                   icon: Icons.language_rounded,
                   style: AppIconButtonStyle.tonal,
                 ),
-                SizedBox(width: compact ? 8 : 12),
+                SizedBox(width: compact ? 4 : 12),
               ],
               if (state.isAccount) ...[
-                if (compact)
+                if (compact && !extraCompact)
                   AppIconButton(
                     tooltip: l10n.joinRoom,
                     onPressed: callbacks.openJoinRoom,
                     icon: Icons.login_rounded,
                     style: AppIconButtonStyle.tonal,
                   )
-                else
+                else if (!compact)
                   AppActionButton(
                     onPressed: callbacks.openJoinRoom,
                     icon: Icons.login_rounded,
                     label: l10n.joinRoom,
                     style: AppActionButtonStyle.outlined,
                   ),
-                SizedBox(width: compact ? 8 : 10),
+                if (!extraCompact) SizedBox(width: compact ? 8 : 10),
                 if (compact)
                   AppIconButton(
                     tooltip: l10n.createRoom,
@@ -243,7 +253,14 @@ class _HomeHeader extends StatelessWidget {
                   callbacks: callbacks,
                   compact: compact,
                 ),
-              ] else
+              ] else if (availableWidth < 340)
+                AppIconButton(
+                  tooltip: l10n.login,
+                  onPressed: callbacks.openLogin,
+                  icon: Icons.login_rounded,
+                  style: AppIconButtonStyle.filled,
+                )
+              else
                 AppActionButton(
                   onPressed: callbacks.openLogin,
                   icon: Icons.login_rounded,
@@ -283,6 +300,7 @@ class _AccountMenu extends StatelessWidget {
       tooltip: context.l10n.accountMenu,
       onSelected: (value) => switch (value) {
         'account' => callbacks.openAccountCenter(),
+        'join' => callbacks.openJoinRoom(),
         'admin' => callbacks.openAdminSettings(),
         'server' => callbacks.openServerSettings(),
         'language' => callbacks.openLanguageSelector(),
@@ -290,6 +308,13 @@ class _AccountMenu extends StatelessWidget {
         _ => null,
       },
       itemBuilder: (context) => [
+        if (compact)
+          _menuItem(
+            'join',
+            Icons.login_rounded,
+            context.l10n.joinRoom,
+            color: theme.colorScheme.onSurface,
+          ),
         _menuItem(
           'account',
           Icons.account_circle_rounded,
@@ -324,7 +349,7 @@ class _AccountMenu extends StatelessWidget {
         ),
       ],
       child: compact
-          ? child
+          ? SizedBox(width: 44, height: 44, child: Center(child: child))
           : AppInkSurface(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(8),
@@ -369,7 +394,9 @@ class _AccountMenu extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: color),
         const SizedBox(width: 8),
-        Text(label, style: TextStyle(color: color)),
+        Flexible(
+          child: Text(label, style: TextStyle(color: color)),
+        ),
       ],
     ),
   );
@@ -388,85 +415,172 @@ class _DiscoveryBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasFilters =
+        state.selectedCategoryId.isNotEmpty ||
+        state.selectedLabelCount > 0 ||
+        searchController.text.trim().isNotEmpty;
+    final pagePadding = AppMetrics.pagePadding(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final horizontalPadding = ((width - 1480) / 2).clamp(
+      pagePadding.left,
+      double.infinity,
+    );
+    final showResults =
+        state.rooms.isNotEmpty ||
+        state.featuredRooms.isEmpty ||
+        hasFilters ||
+        state.loadError != null;
     return AppRefreshIndicator(
       onRefresh: callbacks.refresh,
-      child: AppSingleChildScrollView(
+      child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: AppMetrics.pagePadding(context),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1480),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (state.page == 1 && state.featuredRooms.isNotEmpty) ...[
-                  _SectionHeading(
-                    title: context.l10n.featuredRooms,
-                    subtitle: context.l10n.featuredRoomsDescription,
-                    icon: Icons.auto_awesome_rounded,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              12,
+              horizontalPadding,
+              0,
+            ),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _RoomControls(
+                    state: state,
+                    callbacks: callbacks,
+                    searchController: searchController,
                   ),
-                  const SizedBox(height: 12),
-                  _FeaturedRooms(state: state, callbacks: callbacks),
+                  if (state.categories.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _CategoryStrip(state: state, callbacks: callbacks),
+                  ],
                   const SizedBox(height: 24),
-                ],
-                if (state.isAccount && state.joinedRooms.isNotEmpty) ...[
-                  _SectionHeading(
-                    title: context.l10n.continueWatchingRooms,
-                    subtitle: context.l10n.continueWatchingRoomsDescription,
-                    icon: Icons.play_circle_outline_rounded,
-                  ),
-                  const SizedBox(height: 12),
-                  _HorizontalRoomRail(
-                    height: 196,
-                    itemCount: state.joinedRooms.length,
-                    itemWidth: (width) =>
-                        width < 520 ? (width * 0.80).clamp(236, 292) : 264,
-                    previousTooltip: context.l10n.previousRooms,
-                    nextTooltip: context.l10n.nextRooms,
-                    itemBuilder: (_, index) => _RoomCard(
-                      room: state.joinedRooms[index],
-                      state: state,
-                      callbacks: callbacks,
+                  if (state.loadError != null) ...[
+                    _DiscoveryError(state: state, onRetry: callbacks.refresh),
+                    const SizedBox(height: 20),
+                  ],
+                  if (state.page == 1 &&
+                      !hasFilters &&
+                      state.featuredRooms.isNotEmpty) ...[
+                    _SectionHeading(
+                      title: context.l10n.featuredRooms,
+                      icon: Icons.auto_awesome_rounded,
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 12),
+                    _FeaturedRooms(state: state, callbacks: callbacks),
+                    const SizedBox(height: 24),
+                  ],
+                  if (!hasFilters &&
+                      state.isAccount &&
+                      state.joinedRooms.isNotEmpty) ...[
+                    _SectionHeading(
+                      title: context.l10n.continueWatchingRooms,
+                      icon: Icons.play_circle_outline_rounded,
+                    ),
+                    const SizedBox(height: 12),
+                    _HorizontalRoomRail(
+                      height: _scaledRoomHeight(context, 196),
+                      itemCount: state.joinedRooms.length,
+                      itemWidth: (width) =>
+                          width < 520 ? (width * 0.80).clamp(236, 292) : 264,
+                      previousTooltip: context.l10n.previousRooms,
+                      nextTooltip: context.l10n.nextRooms,
+                      itemBuilder: (_, index) => _RoomCard(
+                        room: state.joinedRooms[index],
+                        state: state,
+                        callbacks: callbacks,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  if (showResults && state.loadError == null)
+                    _SectionHeading(
+                      title: context.l10n.popularRooms,
+                      icon: Icons.local_fire_department_rounded,
+                    ),
                 ],
-                if (state.categories.isNotEmpty) ...[
-                  _CategoryStrip(state: state, callbacks: callbacks),
-                  const SizedBox(height: 18),
-                ],
-                _RoomControls(
-                  state: state,
-                  callbacks: callbacks,
-                  searchController: searchController,
-                ),
-                const SizedBox(height: 22),
-                if (state.rooms.isNotEmpty || state.featuredRooms.isEmpty) ...[
-                  _SectionHeading(
-                    title: context.l10n.popularRooms,
-                    subtitle: context.l10n.popularRoomsDescription,
-                    icon: Icons.local_fire_department_rounded,
-                  ),
-                  const SizedBox(height: 12),
-                  _RoomGrid(state: state, callbacks: callbacks),
-                ],
-              ],
+              ),
             ),
           ),
-        ),
+          if (state.rooms.isNotEmpty)
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                12,
+                horizontalPadding,
+                pagePadding.bottom,
+              ),
+              sliver: SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = ((constraints.crossAxisExtent + 16) / 288)
+                      .floor()
+                      .clamp(1, 5);
+                  return SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _RoomCard(
+                        room: state.rooms[index],
+                        state: state,
+                        callbacks: callbacks,
+                      ),
+                      childCount: state.rooms.length,
+                    ),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      mainAxisExtent: _scaledRoomHeight(context, 318),
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                  );
+                },
+              ),
+            )
+          else if (showResults && state.loadError == null)
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                12,
+                horizontalPadding,
+                pagePadding.bottom,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: _RoomEmptyState(state: state, callbacks: callbacks),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
 
+class _DiscoveryError extends StatelessWidget {
+  const _DiscoveryError({required this.state, required this.onRetry});
+
+  final HomeViewState state;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(Icons.cloud_off_rounded, color: Theme.of(context).colorScheme.error),
+      const SizedBox(width: 12),
+      Expanded(child: Text(context.l10n.loadRoomsFailed(state.loadError!))),
+      const SizedBox(width: 12),
+      AppIconButton(
+        tooltip: context.l10n.retry,
+        icon: Icons.refresh_rounded,
+        loading: state.isLoading,
+        onPressed: () => onRetry(),
+      ),
+    ],
+  );
+}
+
 class _SectionHeading extends StatelessWidget {
-  const _SectionHeading({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-  });
+  const _SectionHeading({required this.title, required this.icon});
   final String title;
-  final String subtitle;
   final IconData icon;
 
   @override
@@ -475,13 +589,7 @@ class _SectionHeading extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppIconBadge(
-          icon: icon,
-          color: theme.colorScheme.primary,
-          size: 34,
-          iconSize: 19,
-          backgroundAlpha: 0.11,
-        ),
+        Icon(icon, color: theme.colorScheme.primary, size: 22),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -493,19 +601,18 @@ class _SectionHeading extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
             ],
           ),
         ),
       ],
     );
   }
+}
+
+double _scaledRoomHeight(BuildContext context, double baseHeight) {
+  final scaler = MediaQuery.textScalerOf(context);
+  return baseHeight +
+      ((scaler.scale(14) / 14 - 1) * 88).clamp(0, double.infinity);
 }
 
 class _FeaturedRooms extends StatelessWidget {
@@ -516,58 +623,18 @@ class _FeaturedRooms extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      Widget card(int index) => _RoomCard(
-        room: state.featuredRooms[index],
-        state: state,
-        callbacks: callbacks,
-      );
-      if (constraints.maxWidth < 1100) {
-        return _HorizontalRoomRail(
-          height: 224,
-          itemCount: state.featuredRooms.length,
-          itemWidth: (width) =>
-              width < 520 ? (width * 0.86).clamp(248, 316) : 292,
-          previousTooltip: context.l10n.previousRooms,
-          nextTooltip: context.l10n.nextRooms,
-          itemBuilder: (_, index) => card(index),
-        );
-      }
-      if (state.featuredRooms.length <= 3) {
-        final count = state.featuredRooms.length;
-        return _HorizontalRoomRail(
-          height: count == 3 ? 300 : 390,
-          itemCount: count,
-          itemWidth: (width) => switch (count) {
-            1 => width.clamp(0, 680),
-            2 => ((width - 12) / 2).clamp(0, 560),
-            _ => ((width - 24) / 3).clamp(0, 440),
-          },
-          previousTooltip: context.l10n.previousRooms,
-          nextTooltip: context.l10n.nextRooms,
-          itemBuilder: (_, index) => card(index),
-        );
-      }
-      return SizedBox(
-        height: 390,
-        child: Row(
-          children: [
-            Expanded(flex: 5, child: card(0)),
-            const SizedBox(width: 14),
-            Expanded(
-              flex: 6,
-              child: AppGridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 14,
-                  mainAxisExtent: 188,
-                ),
-                itemCount: state.featuredRooms.skip(1).take(4).length,
-                itemBuilder: (_, index) => card(index + 1),
-              ),
-            ),
-          ],
+      return _HorizontalRoomRail(
+        height: _scaledRoomHeight(context, 294),
+        itemCount: state.featuredRooms.length,
+        itemWidth: (width) => width < 520
+            ? (width * 0.88).clamp(240, 340)
+            : ((width - 36) / 4).clamp(280, 360),
+        previousTooltip: context.l10n.previousRooms,
+        nextTooltip: context.l10n.nextRooms,
+        itemBuilder: (_, index) => _RoomCard(
+          room: state.featuredRooms[index],
+          state: state,
+          callbacks: callbacks,
         ),
       );
     },
@@ -580,33 +647,49 @@ class _CategoryStrip extends StatelessWidget {
   final HomeViewCallbacks callbacks;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 44,
-    child: AppListView(
-      scrollDirection: Axis.horizontal,
-      children: [
-        AppChip(
-          label: Text(context.l10n.allCategories),
-          selected: state.selectedCategoryId.isEmpty,
-          onSelected: (_) => callbacks.selectCategory(''),
-        ),
-        const SizedBox(width: 8),
-        for (final category in state.categories) ...[
-          AppChip(
-            label: Text(
-              category.name.trim().isEmpty ? category.key : category.name,
-            ),
-            selected: state.selectedCategoryId == category.id,
-            onSelected: (_) => callbacks.selectCategory(category.id),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      Widget categoryChip(String id, String name) => AppTooltip(
+        message: name,
+        excludeFromSemantics: true,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: constraints.maxWidth.clamp(0, 360),
           ),
-          const SizedBox(width: 8),
-        ],
-      ],
-    ),
+          child: AppChip(
+            label: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+            selected: state.selectedCategoryId == id,
+            onSelected: (_) => callbacks.selectCategory(id),
+          ),
+        ),
+      );
+      return SizedBox(
+        height: (MediaQuery.textScalerOf(context).scale(14) + 28).clamp(
+          44,
+          double.infinity,
+        ),
+        child: AppListView(
+          scrollDirection: Axis.horizontal,
+          children: [
+            categoryChip('', context.l10n.allCategories),
+            const SizedBox(width: 8),
+            for (final category in state.categories) ...[
+              categoryChip(
+                category.id,
+                category.name.trim().isEmpty
+                    ? category.key
+                    : category.name.trim(),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ],
+        ),
+      );
+    },
   );
 }
 
-class _RoomControls extends StatelessWidget {
+class _RoomControls extends StatefulWidget {
   const _RoomControls({
     required this.state,
     required this.callbacks,
@@ -617,8 +700,116 @@ class _RoomControls extends StatelessWidget {
   final TextEditingController searchController;
 
   @override
+  State<_RoomControls> createState() => _RoomControlsState();
+}
+
+class _RoomControlsState extends State<_RoomControls> {
+  Timer? _searchDebounce;
+
+  HomeViewState get state => widget.state;
+  HomeViewCallbacks get callbacks => widget.callbacks;
+  TextEditingController get searchController => widget.searchController;
+
+  @override
+  void didUpdateWidget(covariant _RoomControls oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchController != searchController ||
+        oldWidget.state.identity != state.identity) {
+      _searchDebounce?.cancel();
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
+
+  void _submitSearch(String value) {
+    _searchDebounce?.cancel();
+    callbacks.search(value);
+  }
+
+  void _scheduleSearch(String value) {
+    _searchDebounce?.cancel();
+    if (value.trim().isEmpty) {
+      _submitSearch(value);
+    } else {
+      _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+        if (searchController.text == value &&
+            searchController.value.composing.isCollapsed) {
+          _submitSearch(value);
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final hasTaxonomyFilters =
+        state.selectedCategoryId.isNotEmpty || state.selectedLabelCount > 0;
+    if (AppBreakpoints.widthOf(context) < 600) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: AppSearchField(
+                  controller: searchController,
+                  hintText: context.l10n.searchRooms,
+                  onChanged: _scheduleSearch,
+                  onSubmitted: _submitSearch,
+                ),
+              ),
+              const SizedBox(width: 8),
+              AppIconButton(
+                tooltip: state.selectedLabelCount == 0
+                    ? context.l10n.labels
+                    : context.l10n.selectedLabels(state.selectedLabelCount),
+                icon: Icons.sell_outlined,
+                selected: state.selectedLabelCount > 0,
+                onPressed: state.isLoadingTaxonomy
+                    ? null
+                    : callbacks.openLabelFilter,
+                style: AppIconButtonStyle.tonal,
+              ),
+              if (hasTaxonomyFilters) ...[
+                const SizedBox(width: 4),
+                AppIconButton(
+                  tooltip: context.l10n.clearRoomTaxonomyFilters,
+                  icon: Icons.filter_alt_off_rounded,
+                  onPressed: callbacks.clearFilters,
+                ),
+              ],
+              const SizedBox(width: 4),
+              AppIconButton(
+                tooltip: context.l10n.refresh,
+                onPressed: state.isLoading ? null : () => callbacks.refresh(),
+                icon: Icons.refresh_rounded,
+              ),
+            ],
+          ),
+          if (state.totalRooms > 0) ...[
+            const SizedBox(height: 8),
+            AppPaginationBar(
+              padding: EdgeInsets.zero,
+              label: context.l10n.roomsPageSummary(
+                state.totalRooms,
+                state.page,
+                state.pageCount,
+              ),
+              onPrevious: state.isLoading || state.page <= 1
+                  ? null
+                  : () => callbacks.goToPage(state.page - 1),
+              onNext: state.isLoading || state.page >= state.pageCount
+                  ? null
+                  : () => callbacks.goToPage(state.page + 1),
+            ),
+          ],
+        ],
+      );
+    }
     final compact = AppBreakpoints.widthOf(context) < 1080;
     final filters = LayoutBuilder(
       builder: (context, constraints) {
@@ -632,27 +823,8 @@ class _RoomControls extends StatelessWidget {
               controller: searchController,
               width: narrow ? constraints.maxWidth : 320,
               hintText: context.l10n.searchRooms,
-              onChanged: (value) {
-                if (value.isEmpty) callbacks.search('');
-              },
-              onSubmitted: callbacks.search,
-            ),
-            AppSelect<String?>(
-              value: state.selectedCategoryId.isEmpty
-                  ? null
-                  : state.selectedCategoryId,
-              width: narrow ? constraints.maxWidth : 180,
-              hintText: context.l10n.allCategories,
-              prefixIcon: Icons.category_outlined,
-              clearable: true,
-              enabled: !state.isLoadingTaxonomy && state.categories.isNotEmpty,
-              options: {
-                context.l10n.allCategories: null,
-                for (final category in state.categories)
-                  (category.name.trim().isEmpty ? category.key : category.name):
-                      category.id,
-              },
-              onChanged: (value) => callbacks.selectCategory(value ?? ''),
+              onChanged: _scheduleSearch,
+              onSubmitted: _submitSearch,
             ),
             AppActionButton(
               onPressed: state.isLoadingTaxonomy
@@ -684,56 +856,49 @@ class _RoomControls extends StatelessWidget {
           ? MainAxisAlignment.spaceBetween
           : MainAxisAlignment.end,
       children: [
-        Flexible(
-          child: AppPaginationBar(
-            padding: EdgeInsets.zero,
-            label: context.l10n.roomsPageSummary(
-              state.totalRooms,
-              state.page,
-              state.pageCount,
+        if (state.totalRooms > 0 || state.featuredRooms.isEmpty)
+          Flexible(
+            child: AppPaginationBar(
+              padding: EdgeInsets.zero,
+              label: context.l10n.roomsPageSummary(
+                state.totalRooms,
+                state.page,
+                state.pageCount,
+              ),
+              onPrevious: state.isLoading || state.page <= 1
+                  ? null
+                  : () => callbacks.goToPage(state.page - 1),
+              onNext: state.isLoading || state.page >= state.pageCount
+                  ? null
+                  : () => callbacks.goToPage(state.page + 1),
             ),
-            onPrevious: state.page <= 1
-                ? null
-                : () => callbacks.goToPage(state.page - 1),
-            onNext: state.page >= state.pageCount
-                ? null
-                : () => callbacks.goToPage(state.page + 1),
           ),
-        ),
         const SizedBox(width: 8),
         AppIconButton(
           tooltip: context.l10n.refresh,
-          onPressed: () => callbacks.refresh(),
+          onPressed: state.isLoading ? null : () => callbacks.refresh(),
           icon: Icons.refresh_rounded,
           style: AppIconButtonStyle.tonal,
         ),
       ],
     );
-    return AppInkSurface(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.7)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: compact
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [filters, const SizedBox(height: 12), actions],
-              )
-            : Row(
-                children: [
-                  Expanded(child: filters),
-                  const SizedBox(width: 12),
-                  actions,
-                ],
-              ),
-      ),
-    );
+    return compact
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [filters, const SizedBox(height: 12), actions],
+          )
+        : Row(
+            children: [
+              Expanded(child: filters),
+              const SizedBox(width: 12),
+              actions,
+            ],
+          );
   }
 }
 
-class _RoomGrid extends StatelessWidget {
-  const _RoomGrid({required this.state, required this.callbacks});
+class _RoomEmptyState extends StatelessWidget {
+  const _RoomEmptyState({required this.state, required this.callbacks});
   final HomeViewState state;
   final HomeViewCallbacks callbacks;
 
@@ -808,22 +973,7 @@ class _RoomGrid extends StatelessWidget {
         ),
       );
     }
-    return AppGridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 360,
-        mainAxisExtent: 318,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: state.rooms.length,
-      itemBuilder: (_, index) => _RoomCard(
-        room: state.rooms[index],
-        state: state,
-        callbacks: callbacks,
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }
 
@@ -948,7 +1098,7 @@ class _HorizontalRoomRailState extends State<_HorizontalRoomRail> {
       position.minScrollExtent,
       position.maxScrollExtent,
     );
-    animate
+    (animate && !MediaQuery.disableAnimationsOf(context))
         ? _controller.animateTo(
             target,
             duration: const Duration(milliseconds: 260),
@@ -959,9 +1109,8 @@ class _HorizontalRoomRailState extends State<_HorizontalRoomRail> {
 
   void _handlePointerSignal(PointerSignalEvent event) {
     if (event is! PointerScrollEvent || !_controller.hasClients) return;
-    final delta = event.scrollDelta.dx.abs() > event.scrollDelta.dy.abs()
-        ? event.scrollDelta.dx
-        : event.scrollDelta.dy;
+    // Preserve vertical page scrolling when the pointer crosses a room rail.
+    final delta = event.scrollDelta.dx;
     if (delta == 0) return;
     final position = _controller.position;
     final target = (_controller.offset + delta).clamp(

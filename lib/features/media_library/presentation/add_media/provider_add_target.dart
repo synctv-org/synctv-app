@@ -19,20 +19,51 @@ class ProviderAddTargetSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<ProviderAddTarget>(
-      key: const Key('provider-add-target'),
-      segments: [
-        for (final target in targets)
-          ButtonSegment(
-            value: target,
-            icon: Icon(_icon(target)),
-            label: Text(_label(context, target)),
-          ),
-      ],
-      selected: {value},
-      onSelectionChanged: enabled
-          ? (selection) => onChanged(selection.single)
-          : null,
+    final labels = {
+      for (final target in targets) target: _label(context, target),
+    };
+    final style = Theme.of(context).textTheme.labelLarge;
+    var segmentWidth = 0.0;
+    for (final label in labels.values.expand((label) => label.split(' '))) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: style),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout();
+      // Reserve room for the icon, gap and button padding.
+      final width = painter.width + 72;
+      if (width > segmentWidth) segmentWidth = width;
+      painter.dispose();
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SegmentedButton<ProviderAddTarget>(
+          key: const Key('provider-add-target'),
+          direction: constraints.maxWidth < segmentWidth * targets.length
+              ? Axis.vertical
+              : Axis.horizontal,
+          segments: [
+            for (final target in targets)
+              ButtonSegment(
+                value: target,
+                icon: Icon(_icon(target)),
+                label: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: (constraints.maxWidth - 72).clamp(
+                      0,
+                      double.infinity,
+                    ),
+                  ),
+                  child: Text(labels[target]!),
+                ),
+              ),
+          ],
+          selected: {value},
+          onSelectionChanged: enabled
+              ? (selection) => onChanged(selection.single)
+              : null,
+        );
+      },
     );
   }
 

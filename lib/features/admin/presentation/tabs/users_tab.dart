@@ -1,7 +1,11 @@
 part of '../admin_settings_page.dart';
 
+enum _UserBatchAction { ban, delete }
+
 class UserManagementTab extends StatefulWidget {
-  const UserManagementTab({super.key});
+  const UserManagementTab({super.key, this.isActive = true});
+
+  final bool isActive;
 
   @override
   State<UserManagementTab> createState() => _UserManagementTabState();
@@ -10,6 +14,7 @@ class UserManagementTab extends StatefulWidget {
 class _UserManagementTabState extends State<UserManagementTab> {
   List<SyncTvUser> _users = [];
   bool _isLoading = true;
+  int _loadGeneration = 0;
   int _page = 1;
   int _pageSize = 20;
   int _total = 0;
@@ -23,12 +28,22 @@ class _UserManagementTabState extends State<UserManagementTab> {
   admin_enum.SortDirection _sortDirection =
       admin_enum.SortDirection.SORT_DIRECTION_DESC;
   final Set<String> _selectedUserIds = {};
+  _UserBatchAction? _batchAction;
+  bool _batchPending = false;
   final _searchController = TextEditingController();
 
   int get _pageCount =>
       _total <= 0 ? 1 : ((_total + _pageSize - 1) ~/ _pageSize);
 
   bool _initialized = false;
+
+  @override
+  void didUpdateWidget(covariant UserManagementTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      unawaited(_loadUsers(silent: true));
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -48,6 +63,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
   }
 
   Future<void> _loadUsers({bool silent = false}) async {
+    final generation = ++_loadGeneration;
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = await adminGateway.adminListUsersPage(
@@ -61,7 +77,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
         sortDirection: _sortDirection,
       );
 
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
 
       setState(() {
         _users = data.users;
@@ -72,7 +88,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
         _isLoading = false;
       });
     } catch (e) {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() => _isLoading = false);
         AppNotifications.showError(context, context.l10n.loadUsersFailed('$e'));
       }
@@ -80,101 +96,13 @@ class _UserManagementTabState extends State<UserManagementTab> {
   }
 
   Future<void> _addUser() async {
-    final l10n = context.l10n;
-    final usernameController = TextEditingController();
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
-    var role = common_enum.UserRole.USER_ROLE_USER;
-    var status = common_enum.UserStatus.USER_STATUS_ACTIVE;
-
-    await AppDialogs.showStyledDialog(
+    final created = await showAppDialog<bool>(
       context: context,
-      title: l10n.addUser,
-      icon: const Icon(Icons.person_add, color: Color(0xFF5D5FEF)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppDialogs.createFormField(
-            context: context,
-            label: l10n.username,
-            controller: usernameController,
-            hintText: l10n.usernameRequired,
-            prefixIcon: Icons.person_outline,
-          ),
-          const SizedBox(height: 12),
-          AppDialogs.createFormField(
-            context: context,
-            label: l10n.email,
-            controller: emailController,
-            hintText: l10n.optional,
-            prefixIcon: Icons.mail_outline_rounded,
-            keyboardType: TextInputType.emailAddress,
-          ),
-          const SizedBox(height: 12),
-          AppDialogs.createFormField(
-            context: context,
-            label: l10n.password,
-            controller: passwordController,
-            hintText: l10n.passwordRequired,
-            prefixIcon: Icons.lock_outline,
-            obscureText: true,
-          ),
-          const SizedBox(height: 12),
-          AppSelect<common_enum.UserRole>(
-            value: role,
-            label: l10n.role,
-            options: {
-              l10n.user: common_enum.UserRole.USER_ROLE_USER,
-              l10n.administrator: common_enum.UserRole.USER_ROLE_ADMIN,
-            },
-            onChanged: (value) {
-              if (value != null) role = value;
-            },
-          ),
-          const SizedBox(height: 12),
-          AppSelect<common_enum.UserStatus>(
-            value: status,
-            label: l10n.status,
-            options: {
-              l10n.active: common_enum.UserStatus.USER_STATUS_ACTIVE,
-              l10n.banned: common_enum.UserStatus.USER_STATUS_BANNED,
-            },
-            onChanged: (val) =>
-                status = val ?? common_enum.UserStatus.USER_STATUS_ACTIVE,
-          ),
-        ],
-      ),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(context, () async {
-          if (usernameController.text.isEmpty ||
-              passwordController.text.isEmpty) {
-            AppNotifications.showWarning(
-              context,
-              l10n.usernameAndPasswordRequired,
-            );
-            return;
-          }
-          try {
-            await adminGateway.adminAddUser(
-              usernameController.text,
-              passwordController.text,
-              role,
-              email: emailController.text.trim(),
-              status: status,
-            );
-            if (!mounted) return;
-            Navigator.pop(context);
-            AppNotifications.showSuccess(context, l10n.userCreated);
-            _loadUsers(silent: true);
-          } catch (e) {
-            if (!mounted) return;
-            AppNotifications.showError(context, l10n.createUserFailed('$e'));
-          }
-        }, text: l10n.create),
-      ],
+      builder: (_) => const AddUserDialog(),
     );
+    if (created != true || !mounted) return;
+    AppNotifications.showSuccess(context, context.l10n.userCreated);
+    await _loadUsers(silent: true);
   }
 
   Future<void> _deleteUser(SyncTvUser user) async {
@@ -324,8 +252,30 @@ class _UserManagementTabState extends State<UserManagementTab> {
     });
   }
 
-  Future<void> _batchBanUsers() async {
+  Future<void> _runUserBatch(
+    _UserBatchAction action,
+    Future<void> Function() operation,
+  ) async {
+    if (!mounted || _batchAction != null || _selectedUserIds.isEmpty) return;
+    setState(() => _batchAction = action);
+    try {
+      await operation();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _batchAction = null;
+          _batchPending = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _batchBanUsers() =>
+      _runUserBatch(_UserBatchAction.ban, _confirmAndBanUsers);
+
+  Future<void> _confirmAndBanUsers() async {
     if (_selectedUserIds.isEmpty) return;
+    final targetIds = _selectedUserIds.toList(growable: false);
     final l10n = context.l10n;
     final reasonController = TextEditingController();
     final confirmed = await AppDialogs.showStyledDialog<bool>(
@@ -336,7 +286,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.usersWillBeBanned(_selectedUserIds.length)),
+          Text(l10n.usersWillBeBanned(targetIds.length)),
           const SizedBox(height: 12),
           AppDialogs.createFormField(
             context: context,
@@ -357,31 +307,36 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ),
       ],
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
+    setState(() => _batchPending = true);
     try {
       final result = await adminGateway.adminBatchBanUsers(
-        _selectedUserIds.toList(),
+        targetIds,
         reason: reasonController.text.trim(),
       );
       if (!mounted) return;
       _showBatchResult(l10n.batchBanCompleted, result);
-      setState(_selectedUserIds.clear);
-      _loadUsers(silent: true);
+      _removeSuccessfulBatchSelections(targetIds, result);
+      await _loadUsers(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(context, l10n.batchBanFailed('$e'));
     }
   }
 
-  Future<void> _batchDeleteUsers() async {
+  Future<void> _batchDeleteUsers() =>
+      _runUserBatch(_UserBatchAction.delete, _confirmAndDeleteUsers);
+
+  Future<void> _confirmAndDeleteUsers() async {
     if (_selectedUserIds.isEmpty) return;
+    final targetIds = _selectedUserIds.toList(growable: false);
     final l10n = context.l10n;
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: l10n.batchDeleteUsers,
       icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
       content: _destructiveDialogContent(
-        l10n.usersWillBeDeleted(_selectedUserIds.length),
+        l10n.usersWillBeDeleted(targetIds.length),
         [
           l10n.batchDeleteUsersClearsAccountData,
           l10n.batchDeleteUsersAffectsRelatedData,
@@ -398,19 +353,29 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ),
       ],
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
+    setState(() => _batchPending = true);
     try {
-      final result = await adminGateway.adminBatchDeleteUsers(
-        _selectedUserIds.toList(),
-      );
+      final result = await adminGateway.adminBatchDeleteUsers(targetIds);
       if (!mounted) return;
       _showBatchResult(l10n.batchDeleteCompleted, result);
-      setState(_selectedUserIds.clear);
-      _loadUsers(silent: true);
+      _removeSuccessfulBatchSelections(targetIds, result);
+      await _loadUsers(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(context, l10n.batchDeleteFailed('$e'));
     }
+  }
+
+  void _removeSuccessfulBatchSelections(
+    List<String> targetIds,
+    AdminBatchOperationResult result,
+  ) {
+    final targets = targetIds.toSet();
+    final succeeded = result.results
+        .where((item) => item.success && targets.contains(item.id))
+        .map((item) => item.id);
+    setState(() => _selectedUserIds.removeAll(succeeded));
   }
 
   void _showBatchResult(String title, AdminBatchOperationResult result) {
@@ -632,10 +597,12 @@ class _UserManagementTabState extends State<UserManagementTab> {
         final pageCount = total <= 0 ? 1 : ((total + pageSize - 1) ~/ pageSize);
         return Column(
           children: [
-            AppSingleChildScrollView(
-              scrollDirection: Axis.horizontal,
+            Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 8),
-              child: Row(
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   SizedBox(
                     width: 180,
@@ -656,7 +623,6 @@ class _UserManagementTabState extends State<UserManagementTab> {
                       },
                     ),
                   ),
-                  const SizedBox(width: 12),
                   AppSelect<common_enum.RoomStatus>(
                     value: status,
                     options: {
@@ -674,7 +640,6 @@ class _UserManagementTabState extends State<UserManagementTab> {
                       loadRooms();
                     },
                   ),
-                  const SizedBox(width: 12),
                   AppSelect<bool?>(
                     value: isBanned,
                     options: {
@@ -688,7 +653,6 @@ class _UserManagementTabState extends State<UserManagementTab> {
                       loadRooms();
                     },
                   ),
-                  const SizedBox(width: 12),
                   AppSelect<admin_enum.RoomListSortBy>(
                     value: sortBy,
                     options: {
@@ -921,96 +885,23 @@ class _UserManagementTabState extends State<UserManagementTab> {
   }
 
   Future<void> _renameUser(SyncTvUser user) async {
-    final l10n = context.l10n;
-    final controller = TextEditingController(text: user.username);
-    final confirmed = await AppDialogs.showStyledDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
-      title: l10n.changeUsername,
-      icon: const Icon(
-        Icons.drive_file_rename_outline_rounded,
-        color: Color(0xFF5D5FEF),
-      ),
-      content: AppDialogs.createFormField(
-        context: context,
-        label: l10n.newUsername,
-        controller: controller,
-        hintText: l10n.usernameLengthHint,
-        prefixIcon: Icons.person_outline,
-      ),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: l10n.save,
-        ),
-      ],
+      builder: (_) =>
+          EditUserDialog.rename(userId: user.id, username: user.username),
     );
-    if (confirmed != true) return;
-    try {
-      await adminGateway.adminUpdateUsername(user.id, controller.text.trim());
-      if (!mounted) return;
-      AppNotifications.showSuccess(context, l10n.usernameUpdated);
-      _loadUsers(silent: true);
-    } catch (e) {
-      if (!mounted) return;
-      AppNotifications.showError(context, l10n.changeUsernameFailed('$e'));
-    }
+    if (saved != true || !mounted) return;
+    AppNotifications.showSuccess(context, context.l10n.usernameUpdated);
+    await _loadUsers(silent: true);
   }
 
   Future<void> _resetPassword(SyncTvUser user) async {
-    final l10n = context.l10n;
-    final password = TextEditingController();
-    final reason = TextEditingController();
-    final confirmed = await AppDialogs.showStyledDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
-      title: l10n.resetPassword,
-      icon: const Icon(Icons.lock_reset_rounded, color: Colors.orange),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppDialogs.createFormField(
-            context: context,
-            label: l10n.newPassword,
-            controller: password,
-            hintText: l10n.passwordMinimumLength(8),
-            prefixIcon: Icons.lock_outline,
-            obscureText: true,
-          ),
-          const SizedBox(height: 12),
-          AppDialogs.createFormField(
-            context: context,
-            label: l10n.auditReason,
-            controller: reason,
-            hintText: l10n.optional,
-            prefixIcon: Icons.edit_note_rounded,
-          ),
-        ],
-      ),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: l10n.reset,
-        ),
-      ],
+      builder: (_) => EditUserDialog.password(userId: user.id),
     );
-    if (confirmed != true) return;
-    try {
-      await adminGateway.adminUpdatePassword(
-        user.id,
-        password.text,
-        reason: reason.text.trim(),
-      );
-      if (!mounted) return;
-      AppNotifications.showSuccess(context, l10n.passwordReset);
-    } catch (e) {
-      if (!mounted) return;
-      AppNotifications.showError(context, l10n.resetPasswordFailed('$e'));
-    }
+    if (saved != true || !mounted) return;
+    AppNotifications.showSuccess(context, context.l10n.passwordReset);
   }
 
   @override
@@ -1018,446 +909,384 @@ class _UserManagementTabState extends State<UserManagementTab> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _AdminToolbarWrap(
-                items: [
-                  _AdminToolbarItem(
-                    width: 240,
-                    child: _buildStyledTextField(
-                      controller: _searchController,
-                      onSubmitted: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                          _page = 1;
-                        });
-                        _loadUsers();
-                      },
-                      hint: context.l10n.searchUsers,
-                      icon: Icons.search,
-                    ),
-                  ),
-                  _AdminToolbarItem(
-                    width: 104,
-                    child: _AdminPanelCard(
-                      isDark: isDark,
-                      child: AppInkSurface(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: _addUser,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.person_add_rounded,
-                                  color: theme.primaryColor,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  context.l10n.add,
-                                  style: TextStyle(
-                                    color: theme.primaryColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  _AdminToolbarItem(
-                    width: 44,
-                    child: AppIconButton(
-                      tooltip: context.l10n.selectCurrentPage,
-                      icon: Icons.select_all_rounded,
-                      onPressed: _users.isEmpty
-                          ? null
-                          : () {
-                              setState(() {
-                                _selectedUserIds.addAll(
-                                  _users.map((user) => user.id),
-                                );
-                              });
-                            },
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: _AdminToolbarWrap(
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _AdminToolbarWrap(
                   items: [
                     _AdminToolbarItem(
-                      width: 112,
-                      child: AppSelect<common_enum.UserStatus>(
-                        value: _statusFilter,
-                        options: {
-                          context.l10n.allStatuses:
-                              common_enum.UserStatus.USER_STATUS_UNSPECIFIED,
-                          context.l10n.active:
-                              common_enum.UserStatus.USER_STATUS_ACTIVE,
-                          context.l10n.banned:
-                              common_enum.UserStatus.USER_STATUS_BANNED,
-                        },
-                        onChanged: (value) {
-                          if (value == null) return;
+                      width: 240,
+                      child: _buildStyledTextField(
+                        controller: _searchController,
+                        onSubmitted: (val) {
                           setState(() {
-                            _statusFilter = value;
+                            _searchQuery = val;
                             _page = 1;
                           });
                           _loadUsers();
                         },
+                        hint: context.l10n.searchUsers,
+                        icon: Icons.search,
                       ),
                     ),
                     _AdminToolbarItem(
-                      width: 112,
-                      child: AppSelect<common_enum.UserRole>(
-                        value: _roleFilter,
-                        options: {
-                          context.l10n.allRoles:
-                              common_enum.UserRole.USER_ROLE_UNSPECIFIED,
-                          'Root': common_enum.UserRole.USER_ROLE_ROOT,
-                          context.l10n.administrator:
-                              common_enum.UserRole.USER_ROLE_ADMIN,
-                          context.l10n.user:
-                              common_enum.UserRole.USER_ROLE_USER,
-                        },
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            _roleFilter = value;
-                            _page = 1;
-                          });
-                          _loadUsers();
-                        },
-                      ),
-                    ),
-                    _AdminToolbarItem(
-                      width: 112,
-                      child: AppSelect<bool?>(
-                        value: _bannedFilter,
-                        options: {
-                          context.l10n.allBanStates: null,
-                          context.l10n.bannedOnly: true,
-                          context.l10n.notBanned: false,
-                        },
-                        onChanged: (value) {
-                          setState(() {
-                            _bannedFilter = value;
-                            _page = 1;
-                          });
-                          _loadUsers();
-                        },
-                      ),
-                    ),
-                    _AdminToolbarItem(
-                      width: 126,
-                      child: AppSelect<admin_enum.UserListSortBy>(
-                        value: _sortBy,
-                        options: {
-                          context.l10n.createdAt: admin_enum
-                              .UserListSortBy
-                              .USER_LIST_SORT_BY_CREATED_AT,
-                          context.l10n.updatedAt: admin_enum
-                              .UserListSortBy
-                              .USER_LIST_SORT_BY_UPDATED_AT,
-                          context.l10n.username: admin_enum
-                              .UserListSortBy
-                              .USER_LIST_SORT_BY_USERNAME,
-                          context.l10n.email:
-                              admin_enum.UserListSortBy.USER_LIST_SORT_BY_EMAIL,
-                          context.l10n.status: admin_enum
-                              .UserListSortBy
-                              .USER_LIST_SORT_BY_STATUS,
-                          context.l10n.role:
-                              admin_enum.UserListSortBy.USER_LIST_SORT_BY_ROLE,
-                        },
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            _sortBy = value;
-                            _page = 1;
-                          });
-                          _loadUsers();
-                        },
+                      width: 104,
+                      child: AppActionButton(
+                        onPressed: _addUser,
+                        icon: Icons.person_add_rounded,
+                        label: context.l10n.add,
                       ),
                     ),
                     _AdminToolbarItem(
                       width: 44,
                       child: AppIconButton(
-                        tooltip:
-                            _sortDirection ==
-                                admin_enum.SortDirection.SORT_DIRECTION_DESC
-                            ? context.l10n.descending
-                            : context.l10n.ascending,
-                        icon:
-                            _sortDirection ==
-                                admin_enum.SortDirection.SORT_DIRECTION_DESC
-                            ? Icons.south_rounded
-                            : Icons.north_rounded,
-                        onPressed: () {
-                          setState(() {
-                            _sortDirection =
-                                _sortDirection ==
-                                    admin_enum.SortDirection.SORT_DIRECTION_DESC
-                                ? admin_enum.SortDirection.SORT_DIRECTION_ASC
-                                : admin_enum.SortDirection.SORT_DIRECTION_DESC;
-                            _page = 1;
-                          });
-                          _loadUsers();
-                        },
-                      ),
-                    ),
-                    _AdminToolbarItem(
-                      width: 96,
-                      child: AppSelect<int>(
-                        value: _pageSize,
-                        options: {
-                          context.l10n.itemsPerPage(20): 20,
-                          context.l10n.itemsPerPage(50): 50,
-                          context.l10n.itemsPerPage(100): 100,
-                        },
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            _pageSize = value;
-                            _page = 1;
-                          });
-                          _loadUsers();
-                        },
+                        tooltip: context.l10n.selectCurrentPage,
+                        icon: Icons.select_all_rounded,
+                        onPressed: _users.isEmpty
+                            ? null
+                            : () {
+                                setState(() {
+                                  _selectedUserIds.addAll(
+                                    _users.map((user) => user.id),
+                                  );
+                                });
+                              },
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ),
-        if (_selectedUserIds.isNotEmpty) _buildUserBatchBar(theme, isDark),
-        _AdminPager(
-          page: _page,
-          pageSize: _pageSize,
-          total: _total,
-          onPrevious: _page <= 1
-              ? null
-              : () {
-                  setState(() => _page -= 1);
-                  _loadUsers();
-                },
-          onNext: _page >= _pageCount
-              ? null
-              : () {
-                  setState(() => _page += 1);
-                  _loadUsers();
-                },
-        ),
-        Expanded(
-          child: _isLoading
-              ? const AppLoadingIndicator()
-              : AppListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  itemCount: _users.length,
-                  itemBuilder: (context, index) {
-                    final user = _users[index];
-                    final isAdmin = user.role.hasSystemAdminPrivileges;
-                    final isBanned =
-                        user.status ==
-                        common_enum.UserStatus.USER_STATUS_BANNED;
-
-                    return _AdminPanelCard(
-                      isDark: isDark,
-                      child: AppTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        prefix: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AppCheckbox(
-                              value: _selectedUserIds.contains(user.id),
-                              semanticsLabel: context.l10n.selectUser,
-                              onChanged: (value) =>
-                                  _toggleUserSelection(user.id, value),
-                            ),
-                            AppAvatar(
-                              name: user.username,
-                              radius: 24,
-                              backgroundColor: isAdmin
-                                  ? Colors.amber.withValues(alpha: 0.2)
-                                  : theme.primaryColor.withValues(alpha: 0.1),
-                              foregroundColor: isAdmin
-                                  ? Colors.amber.shade800
-                                  : theme.primaryColor,
-                              textStyle: const TextStyle(fontSize: 18),
-                            ),
-                          ],
-                        ),
-                        title: Text(
-                          user.username,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            context.l10n.userListSummary(
-                              user.id,
-                              _systemRoleText(context, user.role),
-                              _userStatusText(context, user.status),
-                              user.connectionCount > 0
-                                  ? context.l10n.connectionCount(
-                                      user.connectionCount,
-                                    )
-                                  : context.l10n.offline,
-                            ),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: theme.hintColor,
-                            ),
-                          ),
-                        ),
-                        suffix: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (isBanned) ...[
-                              AppIconButton(
-                                icon: Icons.check_circle_outline,
-                                iconSize: 24,
-                                tooltip: context.l10n.unban,
-                                onPressed: () => _banUser(user, false),
-                              ),
-                            ] else ...[
-                              AppIconButton(
-                                icon: Icons.info_outline,
-                                iconSize: 22,
-                                tooltip: context.l10n.details,
-                                onPressed: () => _showUserDetails(user),
-                              ),
-                              AppIconButton(
-                                icon: Icons.report_gmailerrorred_outlined,
-                                iconSize: 22,
-                                tooltip: context.l10n.viewReports,
-                                onPressed: () => _openContentReportsViewer(
-                                  context,
-                                  title: context.l10n.userReports(
-                                    user.username,
-                                  ),
-                                  targetType: admin_enum
-                                      .ContentReportTargetType
-                                      .CONTENT_REPORT_TARGET_TYPE_USER,
-                                  targetUserId: user.id,
-                                  scope: admin_enum
-                                      .ContentReportScope
-                                      .CONTENT_REPORT_SCOPE_TARGET_USER,
-                                ),
-                              ),
-                              AppIconButton(
-                                icon: Icons.edit_outlined,
-                                iconSize: 22,
-                                tooltip: context.l10n.rename,
-                                onPressed: () => _renameUser(user),
-                              ),
-                              AppIconButton(
-                                icon: Icons.lock_reset_rounded,
-                                iconSize: 22,
-                                tooltip: context.l10n.resetPassword,
-                                onPressed: () => _resetPassword(user),
-                              ),
-                              AppIconButton(
-                                icon: Icons.block,
-                                iconSize: 22,
-                                style: AppIconButtonStyle.destructive,
-                                tooltip: context.l10n.ban,
-                                onPressed: () => _banUser(user, true),
-                              ),
-                              AppIconButton(
-                                icon: isAdmin
-                                    ? Icons.admin_panel_settings
-                                    : Icons.admin_panel_settings_outlined,
-                                iconSize: 22,
-                                tooltip: isAdmin
-                                    ? context.l10n.removeAdministratorRole
-                                    : context.l10n.makeAdministrator,
-                                onPressed: () => _toggleAdmin(user),
-                              ),
-                            ],
-                            AppIconButton(
-                              icon: Icons.delete_outline,
-                              iconSize: 22,
-                              style: AppIconButtonStyle.destructive,
-                              tooltip: context.l10n.deleteUser,
-                              onPressed: () => _deleteUser(user),
-                            ),
-                          ],
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: _AdminToolbarWrap(
+                    items: [
+                      _AdminToolbarItem(
+                        child: AppSelect<common_enum.UserStatus>(
+                          value: _statusFilter,
+                          options: {
+                            context.l10n.allStatuses:
+                                common_enum.UserStatus.USER_STATUS_UNSPECIFIED,
+                            context.l10n.active:
+                                common_enum.UserStatus.USER_STATUS_ACTIVE,
+                            context.l10n.banned:
+                                common_enum.UserStatus.USER_STATUS_BANNED,
+                          },
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() {
+                              _statusFilter = value;
+                              _page = 1;
+                            });
+                            _loadUsers();
+                          },
                         ),
                       ),
-                    );
-                  },
+                      _AdminToolbarItem(
+                        child: AppSelect<common_enum.UserRole>(
+                          value: _roleFilter,
+                          options: {
+                            context.l10n.allRoles:
+                                common_enum.UserRole.USER_ROLE_UNSPECIFIED,
+                            'Root': common_enum.UserRole.USER_ROLE_ROOT,
+                            context.l10n.administrator:
+                                common_enum.UserRole.USER_ROLE_ADMIN,
+                            context.l10n.user:
+                                common_enum.UserRole.USER_ROLE_USER,
+                          },
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() {
+                              _roleFilter = value;
+                              _page = 1;
+                            });
+                            _loadUsers();
+                          },
+                        ),
+                      ),
+                      _AdminToolbarItem(
+                        child: AppSelect<bool?>(
+                          value: _bannedFilter,
+                          options: {
+                            context.l10n.allBanStates: null,
+                            context.l10n.bannedOnly: true,
+                            context.l10n.notBanned: false,
+                          },
+                          onChanged: (value) {
+                            setState(() {
+                              _bannedFilter = value;
+                              _page = 1;
+                            });
+                            _loadUsers();
+                          },
+                        ),
+                      ),
+                      _AdminToolbarItem(
+                        child: AppSelect<admin_enum.UserListSortBy>(
+                          value: _sortBy,
+                          options: {
+                            context.l10n.createdAt: admin_enum
+                                .UserListSortBy
+                                .USER_LIST_SORT_BY_CREATED_AT,
+                            context.l10n.updatedAt: admin_enum
+                                .UserListSortBy
+                                .USER_LIST_SORT_BY_UPDATED_AT,
+                            context.l10n.username: admin_enum
+                                .UserListSortBy
+                                .USER_LIST_SORT_BY_USERNAME,
+                            context.l10n.email: admin_enum
+                                .UserListSortBy
+                                .USER_LIST_SORT_BY_EMAIL,
+                            context.l10n.status: admin_enum
+                                .UserListSortBy
+                                .USER_LIST_SORT_BY_STATUS,
+                            context.l10n.role: admin_enum
+                                .UserListSortBy
+                                .USER_LIST_SORT_BY_ROLE,
+                          },
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() {
+                              _sortBy = value;
+                              _page = 1;
+                            });
+                            _loadUsers();
+                          },
+                        ),
+                      ),
+                      _AdminToolbarItem(
+                        width: 44,
+                        child: AppIconButton(
+                          tooltip:
+                              _sortDirection ==
+                                  admin_enum.SortDirection.SORT_DIRECTION_DESC
+                              ? context.l10n.descending
+                              : context.l10n.ascending,
+                          icon:
+                              _sortDirection ==
+                                  admin_enum.SortDirection.SORT_DIRECTION_DESC
+                              ? Icons.south_rounded
+                              : Icons.north_rounded,
+                          onPressed: () {
+                            setState(() {
+                              _sortDirection =
+                                  _sortDirection ==
+                                      admin_enum
+                                          .SortDirection
+                                          .SORT_DIRECTION_DESC
+                                  ? admin_enum.SortDirection.SORT_DIRECTION_ASC
+                                  : admin_enum
+                                        .SortDirection
+                                        .SORT_DIRECTION_DESC;
+                              _page = 1;
+                            });
+                            _loadUsers();
+                          },
+                        ),
+                      ),
+                      _AdminToolbarItem(
+                        child: AppSelect<int>(
+                          value: _pageSize,
+                          options: {
+                            context.l10n.itemsPerPage(20): 20,
+                            context.l10n.itemsPerPage(50): 50,
+                            context.l10n.itemsPerPage(100): 100,
+                          },
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() {
+                              _pageSize = value;
+                              _page = 1;
+                            });
+                            _loadUsers();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              ],
+            ),
+          ),
         ),
+        if (_selectedUserIds.isNotEmpty)
+          SliverToBoxAdapter(child: _buildUserBatchBar()),
+        SliverToBoxAdapter(
+          child: _AdminPager(
+            page: _page,
+            pageSize: _pageSize,
+            total: _total,
+            onPrevious: _page <= 1
+                ? null
+                : () {
+                    setState(() => _page -= 1);
+                    _loadUsers();
+                  },
+            onNext: _page >= _pageCount
+                ? null
+                : () {
+                    setState(() => _page += 1);
+                    _loadUsers();
+                  },
+          ),
+        ),
+        if (_isLoading)
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: AppLoadingIndicator(),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            sliver: SliverList.builder(
+              itemCount: _users.length,
+              itemBuilder: (context, index) {
+                final user = _users[index];
+                final isAdmin = user.role.hasSystemAdminPrivileges;
+                final isBanned =
+                    user.status == common_enum.UserStatus.USER_STATUS_BANNED;
+
+                return _AdminPanelCard(
+                  isDark: isDark,
+                  child: _AdminRecordTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    prefix: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppCheckbox(
+                          value: _selectedUserIds.contains(user.id),
+                          semanticsLabel: context.l10n.selectUser,
+                          onChanged: (value) =>
+                              _toggleUserSelection(user.id, value),
+                        ),
+                        AppAvatar(
+                          name: user.username,
+                          radius: 24,
+                          backgroundColor: isAdmin
+                              ? Colors.amber.withValues(alpha: 0.2)
+                              : theme.primaryColor.withValues(alpha: 0.1),
+                          foregroundColor: isAdmin
+                              ? Colors.amber.shade800
+                              : theme.primaryColor,
+                          textStyle: const TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                    title: Text(
+                      user.username,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        context.l10n.userListSummary(
+                          user.id,
+                          _systemRoleText(context, user.role),
+                          _userStatusText(context, user.status),
+                          user.connectionCount > 0
+                              ? context.l10n.connectionCount(
+                                  user.connectionCount,
+                                )
+                              : context.l10n.offline,
+                        ),
+                        style: TextStyle(fontSize: 12, color: theme.hintColor),
+                      ),
+                    ),
+                    actions: [
+                      if (isBanned) ...[
+                        AppIconButton(
+                          icon: Icons.check_circle_outline,
+                          iconSize: 24,
+                          tooltip: context.l10n.unban,
+                          onPressed: () => _banUser(user, false),
+                        ),
+                      ] else ...[
+                        AppIconButton(
+                          icon: Icons.info_outline,
+                          iconSize: 22,
+                          tooltip: context.l10n.details,
+                          onPressed: () => _showUserDetails(user),
+                        ),
+                        AppIconButton(
+                          icon: Icons.report_gmailerrorred_outlined,
+                          iconSize: 22,
+                          tooltip: context.l10n.viewReports,
+                          onPressed: () => _openContentReportsViewer(
+                            context,
+                            title: context.l10n.userReports(user.username),
+                            targetType: admin_enum
+                                .ContentReportTargetType
+                                .CONTENT_REPORT_TARGET_TYPE_USER,
+                            targetUserId: user.id,
+                            scope: admin_enum
+                                .ContentReportScope
+                                .CONTENT_REPORT_SCOPE_TARGET_USER,
+                          ),
+                        ),
+                        AppIconButton(
+                          icon: Icons.edit_outlined,
+                          iconSize: 22,
+                          tooltip: context.l10n.rename,
+                          onPressed: () => _renameUser(user),
+                        ),
+                        AppIconButton(
+                          icon: Icons.lock_reset_rounded,
+                          iconSize: 22,
+                          tooltip: context.l10n.resetPassword,
+                          onPressed: () => _resetPassword(user),
+                        ),
+                        AppIconButton(
+                          icon: Icons.block,
+                          iconSize: 22,
+                          style: AppIconButtonStyle.destructive,
+                          tooltip: context.l10n.ban,
+                          onPressed: () => _banUser(user, true),
+                        ),
+                        AppIconButton(
+                          icon: isAdmin
+                              ? Icons.admin_panel_settings
+                              : Icons.admin_panel_settings_outlined,
+                          iconSize: 22,
+                          tooltip: isAdmin
+                              ? context.l10n.removeAdministratorRole
+                              : context.l10n.makeAdministrator,
+                          onPressed: () => _toggleAdmin(user),
+                        ),
+                      ],
+                      AppIconButton(
+                        icon: Icons.delete_outline,
+                        iconSize: 22,
+                        style: AppIconButtonStyle.destructive,
+                        tooltip: context.l10n.deleteUser,
+                        onPressed: () => _deleteUser(user),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildUserBatchBar(ThemeData theme, bool isDark) {
-    return AppPanelSurface(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      color: isDark ? Colors.grey.shade900 : Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
-      child: Row(
-        children: [
-          Icon(Icons.checklist_rounded, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(context.l10n.usersSelected(_selectedUserIds.length)),
-          ),
-          AppActionButton(
-            onPressed: () => setState(_selectedUserIds.clear),
-            label: context.l10n.clear,
-            style: AppActionButtonStyle.text,
-          ),
-          const SizedBox(width: 4),
-          AppActionButton(
-            onPressed: _batchBanUsers,
-            icon: Icons.block_rounded,
-            label: context.l10n.ban,
-            style: AppActionButtonStyle.tonal,
-          ),
-          const SizedBox(width: 8),
-          AppActionButton(
-            onPressed: _batchDeleteUsers,
-            icon: Icons.delete_outline_rounded,
-            label: context.l10n.delete,
-            style: AppActionButtonStyle.destructive,
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildUserBatchBar() => _AdminBatchBar(
+    label: context.l10n.usersSelected(_selectedUserIds.length),
+    onClear: () => setState(_selectedUserIds.clear),
+    onBan: _batchAction == null ? _batchBanUsers : null,
+    onDelete: _batchAction == null ? _batchDeleteUsers : null,
+    banning: _batchPending && _batchAction == _UserBatchAction.ban,
+    deleting: _batchPending && _batchAction == _UserBatchAction.delete,
+  );
 
   Widget _buildStyledTextField({
     required TextEditingController controller,

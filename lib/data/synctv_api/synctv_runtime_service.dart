@@ -14,12 +14,16 @@ typedef SyncTvServerInfoProbe = Future<client.GetServerInfoResponse> Function(
 class SyncTvRuntimeService {
   static const serverProbeTimeout = Duration(seconds: 8);
 
-  SyncTvRuntimeService({this.serverInfoProbe, String? singleServerEndpoint})
-    : _singleServerEndpoint = _resolveSingleServerEndpoint(
-        singleServerEndpoint,
-      ),
-      session = SyncTvSession() {
-    sessionStore = SyncTvSessionStore(session);
+  SyncTvRuntimeService({
+    this.serverInfoProbe,
+    String? singleServerEndpoint,
+    SyncTvSessionStore Function(SyncTvSession)? sessionStoreFactory,
+  }) : _singleServerEndpoint = _resolveSingleServerEndpoint(
+         singleServerEndpoint,
+       ),
+       session = SyncTvSession() {
+    sessionStore =
+        sessionStoreFactory?.call(session) ?? SyncTvSessionStore(session);
     _api = _createClient(SyncTvSessionStore.clientBootstrapBaseUrl);
   }
 
@@ -28,14 +32,17 @@ class SyncTvRuntimeService {
   final String? _singleServerEndpoint;
   late final SyncTvSessionStore sessionStore;
   late SyncTvApiClient _api;
-  final StreamController<void> _authErrorController =
-      StreamController<void>.broadcast();
-  final Set<({SyncTvApiClient source, int generation})> _authErrorsInFlight =
-      {};
+  final StreamController<int> _authErrorController =
+      StreamController<int>.broadcast();
+  final Set<({SyncTvApiClient source, int generation, int sessionGeneration})>
+  _authErrorsInFlight = {};
   int _serverSelectionRevision = 0;
+  Future<void>? _initialization;
 
   SyncTvApiClient get api => _api;
-  Stream<void> get onAuthError => _authErrorController.stream;
+  Stream<void> get onAuthError => _authErrorController.stream
+      .where((generation) => generation == session.generation)
+      .map<void>((_) {});
   String get baseUrl => sessionStore.baseUrl;
   bool get hasRecoverableSession => session.hasRecoverableCredentials;
   List<SyncTvServerProfile> get servers =>
@@ -46,7 +53,15 @@ class SyncTvRuntimeService {
   SyncTvSessionIdentity get sessionIdentity => session.identity;
   bool get singleServerMode => _singleServerEndpoint != null;
 
-  Future<void> init() async {
+  Future<void> init() => _initialization ??= _initialize().onError((
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    _initialization = null;
+    Error.throwWithStackTrace(error, stackTrace);
+  });
+
+  Future<void> _initialize() async {
     await sessionStore.load();
     if (_singleServerEndpoint case final endpoint?) {
       await sessionStore.forceSingleServer(endpoint);
@@ -64,9 +79,10 @@ class SyncTvRuntimeService {
   }
 
   Future<void> setBaseUrl(String url) async {
-    _requireAllowedEndpoint(url);
+    final endpoint = ServerEndpointIdentity.fromUserInput(url);
+    _requireAllowedEndpoint(endpoint);
     _serverSelectionRevision++;
-    _api.configureServer(url, allowInsecureTls: false);
+    _api.configureServer(endpoint, allowInsecureTls: false);
     await sessionStore.setBaseUrl(_api.baseUrl);
   }
 
@@ -74,16 +90,23 @@ class SyncTvRuntimeService {
     String url, {
     bool allowInsecureTls = false,
   }) async {
-    _requireAllowedEndpoint(url, allowInsecureTls: allowInsecureTls);
+    final endpoint = ServerEndpointIdentity.fromUserInput(url);
+    _requireAllowedEndpoint(endpoint, allowInsecureTls: allowInsecureTls);
     if (_singleServerEndpoint != null) {
       return sessionStore.forceSingleServer(_singleServerEndpoint);
     }
-    final serverClient = _createClient(url, allowInsecureTls: allowInsecureTls);
+    final serverClient = _createClient(
+      endpoint,
+      allowInsecureTls: allowInsecureTls,
+    );
+    final revision = ++_serverSelectionRevision;
     try {
       final info = await _getServerInfo(serverClient)
           .timeout(serverProbeTimeout);
+      if (revision != _serverSelectionRevision) {
+        throw const SyncTvStaleEndpointException();
+      }
       final declaredServerId = info.serverId.trim();
-      _serverSelectionRevision++;
       _api.configureServer(
         serverClient.baseUrl,
         allowInsecureTls: allowInsecureTls,
@@ -120,8 +143,12 @@ class SyncTvRuntimeService {
       );
     }
     final normalized = ServerEndpointIdentity.normalize(endpoint);
+    final target = servers
+        .where((server) => server.endpoint == normalized)
+        .firstOrNull;
+    if (target == null || target.isBuiltIn) return;
+    _serverSelectionRevision++;
     if (activeServer?.endpoint == normalized) {
-      _serverSelectionRevision++;
       final next = servers
           .where((server) => server.endpoint != normalized)
           .firstOrNull;
@@ -237,18 +264,32 @@ class SyncTvRuntimeService {
         !source.isEndpointGenerationCurrent(generation)) {
       return;
     }
-    final operation = (source: source, generation: generation);
-    if (!_authErrorsInFlight.add(operation)) return;
+    if (_authErrorsInFlight.contains((
+      source: source,
+      generation: generation,
+      sessionGeneration: session.generation,
+    ))) {
+      return;
+    }
+    // Clearing is synchronous; persistence may outlive this session.
+    final persistence = sessionStore.clearSessionAndPersist();
+    final operation = (
+      source: source,
+      generation: generation,
+      sessionGeneration: session.generation,
+    );
+    _authErrorsInFlight.add(operation);
     unawaited(() async {
       try {
-        if (!identical(source, _api) ||
-            !source.isEndpointGenerationCurrent(generation)) {
-          return;
+        try {
+          await persistence;
+        } catch (error) {
+          debugPrint('Failed to persist expired session: $error');
         }
-        await sessionStore.clearSessionAndPersist();
         if (identical(source, _api) &&
-            source.isEndpointGenerationCurrent(generation)) {
-          _authErrorController.add(null);
+            source.isEndpointGenerationCurrent(generation) &&
+            session.generation == operation.sessionGeneration) {
+          _authErrorController.add(operation.sessionGeneration);
         }
       } finally {
         _authErrorsInFlight.remove(operation);

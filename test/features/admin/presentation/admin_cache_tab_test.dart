@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/admin_models.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
@@ -12,6 +13,56 @@ import 'package:synctv_app/l10n/l10n.dart';
 import '../../../test_app.dart';
 
 void main() {
+  for (final size in [const Size(320, 240), const Size(740, 320)]) {
+    testWidgets(
+      'cache stats and maintenance are reachable at $size with enlarged text',
+      (tester) async {
+        await tester.binding.setSurfaceSize(size);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final gateway = _CacheAdminGateway();
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('en'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            builder: (context, child) =>
+                DependencyScope<AdminGateway>(value: gateway, child: child!),
+            home: const Scaffold(body: AdminSliceCacheTab()),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await tester.scrollUntilVisible(
+          find.text('512.0 MiB'),
+          150,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('512.0 MiB').hitTestable(), findsOneWidget);
+        final value = tester.renderObject<RenderParagraph>(
+          find.descendant(
+            of: find.text('512.0 MiB'),
+            matching: find.byType(RichText),
+          ),
+        );
+        expect(value.didExceedMaxLines, isFalse);
+        await tester.scrollUntilVisible(
+          find.text('Evict expired'),
+          -150,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Evict expired'));
+        await tester.pumpAndSettle();
+        expect(gateway.evictionCount, 1);
+        await tester.pump(const Duration(seconds: 4));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('slice cache tab renders stats and runs maintenance actions', (
     tester,
   ) async {
@@ -46,6 +97,31 @@ void main() {
     expect(gateway.purgeCount, 1);
     await tester.pump(const Duration(seconds: 4));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('slice cache preserves over-capacity usage with a bounded bar', (
+    tester,
+  ) async {
+    final gateway = _CacheAdminGateway(anomalousUsage: true);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => DependencyScope<AdminGateway>(
+          value: gateway,
+          child: buildThemedTestApp(context, child),
+        ),
+        home: const Scaffold(body: AdminSliceCacheTab()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('135.0%'), findsOneWidget);
+    expect(find.text('100.0%'), findsNothing);
+    expect(
+      tester.widget<AppLinearProgress>(find.byType(AppLinearProgress)).value,
+      1.0,
+    );
   });
 
   testWidgets(
@@ -131,9 +207,13 @@ void main() {
 }
 
 final class _CacheAdminGateway implements AdminGateway {
-  _CacheAdminGateway({this.partialFailure = false});
+  _CacheAdminGateway({
+    this.partialFailure = false,
+    this.anomalousUsage = false,
+  });
 
   final bool partialFailure;
+  final bool anomalousUsage;
   int evictionCount = 0;
   int purgeCount = 0;
   bool lastEvictionAllNodes = false;
@@ -149,7 +229,8 @@ final class _CacheAdminGateway implements AdminGateway {
       nextStats = null;
       return pending.future;
     }
-    return const AdminSliceCacheStats(
+    final usageRatio = anomalousUsage ? 1.35 : 0.5;
+    return AdminSliceCacheStats(
       nodes: [
         AdminSliceCacheNodeStats(
           nodeId: 'node_a',
@@ -170,7 +251,7 @@ final class _CacheAdminGateway implements AdminGateway {
           metadataEntries: 16,
           updatingEntries: 1,
           lockCount: 2,
-          usageRatio: 0.5,
+          usageRatio: usageRatio,
         ),
       ],
       failures: [],

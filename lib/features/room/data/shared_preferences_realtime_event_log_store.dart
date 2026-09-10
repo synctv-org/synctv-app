@@ -11,9 +11,11 @@ final class SharedPreferencesRealtimeEventLogStore
   @override
   Future<RealtimeEventLogPreferenceValues> load() async {
     final preferences = await SharedPreferences.getInstance();
+    final maxEntries = preferences.get(_maxEntriesKey);
+    final grouped = preferences.get(_groupedKey);
     return RealtimeEventLogPreferenceValues(
-      maxEntries: preferences.getInt(_maxEntriesKey),
-      grouped: preferences.getBool(_groupedKey),
+      maxEntries: maxEntries is int ? maxEntries : null,
+      grouped: grouped is bool ? grouped : null,
     );
   }
 

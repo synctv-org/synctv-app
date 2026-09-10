@@ -3,11 +3,13 @@
 <head>
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="SyncTV synchronized media playback">
   <meta name="color-scheme" content="light dark">
   <meta name="referrer" content="same-origin">
-  <meta name="theme-color" content="#111318">
+  <meta name="theme-color" content="#F6F7FA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,11 +22,52 @@
     html, body {
       margin: 0;
       min-height: 100%;
-      background: #111318;
+      background: #F6F7FA;
+      color: #111827;
+      font-family: system-ui, sans-serif;
+    }
+    #startup {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #startup img { width: 64px; height: 64px; }
+    #startup h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    #startup p { margin: 0; max-width: 280px; text-align: center; }
+    #startup progress { width: 160px; height: 4px; accent-color: #2563EB; }
+    #startup button {
+      min-height: 44px;
+      padding: 8px 20px;
+      border: 0;
+      border-radius: 8px;
+      background: #2563EB;
+      color: white;
+      font: inherit;
+      cursor: pointer;
+    }
+    #startup [hidden] { display: none; }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #111318; color: #F8FAFC; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #startup progress { visibility: hidden; }
     }
   </style>
 </head>
 <body>
+  <div id="startup" role="status" aria-live="polite">
+    <img src="icons/Icon-192.png" alt="" width="64" height="64">
+    <h1>SyncTV</h1>
+    <progress aria-label="Loading"></progress>
+    <p id="startup-error" hidden></p>
+    <button id="startup-retry" type="button" hidden>Retry</button>
+  </div>
+  <!-- Register recovery before fetching the Flutter bootstrap script. -->
+  <script src="startup.js"></script>
   <!-- Corbado flutter-passkeys Web bridge 2.5.0, vendored for offline and CSP-safe startup. -->
   <script
     src="passkeys_bundle.js"

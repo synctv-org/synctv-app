@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/realtime_event_log_preferences_controller.dart';
@@ -43,7 +45,82 @@ final class _RealtimeLogStore implements RealtimeEventLogPreferencesStore {
   }
 }
 
+final class _DelayedLogStore implements RealtimeEventLogPreferencesStore {
+  final reads = <Completer<RealtimeEventLogPreferenceValues>>[];
+  final writes = <Completer<void>>[];
+
+  @override
+  Future<RealtimeEventLogPreferenceValues> load() {
+    final result = Completer<RealtimeEventLogPreferenceValues>();
+    reads.add(result);
+    return result.future;
+  }
+
+  Future<void> _write() {
+    final result = Completer<void>();
+    writes.add(result);
+    return result.future;
+  }
+
+  @override
+  Future<void> saveGrouped(bool value) => _write();
+
+  @override
+  Future<void> saveMaxEntries(int value) => _write();
+}
+
 void main() {
+  test(
+    'realtime preferences retry failed reads and preserve edits during load',
+    () async {
+      final store = _DelayedLogStore();
+      final controller = RealtimeEventLogPreferencesController(store: store);
+      final failure = expectLater(controller.load(), throwsStateError);
+      await Future<void>.delayed(Duration.zero);
+      store.reads.single.completeError(StateError('read failed'));
+      await failure;
+      final retry = controller.load();
+      await Future<void>.delayed(Duration.zero);
+      final edit = controller.setGrouped(true);
+      store.reads.last.complete(
+        const RealtimeEventLogPreferenceValues(maxEntries: 300, grouped: false),
+      );
+      await retry;
+      await Future<void>.delayed(Duration.zero);
+      expect(controller.maxEntries.value, 300);
+      expect(controller.grouped.value, isTrue);
+      store.writes.single.complete();
+      await edit;
+    },
+  );
+
+  test(
+    'realtime preferences serialize saves and roll back to durable values',
+    () async {
+      final store = _DelayedLogStore();
+      final controller = RealtimeEventLogPreferencesController(store: store);
+      final first = expectLater(
+        controller.setMaxEntries(200),
+        throwsStateError,
+      );
+      final second = expectLater(
+        controller.setMaxEntries(300),
+        throwsStateError,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(store.writes, hasLength(1));
+      store.writes[0].completeError(StateError('first failed'));
+      await first;
+      await Future<void>.delayed(Duration.zero);
+      expect(controller.maxEntries.value, 300);
+      store.writes[1].completeError(StateError('second failed'));
+      await second;
+      expect(
+        controller.maxEntries.value,
+        RealtimeEventLogPreferencesController.defaultMaxEntries,
+      );
+    },
+  );
   test('player volume preferences normalize loaded values', () async {
     final store = _PlayerVolumeStore(
       values: const PlayerVolumePreferenceValues(

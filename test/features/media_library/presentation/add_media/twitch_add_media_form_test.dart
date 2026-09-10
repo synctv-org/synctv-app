@@ -101,7 +101,7 @@ void main() {
 
     expect(find.text('Twitch VOD'), findsOneWidget);
     expect(find.textContaining('2 qualities'), findsOneWidget);
-    expect(find.textContaining('1 chapters'), findsOneWidget);
+    expect(find.textContaining('1 chapter'), findsOneWidget);
     await tester.tap(find.text('Share my credentials'));
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('Twitch VOD'), findsNothing);

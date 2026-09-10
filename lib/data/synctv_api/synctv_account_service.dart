@@ -5,6 +5,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/core/identifiers/decimal_int64.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_memory_cache.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -417,22 +418,27 @@ class SyncTvNotificationDomainService {
     );
   }
 
-  Future<UserNotificationItem> getNotification(int notificationId) async {
+  Future<UserNotificationItem> getNotification(String notificationId) async {
+    final id = normalizeInt64Decimal(notificationId);
+    if (id == null) {
+      throw FormatException('Invalid notification ID', notificationId);
+    }
     final response = await _api.notifications.getNotification(
-      client.GetNotificationRequest(notificationId: Int64(notificationId)),
+      client.GetNotificationRequest(notificationId: Int64.parseInt(id)),
     );
     return notificationFromProto(response);
   }
 
   Future<void> markNotificationAsRead(UserNotificationItem item) async {
-    if (item.numericId <= 0) return;
-    await markNotificationsAsRead([item.numericId]);
+    await markNotificationsAsRead([item.id]);
   }
 
-  Future<void> markNotificationsAsRead(List<int> notificationIds) async {
+  Future<void> markNotificationsAsRead(List<String> notificationIds) async {
     final ids = notificationIds
-        .where((id) => id > 0)
-        .map(Int64.new)
+        .map((id) => normalizeInt64Decimal(id))
+        .whereType<String>()
+        .toSet()
+        .map(Int64.parseInt)
         .toList(growable: false);
     if (ids.isEmpty) return;
     await _api.notifications.markAsRead(
@@ -447,9 +453,10 @@ class SyncTvNotificationDomainService {
   }
 
   Future<void> deleteNotification(UserNotificationItem item) async {
-    if (item.numericId <= 0) return;
+    final id = normalizeInt64Decimal(item.id);
+    if (id == null) return;
     await _api.notifications.deleteNotification(
-      client.DeleteNotificationRequest(notificationId: Int64(item.numericId)),
+      client.DeleteNotificationRequest(notificationId: Int64.parseInt(id)),
     );
     _cache.invalidatePrefix('account:notifications');
   }
@@ -464,7 +471,6 @@ UserNotificationItem notificationFromProto(
   client.NotificationProto notification,
 ) {
   return UserNotificationItem(
-    numericId: int.tryParse(notification.id) ?? 0,
     id: notification.id,
     type: notification.notificationType,
     title: notification.title,

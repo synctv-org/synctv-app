@@ -113,7 +113,7 @@ final class SyncTvAccountGateway implements AccountGateway {
   );
 
   @override
-  Future<UserNotificationItem> getNotification(int notificationId) =>
+  Future<UserNotificationItem> getNotification(String notificationId) =>
       SyncTvService.getNotification(notificationId);
 
   @override
@@ -121,7 +121,7 @@ final class SyncTvAccountGateway implements AccountGateway {
       SyncTvService.markNotificationAsRead(item);
 
   @override
-  Future<void> markNotificationsAsRead(List<int> notificationIds) =>
+  Future<void> markNotificationsAsRead(List<String> notificationIds) =>
       SyncTvService.markNotificationsAsRead(notificationIds);
 
   @override

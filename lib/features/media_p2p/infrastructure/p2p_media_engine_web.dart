@@ -67,30 +67,40 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   final String _namespace;
   http.Client? _client;
   JSObject? _bridge;
+  JSFunction? _requestHandler;
+  Future<void>? _initialization;
   bool _disposed = false;
 
-  Future<void> initialize() async {
-    if (_disposed) throw StateError('P2P media engine has been disposed');
-    _client = http.Client();
+  @visibleForTesting
+  int get activeWorkerRequestCount => _workerControls.length;
+
+  Future<void> initialize() {
+    if (_disposed) {
+      return Future.error(StateError('P2P media engine has been disposed'));
+    }
+    return _initialization ??= _initialize();
+  }
+
+  Future<void> _initialize() async {
     final bridge = globalContext.getProperty<JSObject?>('SyncTvP2pBridge'.toJS);
     if (bridge == null) {
       throw StateError('SyncTV P2P Service Worker bridge is unavailable');
     }
-    _bridge = bridge;
-    final handler = ((JSAny? requestJson, JSObject port) {
-      unawaited(_handleWorkerRequest(requestJson, port));
-    }).toJS;
-    bridge.callMethod<JSAny?>('setRequestHandler'.toJS, handler);
     final ready = bridge.callMethod<JSAny?>('ready'.toJS);
     final readyValue = await (ready as JSPromise<JSAny?>).toDart;
+    if (_disposed) throw StateError('P2P media engine has been disposed');
     if (readyValue?.dartify() != true) {
-      bridge.callMethod<JSAny?>('setRequestHandler'.toJS, null);
-      _bridge = null;
-      _client?.close();
       throw StateError(
         'SyncTV P2P requires an active same-origin Service Worker',
       );
     }
+    final handler = ((JSAny? requestJson, JSObject port) {
+      unawaited(_handleWorkerRequest(requestJson, port));
+    }).toJS;
+    _client = http.Client();
+    _bridge = bridge;
+    _requestHandler = handler;
+    bridge.callMethod<JSAny?>('setRequestHandler'.toJS, handler);
   }
 
   @override
@@ -145,7 +155,9 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     String swarmId,
     String pieceKey, {
     required bool recordStats,
+    P2pPieceRequestCancellation? cancellation,
   }) async {
+    if (cancellation != null) _ensureRequestActive(cancellation);
     final bridge = _bridge;
     if (bridge == null) return null;
     final value = bridge.callMethod<JSAny?>(
@@ -154,7 +166,11 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       '$swarmId|$pieceKey'.toJS,
       _cacheTtl.inMilliseconds.toJS,
     );
-    final result = await (value as JSPromise<JSAny?>).toDart;
+    final operation = (value as JSPromise<JSAny?>).toDart;
+    final result = cancellation == null
+        ? await operation
+        : await _awaitRequest(operation, cancellation);
+    if (_disposed) return null;
     if (result != null && result.isA<JSUint8Array>()) {
       if (recordStats) {
         stats.value = stats.value.copyWith(
@@ -172,6 +188,11 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }
 
   Future<void> _handleWorkerRequest(JSAny? raw, JSObject port) async {
+    if (_disposed) {
+      port.setProperty('onmessage'.toJS, null);
+      port.callMethod<JSAny?>('close'.toJS);
+      return;
+    }
     final control = _WorkerRequestControl(port);
     final cancellation = control.cancellation;
     _workerControls[port] = control;
@@ -249,6 +270,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       cancellation: cancellation,
       maxBytes: _maxManifestBytes,
     );
+    _ensureRequestActive(cancellation);
     if (response == null) {
       _postError(port, 502, 'Unable to load the media manifest.');
       return;
@@ -331,7 +353,13 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     }
     final key = resource.logicalKey;
     if (resource.shareable) {
-      final cached = await cachedPiece(resource.swarmId, key);
+      final cached = await _cachedPiece(
+        resource.swarmId,
+        key,
+        recordStats: true,
+        cancellation: cancellation,
+      );
+      _ensureRequestActive(cancellation);
       if (cached != null) {
         await _sendBytes(port, 200, _headersFor(resource), cached, method);
         return;
@@ -430,7 +458,13 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     required int expectedLength,
     required P2pPieceRequestCancellation cancellation,
   }) async {
-    final cached = await cachedPiece(resource.swarmId, key);
+    final cached = await _cachedPiece(
+      resource.swarmId,
+      key,
+      recordStats: true,
+      cancellation: cancellation,
+    );
+    _ensureRequestActive(cancellation);
     if (cached != null && cached.length == expectedLength) return cached;
     final peer = await _loadPeerPiece(
       resource,
@@ -473,7 +507,9 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       resource.swarmId,
       pieceKey,
       recordStats: false,
+      cancellation: cancellation,
     );
+    _ensureRequestActive(cancellation);
     final cachedLength = _decodeLengthMetadata(resource, cached);
     if (cachedLength > 0) {
       resource.length = cachedLength;
@@ -520,8 +556,13 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         ),
       );
     }
-    final length = await result.future;
-    resolutionCancellation.cancel();
+    final int length;
+    try {
+      length = await _awaitRequest(result.future, cancellation);
+    } finally {
+      resolutionCancellation.cancel();
+    }
+    _ensureRequestActive(cancellation);
     if (length > 0) {
       resource.length = length;
       await _rememberLength(resource, pieceKey, length);
@@ -562,9 +603,9 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     String pieceKey,
     P2pPieceRequestCancellation cancellation,
   ) async {
-    final peer = await requestPeerPiece(
-      resource.swarmId,
-      pieceKey,
+    _ensureRequestActive(cancellation);
+    final peer = await _awaitRequest(
+      requestPeerPiece(resource.swarmId, pieceKey, cancellation),
       cancellation,
     );
     if (peer == null || cancellation.isCancelled) return -1;
@@ -601,6 +642,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     _WebResource resource,
     P2pPieceRequestCancellation cancellation,
   ) async {
+    _ensureRequestActive(cancellation);
     final abort = _OriginAbort(cancellation);
     final request = http.AbortableRequest(
       'GET',
@@ -611,7 +653,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       ..addAll(resource.headers)
       ..['range'] = 'bytes=0-0';
     try {
-      final response = await (_client ??= http.Client()).send(request);
+      final response = await _client!.send(request);
       abort.headersReceived();
       resource.originAcceptsRanges = response.statusCode == 206;
       if (response.statusCode == 206) {
@@ -636,6 +678,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     required int maxBytes,
     required P2pPieceRequestCancellation cancellation,
   }) async {
+    _ensureRequestActive(cancellation);
     final abort = _OriginAbort(cancellation);
     final request = http.AbortableRequest(
       method,
@@ -647,7 +690,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       request.headers['range'] = range;
     }
     try {
-      final response = await (_client ??= http.Client()).send(request);
+      final response = await _client!.send(request);
       abort.headersReceived();
       final builder = BytesBuilder(copy: false);
       await for (final chunk in response.stream) {
@@ -673,6 +716,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     required int expectedLength,
     required P2pPieceRequestCancellation cancellation,
   }) async {
+    _ensureRequestActive(cancellation);
     final abort = _OriginAbort(cancellation);
     final request = http.AbortableRequest(
       'GET',
@@ -683,7 +727,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       ..addAll(resource.headers)
       ..['range'] = range;
     try {
-      final response = await (_client ??= http.Client()).send(request);
+      final response = await _client!.send(request);
       abort.headersReceived();
       if (response.statusCode != 200 && response.statusCode != 206) {
         return _OriginBytes(
@@ -725,6 +769,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     _WebResource resource,
     P2pPieceRequestCancellation cancellation,
   ) async {
+    _ensureRequestActive(cancellation);
     final abort = _OriginAbort(cancellation);
     final request = http.AbortableRequest(
       'GET',
@@ -733,7 +778,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     );
     request.headers.addAll(resource.headers);
     try {
-      final response = await (_client ??= http.Client()).send(request);
+      final response = await _client!.send(request);
       abort.headersReceived();
       return _OriginStream(response, abort);
     } catch (_) {
@@ -757,6 +802,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       _cacheTtl.inMilliseconds.toJS,
     ]);
     final result = await (promise as JSPromise<JSAny?>).toDart;
+    if (_disposed) return;
     final total = result.dartify();
     stats.value = stats.value.copyWith(
       cacheBytes: total is num ? total.toInt() : stats.value.cacheBytes,
@@ -772,12 +818,12 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }) async {
     if (!resource.shareable || !canRequestPeer(resource.swarmId)) return null;
     final requestCancellation = cancellation ?? P2pPieceRequestCancellation();
+    _ensureRequestActive(requestCancellation);
     final ownsCancellation = cancellation == null;
     if (ownsCancellation) _activePeerRequests.add(requestCancellation);
     try {
-      final peer = await requestPeerPiece(
-        resource.swarmId,
-        key,
+      final peer = await _awaitRequest(
+        requestPeerPiece(resource.swarmId, key, requestCancellation),
         requestCancellation,
       );
       if (peer == null || requestCancellation.isCancelled) return null;
@@ -785,6 +831,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       _recordP2p(bytes.length);
       if (expectedLength != null && bytes.length != expectedLength) {
         await _reportPeerIntegrity(peer.source, false);
+        _ensureRequestActive(requestCancellation);
         stats.value = stats.value.copyWith(
           integrityChecks: stats.value.integrityChecks + 1,
           integrityMismatches: stats.value.integrityMismatches + 1,
@@ -810,6 +857,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
                 maxBytes: expectedLength ?? bytes.length,
                 cancellation: requestCancellation,
               );
+        _ensureRequestActive(requestCancellation);
         final originIsValid =
             origin != null &&
             origin.statusCode >= 200 &&
@@ -822,6 +870,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
           );
         } else if (!_sameSha256(bytes, origin.bytes)) {
           await _reportPeerIntegrity(peer.source, false);
+          _ensureRequestActive(requestCancellation);
           stats.value = stats.value.copyWith(
             integrityChecks: stats.value.integrityChecks + 1,
             integrityMismatches: stats.value.integrityMismatches + 1,
@@ -832,6 +881,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
           return origin.bytes;
         } else {
           await _reportPeerIntegrity(peer.source, true);
+          _ensureRequestActive(requestCancellation);
           stats.value = stats.value.copyWith(
             integrityChecks: stats.value.integrityChecks + 1,
           );
@@ -878,6 +928,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }
 
   void _postMeta(JSObject port, int status, Map<String, String> headers) {
+    if (!_canPost(port)) return;
     port.callMethod<JSAny?>(
       'postMessage'.toJS,
       {'type': 'meta', 'status': status, 'headers': headers}.jsify(),
@@ -887,7 +938,9 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   Future<void> _postChunk(JSObject port, Uint8List bytes) async {
     for (var offset = 0; offset < bytes.length; offset += 256 * 1024) {
       final control = _workerControls[port];
-      if (control != null && !await control.takeCredit()) return;
+      if (control == null || !await control.takeCredit() || !_canPost(port)) {
+        return;
+      }
       final end = min(bytes.length, offset + 256 * 1024);
       port.callMethod<JSAny?>(
         'postMessage'.toJS,
@@ -900,6 +953,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }
 
   void _postEnd(JSObject port) {
+    if (!_canPost(port)) return;
     port.callMethod<JSAny?>('postMessage'.toJS, {'type': 'end'}.jsify());
   }
 
@@ -956,6 +1010,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }
 
   void _postError(JSObject port, int status, String message) {
+    if (!_canPost(port)) return;
     port.callMethod<JSAny?>(
       'postMessage'.toJS,
       {'type': 'error', 'status': status, 'message': message}.jsify(),
@@ -1065,12 +1120,14 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         _ => 'application/octet-stream',
       };
   void _recordHttp(int bytes) {
+    if (_disposed) return;
     stats.value = stats.value.copyWith(
       httpBytes: stats.value.httpBytes + bytes,
     );
   }
 
   void _recordP2p(int bytes) {
+    if (_disposed) return;
     stats.value = stats.value.copyWith(p2pBytes: stats.value.p2pBytes + bytes);
   }
 
@@ -1096,6 +1153,30 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     }
   }
 
+  void _ensureRequestActive(P2pPieceRequestCancellation cancellation) {
+    if (_disposed || cancellation.isCancelled) {
+      throw http.RequestAbortedException();
+    }
+  }
+
+  Future<T> _awaitRequest<T>(
+    Future<T> operation,
+    P2pPieceRequestCancellation cancellation,
+  ) async {
+    // Keep listening to the operation so late failures remain handled.
+    final result = await Future.any<T>([
+      operation,
+      cancellation.whenCancelled.then<T>(
+        (_) => throw http.RequestAbortedException(),
+      ),
+    ]);
+    _ensureRequestActive(cancellation);
+    return result;
+  }
+
+  bool _canPost(JSObject port) =>
+      !_disposed && _workerControls[port]?.cancellation.isCancelled == false;
+
   String _randomToken(int bytes) => base64Url
       .encode(List<int>.generate(bytes, (_) => _random.nextInt(256)))
       .replaceAll('=', '');
@@ -1108,9 +1189,14 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       cancellation.cancel();
     }
     _activePeerRequests.clear();
-    _bridge?.callMethod<JSAny?>('setRequestHandler'.toJS, null);
+    final handler = _requestHandler;
+    if (handler != null) {
+      _bridge?.callMethod<JSAny?>('clearRequestHandler'.toJS, handler);
+    }
+    _requestHandler = null;
     _bridge = null;
     _client?.close();
+    _client = null;
     _resources.clear();
     for (final control in _workerControls.values) {
       control.close();
@@ -1283,6 +1369,8 @@ final class _WorkerRequestControl {
   void close() {
     if (_closed) return;
     _closed = true;
+    _port.setProperty('onmessage'.toJS, null);
+    _port.callMethod<JSAny?>('close'.toJS);
     cancellation.cancel();
     while (_waiters.isNotEmpty) {
       _waiters.removeFirst().complete(false);

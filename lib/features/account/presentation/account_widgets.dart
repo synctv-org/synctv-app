@@ -16,40 +16,49 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
+    final badge = AppIconBadge(
+      icon: icon,
+      color: theme.colorScheme.primary,
+      size: dense ? 36 : 42,
+      iconSize: dense ? 20 : 22,
+      borderRadius: BorderRadius.circular(8),
+    );
+    final text = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppIconBadge(
-          icon: icon,
-          color: theme.colorScheme.primary,
-          size: dense ? 36 : 42,
-          iconSize: dense ? 20 : 22,
-          borderRadius: BorderRadius.circular(8),
+        Text(
+          title,
+          style:
+              (dense ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
+                  ?.copyWith(fontWeight: FontWeight.w800),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style:
-                    (dense
-                            ? theme.textTheme.titleMedium
-                            : theme.textTheme.titleLarge)
-                        ?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
-                ),
-              ),
-            ],
+        const SizedBox(height: 2),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
           ),
         ),
       ],
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth <
+            MediaQuery.textScalerOf(context).scale(280)) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [badge, const SizedBox(height: 12), text],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            badge,
+            const SizedBox(width: 12),
+            Expanded(child: text),
+          ],
+        );
+      },
     );
   }
 }
@@ -147,12 +156,6 @@ class _LoadErrorSummary extends StatelessWidget {
                   ),
                 ),
               ),
-              AppActionButton(
-                onPressed: onRetry,
-                icon: Icons.refresh_rounded,
-                label: context.l10n.retryAll,
-                style: AppActionButtonStyle.text,
-              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -164,6 +167,16 @@ class _LoadErrorSummary extends StatelessWidget {
             ),
             if (entry.key != errors.keys.last) const AppDivider(height: 16),
           ],
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: AppActionButton(
+              onPressed: onRetry,
+              icon: Icons.refresh_rounded,
+              label: context.l10n.retryAll,
+              wrapLabel: true,
+              style: AppActionButtonStyle.text,
+            ),
+          ),
         ],
       ),
     );
@@ -206,12 +219,6 @@ class _LoadErrorBanner extends StatelessWidget {
                   ),
                 ),
               ),
-              AppActionButton(
-                onPressed: onRetry,
-                icon: Icons.refresh_rounded,
-                label: context.l10n.retry,
-                style: AppActionButtonStyle.text,
-              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -228,6 +235,16 @@ class _LoadErrorBanner extends StatelessWidget {
             message,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+            ),
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: AppActionButton(
+              onPressed: onRetry,
+              icon: Icons.refresh_rounded,
+              label: context.l10n.retry,
+              wrapLabel: true,
+              style: AppActionButtonStyle.text,
             ),
           ),
         ],
@@ -292,6 +309,71 @@ class _ModuleErrorRow extends StatelessWidget {
   }
 }
 
+class _LinkedOAuthAccountRow extends StatelessWidget {
+  final OAuth2LinkedAccount account;
+  final String description;
+  final VoidCallback? onUnlink;
+
+  const _LinkedOAuthAccountRow({
+    required this.account,
+    required this.description,
+    required this.onUnlink,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final icon = OAuthProviderIcon(
+      type: account.providerType,
+      name: account.providerInstanceName,
+    );
+    final action = AppIconButton(
+      onPressed: onUnlink,
+      icon: Icons.link_off_rounded,
+      tooltip: context.l10n.unbind,
+      style: AppIconButtonStyle.destructive,
+    );
+    final title = Text(
+      '${account.providerType} / ${account.providerInstanceName}',
+      style: theme.textTheme.titleSmall,
+    );
+    final subtitle = Text(
+      description,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final layoutScale = (MediaQuery.textScalerOf(context).scale(14) / 14)
+            .clamp(1.0, double.infinity);
+        if (constraints.maxWidth < 520 * layoutScale) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(children: [icon, const Spacer(), action]),
+                const SizedBox(height: 8),
+                title,
+                const SizedBox(height: 4),
+                subtitle,
+              ],
+            ),
+          );
+        }
+        return AppTile(
+          contentPadding: EdgeInsets.zero,
+          prefix: icon,
+          title: title,
+          subtitle: subtitle,
+          suffix: action,
+        );
+      },
+    );
+  }
+}
+
 class _MediaProviderBindCard extends StatelessWidget {
   final String label;
   final String description;
@@ -315,41 +397,56 @@ class _MediaProviderBindCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       onTap: onTap,
       padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          AppIconBadge(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final layoutScale = (MediaQuery.textScalerOf(context).scale(14) / 14)
+              .clamp(1.0, double.infinity);
+          final badge = AppIconBadge(
             icon: icon,
             color: color,
             size: 40,
             backgroundAlpha: 0.14,
             borderRadius: BorderRadius.circular(8),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          );
+          final details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                description,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          );
+          final arrow = Icon(Icons.arrow_forward_rounded, color: color);
+          if (constraints.maxWidth < 360 * layoutScale) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  label,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                Row(children: [badge, const Spacer(), arrow]),
+                const SizedBox(height: 12),
+                details,
               ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.arrow_forward_rounded, color: color),
-        ],
+            );
+          }
+          return Row(
+            children: [
+              badge,
+              const SizedBox(width: 12),
+              Expanded(child: details),
+              const SizedBox(width: 8),
+              arrow,
+            ],
+          );
+        },
       ),
     );
   }
@@ -588,7 +685,7 @@ class _AccountNavTile extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              overflow: TextOverflow.ellipsis,
+              softWrap: true,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: foreground,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
@@ -628,43 +725,53 @@ class _AccountHero extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 680;
-            final identity = Row(
+            final layoutScale =
+                (MediaQuery.textScalerOf(context).scale(14) / 14).clamp(
+                  1.0,
+                  double.infinity,
+                );
+            final wide = constraints.maxWidth >= 680 * layoutScale;
+            final avatar = _ProfileAvatar(
+              username: user.username,
+              avatarUrl: user.avatarUrl,
+              size: wide ? 76 : 60,
+            );
+            final details = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ProfileAvatar(username: user.username, size: wide ? 76 : 60),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.username.isEmpty
-                            ? context.l10n.currentAccount
-                            : user.username,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      if (user.hasEmail) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          user.email!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.66,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                Text(
+                  user.username.isEmpty
+                      ? context.l10n.currentAccount
+                      : user.username,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
+                if (user.hasEmail) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    user.email!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.66,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             );
+            final identity = constraints.maxWidth < 420 * layoutScale
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [avatar, const SizedBox(height: 16), details],
+                  )
+                : Row(
+                    children: [
+                      avatar,
+                      const SizedBox(width: 16),
+                      Expanded(child: details),
+                    ],
+                  );
             final metadata = Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -719,17 +826,16 @@ class _MetricTile extends StatelessWidget {
     final theme = Theme.of(context);
     return _Section(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Icon(icon, color: tone, size: 22),
+          const SizedBox(height: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -737,8 +843,6 @@ class _MetricTile extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
                 ),
@@ -940,12 +1044,14 @@ class _RoomManagementTile extends StatelessWidget {
                 onPressed: onOpen,
                 icon: Icons.open_in_new_rounded,
                 label: context.l10n.open,
+                wrapLabel: true,
               ),
               if (canManage)
                 AppActionButton(
                   onPressed: onManage,
                   icon: Icons.settings_outlined,
                   label: context.l10n.manage,
+                  wrapLabel: true,
                   style: AppActionButtonStyle.outlined,
                 ),
               AppActionButton(
@@ -954,6 +1060,7 @@ class _RoomManagementTile extends StatelessWidget {
                     ? Icons.delete_outline_rounded
                     : Icons.logout_rounded,
                 label: isOwner ? context.l10n.delete : context.l10n.leave,
+                wrapLabel: true,
                 style: AppActionButtonStyle.outlined,
               ),
             ],
@@ -996,7 +1103,7 @@ class _RoomManagementTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              actions,
+              Flexible(child: actions),
             ],
           );
         },

@@ -361,6 +361,7 @@ const Room$json = {
       '10': 'isPublic',
       '17': true
     },
+    {'1': 'password_enabled', '3': 20, '4': 1, '5': 8, '10': 'passwordEnabled'},
   ],
   '8': [
     {'1': '_is_public'},
@@ -383,7 +384,8 @@ final $typed_data.Uint8List roomDescriptor = $convert.base64Decode(
     'xpZW50LlJlc291cmNlQ292ZXJSBWNvdmVyEjcKCGNhdGVnb3J5GBEgASgLMhsuc3luY3R2LmNs'
     'aWVudC5Sb29tQ2F0ZWdvcnlSCGNhdGVnb3J5EjAKBmxhYmVscxgSIAMoCzIYLnN5bmN0di5jbG'
     'llbnQuUm9vbUxhYmVsUgZsYWJlbHMSIAoJaXNfcHVibGljGBMgASgISABSCGlzUHVibGljiAEB'
-    'QgwKCl9pc19wdWJsaWM=');
+    'EikKEHBhc3N3b3JkX2VuYWJsZWQYFCABKAhSD3Bhc3N3b3JkRW5hYmxlZEIMCgpfaXNfcHVibG'
+    'lj');
 
 @$core.Deprecated('Use runtimeSettingsDescriptor instead')
 const RuntimeSettings$json = {

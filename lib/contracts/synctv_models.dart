@@ -1,4 +1,5 @@
 import 'package:synctv_app/contracts/proto_mapping.dart';
+import 'package:synctv_app/contracts/permission_bits.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -1401,12 +1402,12 @@ class RoomMemberPermissions {
 }
 
 class RoomGuestPermissions {
-  static const int viewMembers = 1 << 32;
-  static const int viewChatHistory = 1 << 33;
-  static const int useVoiceChat = 1 << 34;
-  static const int useP2pMedia = 1 << 35;
+  static const int viewMembers = 0x100000000;
+  static const int viewChatHistory = 0x200000000;
+  static const int useVoiceChat = 0x400000000;
+  static const int useP2pMedia = 0x800000000;
   static const int all =
-      viewMembers | viewChatHistory | useVoiceChat | useP2pMedia;
+      viewMembers + viewChatHistory + useVoiceChat + useP2pMedia;
 }
 
 class RoomAdminPermissions {
@@ -1586,7 +1587,10 @@ class SyncTvRoomSettings {
   }
 
   int get effectiveGuestPermissions {
-    return guestAddedPermissions & ~guestRemovedPermissions;
+    return PermissionBits.remove(
+      guestAddedPermissions,
+      guestRemovedPermissions,
+    );
   }
 
   Map<String, dynamic> toJson() {

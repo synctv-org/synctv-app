@@ -5,6 +5,7 @@ const double chatContextMenuItemExtent = 28;
 const double chatContextMenuItemSpacing = 3;
 const double chatContextMenuHorizontalPadding = 8;
 const double chatContextMenuVerticalPadding = 7;
+const double chatContextMenuBorderWidth = 1;
 
 class ChatContextMenuLayout {
   const ChatContextMenuLayout({
@@ -28,44 +29,51 @@ ChatContextMenuLayout calculateChatContextMenuLayout({
   required int reactionCount,
   required int actionCount,
 }) {
-  final availableWidth = math.max(
-    1.0,
-    viewportWidth - chatContextMenuScreenMargin * 2,
+  final horizontalMargin = math.min(
+    chatContextMenuScreenMargin,
+    math.max(0.0, viewportWidth / 2),
   );
+  final verticalMargin = math.min(
+    chatContextMenuScreenMargin,
+    math.max(0.0, viewportHeight / 2),
+  );
+  final availableWidth = math.max(0.0, viewportWidth - horizontalMargin * 2);
+  final availableHeight = math.max(0.0, viewportHeight - verticalMargin * 2);
   final preferredReactionWidth = _rowWidth(reactionCount);
   final preferredActionWidth = _rowWidth(actionCount);
   final preferredWidth =
       math.max(preferredReactionWidth, preferredActionWidth) +
-      chatContextMenuHorizontalPadding * 2;
+      (chatContextMenuHorizontalPadding + chatContextMenuBorderWidth) * 2;
   final width = math.min(preferredWidth, availableWidth);
   final contentWidth = math.max(
     1.0,
-    width - chatContextMenuHorizontalPadding * 2,
+    width - (chatContextMenuHorizontalPadding + chatContextMenuBorderWidth) * 2,
   );
   final reactionRows = _rowCount(reactionCount, contentWidth);
   final actionRows = _rowCount(actionCount, contentWidth);
-  final height =
-      chatContextMenuVerticalPadding * 2 +
+  final preferredHeight =
+      (chatContextMenuVerticalPadding + chatContextMenuBorderWidth) * 2 +
       _rowsHeight(reactionRows) +
       7 +
       1 +
       5 +
       _rowsHeight(actionRows);
+  final height = math.min(preferredHeight, availableHeight);
 
   final maxLeft = math.max(
-    chatContextMenuScreenMargin,
-    viewportWidth - width - chatContextMenuScreenMargin,
+    horizontalMargin,
+    viewportWidth - width - horizontalMargin,
   );
   final maxTop = math.max(
-    chatContextMenuScreenMargin,
-    viewportHeight - height - chatContextMenuScreenMargin,
+    verticalMargin,
+    viewportHeight - height - verticalMargin,
   );
 
   return ChatContextMenuLayout(
     width: width,
     height: height,
-    left: anchorX.clamp(chatContextMenuScreenMargin, maxLeft).toDouble(),
-    top: (anchorY - 10).clamp(chatContextMenuScreenMargin, maxTop).toDouble(),
+    left: anchorX.clamp(horizontalMargin, maxLeft).toDouble(),
+    top: (anchorY - 10).clamp(verticalMargin, maxTop).toDouble(),
   );
 }
 

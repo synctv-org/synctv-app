@@ -7,6 +7,17 @@ import 'package:crypto/crypto.dart';
 /// A server-provided ID is descriptive metadata. The normalized endpoint is
 /// the trust, session, cache, and persistence boundary controlled by the user.
 abstract final class ServerEndpointIdentity {
+  /// Accepts a user-pasted API URL once, before creating a deployment identity.
+  static String fromUserInput(String input) {
+    final normalized = normalize(input);
+    final uri = Uri.parse(normalized);
+    if (!uri.path.endsWith('/api')) return normalized;
+    return normalize(
+      uri.replace(path: uri.path.substring(0, uri.path.length - 4)).toString(),
+    );
+  }
+
+  /// Canonicalizes a deployment root without removing meaningful path segments.
   static String normalize(String input) {
     var value = input.trim();
     if (value.isEmpty) {
@@ -34,9 +45,6 @@ abstract final class ServerEndpointIdentity {
     var path = parsed.path;
     while (path.length > 1 && path.endsWith('/')) {
       path = path.substring(0, path.length - 1);
-    }
-    if (path.endsWith('/api')) {
-      path = path.substring(0, path.length - 4);
     }
     if (path == '/') path = '';
 

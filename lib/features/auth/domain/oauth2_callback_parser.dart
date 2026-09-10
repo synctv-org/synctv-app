@@ -4,6 +4,27 @@ import 'package:synctv_app/features/auth/domain/oauth2_callback_config.dart';
 class OAuth2CallbackParser {
   const OAuth2CallbackParser._();
 
+  // Identify the session before interpreting successful or failed callbacks.
+  static bool belongsToSession(
+    String callbackUrl, {
+    required String expectedState,
+    required Uri expectedRedirectUri,
+  }) {
+    if (expectedState.isEmpty) return false;
+    try {
+      final uri = Uri.tryParse(callbackUrl);
+      if (uri == null || !_matchesRedirectUri(uri, expectedRedirectUri)) {
+        return false;
+      }
+      final states = uri.queryParametersAll['state'];
+      return states != null &&
+          states.length == 1 &&
+          states.single.trim() == expectedState;
+    } on FormatException {
+      return false;
+    }
+  }
+
   static OAuth2CallbackPayload parse(
     Uri uri, {
     String expectedState = '',
@@ -15,9 +36,17 @@ class OAuth2CallbackParser {
       throw ArgumentError('授权回跳无效，请重新发起授权');
     }
 
-    final params = uri.queryParameters;
-    final code = params['code']?.trim() ?? '';
-    final state = params['state']?.trim() ?? '';
+    final params = uri.queryParametersAll;
+    final codes = params['code'];
+    final states = params['state'];
+    if (codes == null ||
+        codes.length != 1 ||
+        states == null ||
+        states.length != 1) {
+      throw ArgumentError('授权回跳无效，请重新发起授权');
+    }
+    final code = codes.single.trim();
+    final state = states.single.trim();
 
     if (code.isEmpty) {
       throw ArgumentError('授权回跳无效，请重新发起授权');

@@ -1,3 +1,6 @@
+import 'package:synctv_app/core/presentation/image/app_image_preview.dart';
+import 'package:synctv_app/features/room/presentation/widgets/chat_message_edit_form.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -9,6 +12,7 @@ import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
 import 'package:synctv_app/features/room/application/room_realtime_protocol.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
+import 'package:synctv_app/contracts/permission_bits.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
@@ -40,9 +44,12 @@ import 'package:synctv_app/core/presentation/widgets/app_responsive_layout.dart'
 import 'package:synctv_app/features/media_library/presentation/add_media_dialog.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
 import 'package:synctv_app/features/providers/application/provider_gateway.dart';
+import 'package:synctv_app/features/providers/presentation/provider_instance_options.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/features/room/presentation/widgets/chat_read_receipts_dialog.dart';
+import 'package:synctv_app/features/room/presentation/widgets/member_permission_dialog.dart';
+import 'package:synctv_app/features/room/presentation/widgets/room_member_text_dialog.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/features/room/presentation/widgets/free_mode_settings_fields.dart';
 import 'package:synctv_app/features/room/presentation/models/playlist_selection_policy.dart';
@@ -225,7 +232,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   final List<RoomStreamEntryInfo> _streams = [];
   final List<RoomJoinReviewInfo> _reviews = [];
   final List<AdminRoomMember> _members = [];
+  final Map<String, RoomRealtimeOnlineEvent> _pendingMemberPresence = {};
   final List<RoomChatMessageInfo> _chatMessages = [];
+  final Map<String, RoomRealtimeMessage> _pendingChatMessages = {};
+  final Map<String, ChatPinEventInfo> _pendingChatPins = {};
   late final PlaybackHistoryController _playbackHistoryController;
   final Map<String, ChatMessageReadReceiptsInfo> _chatReceiptCache = {};
   final List<IceServerInfo> _iceServers = [];
@@ -246,7 +256,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   String _chatSearchCursor = '';
   String _chatSearchQuery = '';
   bool _chatHistoryLoaded = false;
+  int _chatLoadGeneration = 0;
   String _settingsWatchVersion = '';
+  int _settingsSnapshotRevision = 0;
+  int _settingsReadRevision = 0;
   String _membersWatchVersion = '';
   String _mediaWatchVersion = '';
   String _mediaObserveId = '${_mediaObserveIdPrefix}_0';
@@ -266,12 +279,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   client_enum.SortDirection _streamSortDirection =
       client_enum.SortDirection.SORT_DIRECTION_ASC;
   int _streamsPage = 1;
+  int _streamsLoadGeneration = 0;
   final int _streamsPageSize = 50;
   int _streamsTotal = 0;
   int _reviewsPage = 1;
+  int _reviewsLoadGeneration = 0;
   final int _reviewsPageSize = 50;
   int _reviewsTotal = 0;
   int _membersPage = 1;
+  int _membersLoadGeneration = 0;
   final int _membersPageSize = 50;
   int _membersTotal = 0;
   int _membersOnlineCount = 0;
@@ -294,11 +310,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   int _memberPermissions = RoomMemberPermissions.all;
   int _guestPermissions = 0;
   bool _isSaving = false;
+  bool _resettingSettings = false;
   bool _streamsLoading = false;
   bool _reviewsLoading = false;
   bool _membersLoading = false;
   bool _mediaLoading = false;
   bool _mediaProviderInstancesLoading = false;
+  int _mediaProviderInstancesGeneration = 0;
   bool _chatLoading = false;
   bool _reviewsLoaded = false;
   final Set<String> _chatReceiptLoadingIds = {};
@@ -447,6 +465,48 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _memberPermissions = settings.effectiveMemberPermissions;
     _guestPermissions = settings.effectiveGuestPermissions;
     _maxMembersController.text = settings.maxMembers.toString();
+  }
+
+  void _mergeSettings(
+    SyncTvRoomSettings incoming, {
+    SyncTvRoomSettings? base,
+    String? baseMaxMembersText,
+  }) {
+    // A save echo describes the submitted draft, not edits made after submit.
+    if (_isSaving && base == null) {
+      _settings = incoming;
+      return;
+    }
+    final previous = base ?? _settings;
+    if (_allowGuestJoin == previous.allowGuestJoin) {
+      _allowGuestJoin = incoming.allowGuestJoin;
+    }
+    if (_requireApproval == previous.requireApproval) {
+      _requireApproval = incoming.requireApproval;
+    }
+    if (_allowAutoJoin == previous.allowAutoJoin) {
+      _allowAutoJoin = incoming.allowAutoJoin;
+    }
+    if (_chatEnabled == previous.chatEnabled) {
+      _chatEnabled = incoming.chatEnabled;
+    }
+    if (_voiceChatEnabled == previous.voiceChatEnabled) {
+      _voiceChatEnabled = incoming.voiceChatEnabled;
+    }
+    if (_p2pMediaEnabled == previous.p2pMediaEnabled) {
+      _p2pMediaEnabled = incoming.p2pMediaEnabled;
+    }
+    if (_memberPermissions == previous.effectiveMemberPermissions) {
+      _memberPermissions = incoming.effectiveMemberPermissions;
+    }
+    if (_guestPermissions == previous.effectiveGuestPermissions) {
+      _guestPermissions = incoming.effectiveGuestPermissions;
+    }
+    if (_maxMembersController.text ==
+        (baseMaxMembersText ?? previous.maxMembers.toString())) {
+      _maxMembersController.text = incoming.maxMembers.toString();
+    }
+    _settings = incoming;
   }
 
   void _startResourceWatches() {
@@ -665,7 +725,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _updateRoomPassword() async {
-    if (_passwordUpdating) return;
+    if (_passwordUpdating || _resettingSettings) return;
     final password = _passwordController.text.trim();
     setState(() => _passwordUpdating = true);
     try {
@@ -673,13 +733,23 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         widget.roomId,
         password.isEmpty ? null : password,
       );
+      final snapshotRevision = _settingsSnapshotRevision;
+      final readRevision = ++_settingsReadRevision;
       final freshSettings = await _roomGateway.getRoomSettings(widget.roomId);
       if (!mounted) return;
       setState(() {
-        _settings = freshSettings;
-        _passwordController.clear();
-        _applySettings(freshSettings);
+        _mergeSettings(
+          snapshotRevision == _settingsSnapshotRevision &&
+                  readRevision == _settingsReadRevision
+              ? freshSettings
+              : _settings,
+        );
+        if (_passwordController.text.trim() == password) {
+          _passwordController.clear();
+        }
       });
+      await _loadRoomInfo();
+      if (!mounted) return;
       AppNotifications.showSuccess(
         context,
         password.isEmpty
@@ -699,16 +769,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   bool get _canSubmitPasswordChange {
-    if (_passwordUpdating) return false;
+    if (_passwordUpdating || _resettingSettings) return false;
     final password = _passwordController.text.trim();
-    return password.isNotEmpty || _settings.requirePassword;
+    return password.isNotEmpty || (_roomInfo?.needPassword ?? false);
   }
 
   String get _passwordActionLabel {
     if (_passwordController.text.trim().isNotEmpty) {
       return context.l10n.savePassword;
     }
-    return _settings.requirePassword
+    return (_roomInfo?.needPassword ?? false)
         ? context.l10n.removePassword
         : context.l10n.noActionNeeded;
   }
@@ -936,7 +1006,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         RoomResourceWatchEvent<void>.changed(version: message.resourceVersion),
       );
       if (mounted) {
-        setState(() => _membersOnlineCount = message.onlineMemberCount);
+        setState(
+          () => _membersOnlineCount = _members.isEmpty
+              ? 0
+              : message.onlineMemberCount,
+        );
       }
       return;
     }
@@ -1042,8 +1116,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           return;
         }
         setState(() {
-          _settings = snapshot;
-          _applySettings(snapshot);
+          _settingsSnapshotRevision++;
+          _mergeSettings(snapshot);
         });
       case RoomResourceWatchFailed(:final message):
         AppNotifications.showError(
@@ -1089,6 +1163,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   void _applyMemberOnlineEvent(RoomRealtimeOnlineEvent? event) {
     if (!mounted || event == null || event.userId.isEmpty) return;
+    if (_membersLoading) _pendingMemberPresence[event.userId] = event;
     final index = _members.indexWhere(
       (member) => member.userId == event.userId,
     );
@@ -1121,7 +1196,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           AppNotifications.showError(context, context.l10n.mediaSnapshotEmpty);
           return;
         }
-        setState(() => _mediaPage = snapshot);
+        setState(() {
+          ++_mediaLoadGeneration;
+          _mediaLoading = false;
+          _mediaPage = snapshot;
+        });
       case RoomResourceWatchFailed(:final message):
         AppNotifications.showError(
           context,
@@ -1172,7 +1251,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  bool _hasPermission(int permissions, int flag) => (permissions & flag) != 0;
+  bool _hasPermission(int permissions, int flag) =>
+      PermissionBits.contains(permissions, flag);
 
   void _setMemberPermission(int flag, bool enabled) {
     setState(() {
@@ -1185,8 +1265,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   void _setGuestPermission(int flag, bool enabled) {
     setState(() {
       _guestPermissions = enabled
-          ? (_guestPermissions | flag)
-          : (_guestPermissions & ~flag);
+          ? PermissionBits.add(_guestPermissions, flag)
+          : PermissionBits.remove(_guestPermissions, flag);
     });
   }
 
@@ -1194,19 +1274,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       RoomMemberPermissions.all & ~_memberPermissions;
 
   int _guestRemovedPermissions() =>
-      RoomGuestPermissions.all & ~_guestPermissions;
+      PermissionBits.remove(RoomGuestPermissions.all, _guestPermissions);
 
-  Future<void> _saveSettings() async {
-    final maxMembers = int.tryParse(_maxMembersController.text.trim());
-    if (maxMembers == null || maxMembers < 0 || maxMembers > 10000) {
-      AppNotifications.showError(context, context.l10n.maxMembersRange);
-      return;
-    }
-
-    setState(() => _isSaving = true);
-    try {
-      final settings = SyncTvRoomSettings(
-        requirePassword: _settings.requirePassword,
+  SyncTvRoomSettings _captureSettingsDraft(int maxMembers) =>
+      SyncTvRoomSettings(
+        requirePassword: (_roomInfo?.needPassword ?? false),
         allowGuestJoin: _allowGuestJoin,
         requireApproval: _requireApproval,
         allowAutoJoin: _allowAutoJoin,
@@ -1223,12 +1295,31 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         guestRemovedPermissions: _guestRemovedPermissions(),
       );
 
+  Future<void> _saveSettings() async {
+    if (_isSaving) return;
+    final maxMembers = int.tryParse(_maxMembersController.text.trim());
+    if (maxMembers == null || maxMembers < 0 || maxMembers > 10000) {
+      AppNotifications.showError(context, context.l10n.maxMembersRange);
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      final settings = _captureSettingsDraft(maxMembers);
+
       await _roomGateway.updateRoomSettings(widget.roomId, settings);
+      final snapshotRevision = _settingsSnapshotRevision;
+      final readRevision = ++_settingsReadRevision;
       final freshSettings = await _roomGateway.getRoomSettings(widget.roomId);
       if (!mounted) return;
       setState(() {
-        _settings = freshSettings;
-        _applySettings(freshSettings);
+        _mergeSettings(
+          snapshotRevision == _settingsSnapshotRevision &&
+                  readRevision == _settingsReadRevision
+              ? freshSettings
+              : _settings,
+          base: settings,
+        );
       });
       AppNotifications.showSuccess(context, context.l10n.settingsUpdated);
     } catch (e) {
@@ -1242,6 +1333,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _loadStreams() async {
     if (!mounted) return;
+    final loadGeneration = ++_streamsLoadGeneration;
     setState(() => _streamsLoading = true);
     try {
       final page = await _roomGateway.listRoomStreamsPage(
@@ -1251,7 +1343,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         search: _streamSearchController.text.trim(),
         sortDirection: _streamSortDirection,
       );
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _streamsLoadGeneration) return;
       setState(() {
         _streams
           ..clear()
@@ -1259,19 +1351,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _streamsTotal = page.total;
       });
     } catch (e) {
-      if (mounted) {
+      if (mounted && loadGeneration == _streamsLoadGeneration) {
         AppNotifications.showError(
           context,
           context.l10n.loadActiveStreamsFailed('$e'),
         );
       }
     } finally {
-      if (mounted) setState(() => _streamsLoading = false);
+      if (mounted && loadGeneration == _streamsLoadGeneration) {
+        setState(() => _streamsLoading = false);
+      }
     }
   }
 
   Future<void> _loadReviews() async {
     if (!mounted) return;
+    final loadGeneration = ++_reviewsLoadGeneration;
     _reviewsLoaded = true;
     setState(() => _reviewsLoading = true);
     try {
@@ -1282,7 +1377,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         status: _reviewStatusFilter,
         userId: _reviewUserController.text.trim(),
       );
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _reviewsLoadGeneration) return;
       setState(() {
         _reviews
           ..clear()
@@ -1290,19 +1385,23 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _reviewsTotal = page.total;
       });
     } catch (e) {
-      if (mounted) {
+      if (mounted && loadGeneration == _reviewsLoadGeneration) {
         AppNotifications.showError(
           context,
           context.l10n.loadJoinReviewsFailed('$e'),
         );
       }
     } finally {
-      if (mounted) setState(() => _reviewsLoading = false);
+      if (mounted && loadGeneration == _reviewsLoadGeneration) {
+        setState(() => _reviewsLoading = false);
+      }
     }
   }
 
   Future<void> _loadMembers() async {
     if (!mounted) return;
+    final loadGeneration = ++_membersLoadGeneration;
+    _pendingMemberPresence.clear();
     setState(() => _membersLoading = true);
     try {
       final page = await _roomGateway.getRoomMemberDetailsPage(
@@ -1314,27 +1413,46 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         sortBy: _memberSortBy,
         sortDirection: _memberSortDirection,
       );
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _membersLoadGeneration) return;
       setState(() {
         _members
           ..clear()
-          ..addAll(page.members);
+          ..addAll(
+            page.members.map((member) {
+              final presence = _pendingMemberPresence[member.userId];
+              if (presence == null) return member;
+              return member.copyWith(
+                isOnline: presence.isOnline,
+                connectionCount: presence.isOnline
+                    ? (member.connectionCount > 0 ? member.connectionCount : 1)
+                    : 0,
+              );
+            }),
+          );
         _membersTotal = page.total;
-        _membersOnlineCount = page.onlineMemberCount > 0
+        _membersOnlineCount =
+            _members.isNotEmpty &&
+                _memberRoleFilter == null &&
+                _memberSearchController.text.trim().isEmpty &&
+                _pendingMemberPresence.isEmpty &&
+                page.onlineMemberCount > 0
             ? page.onlineMemberCount
             : _members.where((m) => m.isOnline).length;
         _membersWatchVersion = page.version;
       });
       _startMembersOnlineWatches();
     } catch (e) {
-      if (mounted) {
+      if (mounted && loadGeneration == _membersLoadGeneration) {
         AppNotifications.showError(
           context,
           context.l10n.loadMembersFailed('$e'),
         );
       }
     } finally {
-      if (mounted) setState(() => _membersLoading = false);
+      if (mounted && loadGeneration == _membersLoadGeneration) {
+        _pendingMemberPresence.clear();
+        setState(() => _membersLoading = false);
+      }
     }
   }
 
@@ -1459,6 +1577,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _loadMediaProviderInstances() async {
     if (!mounted) return;
+    final generation = ++_mediaProviderInstancesGeneration;
     final provider = _mediaSourceProvider;
     if (!_mediaSourcesWithProviderInstances.contains(provider)) {
       setState(() {
@@ -1475,7 +1594,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           .listAvailableProviderInstances(
             providerType: SourceConfigCodec.providerToString(provider),
           );
-      if (!mounted || provider != _mediaSourceProvider) return;
+      if (!mounted || generation != _mediaProviderInstancesGeneration) return;
       final normalized = _mergeMediaProviderInstances(instances);
       setState(() {
         _mediaProviderInstances = normalized;
@@ -1484,14 +1603,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         }
       });
     } catch (e) {
-      if (mounted) {
+      if (mounted && generation == _mediaProviderInstancesGeneration) {
         AppNotifications.showError(
           context,
           context.l10n.loadMediaSourceInstancesFailed('$e'),
         );
       }
     } finally {
-      if (mounted && provider == _mediaSourceProvider) {
+      if (mounted && generation == _mediaProviderInstancesGeneration) {
         setState(() => _mediaProviderInstancesLoading = false);
       }
     }
@@ -1534,16 +1653,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _loadChatHistory({bool loadMore = false}) async {
     if (!mounted) return;
     if (_chatSearchQuery.isNotEmpty) {
-      await _searchChatHistory(loadMore: loadMore);
+      await _searchChatHistory(loadMore: loadMore, useActiveQuery: true);
       return;
     }
     if (loadMore && _chatCursor.isEmpty) return;
+    final generation = ++_chatLoadGeneration;
+    _clearPendingChatUpdates();
     setState(() => _chatLoading = true);
     try {
       final page = await _chatGateway.getHistory(
         widget.roomId,
         cursor: loadMore ? _chatCursor : '',
       );
+      if (!mounted || generation != _chatLoadGeneration) return;
       ChatReadStateInfo? readState;
       if (!loadMore && page.messages.isNotEmpty) {
         try {
@@ -1558,7 +1680,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           } catch (_) {}
         }
       }
-      if (!mounted) return;
+      if (!mounted || generation != _chatLoadGeneration) return;
       var shouldRestartChatWatch = false;
       setState(() {
         if (loadMore) {
@@ -1573,24 +1695,36 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           _chatWatchVersion = page.eventCursor;
         }
         if (readState != null) _chatReadState = readState;
+        _mergePendingChatUpdates();
       });
       if (shouldRestartChatWatch) _startChatWatch();
     } catch (e) {
-      if (mounted) {
+      if (mounted && generation == _chatLoadGeneration) {
         AppNotifications.showError(
           context,
           context.l10n.loadChatHistoryFailed('$e'),
         );
       }
     } finally {
-      if (mounted) setState(() => _chatLoading = false);
+      if (mounted && generation == _chatLoadGeneration) {
+        _clearPendingChatUpdates();
+        setState(() => _chatLoading = false);
+      }
     }
   }
 
   void _replaceChatHistory(List<RoomChatMessageInfo> messages) {
+    final existing = {for (final message in _chatMessages) message.id: message};
     _chatMessages
       ..clear()
-      ..addAll(messages);
+      ..addAll(
+        messages.map((message) {
+          final current = existing[message.id];
+          return current != null && current.version > message.version
+              ? current
+              : message;
+        }),
+      );
   }
 
   void _appendChatHistoryPage(List<RoomChatMessageInfo> messages) {
@@ -1602,9 +1736,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _searchChatHistory({bool loadMore = false}) async {
+  Future<void> _searchChatHistory({
+    bool loadMore = false,
+    bool useActiveQuery = false,
+  }) async {
     if (!mounted) return;
-    final query = _chatSearchController.text.trim();
+    final query = loadMore || useActiveQuery
+        ? _chatSearchQuery
+        : _chatSearchController.text.trim();
     if (query.isEmpty) {
       if (_chatSearchQuery.isEmpty) return;
       setState(() {
@@ -1615,6 +1754,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       return;
     }
     if (loadMore && _chatSearchCursor.isEmpty) return;
+    final generation = ++_chatLoadGeneration;
+    _clearPendingChatUpdates();
     setState(() {
       _chatLoading = true;
       if (!loadMore) {
@@ -1628,7 +1769,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         query: query,
         cursor: loadMore ? _chatSearchCursor : '',
       );
-      if (!mounted) return;
+      if (!mounted || generation != _chatLoadGeneration) return;
       setState(() {
         if (loadMore) {
           _appendChatHistoryPage(page.messages);
@@ -1636,22 +1777,35 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           _replaceChatHistory(page.messages);
         }
         _chatSearchCursor = page.nextCursor;
+        _mergePendingChatUpdates();
       });
     } catch (e) {
-      if (mounted) {
+      if (mounted && generation == _chatLoadGeneration) {
         AppNotifications.showError(
           context,
           context.l10n.searchChatHistoryFailed('$e'),
         );
       }
     } finally {
-      if (mounted) setState(() => _chatLoading = false);
+      if (mounted && generation == _chatLoadGeneration) {
+        _clearPendingChatUpdates();
+        setState(() => _chatLoading = false);
+      }
     }
   }
 
   void _applyChatRealtimeMessage(RoomRealtimeMessage message) {
+    if (_chatLoading) {
+      final pending = _pendingChatMessages[message.chatId];
+      if (pending == null || pending.chatVersion <= message.chatVersion) {
+        _pendingChatMessages[message.chatId] = message;
+      }
+    }
     final next = _chatInfoFromRealtime(message);
     final index = _chatMessages.indexWhere((item) => item.id == next.id);
+    // Search membership is determined by the server, not the live timeline.
+    if (_chatSearchQuery.isNotEmpty && index < 0) return;
+    if (index >= 0 && _chatMessages[index].version > next.version) return;
     if (index >= 0) {
       _chatMessages[index] = next;
     } else {
@@ -1687,6 +1841,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   void _applyChatPinEvent(ChatPinEventInfo event) {
+    if (_chatLoading) _pendingChatPins[event.message.id] = event;
     final clearPin =
         event.kind ==
             client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED ||
@@ -1700,6 +1855,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         pin: event.pin,
         clearPin: clearPin,
       );
+    }
+  }
+
+  void _clearPendingChatUpdates() {
+    _pendingChatMessages.clear();
+    _pendingChatPins.clear();
+  }
+
+  void _mergePendingChatUpdates() {
+    // HTTP pages may predate events received while the request was pending.
+    // Reapply only those events, keeping search membership server-defined.
+    for (final message in _pendingChatMessages.values.toList()) {
+      _applyChatRealtimeMessage(message);
+    }
+    for (final event in _pendingChatPins.values.toList()) {
+      _applyChatPinEvent(event);
     }
   }
 
@@ -1941,9 +2112,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     source_enum.SourceProvider.SOURCE_PROVIDER_FNOS: 'FNOS',
     source_enum.SourceProvider.SOURCE_PROVIDER_QNAP: 'QNAP',
   };
-
-  String _providerInstanceLabel(String instanceName) =>
-      instanceName.isEmpty ? context.l10n.localInstance : instanceName;
 
   String get _currentPlaylistId =>
       _mediaPlaylistStack.isEmpty ? '' : _mediaPlaylistStack.last;
@@ -2539,27 +2707,51 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _resetSettings() async {
+    if (_isSaving || _passwordUpdating) return;
     final confirmed = await _confirm(
       title: context.l10n.resetSettings,
       content: context.l10n.resetRoomSettingsDescription,
       action: context.l10n.reset,
     );
-    if (!confirmed) return;
+    if (!confirmed || !mounted || _isSaving || _passwordUpdating) return;
+    final maxMembersText = _maxMembersController.text;
+    final draft = _captureSettingsDraft(
+      int.tryParse(maxMembersText.trim()) ?? _settings.maxMembers,
+    );
+    setState(() {
+      _isSaving = true;
+      _resettingSettings = true;
+    });
     try {
       await _roomGateway.resetRoomSettings(widget.roomId);
+      final snapshotRevision = _settingsSnapshotRevision;
+      final readRevision = ++_settingsReadRevision;
       final settings = await _roomGateway.getRoomSettings(
         widget.roomId,
         refresh: true,
       );
       if (!mounted) return;
       setState(() {
-        _settings = settings;
-        _applySettings(settings);
+        _mergeSettings(
+          snapshotRevision == _settingsSnapshotRevision &&
+                  readRevision == _settingsReadRevision
+              ? settings
+              : _settings,
+          base: draft,
+          baseMaxMembersText: maxMembersText,
+        );
       });
       AppNotifications.showSuccess(context, context.l10n.settingsReset);
     } catch (e) {
       if (mounted) {
         AppNotifications.showError(context, context.l10n.resetFailed('$e'));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+          _resettingSettings = false;
+        });
       }
     }
   }
@@ -3161,37 +3353,27 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       AppNotifications.showInfo(context, context.l10n.deletedMessageCannotEdit);
       return;
     }
-    final content = await _showChatMessageEditDialog(message.content);
-    if (content == null || content == message.content) return;
-    try {
-      await _chatGateway.edit(
-        widget.roomId,
-        message.id,
-        content: content,
-        expectedVersion: message.version,
-      );
-      await _loadChatHistory();
-      if (mounted) {
-        AppNotifications.showSuccess(context, context.l10n.messageUpdated);
-      }
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(
-          context,
-          context.l10n.editMessageFailed('$e'),
-        );
-      }
-    }
-  }
-
-  Future<String?> _showChatMessageEditDialog(String initialContent) {
-    return AppDialogs.showStyledDialog<String>(
+    final content = await AppDialogs.showStyledDialog<String>(
       context: context,
       title: context.l10n.editMessage,
       icon: const Icon(Icons.edit_outlined),
-      content: _ChatMessageEditForm(initialContent: initialContent),
+      content: ChatMessageEditForm(
+        initialContent: message.content,
+        onSave: (content) async {
+          await _chatGateway.edit(
+            widget.roomId,
+            message.id,
+            content: content,
+            expectedVersion: message.version,
+          );
+          if (mounted) await _loadChatHistory();
+        },
+      ),
       actions: const [],
     );
+    if (mounted && content != null && content != message.content) {
+      AppNotifications.showSuccess(context, context.l10n.messageUpdated);
+    }
   }
 
   Future<void> _deleteChatMessage(RoomChatMessageInfo message) async {
@@ -3255,7 +3437,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         .ContentReportTargetType
         .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
     String targetMemberUserId = '',
-    int targetChatMessageId = 0,
+    String targetChatMessageId = '0',
   }) {
     return AppDialogs.showStyledDialog<void>(
       context: context,
@@ -3332,7 +3514,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _showChatMessageContext(RoomChatMessageInfo message) async {
     try {
-      final contextInfo = await _chatGateway.getContext(
+      var contextInfo = await _chatGateway.getContext(
         widget.roomId,
         message.id,
         beforeLimit: 10,
@@ -3340,36 +3522,62 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         includeDeleted: true,
       );
       if (!mounted) return;
-      final messages = [
-        ...contextInfo.before,
-        contextInfo.message,
-        ...contextInfo.after,
-      ];
       await showAppBottomSheet<void>(
         context: context,
-        builder: (context) {
-          final theme = Theme.of(context);
-          final isDark = theme.brightness == Brightness.dark;
-          return AppSafeArea(
-            child: AppListView(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-                  child: Text(
-                    context.l10n.messageContext,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (context, setSheetState) {
+            final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
+            Future<void> refreshContext() async {
+              if (!sheetContext.mounted) return;
+              try {
+                final updated = await _chatGateway.getContext(
+                  widget.roomId,
+                  message.id,
+                  beforeLimit: 10,
+                  afterLimit: 10,
+                  includeDeleted: true,
+                );
+                if (!context.mounted) return;
+                setSheetState(() => contextInfo = updated);
+              } catch (error) {
+                if (!context.mounted) return;
+                AppNotifications.showError(
+                  context,
+                  context.l10n.loadMessageContextFailed('$error'),
+                );
+              }
+            }
+
+            return AppSafeArea(
+              child: AppListView(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                    child: Text(
+                      context.l10n.messageContext,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                ...messages.map(
-                  (item) => _buildChatMessageTile(item, theme, isDark),
-                ),
-              ],
-            ),
-          );
-        },
+                  for (final item in [
+                    ...contextInfo.before,
+                    contextInfo.message,
+                    ...contextInfo.after,
+                  ])
+                    _buildChatMessageTile(
+                      item,
+                      theme,
+                      isDark,
+                      onChanged: refreshContext,
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
       );
     } catch (e) {
       if (mounted) {
@@ -3465,8 +3673,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     var loading = true;
     var error = '';
     var playlists = <RoomMediaEntry>[];
+    var started = false;
 
-    Future<void> loadPlaylists(StateSetter setDialogState) async {
+    Future<void> loadPlaylists(
+      BuildContext dialogContext,
+      StateSetter setDialogState,
+    ) async {
+      if (!dialogContext.mounted) return;
       setDialogState(() {
         loading = true;
         error = '';
@@ -3477,7 +3690,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           pageSize: 100,
           dynamicOnly: false,
         );
-        if (!mounted) return;
+        if (!dialogContext.mounted) return;
         setDialogState(() {
           playlists = page.playlists
               .where((item) => item.id != _currentPlaylistId)
@@ -3485,7 +3698,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           loading = false;
         });
       } catch (e) {
-        if (!mounted) return;
+        if (!dialogContext.mounted) return;
         setDialogState(() {
           error = e.toString();
           loading = false;
@@ -3496,13 +3709,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     return showAppDialog<_MediaMoveTarget>(
       context: context,
       builder: (context) {
-        var started = false;
         return StatefulBuilder(
           builder: (context, setDialogState) {
             if (!started) {
               started = true;
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) loadPlaylists(setDialogState);
+                if (context.mounted) loadPlaylists(context, setDialogState);
               });
             }
 
@@ -3553,32 +3765,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         ),
                       )
                     else
-                      Flexible(
-                        child: AppListView.builder(
-                          shrinkWrap: true,
-                          itemCount: playlists.length,
-                          itemBuilder: (context, index) {
-                            final playlist = playlists[index];
-                            return AppTile(
-                              prefix: const Icon(Icons.folder_outlined),
-                              title: Text(
-                                playlist.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: playlist.parentId == null
-                                  ? null
-                                  : Text(
-                                      context.l10n.parentId(playlist.parentId!),
-                                    ),
-                              onPressed: () => Navigator.pop(
-                                context,
-                                _MediaMoveTarget(playlist.id, playlist.name),
-                              ),
-                            );
-                          },
+                      for (final playlist in playlists)
+                        AppTile(
+                          prefix: const Icon(Icons.folder_outlined),
+                          title: Text(
+                            playlist.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: playlist.parentId == null
+                              ? null
+                              : Text(context.l10n.parentId(playlist.parentId!)),
+                          onPressed: () => Navigator.pop(
+                            context,
+                            _MediaMoveTarget(playlist.id, playlist.name),
+                          ),
                         ),
-                      ),
                   ],
                 ),
               ),
@@ -3591,7 +3793,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 AppActionButton(
                   onPressed: loading
                       ? null
-                      : () => loadPlaylists(setDialogState),
+                      : () => loadPlaylists(context, setDialogState),
                   icon: Icons.refresh,
                   label: context.l10n.refresh,
                   style: AppActionButtonStyle.text,
@@ -3640,80 +3842,91 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final descriptionController = TextEditingController(
       text: initialDescription,
     );
+    final formKey = GlobalKey<FormState>();
     var playbackProxyMode = playbackProxyPolicy?.currentMode;
     var selectedPlaylistBrowseAccessMode = playlistBrowseAccessMode;
+    void submit() {
+      if (formKey.currentState?.validate() != true) return;
+      Navigator.pop(
+        context,
+        _EntryEditResult(
+          nameController.text.trim(),
+          descriptionController.text.trim(),
+          playbackProxyMode,
+          selectedPlaylistBrowseAccessMode,
+        ),
+      );
+    }
+
     return AppDialogs.showStyledDialog<_EntryEditResult>(
       context: context,
       title: title,
       icon: const Icon(Icons.edit_outlined),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
-        child: StatefulBuilder(
-          builder: (context, setDialogState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(
-                controller: nameController,
-                label: context.l10n.name,
-                autofocus: true,
-                onSubmitted: (_) {
-                  Navigator.pop(
-                    context,
-                    _EntryEditResult(
-                      nameController.text.trim(),
-                      descriptionController.text.trim(),
-                      playbackProxyMode,
-                      selectedPlaylistBrowseAccessMode,
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              AppTextField(
-                controller: descriptionController,
-                label: context.l10n.description,
-                minLines: 2,
-                maxLines: 4,
-              ),
-              if (playbackProxyPolicy != null && playbackProxyMode != null) ...[
-                const SizedBox(height: 16),
-                PlaybackProxyModeControl(
-                  value: playbackProxyMode!,
-                  policy: playbackProxyPolicy,
-                  onChanged: (value) =>
-                      setDialogState(() => playbackProxyMode = value),
+        child: Form(
+          key: formKey,
+          child: StatefulBuilder(
+            builder: (context, setDialogState) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppTextField(
+                  controller: nameController,
+                  label: context.l10n.name,
+                  autofocus: true,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? context.l10n.nameRequired
+                      : null,
+                  onSubmitted: (_) => submit(),
                 ),
-              ],
-              if (selectedPlaylistBrowseAccessMode != null) ...[
-                const SizedBox(height: 16),
-                AppSelect<client_enum.PlaylistBrowseAccessMode>(
-                  value: selectedPlaylistBrowseAccessMode,
-                  label: context.l10n.playlistBrowseAccess,
-                  description: context.l10n.playlistBrowseAccessDescription,
-                  prefixIcon: Icons.visibility_outlined,
-                  options: {
-                    context.l10n.playlistBrowseAccessModeDefault: client_enum
-                        .PlaylistBrowseAccessMode
-                        .PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
-                    context.l10n.playlistBrowseAccessModeRoomMembers:
-                        client_enum
-                            .PlaylistBrowseAccessMode
-                            .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
-                    context.l10n.playlistBrowseAccessModeCreatorOnly:
-                        client_enum
-                            .PlaylistBrowseAccessMode
-                            .PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY,
-                  },
-                  onChanged: (value) {
-                    if (value != null) {
-                      setDialogState(
-                        () => selectedPlaylistBrowseAccessMode = value,
-                      );
-                    }
-                  },
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: descriptionController,
+                  label: context.l10n.description,
+                  minLines: 2,
+                  maxLines: 4,
                 ),
+                if (playbackProxyPolicy != null &&
+                    playbackProxyMode != null) ...[
+                  const SizedBox(height: 16),
+                  PlaybackProxyModeControl(
+                    value: playbackProxyMode!,
+                    policy: playbackProxyPolicy,
+                    onChanged: (value) =>
+                        setDialogState(() => playbackProxyMode = value),
+                  ),
+                ],
+                if (selectedPlaylistBrowseAccessMode != null) ...[
+                  const SizedBox(height: 16),
+                  AppSelect<client_enum.PlaylistBrowseAccessMode>(
+                    value: selectedPlaylistBrowseAccessMode,
+                    label: context.l10n.playlistBrowseAccess,
+                    description: context.l10n.playlistBrowseAccessDescription,
+                    prefixIcon: Icons.visibility_outlined,
+                    options: {
+                      context.l10n.playlistBrowseAccessModeDefault: client_enum
+                          .PlaylistBrowseAccessMode
+                          .PLAYLIST_BROWSE_ACCESS_MODE_DEFAULT,
+                      context.l10n.playlistBrowseAccessModeRoomMembers:
+                          client_enum
+                              .PlaylistBrowseAccessMode
+                              .PLAYLIST_BROWSE_ACCESS_MODE_ROOM_MEMBERS,
+                      context.l10n.playlistBrowseAccessModeCreatorOnly:
+                          client_enum
+                              .PlaylistBrowseAccessMode
+                              .PLAYLIST_BROWSE_ACCESS_MODE_CREATOR_ONLY,
+                    },
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(
+                          () => selectedPlaylistBrowseAccessMode = value,
+                        );
+                      }
+                    },
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -3721,15 +3934,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         AppDialogs.createCancelButton(context),
         AppDialogs.createConfirmButton(
           context,
-          () => Navigator.pop(
-            context,
-            _EntryEditResult(
-              nameController.text.trim(),
-              descriptionController.text.trim(),
-              playbackProxyMode,
-              selectedPlaylistBrowseAccessMode,
-            ),
-          ),
+          submit,
           text: context.l10n.save,
         ),
       ],
@@ -3745,55 +3950,67 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final userIdController = TextEditingController();
     var role = common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER;
     var notify = true;
+    final formKey = GlobalKey<FormState>();
+    void submit() {
+      if (!(formKey.currentState?.validate() ?? false)) return;
+      Navigator.pop(
+        context,
+        _MemberEditResult(userIdController.text.trim(), role, notify),
+      );
+    }
+
     return AppDialogs.showStyledDialog<_MemberEditResult>(
       context: context,
       title: context.l10n.addMember,
       icon: const Icon(Icons.person_add_alt_1_rounded),
-      content: StatefulBuilder(
-        builder: (context, setDialogState) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(
-                controller: userIdController,
-                label: context.l10n.userId,
-                prefixIcon: Icons.person_outline_rounded,
-                autofocus: true,
-              ),
-              const SizedBox(height: 16),
-              AppSelect<common_enum.RoomMemberRole>(
-                value: role,
-                label: context.l10n.role,
-                prefixIcon: Icons.admin_panel_settings_outlined,
-                options: {
-                  context.l10n.administrator:
-                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
-                  context.l10n.member:
-                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
-                  context.l10n.guest:
-                      common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
-                },
-                onChanged: (value) {
-                  if (value != null) setDialogState(() => role = value);
-                },
-              ),
-              const SizedBox(height: 12),
-              AppSwitchTile(
-                title: Text(context.l10n.sendNotification),
-                value: notify,
-                onChanged: (value) => setDialogState(() => notify = value),
-              ),
-            ],
-          );
-        },
+      content: Form(
+        key: formKey,
+        child: StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppTextField(
+                  controller: userIdController,
+                  label: context.l10n.userId,
+                  prefixIcon: Icons.person_outline_rounded,
+                  autofocus: true,
+                  validator: (value) => (value?.trim().isEmpty ?? true)
+                      ? context.l10n.userIdRequired
+                      : null,
+                  onSubmitted: (_) => submit(),
+                ),
+                const SizedBox(height: 16),
+                AppSelect<common_enum.RoomMemberRole>(
+                  value: role,
+                  label: context.l10n.role,
+                  prefixIcon: Icons.admin_panel_settings_outlined,
+                  options: {
+                    context.l10n.administrator:
+                        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+                    context.l10n.member:
+                        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+                    context.l10n.guest:
+                        common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
+                  },
+                  onChanged: (value) {
+                    if (value != null) setDialogState(() => role = value);
+                  },
+                ),
+                const SizedBox(height: 12),
+                AppSwitchTile(
+                  title: Text(context.l10n.sendNotification),
+                  value: notify,
+                  onChanged: (value) => setDialogState(() => notify = value),
+                ),
+              ],
+            );
+          },
+        ),
       ),
       actions: [
         AppDialogs.createCancelButton(context),
-        AppDialogs.createConfirmButton(context, () {
-          final userId = userIdController.text.trim();
-          if (userId.isEmpty) return;
-          Navigator.pop(context, _MemberEditResult(userId, role, notify));
-        }, text: context.l10n.add),
+        AppDialogs.createConfirmButton(context, submit, text: context.l10n.add),
       ],
     ).whenComplete(
       () => _disposeTextControllersAfterDialog([userIdController]),
@@ -3857,175 +4074,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     required String label,
     required String initialValue,
     required IconData icon,
-  }) {
-    final controller = TextEditingController(text: initialValue);
-    void submit() => Navigator.pop(context, controller.text.trim());
-
-    return AppDialogs.showStyledDialog<String>(
-      context: context,
+  }) => showAppDialog<String>(
+    context: context,
+    builder: (_) => RoomMemberTextDialog(
       title: title,
-      icon: Icon(icon),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
-        child: AppTextField(
-          controller: controller,
-          label: label,
-          autofocus: true,
-          maxLength: 64,
-          onSubmitted: (_) => submit(),
-        ),
-      ),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        AppDialogs.createConfirmButton(
-          context,
-          submit,
-          text: context.l10n.save,
-        ),
-      ],
-    ).whenComplete(() => _disposeTextControllersAfterDialog([controller]));
-  }
+      label: label,
+      initialValue: initialValue,
+      icon: icon,
+    ),
+  );
 
-  Future<_MemberPermissionOverrideResult?> _showMemberPermissionOverrideDialog(
+  Future<MemberPermissionOverrideResult?> _showMemberPermissionOverrideDialog(
     AdminRoomMember member,
-  ) {
-    final isAdmin =
-        member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN;
-    var added = isAdmin
-        ? member.adminAddedPermissions
-        : member.addedPermissions;
-    var removed = isAdmin
-        ? member.adminRemovedPermissions
-        : member.removedPermissions;
-    final permissions = isAdmin
-        ? RoomAdminPermissions.values
-        : RoomMemberPermissions.values;
-
-    return showAppDialog<_MemberPermissionOverrideResult>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            void setOverride(int flag, _PermissionOverrideMode mode) {
-              setDialogState(() {
-                added &= ~flag;
-                removed &= ~flag;
-                switch (mode) {
-                  case _PermissionOverrideMode.inherit:
-                    break;
-                  case _PermissionOverrideMode.allow:
-                    added |= flag;
-                  case _PermissionOverrideMode.deny:
-                    removed |= flag;
-                }
-              });
-            }
-
-            return AppDialog(
-              title: Text(context.l10n.permissionOverrides),
-              body: SizedBox(
-                width: 440,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 520),
-                  child: AppListView(
-                    shrinkWrap: true,
-                    children: permissions
-                        .map(
-                          (permission) => _buildPermissionOverrideRow(
-                            isAdmin
-                                ? context.l10n.roomAdminPermissionLabel(
-                                    permission,
-                                  )
-                                : context.l10n.roomMemberPermissionLabel(
-                                    permission,
-                                  ),
-                            permission,
-                            added,
-                            removed,
-                            setOverride,
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-              ),
-              actions: [
-                AppActionButton(
-                  onPressed: () => Navigator.pop(context),
-                  label: context.l10n.cancel,
-                  style: AppActionButtonStyle.text,
-                ),
-                AppActionButton(
-                  onPressed: () {
-                    setDialogState(() {
-                      added = 0;
-                      removed = 0;
-                    });
-                  },
-                  label: context.l10n.clearOverrides,
-                  style: AppActionButtonStyle.text,
-                ),
-                AppActionButton(
-                  onPressed: () {
-                    Navigator.pop(
-                      context,
-                      _MemberPermissionOverrideResult(
-                        addedPermissions: isAdmin ? 0 : added,
-                        removedPermissions: isAdmin ? 0 : removed,
-                        adminAddedPermissions: isAdmin ? added : 0,
-                        adminRemovedPermissions: isAdmin ? removed : 0,
-                      ),
-                    );
-                  },
-                  label: context.l10n.save,
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildPermissionOverrideRow(
-    String title,
-    int flag,
-    int added,
-    int removed,
-    void Function(int flag, _PermissionOverrideMode mode) onChanged,
-  ) {
-    final mode = (added & flag) != 0
-        ? _PermissionOverrideMode.allow
-        : (removed & flag) != 0
-        ? _PermissionOverrideMode.deny
-        : _PermissionOverrideMode.inherit;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(child: Text(title)),
-          AppSegmentedControl<_PermissionOverrideMode>(
-            segments: [
-              ButtonSegment(
-                value: _PermissionOverrideMode.inherit,
-                label: Text(context.l10n.inherit),
-              ),
-              ButtonSegment(
-                value: _PermissionOverrideMode.allow,
-                label: Text(context.l10n.allow),
-              ),
-              ButtonSegment(
-                value: _PermissionOverrideMode.deny,
-                label: Text(context.l10n.deny),
-              ),
-            ],
-            value: mode,
-            onChanged: (selection) => onChanged(flag, selection),
-          ),
-        ],
-      ),
-    );
-  }
+  ) => showAppDialog<MemberPermissionOverrideResult>(
+    context: context,
+    builder: (_) => MemberPermissionDialog(member: member),
+  );
 
   Future<bool> _confirm({
     required String title,
@@ -4089,7 +4153,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               ],
             ),
           ),
-          AppSwitch(value: value, onChanged: onChanged),
+          AppSwitch(value: value, onChanged: onChanged, semanticsLabel: title),
         ],
       ),
     );
@@ -4505,7 +4569,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               prefix: const Icon(Icons.restart_alt),
               title: Text(context.l10n.resetRoomSettings),
               subtitle: Text(context.l10n.restoreServerRoomPolicy),
-              onPressed: _resetSettings,
+              onPressed: _isSaving || _passwordUpdating ? null : _resetSettings,
             ),
           ],
         ),
@@ -4796,10 +4860,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             ? _mediaProviderInstanceName
                             : '',
                         label: context.l10n.instance,
-                        options: {
-                          for (final instance in _mediaProviderInstances)
-                            _providerInstanceLabel(instance): instance,
-                        },
+                        options: providerInstanceOptions(
+                          _mediaProviderInstances,
+                          context.l10n,
+                        ),
                         enabled:
                             _mediaSourcesWithProviderInstances.contains(
                               _mediaSourceProvider,
@@ -4906,7 +4970,21 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ),
           if (entries.isEmpty)
-            _buildEmptyState(context.l10n.noMediaEntriesAtCurrentLevel, theme)
+            _buildEmptyState(
+              _mediaSearchController.text.trim().isNotEmpty ||
+                      _mediaSourceProvider !=
+                          source_enum
+                              .SourceProvider
+                              .SOURCE_PROVIDER_UNSPECIFIED ||
+                      _mediaProviderInstanceName.isNotEmpty ||
+                      _mediaAvailability !=
+                          client_enum
+                              .ResourceAvailabilityFilter
+                              .RESOURCE_AVAILABILITY_FILTER_ALL
+                  ? context.l10n.noMatchingMediaEntries
+                  : context.l10n.noMediaEntriesAtCurrentLevel,
+              theme,
+            )
           else
             ...entries.map((entry) => _buildMediaTile(entry, theme, isDark)),
           if (page != null && page.usesCursor)
@@ -5081,7 +5159,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             : context.l10n.watchingSettingChanges,
         stats: _settingsWatchStats,
         details: {
-          'requirePassword': _settings.requirePassword,
+          'requirePassword': (_roomInfo?.needPassword ?? false),
           'allowGuestJoin': _settings.allowGuestJoin,
           'allowAutoJoin': _settings.allowAutoJoin,
           'requireApproval': _settings.requireApproval,
@@ -6251,8 +6329,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Widget _buildChatMessageTile(
     RoomChatMessageInfo message,
     ThemeData theme,
-    bool isDark,
-  ) {
+    bool isDark, {
+    Future<void> Function()? onChanged,
+  }) {
     final scheme = theme.colorScheme;
     final title = chatMessageDisplayUsername(
       messageType: message.messageType,
@@ -6436,7 +6515,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           targetType: admin_enum
                               .ContentReportTargetType
                               .CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE,
-                          targetChatMessageId: int.tryParse(message.id) ?? 0,
+                          targetChatMessageId: message.id,
                         ),
                       ),
                       _buildChatMessageActionButton(
@@ -6448,13 +6527,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             : Icons.push_pin_outlined,
                         onPressed: message.isDeleted
                             ? null
-                            : () => _toggleChatPin(message),
+                            : () async {
+                                await _toggleChatPin(message);
+                                await onChanged?.call();
+                              },
                       ),
                       if (message.canEditBy(_currentUserId))
                         _buildChatMessageActionButton(
                           tooltip: context.l10n.edit,
                           icon: Icons.edit_outlined,
-                          onPressed: () => _editChatMessage(message),
+                          onPressed: () async {
+                            await _editChatMessage(message);
+                            await onChanged?.call();
+                          },
                         ),
                       _buildChatMessageActionButton(
                         tooltip: context.l10n.delete,
@@ -6462,7 +6547,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         color: scheme.error,
                         onPressed: message.isDeleted
                             ? null
-                            : () => _deleteChatMessage(message),
+                            : () async {
+                                await _deleteChatMessage(message);
+                                await onChanged?.call();
+                              },
                       ),
                     ],
                   ),
@@ -6768,7 +6856,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Widget _buildChatImageThumb(StoredImageInfo image, ThemeData theme) {
     final resolved = _resourceUrlResolver.resolve(image.url);
-    return AppImageThumbnail(
+    return AppImagePreview(
       url: resolved,
       width: 160,
       height: 104,
@@ -7323,7 +7411,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ),
                       _buildDetailLine(
                         context.l10n.password,
-                        _settings.requirePassword
+                        (_roomInfo?.needPassword ?? false)
                             ? context.l10n.configured
                             : context.l10n.notConfigured,
                       ),
@@ -7408,7 +7496,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 children: [
                   Expanded(
                     child: Text(
-                      _settings.requirePassword
+                      (_roomInfo?.needPassword ?? false)
                           ? context.l10n.roomCurrentlyRequiresPassword
                           : context.l10n.roomCurrentlyNoPassword,
                       style: TextStyle(color: theme.hintColor, fontSize: 13),
@@ -7741,81 +7829,6 @@ class _RoomSettingsNavTile extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-enum _PermissionOverrideMode { inherit, allow, deny }
-
-class _MemberPermissionOverrideResult {
-  final int addedPermissions;
-  final int removedPermissions;
-  final int adminAddedPermissions;
-  final int adminRemovedPermissions;
-
-  const _MemberPermissionOverrideResult({
-    required this.addedPermissions,
-    required this.removedPermissions,
-    required this.adminAddedPermissions,
-    required this.adminRemovedPermissions,
-  });
-}
-
-class _ChatMessageEditForm extends StatefulWidget {
-  final String initialContent;
-
-  const _ChatMessageEditForm({required this.initialContent});
-
-  @override
-  State<_ChatMessageEditForm> createState() => _ChatMessageEditFormState();
-}
-
-class _ChatMessageEditFormState extends State<_ChatMessageEditForm> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialContent);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    Navigator.pop(context, _controller.text.trim());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AppTextField(
-          controller: _controller,
-          label: context.l10n.messageContent,
-          autofocus: true,
-          minLines: 2,
-          maxLines: 5,
-          onSubmitted: (_) => _submit(),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            AppDialogs.createCancelButton(context),
-            const SizedBox(width: 8),
-            AppDialogs.createConfirmButton(
-              context,
-              _submit,
-              text: context.l10n.save,
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

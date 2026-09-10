@@ -3,6 +3,9 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 
+String _thresholdLabel(BuildContext context, double value) => context.l10n
+    .secondsValue(value.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), ''));
+
 class FreeModeSettingsFields extends StatelessWidget {
   final PlaybackModeConfig config;
   final ValueChanged<PlaybackModeConfig> onChanged;
@@ -15,11 +18,13 @@ class FreeModeSettingsFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final autoThresholdLabel = context.l10n.secondsValue(
-      config.autoSeekDriftThresholdSeconds.toStringAsFixed(1),
+    final autoThresholdLabel = _thresholdLabel(
+      context,
+      config.autoSeekDriftThresholdSeconds,
     );
-    final manualThresholdLabel = context.l10n.secondsValue(
-      config.manualSeekDriftThresholdSeconds.toStringAsFixed(1),
+    final manualThresholdLabel = _thresholdLabel(
+      context,
+      config.manualSeekDriftThresholdSeconds,
     );
 
     return Column(
@@ -41,9 +46,9 @@ class FreeModeSettingsFields extends StatelessWidget {
           title: context.l10n.syncCorrectionThreshold,
           valueLabel: autoThresholdLabel,
           value: config.autoSeekDriftThresholdSeconds,
-          min: 0.1,
-          max: 10.0,
-          divisions: 99,
+          min: PlaybackModeConfig.minAutoSeekDriftSeconds,
+          max: PlaybackModeConfig.maxAutoSeekDriftSeconds,
+          divisions: 599,
           enabled: !config.freeModeEnabled,
           onChanged: (value) {
             onChanged(config.copyWith(autoSeekDriftThresholdSeconds: value));
@@ -55,9 +60,9 @@ class FreeModeSettingsFields extends StatelessWidget {
           title: context.l10n.manualSyncDriftThreshold,
           valueLabel: manualThresholdLabel,
           value: config.manualSeekDriftThresholdSeconds,
-          min: 0.1,
-          max: 1.0,
-          divisions: 18,
+          min: PlaybackModeConfig.minManualSeekDriftSeconds,
+          max: PlaybackModeConfig.maxManualSeekDriftSeconds,
+          divisions: 98,
           enabled: true,
           onChanged: (value) {
             onChanged(config.copyWith(manualSeekDriftThresholdSeconds: value));
@@ -106,20 +111,27 @@ class _PlaybackModeSlider extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, size: 20, color: color),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      valueLabel,
+                      style: theme.textTheme.labelLarge?.copyWith(color: color),
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                valueLabel,
-                style: theme.textTheme.labelLarge?.copyWith(color: color),
               ),
             ],
           ),
@@ -132,6 +144,8 @@ class _PlaybackModeSlider extends StatelessWidget {
               max: max,
               divisions: divisions,
               label: valueLabel,
+              semanticFormatterCallback: (value) =>
+                  _thresholdLabel(context, value),
               onChanged: enabled ? onChanged : null,
             ),
           ),

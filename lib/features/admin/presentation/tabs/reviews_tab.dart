@@ -19,8 +19,10 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
   int _pageSize = 50;
   int _total = 0;
   bool _isLoading = true;
+  int _loadGeneration = 0;
   List<AdminReviewItem> _reviews = const [];
   final _searchController = TextEditingController();
+  final Set<(AdminReviewKind, String)> _deciding = {};
 
   bool _initialized = false;
 
@@ -42,6 +44,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
   }
 
   Future<void> _loadReviews({bool silent = false}) async {
+    final generation = ++_loadGeneration;
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = await adminGateway.adminListReviewsPage(
@@ -54,57 +57,89 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
         roomId: _roomId,
         userId: _userId,
       );
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
+      final lastPage = math.max(1, (data.total + _pageSize - 1) ~/ _pageSize);
+      if (_page > lastPage) {
+        setState(() => _page = lastPage);
+        await _loadReviews();
+        return;
+      }
       setState(() {
         _reviews = data.reviews;
         _total = data.total;
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() => _isLoading = false);
       AppNotifications.showError(context, context.l10n.loadReviewsFailed('$e'));
     }
   }
 
   Future<void> _approve(AdminReviewItem review) async {
+    final key = (review.kind, review.id);
+    if (!mounted || _deciding.contains(key)) return;
+    setState(() => _deciding.add(key));
     try {
       await adminGateway.adminApproveReview(review.kind, review.id);
       if (!mounted) return;
       AppNotifications.showSuccess(context, context.l10n.reviewApproved);
-      _loadReviews(silent: true);
+      await _loadReviews(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(context, context.l10n.operationFailed('$e'));
+    } finally {
+      if (mounted) setState(() => _deciding.remove(key));
     }
   }
 
   Future<void> _reject(AdminReviewItem review) async {
+    final key = (review.kind, review.id);
+    if (!mounted || _deciding.contains(key)) return;
+    setState(() => _deciding.add(key));
     final l10n = context.l10n;
     final controller = TextEditingController();
-    final confirmed = await AppDialogs.showStyledDialog<bool>(
-      context: context,
-      title: l10n.rejectReview,
-      icon: const Icon(Icons.cancel_outlined, color: Colors.red),
-      content: AppDialogs.createFormField(
-        context: context,
-        label: l10n.reason,
-        controller: controller,
-        hintText: l10n.rejectionReasonHint,
-        prefixIcon: Icons.edit_note_rounded,
-      ),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: l10n.reject,
-        ),
-      ],
-    );
-    if (confirmed != true) return;
+    final formKey = GlobalKey<FormState>();
+    void submit() {
+      if (formKey.currentState?.validate() == true) {
+        Navigator.pop(context, true);
+      }
+    }
+
+    var disposeScheduled = false;
     try {
+      final confirmed = await AppDialogs.showStyledDialog<bool>(
+        context: context,
+        title: l10n.rejectReview,
+        icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+        content: Builder(
+          builder: (dialogContext) {
+            if (!disposeScheduled) {
+              disposeScheduled = true;
+              _disposeControllersAfterRouteClose(dialogContext, [controller]);
+            }
+            return Form(
+              key: formKey,
+              child: AppTextField(
+                label: l10n.reason,
+                controller: controller,
+                hintText: l10n.rejectionReasonHint,
+                prefixIcon: Icons.edit_note_rounded,
+                validator: (value) => value?.trim().isNotEmpty == true
+                    ? null
+                    : l10n.fieldRequired(l10n.reason),
+                onSubmitted: (_) => submit(),
+              ),
+            );
+          },
+        ),
+        actions: [
+          AppDialogs.createCancelButton(context),
+          const SizedBox(width: 8),
+          AppDialogs.createConfirmButton(context, submit, text: l10n.reject),
+        ],
+      );
+      if (confirmed != true || !mounted) return;
       await adminGateway.adminRejectReview(
         review.kind,
         review.id,
@@ -112,10 +147,13 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
       );
       if (!mounted) return;
       AppNotifications.showSuccess(context, l10n.reviewRejected);
-      _loadReviews(silent: true);
+      await _loadReviews(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(context, l10n.operationFailed('$e'));
+    } finally {
+      if (!disposeScheduled) controller.dispose();
+      if (mounted) setState(() => _deciding.remove(key));
     }
   }
 
@@ -149,8 +187,8 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Column(
-      children: [
+    return _AdminPagedList(
+      header: [
         Padding(
           padding: const EdgeInsets.all(16),
           child: Wrap(
@@ -256,67 +294,55 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
                   _loadReviews();
                 },
         ),
-        Expanded(
-          child: _isLoading
-              ? const AppLoadingIndicator()
-              : _reviews.isEmpty
-              ? Center(
-                  child: Text(
-                    context.l10n.noReviewRecords,
-                    style: TextStyle(color: theme.hintColor),
-                  ),
-                )
-              : AppListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  itemCount: _reviews.length,
-                  itemBuilder: (context, index) {
-                    final review = _reviews[index];
-                    final pending =
-                        review.status ==
-                        common_enum.ReviewStatus.REVIEW_STATUS_PENDING;
-                    return _AdminPanelCard(
-                      isDark: isDark,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildReviewSummary(review, theme)),
-                            const SizedBox(width: 8),
-                            pending
-                                ? Wrap(
-                                    spacing: 4,
-                                    children: [
-                                      AppIconButton(
-                                        tooltip: context.l10n.approve,
-                                        icon: Icons.check_circle_outline,
-                                        onPressed: () => _approve(review),
-                                      ),
-                                      AppIconButton(
-                                        tooltip: context.l10n.reject,
-                                        icon: Icons.cancel_outlined,
-                                        style: AppIconButtonStyle.destructive,
-                                        onPressed: () => _reject(review),
-                                      ),
-                                    ],
-                                  )
-                                : Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Text(
-                                      _reviewStatusText(context, review.status),
-                                    ),
-                                  ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
       ],
+      loading: _isLoading,
+      itemCount: _reviews.length,
+      emptyMessage: context.l10n.noReviewRecords,
+      itemBuilder: (context, index) {
+        final review = _reviews[index];
+        final pending =
+            review.status == common_enum.ReviewStatus.REVIEW_STATUS_PENDING;
+        return _AdminPanelCard(
+          isDark: isDark,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _buildReviewSummary(review, theme)),
+                const SizedBox(width: 8),
+                pending
+                    ? Wrap(
+                        spacing: 4,
+                        children: [
+                          AppIconButton(
+                            tooltip: context.l10n.approve,
+                            icon: Icons.check_circle_outline,
+                            onPressed:
+                                _deciding.contains((review.kind, review.id))
+                                ? null
+                                : () => _approve(review),
+                          ),
+                          AppIconButton(
+                            tooltip: context.l10n.reject,
+                            icon: Icons.cancel_outlined,
+                            style: AppIconButtonStyle.destructive,
+                            onPressed:
+                                _deciding.contains((review.kind, review.id))
+                                ? null
+                                : () => _reject(review),
+                          ),
+                        ],
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(_reviewStatusText(context, review.status)),
+                      ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -329,9 +355,22 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
       if (review.reviewedAt case final reviewedAt?)
         context.l10n.reviewedAt(_formatTimestamp(reviewedAt)),
     ];
-    final details = review.details.isEmpty
-        ? [review.subtitle, review.detail]
-        : review.details;
+    final details = switch (review) {
+      AdminRoomJoinReview() => [
+        if (review.subtitle.isNotEmpty) review.subtitle,
+        if (review.roomId.isNotEmpty)
+          '${context.l10n.roomId}: ${review.roomId}',
+        if (review.userId.isNotEmpty)
+          '${context.l10n.userId}: ${review.userId}',
+        if (review.roomId.isEmpty && review.userId.isEmpty)
+          ...review.details.isEmpty ? [review.detail] : review.details,
+        '${context.l10n.role}: ${_roomMemberRoleText(context, review.requestedRole)}',
+      ],
+      _ =>
+        review.details.isEmpty
+            ? [review.subtitle, review.detail]
+            : review.details,
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

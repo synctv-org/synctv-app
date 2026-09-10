@@ -130,7 +130,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get serverAddressIdentityDescription =>
-      '上方地址是本设备识别该服务器的身份；下方 ID 由服务器自行声明，其他地址也可能声明相同 ID。';
+      '本设备通过服务器地址识别这条连接。服务器 ID 由服务器自行声明，其他地址也可能声明相同 ID。';
 
   @override
   String serverDeclaredId(String serverId) {
@@ -755,6 +755,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oauth2CallbackCompleteTitle => '授权完成';
 
   @override
+  String get oauth2CallbackDispatchFailedTitle => '授权结果发送失败';
+
+  @override
+  String get oauth2CallbackDispatchFailedMessage =>
+      '无法将授权结果发送到 SyncTV，请重试。如果仍然失败，请返回 SyncTV 重新登录。';
+
+  @override
   String get oauth2CallbackCompleteMessage => '现在可以关闭此窗口并返回 SyncTV。';
 
   @override
@@ -890,6 +897,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverRequiredForInvite => '需要添加服务器';
 
   @override
+  String get inviteOnAnotherServer => '房间位于其他服务器';
+
+  @override
+  String get webInviteServerDescription =>
+      '此房间属于另一个 SyncTV 服务器。当前浏览器会话保持连接到当前服务器。';
+
+  @override
+  String get openInviteServer => '打开服务器';
+
+  @override
+  String get openInviteServerFailed => '无法打开邀请服务器';
+
+  @override
+  String get copyRoomId => '复制房间 ID';
+
+  @override
+  String get copyRoomIdFailed => '无法复制房间 ID';
+
+  @override
   String get serverRequiredForInviteDescription =>
       '这个邀请来自另一个 SyncTV 服务器。请先添加该服务器地址，客户端会自动识别身份后继续加入房间。';
 
@@ -911,6 +937,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String imageCropFailed(String error) {
     return '图片裁剪失败：$error';
   }
+
+  @override
+  String get imageCannotBeEdited => '无法编辑这张图片，请选择其他图片或上传原图。';
 
   @override
   String get cropForPurpose => '按用途裁剪';
@@ -1482,6 +1511,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noExtraRequestHeaders => '默认不发送额外请求头。';
 
   @override
+  String get nameRequired => '请输入名称';
+
+  @override
   String get name => '名称';
 
   @override
@@ -1557,6 +1589,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get liveSourceAddressHint => '请输入与所选协议匹配的地址';
+
+  @override
+  String get invalidRtmpSourceUrl => '请输入包含主机的完整 rtmp:// 地址。';
+
+  @override
+  String get invalidRtspSourceUrl => '请输入包含主机的完整 rtsp:// 地址。';
+
+  @override
+  String get invalidHttpFlvSourceUrl => '请输入路径以 .flv 结尾的 HTTP 或 HTTPS 地址。';
+
+  @override
+  String get invalidWhepSourceUrl => '请输入完整的 HTTP 或 HTTPS WHEP 地址。';
 
   @override
   String get rtspTransport => 'RTSP 传输方式';
@@ -2963,6 +3007,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get liveRoomOrVideoUrl => '直播间或视频链接';
 
   @override
+  String get liveReplay => '回放';
+
+  @override
+  String get liveDanmaku => '直播弹幕';
+
+  @override
+  String cdnRoutesCount(int count) {
+    return '$count 条 CDN 线路';
+  }
+
+  @override
+  String mediaStreamsCount(int count) {
+    return '$count 路媒体流';
+  }
+
+  @override
+  String get hlsVideo => 'HLS 视频';
+
+  @override
+  String get hlsAudio => 'HLS 音频';
+
+  @override
+  String get protectedMedia => '受保护';
+
+  @override
   String get roomIdAliasOrUrl => '房间 ID、别名或链接';
 
   @override
@@ -3793,7 +3862,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String unreadTotalSummary(int unread, int total) {
-    return '未读 $unread / 总计 $total';
+    return '全部未读 $unread · 当前结果 $total';
   }
 
   @override
@@ -4224,6 +4293,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsUpdated => '设置已更新';
+
+  @override
+  String get runtimeSettingChanged => '此设置在编辑期间发生了变化。请重新打开并核对最新值。';
 
   @override
   String get roomVisibilityUpdated => '房间可见性已更新';
@@ -4810,6 +4882,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noMediaEntriesAtCurrentLevel => '当前层级没有媒体条目';
 
   @override
+  String get noMatchingMediaEntries => '没有符合当前筛选条件的媒体条目';
+
+  @override
   String get realtimeDiagnostics => '实时诊断';
 
   @override
@@ -5095,6 +5170,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get waitingForEvent => '等待事件';
+
+  @override
+  String get messageContentRequired => '请输入消息内容';
 
   @override
   String get messageContent => '消息内容';
@@ -6122,6 +6200,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get emailWhitelist => '邮箱白名单';
 
   @override
+  String get registrationEmailWhitelistHint => '注册邮箱必须符合服务器允许的邮箱地址或域名。';
+
+  @override
   String get emailWhitelistDescription =>
       '每行一个邮箱或域名，域名可使用 example.com 或 @example.com。';
 
@@ -6140,6 +6221,18 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get maxVoiceParticipantsPerRoomDescription =>
       '单个房间同时参与语音的人数上限。Mesh 语音允许 2 至 32，移动端推荐 8。';
+
+  @override
+  String get runtimeServerName => '服务器名称';
+
+  @override
+  String get runtimeServerNameDescription => '客户端服务器信息中显示的名称。';
+
+  @override
+  String get maxPinnedMessagesPerRoom => '每个房间置顶消息上限';
+
+  @override
+  String get maxPinnedMessagesPerRoomDescription => '每个房间可同时置顶的聊天消息数量上限。';
 
   @override
   String get chatMessagesPerRoom => '每个房间保留聊天数';
@@ -6319,7 +6412,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get socks5ProxyAddress => 'SOCKS5 代理地址';
 
   @override
-  String get socks5ProxyAddressRequired => '请输入 socks5:// 开头的代理地址';
+  String get socks5ProxyAddressRequired =>
+      '请输入 SOCKS5 主机及可选端口（0-65535），不要包含凭据、路径、查询参数或片段。';
+
+  @override
+  String get smtpProxyCredentialTooLong => 'SOCKS5 凭据的每个字段最多支持 255 个 UTF-8 字节。';
 
   @override
   String get proxyRequiresAuthentication => '代理需要认证';
@@ -6464,6 +6561,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get positiveIntegerRequired => '请输入大于 0 的整数';
+
+  @override
+  String get validRuntimeIntegerRequired => '请输入支持范围内的整数';
 
   @override
   String get capabilityTypes => '能力类型';
@@ -6634,7 +6734,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messages => '消息';
 
   @override
-  String get searchReportsHint => '搜索原因、对象或 usr_/room_ ID';
+  String get searchReportsHint => '搜索原因或名称';
+
+  @override
+  String get reportFilters => '举报筛选';
+
+  @override
+  String get reportFilterReporterId => '举报人用户 ID';
+
+  @override
+  String get reportFilterRoomId => '关联房间 ID';
+
+  @override
+  String get reportFilterTargetRoomId => '被举报房间 ID';
+
+  @override
+  String get reportFilterTargetUserId => '被举报用户 ID';
+
+  @override
+  String get reportFilterMemberRoomId => '成员所在房间 ID';
+
+  @override
+  String get reportFilterMemberId => '被举报成员用户 ID';
+
+  @override
+  String get reportFilterMessageId => '消息 ID';
 
   @override
   String get noReportRecords => '暂无举报记录';
@@ -6675,7 +6799,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String messageFilter(int id) {
+  String messageFilter(String id) {
     return '消息 #$id';
   }
 
@@ -6695,9 +6819,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String chatMessageTarget(int id, String room) {
+  String chatMessageTarget(String id, String room) {
     return '聊天消息 #$id · $room';
   }
+
+  @override
+  String get validMessageIdRequired => '请输入 1 至 9223372036854775807 之间的消息 ID';
 
   @override
   String unknownTarget(String id) {
@@ -6865,6 +6992,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loading => '加载中';
+
+  @override
+  String get startupFailed => 'SyncTV 启动失败。';
 
   @override
   String get loadOlderMessages => '加载更早消息';
@@ -7180,4 +7310,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get blockedUsersTemporarilyUnavailable => '暂时无法加载已拉黑用户';
+
+  @override
+  String get fnosTwoFactorSetupRequired => '请先在 FNOS 中设置两步验证，然后重试登录。';
+
+  @override
+  String get browserLogin => '浏览器登录';
+
+  @override
+  String get appPassword => '应用密码';
+
+  @override
+  String get openBrowser => '打开浏览器';
+
+  @override
+  String get youtubeCredentialsRequired => '请填写名称及至少一项 YouTube 凭据';
+
+  @override
+  String providerCookieRequired(String provider) {
+    return '请填写名称和 $provider Cookie';
+  }
+
+  @override
+  String get viewImage => '查看图片';
+
+  @override
+  String get zoomIn => '放大';
+
+  @override
+  String get zoomOut => '缩小';
+
+  @override
+  String get imageLoadFailed => '图片加载失败。';
+
+  @override
+  String get emailInvalidFormat => '请输入有效的邮箱地址。';
 }

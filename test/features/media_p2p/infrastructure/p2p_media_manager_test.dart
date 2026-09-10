@@ -4,7 +4,57 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_manager.dart';
 
+import '../../../support/p2p_replacement_candidates.dart';
+
 void main() {
+  test('disposal closes remaining peers after a transport failure', () async {
+    expect(await p2pDisposalAfterPeerFailure(), [
+      'close 0',
+      'close 1',
+      'original failure',
+    ]);
+  });
+  test(
+    'concurrent and subsequent disposal report the same shutdown failure',
+    () async {
+      expect(await p2pConcurrentDisposalWaits(failClose: true), isTrue);
+    },
+  );
+  test('concurrent disposal waits for peer shutdown', () async {
+    expect(await p2pConcurrentDisposalWaits(), isTrue);
+  });
+  for (final duringClose in [false, true]) {
+    test(
+      'replaced channel ignores stale callbacks (during close: $duringClose)',
+      () async {
+        expect(await p2pReplacedChannelEvents(duringClose: duringClose), [
+          'state',
+          'current cache read',
+        ]);
+      },
+    );
+  }
+
+  test(
+    'replacement detaches old peer before awaiting its data channel',
+    () async {
+      expect(await p2pReplacementCandidates(delayChannel: true), [
+        'During old peer close',
+        'After replacement',
+      ]);
+    },
+  );
+
+  test(
+    'replacement preserves candidates received while old peer closes',
+    () async {
+      expect(await p2pReplacementCandidates(), [
+        'During old peer close',
+        'After replacement',
+      ]);
+    },
+  );
+
   test('active swarm presence is announced periodically', () {
     fakeAsync((async) {
       final signals = <({String type, Map<String, dynamic> data})>[];

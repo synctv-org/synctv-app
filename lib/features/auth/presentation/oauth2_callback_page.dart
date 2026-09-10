@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 
@@ -27,10 +28,29 @@ class OAuth2CallbackPage extends StatefulWidget {
 }
 
 class _OAuth2CallbackPageState extends State<OAuth2CallbackPage> {
+  bool _dispatched = false;
+
   @override
   void initState() {
     super.initState();
-    widget.dispatcher.dispatch();
+    _dispatch();
+  }
+
+  void _dispatch() {
+    try {
+      widget.dispatcher.dispatch();
+      _dispatched = true;
+    } catch (_) {
+      // Callback URLs can contain credentials; never render transport errors.
+      _dispatched = false;
+    }
+  }
+
+  void _retry() {
+    if (!mounted || _dispatched || ModalRoute.of(context)?.isCurrent == false) {
+      return;
+    }
+    setState(_dispatch);
   }
 
   @override
@@ -38,31 +58,49 @@ class _OAuth2CallbackPageState extends State<OAuth2CallbackPage> {
     return Scaffold(
       body: SafeArea(
         child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle_outline,
-                    size: 56,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    context.l10n.oauth2CallbackCompleteTitle,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    context.l10n.oauth2CallbackCompleteMessage,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+          child: AppSingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _dispatched
+                          ? Icons.check_circle_outline
+                          : Icons.error_outline,
+                      size: 56,
+                      color: _dispatched
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      _dispatched
+                          ? context.l10n.oauth2CallbackCompleteTitle
+                          : context.l10n.oauth2CallbackDispatchFailedTitle,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _dispatched
+                          ? context.l10n.oauth2CallbackCompleteMessage
+                          : context.l10n.oauth2CallbackDispatchFailedMessage,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    if (!_dispatched) ...[
+                      const SizedBox(height: 24),
+                      FilledButton.icon(
+                        onPressed: _retry,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(context.l10n.retry),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),

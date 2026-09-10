@@ -1,5 +1,10 @@
+import 'package:synctv_app/features/room/presentation/widgets/chat_scroll_controller.dart';
+import 'package:synctv_app/core/presentation/image/app_image_preview.dart';
+import 'package:synctv_app/features/room/presentation/widgets/chat_message_edit_form.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show SemanticsRole;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +19,8 @@ import 'package:synctv_app/contracts/chat_message_selection.dart';
 import 'package:synctv_app/contracts/playback_client_profile.dart';
 import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/features/room/presentation/models/chat_context_menu_layout.dart';
+import 'package:synctv_app/features/room/presentation/widgets/chat_context_menu_popup.dart';
+import 'package:synctv_app/features/room/presentation/models/chat_detail_dialog_controller.dart';
 import 'package:synctv_app/features/room/presentation/playback_control_reporter.dart';
 import 'package:synctv_app/features/room/domain/playback_operation_tracker.dart';
 import 'package:synctv_app/features/room/presentation/models/playlist_source_presentation.dart';
@@ -33,7 +40,9 @@ import 'package:synctv_app/features/room/application/room_realtime_protocol.dart
 import 'package:synctv_app/features/account/application/account_gateway.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/application/subtitle_source.dart';
+import 'package:synctv_app/features/room/application/subtitle_selection_controller.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
+import 'package:synctv_app/features/room/domain/room_chat_message_state.dart';
 import 'package:synctv_app/features/room/application/realtime_event_log_preferences_controller.dart';
 import 'package:synctv_app/core/network/resource_url_resolver.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
@@ -51,6 +60,7 @@ import 'package:synctv_app/features/room/application/browser_autoplay_controller
 import 'package:synctv_app/features/room/application/playback_overlay_preferences_controller.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_preferences_controller.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_runtime.dart';
+import 'package:synctv_app/features/media_p2p/application/p2p_media_engine_owner.dart';
 import 'package:synctv_app/features/room/application/room_realtime_channel.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/image/local_image_picker.dart';
@@ -244,46 +254,52 @@ class _RoomCollaborationTabButton extends StatelessWidget {
     final theme = Theme.of(context);
     return AppTooltip(
       message: label,
-      child: AppInkSurface(
+      excludeFromSemantics: true,
+      child: Semantics(
+        role: SemanticsRole.tab,
+        selected: selected,
+        label: label,
+        enabled: enabled,
         onTap: enabled ? onPressed : null,
-        semanticLabel: label,
-        color: selected
-            ? theme.colorScheme.primary.withValues(alpha: 0.10)
-            : Colors.transparent,
-        borderRadius: BorderRadius.zero,
-        child: SizedBox.expand(
-          child: Stack(
-            children: [
-              Center(
-                child: IgnorePointer(
-                  child: AppIconButton(
-                    onPressed: enabled ? onPressed : null,
-                    icon: icon,
-                    tooltip: label,
-                    iconSize: 22,
-                    selected: selected,
-                    showTooltip: false,
-                    style: selected
-                        ? AppIconButtonStyle.tonal
-                        : AppIconButtonStyle.ghost,
+        child: ExcludeSemantics(
+          child: AppInkSurface(
+            onTap: enabled ? onPressed : null,
+            semanticLabel: label,
+            color: selected
+                ? theme.colorScheme.primary.withValues(alpha: 0.10)
+                : Colors.transparent,
+            borderRadius: BorderRadius.zero,
+            child: SizedBox.expand(
+              child: Stack(
+                children: [
+                  Center(
+                    child: Icon(
+                      icon,
+                      size: 22,
+                      color: selected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: IgnorePointer(
-                  child: AppAnimatedPanelSurface(
-                    duration: const Duration(milliseconds: 160),
-                    height: selected ? 2 : 0,
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.zero,
-                    child: const SizedBox.shrink(),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: IgnorePointer(
+                      child: AppAnimatedPanelSurface(
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 160),
+                        height: selected ? 2 : 0,
+                        color: theme.colorScheme.primary,
+                        borderRadius: BorderRadius.zero,
+                        child: const SizedBox.shrink(),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -313,6 +329,7 @@ class _RoomScreenState extends State<RoomScreen>
   late final PlayerVolumePreferencesController _playerVolumePreferences;
   late final BrowserAutoplayController _browserAutoplay;
   late final PlaybackOverlayPreferencesController _playbackOverlayPreferences;
+  final _subtitleSelection = SubtitleSelectionController();
   late final bool _supportsP2pMediaLoader = supportsP2pMediaLoader();
 
   late TabController _tabController;
@@ -342,14 +359,18 @@ class _RoomScreenState extends State<RoomScreen>
   bool _p2pPreferenceUpdateRunning = false;
   bool _p2pPreferenceUpdateRequested = false;
   final TextEditingController _messageController = TextEditingController();
-  final ScrollController _chatScrollController = ScrollController();
-  final List<RoomRealtimeChatEntry> _messages = [];
-  final List<RoomRealtimeChatEntry> _pinnedMessages = [];
-  final Map<String, RoomRealtimeChatEntry> _chatMessageCache = {};
+  final ScrollController _chatScrollController = ChatScrollController();
+  final GlobalKey _realtimeEventLogKey = GlobalKey();
+  final GlobalKey _chatTabKey = GlobalKey();
+  final _chatState = RoomChatMessageState();
+  List<RoomRealtimeChatEntry> get _messages => _chatState.messages;
+  List<RoomRealtimeChatEntry> get _pinnedMessages => _chatState.pinnedMessages;
+  Map<String, RoomRealtimeChatEntry> get _chatMessageCache => _chatState.cache;
   final Map<String, GlobalKey> _chatMessageKeys = {};
   final Map<String, ChatMessageReadReceiptsInfo> _chatReceiptCache = {};
   final Set<String> _blockedUserIds = <String>{};
-  final Set<String> _loadingReplyMessageIds = {};
+  final _replyPreviewLoads = KeyedAsyncOperationCoordinator();
+  final _chatDetailDialogs = ChatDetailDialogController();
   final Set<String> _chatReceiptLoadingIds = {};
   final List<RealtimeEventLogEntry> _realtimeEvents = [];
   PickedLocalImage? _selectedChatImage;
@@ -440,7 +461,7 @@ class _RoomScreenState extends State<RoomScreen>
   bool _serverTimeSyncInFlight = false;
   bool _joiningVoice = false;
   PlaybackDanmakuWindow? _playbackDanmakuWindow;
-  bool _loadingPlaybackDanmaku = false;
+  final _playbackDanmakuLoader = PlaybackDanmakuLoader();
 
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
@@ -451,7 +472,8 @@ class _RoomScreenState extends State<RoomScreen>
 
   VoiceChatSession? _voiceChatManager;
   P2pMediaSession? _p2pMediaManager;
-  P2pMediaPlaybackEngine? _p2pMediaEngine;
+  final _p2pEngineOwner = P2pMediaEngineOwner();
+  P2pMediaPlaybackEngine? get _p2pMediaEngine => _p2pEngineOwner.current;
   static const _p2pMediaRole = 'media';
   static const _p2pSubtitleRole = 'subtitle';
   static const _p2pDanmakuRole = 'danmaku';
@@ -490,6 +512,7 @@ class _RoomScreenState extends State<RoomScreen>
     room: widget.room,
     currentUser: _currentUser,
     selfMember: _selfMember,
+    chatEnabled: _roomSettings.chatEnabled,
   );
 
   bool get _canManageRoom => _capabilities.canManageRoomSettings;
@@ -525,8 +548,7 @@ class _RoomScreenState extends State<RoomScreen>
   bool get _canViewMembers => _capabilities.canViewMembers;
   bool get _canViewChatHistory => _capabilities.canViewChatHistory;
   bool get _canSendChatMessages => _capabilities.canSendChatMessages;
-  bool get _canSendRoomDanmaku =>
-      _roomSettings.chatEnabled && _canSendChatMessages;
+  bool get _canSendRoomDanmaku => _canSendChatMessages;
   bool get _canAccessChat => _canViewChatHistory || _canSendChatMessages;
   bool get _canManageOwnMedia => _capabilities.canManageOwnMedia;
   bool get _canDeleteMedia => _capabilities.canDeleteMedia;
@@ -725,6 +747,7 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _applyP2pPreference() async {
     if (!mounted || _isDisposing) return;
     await _p2pEngineOperations.run(() async {
+      if (!mounted || _isDisposing) return;
       final currentEngine = _p2pMediaEngine;
       final modeChanged =
           currentEngine != null &&
@@ -749,8 +772,9 @@ class _RoomScreenState extends State<RoomScreen>
         return;
       }
       await _deactivateP2pResources();
+      if (!mounted || _isDisposing) return;
       if (identical(_p2pMediaEngine, currentEngine)) {
-        _p2pMediaEngine = null;
+        _p2pEngineOwner.takeCurrent();
       }
       if (currentEngine != null) {
         _retainP2pEngineStats(currentEngine.stats.value);
@@ -773,6 +797,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _deactivateP2pResources() async {
+    if (!mounted || _isDisposing) return;
     if (_activeP2pResources.isEmpty &&
         _p2pMediaManager?.activeSwarms.isEmpty == true) {
       return;
@@ -785,6 +810,7 @@ class _RoomScreenState extends State<RoomScreen>
     String role,
     P2pResourceDelivery? delivery,
   ) async {
+    if (!mounted || _isDisposing) return;
     if (delivery == null ||
         delivery.swarmId.isEmpty ||
         delivery.swarmTicket.isEmpty) {
@@ -800,18 +826,17 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<P2pMediaPlaybackEngine?> _ensureP2pPlaybackEngine() async {
-    final existing = _p2pMediaEngine;
-    if (existing != null) return existing;
+    if (!mounted || _isDisposing) return null;
     final session = _p2pMediaManager;
     if (session == null) return null;
-    final engine = await _p2pRuntimeFactory.createPlaybackEngine(
-      session: session,
-      serverBaseUrl: _sessionGateway.serverBaseUrl,
-      maxCacheBytes: widget.p2pMediaPreferences.cacheSizeMiB * 1024 * 1024,
-      securityMode: widget.p2pMediaPreferences.securityMode,
+    return _p2pEngineOwner.acquire(
+      () => _p2pRuntimeFactory.createPlaybackEngine(
+        session: session,
+        serverBaseUrl: _sessionGateway.serverBaseUrl,
+        maxCacheBytes: widget.p2pMediaPreferences.cacheSizeMiB * 1024 * 1024,
+        securityMode: widget.p2pMediaPreferences.securityMode,
+      ),
     );
-    _p2pMediaEngine = engine;
-    return engine;
   }
 
   Future<LocalizedPlaybackResource> _localizeStaticPlaybackResource(
@@ -824,7 +849,9 @@ class _RoomScreenState extends State<RoomScreen>
       uri: Uri.parse(url),
       headers: headers,
     );
+    if (!mounted || _isDisposing) return origin;
     await widget.p2pMediaPreferences.load();
+    if (!mounted || _isDisposing) return origin;
     final scheme = origin.uri.scheme.toLowerCase();
     final canUseP2p =
         widget.p2pMediaPreferences.enabled &&
@@ -843,6 +870,7 @@ class _RoomScreenState extends State<RoomScreen>
         return origin;
       }
       await _setActiveP2pResource(role, delivery);
+      if (!mounted || _isDisposing) return origin;
       final localized = await engine.localizeStatic(
         upstream: origin.uri,
         headers: headers,
@@ -874,6 +902,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (_activeP2pResources.isEmpty) return;
     unawaited(
       _p2pEngineOperations.run(() async {
+        if (!mounted || _isDisposing) return;
         P2pResourceDelivery? matchingSubtitle;
         final activeSubtitle = _activeP2pResources[_p2pSubtitleRole];
         if (activeSubtitle != null) {
@@ -1119,8 +1148,18 @@ class _RoomScreenState extends State<RoomScreen>
       _chatHistoryRequested = false;
       if (mounted) {
         setState(() {
-          _messages.clear();
-          _pinnedMessages.clear();
+          _chatState.clear();
+          _chatDetailDialogs.dismissAll();
+          _chatMessageKeys.clear();
+          _chatReceiptCache.clear();
+          _replyPreviewLoads.invalidate();
+          _chatReceiptLoadingIds.clear();
+          _replyingToMessage = null;
+          _highlightedChatMessageId = null;
+          _hoveredChatMessageId = null;
+          _activeChatMessageId = null;
+          _expandedChatActionMessageId = null;
+          _chatHighlightTimer?.cancel();
           _pinnedMessagesLoading = false;
         });
       }
@@ -1145,6 +1184,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _handleRoomSessionClosed(String message) async {
+    _chatDetailDialogs.dispose();
     _reconnectTimer?.cancel();
     await _disposeVideoController();
     await _realtimeSubscription?.cancel();
@@ -1176,14 +1216,17 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _loadChatHistory() async {
+    if (!mounted || !_canViewChatHistory) return;
+    final revision = _chatState.beginSnapshot();
     try {
       final page = await _chatGateway.getHistory(
         widget.room.roomId,
         limit: 100,
       );
+      if (!_isCurrentChatRead(revision)) return;
       final history = page.messages
           .map(RoomRealtimeChatEntry.fromHistory)
-          .where((entry) => !entry.isDeleted)
+          .where((entry) => !_blockedUserIds.contains(entry.userId))
           .toList()
           .reversed;
       if (_canViewChatHistory && page.messages.isNotEmpty) {
@@ -1191,8 +1234,8 @@ class _RoomScreenState extends State<RoomScreen>
       }
       if (mounted) {
         setState(() {
-          _messages.prependUnique(history, maxEntries: 100);
-          _indexChatMessages(history);
+          _chatState.prependHistory(history, snapshotRevision: revision);
+          _refreshChatReferences();
         });
         _scrollToBottom();
       }
@@ -1202,13 +1245,15 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _loadPinnedChatMessages() async {
-    if (!mounted) return;
+    if (!mounted || !_canViewChatHistory) return;
+    final revision = _chatState.beginSnapshot();
     setState(() => _pinnedMessagesLoading = true);
     try {
       final pinned = await _chatGateway.listPinned(
         widget.room.roomId,
         limit: 20,
       );
+      if (!_isCurrentChatRead(revision)) return;
       final entries =
           pinned
               .map(
@@ -1216,20 +1261,20 @@ class _RoomScreenState extends State<RoomScreen>
                   entry.message.copyWith(pin: entry.pin),
                 ),
               )
-              .where((entry) => !entry.isDeleted && entry.isPinned)
+              .where((entry) => !_blockedUserIds.contains(entry.userId))
               .toList()
             ..sort(_comparePinnedMessages);
       if (!mounted) return;
       setState(() {
-        _pinnedMessages
-          ..clear()
-          ..addAll(entries);
-        _indexChatMessages(entries);
+        _chatState.replacePins(entries, snapshotRevision: revision);
+        _refreshChatReferences();
       });
     } catch (e) {
       debugPrint('Fetch pinned chat messages error: $e');
     } finally {
-      if (mounted) setState(() => _pinnedMessagesLoading = false);
+      if (_isCurrentChatRead(revision)) {
+        setState(() => _pinnedMessagesLoading = false);
+      }
     }
   }
 
@@ -1506,12 +1551,14 @@ class _RoomScreenState extends State<RoomScreen>
     final type = message.kind;
 
     if (type == RoomRealtimeMessageKind.chat) {
+      if (!_canViewChatHistory) return;
       final content = message.chatContent;
       final chatEntry = _chatEntryFromRealtimeMessage(message);
       final username = chatEntry.username;
       if (message.chatEventId.isNotEmpty) {
         _lastChatEventId = message.chatEventId;
       }
+      if (!_chatState.accepts(chatEntry)) return;
       if (_blockedUserIds.contains(chatEntry.userId)) return;
 
       if (message.isChatCreated &&
@@ -1538,12 +1585,7 @@ class _RoomScreenState extends State<RoomScreen>
       final shouldAutoScroll = _isChatNearBottom();
       if (mounted) {
         setState(() {
-          _messages.applyRealtimeEvent(
-            chatEntry,
-            eventKind: message.chatEventKind,
-            maxEntries: 100,
-          );
-          _indexChatMessage(chatEntry);
+          _mergeChatMessage(chatEntry, addToTimeline: true);
           if (chatEntry.isDeleted) {
             _chatReceiptCache.remove(chatEntry.id);
             _chatMessageKeys.remove(chatEntry.id);
@@ -1551,8 +1593,6 @@ class _RoomScreenState extends State<RoomScreen>
             if (_replyingToMessage?.id == chatEntry.id) {
               _replyingToMessage = null;
             }
-          } else {
-            _syncPinnedChatEntryFromRealtime(chatEntry);
           }
         });
         if (shouldAutoScroll) {
@@ -1565,6 +1605,7 @@ class _RoomScreenState extends State<RoomScreen>
         }
       }
     } else if (type == RoomRealtimeMessageKind.chatPin) {
+      if (!_canViewChatHistory) return;
       final event = message.chatPinEvent;
       if (event == null) return;
       if (_blockedUserIds.contains(event.message.userId)) return;
@@ -1804,24 +1845,42 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  void _indexChatMessage(RoomRealtimeChatEntry message) {
-    if (message.id.isEmpty) return;
-    if (message.isDeleted) {
-      _chatMessageCache[message.id] = message;
-      _chatReceiptCache.remove(message.id);
-      _chatMessageKeys.remove(message.id);
-      return;
-    }
-    _chatMessageCache[message.id] = message;
+  bool _mergeChatMessage(
+    RoomRealtimeChatEntry message, {
+    bool addToTimeline = false,
+    bool updatePin = false,
+    bool fromSnapshot = false,
+    int maxEntries = 100,
+    int? snapshotRevision,
+  }) {
+    if (_blockedUserIds.contains(message.userId)) return false;
+    final accepted = _chatState.merge(
+      message,
+      addToTimeline: addToTimeline,
+      updatePin: updatePin,
+      fromSnapshot: fromSnapshot,
+      maxEntries: maxEntries,
+      snapshotRevision: snapshotRevision,
+    );
+    if (accepted) _refreshChatReferences();
+    return accepted;
   }
 
-  void _indexChatMessages(Iterable<RoomRealtimeChatEntry> messages) {
-    for (final message in messages) {
-      _indexChatMessage(message);
-    }
+  void _refreshChatReferences() {
+    _chatDetailDialogs.dismissWhere(
+      (messageId, _) => _chatMessageCache[messageId]?.isDeleted == true,
+    );
+    _chatReceiptCache.removeWhere(
+      (id, _) => _chatMessageCache[id]?.isDeleted == true,
+    );
+    _chatMessageKeys.removeWhere(
+      (id, _) => _chatMessageCache[id]?.isDeleted == true,
+    );
+    final reply = _chatMessageCache[_replyingToMessage?.id];
+    if (reply != null) _replyingToMessage = reply.isDeleted ? null : reply;
   }
 
-  void _applyChatPinEvent(ChatPinEventInfo event) {
+  void _applyChatPinEvent(ChatPinEventInfo event, {int? snapshotRevision}) {
     final clearPin =
         event.kind ==
             client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED ||
@@ -1831,45 +1890,11 @@ class _RoomScreenState extends State<RoomScreen>
     final eventEntry = RoomRealtimeChatEntry.fromHistory(
       event.message.copyWith(pin: pin, clearPin: clearPin),
     );
-    final index = _messages.indexWhere((entry) => entry.id == event.message.id);
-    if (index >= 0) {
-      final updated = _messages[index].copyWith(pin: pin, clearPin: clearPin);
-      _messages[index] = updated;
-      _indexChatMessage(updated);
-    } else {
-      _indexChatMessage(eventEntry);
-    }
-    final cached = _chatMessageCache[event.message.id];
-    if (cached != null) {
-      _chatMessageCache[event.message.id] = cached.copyWith(
-        pin: pin,
-        clearPin: clearPin,
-      );
-    }
-    _applyPinnedChatEntry(eventEntry, clearPin: clearPin);
-  }
-
-  void _applyPinnedChatEntry(
-    RoomRealtimeChatEntry entry, {
-    required bool clearPin,
-  }) {
-    if (entry.id.isEmpty) return;
-    _pinnedMessages.removeWhere((message) => message.id == entry.id);
-    if (!clearPin && entry.isPinned && !entry.isDeleted) {
-      _pinnedMessages.add(entry);
-      _pinnedMessages.sort(_comparePinnedMessages);
-    }
-  }
-
-  void _syncPinnedChatEntryFromRealtime(RoomRealtimeChatEntry entry) {
-    if (entry.id.isEmpty) return;
-    final index = _pinnedMessages.indexWhere(
-      (message) => message.id == entry.id,
+    _mergeChatMessage(
+      eventEntry,
+      updatePin: true,
+      snapshotRevision: snapshotRevision,
     );
-    if (index < 0) return;
-    final pinned = _pinnedMessages[index];
-    _pinnedMessages[index] = entry.copyWith(pin: pinned.pin);
-    _pinnedMessages.sort(_comparePinnedMessages);
   }
 
   int _comparePinnedMessages(RoomRealtimeChatEntry a, RoomRealtimeChatEntry b) {
@@ -1888,29 +1913,49 @@ class _RoomScreenState extends State<RoomScreen>
     return null;
   }
 
+  bool _isCurrentChatRead(int revision) =>
+      mounted && _canViewChatHistory && _chatState.isCurrentSnapshot(revision);
+
+  bool _isCurrentChatUserRead(String userId, int revision) =>
+      _isCurrentChatRead(revision) &&
+      !_blockedUserIds.contains(userId) &&
+      _chatState.isCurrentUserSnapshot(userId, revision);
+
+  bool _isCurrentChatMessageRead(RoomRealtimeChatEntry message, int revision) =>
+      _isCurrentChatUserRead(message.userId, revision) &&
+      !message.isDeleted &&
+      _chatMessageCache[message.id]?.isDeleted != true;
+
   void _ensureReplyPreviewLoaded(String messageId) {
-    if (messageId.isEmpty ||
-        _chatMessageCache.containsKey(messageId) ||
-        _loadingReplyMessageIds.contains(messageId)) {
+    if (!mounted ||
+        !_canViewChatHistory ||
+        messageId.isEmpty ||
+        _chatMessageCache.containsKey(messageId)) {
       return;
     }
-    _loadingReplyMessageIds.add(messageId);
-    unawaited(() async {
-      try {
-        final message = await _chatGateway.getMessage(
-          widget.room.roomId,
-          messageId,
-          includeDeleted: true,
-        );
-        final entry = RoomRealtimeChatEntry.fromHistory(message);
-        if (!mounted) return;
-        setState(() => _indexChatMessage(entry));
-      } catch (e) {
-        debugPrint('Load reply preview error: $e');
-      } finally {
-        _loadingReplyMessageIds.remove(messageId);
-      }
-    }());
+    unawaited(
+      _replyPreviewLoads.run(messageId, (isCurrent) async {
+        final revision = _chatState.beginSnapshot();
+        try {
+          final message = await _chatGateway.getMessage(
+            widget.room.roomId,
+            messageId,
+            includeDeleted: true,
+          );
+          final entry = RoomRealtimeChatEntry.fromHistory(message);
+          if (!isCurrent() || !_isCurrentChatRead(revision)) return;
+          setState(
+            () => _mergeChatMessage(
+              entry,
+              snapshotRevision: revision,
+              fromSnapshot: true,
+            ),
+          );
+        } catch (e) {
+          debugPrint('Load reply preview error: $e');
+        }
+      }),
+    );
   }
 
   String _chatPreviewText(RoomRealtimeChatEntry message) {
@@ -1961,6 +2006,8 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _loadChatMessageContext(String messageId) async {
+    if (!mounted || !_canViewChatHistory) return;
+    final revision = _chatState.beginSnapshot();
     try {
       final contextInfo = await _chatGateway.getContext(
         widget.room.roomId,
@@ -1969,26 +2016,28 @@ class _RoomScreenState extends State<RoomScreen>
         afterLimit: 30,
         includeDeleted: true,
       );
-      final entries =
-          [...contextInfo.before, contextInfo.message, ...contextInfo.after]
-              .map(RoomRealtimeChatEntry.fromHistory)
-              .where((entry) => !entry.isDeleted);
-      if (!mounted) return;
+      final entries = [
+        ...contextInfo.before,
+        contextInfo.message,
+        ...contextInfo.after,
+      ].map(RoomRealtimeChatEntry.fromHistory);
+      if (!_isCurrentChatRead(revision)) return;
       setState(() {
         for (final entry in entries) {
-          _messages.applyRealtimeEvent(
+          _mergeChatMessage(
             entry,
-            eventKind: RoomRealtimeChatEventKind.created,
+            addToTimeline: true,
             maxEntries: 160,
+            snapshotRevision: revision,
+            fromSnapshot: true,
           );
-          _indexChatMessage(entry);
         }
         _messages.sort(
           (a, b) => a.timestampMillis.compareTo(b.timestampMillis),
         );
       });
     } catch (e) {
-      if (mounted) {
+      if (mounted && _isCurrentChatRead(revision)) {
         AppNotifications.showError(
           context,
           context.l10n.loadQuotedContextFailed('$e'),
@@ -2786,7 +2835,8 @@ class _RoomScreenState extends State<RoomScreen>
     double positionSeconds, {
     bool force = false,
   }) async {
-    if (!_playbackOverlayPreferences.value.chatDanmakuEnabled) {
+    if (!_canViewChatHistory ||
+        !_playbackOverlayPreferences.value.chatDanmakuEnabled) {
       _playbackDanmakuWindow = null;
       return;
     }
@@ -2796,16 +2846,16 @@ class _RoomScreenState extends State<RoomScreen>
       return;
     }
     final sourceKey = playbackDanmakuSourceKey(entry);
-    if (sourceKey.isEmpty || _loadingPlaybackDanmaku) return;
+    if (sourceKey.isEmpty) return;
     if (!force &&
         _playbackDanmakuWindow?.covers(sourceKey, positionSeconds, 20) ==
             true) {
       return;
     }
 
-    _loadingPlaybackDanmaku = true;
     try {
-      final result = await fetchPlaybackDanmakuWindow(
+      final result = await _playbackDanmakuLoader.load(
+        canViewChatHistory: _canViewChatHistory,
         loadMessages: (query) => _chatGateway.getPlaybackMessages(
           query.roomId,
           playbackMediaId: query.playbackMediaId,
@@ -2824,6 +2874,7 @@ class _RoomScreenState extends State<RoomScreen>
       final currentEntry = _currentStatus?.entry;
       if (!mounted ||
           result == null ||
+          !_canViewChatHistory ||
           !_playbackOverlayPreferences.value.chatDanmakuEnabled ||
           currentEntry == null ||
           currentEntry.live ||
@@ -2834,8 +2885,6 @@ class _RoomScreenState extends State<RoomScreen>
       _danmakuController.addUniqueItems(result.items);
     } catch (e) {
       debugPrint('Fetch playback danmaku error: $e');
-    } finally {
-      _loadingPlaybackDanmaku = false;
     }
   }
 
@@ -3620,7 +3669,11 @@ class _RoomScreenState extends State<RoomScreen>
 
   @override
   void dispose() {
+    _subtitleSelection.dispose();
     _isDisposing = true;
+    _p2pEngineOwner.close();
+    _chatDetailDialogs.dispose();
+    _replyPreviewLoads.invalidate();
     _chatReadStateUpdater.dispose();
     _realtimeLogPreferences.maxEntries.removeListener(
       _handleRealtimeLogMaxEntriesChanged,
@@ -3643,8 +3696,9 @@ class _RoomScreenState extends State<RoomScreen>
     _mediaEntryScrollController.dispose();
     unawaited(_voiceChatManager?.dispose());
     unawaited(_p2pMediaManager?.dispose());
-    final p2pEngine = _p2pMediaEngine;
-    _p2pMediaEngine = null;
+    _p2pMediaManager = null;
+    _activeP2pResources.clear();
+    final p2pEngine = _p2pEngineOwner.takeCurrent();
     if (p2pEngine != null) {
       unawaited(_p2pEngineOperations.run(p2pEngine.dispose));
     }
@@ -3810,6 +3864,7 @@ class _RoomScreenState extends State<RoomScreen>
                     _videoPlayerController != null &&
                         _videoPlayerController!.value.isInitialized
                     ? CustomVideoPlayer(
+                        subtitleSelection: _subtitleSelection,
                         volumePreferences: _playerVolumePreferences,
                         browserAutoplay: _browserAutoplay,
                         overlayPreferences: _playbackOverlayPreferences,
@@ -4326,6 +4381,7 @@ class _RoomScreenState extends State<RoomScreen>
             }
             return CustomVideoPlayer(
               key: ValueKey(controller),
+              subtitleSelection: _subtitleSelection,
               volumePreferences: _playerVolumePreferences,
               browserAutoplay: _browserAutoplay,
               overlayPreferences: _playbackOverlayPreferences,
@@ -4467,6 +4523,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Widget _buildRealtimeEventsTab() {
     return RealtimeEventLogView(
+      key: _realtimeEventLogKey,
       events: _realtimeEvents,
       onClear: () => setState(_realtimeEvents.clear),
       onMaxEntriesChanged: (_) => setState(_trimRealtimeEvents),
@@ -4477,6 +4534,7 @@ class _RoomScreenState extends State<RoomScreen>
   Widget _buildChatTab() {
     final theme = Theme.of(context);
     return Column(
+      key: _chatTabKey,
       children: [
         _buildVoiceControl(theme),
         if (_pinnedMessages.isNotEmpty || _pinnedMessagesLoading)
@@ -5136,7 +5194,12 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _showChatReadReceipts(RoomRealtimeChatEntry message) async {
-    if (message.id.isEmpty) return;
+    if (!mounted || !_canViewChatHistory || message.id.isEmpty) return;
+    final revision = _chatState.beginSnapshot();
+    if (!_isCurrentChatMessageRead(message, revision) ||
+        _chatReceiptLoadingIds.contains(message.id)) {
+      return;
+    }
     ChatMessageReadReceiptsInfo? receipt = _chatReceiptCache[message.id];
     if (receipt == null) {
       setState(() => _chatReceiptLoadingIds.add(message.id));
@@ -5145,13 +5208,13 @@ class _RoomScreenState extends State<RoomScreen>
           widget.room.roomId,
           message.id,
         );
-        if (!mounted) return;
+        if (!_isCurrentChatMessageRead(message, revision)) return;
         setState(() {
           _chatReceiptCache[message.id] = loaded;
         });
         receipt = loaded;
       } catch (e) {
-        if (mounted) {
+        if (mounted && _isCurrentChatMessageRead(message, revision)) {
           AppNotifications.showError(
             context,
             context.l10n.loadReadDetailsFailed('$e'),
@@ -5159,15 +5222,17 @@ class _RoomScreenState extends State<RoomScreen>
         }
         return;
       } finally {
-        if (mounted) {
+        if (_isCurrentChatUserRead(message.userId, revision)) {
           setState(() => _chatReceiptLoadingIds.remove(message.id));
         }
       }
     }
     final visibleReceipt = receipt;
-    if (!mounted) return;
-    await showAppDialog<void>(
+    if (!mounted || !_isCurrentChatMessageRead(message, revision)) return;
+    await _chatDetailDialogs.show(
       context: context,
+      messageId: message.id,
+      userId: message.userId,
       builder: (context) => ChatReadReceiptsDialog(receipts: visibleReceipt),
     );
   }
@@ -5176,9 +5241,14 @@ class _RoomScreenState extends State<RoomScreen>
     RoomRealtimeChatEntry message,
     ChatReactionSummaryInfo reaction,
   ) async {
-    if (message.id.isEmpty) return;
-    await showAppDialog<void>(
+    if (message.id.isEmpty ||
+        !_isCurrentChatMessageRead(message, _chatState.revision)) {
+      return;
+    }
+    await _chatDetailDialogs.show(
       context: context,
+      messageId: message.id,
+      userId: message.userId,
       builder: (context) => ChatReactionUsersDialog(
         roomId: widget.room.roomId,
         messageId: message.id,
@@ -5569,39 +5639,21 @@ class _RoomScreenState extends State<RoomScreen>
     Offset position,
   ) async {
     final isMine = _currentUser != null && message.userId == _currentUser!.id;
-    final screen = MediaQuery.sizeOf(context);
-    final layout = calculateChatContextMenuLayout(
-      viewportWidth: screen.width,
-      viewportHeight: screen.height,
-      anchorX: position.dx,
-      anchorY: position.dy,
-      reactionCount: commonChatReactionKeys.length,
-      actionCount: isMine || _canDeleteChatMessages ? 6 : 5,
-    );
     await showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierLabel: context.l10n.closeMessageActions,
       barrierColor: Colors.transparent,
       pageBuilder: (dialogContext, _, _) {
-        return Stack(
-          children: [
-            Positioned(
-              left: layout.left,
-              top: layout.top,
-              child: Material(
-                color: Colors.transparent,
-                child: SizedBox(
-                  width: layout.width,
-                  child: _buildChatContextActionPanel(
-                    message,
-                    isMine,
-                    onClose: () => Navigator.pop(dialogContext),
-                  ),
-                ),
-              ),
-            ),
-          ],
+        return ChatContextMenuPopup(
+          anchor: position,
+          reactionCount: commonChatReactionKeys.length,
+          actionCount: isMine || _canDeleteChatMessages ? 6 : 5,
+          child: _buildChatContextActionPanel(
+            message,
+            isMine,
+            onClose: () => Navigator.pop(dialogContext),
+          ),
         );
       },
     );
@@ -5619,13 +5671,15 @@ class _RoomScreenState extends State<RoomScreen>
   }) {
     final scheme = Theme.of(context).colorScheme;
     return Material(
-      elevation: 8,
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(8),
       child: AppPanelSurface(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.98),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.7),
+          width: chatContextMenuBorderWidth,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -5734,6 +5788,7 @@ class _RoomScreenState extends State<RoomScreen>
     required bool enabled,
   }) async {
     if (message.id.isEmpty) return;
+    final revision = _chatState.revision;
     try {
       final updated = await _chatGateway.setReaction(
         widget.room.roomId,
@@ -5744,12 +5799,11 @@ class _RoomScreenState extends State<RoomScreen>
       if (!mounted) return;
       final entry = RoomRealtimeChatEntry.fromHistory(updated);
       setState(() {
-        _messages.applyRealtimeEvent(
+        _mergeChatMessage(
           entry,
-          eventKind: RoomRealtimeChatEventKind.reactionsChanged,
-          maxEntries: 100,
+          addToTimeline: true,
+          snapshotRevision: revision,
         );
-        _indexChatMessage(entry);
       });
     } catch (e) {
       if (mounted) {
@@ -5781,12 +5835,13 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _toggleChatPin(RoomRealtimeChatEntry message) async {
     if (message.id.isEmpty || message.isDeleted) return;
+    final revision = _chatState.revision;
     try {
       final event = message.isPinned
           ? await _chatGateway.unpin(widget.room.roomId, message.id)
           : await _chatGateway.pin(widget.room.roomId, message.id);
       if (!mounted) return;
-      setState(() => _applyChatPinEvent(event));
+      setState(() => _applyChatPinEvent(event, snapshotRevision: revision));
       AppNotifications.showSuccess(
         context,
         message.isPinned
@@ -5821,7 +5876,7 @@ class _RoomScreenState extends State<RoomScreen>
         onConfirm: () => Navigator.pop(context, true),
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     try {
       await _chatGateway.delete(
@@ -5832,8 +5887,7 @@ class _RoomScreenState extends State<RoomScreen>
       );
       if (!mounted) return;
       setState(() {
-        _messages.removeWhere((entry) => entry.dedupeKey == message.dedupeKey);
-        _indexChatMessage(
+        _mergeChatMessage(
           message.copyWith(
             content: '',
             images: const [],
@@ -5867,40 +5921,31 @@ class _RoomScreenState extends State<RoomScreen>
       context: context,
       title: context.l10n.editMessage,
       icon: const Icon(Icons.edit_outlined),
-      content: _RoomChatMessageEditForm(initialContent: message.content),
+      content: ChatMessageEditForm(
+        initialContent: message.content,
+        onSave: (content) async {
+          final revision = _chatState.revision;
+          final updated = await _chatGateway.edit(
+            widget.room.roomId,
+            message.id,
+            content: content,
+            expectedVersion: message.version,
+          );
+          if (!mounted) return;
+          final entry = RoomRealtimeChatEntry.fromHistory(updated);
+          setState(() {
+            _mergeChatMessage(
+              entry,
+              addToTimeline: true,
+              snapshotRevision: revision,
+            );
+          });
+        },
+      ),
       actions: const [],
     );
-    if (content == null || content == message.content) return;
-
-    try {
-      final updated = await _chatGateway.edit(
-        widget.room.roomId,
-        message.id,
-        content: content,
-        expectedVersion: message.version,
-      );
-      if (!mounted) return;
-      final entry = RoomRealtimeChatEntry.fromHistory(updated);
-      setState(() {
-        _messages.applyRealtimeEvent(
-          entry,
-          eventKind: RoomRealtimeChatEventKind.edited,
-          maxEntries: 100,
-        );
-        _indexChatMessage(entry);
-        _syncPinnedChatEntryFromRealtime(entry);
-        if (_replyingToMessage?.id == entry.id) {
-          _replyingToMessage = entry;
-        }
-      });
+    if (mounted && content != null && content != message.content) {
       AppNotifications.showSuccess(context, context.l10n.messageUpdated);
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(
-          context,
-          context.l10n.editMessageFailed('$e'),
-        );
-      }
     }
   }
 
@@ -6016,23 +6061,19 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _removeBlockedUserContent(String userId) {
-    final removedEntries = <RoomRealtimeChatEntry>[
-      ..._messages.where((entry) => entry.userId == userId),
-      ..._pinnedMessages.where((entry) => entry.userId == userId),
-      ..._chatMessageCache.values.where((entry) => entry.userId == userId),
-    ];
+    _chatDetailDialogs.dismissWhere((_, authorId) => authorId == userId);
+    final removedEntries = _chatState.removeUser(userId);
     final messageIds = removedEntries
         .map((entry) => entry.id)
         .where((id) => id.isNotEmpty)
         .toSet();
     final dedupeKeys = removedEntries.map((entry) => entry.dedupeKey).toSet();
 
-    _messages.removeWhere((entry) => entry.userId == userId);
-    _pinnedMessages.removeWhere((entry) => entry.userId == userId);
-    _chatMessageCache.removeWhere((_, entry) => entry.userId == userId);
     _chatMessageKeys.removeWhere((id, _) => messageIds.contains(id));
     _chatReceiptCache.removeWhere((id, _) => messageIds.contains(id));
-    _loadingReplyMessageIds.removeAll(messageIds);
+    for (final id in messageIds) {
+      _replyPreviewLoads.invalidate(key: id);
+    }
     _chatReceiptLoadingIds.removeAll(messageIds);
     _mentionCandidates.removeWhere((user) => user.id == userId);
     _pendingChatMentions.removeWhere((mention) => mention.userId == userId);
@@ -6145,7 +6186,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Widget _buildChatImageThumb(StoredImageInfo image) {
     final url = _resourceUrlResolver.resolve(image.url);
-    return AppImageThumbnail(
+    return AppImagePreview(
       url: url,
       width: 180,
       height: 120,
@@ -6641,7 +6682,7 @@ class _RoomScreenState extends State<RoomScreen>
         overflow: TextOverflow.ellipsis,
       ),
       suffix: selectionMode
-          ? _buildPlaylistSelectionIcon(isSelected, true, primaryColor)
+          ? _buildPlaylistSelectionIcon(entry, isSelected, true, primaryColor)
           : _buildRtmpPublishKeyButton(entry),
       onPressed: _playlistEntryTapHandler(entry, selectionMode),
       onLongPress: _playlistEntryLongPressHandler(entry, selectionMode),
@@ -6734,6 +6775,7 @@ class _RoomScreenState extends State<RoomScreen>
               if (selectionMode) ...[
                 const SizedBox(width: 8),
                 _buildPlaylistSelectionIcon(
+                  entry,
                   isSelected,
                   selectionMode,
                   primaryColor,
@@ -6796,6 +6838,7 @@ class _RoomScreenState extends State<RoomScreen>
                       right: 8,
                       top: 8,
                       child: _buildPlaylistSelectionIcon(
+                        entry,
                         isSelected,
                         selectionMode,
                         primaryColor,
@@ -6920,14 +6963,20 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Widget? _buildPlaylistSelectionIcon(
+    RoomMediaEntry entry,
     bool isSelected,
     bool selectionMode,
     Color primaryColor,
   ) {
     if (!selectionMode) return null;
-    return Icon(
-      isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-      color: isSelected ? primaryColor : Colors.grey,
+    return AppCheckbox(
+      value: isSelected,
+      semanticsLabel: entry.name,
+      activeColor: primaryColor,
+      shape: const CircleBorder(),
+      onChanged: PlaylistSelectionPolicy.isSelectable(entry)
+          ? (_) => _toggleSelection(entry)
+          : null,
     );
   }
 
@@ -7737,13 +7786,14 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _deleteSelectedMediaEntries() async {
     if (!_canDeleteCurrentSelection) return;
+    final selectedEntries = _selectedMediaEntries.values.toList();
 
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.deleteEntries,
       icon: const Icon(Icons.delete_outline, color: Colors.red),
       content: Text(
-        context.l10n.confirmDeleteMediaEntries(_selectedMediaEntryIds.length),
+        context.l10n.confirmDeleteMediaEntries(selectedEntries.length),
       ),
       actions: [
         AppDialogs.createCancelButton(context),
@@ -7756,9 +7806,8 @@ class _RoomScreenState extends State<RoomScreen>
       ],
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       try {
-        final selectedEntries = _selectedMediaEntries.values.toList();
         final mediaIds = selectedEntries
             .where((entry) => !entry.isPlaylist)
             .map((entry) => entry.id)
@@ -7781,7 +7830,7 @@ class _RoomScreenState extends State<RoomScreen>
           mediaIds: mediaIds,
           playlistIds: playlistIds,
         );
-
+        if (!mounted) return;
         setState(() {
           _isSelectionMode = false;
           _selectedMediaEntryIds.clear();
@@ -7893,7 +7942,8 @@ class _RoomScreenState extends State<RoomScreen>
               canViewPlaybackHistory: _canViewPlaybackHistory,
               canNavigatePlayback: _canNavigatePlayback,
               canManagePlaybackHistory: _canManageRoom,
-              canUseWebRtc: _canUseVoiceChat || _canUseP2pMedia,
+              canUseWebRtc:
+                  _capabilities.canUseVoiceChat || _capabilities.canUseP2pMedia,
               currentSettings: settings,
               realtime: RoomRealtimeSession(
                 send: _sendRealtimeMessage,
@@ -8087,9 +8137,10 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _pickChatImage() async {
+    if (!_canSendChatMessages) return;
     try {
       final image = await pickLocalImageUpload(context);
-      if (image == null || !mounted) return;
+      if (image == null || !mounted || !_canSendChatMessages) return;
       setState(() => _selectedChatImage = image);
     } catch (e) {
       if (mounted) {
@@ -8102,6 +8153,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _sendMessage(String text) async {
+    if (!_canSendChatMessages) return;
     final content = text.trim();
     final selectedImage = _selectedChatImage;
     if (content.isEmpty && selectedImage == null) return;
@@ -8119,6 +8171,7 @@ class _RoomScreenState extends State<RoomScreen>
           ),
         );
       }
+      if (!mounted || !_canSendChatMessages) return;
       final message = await _chatGateway.send(
         widget.room.roomId,
         content: content,
@@ -8127,15 +8180,10 @@ class _RoomScreenState extends State<RoomScreen>
         mentions: _pendingChatMentions,
       );
       final entry = RoomRealtimeChatEntry.fromHistory(message);
-      _messageController.clear();
       if (mounted) {
+        _messageController.clear();
         setState(() {
-          _messages.applyRealtimeEvent(
-            entry,
-            eventKind: RoomRealtimeChatEventKind.created,
-            maxEntries: 100,
-          );
-          _indexChatMessage(entry);
+          _mergeChatMessage(entry, addToTimeline: true);
           _selectedChatImage = null;
           _replyingToMessage = null;
           _pendingChatMentions = [];
@@ -8150,68 +8198,6 @@ class _RoomScreenState extends State<RoomScreen>
     } finally {
       if (mounted) setState(() => _sendingChatMessage = false);
     }
-  }
-}
-
-class _RoomChatMessageEditForm extends StatefulWidget {
-  const _RoomChatMessageEditForm({required this.initialContent});
-
-  final String initialContent;
-
-  @override
-  State<_RoomChatMessageEditForm> createState() =>
-      _RoomChatMessageEditFormState();
-}
-
-class _RoomChatMessageEditFormState extends State<_RoomChatMessageEditForm> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialContent);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final content = _controller.text.trim();
-    if (content.isEmpty) return;
-    Navigator.pop(context, content);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AppTextField(
-          controller: _controller,
-          label: context.l10n.messageContent,
-          autofocus: true,
-          minLines: 2,
-          maxLines: 5,
-          onSubmitted: (_) => _submit(),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            AppDialogs.createCancelButton(context),
-            const SizedBox(width: 8),
-            AppDialogs.createConfirmButton(
-              context,
-              _submit,
-              text: context.l10n.save,
-            ),
-          ],
-        ),
-      ],
-    );
   }
 }
 

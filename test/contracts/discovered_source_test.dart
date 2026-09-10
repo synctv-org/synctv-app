@@ -5,6 +5,52 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart' as source;
 
 void main() {
+  test(
+    'source readiness matches required source structure without mutating it',
+    () {
+      final cases = [
+        provider_common.DiscoveredSource(),
+        provider_common.DiscoveredSource(media: source.MediaSourceConfig()),
+        provider_common.DiscoveredSource(
+          playlist: source.PlaylistSourceConfig(),
+        ),
+        provider_common.DiscoveredSource(
+          media: source.MediaSourceConfig(
+            huya: source.HuyaMediaSourceConfig(
+              live: source.HuyaLiveSourceConfig(roomId: 'room'),
+            ),
+          ),
+        ),
+        provider_common.DiscoveredSource(
+          playlist: source.PlaylistSourceConfig(
+            twitch: source.TwitchPlaylistSourceConfig(),
+          ),
+        ),
+      ];
+      for (var index = 0; index < cases.length; index++) {
+        final value = cases[index];
+        final original = value.deepCopy();
+        expect(value.hasMediaSource, index == 3);
+        expect(value.hasPlaylistSource, index == 4);
+        if (value.hasMediaSource) {
+          final copy = value.requireMedia();
+          copy.clearProvider();
+          expect(value, original);
+        } else {
+          expect(value.requireMedia, throwsStateError);
+        }
+        if (value.hasPlaylistSource) {
+          final copy = value.requirePlaylist();
+          copy.clearProvider();
+          expect(value, original);
+        } else {
+          expect(value.requirePlaylist, throwsStateError);
+        }
+        expect(value, original);
+      }
+    },
+  );
+
   const only = source.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY;
 
   test('applies proxy mode to every supported media provider', () {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:fixnum/fixnum.dart';
+import 'package:synctv_app/core/identifiers/event_sequence.dart';
 import 'package:synctv_app/contracts/chat_message_selection.dart';
 import 'package:synctv_app/contracts/playback_client_profile.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
@@ -504,7 +505,7 @@ class SyncTvRoomMediaDomainService {
       messages: response.messages.map(_chatMessageFromProto).toList(),
       nextCursor: response.nextCursor,
       eventCursor: response.hasEventCursor()
-          ? response.eventCursor.sequence.toInt().toString()
+          ? response.eventCursor.sequence.toString()
           : '',
     );
   }
@@ -531,7 +532,7 @@ class SyncTvRoomMediaDomainService {
       messages: response.messages.map(_chatMessageFromProto).toList(),
       nextCursor: response.nextCursor,
       eventCursor: response.hasEventCursor()
-          ? response.eventCursor.sequence.toInt().toString()
+          ? response.eventCursor.sequence.toString()
           : '',
     );
   }
@@ -1101,14 +1102,12 @@ class SyncTvRoomMediaDomainService {
       client_enum.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT;
 
   Int64? _watchSequence(String version) {
-    if (version.isEmpty) return null;
-    final parsed = int.tryParse(version);
-    return parsed == null ? null : Int64(parsed);
+    return parseEventSequence(version);
   }
 
   String _cursorVersion(client.EventCursor cursor) {
-    final sequence = cursor.sequence.toInt();
-    return sequence == 0 ? cursor.eventId : sequence.toString();
+    final sequence = cursor.sequence;
+    return sequence == Int64.ZERO ? cursor.eventId : sequence.toString();
   }
 
   client_enum.PlaybackUpdateType _playbackStateUpdateType(

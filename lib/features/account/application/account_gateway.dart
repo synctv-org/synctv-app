@@ -63,11 +63,11 @@ abstract interface class AccountGateway {
     bool refresh = false,
   });
 
-  Future<UserNotificationItem> getNotification(int notificationId);
+  Future<UserNotificationItem> getNotification(String notificationId);
 
   Future<void> markNotificationAsRead(UserNotificationItem item);
 
-  Future<void> markNotificationsAsRead(List<int> notificationIds);
+  Future<void> markNotificationsAsRead(List<String> notificationIds);
 
   Future<void> markAllNotificationsAsRead();
 

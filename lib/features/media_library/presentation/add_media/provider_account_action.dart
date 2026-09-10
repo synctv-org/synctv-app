@@ -40,9 +40,9 @@ class ProviderAccountSelector<T> extends StatelessWidget {
     this.includeDefault = false,
     this.enabled = true,
     this.defaultLabel,
+    this.label,
+    this.prefixIcon = Icons.account_circle_outlined,
   });
-
-  static const defaultValue = '__default_media_source__';
 
   final List<T> accounts;
   final String? selectedId;
@@ -52,59 +52,57 @@ class ProviderAccountSelector<T> extends StatelessWidget {
   final bool includeDefault;
   final bool enabled;
   final String? defaultLabel;
+  final String? label;
+  final IconData prefixIcon;
 
   @override
   Widget build(BuildContext context) {
     if (accounts.isEmpty && !includeDefault) return const SizedBox.shrink();
 
-    final accountIds = <String>{};
-    final items = <DropdownMenuItem<String>>[];
-    if (includeDefault) {
-      items.add(
-        DropdownMenuItem(
-          value: defaultValue,
-          child: Text(defaultLabel ?? context.l10n.defaultMediaSource),
-        ),
-      );
-    }
+    final accountsById = <String, T>{};
     for (final account in accounts) {
       final id = idOf(account);
-      if (id.isEmpty || !accountIds.add(id)) continue;
-      items.add(
-        DropdownMenuItem(
-          value: id,
-          child: Text(labelOf(account), overflow: TextOverflow.ellipsis),
-        ),
-      );
+      if (id.isNotEmpty) accountsById.putIfAbsent(id, () => account);
     }
-
-    final selected =
-        selectedId != null &&
-            selectedId!.isNotEmpty &&
-            accountIds.contains(selectedId)
+    final labels = accountsById.map(
+      (id, account) => MapEntry(id, labelOf(account)),
+    );
+    final labelCounts = <String, int>{};
+    for (final label in labels.values) {
+      labelCounts.update(label, (count) => count + 1, ifAbsent: () => 1);
+    }
+    final options = <String, String?>{
+      if (includeDefault) defaultLabel ?? context.l10n.defaultMediaSource: null,
+    };
+    for (final entry in labels.entries) {
+      final base =
+          labelCounts[entry.value]! > 1 || options.containsKey(entry.value)
+          ? '${entry.value} (${entry.key})'
+          : entry.value;
+      var label = base;
+      var suffix = 2;
+      // Account labels can also match another account's disambiguated label.
+      while (options.containsKey(label) ||
+          (label != entry.value && labelCounts.containsKey(label))) {
+        label = '$base ${suffix++}';
+      }
+      options[label] = entry.key;
+    }
+    final selected = accountsById.containsKey(selectedId)
         ? selectedId
         : includeDefault
-        ? defaultValue
-        : items.firstOrNull?.value;
-    return DropdownButtonFormField<String>(
-      initialValue: selected,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: context.l10n.mediaSourceAccount,
-        prefixIcon: const Icon(Icons.account_circle_outlined),
-      ),
-      items: items,
-      onChanged: !enabled
-          ? null
-          : (value) {
-              if (value == defaultValue || value == null) {
-                onChanged(null);
-                return;
-              }
-              onChanged(
-                accounts.firstWhere((account) => idOf(account) == value),
-              );
-            },
+        ? null
+        : accountsById.keys.firstOrNull;
+    return AppSelect<String?>(
+      value: selected,
+      label: label ?? context.l10n.mediaSourceAccount,
+      labelAbove: true,
+      wrapText: true,
+      useAnchoredMenu: true,
+      prefixIcon: prefixIcon,
+      options: options,
+      enabled: enabled,
+      onChanged: (id) => onChanged(id == null ? null : accountsById[id]),
     );
   }
 }

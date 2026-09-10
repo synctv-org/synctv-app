@@ -73,6 +73,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   int _page = 1;
   bool _hasMore = false;
   bool _loading = false;
+  int _loadGeneration = 0;
   List<FnosFileItemInfo> _files = const [];
   List<FnosMediaLibraryInfo> _libraries = const [];
   FnosMediaLibraryInfo? _library;
@@ -98,9 +99,11 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
   @override
   void didUpdateWidget(covariant FnosAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
-        widget.binds.isNotEmpty) {
-      _bind = widget.binds.first;
+    if (_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) {
+      ++_loadGeneration;
+      _loading = false;
+      _bind = widget.binds.firstOrNull;
+      _resetLocation();
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
   }
@@ -499,7 +502,8 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
 
   Future<void> _load() async {
     final bind = _bind;
-    if (bind == null || _loading) return;
+    if (!mounted || bind == null) return;
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _listSource = null;
@@ -524,7 +528,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
                     search: _searchController.text,
                     instanceName: bind.providerInstanceName,
                   ));
-          if (!mounted) return;
+          if (!mounted || generation != _loadGeneration) return;
           setState(() {
             _files = result.items;
             _hasMore = result.hasMore;
@@ -538,7 +542,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
                       bind.serverId,
                       instanceName: bind.providerInstanceName,
                     ));
-            if (!mounted) return;
+            if (!mounted || generation != _loadGeneration) return;
             setState(() {
               _libraries = libraries;
               _hasMore = false;
@@ -568,7 +572,7 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
                       search: _searchController.text,
                       instanceName: bind.providerInstanceName,
                     ));
-            if (!mounted) return;
+            if (!mounted || generation != _loadGeneration) return;
             setState(() {
               _mediaItems = result.items;
               _hasMore = result.hasMore;
@@ -577,11 +581,13 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
           }
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         AppNotifications.showError(context, '$error');
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loading = false);
+      }
     }
   }
 

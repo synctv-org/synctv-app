@@ -36,9 +36,18 @@ class SyncedClock {
     if (clientSentAtNanos <= 0 ||
         clientReceivedAtNanos <= 0 ||
         serverReceivedAtNanos <= 0 ||
-        serverSentAtNanos <= 0) {
+        serverSentAtNanos <= 0 ||
+        clientReceivedAtNanos < clientSentAtNanos ||
+        serverSentAtNanos < serverReceivedAtNanos) {
       return;
     }
+
+    final roundTripNanos =
+        (clientReceivedAtNanos - clientSentAtNanos) -
+        (serverSentAtNanos - serverReceivedAtNanos);
+    // Reversed clocks or impossible processing times cannot calibrate playback.
+    // Preserve the last valid sample instead of presenting zero latency.
+    if (roundTripNanos < 0) return;
 
     final offsetNanos =
         (serverReceivedAtNanos -
@@ -46,11 +55,10 @@ class SyncedClock {
             serverSentAtNanos -
             clientReceivedAtNanos) ~/
         2;
-    final roundTripNanos =
-        (clientReceivedAtNanos - clientSentAtNanos) -
-        (serverSentAtNanos - serverReceivedAtNanos);
-    _offsetMicros = offsetNanos ~/ 1000;
-    _roundTripMicros = roundTripNanos <= 0 ? 0 : roundTripNanos ~/ 1000;
+    // Epoch nanoseconds lose sub-microsecond precision on the Web. Rounding
+    // avoids truncating a nearly exact offset below the target clock tick.
+    _offsetMicros = (offsetNanos / 1000).round();
+    _roundTripMicros = roundTripNanos ~/ 1000;
     _syncedAt = DateTime.now();
   }
 

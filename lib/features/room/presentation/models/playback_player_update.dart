@@ -16,7 +16,9 @@ bool activePlaybackSourceCanContinue({
   required int? expireAt,
   required DateTime now,
 }) {
-  if (expireAt == null || expireAt <= 0) return false;
+  if (expireAt == null || expireAt <= 0 || expireAt > 8640000000000) {
+    return false;
+  }
   final expiresAt = DateTime.fromMillisecondsSinceEpoch(
     expireAt * 1000,
     isUtc: true,

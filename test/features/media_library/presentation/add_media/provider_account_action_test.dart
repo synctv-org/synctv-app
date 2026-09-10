@@ -79,7 +79,7 @@ void main() {
     );
 
     expect(find.text('Personal'), findsOneWidget);
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.tap(find.byType(TextButton));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Family').last);
     await tester.pumpAndSettle();

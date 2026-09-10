@@ -12,6 +12,70 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
 import '../../../test_app.dart';
 
 void main() {
+  testWidgets('provider draft survives wide and compact layout changes', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const ui.Size(600, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: buildThemedTestApp,
+        home: const Scaffold(body: AddMediaDialog(roomId: 'room_layout_test')),
+      ),
+    );
+    await tester.pump();
+    final selector = find.byKey(const ValueKey('add-media-source-selector-0'));
+    final rect = tester.getRect(selector);
+    await tester.tapAt(Offset(rect.right - 24, rect.center.dy));
+    await tester.pumpAndSettle();
+    for (var index = 0; index < 11; index++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    }
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('cctv-resource')),
+      'sweep-resource',
+    );
+    await tester.enterText(
+      find.byKey(const Key('cctv-name')),
+      'Retained draft',
+    );
+    var currentSource = 11;
+    for (final nextSource in [8, 11]) {
+      final sourceSelector = find.byKey(
+        ValueKey('add-media-source-selector-$currentSource'),
+      );
+      final sourceRect = tester.getRect(sourceSelector);
+      await tester.tapAt(Offset(sourceRect.right - 24, sourceRect.center.dy));
+      await tester.pumpAndSettle();
+      for (var step = 0; step < (nextSource - currentSource).abs(); step++) {
+        await tester.sendKeyEvent(
+          nextSource > currentSource
+              ? LogicalKeyboardKey.arrowDown
+              : LogicalKeyboardKey.arrowUp,
+        );
+      }
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      currentSource = nextSource;
+    }
+    expect(find.text('sweep-resource'), findsOneWidget);
+    expect(find.text('Retained draft'), findsOneWidget);
+    for (final width in [1169.0, 600.0, 1300.0, 430.0]) {
+      tester.view.physicalSize = ui.Size(width, 800);
+      await tester.pump();
+      expect(find.text('sweep-resource'), findsOneWidget);
+      expect(find.text('Retained draft'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }
+    await tester.pump(const Duration(seconds: 4));
+  });
+
   testWidgets('direct links wait for a resolved source policy', (tester) async {
     tester.view.physicalSize = const ui.Size(800, 700);
     tester.view.devicePixelRatio = 1;

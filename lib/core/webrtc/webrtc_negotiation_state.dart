@@ -37,8 +37,11 @@ class WebRtcNegotiationState<K, C> {
   List<C> takeCandidates(K peer) => _pendingCandidates.remove(peer) ?? const [];
 
   void restoreCandidates(K peer, Iterable<C> candidates) {
-    final values = candidates.toList(growable: false);
-    if (values.isNotEmpty) _pendingCandidates[peer] = values;
+    final values = candidates.toList();
+    if (values.isEmpty) return;
+    // New candidates may arrive while the old peer is closing.
+    values.addAll(_pendingCandidates[peer] ?? const []);
+    _pendingCandidates[peer] = values;
   }
 
   void clearPeer(K peer, {bool preserveCandidates = false}) {

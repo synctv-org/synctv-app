@@ -36,7 +36,12 @@ final class NativeP2pMediaRuntimeFactory implements P2pMediaRuntimeFactory {
       securityMode: securityMode,
       serverBaseUrl: serverBaseUrl,
     );
-    await engine.initialize();
-    return engine;
+    try {
+      await engine.initialize();
+      return engine;
+    } catch (_) {
+      await engine.dispose();
+      rethrow;
+    }
   }
 }

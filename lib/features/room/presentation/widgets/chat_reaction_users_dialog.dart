@@ -3,6 +3,8 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 
+import '../models/chat_detail_time.dart';
+
 class ChatReactionUsersDialog extends StatefulWidget {
   const ChatReactionUsersDialog({
     super.key,
@@ -24,9 +26,12 @@ class ChatReactionUsersDialog extends StatefulWidget {
 
 class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
   final List<ChatReactionUserInfo> _users = [];
+  final Set<String> _loadedCursors = {};
+  int _loadRevision = 0;
   String _nextCursor = '';
   int _total = 0;
   bool _loading = false;
+  Object? _error;
 
   @override
   void initState() {
@@ -34,29 +39,57 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
     _load();
   }
 
+  @override
+  void didUpdateWidget(covariant ChatReactionUsersDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.roomId != widget.roomId ||
+        oldWidget.messageId != widget.messageId ||
+        oldWidget.reactionKey != widget.reactionKey) {
+      _users.clear();
+      _loadedCursors.clear();
+      _nextCursor = '';
+      _total = 0;
+      _loading = false;
+      _load();
+    }
+  }
+
   Future<void> _load({bool loadMore = false}) async {
     if (_loading) return;
     if (loadMore && _nextCursor.isEmpty) return;
-    setState(() => _loading = true);
+    final revision = ++_loadRevision;
+    final cursor = loadMore ? _nextCursor : '';
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final page = await widget.loadUsers(cursor: loadMore ? _nextCursor : '');
-      if (!mounted) return;
+      final page = await widget.loadUsers(cursor: cursor);
+      if (!mounted || revision != _loadRevision) return;
       setState(() {
         _total = page.total;
-        _nextCursor = page.nextCursor;
-        if (loadMore) {
-          final existing = _users.map((user) => user.userId).toSet();
-          for (final user in page.users) {
-            if (existing.add(user.userId)) _users.add(user);
-          }
-        } else {
-          _users
-            ..clear()
-            ..addAll(page.users);
-        }
+        if (!loadMore) _loadedCursors.clear();
+        _loadedCursors.add(cursor);
+        _nextCursor = _loadedCursors.contains(page.nextCursor)
+            ? ''
+            : page.nextCursor;
+        final members = <String, ChatReactionUserInfo>{
+          if (loadMore)
+            for (final user in _users) user.userId: user,
+          for (final user in page.users) user.userId: user,
+        };
+        _users
+          ..clear()
+          ..addAll(members.values);
       });
+    } catch (error) {
+      if (mounted && revision == _loadRevision) {
+        setState(() => _error = error);
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && revision == _loadRevision) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -87,7 +120,9 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
                   : _users.isEmpty
                   ? Center(
                       child: Text(
-                        context.l10n.noMembers,
+                        _error == null
+                            ? context.l10n.noMembers
+                            : context.l10n.loadFailed('$_error'),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -98,6 +133,7 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
                       separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final user = _users[index];
+                        final reactedAt = formatChatDetailTime(user.reactedAt);
                         final name = user.username.isEmpty
                             ? user.userId
                             : user.username;
@@ -117,9 +153,9 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  if (user.reactedAt > 0)
+                                  if (reactedAt != null)
                                     Text(
-                                      _formatTime(user.reactedAt),
+                                      reactedAt,
                                       style: theme.textTheme.labelSmall
                                           ?.copyWith(
                                             color: theme
@@ -135,15 +171,28 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
                       },
                     ),
             ),
-            if (_nextCursor.isNotEmpty) ...[
+            if (_error != null || _nextCursor.isNotEmpty) ...[
               const SizedBox(height: 12),
+              if (_error != null && _users.isNotEmpty)
+                Text(
+                  context.l10n.loadFailed('$_error'),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
               Align(
                 alignment: Alignment.center,
                 child: AppActionButton(
-                  onPressed: _loading ? null : () => _load(loadMore: true),
+                  onPressed: _loading
+                      ? null
+                      : () => _load(loadMore: _nextCursor.isNotEmpty),
                   loading: _loading,
-                  icon: Icons.more_horiz,
-                  label: context.l10n.loadMore,
+                  icon: _error == null ? Icons.more_horiz : Icons.refresh,
+                  label: _error == null
+                      ? context.l10n.loadMore
+                      : context.l10n.retry,
                   style: AppActionButtonStyle.tonal,
                 ),
               ),
@@ -159,13 +208,5 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
         ),
       ],
     );
-  }
-
-  static String _formatTime(int seconds) {
-    final time = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
-    return '${time.month.toString().padLeft(2, '0')}-'
-        '${time.day.toString().padLeft(2, '0')} '
-        '${time.hour.toString().padLeft(2, '0')}:'
-        '${time.minute.toString().padLeft(2, '0')}';
   }
 }

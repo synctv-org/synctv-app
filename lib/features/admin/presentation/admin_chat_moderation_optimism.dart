@@ -7,7 +7,11 @@ final class AdminChatModerationOptimisticState {
   final Map<int, _ModerationIntent> _intents = {};
   int _nextIntentId = 1;
 
-  void clearServerMessages() => _serverMessages.clear();
+  void clearServerMessages() {
+    _serverMessages.clear();
+    // Accepted jobs are asynchronous; an explicit refresh trusts the server.
+    _intents.removeWhere((_, intent) => intent.accepted);
+  }
 
   int begin({
     required String messageId,
@@ -25,7 +29,15 @@ final class AdminChatModerationOptimisticState {
 
   void discard(int intentId) => _intents.remove(intentId);
 
+  void accept(int intentId) {
+    _intents[intentId]?.accepted = true;
+  }
+
   RoomChatMessageInfo recordServerMessage(RoomChatMessageInfo message) {
+    final current = _serverMessages[message.id];
+    if (current != null && current.version > message.version) {
+      return _displayMessage(current);
+    }
     _serverMessages[message.id] = message;
     return _displayMessage(message);
   }
@@ -52,7 +64,7 @@ final class AdminChatModerationOptimisticState {
 }
 
 final class _ModerationIntent {
-  const _ModerationIntent({
+  _ModerationIntent({
     required this.messageId,
     required this.userId,
     required this.deleteAllMessages,
@@ -61,6 +73,7 @@ final class _ModerationIntent {
   final String messageId;
   final String userId;
   final bool deleteAllMessages;
+  bool accepted = false;
 
   bool matches(RoomChatMessageInfo message) =>
       message.id == messageId ||

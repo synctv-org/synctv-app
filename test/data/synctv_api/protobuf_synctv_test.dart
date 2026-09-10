@@ -34,6 +34,8 @@ import 'package:synctv_app/data/synctv_api/synctv_room_management_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_room_media_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_session_store.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
+import 'package:synctv_app/data/synctv_api/synctv_runtime_service.dart';
+import 'package:synctv_app/data/synctv_api/synctv_domain_services.dart';
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -162,6 +164,16 @@ passkey.PasskeyRegistrationCredential testPasskeyRegistrationCredential(
     },
     'clientExtensionResults': <String, dynamic>{},
   });
+}
+
+Future<SyncTvDomainServices> _restoredDomains() async {
+  final runtime = SyncTvRuntimeService();
+  addTearDown(() => runtime.api.close());
+  await runtime.init();
+  return SyncTvDomainServices(
+    api: runtime.api,
+    sessionStore: runtime.sessionStore,
+  );
 }
 
 void main() {
@@ -653,11 +665,11 @@ void main() {
       );
 
       expect(settings.authPolicyHints, [
-        '密码注册需要管理员审核',
-        '邮箱注册需要管理员审核',
-        'Passkey 注册需要管理员审核',
-        '服务器启用了邮箱白名单，注册邮箱需要在白名单内',
-        '访客访问未启用',
+        AuthPolicyHint.passwordReview,
+        AuthPolicyHint.emailReview,
+        AuthPolicyHint.passkeyReview,
+        AuthPolicyHint.emailWhitelist,
+        AuthPolicyHint.guestDisabled,
       ]);
     },
   );
@@ -1364,7 +1376,7 @@ void main() {
   test('chat reactions are mapped from protobuf events and endpoints', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -1466,7 +1478,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -1735,7 +1747,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -1803,7 +1815,7 @@ void main() {
     () async {
       http.Request? captured;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           captured = request;
@@ -2078,7 +2090,7 @@ void main() {
       final seenPaths = <String>[];
 
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()
           ..updateAccountTokens(accessToken: 'access-token'),
         httpClient: MockClient((request) async {
@@ -2191,7 +2203,7 @@ void main() {
       final seenPaths = <String>[];
 
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()
           ..updateAccountTokens(accessToken: 'access-token'),
         httpClient: MockClient((request) async {
@@ -2905,7 +2917,7 @@ void main() {
 
   test('API client resolves server-relative resource URLs', () {
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/synctv/api',
+      baseUrl: 'https://example.test/synctv',
       session: SyncTvSession(),
     );
     expect(api.baseUrl, 'https://example.test/synctv');
@@ -2924,14 +2936,13 @@ void main() {
     );
   });
 
-  test('provider bind aggregation follows available instance protobuf API', () async {
+  test('provider binding facade loads all instances without discovery', () async {
     final requests = <http.Request>[];
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final subscription = server.listen((request) async {
       requests.add(http.Request(request.method, request.uri));
       request.response.headers.contentType = io.ContentType.json;
 
-      final instanceName = request.uri.queryParameters['instanceName'] ?? '';
       if (request.uri.path == '/api/providers/instances/available') {
         request.response.write(
           jsonEncode({
@@ -2941,53 +2952,45 @@ void main() {
       } else if (request.uri.path == '/api/providers/alist/binds') {
         request.response.write(
           jsonEncode({
-            'binds': instanceName == 'edge'
-                ? [
-                    {
-                      'id': 'alist_edge',
-                      'serverId': 'alist_server_edge',
-                      'host': 'https://alist-edge.example.test',
-                      'username': 'edge-user',
-                      'createdAt': 2,
-                      'providerInstanceName': 'edge',
-                    },
-                  ]
-                : [
-                    {
-                      'id': 'alist_default_a',
-                      'serverId': 'alist_server_default',
-                      'host': 'https://alist.example.test',
-                      'username': 'default-user',
-                      'createdAt': 1,
-                      'providerInstanceName': '',
-                    },
-                    {
-                      'id': 'alist_default_b',
-                      'serverId': 'alist_server_default',
-                      'host': 'https://alist.example.test',
-                      'username': 'default-user',
-                      'createdAt': 1,
-                      'providerInstanceName': '',
-                    },
-                  ],
+            'binds': [
+              {
+                'id': 'alist_edge',
+                'serverId': 'alist_server_edge',
+                'host': 'https://alist-edge.example.test',
+                'username': 'edge-user',
+                'createdAt': 2,
+                'providerInstanceName': 'edge',
+              },
+              {
+                'id': 'alist_default_a',
+                'serverId': 'alist_server_default',
+                'host': 'https://alist.example.test',
+                'username': 'default-user',
+                'createdAt': 1,
+                'providerInstanceName': '',
+              },
+            ],
           }),
         );
       } else if (request.uri.path == '/api/providers/emby/binds') {
         request.response.write(
           jsonEncode({
             'binds': [
-              {
-                'id': instanceName == 'edge' ? 'emby_edge' : 'emby_default',
-                'serverId': instanceName == 'edge'
-                    ? 'emby_server_edge'
-                    : 'emby_server',
-                'host': instanceName == 'edge'
-                    ? 'https://emby-edge.example.test'
-                    : 'https://emby.example.test',
-                'userId': instanceName == 'edge' ? 'edge-user' : 'default-user',
-                'createdAt': instanceName == 'edge' ? 4 : 3,
-                'providerInstanceName': instanceName,
-              },
+              for (final instanceName in ['', 'edge'])
+                {
+                  'id': instanceName == 'edge' ? 'emby_edge' : 'emby_default',
+                  'serverId': instanceName == 'edge'
+                      ? 'emby_server_edge'
+                      : 'emby_server',
+                  'host': instanceName == 'edge'
+                      ? 'https://emby-edge.example.test'
+                      : 'https://emby.example.test',
+                  'userId': instanceName == 'edge'
+                      ? 'edge-user'
+                      : 'default-user',
+                  'createdAt': instanceName == 'edge' ? 4 : 3,
+                  'providerInstanceName': instanceName,
+                },
             ],
           }),
         );
@@ -2995,14 +2998,15 @@ void main() {
         request.response.write(
           jsonEncode({
             'binds': [
-              {
-                'id': instanceName == 'edge' ? 'bili_edge' : 'bili_default',
-                'serverId': instanceName == 'edge'
-                    ? 'bili_server_edge'
-                    : 'bili_server',
-                'createdAt': instanceName == 'edge' ? 6 : 5,
-                'providerInstanceName': instanceName,
-              },
+              for (final instanceName in ['', 'edge'])
+                {
+                  'id': instanceName == 'edge' ? 'bili_edge' : 'bili_default',
+                  'serverId': instanceName == 'edge'
+                      ? 'bili_server_edge'
+                      : 'bili_server',
+                  'createdAt': instanceName == 'edge' ? 6 : 5,
+                  'providerInstanceName': instanceName,
+                },
             ],
           }),
         );
@@ -3026,10 +3030,10 @@ void main() {
       final bilibiliBinds = await SyncTvService.getAllBilibiliBindInfos();
 
       expect(alistBinds.map((bind) => bind.serverId), [
-        'alist_server_default',
         'alist_server_edge',
+        'alist_server_default',
       ]);
-      expect(alistBinds.last.providerInstanceName, 'edge');
+      expect(alistBinds.first.providerInstanceName, 'edge');
       expect(embyBinds.map((bind) => bind.providerInstanceName), ['', 'edge']);
       expect(bilibiliBinds.map((bind) => bind.providerInstanceName), [
         '',
@@ -3039,25 +3043,17 @@ void main() {
       final availableRequests = requests.where(
         (request) => request.url.path == '/api/providers/instances/available',
       );
-      expect(
-        availableRequests.map(
-          (request) => request.url.queryParameters['providerType'],
-        ),
-        ['alist', 'emby', 'bilibili'],
-      );
+      expect(availableRequests, isEmpty);
       expect(
         requests.map(
           (request) =>
               '${request.url.path}?${request.url.queryParameters['instanceName'] ?? ''}',
         ),
-        containsAll([
+        [
           '/api/providers/alist/binds?',
-          '/api/providers/alist/binds?edge',
           '/api/providers/emby/binds?',
-          '/api/providers/emby/binds?edge',
           '/api/providers/bilibili/binds?',
-          '/api/providers/bilibili/binds?edge',
-        ]),
+        ],
       );
       expect(
         requests
@@ -3075,14 +3071,16 @@ void main() {
     }
   });
 
-  test('provider bind aggregation includes default local instance when discovery is empty', () async {
+  test('provider bindings remain available when discovery fails', () async {
     final requests = <http.Request>[];
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final subscription = server.listen((request) async {
       requests.add(http.Request(request.method, request.uri));
       request.response.headers.contentType = io.ContentType.json;
       if (request.uri.path == '/api/providers/instances/available') {
-        request.response.write(jsonEncode({'instances': []}));
+        request.response
+          ..statusCode = 503
+          ..write(jsonEncode({'message': 'Discovery unavailable'}));
       } else if (request.uri.path == '/api/providers/alist/binds') {
         request.response.write(
           jsonEncode({
@@ -3119,7 +3117,7 @@ void main() {
       expect(binds.single.providerInstanceName, isEmpty);
 
       final paths = requests.map((request) => request.url.path);
-      expect(paths, contains('/api/providers/instances/available'));
+      expect(paths, isNot(contains('/api/providers/instances/available')));
       expect(paths, contains('/api/providers/alist/binds'));
       expect(
         requests
@@ -3147,7 +3145,7 @@ void main() {
         ..updateAccountTokens(accessToken: 'expired-access')
         ..updateAccountTokens(refreshToken: 'refresh-token');
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: session,
         onAuthError: (_) => authErrors++,
         onTokenRefresh: (_) async => persistedRefresh = true,
@@ -3245,7 +3243,7 @@ void main() {
         ..updateAccountTokens(accessToken: 'access-token')
         ..updateAccountTokens(refreshToken: 'refresh-token');
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: session,
         onAuthError: (_) => authErrors++,
         httpClient: MockClient((request) async {
@@ -3471,7 +3469,7 @@ void main() {
     () async {
       Uri? requestedUri;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -3647,7 +3645,7 @@ void main() {
     () async {
       Uri? requestedUri;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -3736,7 +3734,7 @@ void main() {
   test('watch playlist items sends a flat cursor query', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -4044,7 +4042,7 @@ void main() {
       ..updateAccountTokens(accessToken: 'expired-access')
       ..updateAccountTokens(refreshToken: 'refresh-token');
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: session,
       onAuthError: (_) => authErrors++,
       onTokenRefresh: (_) async => persistedRefresh = true,
@@ -4158,7 +4156,7 @@ void main() {
     'dynamic playlist item mapping keeps target for browsing and playback',
     () {
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession(),
       );
       final target = testProviderTarget('/shows/ep1.mkv');
@@ -4274,7 +4272,7 @@ void main() {
     () async {
       var requestCount = 0;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestCount++;
@@ -4970,7 +4968,7 @@ void main() {
   test('watch playback state query uses known event sequence', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -5008,7 +5006,7 @@ void main() {
       Uri? requestedUri;
       final playbackClientProfile = defaultPlaybackClientProfile();
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -5068,7 +5066,7 @@ void main() {
       String? requestMethod;
       String? requestBody;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -5122,7 +5120,7 @@ void main() {
       String? requestMethod;
       String? requestBody;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -5176,7 +5174,7 @@ void main() {
     Uri? requestedUri;
     String? requestMethod;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -5203,7 +5201,7 @@ void main() {
   test('move playlist sends protobuf oneof anchor body', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -5245,7 +5243,7 @@ void main() {
       String? requestMethod;
       String? requestBody;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -5284,7 +5282,7 @@ void main() {
     String? requestMethod;
     String? requestBody;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -5316,7 +5314,7 @@ void main() {
     String? requestMethod;
     String? requestBody;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -5352,7 +5350,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -5378,7 +5376,7 @@ void main() {
   test('watch room members query uses protobuf enum values', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -5426,7 +5424,7 @@ void main() {
   test('admin list users query preserves protobuf filters', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -5531,7 +5529,7 @@ void main() {
     'admin user mapping preserves current protobuf role and status enums',
     () {
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession(),
       );
       final user = api.mapAdminUser(
@@ -5590,7 +5588,7 @@ void main() {
     final requests = <http.Request>[];
     const adminCredential = 'not-a-real-test-credential';
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -5655,7 +5653,7 @@ void main() {
   test('admin unban user uses protobuf path command endpoint', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -5681,9 +5679,26 @@ void main() {
     expect(requests.single.body, isEmpty);
   });
 
+  test('room mappings read the independent password credential state', () {
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test',
+      session: SyncTvSession(),
+    );
+    for (final enabled in [true, false]) {
+      expect(
+        api.mapRoom(client.Room(passwordEnabled: enabled)).needPassword,
+        enabled,
+      );
+      expect(
+        api.mapAdminRoom(admin.Room(passwordEnabled: enabled)).needPassword,
+        enabled,
+      );
+    }
+  });
+
   test('admin room mapping keeps lifecycle status separate from ban flag', () {
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession(),
     );
     final room = api.mapAdminRoom(
@@ -5842,9 +5857,9 @@ void main() {
           refreshToken: 'refresh',
         ),
       );
-      await SyncTvService.init();
+      final domains = await _restoredDomains();
 
-      final page = await SyncTvService.getMyRoomsPage(
+      final page = await domains.publicRooms.getMyRoomsPage(
         page: 3,
         pageSize: 40,
         search: 'Mine',
@@ -6015,7 +6030,7 @@ void main() {
   test('chat history query is generated from protobuf request', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -6055,7 +6070,7 @@ void main() {
   test('chat playback query includes requested message types', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -6153,7 +6168,7 @@ void main() {
   test('notification detail endpoint maps protobuf response', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -6188,7 +6203,7 @@ void main() {
   test('room stream query and kick use protobuf contract', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -6319,7 +6334,7 @@ void main() {
   test('room stream endpoints use path protobuf parameters', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -6377,7 +6392,7 @@ void main() {
 
   test('publish key info preserves the server key type', () async {
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         return http.Response(
@@ -6413,7 +6428,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -6617,7 +6632,7 @@ void main() {
       String? requestMethod;
       String? requestBody;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -6694,7 +6709,7 @@ void main() {
       String? requestMethod;
       String? requestBody;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -6778,7 +6793,7 @@ void main() {
     String? requestBody;
     final session = SyncTvSession()..updateAccountTokens(accessToken: 'token');
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: session,
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -6808,7 +6823,7 @@ void main() {
     String? requestMethod;
     String? requestBody;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -6838,7 +6853,7 @@ void main() {
     String? requestMethod;
     String? requestBody;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -6870,6 +6885,18 @@ void main() {
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final origin = 'http://${server.address.host}:${server.port}';
     final requests = server.listen((request) async {
+      if (request.method == 'GET') {
+        request.response
+          ..statusCode = 200
+          ..headers.contentType = io.ContentType.json
+          ..write(
+            jsonEncode({
+              'settings': {'maxMembers': '17', 'allowGuestJoin': false},
+            }),
+          );
+        await request.response.close();
+        return;
+      }
       requestedUri = request.uri;
       requestBody = await utf8.decoder.bind(request).join();
       request.response
@@ -6905,6 +6932,9 @@ void main() {
           guestAddedPermissions: RoomGuestPermissions.viewMembers,
         ),
       );
+      final fresh = await SyncTvService.getRoomSettings('room_1');
+      expect(fresh.maxMembers, 17);
+      expect(fresh.allowGuestJoin, isFalse);
     } finally {
       await requests.cancel();
       await server.close(force: true);
@@ -6945,7 +6975,7 @@ void main() {
     () async {
       http.Request? capturedRequest;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           capturedRequest = request;
@@ -7475,7 +7505,7 @@ void main() {
     Uri? requestedUri;
     String? requestBody;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -7550,7 +7580,7 @@ void main() {
   test('member permission overrides send protobuf request body', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -7613,7 +7643,7 @@ void main() {
     () async {
       http.Request? capturedRequest;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           capturedRequest = request;
@@ -7659,7 +7689,7 @@ void main() {
   test('member display metadata routes use latest protobuf contract', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -7716,7 +7746,7 @@ void main() {
   test('room lifecycle and member commands use protobuf contract', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -7804,7 +7834,7 @@ void main() {
   test('admin room ban and password update preserve protobuf fields', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -7856,7 +7886,7 @@ void main() {
   test('room password clear uses room password delete endpoint', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -7882,7 +7912,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -7941,7 +7971,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -8018,7 +8048,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -8063,7 +8093,7 @@ void main() {
   test('admin unban room uses protobuf path command endpoint', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -8097,7 +8127,7 @@ void main() {
       Uri? requestedUri;
       String? requestBody;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -8135,7 +8165,7 @@ void main() {
   test('admin add member sends current room member role enum body', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -8358,7 +8388,7 @@ void main() {
     () async {
       http.Request? capturedRequest;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           capturedRequest = request;
@@ -8385,7 +8415,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -8451,7 +8481,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -8516,7 +8546,7 @@ void main() {
     () async {
       Uri? requestedUri;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -8589,7 +8619,7 @@ void main() {
     String? requestBody;
     const directoryCredential = 'not-real-directory-credential';
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -8638,7 +8668,7 @@ void main() {
       String? requestBody;
       const directoryCredential = 'not-real-directory-credential';
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -8743,7 +8773,7 @@ void main() {
       String? requestBody;
       const providerCredential = 'not-real-provider-credential';
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -8790,7 +8820,7 @@ void main() {
       const providerCredential = 'not-real-provider-credential';
       const embyCredential = 'not-real-emby-credential';
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -8939,7 +8969,7 @@ void main() {
   test('provider instance query is generated from protobuf request', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -9064,7 +9094,7 @@ void main() {
   test('provider backend discovery uses protobuf path request', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -9114,7 +9144,7 @@ void main() {
     }
 
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -9214,7 +9244,7 @@ void main() {
   test('OAuth2 unlink sends provider instance and user id query', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -9334,7 +9364,7 @@ void main() {
         ..updateAccountTokens(accessToken: 'existing-access')
         ..updateAccountTokens(refreshToken: 'existing-refresh');
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: session,
         httpClient: MockClient((request) async {
           expect(request.headers['authorization'], 'Bearer existing-access');
@@ -9369,7 +9399,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -9491,7 +9521,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -9541,7 +9571,7 @@ void main() {
         'http://${server.address.host}:${server.port}',
       );
 
-      await SyncTvService.markNotificationsAsRead([0, 42, -1, 43]);
+      await SyncTvService.markNotificationsAsRead(['0', '42', '-1', '43']);
     } finally {
       await listener.cancel();
       await server.close(force: true);
@@ -9561,7 +9591,7 @@ void main() {
       Uri? requestedUri;
       String? requestBody;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -9598,7 +9628,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -9742,7 +9772,7 @@ void main() {
   test('room websocket uri uses ticket and json transport', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -9773,7 +9803,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -9952,8 +9982,8 @@ void main() {
           baseUrl: 'http://${server.address.host}:${server.port}',
         ),
       );
-      await SyncTvService.init();
-      final page = await SyncTvService.adminListReviewsPage(
+      final domains = await _restoredDomains();
+      final page = await domains.admin.listReviewsPage(
         kind: AdminReviewKind.userRegistration,
       );
       expect(page.total, 1);
@@ -10007,8 +10037,8 @@ void main() {
           baseUrl: 'http://${server.address.host}:${server.port}',
         ),
       );
-      await SyncTvService.init();
-      final page = await SyncTvService.adminListReviewsPage(
+      final domains = await _restoredDomains();
+      final page = await domains.admin.listReviewsPage(
         kind: AdminReviewKind.userRegistration,
       );
       expect(page.total, 1);
@@ -10028,7 +10058,7 @@ void main() {
   test('admin stream and ban list queries preserve protobuf filters', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -10309,7 +10339,7 @@ void main() {
 
   test('public settings response stays typed instead of map-shaped', () async {
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession(),
       httpClient: MockClient((request) async {
         return http.Response(
@@ -10411,7 +10441,7 @@ void main() {
   test('public server info endpoint maps protobuf response', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession(),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -10438,7 +10468,7 @@ void main() {
     () async {
       Uri? requestedUri;
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession(),
         httpClient: MockClient((request) async {
           requestedUri = request.url;
@@ -10537,7 +10567,7 @@ void main() {
   test('public room taxonomy endpoints map categories and labels', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession(),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -10621,7 +10651,7 @@ void main() {
     'room mapping preserves category and labels from protobuf response',
     () async {
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession(),
         httpClient: MockClient((request) async {
           return http.Response(
@@ -10744,9 +10774,9 @@ void main() {
     );
     final parsed = RoomInviteService.parse(link);
 
-    expect(Uri.parse(link).path, '/rooms/join');
+    expect(Uri.parse(link).path, '/api/rooms/join');
     expect(parsed.roomId, 'room_123');
-    expect(parsed.serverEndpoint, 'https://sync.example');
+    expect(parsed.serverEndpoint, 'https://sync.example/api');
     expect(RoomInviteService.parse('room_plain').roomId, 'room_plain');
   });
 
@@ -10754,7 +10784,7 @@ void main() {
     http.Request? capturedRequest;
     const roomCredential = 'not-real-room-credential';
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
       httpClient: MockClient((request) async {
         capturedRequest = request;
@@ -10882,7 +10912,7 @@ void main() {
   test('room discovery endpoint maps viewer access details', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'user-token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -10924,7 +10954,7 @@ void main() {
     Uri? requestedUri;
     String? authorization;
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'user-token'),
       httpClient: MockClient((request) async {
         requestedUri = request.url;
@@ -10975,7 +11005,7 @@ void main() {
         displayName: 'Guest',
       );
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: session,
       httpClient: MockClient((request) async {
         requests.add((
@@ -11056,9 +11086,9 @@ void main() {
           refreshToken: 'refresh-only-token',
         ),
       );
-      await SyncTvService.init();
+      final domains = await _restoredDomains();
 
-      await SyncTvService.discoverRooms(pageSize: 8);
+      await domains.publicRooms.discoverRooms(pageSize: 8);
 
       expect(requestedPaths, ['/api/auth/refresh', '/api/user/rooms/discover']);
       expect(discoveryAuthorization, 'Bearer fresh-access');
@@ -11070,7 +11100,7 @@ void main() {
 
   test('room discovery maps pending approval as non-joinable', () async {
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'user-token'),
       httpClient: MockClient(
         (_) async => http.Response(
@@ -11105,7 +11135,7 @@ void main() {
     );
   });
 
-  test('SyncTV service preserves room discovery state', () async {
+  test('public room service preserves room discovery state', () async {
     http.Request? capturedRequest;
     final server = await io.HttpServer.bind('127.0.0.1', 0);
     final listener = server.listen((request) async {
@@ -11138,9 +11168,9 @@ void main() {
           baseUrl: 'http://${server.address.host}:${server.port}',
         ),
       );
-      await SyncTvService.init();
+      final domains = await _restoredDomains();
 
-      final room = await SyncTvService.getRoomDiscovery('room_lobby');
+      final room = await domains.publicRooms.getRoomDiscovery('room_lobby');
 
       expect(capturedRequest, isNotNull);
       expect(capturedRequest!.url.path, '/api/user/rooms/room_lobby/discovery');
@@ -11162,7 +11192,7 @@ void main() {
     const emailLoginToken = 'not-real-email-login-token';
     final session = SyncTvSession();
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: session,
       httpClient: MockClient((request) async {
         capturedRequest = request;
@@ -11206,7 +11236,7 @@ void main() {
       final requests = <http.Request>[];
       final session = SyncTvSession();
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: session,
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -11323,7 +11353,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -11526,7 +11556,7 @@ void main() {
   test('login discovery is server-driven and preserves method order', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession(),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -11762,7 +11792,7 @@ void main() {
     final requests = <http.Request>[];
     final session = SyncTvSession();
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: session,
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -11806,7 +11836,7 @@ void main() {
   test('MFA challenge preserves methods and UTC expiry', () async {
     final session = SyncTvSession();
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: session,
       httpClient: MockClient(
         (_) async => http.Response(
@@ -11858,7 +11888,7 @@ void main() {
       final session = SyncTvSession()
         ..updateAccountTokens(accessToken: 'access');
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: session,
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -12060,7 +12090,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'access'),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -12246,7 +12276,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession(),
         httpClient: MockClient((request) async {
           requests.add(request);
@@ -12365,7 +12395,7 @@ void main() {
   test('opaque registration domain omits blank email identifier', () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession(),
       httpClient: MockClient((request) async {
         requests.add(request);
@@ -12403,7 +12433,7 @@ void main() {
     final requests = <http.Request>[];
     const emailResetToken = 'not-real-email-reset-token';
     final api = SyncTvApiClient(
-      baseUrl: 'https://example.test/api',
+      baseUrl: 'https://example.test',
       session: SyncTvSession()..updateAccountTokens(accessToken: 'access'),
       httpClient: MockClient((request) async {
         requests.add(request);

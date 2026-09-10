@@ -4,6 +4,22 @@ import 'package:synctv_app/features/providers/presentation/binding/platform_bind
 import 'package:synctv_app/l10n/app_localizations.dart';
 
 void main() {
+  for (final scale in [1.3, 2.0]) {
+    testWidgets('Emby form fits 320 pixels at text scale $scale', (
+      tester,
+    ) async {
+      await _pumpEmbyForm(
+        tester,
+        surfaceSize: const Size(320, 700),
+        textScale: scale,
+      );
+      expect(tester.takeException(), isNull);
+      await _selectCredentialMode(tester, 1);
+      expect(tester.takeException(), isNull);
+      await _selectCredentialMode(tester, 2);
+      expect(tester.takeException(), isNull);
+    });
+  }
   testWidgets('Emby passwordless mode is explicit and submits empty password', (
     tester,
   ) async {
@@ -147,11 +163,17 @@ Future<void> _pumpEmbyForm(
   })?
   onBind,
   Size surfaceSize = const Size(900, 760),
+  double textScale = 1,
 }) async {
   await tester.binding.setSurfaceSize(surfaceSize);
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
     MaterialApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      ),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(

@@ -14,6 +14,7 @@ const STATIC_PATHS = new Set([
   '/passkeys_bundle.js',
   '/provider_verification.css',
   '/provider_verification.js',
+  '/startup.js',
   '/synctv_p2p_bridge.js',
   '/version.json',
 ]);
@@ -24,10 +25,14 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
-    const names = await caches.keys();
-    await Promise.all(names
-      .filter((name) => name.startsWith('synctv-app-runtime-') && name !== APP_CACHE)
-      .map((name) => caches.delete(name)));
+    try {
+      const names = await caches.keys();
+      await Promise.all(names
+        .filter((name) => name.startsWith('synctv-app-runtime-') && name !== APP_CACHE)
+        .map((name) => caches.delete(name)));
+    } catch {
+      // Cache storage is optional; its failure must not prevent worker activation.
+    }
     await self.clients.claim();
   })());
 });
@@ -77,25 +82,25 @@ function isCacheable(response) {
 }
 
 async function networkFirstNavigation(event) {
-  const cache = await caches.open(APP_CACHE);
+  const cache = await openAppCache();
   try {
     const response = await fetch(event.request);
-    if (isCacheable(response)) {
+    if (cache && isCacheable(response)) {
       event.waitUntil(cache.put(new Request('/'), response.clone()).catch(() => {}));
     }
     return response;
   } catch (error) {
-    const index = await cache.match(new Request('/'));
+    const index = await readCachedResponse(cache, new Request('/'));
     if (index) return index;
     throw error;
   }
 }
 
 async function cacheFirstStaticAsset(event) {
-  const cache = await caches.open(APP_CACHE);
-  const cached = await cache.match(event.request);
+  const cache = await openAppCache();
+  const cached = await readCachedResponse(cache, event.request);
   const update = fetch(event.request).then((response) => {
-    if (isCacheable(response)) {
+    if (cache && isCacheable(response)) {
       event.waitUntil(cache.put(event.request, response.clone()).catch(() => {}));
     }
     return response;
@@ -108,17 +113,33 @@ async function cacheFirstStaticAsset(event) {
 }
 
 async function networkFirstStaticAsset(event) {
-  const cache = await caches.open(APP_CACHE);
+  const cache = await openAppCache();
   try {
     const response = await fetch(event.request);
-    if (isCacheable(response)) {
+    if (cache && isCacheable(response)) {
       event.waitUntil(cache.put(event.request, response.clone()).catch(() => {}));
     }
     return response;
   } catch (error) {
-    const cached = await cache.match(event.request);
+    const cached = await readCachedResponse(cache, event.request);
     if (cached) return cached;
     throw error;
+  }
+}
+
+async function openAppCache() {
+  try {
+    return await caches.open(APP_CACHE);
+  } catch {
+    return null;
+  }
+}
+
+async function readCachedResponse(cache, request) {
+  try {
+    return await cache?.match(request);
+  } catch {
+    return undefined;
   }
 }
 

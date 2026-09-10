@@ -13,13 +13,17 @@ final class SharedPreferencesPlaybackModeStore
   @override
   Future<PlaybackModeConfig> load() async {
     final preferences = await SharedPreferences.getInstance();
-    final raw = preferences.getString(_key);
-    if (raw == null || raw.isEmpty) return PlaybackModeConfig.defaults;
-    final decoded = jsonDecode(raw);
-    if (decoded is! Map<String, Object?>) {
-      return PlaybackModeConfig.defaults;
+    final raw = preferences.get(_key);
+    if (raw is! String || raw.isEmpty) return PlaybackModeConfig.defaults;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, Object?>) {
+        return PlaybackModeConfig.fromJson(decoded);
+      }
+    } on FormatException {
+      // Invalid persisted data must not prevent application startup.
     }
-    return PlaybackModeConfig.fromJson(decoded);
+    return PlaybackModeConfig.defaults;
   }
 
   @override

@@ -42,12 +42,15 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
   static const _closeTimeout = Duration(seconds: 2);
 
   Timer? _heartbeatTimer;
+  var _closed = false;
+  Future<void>? _closeFuture;
 
   RoomRealtimeConnection._({
     required this._outgoing,
     required this._socket,
     required this.stream,
     required this.onOutgoing,
+    required this.closeSocket,
   });
 
   final StreamController<List<int>> _outgoing;
@@ -55,6 +58,7 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
   @override
   final Stream<Uint8List> stream;
   final void Function(List<int> bytes)? onOutgoing;
+  final Future<void> Function() closeSocket;
 
   @override
   Future<void> get ready async {
@@ -63,17 +67,21 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
 
   @override
   void send(List<int> bytes) {
-    if (bytes.isNotEmpty) _outgoing.add(bytes);
+    if (bytes.isNotEmpty && !_outgoing.isClosed) _outgoing.add(bytes);
   }
 
   @override
-  Future<void> close() async {
+  Future<void> close() => _closeFuture ??= _close();
+
+  Future<void> _close() async {
+    _closed = true;
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
-    await _outgoing.close();
+    // An unconnected queue has no listener to consume its done event.
+    unawaited(_outgoing.close());
     try {
-      final socket = await _socket.timeout(_closeTimeout);
-      await socket.close().timeout(_closeTimeout);
+      await _socket.timeout(_closeTimeout);
+      await closeSocket().timeout(_closeTimeout);
     } catch (_) {
       // A late connection closes itself after setup completes.
     }
@@ -97,11 +105,21 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
   }) {
     late final RoomRealtimeSocket socket;
     late final RoomRealtimeConnection connection;
+    Future<void>? socketCloseFuture;
+    Future<void> closeSocket() =>
+        socketCloseFuture ??= Future<void>.sync(socket.close);
+
     StreamSubscription<List<int>>? outgoingSubscription;
     final incoming = StreamController<Uint8List>();
     final outgoing = StreamController<List<int>>();
 
-    final connectingSocket = createWebSocketUri(roomId)
+    void failTransport(Object error, StackTrace stackTrace) {
+      if (outgoing.isClosed) return;
+      if (!incoming.isClosed) incoming.addError(error, stackTrace);
+      unawaited(connection.close());
+    }
+
+    final connectingSocket = Future<Uri>.sync(() => createWebSocketUri(roomId))
         .timeout(_connectTimeout)
         .then(
           (uri) => (connectSocket ?? connectRoomRealtimeSocket)(
@@ -128,29 +146,40 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
         .then((connected) {
           socket = connected;
           if (outgoing.isClosed) {
-            unawaited(socket.close().catchError((_) {}));
+            unawaited(closeSocket().catchError((_) {}));
             return connected;
           }
           socket.messages.listen(
             (frame) {
+              if (outgoing.isClosed) return;
               try {
                 final message = decodeMessage(frame);
                 final bytes = Uint8List.fromList(message.writeToBuffer());
                 onIncoming?.call(bytes);
                 incoming.add(bytes);
               } catch (error, stackTrace) {
-                incoming.addError(error, stackTrace);
+                failTransport(error, stackTrace);
               }
             },
-            onError: incoming.addError,
-            onDone: incoming.close,
+            onError: failTransport,
+            onDone: () {
+              connection._heartbeatTimer?.cancel();
+              connection._heartbeatTimer = null;
+              unawaited(outgoing.close());
+              unawaited(incoming.close());
+            },
           );
           outgoingSubscription = outgoing.stream
               .where((bytes) => bytes.isNotEmpty)
               .listen((bytes) {
-                final message = client.ClientMessage.fromBuffer(bytes);
-                onOutgoing?.call(bytes);
-                socket.send(encodeMessage(message));
+                if (outgoing.isClosed) return;
+                try {
+                  final message = client.ClientMessage.fromBuffer(bytes);
+                  onOutgoing?.call(bytes);
+                  socket.send(encodeMessage(message));
+                } catch (error, stackTrace) {
+                  failTransport(error, stackTrace);
+                }
               });
           connection._heartbeatTimer = Timer.periodic(
             const Duration(seconds: 25),
@@ -172,10 +201,10 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
     unawaited(
       socketFuture.then<void>(
         (_) {},
-        onError: (Object error, StackTrace stackTrace) async {
+        onError: (Object error, StackTrace stackTrace) {
+          unawaited(outgoing.close());
           incoming.addError(error, stackTrace);
-          await incoming.close();
-          await outgoing.close();
+          unawaited(incoming.close());
         },
       ),
     );
@@ -184,14 +213,17 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
       socket: socketFuture,
       stream: incoming.stream,
       onOutgoing: onOutgoing,
+      closeSocket: closeSocket,
     );
     incoming.onCancel = () async {
       connection._heartbeatTimer?.cancel();
       connection._heartbeatTimer = null;
-      await outgoing.close();
+      unawaited(outgoing.close());
       await outgoingSubscription?.cancel();
+      if (connection._closed) return;
       await socketFuture
-          .then((_) => socket.close().timeout(_closeTimeout))
+          .timeout(_closeTimeout)
+          .then((_) => closeSocket().timeout(_closeTimeout))
           .catchError((_) {});
     };
 

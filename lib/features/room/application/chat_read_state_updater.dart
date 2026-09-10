@@ -8,6 +8,7 @@ final class ChatReadStateUpdater {
   final Future<void> Function(String messageId) markRead;
 
   String? _pendingMessageId;
+  String? _lastAcknowledgedMessageId;
   bool _inFlight = false;
   bool _disposed = false;
 
@@ -30,8 +31,10 @@ final class ChatReadStateUpdater {
         final messageId = _pendingMessageId;
         _pendingMessageId = null;
         if (messageId == null) return;
+        if (messageId == _lastAcknowledgedMessageId) continue;
         try {
           await markRead(messageId);
+          _lastAcknowledgedMessageId = messageId;
         } catch (_) {
           // The next visible message retries the cursor update.
         }

@@ -1,4 +1,7 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
@@ -10,6 +13,218 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
 void main() {
+  for (final locale in ['en', 'zh']) {
+    for (final width in [320.0, 1200.0]) {
+      testWidgets('large text proxy control fits $locale at $width', (
+        tester,
+      ) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = Size(width, 900);
+        addTearDown(tester.view.reset);
+        var mode =
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY;
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: Locale(locale),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(3)),
+              child: child!,
+            ),
+            home: StatefulBuilder(
+              builder: (context, setState) => Scaffold(
+                body: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: PlaybackProxyModeControl(
+                    value: mode,
+                    policy: _allModesPolicy(),
+                    onChanged: (value) => setState(() => mode = value),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        final dropdown = find.byKey(const Key('playback-proxy-mode-dropdown'));
+        expect(dropdown, findsOneWidget);
+        final l10n = AppLocalizations.of(tester.element(dropdown));
+        final selected = find.text(l10n.playbackProxyDirectOnly).hitTestable();
+        expect(selected, findsOneWidget);
+        expect(
+          tester
+              .getRect(dropdown)
+              .contains(tester.getRect(selected).bottomRight),
+          isTrue,
+        );
+        await tester.ensureVisible(dropdown);
+        await tester.tap(dropdown);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        final option = find.text(l10n.playbackProxyOnly).last;
+        await tester.ensureVisible(option);
+        await tester.tap(option);
+        await tester.pumpAndSettle();
+        expect(mode, source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
+  for (final locale in ['en', 'zh']) {
+    testWidgets('disabled dropdown has named disabled semantics in $locale', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      try {
+        late StateSetter update;
+        var enabled = false;
+        var changes = 0;
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: Locale(locale),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                update = setState;
+                return Scaffold(
+                  body: SizedBox(
+                    width: 320,
+                    child: PlaybackProxyModeControl(
+                      value: source_enum
+                          .PlaybackProxyMode
+                          .PLAYBACK_PROXY_MODE_AUTO,
+                      enabled: enabled,
+                      policy: _allModesPolicy(),
+                      onChanged: (_) => changes++,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(PlaybackProxyModeControl)),
+        );
+        final disabled = find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics &&
+              widget.properties.button == true &&
+              widget.properties.enabled == false &&
+              widget.properties.label == l10n.playbackProxyMode,
+        );
+        expect(disabled, findsOneWidget);
+        final data = tester.getSemantics(disabled).getSemanticsData();
+        expect(data.label, l10n.playbackProxyMode);
+        expect(data.value, l10n.playbackProxyAuto);
+        expect(data.flagsCollection.isEnabled, ui.Tristate.isFalse);
+        expect(data.hasAction(SemanticsAction.tap), isFalse);
+        final dropdown = find.byKey(const Key('playback-proxy-mode-dropdown'));
+        await tester.tap(dropdown);
+        await tester.pumpAndSettle();
+        expect(find.text(l10n.playbackProxyOnly), findsNothing);
+        expect(changes, 0);
+        update(() => enabled = true);
+        await tester.pumpAndSettle();
+        expect(disabled, findsNothing);
+        await tester.tap(dropdown);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(l10n.playbackProxyOnly).last);
+        await tester.pumpAndSettle();
+        expect(changes, 1);
+        expect(tester.takeException(), isNull);
+      } finally {
+        semantics.dispose();
+      }
+    });
+  }
+
+  for (final width in [360.0, 800.0]) {
+    for (final change in ['disabled', 'policy', 'disposed', 'callback']) {
+      testWidgets('saved selection respects $change at width $width', (
+        tester,
+      ) async {
+        late StateSetter update;
+        var enabled = true;
+        var visible = true;
+        var useNewCallback = false;
+        var policy = _allModesPolicy();
+        final oldChanges = <source_enum.PlaybackProxyMode>[];
+        final newChanges = <source_enum.PlaybackProxyMode>[];
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                update = setState;
+                return Scaffold(
+                  body: SizedBox(
+                    width: width,
+                    child: visible
+                        ? PlaybackProxyModeControl(
+                            value: source_enum
+                                .PlaybackProxyMode
+                                .PLAYBACK_PROXY_MODE_AUTO,
+                            enabled: enabled,
+                            policy: policy,
+                            onChanged: useNewCallback
+                                ? newChanges.add
+                                : oldChanges.add,
+                          )
+                        : const Text('Replacement'),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+        late VoidCallback select;
+        if (width < 640) {
+          final callback = tester
+              .widget<DropdownButtonFormField<source_enum.PlaybackProxyMode>>(
+                find.byKey(const Key('playback-proxy-mode-dropdown')),
+              )
+              .onChanged!;
+          select = () => callback(
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
+          );
+        } else {
+          final callback = tester
+              .widget<SegmentedButton<source_enum.PlaybackProxyMode>>(
+                find.byKey(const Key('playback-proxy-mode')),
+              )
+              .onSelectionChanged!;
+          select = () => callback({
+            source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY,
+          });
+        }
+        update(() {
+          if (change == 'disabled') enabled = false;
+          if (change == 'policy') policy = _proxyModesPolicy();
+          if (change == 'disposed') visible = false;
+          if (change == 'callback') useNewCallback = true;
+        });
+        await tester.pump();
+        select();
+        await tester.pump();
+        expect(oldChanges, isEmpty);
+        expect(
+          newChanges,
+          change == 'callback'
+              ? [source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_DIRECT_ONLY]
+              : isEmpty,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
   testWidgets('selects every playback route mode and updates its description', (
     tester,
   ) async {

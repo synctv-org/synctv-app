@@ -56,6 +56,7 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
   int _page = 1;
   bool _hasMore = false;
   bool _loading = false;
+  int _loadGeneration = 0;
   List<QnapFileItemInfo> _items = const [];
   provider_common.DiscoveredSource? _listSource;
   source_enum.PlaybackProxyMode _proxyMode =
@@ -75,9 +76,15 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
   @override
   void didUpdateWidget(covariant QnapAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
-        widget.binds.isNotEmpty) {
-      _bind = widget.binds.first;
+    if (_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) {
+      ++_loadGeneration;
+      _loading = false;
+      _bind = widget.binds.firstOrNull;
+      _path = '';
+      _page = 1;
+      _items = const [];
+      _listSource = null;
+      _selection.clear();
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
   }
@@ -322,7 +329,8 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
 
   Future<void> _load() async {
     final bind = _bind;
-    if (bind == null || _loading) return;
+    if (!mounted || bind == null) return;
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _selection.clear();
@@ -337,7 +345,7 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
         _pageSize,
         _searchController.text.trim(),
       );
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _items = result.items;
         _page = result.page;
@@ -345,9 +353,13 @@ class _QnapAddMediaFormState extends State<QnapAddMediaForm> {
         _listSource = result.source;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted && generation == _loadGeneration) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loading = false);
+      }
     }
   }
 

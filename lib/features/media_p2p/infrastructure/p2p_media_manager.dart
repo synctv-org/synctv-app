@@ -17,7 +17,8 @@ class P2pMediaManager implements P2pMediaSession {
     required this.loadIceServers,
     required this.loadCachedPiece,
     required this.onStateChange,
-  }) {
+    Future<RTCPeerConnection> Function(Map<String, dynamic>)? createConnection,
+  }) : _createConnection = createConnection ?? createPeerConnection {
     _availabilityPruneTimer = Timer.periodic(
       const Duration(seconds: 30),
       (_) => _prunePieceAvailability(),
@@ -61,6 +62,8 @@ class P2pMediaManager implements P2pMediaSession {
   final P2pIceServersLoader loadIceServers;
   final P2pCachedPieceLoader loadCachedPiece;
   final VoidCallback onStateChange;
+  final Future<RTCPeerConnection> Function(Map<String, dynamic>)
+  _createConnection;
   final Map<_PeerKey, RTCPeerConnection> _peerConnections = {};
   final Map<_PeerKey, RTCDataChannel> _channels = {};
   final WebRtcNegotiationState<_PeerKey, RTCIceCandidate> _negotiation =
@@ -86,6 +89,7 @@ class P2pMediaManager implements P2pMediaSession {
   final Random _random = Random.secure();
   List<Map<String, dynamic>>? _iceServers;
   bool _disposed = false;
+  Future<void>? _disposeFuture;
   int _uploadedBytes = 0;
   final P2pPermitPool _downloadPermits = P2pPermitPool(_maxConcurrentDownloads);
   final P2pPermitPool _uploadPermits = P2pPermitPool(_maxConcurrentUploads);
@@ -558,7 +562,7 @@ class P2pMediaManager implements P2pMediaSession {
   }
 
   Future<RTCPeerConnection> _createPeerConnection(_PeerKey key) async {
-    final pc = await createPeerConnection({
+    final pc = await _createConnection({
       'iceServers': await _loadIceServerConfiguration(),
     });
     if (_disposed || !_activeSwarms.containsKey(key.swarmId)) {
@@ -600,12 +604,14 @@ class P2pMediaManager implements P2pMediaSession {
       return;
     }
     final previous = _channels[key];
+    // Publish ownership before close, which may synchronously emit callbacks.
+    _channels[key] = channel;
     if (previous != null && !identical(previous, channel)) {
       unawaited(previous.close());
     }
-    _channels[key] = channel;
     channel.bufferedAmountLowThreshold = _maxBufferedBytes ~/ 2;
     channel.onDataChannelState = (_) {
+      if (_disposed || !identical(_channels[key], channel)) return;
       if (channel.state == RTCDataChannelState.RTCDataChannelOpen) {
         _finishPeerDiscovery(key.swarmId);
         unawaited(_ensureLatencyProbe(key, channel));
@@ -613,6 +619,7 @@ class P2pMediaManager implements P2pMediaSession {
       onStateChange();
     };
     channel.onMessage = (message) {
+      if (_disposed || !identical(_channels[key], channel)) return;
       if (message.isBinary) {
         _handleBinary(key, message.binary);
       } else {
@@ -877,9 +884,8 @@ class P2pMediaManager implements P2pMediaSession {
 
   Future<void> _closePeer(_PeerKey key) async {
     final channel = _channels.remove(key);
-    await channel?.close();
     final pc = _peerConnections.remove(key);
-    await pc?.close();
+    // Detach the old peer before awaiting transport shutdown so new ICE queues survive.
     _negotiation.clearPeer(key);
     _outgoingPeers.remove(key);
     _peerPerformance.remove(key);
@@ -904,6 +910,11 @@ class P2pMediaManager implements P2pMediaSession {
             .where((transferKey) => transferKey.peer == key)
             .toList(growable: false)) {
       _incomingTransfers.remove(transferKey)?.completeMissing();
+    }
+    try {
+      await channel?.close();
+    } finally {
+      await pc?.close();
     }
     onStateChange();
   }
@@ -1086,33 +1097,71 @@ class P2pMediaManager implements P2pMediaSession {
   }
 
   @override
-  Future<void> dispose() async {
-    if (_disposed) return;
+  Future<void> dispose() {
+    final existing = _disposeFuture;
+    if (existing != null) return existing;
     _disposed = true;
-    await _membershipOperations.run(() async {});
-    for (final entry in _activeSwarms.entries) {
-      _sendSwarmMembership('media_swarm_leave', entry.key, entry.value);
+    final completion = Completer<void>();
+    _disposeFuture = completion.future;
+    unawaited(_dispose(completion));
+    return completion.future;
+  }
+
+  Future<void> _dispose(Completer<void> completion) async {
+    Object? firstError;
+    StackTrace? firstStack;
+    Future<void> attempt(FutureOr<void> Function() cleanup) async {
+      try {
+        await cleanup();
+      } catch (error, stackTrace) {
+        firstError ??= error;
+        firstStack ??= stackTrace;
+      }
     }
-    _availabilityPruneTimer.cancel();
-    _peerMaintenanceTimer.cancel();
-    _swarmAnnounceTimer.cancel();
-    _downloadPermits.close();
-    _uploadPermits.close();
-    for (final cancellation in _uploadCancellations.values) {
-      cancellation.cancel();
+
+    try {
+      await _membershipOperations.run(() async {});
+      for (final entry in _activeSwarms.entries) {
+        await attempt(
+          () =>
+              _sendSwarmMembership('media_swarm_leave', entry.key, entry.value),
+        );
+      }
+      _availabilityPruneTimer.cancel();
+      _peerMaintenanceTimer.cancel();
+      _swarmAnnounceTimer.cancel();
+      _downloadPermits.close();
+      _uploadPermits.close();
+      for (final cancellation in _uploadCancellations.values) {
+        cancellation.cancel();
+      }
+      _activeSwarms.clear();
+      for (final swarmId in _peerDiscoverySignals.keys.toList(
+        growable: false,
+      )) {
+        _finishPeerDiscovery(swarmId);
+      }
+      for (final key in _peerConnections.keys.toList(growable: false)) {
+        await attempt(() => _closePeer(key));
+      }
+      await attempt(() async {
+        await Future.wait(_uploadTasks.toList(growable: false));
+      });
+      _remoteSwarmMemberships.clear();
+      _negotiation.clear();
+      _integrityBlockedPeers.clear();
+      for (final transfer in _incomingTransfers.values) {
+        transfer.completeMissing();
+      }
+      _incomingTransfers.clear();
+      if (firstError != null) {
+        completion.completeError(firstError!, firstStack!);
+      } else {
+        completion.complete();
+      }
+    } catch (error, stackTrace) {
+      completion.completeError(error, stackTrace);
     }
-    _activeSwarms.clear();
-    for (final swarmId in _peerDiscoverySignals.keys.toList(growable: false)) {
-      _finishPeerDiscovery(swarmId);
-    }
-    for (final key in _peerConnections.keys.toList(growable: false)) {
-      await _closePeer(key);
-    }
-    await Future.wait(_uploadTasks.toList(growable: false));
-    _remoteSwarmMemberships.clear();
-    _negotiation.clear();
-    _integrityBlockedPeers.clear();
-    _incomingTransfers.clear();
   }
 }
 

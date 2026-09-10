@@ -36,9 +36,15 @@
   "serverAddress": "服务器地址",
   "serverAddressExample": "例如：https://tv.example.com",
   "serverAutoDiscoverDescription": "每个地址都会保存为独立服务器，账号、会话和缓存数据均按地址隔离。",
-  "serverAddressIdentityDescription": "上方地址是本设备识别该服务器的身份；下方 ID 由服务器自行声明，其他地址也可能声明相同 ID。",
+  "serverAddressIdentityDescription": "本设备通过服务器地址识别这条连接。服务器 ID 由服务器自行声明，其他地址也可能声明相同 ID。",
   "serverDeclaredId": "服务器声明 ID：{serverId}",
-  "@serverDeclaredId": {"placeholders": {"serverId": {"type": "String"}}},
+  "@serverDeclaredId": {
+    "placeholders": {
+      "serverId": {
+        "type": "String"
+      }
+    }
+  },
   "savedServers": "已保存服务器",
   "noSavedServers": "还没有保存的服务器。添加服务器后即可登录和浏览公开房间。",
   "currentServer": "当前服务器",
@@ -229,6 +235,8 @@
   "continueWithProvider": "使用 {provider} 继续",
   "oauthCallbackUnavailable": "当前构建需要配置 App Link 或桌面回跳才能使用 OAuth2。",
   "oauth2CallbackCompleteTitle": "授权完成",
+  "oauth2CallbackDispatchFailedTitle": "授权结果发送失败",
+  "oauth2CallbackDispatchFailedMessage": "无法将授权结果发送到 SyncTV，请重试。如果仍然失败，请返回 SyncTV 重新登录。",
   "oauth2CallbackCompleteMessage": "现在可以关闭此窗口并返回 SyncTV。",
   "oauthAuthorizationTimedOut": "授权等待超时，请重试。",
   "providerReviewRequired": "{provider}（注册需审核）",
@@ -270,12 +278,19 @@
   "reactingMembers": "回应成员",
   "loadMore": "加载更多",
   "serverRequiredForInvite": "需要添加服务器",
+  "inviteOnAnotherServer": "房间位于其他服务器",
+  "webInviteServerDescription": "此房间属于另一个 SyncTV 服务器。当前浏览器会话保持连接到当前服务器。",
+  "openInviteServer": "打开服务器",
+  "openInviteServerFailed": "无法打开邀请服务器",
+  "copyRoomId": "复制房间 ID",
+  "copyRoomIdFailed": "无法复制房间 ID",
   "serverRequiredForInviteDescription": "这个邀请来自另一个 SyncTV 服务器。请先添加该服务器地址，客户端会自动识别身份后继续加入房间。",
   "chooseServerEndpoint": "选择访问地址",
   "roomIdOrInviteRequired": "请输入房间 ID 或邀请链接",
   "processInviteFailed": "处理邀请失败：{error}",
   "editImage": "编辑图片",
   "imageCropFailed": "图片裁剪失败：{error}",
+  "imageCannotBeEdited": "无法编辑这张图片，请选择其他图片或上传原图。",
   "cropForPurpose": "按用途裁剪",
   "squareCrop": "方形裁剪",
   "uploadOriginalImage": "上传原图",
@@ -450,6 +465,7 @@
   "addToPlaylist": "添加到播放列表",
   "requestHeaders": "请求头",
   "noExtraRequestHeaders": "默认不发送额外请求头。",
+  "nameRequired": "请输入名称",
   "name": "名称",
   "value": "值",
   "removeRequestHeader": "移除请求头",
@@ -459,7 +475,13 @@
   "publishKeyType": "发布密钥类型",
   "generatePublishKey": "生成推流密钥",
   "generatePublishKeyFailed": "生成推流密钥失败：{error}",
-  "@generatePublishKeyFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@generatePublishKeyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "streamKey": "流密钥",
   "publishKey": "发布密钥",
   "singleUsePublishKey": "一次性密钥",
@@ -476,6 +498,10 @@
   "createPublishingEntry": "创建推流入口",
   "sourceAddress": "源地址",
   "liveSourceAddressHint": "请输入与所选协议匹配的地址",
+  "invalidRtmpSourceUrl": "请输入包含主机的完整 rtmp:// 地址。",
+  "invalidRtspSourceUrl": "请输入包含主机的完整 rtsp:// 地址。",
+  "invalidHttpFlvSourceUrl": "请输入路径以 .flv 结尾的 HTTP 或 HTTPS 地址。",
+  "invalidWhepSourceUrl": "请输入完整的 HTTP 或 HTTPS WHEP 地址。",
   "rtspTransport": "RTSP 传输方式",
   "videoTrack": "视频轨道",
   "audioTrack": "音频轨道",
@@ -675,7 +701,13 @@
   "selectPlaybackRoute": "选择线路",
   "playbackRouteMain": "主线路",
   "playbackRouteBackup": "备用线路 {index}",
-  "@playbackRouteBackup": {"placeholders": {"index": {"type": "int"}}},
+  "@playbackRouteBackup": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "playbackRouteOriginal": "原始",
   "playbackRouteProgressive": "普通视频",
   "playbackRouteTranscoded": "转码",
@@ -884,7 +916,6 @@
   "searchQueryLabel": "搜索关键词",
   "liveUrlOrId": "直播链接或 ID",
   "authorIdentifier": "创作者标识",
-  "username": "用户名",
   "liveVodClipUrl": "直播、回放或剪辑链接",
   "channelNameOrUrl": "频道名称或链接",
   "channelSearch": "搜索频道",
@@ -905,6 +936,13 @@
   "acfunUrl": "AcFun 链接",
   "cctvUrlOrVideoId": "CCTV 链接或视频 ID",
   "liveRoomOrVideoUrl": "直播间或视频链接",
+  "liveReplay": "回放",
+  "liveDanmaku": "直播弹幕",
+  "cdnRoutesCount": "{count} 条 CDN 线路",
+  "mediaStreamsCount": "{count} 路媒体流",
+  "hlsVideo": "HLS 视频",
+  "hlsAudio": "HLS 音频",
+  "protectedMedia": "受保护",
   "roomIdAliasOrUrl": "房间 ID、别名或链接",
   "embyDiscoveryAndLists": "发现与列表",
   "noPreparedLinks": "暂无已解析链接",
@@ -1144,7 +1182,7 @@
   "dangerousActions": "危险操作",
   "dangerousActionsDescription": "这些操作会影响账号可用性或永久删除数据",
   "closeAccountTileDescription": "注销当前账户，并清除本机登录状态",
-  "unreadTotalSummary": "未读 {unread} / 总计 {total}",
+  "unreadTotalSummary": "全部未读 {unread} · 当前结果 {total}",
   "selectedCount": "已选 {count}",
   "markSelectedUnreadNotifications": "标记所选未读通知",
   "selectCurrentUnreadNotifications": "选择当前未读通知",
@@ -1278,6 +1316,7 @@
   "chatWatchFailed": "聊天事件监听失败",
   "maxMembersRange": "最大成员数必须在 0 到 10000 之间",
   "settingsUpdated": "设置已更新",
+  "runtimeSettingChanged": "此设置在编辑期间发生了变化。请重新打开并核对最新值。",
   "roomVisibilityUpdated": "房间可见性已更新",
   "makeRoomPrivate": "将房间设为非公开？",
   "makeRoomPrivateConfirmation": "房间将从公开列表中移除，当前匿名访客会断开连接。",
@@ -1434,7 +1473,6 @@
   "approved": "已通过",
   "rejected": "已拒绝",
   "noJoinRequests": "当前没有加入申请",
-  "mediaLibrary": "媒体库",
   "clearCurrentLevel": "清空当前层级",
   "refreshDynamicList": "刷新动态列表",
   "searchMediaOrPlaylist": "搜索媒体或播放列表",
@@ -1445,6 +1483,7 @@
   "position": "位置",
   "addedAt": "添加时间",
   "noMediaEntriesAtCurrentLevel": "当前层级没有媒体条目",
+  "noMatchingMediaEntries": "没有符合当前筛选条件的媒体条目",
   "realtimeDiagnostics": "实时诊断",
   "copyDiagnostics": "复制诊断数据",
   "resetWatches": "重置监听",
@@ -1531,6 +1570,7 @@
   "unspecified": "未指定",
   "unknownTime": "时间未知",
   "waitingForEvent": "等待事件",
+  "messageContentRequired": "请输入消息内容",
   "messageContent": "消息内容",
   "systemManagement": "系统管理",
   "administrators": "管理员",
@@ -1833,12 +1873,17 @@
   "enableEmailWhitelist": "启用邮箱白名单",
   "enableEmailWhitelistDescription": "限制邮箱注册只能使用指定域名或邮箱。",
   "emailWhitelist": "邮箱白名单",
+  "registrationEmailWhitelistHint": "注册邮箱必须符合服务器允许的邮箱地址或域名。",
   "emailWhitelistDescription": "每行一个邮箱或域名，域名可使用 example.com 或 @example.com。",
   "externalIceServers": "外部 ICE 服务器",
   "externalIceServersDescription": "向客户端下发的 STUN/TURN 服务器列表。",
   "externalIceServersWarning": "TURN 用户名和凭据会下发给客户端，请使用最小权限且可轮换的账号。",
   "maxVoiceParticipantsPerRoom": "每房间语音人数上限",
   "maxVoiceParticipantsPerRoomDescription": "单个房间同时参与语音的人数上限。Mesh 语音允许 2 至 32，移动端推荐 8。",
+  "runtimeServerName": "服务器名称",
+  "runtimeServerNameDescription": "客户端服务器信息中显示的名称。",
+  "maxPinnedMessagesPerRoom": "每个房间置顶消息上限",
+  "maxPinnedMessagesPerRoomDescription": "每个房间可同时置顶的聊天消息数量上限。",
   "chatMessagesPerRoom": "每个房间保留聊天数",
   "chatMessagesPerRoomDescription": "聊天消息按房间保留的数量上限，0 表示不限制。",
   "chatRetentionDays": "聊天保留天数",
@@ -1890,7 +1935,8 @@
   "enableSmtpProxy": "启用 SMTP 代理",
   "enableSmtpProxyDescription": "邮件连接通过 SOCKS5 代理建立。",
   "socks5ProxyAddress": "SOCKS5 代理地址",
-  "socks5ProxyAddressRequired": "请输入 socks5:// 开头的代理地址",
+  "socks5ProxyAddressRequired": "请输入 SOCKS5 主机及可选端口（0-65535），不要包含凭据、路径、查询参数或片段。",
+  "smtpProxyCredentialTooLong": "SOCKS5 凭据的每个字段最多支持 255 个 UTF-8 字节。",
   "proxyRequiresAuthentication": "代理需要认证",
   "proxyAuthenticationDescription": "配置 SOCKS5 用户名和密码。",
   "proxyUsername": "代理用户名",
@@ -1935,6 +1981,7 @@
   "requestTimeout": "请求超时",
   "secondsShort": "秒",
   "positiveIntegerRequired": "请输入大于 0 的整数",
+  "validRuntimeIntegerRequired": "请输入支持范围内的整数",
   "capabilityTypes": "能力类型",
   "capabilityTypesDescription": "一个实例可以同时承载多个 Provider 类型。",
   "connectionSecurity": "连接安全",
@@ -1987,7 +2034,15 @@
   "resolveReportFailed": "处置失败：{error}",
   "reportStatusUpdated": "举报状态已更新",
   "messages": "消息",
-  "searchReportsHint": "搜索原因、对象或 usr_/room_ ID",
+  "searchReportsHint": "搜索原因或名称",
+  "reportFilters": "举报筛选",
+  "reportFilterReporterId": "举报人用户 ID",
+  "reportFilterRoomId": "关联房间 ID",
+  "reportFilterTargetRoomId": "被举报房间 ID",
+  "reportFilterTargetUserId": "被举报用户 ID",
+  "reportFilterMemberRoomId": "成员所在房间 ID",
+  "reportFilterMemberId": "被举报成员用户 ID",
+  "reportFilterMessageId": "消息 ID",
   "noReportRecords": "暂无举报记录",
   "reportListSummary": "{reason}\n举报人：{reporter} · {time}",
   "reporterFilter": "举报人 {id}",
@@ -1997,6 +2052,7 @@
   "memberRoomFilter": "成员所在房间 {id}",
   "reportedMemberFilter": "被举报成员 {id}",
   "messageFilter": "消息 #{id}",
+  "validMessageIdRequired": "请输入 1 至 9223372036854775807 之间的消息 ID",
   "roomTarget": "房间 {target}",
   "userTarget": "用户 {target}",
   "memberTarget": "成员 {user} · {room}",
@@ -2050,6 +2106,7 @@
   "messagesLoaded": "已加载 {count} 条消息",
   "olderMessagesAvailable": "还有更早消息",
   "loading": "加载中",
+  "startupFailed": "SyncTV 启动失败。",
   "loadOlderMessages": "加载更早消息",
   "noChatMessages": "暂无聊天消息",
   "deletedUser": "已删除用户",
@@ -2082,19 +2139,43 @@
   "verifyWithRecoveryCode": "使用恢复码验证",
   "authenticatorApp": "认证器 App",
   "setupAuthenticatorFailed": "设置认证器失败：{error}",
-  "@setupAuthenticatorFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@setupAuthenticatorFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "regenerateRecoveryCodesFailed": "重新生成恢复码失败：{error}",
-  "@regenerateRecoveryCodesFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@regenerateRecoveryCodesFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "removeAuthenticatorApp": "移除认证器 App",
   "removeAuthenticatorAppConfirmation": "移除认证器 App 及其全部恢复码？",
   "authenticatorAppRemoved": "认证器 App 已移除",
   "removeAuthenticatorFailed": "移除认证器失败：{error}",
-  "@removeAuthenticatorFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@removeAuthenticatorFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "authenticatorAppDescription": "使用标准认证器 App 生成的动态验证码完成多因素验证",
   "authenticatorAppConfigured": "已配置",
   "authenticatorAppNotConfigured": "未配置",
   "recoveryCodesRemaining": "剩余 {count} 个恢复码",
-  "@recoveryCodesRemaining": {"placeholders": {"count": {"type": "int"}}},
+  "@recoveryCodesRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "authenticatorAppSetupHint": "添加认证器 App 以增强账户安全",
   "recoveryCodes": "恢复码",
   "setup": "设置",
@@ -2138,19 +2219,67 @@
   "blockUser": "拉黑用户",
   "unblockUser": "解除拉黑",
   "confirmBlockUser": "拉黑 {name}？其消息将立即消失，其创建的房间也会从首页发现中隐藏。已有房间关系仍会保留。",
-  "@confirmBlockUser": {"placeholders": {"name": {"type": "String"}}},
+  "@confirmBlockUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "confirmUnblockUser": "解除对 {name} 的拉黑？其消息和房间将重新可见。",
-  "@confirmUnblockUser": {"placeholders": {"name": {"type": "String"}}},
+  "@confirmUnblockUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "userBlocked": "已拉黑用户",
   "userUnblocked": "已解除拉黑",
   "blockUserFailed": "拉黑用户失败：{error}",
-  "@blockUserFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@blockUserFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unblockUserFailed": "解除拉黑失败：{error}",
-  "@unblockUserFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@unblockUserFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "noBlockedUsers": "暂无已拉黑用户",
   "searchBlockedUsers": "搜索已拉黑用户",
   "blockedAt": "拉黑于 {time}",
-  "@blockedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@blockedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "blockedCreator": "创建者已拉黑",
-  "blockedUsersTemporarilyUnavailable": "暂时无法加载已拉黑用户"
+  "blockedUsersTemporarilyUnavailable": "暂时无法加载已拉黑用户",
+  "fnosTwoFactorSetupRequired": "请先在 FNOS 中设置两步验证，然后重试登录。",
+  "browserLogin": "浏览器登录",
+  "appPassword": "应用密码",
+  "openBrowser": "打开浏览器",
+  "youtubeCredentialsRequired": "请填写名称及至少一项 YouTube 凭据",
+  "providerCookieRequired": "请填写名称和 {provider} Cookie",
+  "@providerCookieRequired": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "viewImage": "查看图片",
+  "zoomIn": "放大",
+  "zoomOut": "缩小",
+  "imageLoadFailed": "图片加载失败。",
+  "emailInvalidFormat": "请输入有效的邮箱地址。"
 }

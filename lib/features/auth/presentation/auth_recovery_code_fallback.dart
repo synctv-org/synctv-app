@@ -30,6 +30,7 @@ class AuthRecoveryCodeFallback extends StatelessWidget {
           onPressed: onOpen,
           icon: Icons.key_rounded,
           label: context.l10n.useRecoveryCode,
+          wrapLabel: true,
           style: AppActionButtonStyle.text,
         ),
       );
@@ -64,6 +65,7 @@ class AuthRecoveryCodeFallback extends StatelessWidget {
             onPressed: onBack,
             icon: Icons.arrow_back_rounded,
             label: context.l10n.backToVerificationMethods,
+            wrapLabel: true,
             style: AppActionButtonStyle.text,
           ),
         ),

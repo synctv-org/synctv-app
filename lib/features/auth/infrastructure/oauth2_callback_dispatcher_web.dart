@@ -17,7 +17,7 @@ final class PlatformOAuth2CallbackDispatcher
 
     if (opener != null && !opener.closed) {
       opener.postMessage(message, targetOrigin);
-      web.window.close();
+      _closeAfterDelivery();
       return;
     }
 
@@ -29,13 +29,30 @@ final class PlatformOAuth2CallbackDispatcher
       return;
     }
 
-    web.window.localStorage.setItem(oauth2WebCallbackMessageKey, callbackUrl);
     if (state != null && state.isNotEmpty) {
       web.window.localStorage.setItem(
         oauth2WebCallbackStorageKey(state),
         callbackUrl,
       );
+      try {
+        web.window.localStorage.setItem(
+          oauth2WebCallbackMessageKey,
+          callbackUrl,
+        );
+      } catch (_) {
+        // The current client already has its state-scoped callback.
+      }
+    } else {
+      web.window.localStorage.setItem(oauth2WebCallbackMessageKey, callbackUrl);
     }
-    web.window.close();
+    _closeAfterDelivery();
+  }
+
+  void _closeAfterDelivery() {
+    try {
+      web.window.close();
+    } catch (_) {
+      // Keep the completion page available when the browser cannot close it.
+    }
   }
 }

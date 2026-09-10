@@ -43,7 +43,7 @@ void main() {
     expect(tester.widget<AppTextField>(cookieField).obscureText, isTrue);
 
     await tester.enterText(cookieField, 'sessionid=secret; tt_chain_token=x');
-    await tester.tap(find.text('Default'));
+    await tester.tap(find.text('Local instance'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('tiktok-edge').last);
     await tester.pumpAndSettle();

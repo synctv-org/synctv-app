@@ -65,7 +65,7 @@ final _guardedPatterns = <_GuardedPattern>[
   ),
   _GuardedPattern(
     'CircularProgressIndicator',
-    RegExp(r'\bCircularProgressIndicator\s*\('),
+    RegExp(r'\bCircularProgressIndicator(?:\.adaptive)?\s*\('),
   ),
   _GuardedPattern(
     'LinearProgressIndicator',

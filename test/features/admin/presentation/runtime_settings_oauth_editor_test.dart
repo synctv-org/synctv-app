@@ -40,7 +40,7 @@ void main() {
       );
       expect(secretField, findsOneWidget);
       await tester.enterText(secretField, '   ');
-      await tester.tap(find.text('Save instance'));
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Confirm changes').last);

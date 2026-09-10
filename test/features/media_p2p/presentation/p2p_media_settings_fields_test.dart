@@ -11,21 +11,18 @@ import '../../../test_app.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  late P2pMediaPreferencesController preferences;
-
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({
-      'playback.p2p_media_enabled': true,
-    });
-    preferences = P2pMediaPreferencesController(
-      store: const SharedPreferencesP2pMediaPreferencesStore(),
-    );
-    await preferences.load();
-  });
 
   testWidgets('renders and persists the selected P2P security mode', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({
+      'playback.p2p_media_enabled': true,
+    });
+    final preferences = P2pMediaPreferencesController(
+      store: const SharedPreferencesP2pMediaPreferencesStore(),
+    );
+    addTearDown(preferences.dispose);
+    await preferences.load();
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en'),

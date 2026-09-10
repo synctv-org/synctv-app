@@ -4,6 +4,8 @@ import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 
+import '../models/chat_detail_time.dart';
+
 class ChatReadReceiptsDialog extends StatelessWidget {
   final ChatMessageReadReceiptsInfo receipts;
 
@@ -12,12 +14,16 @@ class ChatReadReceiptsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final stacked =
+        MediaQuery.sizeOf(context).width < 600 ||
+        MediaQuery.textScalerOf(context).scale(14) > 21;
     return AppDialog(
       title: Text(context.l10n.messageReadDetails),
       body: SizedBox(
         width: 620,
         height: 460,
-        child: Row(
+        child: Flex(
+          direction: stacked ? Axis.vertical : Axis.horizontal,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
@@ -30,10 +36,16 @@ class ChatReadReceiptsDialog extends StatelessWidget {
                 },
               ),
             ),
-            AppVerticalDivider(
-              width: 28,
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
-            ),
+            if (stacked)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: AppDivider(height: 1),
+              )
+            else
+              AppVerticalDivider(
+                width: 28,
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+              ),
             Expanded(
               child: _ChatReceiptUserColumn(
                 title: context.l10n.unreadCount(receipts.unreadTotal),
@@ -93,7 +105,9 @@ class _ChatReceiptUserColumn extends StatelessWidget {
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final user = users[index];
-                    final readAt = readTimes[user.id] ?? 0;
+                    final readAt = formatChatDetailTime(
+                      readTimes[user.id] ?? 0,
+                    );
                     return Row(
                       children: [
                         AppAvatar(
@@ -114,9 +128,9 @@ class _ChatReceiptUserColumn extends StatelessWidget {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              if (readAt > 0)
+                              if (readAt != null)
                                 Text(
-                                  _formatReceiptTime(readAt),
+                                  readAt,
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
@@ -131,13 +145,5 @@ class _ChatReceiptUserColumn extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  static String _formatReceiptTime(int seconds) {
-    final time = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
-    return '${time.month.toString().padLeft(2, '0')}-'
-        '${time.day.toString().padLeft(2, '0')} '
-        '${time.hour.toString().padLeft(2, '0')}:'
-        '${time.minute.toString().padLeft(2, '0')}';
   }
 }

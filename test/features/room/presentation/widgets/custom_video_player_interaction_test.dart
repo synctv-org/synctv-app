@@ -16,6 +16,7 @@ import 'package:synctv_app/features/media_p2p/application/p2p_media_preferences_
 import 'package:synctv_app/features/media_p2p/domain/p2p_media_preferences.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/application/subtitle_source.dart';
+import 'package:synctv_app/features/room/application/subtitle_selection_controller.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
 import 'package:synctv_app/features/room/infrastructure/picture_in_picture_service.dart';
@@ -189,6 +190,85 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
 }
 
 void main() {
+  testWidgets(
+    'subtitle choices survive player replacement and stay resource scoped',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 700));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final selection = SubtitleSelectionController();
+      addTearDown(selection.dispose);
+      final source = _RecordingSubtitleSource();
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          position: Duration(seconds: 2),
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+      final volume = _volumePreferences();
+
+      Future<void> mount(int generation, {String resource = 'first'}) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            builder: buildThemedTestApp,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: CustomVideoPlayer(
+                key: ValueKey(generation),
+                volumePreferences: volume,
+                subtitleSource: source,
+                subtitleSelection: selection,
+                controller: controller,
+                title: 'Video',
+                playbackResourceIdentity: resource,
+                interactionMode: VideoPlayerInteractionMode.desktop,
+                subtitles: const {
+                  'en': {
+                    'name': 'English',
+                    'url': 'https://example.test/en.vtt',
+                  },
+                  'fr': {
+                    'name': 'French',
+                    'url': 'https://example.test/fr.vtt',
+                  },
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      Future<void> choose(String label) async {
+        await tester.tap(find.byKey(const Key('playback_subtitles_button')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(label));
+        await tester.pumpAndSettle();
+      }
+
+      await mount(0);
+
+      expect(source.requests.last.path, '/en.vtt');
+      await choose('French');
+      expect(source.requests.last.path, '/fr.vtt');
+      await mount(1);
+      expect(source.requests.last.path, '/fr.vtt');
+      expect(find.text('Subtitle'), findsOneWidget);
+      await choose('Turn off subtitles');
+      final requestCount = source.requests.length;
+      await mount(2);
+      expect(source.requests.length, requestCount);
+      expect(find.text('Subtitle'), findsNothing);
+      await mount(3, resource: 'second');
+      expect(source.requests.last.path, '/en.vtt');
+      expect(find.text('Subtitle'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final brightness in Brightness.values) {
     testWidgets('player controls stay visible in ${brightness.name} theme', (
       tester,
@@ -1170,6 +1250,31 @@ void main() {
     for (var index = 1; index < rows.length; index++) {
       expect(rows[index].top, greaterThan(rows[index - 1].bottom));
     }
+
+    await tester.tap(find.text('Playback speed'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SimpleDialog), findsOneWidget);
+    await tester.tap(find.text('1.50x'));
+    await tester.pumpAndSettle();
+    expect(controller.playbackSpeeds, [1.5]);
+    expect(find.byType(SimpleDialog), findsNothing);
+
+    await tester.tap(find.text('Playback speed'));
+    await tester.pumpAndSettle();
+    final selectedOption = find.ancestor(
+      of: find.text('1.50x'),
+      matching: find.byType(SimpleDialogOption),
+    );
+    expect(
+      find.descendant(
+        of: selectedOption,
+        matching: find.byIcon(Icons.check_rounded),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('1x'));
+    await tester.pumpAndSettle();
+    expect(controller.playbackSpeeds, [1.5, 1.0]);
   });
 
   testWidgets('playback routes stay interactive in more actions', (
@@ -1902,6 +2007,55 @@ void main() {
     },
   );
 
+  testWidgets('loaded subtitles render while paused without a player tick', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        position: Duration(seconds: 2),
+        isInitialized: true,
+      ),
+    );
+    addTearDown(controller.dispose);
+    final source = _ControlledSubtitleSource();
+    final uri = Uri.parse('https://example.com/paused.vtt');
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CustomVideoPlayer(
+            volumePreferences: _volumePreferences(),
+            subtitleSource: source,
+            controller: controller,
+            title: 'Paused movie',
+            interactionMode: VideoPlayerInteractionMode.desktop,
+            subtitles: {
+              'sub_0': {'name': 'English', 'url': uri.toString()},
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    source.documents[uri]!.complete(
+      Uint8List.fromList(
+        'WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nPaused subtitle'.codeUnits,
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(controller.value.isPlaying, isFalse);
+    expect(find.text('Paused subtitle'), findsOneWidget);
+    controller.value = controller.value.copyWith(
+      position: const Duration(seconds: 4),
+    );
+    await tester.pump();
+    expect(find.text('Paused subtitle'), findsNothing);
+  });
+
   testWidgets('renders Bilibili JSON subtitles', (tester) async {
     final controller = _RecordingVideoPlayerController(
       const VideoPlayerValue(
@@ -2195,6 +2349,50 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(invocationCount, 1);
+  });
+
+  testWidgets('Escape exits fullscreen without entering it from the room', (
+    tester,
+  ) async {
+    final controller = VideoPlayerController.networkUrl(
+      Uri.parse('https://example.test/video.mp4'),
+    );
+    addTearDown(controller.dispose);
+    var fullscreen = false;
+    var toggles = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: StatefulBuilder(
+          builder: (context, setState) => Scaffold(
+            body: CustomVideoPlayer(
+              volumePreferences: _volumePreferences(),
+              subtitleSource: const _EmptySubtitleSource(),
+              controller: controller,
+              title: 'Video',
+              interactionMode: VideoPlayerInteractionMode.desktop,
+              isFullScreen: fullscreen,
+              onToggleFullScreen: () => setState(() {
+                fullscreen = !fullscreen;
+                toggles++;
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    expect(toggles, 0);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+    await tester.pump();
+    expect(fullscreen, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    expect(fullscreen, isFalse);
+    expect(toggles, 2);
   });
 
   testWidgets('desktop P shortcut enters picture-in-picture', (tester) async {

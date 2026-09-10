@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:synctv_app/app/app_viewport.dart';
 import 'package:synctv_app/features/home/presentation/home_view.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/account_models.dart';
@@ -8,7 +8,6 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
-import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/theme/app_theme.dart';
 
 const _categories = [
@@ -140,18 +139,22 @@ HomeViewState homeShowcaseState({
   List<SyncTvRoom>? featuredRooms,
   String selectedCategoryId = '',
   bool isLoading = false,
+  String? loadError,
+  List<SyncTvRoom>? joinedRooms,
+  List<RoomCategoryInfo>? categories,
 }) => HomeViewState(
   identity: const AccountSessionIdentity(),
   hasServer: true,
   isLoading: isLoading,
+  loadError: loadError,
   isLoadingTaxonomy: false,
   rooms: rooms ?? homeShowcaseRooms,
   featuredRooms:
       featuredRooms ?? homeShowcaseRooms.take(5).toList(growable: false),
-  joinedRooms: homeShowcaseRooms
-      .where((room) => room.joined)
-      .toList(growable: false),
-  categories: _categories,
+  joinedRooms:
+      joinedRooms ??
+      homeShowcaseRooms.where((room) => room.joined).toList(growable: false),
+  categories: categories ?? _categories,
   totalRooms: rooms?.length ?? homeShowcaseRooms.length,
   page: 1,
   pageCount: 1,
@@ -193,10 +196,16 @@ HomeViewCallbacks homeShowcaseCallbacks({
 );
 
 class HomeShowcaseApp extends StatefulWidget {
-  const HomeShowcaseApp({super.key, this.state, this.callbacks});
+  const HomeShowcaseApp({
+    super.key,
+    this.state,
+    this.callbacks,
+    this.textScaler,
+  });
 
   final HomeViewState? state;
   final HomeViewCallbacks? callbacks;
+  final TextScaler? textScaler;
 
   @override
   State<HomeShowcaseApp> createState() => _HomeShowcaseAppState();
@@ -219,13 +228,10 @@ class _HomeShowcaseAppState extends State<HomeShowcaseApp> {
     locale: const Locale('en'),
     supportedLocales: AppLocalizations.supportedLocales,
     localizationsDelegates: const [...AppLocalizations.localizationsDelegates],
-    builder: (context, child) {
-      final app = ResponsiveBreakpoints.builder(
-        breakpoints: AppBreakpoints.values,
-        child: child!,
-      );
-      return app;
-    },
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: widget.textScaler),
+      child: AppViewport(child: child!),
+    ),
     home: HomeView(
       state: widget.state ?? homeShowcaseState(),
       callbacks: widget.callbacks ?? homeShowcaseCallbacks(),

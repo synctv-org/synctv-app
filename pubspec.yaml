@@ -36,21 +36,23 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   cupertino_icons: ^1.0.9
+  collection: ^1.19.1
   intl: ^0.20.3
 
   video_player: ^2.14.0
   protobuf: ^6.0.0
   fixnum: ^1.1.1
   http: ^1.6.0
+  mime: ^2.0.0
   web: ^1.1.1
   web_socket_channel: ^3.0.3
   crypto: ^3.0.7
   xml: ^7.0.1
-  file_picker: ^12.1.2
+  file_picker: ^12.2.0
   shared_preferences: ^2.5.5
   screen_brightness: ^2.1.11
   volume_controller: ^3.6.1
-  flutter_webrtc: ^1.6.0+hotfix.1
+  flutter_webrtc: ^1.6.2+hotfix.1
   audio_session: ^0.2.4
   path_provider: ^2.1.6
   canvas_danmaku: ^0.3.3  # 高性能弹幕库
@@ -59,8 +61,8 @@ dependencies:
   media_kit_libs_android_video: ^1.3.8
   media_kit_libs_ios_video: ^1.1.4
   media_kit_libs_windows_video: ^1.0.11
-  # 6.0.0-alpha.7+ adopts AGP 9 Built-in Kotlin.
-  flutter_web_auth_2: ^6.0.0-alpha.7
+  # 6.0.0-alpha.8+ adopts AGP 9 Built-in Kotlin.
+  flutter_web_auth_2: ^6.0.0-alpha.8
   url_launcher: ^6.3.2
   flutter_markdown_plus: ^1.0.12
   passkeys: ^2.22.3
@@ -83,6 +85,7 @@ dependencies:
   font_awesome_flutter: ^11.0.0
 dev_dependencies:
   fake_async: ^1.3.3
+  webview_flutter_platform_interface: ^2.15.1
   flutter_test:
     sdk: flutter
   integration_test:
@@ -125,3 +128,9 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/icon/logo-notext.svg
+    - assets/fonts/OFL.txt
+
+  fonts:
+    - family: SyncTV UI CJK
+      fonts:
+        - asset: assets/fonts/SyncTvUiCjk.ttf

@@ -11,26 +11,28 @@ class PlaylistEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppEmptyState(
-            icon: Icons.movie_filter_outlined,
-            iconSize: compact ? 48 : 64,
-            title: context.l10n.playlistEmpty,
-            subtitle: context.l10n.playlistEmptyDescription,
-            maxWidth: 280,
-          ),
-          if (onAdd != null) ...[
-            const SizedBox(height: 8),
-            AppActionButton(
-              onPressed: onAdd,
-              icon: Icons.add_rounded,
-              label: context.l10n.addMedia,
-              style: AppActionButtonStyle.tonal,
+      child: AppSingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppEmptyState(
+              icon: Icons.movie_filter_outlined,
+              iconSize: compact ? 48 : 64,
+              title: context.l10n.playlistEmpty,
+              subtitle: context.l10n.playlistEmptyDescription,
+              maxWidth: 280,
             ),
+            if (onAdd != null) ...[
+              const SizedBox(height: 8),
+              AppActionButton(
+                onPressed: onAdd,
+                icon: Icons.add_rounded,
+                label: context.l10n.addMedia,
+                style: AppActionButtonStyle.tonal,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

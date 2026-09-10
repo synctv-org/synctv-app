@@ -225,111 +225,117 @@ class _AdminSliceCacheTabState extends State<AdminSliceCacheTab> {
     final operation = _lastOperation;
     final controlsBusy = _isLoading || _isOperating;
     final maintenanceEnabled = _canMaintainCurrentTarget;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              SizedBox(
-                width: 260,
-                child: AppTextField(
-                  controller: _nodeIdController,
-                  label: context.l10n.nodeId,
-                  hintText: context.l10n.currentNode,
-                  prefixIcon: Icons.dns_outlined,
-                  enabled: !_allNodes && !controlsBusy,
-                  onChanged: (_) => _invalidateTargetState(),
-                  onSubmitted: (_) => _load(),
-                ),
-              ),
-              SizedBox(
-                width: 160,
-                child: AppSwitch(
-                  value: _allNodes,
-                  label: context.l10n.allNodes,
-                  enabled: !controlsBusy,
-                  onChanged: (value) {
-                    _loadVersion += 1;
-                    setState(() {
-                      _allNodes = value;
-                      _stats = null;
-                      _statsTarget = null;
-                      _lastOperation = null;
-                      _isLoading = false;
-                    });
-                    _load();
-                  },
-                ),
-              ),
-              AppIconButton(
-                tooltip: context.l10n.refresh,
-                icon: Icons.refresh_rounded,
-                onPressed: controlsBusy ? null : () => _load(),
-              ),
-              AppActionButton(
-                onPressed: maintenanceEnabled ? _evictExpired : null,
-                icon: Icons.auto_delete_outlined,
-                label: context.l10n.evictExpiredSliceCache,
-                loading: _isOperating,
-                style: AppActionButtonStyle.tonal,
-              ),
-              AppActionButton(
-                onPressed: maintenanceEnabled ? _confirmPurge : null,
-                icon: Icons.delete_sweep_rounded,
-                label: context.l10n.purgeSliceCache,
-                style: AppActionButtonStyle.destructive,
-              ),
-            ],
-          ),
-        ),
-        AppDivider(
-          height: 1,
-          color: theme.dividerColor.withValues(alpha: 0.55),
-        ),
-        Expanded(
-          child: _isLoading
-              ? const AppLoadingIndicator()
-              : AppRefreshIndicator(
-                  onRefresh: _load,
-                  child: AppListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      if (operation != null &&
-                          operation.target == _currentTarget)
-                        ..._buildOperationResultBanners(
-                          context,
-                          theme,
-                          operation,
-                        ),
-                      for (final failure in stats?.failures ?? const [])
-                        AppInfoBanner(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          icon: Icons.cloud_off_rounded,
-                          color: theme.colorScheme.error,
-                          title: Text(
-                            failure.nodeId.isEmpty
-                                ? context.l10n.nodeUnavailable
-                                : failure.nodeId,
-                          ),
-                          message: Text(failure.error),
-                        ),
-                      if (stats == null || stats.nodes.isEmpty)
-                        AppEmptyMessage(
-                          message: context.l10n.noSliceCacheStats,
-                          icon: Icons.storage_rounded,
-                        )
-                      else
-                        for (final node in stats.nodes)
-                          _SliceCacheNodeCard(node: node),
-                    ],
+    return AppRefreshIndicator(
+      onRefresh: () async {
+        if (!_isLoading) await _load();
+      },
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 260,
+                    child: AppTextField(
+                      controller: _nodeIdController,
+                      label: context.l10n.nodeId,
+                      hintText: context.l10n.currentNode,
+                      prefixIcon: Icons.dns_outlined,
+                      enabled: !_allNodes && !controlsBusy,
+                      onChanged: (_) => _invalidateTargetState(),
+                      onSubmitted: (_) => _load(),
+                    ),
                   ),
-                ),
-        ),
-      ],
+                  SizedBox(
+                    width: 160,
+                    child: AppSwitch(
+                      value: _allNodes,
+                      label: context.l10n.allNodes,
+                      enabled: !controlsBusy,
+                      onChanged: (value) {
+                        _loadVersion += 1;
+                        setState(() {
+                          _allNodes = value;
+                          _stats = null;
+                          _statsTarget = null;
+                          _lastOperation = null;
+                          _isLoading = false;
+                        });
+                        _load();
+                      },
+                    ),
+                  ),
+                  AppIconButton(
+                    tooltip: context.l10n.refresh,
+                    icon: Icons.refresh_rounded,
+                    onPressed: controlsBusy ? null : () => _load(),
+                  ),
+                  AppActionButton(
+                    onPressed: maintenanceEnabled ? _evictExpired : null,
+                    icon: Icons.auto_delete_outlined,
+                    label: context.l10n.evictExpiredSliceCache,
+                    loading: _isOperating,
+                    style: AppActionButtonStyle.tonal,
+                  ),
+                  AppActionButton(
+                    onPressed: maintenanceEnabled ? _confirmPurge : null,
+                    icon: Icons.delete_sweep_rounded,
+                    label: context.l10n.purgeSliceCache,
+                    style: AppActionButtonStyle.destructive,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: AppDivider(
+              height: 1,
+              color: theme.dividerColor.withValues(alpha: 0.55),
+            ),
+          ),
+          if (_isLoading)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: AppLoadingIndicator(),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList.list(
+                children: [
+                  if (operation != null && operation.target == _currentTarget)
+                    ..._buildOperationResultBanners(context, theme, operation),
+                  for (final failure in stats?.failures ?? const [])
+                    AppInfoBanner(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      icon: Icons.cloud_off_rounded,
+                      color: theme.colorScheme.error,
+                      title: Text(
+                        failure.nodeId.isEmpty
+                            ? context.l10n.nodeUnavailable
+                            : failure.nodeId,
+                      ),
+                      message: Text(failure.error),
+                    ),
+                  if (stats == null || stats.nodes.isEmpty)
+                    AppEmptyMessage(
+                      message: context.l10n.noSliceCacheStats,
+                      icon: Icons.storage_rounded,
+                    )
+                  else
+                    for (final node in stats.nodes)
+                      _SliceCacheNodeCard(node: node),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -395,6 +401,7 @@ class _SliceCacheNodeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final config = node.config;
     final usage = node.usageRatio.clamp(0.0, 1.0).toDouble();
+    final usagePercent = (node.usageRatio * 100).toStringAsFixed(1);
     final statusColor = config.engineEnabled
         ? Colors.green.shade600
         : theme.colorScheme.outline;
@@ -449,13 +456,15 @@ class _SliceCacheNodeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Wrap(
+          AppResponsiveWrap(
+            minItemWidth: MediaQuery.textScalerOf(context).scale(132),
+            maxColumns: 6,
             spacing: 24,
             runSpacing: 12,
             children: [
               _SliceCacheMetric(
                 label: context.l10n.sliceCacheUsage,
-                value: '${(node.usageRatio * 100).toStringAsFixed(1)}%',
+                value: '$usagePercent%',
               ),
               _SliceCacheMetric(
                 label: context.l10n.sliceCacheSize,
@@ -525,28 +534,21 @@ class _SliceCacheMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
-      width: 132,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

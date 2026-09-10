@@ -9,6 +9,7 @@ class AdminProviderTab extends StatefulWidget {
 
 class _AdminProviderTabState extends State<AdminProviderTab> {
   bool _isLoading = true;
+  int _loadGeneration = 0;
   String _providerType = '';
   String _search = '';
   int _page = 1;
@@ -24,6 +25,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
   List<AdminProviderInstance> _instances = const [];
   List<String> _backends = const [];
   final _searchController = TextEditingController();
+  final Set<String> _busyInstances = {};
 
   int get _pageCount =>
       _total <= 0 ? 1 : ((_total + _pageSize - 1) ~/ _pageSize);
@@ -48,6 +50,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
   }
 
   Future<void> _loadInstances({bool silent = false}) async {
+    final generation = ++_loadGeneration;
     if (!silent) setState(() => _isLoading = true);
     try {
       final results = await Future.wait([
@@ -65,8 +68,17 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
             ? Future<List<String>>.value(const [])
             : adminGateway.listProviderBackends(_providerType),
       ]);
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       final instancesPage = results[0] as AdminProviderInstancesPage;
+      final lastPage = math.max(
+        1,
+        (instancesPage.total + _pageSize - 1) ~/ _pageSize,
+      );
+      if (_page > lastPage) {
+        setState(() => _page = lastPage);
+        await _loadInstances();
+        return;
+      }
       setState(() {
         _instances = instancesPage.instances;
         _total = instancesPage.total;
@@ -74,7 +86,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() => _isLoading = false);
       AppNotifications.showError(
         context,
@@ -84,19 +96,24 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
   }
 
   Future<void> _editInstance([AdminProviderInstance? instance]) async {
+    if (!mounted) return;
+    if (instance != null) {
+      if (_busyInstances.contains(instance.name)) return;
+      setState(() => _busyInstances.add(instance.name));
+    }
     final l10n = context.l10n;
     final editing = instance != null;
-    final result = await showAppDialog<_ProviderInstanceEditResult>(
-      context: context,
-      builder: (context) => _ProviderInstanceEditorDialog(
-        instance: instance,
-        selectedFilter: _providerType,
-      ),
-    );
-    if (result == null) return;
-    if (!mounted) return;
-
     try {
+      final result = await showAppDialog<_ProviderInstanceEditResult>(
+        context: context,
+        builder: (context) => _ProviderInstanceEditorDialog(
+          instance: instance,
+          selectedFilter: _providerType,
+        ),
+      );
+      if (result == null) return;
+      if (!mounted) return;
+
       if (editing) {
         await adminGateway.adminUpdateProviderInstance(
           name: instance.name,
@@ -134,68 +151,84 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
         context,
         editing ? l10n.providerInstanceUpdated : l10n.providerInstanceCreated,
       );
-      _loadInstances(silent: true);
+      await _loadInstances(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(
         context,
         l10n.saveProviderInstanceFailed('$e'),
       );
+    } finally {
+      if (mounted && instance != null) {
+        setState(() => _busyInstances.remove(instance.name));
+      }
     }
   }
 
   Future<void> _deleteInstance(AdminProviderInstance instance) async {
+    if (!mounted || _busyInstances.contains(instance.name)) return;
+    setState(() => _busyInstances.add(instance.name));
     final l10n = context.l10n;
-    final confirmed = await AppDialogs.showStyledDialog<bool>(
-      context: context,
-      title: l10n.deleteProvider,
-      icon: const Icon(Icons.delete_forever, color: Colors.red),
-      content: Text(l10n.confirmDeleteProvider(instance.name)),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: l10n.delete,
-        ),
-      ],
-    );
-    if (confirmed != true) return;
     try {
+      final confirmed = await AppDialogs.showStyledDialog<bool>(
+        context: context,
+        title: l10n.deleteProvider,
+        icon: const Icon(Icons.delete_forever, color: Colors.red),
+        content: Text(l10n.confirmDeleteProvider(instance.name)),
+        actions: [
+          AppDialogs.createCancelButton(context),
+          const SizedBox(width: 8),
+          AppDialogs.createConfirmButton(
+            context,
+            () => Navigator.pop(context, true),
+            text: l10n.delete,
+          ),
+        ],
+      );
+      if (confirmed != true || !mounted) return;
       await adminGateway.adminDeleteProviderInstance(instance.name);
       if (!mounted) return;
       AppNotifications.showSuccess(context, l10n.providerInstanceDeleted);
-      _loadInstances(silent: true);
+      await _loadInstances(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(context, l10n.deleteProviderFailed('$e'));
+    } finally {
+      if (mounted) setState(() => _busyInstances.remove(instance.name));
     }
   }
 
   Future<void> _toggleEnabled(AdminProviderInstance instance) async {
+    if (!mounted || _busyInstances.contains(instance.name)) return;
+    setState(() => _busyInstances.add(instance.name));
     try {
       await adminGateway.adminSetProviderInstanceEnabled(
         instance.name,
         !instance.enabled,
       );
       if (!mounted) return;
-      _loadInstances(silent: true);
+      await _loadInstances(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(context, context.l10n.operationFailed('$e'));
+    } finally {
+      if (mounted) setState(() => _busyInstances.remove(instance.name));
     }
   }
 
   Future<void> _reconnect(AdminProviderInstance instance) async {
+    if (!mounted || _busyInstances.contains(instance.name)) return;
+    setState(() => _busyInstances.add(instance.name));
     try {
       await adminGateway.adminReconnectProviderInstance(instance.name);
       if (!mounted) return;
       AppNotifications.showSuccess(context, context.l10n.reconnectStarted);
-      _loadInstances(silent: true);
+      await _loadInstances(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(context, context.l10n.reconnectFailed('$e'));
+    } finally {
+      if (mounted) setState(() => _busyInstances.remove(instance.name));
     }
   }
 
@@ -203,8 +236,8 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Column(
-      children: [
+    return _AdminPagedList(
+      header: [
         Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -250,7 +283,6 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                 child: _AdminToolbarWrap(
                   items: [
                     _AdminToolbarItem(
-                      width: 112,
                       child: AppSelect<bool?>(
                         value: _enabledFilter,
                         options: {
@@ -268,7 +300,6 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                       ),
                     ),
                     _AdminToolbarItem(
-                      width: 112,
                       child: AppSelect<bool?>(
                         value: _tlsFilter,
                         options: {
@@ -286,7 +317,6 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                       ),
                     ),
                     _AdminToolbarItem(
-                      width: 112,
                       child: AppSelect<String>(
                         value: _providerType,
                         prefixIcon: _providerType.isEmpty
@@ -325,7 +355,6 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                       ),
                     ),
                     _AdminToolbarItem(
-                      width: 126,
                       child:
                           AppSelect<
                             provider_common_enum.ProviderInstanceListSortBy
@@ -392,7 +421,6 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                       ),
                     ),
                     _AdminToolbarItem(
-                      width: 96,
                       child: AppSelect<int>(
                         value: _pageSize,
                         options: {
@@ -434,35 +462,31 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                   _loadInstances();
                 },
         ),
-        Expanded(
-          child: _isLoading
-              ? const AppLoadingIndicator()
-              : _instances.isEmpty
-              ? Center(
-                  child: Text(
-                    context.l10n.noProviderInstances,
-                    style: TextStyle(color: theme.hintColor),
-                  ),
-                )
-              : AppListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  itemCount: _instances.length,
-                  itemBuilder: (context, index) {
-                    final instance = _instances[index];
-                    return _AdminPanelCard(
-                      isDark: isDark,
-                      child: _ProviderInstanceTile(
-                        instance: instance,
-                        onToggleEnabled: () => _toggleEnabled(instance),
-                        onEdit: () => _editInstance(instance),
-                        onReconnect: () => _reconnect(instance),
-                        onDelete: () => _deleteInstance(instance),
-                      ),
-                    );
-                  },
-                ),
-        ),
       ],
+      loading: _isLoading,
+      itemCount: _instances.length,
+      emptyMessage: context.l10n.noProviderInstances,
+      itemBuilder: (context, index) {
+        final instance = _instances[index];
+        return _AdminPanelCard(
+          isDark: isDark,
+          child: _ProviderInstanceTile(
+            instance: instance,
+            onToggleEnabled: _busyInstances.contains(instance.name)
+                ? null
+                : () => _toggleEnabled(instance),
+            onEdit: _busyInstances.contains(instance.name)
+                ? null
+                : () => _editInstance(instance),
+            onReconnect: _busyInstances.contains(instance.name)
+                ? null
+                : () => _reconnect(instance),
+            onDelete: _busyInstances.contains(instance.name)
+                ? null
+                : () => _deleteInstance(instance),
+          ),
+        );
+      },
     );
   }
 
@@ -516,10 +540,10 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
 
 class _ProviderInstanceTile extends StatelessWidget {
   final AdminProviderInstance instance;
-  final VoidCallback onToggleEnabled;
-  final VoidCallback onEdit;
-  final VoidCallback onReconnect;
-  final VoidCallback onDelete;
+  final VoidCallback? onToggleEnabled;
+  final VoidCallback? onEdit;
+  final VoidCallback? onReconnect;
+  final VoidCallback? onDelete;
 
   const _ProviderInstanceTile({
     required this.instance,
@@ -542,131 +566,108 @@ class _ProviderInstanceTile extends StatelessWidget {
       _formatTimestamp(instance.createdAt),
       _formatTimestamp(instance.updatedAt),
     );
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
-      child: Row(
+    return _AdminRecordTile(
+      contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      prefix: AppSwitch(
+        value: instance.enabled,
+        semanticsLabel: context.l10n.enableProviderInstance,
+        onChanged: onToggleEnabled == null ? null : (_) => onToggleEnabled!(),
+      ),
+      title: Text(
+        instance.name,
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+      subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSwitch(
-            value: instance.enabled,
-            semanticsLabel: context.l10n.enableProviderInstance,
-            onChanged: (_) => onToggleEnabled(),
+          const SizedBox(height: 6),
+          AppSelectableText(
+            instance.endpoint,
+            style: TextStyle(color: theme.hintColor),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        instance.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _ProviderMetaChip(
-                      label: instance.enabled
-                          ? context.l10n.enabled
-                          : context.l10n.disabled,
-                      icon: instance.enabled
-                          ? Icons.power_settings_new_rounded
-                          : Icons.power_off_rounded,
-                      color: instance.enabled
-                          ? theme.colorScheme.primary
-                          : theme.hintColor,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                AppSelectableText(
-                  instance.endpoint,
-                  maxLines: 1,
-                  style: TextStyle(color: theme.hintColor),
-                ),
-                if (instance.comment.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    instance.comment,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: theme.hintColor),
-                  ),
-                ],
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _ProviderMetaChip(
-                      label: statusText,
-                      icon: _providerStatusIcon(instance.status),
-                      color: _providerStatusColor(theme, instance.status),
-                    ),
-                    _ProviderMetaChip(
-                      label: '${instance.timeoutSeconds}s',
-                      icon: Icons.timer_outlined,
-                      color: theme.colorScheme.primary,
-                    ),
-                    _ProviderMetaChip(
-                      label: tlsText,
-                      icon: instance.tls
-                          ? Icons.verified_user_outlined
-                          : Icons.no_encryption_outlined,
-                      color: instance.tls && !instance.insecureTls
-                          ? Colors.green
-                          : Colors.orange,
-                    ),
-                    for (final provider in instance.providers)
-                      Builder(
-                        builder: (context) {
-                          final brand = mediaProviderBrand(provider);
-                          return _ProviderMetaChip(
-                            label: brand.label,
-                            icon: brand.icon,
-                            color: brand.color,
-                          );
-                        },
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  timeText,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, color: theme.hintColor),
-                ),
-              ],
+          if (instance.comment.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              instance.comment,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: theme.hintColor),
             ),
-          ),
-          const SizedBox(width: 4),
+          ],
+          const SizedBox(height: 10),
           Wrap(
-            spacing: 2,
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              AppIconButton(
-                tooltip: context.l10n.edit,
-                icon: Icons.edit_outlined,
-                onPressed: onEdit,
+              _ProviderMetaChip(
+                label: instance.enabled
+                    ? context.l10n.enabled
+                    : context.l10n.disabled,
+                icon: instance.enabled
+                    ? Icons.power_settings_new_rounded
+                    : Icons.power_off_rounded,
+                color: instance.enabled
+                    ? theme.colorScheme.primary
+                    : theme.hintColor,
               ),
-              AppIconButton(
-                tooltip: context.l10n.reconnect,
-                icon: Icons.sync_rounded,
-                onPressed: onReconnect,
+              _ProviderMetaChip(
+                label: statusText,
+                icon: _providerStatusIcon(instance.status),
+                color: _providerStatusColor(theme, instance.status),
               ),
-              AppIconButton(
-                tooltip: context.l10n.delete,
-                icon: Icons.delete_outline,
-                style: AppIconButtonStyle.destructive,
-                onPressed: onDelete,
+              _ProviderMetaChip(
+                label: '${instance.timeoutSeconds}s',
+                icon: Icons.timer_outlined,
+                color: theme.colorScheme.primary,
               ),
+              _ProviderMetaChip(
+                label: tlsText,
+                icon: instance.tls
+                    ? Icons.verified_user_outlined
+                    : Icons.no_encryption_outlined,
+                color: instance.tls && !instance.insecureTls
+                    ? Colors.green
+                    : Colors.orange,
+              ),
+              for (final provider in instance.providers)
+                Builder(
+                  builder: (context) {
+                    final brand = mediaProviderBrand(provider);
+                    return _ProviderMetaChip(
+                      label: brand.label,
+                      icon: brand.icon,
+                      color: brand.color,
+                    );
+                  },
+                ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            timeText,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, color: theme.hintColor),
           ),
         ],
       ),
+      actions: [
+        AppIconButton(
+          tooltip: context.l10n.edit,
+          icon: Icons.edit_outlined,
+          onPressed: onEdit,
+        ),
+        AppIconButton(
+          tooltip: context.l10n.reconnect,
+          icon: Icons.sync_rounded,
+          onPressed: onReconnect,
+        ),
+        AppIconButton(
+          tooltip: context.l10n.delete,
+          icon: Icons.delete_outline,
+          style: AppIconButtonStyle.destructive,
+          onPressed: onDelete,
+        ),
+      ],
     );
   }
 }

@@ -84,7 +84,7 @@ class CinemaRoomCard extends StatelessWidget {
     final card = AppInkSurface(
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.7)),
+      borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.5)),
       onTap: onTap,
       onLongPress: onLongPress,
       child: LayoutBuilder(
@@ -107,9 +107,12 @@ class CinemaRoomCard extends StatelessWidget {
             );
           }
 
-          final coverHeight = (constraints.maxWidth / 2).clamp(
-            120.0,
-            constraints.maxHeight - 108,
+          final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+          final coverHeight = (constraints.maxWidth * 9 / 16).clamp(
+            80.0,
+            (constraints.maxHeight -
+                    (128 + (textScale - 1).clamp(0, double.infinity) * 64))
+                .clamp(80.0, constraints.maxHeight),
           );
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,8 +174,8 @@ class CinemaRoomCard extends StatelessWidget {
                               style: AppIconButtonStyle.ghost,
                               size: AppIconButtonSize.sm,
                               constraints: const BoxConstraints.tightFor(
-                                width: 30,
-                                height: 30,
+                                width: 44,
+                                height: 44,
                               ),
                             ),
                         ],
@@ -225,7 +228,9 @@ class CinemaRoomCard extends StatelessWidget {
         builder: (context) {
           final hasFocus = Focus.of(context).hasFocus;
           return AnimatedScale(
-            scale: hasFocus ? 1.02 : 1,
+            scale: hasFocus && !MediaQuery.disableAnimationsOf(context)
+                ? 1.02
+                : 1,
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOutCubic,
             child: AppAnimatedPanelSurface(

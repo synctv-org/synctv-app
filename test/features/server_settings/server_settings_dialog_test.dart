@@ -12,6 +12,108 @@ import 'package:synctv_app/contracts/public_models.dart';
 import '../../test_app.dart';
 
 void main() {
+  testWidgets('server activation failure releases the dialog busy lock', (
+    tester,
+  ) async {
+    final gateway = _RecordingServerConnectionGateway();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => DependencyScope<ServerConnectionGateway>(
+          value: gateway,
+          child: buildThemedTestApp(context, child),
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showServerSettingsDialog(context: context),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    gateway.activationError = StateError('switch failed');
+    final activateButton = tester
+        .widgetList<AppIconButton>(find.byType(AppIconButton))
+        .firstWhere((b) => b.icon == Icons.login_rounded);
+    final action = activateButton.onPressed!;
+    action();
+    await tester.pumpAndSettle();
+    expect(gateway.activations, hasLength(1));
+    final retry = tester
+        .widgetList<AppIconButton>(find.byType(AppIconButton))
+        .firstWhere((b) => b.icon == Icons.login_rounded)
+        .onPressed;
+    expect(retry, isNotNull);
+    gateway.activationError = null;
+    retry!();
+    await tester.pumpAndSettle();
+    expect(gateway.activations, [
+      'https://second.example.test',
+      'https://second.example.test',
+    ]);
+    expect(gateway.getServerInfoCalls, 2);
+    expect(find.text('Server-declared ID: server-1'), findsNWidgets(2));
+    expect(find.text('Server-declared ID: old-server'), findsNothing);
+    expect(find.text('Server-declared ID: second'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets(
+    'server removal suppresses retained duplicate callbacks and allows retry',
+    (tester) async {
+      final gateway = _RecordingServerConnectionGateway();
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          builder: (context, child) => DependencyScope<ServerConnectionGateway>(
+            value: gateway,
+            child: buildThemedTestApp(context, child),
+          ),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => showServerSettingsDialog(context: context),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      final remove = find
+          .byWidgetPredicate(
+            (w) => w is AppIconButton && w.icon == Icons.delete_outline_rounded,
+          )
+          .first;
+      final action = tester.widget<AppIconButton>(remove).onPressed!;
+      action();
+      action();
+      await tester.pump();
+      expect(gateway.removals, hasLength(1));
+      expect(tester.widget<AppIconButton>(remove).onPressed, isNull);
+      gateway.removals.first.completeError(StateError('remove failed'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<AppIconButton>(remove).onPressed, isNotNull);
+      action();
+      await tester.pump();
+      expect(gateway.removals, hasLength(2));
+      gateway.removals.last.complete();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.pump(const Duration(seconds: 5));
+    },
+  );
+
   testWidgets('add server dialog forwards the insecure TLS preference', (
     tester,
   ) async {
@@ -278,6 +380,9 @@ void main() {
 
 final class _RecordingServerConnectionGateway
     implements ServerConnectionGateway {
+  final removals = <Completer<void>>[];
+  Object? activationError;
+  final activations = <String>[];
   String? address;
   bool? allowInsecureTls;
   int getServerInfoCalls = 0;
@@ -296,7 +401,16 @@ final class _RecordingServerConnectionGateway
   String get serverBaseUrl => _activeServer?.endpoint ?? '';
 
   @override
-  List<ServerConnectionProfile> get servers => [?_activeServer];
+  List<ServerConnectionProfile> get servers => [
+    ?_activeServer,
+    const ServerConnectionProfile(
+      endpoint: 'https://second.example.test',
+      declaredServerId: 'second',
+      name: 'Second server',
+      isBuiltIn: false,
+      allowInsecureTls: false,
+    ),
+  ];
 
   @override
   Future<ServerConnectionProfile> addServer(
@@ -315,7 +429,10 @@ final class _RecordingServerConnectionGateway
   }
 
   @override
-  Future<void> activateServer(String endpoint) async {}
+  Future<void> activateServer(String endpoint) async {
+    activations.add(endpoint);
+    if (activationError != null) throw activationError!;
+  }
 
   @override
   Future<ServerInfo> getServerInfo({bool refresh = false}) async {
@@ -327,7 +444,11 @@ final class _RecordingServerConnectionGateway
   }
 
   @override
-  Future<void> removeServer(String endpoint) async {}
+  Future<void> removeServer(String endpoint) {
+    final completion = Completer<void>();
+    removals.add(completion);
+    return completion.future;
+  }
 
   @override
   Future<void> syncServerTime({bool refresh = false}) async {}
