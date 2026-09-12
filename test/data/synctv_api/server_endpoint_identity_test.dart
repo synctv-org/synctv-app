@@ -5,7 +5,7 @@ void main() {
   group('ServerEndpointIdentity', () {
     test('normalizes equivalent addresses to one identity', () {
       expect(
-        ServerEndpointIdentity.normalize(' HTTPS://Example.COM:443/api/ '),
+        ServerEndpointIdentity.fromUserInput(' HTTPS://Example.COM:443/api/ '),
         'https://example.com',
       );
       expect(

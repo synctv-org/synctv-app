@@ -6,6 +6,7 @@ final class RoomUiCapabilities {
     required SyncTvRoom room,
     required SyncTvUser? currentUser,
     required AdminRoomMember? selfMember,
+    this.chatEnabled = true,
   }) : _permissions = selfMember?.permissions ?? room.myPermissions,
        isRoomCreator =
            currentUser?.id.isNotEmpty == true &&
@@ -15,12 +16,13 @@ final class RoomUiCapabilities {
   final int _permissions;
   final bool isRoomCreator;
   final bool isSystemAdmin;
+  final bool chatEnabled;
 
   bool allows(int permission) =>
       isRoomCreator || isSystemAdmin || (_permissions & permission) != 0;
 
   bool get canSendChatMessages =>
-      allows(RoomEffectivePermissions.sendChatMessages);
+      chatEnabled && allows(RoomEffectivePermissions.sendChatMessages);
   bool get canManageOwnMedia => allows(RoomEffectivePermissions.manageOwnMedia);
   bool get canBrowseLibrary => allows(RoomEffectivePermissions.browseLibrary);
   bool get canViewMembers => allows(RoomEffectivePermissions.viewMembers);

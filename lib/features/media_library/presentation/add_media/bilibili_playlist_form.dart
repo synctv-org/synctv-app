@@ -459,8 +459,7 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
       ),
       results: _shouldShowBrowser
           ? _buildDiscoveryBrowser(context, items)
-          : const SizedBox(),
-      hasResults: _shouldShowBrowser,
+          : null,
     );
   }
 

@@ -1,7 +1,9 @@
 part of '../admin_settings_page.dart';
 
 class AdministratorsTab extends StatefulWidget {
-  const AdministratorsTab({super.key});
+  const AdministratorsTab({super.key, this.isActive = true});
+
+  final bool isActive;
 
   @override
   State<AdministratorsTab> createState() => _AdministratorsTabState();
@@ -19,12 +21,21 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
   admin_enum.SortDirection _adminSortDirection =
       admin_enum.SortDirection.SORT_DIRECTION_DESC;
   bool _isLoading = true;
+  int _loadGeneration = 0;
   final _adminSearchController = TextEditingController();
 
   int get _adminPageCount =>
       _adminTotal <= 0 ? 1 : ((_adminTotal - 1) ~/ _adminPageSize) + 1;
 
   bool _initialized = false;
+
+  @override
+  void didUpdateWidget(covariant AdministratorsTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      unawaited(_load(silent: true));
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -44,6 +55,7 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
   }
 
   Future<void> _load({bool silent = false}) async {
+    final generation = ++_loadGeneration;
     if (!silent) setState(() => _isLoading = true);
     try {
       final results = await Future.wait([
@@ -56,8 +68,17 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
         ),
         adminGateway.getMe(),
       ]);
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       final adminsPage = results[0] as AdminsPage;
+      final lastPage = math.max(
+        1,
+        (adminsPage.total + _adminPageSize - 1) ~/ _adminPageSize,
+      );
+      if (_adminPage > lastPage) {
+        setState(() => _adminPage = lastPage);
+        await _load();
+        return;
+      }
       final currentUser = results[1] as SyncTvUser;
       setState(() {
         _admins = adminsPage.admins;
@@ -66,7 +87,7 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() => _isLoading = false);
       AppNotifications.showError(
         context,
@@ -90,11 +111,19 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
       actions: [
         AppDialogs.createCancelButton(context),
         const SizedBox(width: 8),
-        AppActionButton(
-          onPressed: () => Navigator.pop(context, 'existing'),
-          icon: Icons.person_search_rounded,
-          label: context.l10n.promoteExistingUser,
-          style: AppActionButtonStyle.tonal,
+        Builder(
+          builder: (buttonContext) => AppActionButton(
+            onPressed: () {
+              if (!buttonContext.mounted ||
+                  ModalRoute.of(buttonContext)?.isCurrent != true) {
+                return;
+              }
+              Navigator.pop(buttonContext, 'existing');
+            },
+            icon: Icons.person_search_rounded,
+            label: context.l10n.promoteExistingUser,
+            style: AppActionButtonStyle.tonal,
+          ),
         ),
         const SizedBox(width: 8),
         AppDialogs.createConfirmButton(
@@ -104,144 +133,27 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
         ),
       ],
     );
+    if (!mounted) return;
     if (mode == 'existing') {
       await _promoteExistingUser();
       return;
     }
     if (mode != 'new') return;
-    if (!mounted) return;
 
-    final usernameController = TextEditingController();
-    final passwordController = TextEditingController();
-    var disposeScheduled = false;
-    final confirmed = await AppDialogs.showStyledDialog<bool>(
-      context: context,
-      title: context.l10n.addAdministrator,
-      icon: const Icon(
-        Icons.admin_panel_settings_rounded,
-        color: Color(0xFF5D5FEF),
-      ),
-      content: Builder(
-        builder: (dialogContext) {
-          if (!disposeScheduled) {
-            disposeScheduled = true;
-            _disposeControllersAfterRouteClose(dialogContext, [
-              usernameController,
-              passwordController,
-            ]);
-          }
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppDialogs.createFormField(
-                context: dialogContext,
-                label: context.l10n.username,
-                controller: usernameController,
-                hintText: context.l10n.usernameRequired,
-                prefixIcon: Icons.person_outline,
-              ),
-              const SizedBox(height: 12),
-              AppDialogs.createFormField(
-                context: dialogContext,
-                label: context.l10n.password,
-                controller: passwordController,
-                hintText: context.l10n.passwordRequired,
-                prefixIcon: Icons.lock_outline,
-                obscureText: true,
-              ),
-            ],
-          );
-        },
-      ),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: context.l10n.add,
-        ),
-      ],
-    );
-    if (confirmed != true) return;
-    try {
-      final username = usernameController.text.trim();
-      final password = passwordController.text;
-      if (username.isEmpty || password.isEmpty) {
-        if (!mounted) return;
-        AppNotifications.showWarning(
-          context,
-          context.l10n.usernameAndPasswordRequired,
-        );
-        return;
-      }
-      await adminGateway.adminAddUser(
-        username,
-        password,
-        common_enum.UserRole.USER_ROLE_ADMIN,
-      );
-      if (!mounted) return;
-      AppNotifications.showSuccess(context, context.l10n.administratorAdded);
-      _load(silent: true);
-    } catch (e) {
-      if (!mounted) return;
-      AppNotifications.showError(context, context.l10n.addFailed('$e'));
-    }
+    await _showAdministratorDialog(promoteExisting: false);
   }
 
-  Future<void> _promoteExistingUser() async {
-    final userIdController = TextEditingController();
-    var disposeScheduled = false;
-    final confirmed = await AppDialogs.showStyledDialog<bool>(
+  Future<void> _promoteExistingUser() =>
+      _showAdministratorDialog(promoteExisting: true);
+
+  Future<void> _showAdministratorDialog({required bool promoteExisting}) async {
+    final added = await showAppDialog<bool>(
       context: context,
-      title: context.l10n.promoteExistingUser,
-      icon: const Icon(Icons.person_search_rounded, color: Color(0xFF5D5FEF)),
-      content: Builder(
-        builder: (dialogContext) {
-          if (!disposeScheduled) {
-            disposeScheduled = true;
-            _disposeControllersAfterRouteClose(dialogContext, [
-              userIdController,
-            ]);
-          }
-          return SizedBox(
-            width: 420,
-            child: AppDialogs.createFormField(
-              context: dialogContext,
-              label: context.l10n.userId,
-              controller: userIdController,
-              hintText: context.l10n.existingUserIdRequired,
-              prefixIcon: Icons.badge_outlined,
-            ),
-          );
-        },
-      ),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: context.l10n.promote,
-        ),
-      ],
+      builder: (_) => AddAdministratorDialog(promoteExisting: promoteExisting),
     );
-    if (confirmed != true) return;
-    final userId = userIdController.text.trim();
-    if (userId.isEmpty) {
-      if (!mounted) return;
-      AppNotifications.showWarning(context, context.l10n.userIdRequired);
-      return;
-    }
-    try {
-      await adminGateway.adminAddAdmin(userId);
-      if (!mounted) return;
-      AppNotifications.showSuccess(context, context.l10n.administratorAdded);
-      _load(silent: true);
-    } catch (e) {
-      if (!mounted) return;
-      AppNotifications.showError(context, context.l10n.addFailed('$e'));
-    }
+    if (added != true || !mounted) return;
+    AppNotifications.showSuccess(context, context.l10n.administratorAdded);
+    await _load(silent: true);
   }
 
   Future<void> _removeAdmin(SyncTvUser user) async {
@@ -260,7 +172,7 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
         ),
       ],
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
     try {
       await adminGateway.adminRemoveAdmin(user.id);
       if (!mounted) return;

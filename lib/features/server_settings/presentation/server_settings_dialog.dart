@@ -30,6 +30,15 @@ Future<bool?> showServerSettingsDialog({
   );
 }
 
+Future<ServerConnectionProfile?> showAddServerDialog({
+  required BuildContext context,
+  String initialAddress = '',
+}) => showAppDialog<ServerConnectionProfile>(
+  context: context,
+  barrierDismissible: false,
+  builder: (_) => _AddServerDialog(initialAddress: initialAddress),
+);
+
 class _ServerSettingsSheet extends StatefulWidget {
   const _ServerSettingsSheet({
     required this.requireServer,
@@ -132,10 +141,9 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final profile = await showAppDialog<ServerConnectionProfile>(
+      final profile = await showAddServerDialog(
         context: context,
-        barrierDismissible: false,
-        builder: (_) => _AddServerDialog(initialAddress: widget.initialAddress),
+        initialAddress: widget.initialAddress,
       );
       if (!mounted || profile == null) return;
 
@@ -185,6 +193,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   }
 
   Future<void> _removeServer(ServerConnectionProfile profile) async {
+    if (!mounted || _busy) return;
     if (profile.isBuiltIn) {
       AppNotifications.showWarning(
         context,
@@ -240,37 +249,59 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.dns_rounded, color: theme.colorScheme.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.server,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final title = Row(
+                    children: [
+                      Icon(Icons.dns_rounded, color: theme.colorScheme.primary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l10n.server,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  if (!kIsWeb) ...[
-                    Flexible(
-                      child: AppActionButton(
-                        onPressed: _busy ? null : _openAddServerDialog,
-                        icon: Icons.add_link_rounded,
-                        label: l10n.addServer,
+                    ],
+                  );
+                  final actions = Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (!kIsWeb)
+                        AppActionButton(
+                          onPressed: _busy ? null : _openAddServerDialog,
+                          icon: Icons.add_link_rounded,
+                          label: l10n.addServer,
+                        ),
+                      AppActionButton(
+                        onPressed: widget.requireServer && activeServer == null
+                            ? null
+                            : () => Navigator.pop(context, _changed),
+                        label: l10n.done,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  Flexible(
-                    child: AppActionButton(
-                      onPressed: widget.requireServer && activeServer == null
-                          ? null
-                          : () => Navigator.pop(context, _changed),
-                      label: l10n.done,
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                  if (constraints.maxWidth < 480 ||
+                      MediaQuery.textScalerOf(context).scale(14) > 21) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        title,
+                        const SizedBox(height: 12),
+                        Align(alignment: Alignment.centerRight, child: actions),
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: title),
+                      actions,
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
               _CurrentServerInfoCard(
@@ -298,6 +329,9 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                     (profile) => _ServerProfileTile(
                       profile: profile,
                       active: profile.endpoint == activeServer?.endpoint,
+                      info: profile.endpoint == activeServer?.endpoint
+                          ? _serverInfo
+                          : null,
                       canRemove: !_busy && !profile.isBuiltIn,
                       busy: _busy,
                       onActivate: () => _activateServer(profile),
@@ -401,126 +435,123 @@ class _AddServerDialogState extends State<_AddServerDialog> {
                 },
               ),
             },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AppDialogHeader(
-                  title: Text(l10n.addServer),
-                  icon: Icons.add_link_rounded,
-                  onClose: _busy ? null : () => Navigator.pop(context),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppTextField(
-                        label: l10n.serverAddress,
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        hintText: l10n.serverAddressExample,
-                        prefixIcon: Icons.link_rounded,
-                        enabled: !_busy,
-                        onSubmitted: (_) => _submit(),
-                      ),
-                      const SizedBox(height: 14),
-                      AppPanelSurface(
-                        color: theme.colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.42),
-                        border: Border.all(
-                          color: theme.colorScheme.outlineVariant.withValues(
-                            alpha: 0.65,
-                          ),
+            child: AppSingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppDialogHeader(
+                    title: Text(l10n.addServer),
+                    icon: Icons.add_link_rounded,
+                    onClose: _busy ? null : () => Navigator.pop(context),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppTextField(
+                          label: l10n.serverAddress,
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          hintText: l10n.serverAddressExample,
+                          prefixIcon: Icons.link_rounded,
+                          enabled: !_busy,
+                          onSubmitted: (_) => _submit(),
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _busy
-                                ? null
-                                : () => setState(
-                                    () =>
-                                        _allowInsecureTls = !_allowInsecureTls,
+                        const SizedBox(height: 14),
+                        AppPanelSurface(
+                          color: theme.colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.42),
+                          border: Border.all(
+                            color: theme.colorScheme.outlineVariant.withValues(
+                              alpha: 0.65,
+                            ),
+                          ),
+                          child: MergeSemantics(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _busy
+                                    ? null
+                                    : () => setState(
+                                        () => _allowInsecureTls =
+                                            !_allowInsecureTls,
+                                      ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
                                   ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.gpp_maybe_outlined,
-                                    color: _allowInsecureTls
-                                        ? theme.colorScheme.error
-                                        : theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          l10n.allowInsecureTls,
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          l10n.allowInsecureTlsDescription,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Semantics(
-                                    label: l10n.allowInsecureTls,
-                                    toggled: _allowInsecureTls,
-                                    child: Switch.adaptive(
-                                      value: _allowInsecureTls,
-                                      onChanged: _busy
-                                          ? null
-                                          : (value) => setState(
-                                              () => _allowInsecureTls = value,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              l10n.allowInsecureTls,
+                                              style: theme.textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                             ),
-                                    ),
+                                            const SizedBox(height: 3),
+                                            Text(
+                                              l10n.allowInsecureTlsDescription,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Switch.adaptive(
+                                        value: _allowInsecureTls,
+                                        onChanged: _busy
+                                            ? null
+                                            : (value) => setState(
+                                                () => _allowInsecureTls = value,
+                                              ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          AppActionButton(
-                            onPressed: _busy
-                                ? null
-                                : () => Navigator.pop(context),
-                            label: l10n.cancel,
+                        const SizedBox(height: 20),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Wrap(
+                            alignment: WrapAlignment.end,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              AppActionButton(
+                                onPressed: _busy
+                                    ? null
+                                    : () => Navigator.pop(context),
+                                label: l10n.cancel,
+                              ),
+                              AppActionButton(
+                                onPressed: _busy ? null : _submit,
+                                icon: Icons.add_link_rounded,
+                                label: l10n.add,
+                                loading: _busy,
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          AppActionButton(
-                            onPressed: _busy ? null : _submit,
-                            icon: Icons.add_link_rounded,
-                            label: l10n.add,
-                            loading: _busy,
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -686,6 +717,7 @@ class _CurrentServerInfoCard extends StatelessWidget {
 class _ServerProfileTile extends StatelessWidget {
   const _ServerProfileTile({
     required this.profile,
+    this.info,
     required this.active,
     required this.canRemove,
     required this.busy,
@@ -694,6 +726,7 @@ class _ServerProfileTile extends StatelessWidget {
   });
 
   final ServerConnectionProfile profile;
+  final ServerInfo? info;
   final bool active;
   final bool canRemove;
   final bool busy;
@@ -706,6 +739,12 @@ class _ServerProfileTile extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
+    final name = (info?.serverName.trim().isNotEmpty ?? false)
+        ? info!.serverName.trim()
+        : profile.name;
+    final declaredServerId = (info?.serverId.trim().isNotEmpty ?? false)
+        ? info!.serverId.trim()
+        : profile.declaredServerId;
     final background = active
         ? primary.withValues(alpha: isDark ? 0.18 : 0.10)
         : isDark
@@ -739,7 +778,7 @@ class _ServerProfileTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        profile.name,
+                        name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall?.copyWith(
@@ -778,11 +817,11 @@ class _ServerProfileTile extends StatelessWidget {
             const SizedBox(height: 6),
             _MetaLine(icon: Icons.gpp_maybe_outlined, text: l10n.tlsUnverified),
           ],
-          if (profile.declaredServerId.isNotEmpty) ...[
+          if (declaredServerId.isNotEmpty) ...[
             const SizedBox(height: 6),
             _MetaLine(
               icon: Icons.fingerprint_rounded,
-              text: l10n.serverDeclaredId(profile.declaredServerId),
+              text: l10n.serverDeclaredId(declaredServerId),
             ),
           ],
         ],

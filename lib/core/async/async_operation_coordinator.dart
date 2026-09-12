@@ -22,26 +22,37 @@ class LatestAsyncOperationCoordinator {
   Future<void> run(
     String key,
     Future<void> Function(IsLatestOperation isLatest) operation,
-  ) async {
+  ) {
     final activeOperation = _activeOperation;
     if (activeOperation != null && _activeKey == key) {
-      await activeOperation;
-      return;
+      return activeOperation;
     }
 
     final generation = ++_generation;
-    late final Future<void> trackedOperation;
-    trackedOperation =
-        Future<void>.sync(() => operation(() => generation == _generation))
-            .whenComplete(() {
-              if (identical(_activeOperation, trackedOperation)) {
-                _activeOperation = null;
-                _activeKey = null;
-              }
-            });
-    _activeOperation = trackedOperation;
+    final completion = Completer<void>();
+    // Register before invoking callbacks, which may synchronously reenter.
+    _activeOperation = completion.future;
     _activeKey = key;
-    await trackedOperation;
+    unawaited(_run(generation, completion, operation));
+    return completion.future;
+  }
+
+  Future<void> _run(
+    int generation,
+    Completer<void> completion,
+    Future<void> Function(IsLatestOperation isLatest) operation,
+  ) async {
+    try {
+      await operation(() => generation == _generation);
+      completion.complete();
+    } catch (error, stackTrace) {
+      completion.completeError(error, stackTrace);
+    } finally {
+      if (identical(_activeOperation, completion.future)) {
+        _activeOperation = null;
+        _activeKey = null;
+      }
+    }
   }
 
   void invalidate() {
@@ -64,5 +75,45 @@ class SerialAsyncOperationCoordinator {
       }
     });
     return result.future;
+  }
+}
+
+class KeyedAsyncOperationCoordinator {
+  final _active = <String, Completer<void>>{};
+
+  Future<void> run(
+    String key,
+    Future<void> Function(IsLatestOperation isCurrent) operation,
+  ) {
+    final active = _active[key];
+    if (active != null) return active.future;
+    final completion = Completer<void>();
+    _active[key] = completion;
+    unawaited(_run(key, completion, operation));
+    return completion.future;
+  }
+
+  Future<void> _run(
+    String key,
+    Completer<void> completion,
+    Future<void> Function(IsLatestOperation isCurrent) operation,
+  ) async {
+    bool isCurrent() => identical(_active[key], completion);
+    try {
+      await operation(isCurrent);
+      completion.complete();
+    } catch (error, stackTrace) {
+      completion.completeError(error, stackTrace);
+    } finally {
+      if (isCurrent()) _active.remove(key);
+    }
+  }
+
+  void invalidate({String? key}) {
+    if (key == null) {
+      _active.clear();
+    } else {
+      _active.remove(key);
+    }
   }
 }

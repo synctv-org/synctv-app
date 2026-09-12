@@ -10,6 +10,8 @@ import 'package:flutter/services.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/binding/bilibili_geetest_flow.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
+import 'package:synctv_app/features/providers/application/provider_gateway.dart';
+import 'package:synctv_app/features/providers/presentation/provider_instance_options.dart';
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pbenum.dart'
     as bilibili_enum;
 import 'package:synctv_app/theme/app_responsive.dart';
@@ -17,10 +19,17 @@ import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
 import 'package:synctv_app/core/presentation/media_provider_brand.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/core/presentation/widgets/app_responsive_layout.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 part 'binding_widgets.dart';
+part 'bilibili_sms_login_panel.dart';
+part 'bilibili_binding_view.dart';
+part 'provider_bind_list.dart';
+part 'provider_account_info_dialog.dart';
+part 'provider_unbind_dialog.dart';
+part 'nextcloud_account_dialog.dart';
 part 'oauth_binding_forms.dart';
 part 'server_account_dialogs.dart';
 
@@ -239,6 +248,12 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
   final Map<_ProviderKind, bool> _loading = {
     for (final provider in _ProviderKind.values) provider: true,
   };
+  final Map<_ProviderKind, int> _loadGenerations = {};
+  final Map<_ProviderKind, String> _loadErrors = {};
+  final Set<_ProviderKind> _refreshing = {};
+  bool _bindingsInitialized = false;
+  bool _showingInfo = false;
+  final Map<_ProviderKind, _ProviderUnbindPhase> _unbinding = {};
 
   @override
   void initState() {
@@ -255,6 +270,13 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       initialIndex: (requestedProviderIndex < 0 ? 0 : requestedProviderIndex)
           .clamp(0, _providers.length - 1),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_bindingsInitialized) return;
+    _bindingsInitialized = true;
     for (final provider in _providers) {
       _loadBinds(provider.kind);
     }
@@ -268,7 +290,18 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
 
   Future<void> _loadBinds(_ProviderKind kind, {bool showLoading = true}) async {
     if (!mounted) return;
-    if (showLoading) setState(() => _loading[kind] = true);
+    final loadGeneration = (_loadGenerations[kind] ?? 0) + 1;
+    _loadGenerations[kind] = loadGeneration;
+    final l10n = context.l10n;
+    setState(() {
+      _loading[kind] = showLoading;
+      if (showLoading) {
+        _refreshing.remove(kind);
+      } else {
+        _refreshing.add(kind);
+      }
+      _loadErrors.remove(kind);
+    });
     try {
       final list = switch (kind) {
         _ProviderKind.alist =>
@@ -314,7 +347,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
                   id: bind.id,
                   serverId: bind.serverId,
                   instanceName: bind.providerInstanceName,
-                  title: context.l10n.bilibiliBound,
+                  title: l10n.bilibiliBound,
                   subtitle: bind.id,
                 ),
               )
@@ -467,40 +500,68 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
               )
               .toList(),
       };
-      if (mounted) setState(() => _binds[kind] = list);
+      if (mounted && _loadGenerations[kind] == loadGeneration) {
+        setState(() {
+          _binds[kind] = list;
+          _loadErrors.remove(kind);
+        });
+      }
     } catch (e) {
-      if (mounted && showLoading) {
-        AppNotifications.showError(
-          context,
-          context.l10n.loadProviderBindingsFailed(_spec(kind).label, '$e'),
-        );
+      if (mounted && _loadGenerations[kind] == loadGeneration) {
+        setState(() => _loadErrors[kind] = '$e');
       }
     } finally {
-      if (mounted && showLoading) setState(() => _loading[kind] = false);
+      if (mounted && _loadGenerations[kind] == loadGeneration) {
+        setState(() {
+          _loading[kind] = false;
+          _refreshing.remove(kind);
+        });
+      }
     }
   }
 
+  bool _isCurrentProvider(_ProviderKind kind) =>
+      mounted &&
+      ModalRoute.of(context)?.isCurrent == true &&
+      _providers[_tabController.index].kind == kind;
+
+  bool _canUseBindings(_ProviderKind kind) =>
+      _isCurrentProvider(kind) &&
+      _loading[kind] != true &&
+      !_refreshing.contains(kind) &&
+      !_loadErrors.containsKey(kind) &&
+      !_unbinding.containsKey(kind);
+
+  // Account callbacks belong to the exact loaded snapshot, including its labels.
+  bool _hasCurrentBinding(_ProviderKind kind, _ProviderBindItem item) =>
+      _binds[kind]?.contains(item) ?? false;
+
+  void _retryBindings(_ProviderKind kind) {
+    if (!_isCurrentProvider(kind) ||
+        _loading[kind] == true ||
+        _refreshing.contains(kind) ||
+        !_loadErrors.containsKey(kind)) {
+      return;
+    }
+    _loadBinds(kind);
+  }
+
   Future<void> _unbind(_ProviderKind kind, _ProviderBindItem item) async {
-    final provider = _spec(kind);
-    final confirm = await AppDialogs.showStyledDialog<bool>(
-      context: context,
-      title: context.l10n.confirmUnbind,
-      icon: const Icon(Icons.delete_outline, color: Colors.red),
-      content: Text(context.l10n.confirmUnbindProvider(provider.label)),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: context.l10n.unbind,
-        ),
-      ],
-    );
-
-    if (confirm != true) return;
-
-    if (mounted) {
+    if (!_canUseBindings(kind) || !_hasCurrentBinding(kind, item)) return;
+    final gateway = providerGateway;
+    setState(() => _unbinding[kind] = _ProviderUnbindPhase.confirming);
+    try {
+      final confirmed = await _confirmProviderUnbind(
+        context,
+        _spec(kind).label,
+        item,
+      );
+      if (confirmed != true || !_isCurrentProvider(kind)) return;
+      if (!_hasCurrentBinding(kind, item)) return;
+      setState(() => _unbinding[kind] = _ProviderUnbindPhase.submitting);
+      _loadGenerations[kind] = (_loadGenerations[kind] ?? 0) + 1;
+      await _unbindProviderAccount(gateway, kind, item);
+      if (!mounted) return;
       setState(() {
         _binds[kind]?.removeWhere(
           (bind) =>
@@ -508,50 +569,26 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
               bind.instanceName == item.instanceName,
         );
       });
-    }
-
-    try {
-      switch (kind) {
-        case _ProviderKind.alist:
-          await providerGateway.logoutAList(item.serverId);
-        case _ProviderKind.emby:
-          await providerGateway.logoutEmby(item.serverId);
-        case _ProviderKind.cloudreve:
-          await providerGateway.logoutCloudreve(item.serverId);
-        case _ProviderKind.bilibili:
-          await providerGateway.logoutBilibili();
-        case _ProviderKind.twitch:
-          await providerGateway.unbindTwitch(item.serverId);
-        case _ProviderKind.fnos:
-          await providerGateway.logoutFnos(item.serverId);
-        case _ProviderKind.qnap:
-          await providerGateway.logoutQnap(item.serverId);
-        case _ProviderKind.synology:
-          await providerGateway.logoutSynology(item.serverId);
-        case _ProviderKind.nextcloud:
-          await providerGateway.logoutNextcloud(item.serverId);
-        case _ProviderKind.seafile:
-          await providerGateway.logoutSeafile(item.serverId);
-        case _ProviderKind.truenas:
-          await providerGateway.logoutTrueNas(item.serverId);
-        case _ProviderKind.youtube:
-          await providerGateway.unbindYoutube(item.serverId);
-        case _ProviderKind.douyin:
-          await providerGateway.unbindDouyin(item.serverId);
-        case _ProviderKind.tiktok:
-          await providerGateway.unbindTikTok(item.serverId);
+      if (_isCurrentProvider(kind)) {
+        AppNotifications.showSuccess(context, context.l10n.unboundSuccessfully);
       }
-      if (!mounted) return;
-      AppNotifications.showSuccess(context, context.l10n.unboundSuccessfully);
       await _loadBinds(kind, showLoading: false);
-    } catch (e) {
+    } catch (error) {
       if (!mounted) return;
-      AppNotifications.showError(context, context.l10n.unbindFailed('$e'));
+      if (_isCurrentProvider(kind)) {
+        AppNotifications.showError(
+          context,
+          context.l10n.unbindFailed('$error'),
+        );
+      }
       await _loadBinds(kind, showLoading: false);
+    } finally {
+      if (mounted) setState(() => _unbinding.remove(kind));
     }
   }
 
   void _showAdd(_ProviderKind kind) {
+    if (!_canUseBindings(kind)) return;
     final provider = _spec(kind);
     if (kind == _ProviderKind.bilibili) {
       _showProviderFormDialog(
@@ -755,7 +792,10 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppDialogHeader(
-                  title: Text(title),
+                  title: Text(
+                    title,
+                    style: Theme.of(dialogContext).textTheme.titleMedium,
+                  ),
                   icon: icon.icon ?? Icons.info_outline_rounded,
                   color: iconColor,
                   onClose: () => Navigator.of(dialogContext).pop(),
@@ -775,254 +815,25 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
   }
 
   Future<void> _showInfo(_ProviderKind kind, _ProviderBindItem item) async {
-    try {
-      final provider = _spec(kind);
-      final rows = await _loadAccountRows(kind, item);
-      if (!mounted) return;
-      AppDialogs.showStyledDialog(
-        context: context,
-        title: context.l10n.providerDetails(provider.label),
-        icon: Icon(provider.icon, color: provider.color),
-        iconColor: provider.color,
-        content: _AccountInfoView(rows: rows),
-        actions: [
-          AppDialogs.createConfirmButton(
-            context,
-            () => Navigator.pop(context),
-            text: context.l10n.close,
-          ),
-        ],
-      );
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(
-          context,
-          context.l10n.loadDetailsFailed('$e'),
-        );
-      }
+    if (!_canUseBindings(kind) ||
+        !_hasCurrentBinding(kind, item) ||
+        _showingInfo) {
+      return;
     }
-  }
-
-  Future<List<(String, String)>> _loadAccountRows(
-    _ProviderKind kind,
-    _ProviderBindItem item,
-  ) async {
+    final provider = _spec(kind);
+    final gateway = providerGateway;
     final l10n = context.l10n;
-    switch (kind) {
-      case _ProviderKind.alist:
-        final info = await providerGateway.getAlistAccount(
-          item.serverId,
-          instanceName: item.instanceName,
-        );
-        return [
-          (l10n.username, info.username),
-          (l10n.rootDirectory, info.basePath),
-          (l10n.server, item.serverId),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.emby:
-        final info = await providerGateway.getEmbyAccount(
-          item.serverId,
-          instanceName: item.instanceName,
-        );
-        return [
-          (l10n.username, info.name),
-          (l10n.userId, info.id),
-          (l10n.server, item.serverId),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.cloudreve:
-        final info = await providerGateway.getCloudreveAccount(
-          item.serverId,
-          instanceName: item.instanceName,
-        );
-        return [
-          (l10n.username, info.nickname),
-          ('Email', info.email),
-          (l10n.userId, info.id),
-          (l10n.server, item.serverId),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.bilibili:
-        final info = await providerGateway.getBilibiliAccount(
-          instanceName: item.instanceName,
-        );
-        return [
-          (
-            l10n.loginStatus,
-            info.isLogin ? l10n.loggedIn : l10n.loggedOutStatus,
-          ),
-          (l10n.username, info.username),
-          (l10n.bilibiliVip, info.isVip ? l10n.yes : l10n.no),
-          (l10n.server, item.serverId),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.twitch:
-        return [
-          (l10n.username, item.title),
-          (l10n.userId, item.subtitle),
-          (l10n.server, item.serverId),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.fnos:
-        return [
-          (l10n.server, item.title),
-          (l10n.username, item.subtitle),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.qnap:
-        final capabilities = await providerGateway.getQnapCapabilities(
-          item.serverId,
-          instanceName: item.instanceName,
-        );
-        return [
-          (l10n.server, item.title),
-          (l10n.username, item.subtitle),
-          (
-            'Real-time transcoding',
-            capabilities.supportRtt ? l10n.yes : l10n.no,
-          ),
-          (
-            'Hardware transcoding',
-            capabilities.hardwareTranscode ? l10n.yes : l10n.no,
-          ),
-          ('QTranscode', capabilities.qtranscode ? l10n.yes : l10n.no),
-          (
-            'Multimedia Codec',
-            capabilities.multimediaCodec ? l10n.yes : l10n.no,
-          ),
-          ('HD Station', capabilities.hdStationSupport ? l10n.yes : l10n.no),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.synology:
-        return [
-          (l10n.server, item.title),
-          (l10n.username, item.subtitle),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.nextcloud:
-        final binds = await providerGateway.getAllNextcloudBindInfos();
-        final bind = binds.firstWhere(
-          (candidate) =>
-              candidate.serverId == item.serverId &&
-              candidate.providerInstanceName == item.instanceName,
-        );
-        return [
-          (l10n.server, bind.endpoint),
-          (l10n.username, bind.username),
-          if (bind.userId.isNotEmpty) (l10n.userId, bind.userId),
-          if (bind.version.isNotEmpty) ('Version', bind.version),
-          if (bind.edition.isNotEmpty) ('Edition', bind.edition),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.seafile:
-        final binds = await providerGateway.getAllSeafileBindInfos();
-        final bind = binds.firstWhere(
-          (candidate) =>
-              candidate.serverId == item.serverId &&
-              candidate.providerInstanceName == item.instanceName,
-        );
-        return [
-          (l10n.server, bind.endpoint),
-          (l10n.username, bind.username),
-          if (bind.version.isNotEmpty) ('Version', bind.version),
-          if (bind.features.isNotEmpty) ('Features', bind.features.join(', ')),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.truenas:
-        final binds = await providerGateway.getAllTrueNasBindInfos();
-        final bind = binds.firstWhere(
-          (candidate) =>
-              candidate.serverId == item.serverId &&
-              candidate.providerInstanceName == item.instanceName,
-        );
-        return [
-          (l10n.server, bind.endpoint),
-          ('Hostname', bind.hostname),
-          if (bind.version.isNotEmpty) ('Version', bind.version),
-          if (bind.systemProduct.isNotEmpty) ('System', bind.systemProduct),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.youtube:
-        final binds = await providerGateway.getAllYoutubeBindInfos();
-        final bind = binds.firstWhere(
-          (candidate) =>
-              candidate.serverId == item.serverId &&
-              candidate.providerInstanceName == item.instanceName,
-        );
-        return [
-          ('Label', bind.label),
-          ('Visitor Data', bind.hasVisitorData ? 'Configured' : 'Empty'),
-          ('PO Token', bind.hasPoToken ? 'Configured' : 'Empty'),
-          ('Cookie', bind.hasCookie ? 'Configured' : 'Empty'),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.douyin:
-        final binds = await providerGateway.getAllDouyinBindInfos();
-        final bind = binds.firstWhere(
-          (candidate) =>
-              candidate.serverId == item.serverId &&
-              candidate.providerInstanceName == item.instanceName,
-        );
-        return [
-          ('Label', bind.label),
-          ('Cookie', bind.hasCookie ? 'Configured' : 'Empty'),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
-      case _ProviderKind.tiktok:
-        final binds = await providerGateway.getAllTikTokBindInfos();
-        final bind = binds.firstWhere(
-          (candidate) =>
-              candidate.serverId == item.serverId &&
-              candidate.providerInstanceName == item.instanceName,
-        );
-        return [
-          ('Label', bind.label),
-          ('Cookie', bind.hasCookie ? 'Configured' : 'Empty'),
-          (
-            l10n.instance,
-            _providerInstanceLabel(item.instanceName, l10n.localInstance),
-          ),
-        ];
+    _showingInfo = true;
+    try {
+      await showAppDialog<void>(
+        context: context,
+        builder: (_) => _ProviderAccountInfoDialog(
+          title: l10n.providerDetails(provider.label),
+          loadRows: () => _loadProviderAccountRows(gateway, l10n, kind, item),
+        ),
+      );
+    } finally {
+      _showingInfo = false;
     }
   }
 
@@ -1097,6 +908,13 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
                     provider: provider,
                     items: _binds[provider.kind] ?? const [],
                     isLoading: _loading[provider.kind] ?? true,
+                    isRefreshing: _refreshing.contains(provider.kind),
+                    error: _loadErrors[provider.kind],
+                    onRetry: () => _retryBindings(provider.kind),
+                    isUnbinding: _unbinding.containsKey(provider.kind),
+                    isSubmitting:
+                        _unbinding[provider.kind] ==
+                        _ProviderUnbindPhase.submitting,
                     onAdd: () => _showAdd(provider.kind),
                     onInfo: (item) => _showInfo(provider.kind, item),
                     onUnbind: (item) => _unbind(provider.kind, item),
@@ -1142,333 +960,4 @@ class _ProviderBindItem {
     required this.title,
     required this.subtitle,
   });
-}
-
-class _ProviderBindList extends StatelessWidget {
-  final _ProviderSpec provider;
-  final List<_ProviderBindItem> items;
-  final bool isLoading;
-  final ValueChanged<_ProviderBindItem> onUnbind;
-  final ValueChanged<_ProviderBindItem> onInfo;
-  final VoidCallback onAdd;
-
-  const _ProviderBindList({
-    required this.provider,
-    required this.items,
-    required this.isLoading,
-    required this.onUnbind,
-    required this.onInfo,
-    required this.onAdd,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) return const AppLoadingIndicator();
-    final theme = Theme.of(context);
-    if (provider.kind == _ProviderKind.bilibili) {
-      final item = items.firstOrNull;
-      return _BilibiliSingleBindView(
-        provider: provider,
-        item: item,
-        onBind: onAdd,
-        onInfo: item == null ? null : () => onInfo(item),
-        onUnbind: item == null ? null : () => onUnbind(item),
-      );
-    }
-
-    return Column(
-      children: [
-        Expanded(
-          child: items.isEmpty
-              ? AppEmptyMessage(
-                  icon: provider.emptyIcon,
-                  message: provider.kind == _ProviderKind.bilibili
-                      ? context.l10n.bilibiliNotBound
-                      : context.l10n.noBoundProviderAccounts(provider.label),
-                )
-              : AppListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    final serverId = item.serverId.isNotEmpty
-                        ? item.serverId
-                        : item.id;
-                    final title = _itemTitle(context, item, serverId);
-                    final instanceLabel = _providerInstanceLabel(
-                      item.instanceName,
-                      context.l10n.localInstance,
-                    );
-                    return AppPanelSurface(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(14),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant.withValues(
-                          alpha: 0.72,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          AppIconBadge(
-                            icon: provider.icon,
-                            color: provider.color,
-                            size: 42,
-                            backgroundAlpha: 0.12,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Wrap(
-                                  spacing: 6,
-                                  runSpacing: 6,
-                                  children: [
-                                    _ProviderTinyChip(
-                                      icon: Icons.account_tree_rounded,
-                                      label: instanceLabel,
-                                      color: provider.color,
-                                    ),
-                                    _ProviderTinyChip(
-                                      icon: Icons.tag_rounded,
-                                      label: serverId,
-                                      color: theme.colorScheme.secondary,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          AppIconButton(
-                            icon: Icons.info_outline,
-                            onPressed: () => onInfo(item),
-                            tooltip: context.l10n.details,
-                            style: AppIconButtonStyle.tonal,
-                          ),
-                          const SizedBox(width: 4),
-                          AppIconButton(
-                            icon: Icons.link_off_rounded,
-                            onPressed: () => onUnbind(item),
-                            tooltip: context.l10n.unbind,
-                            style: AppIconButtonStyle.destructive,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 16),
-          child: SizedBox(
-            width: double.infinity,
-            child: AppActionButton(
-              onPressed: onAdd,
-              icon: provider.kind == _ProviderKind.bilibili
-                  ? Icons.link_rounded
-                  : Icons.add_rounded,
-              label: items.isEmpty
-                  ? context.l10n.bindProvider(provider.label)
-                  : context.l10n.rebindProvider(provider.label),
-              style: AppActionButtonStyle.tonal,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _itemTitle(
-    BuildContext context,
-    _ProviderBindItem item,
-    String serverId,
-  ) {
-    if (item.title.isNotEmpty) return item.title;
-    if (item.subtitle.isNotEmpty) return item.subtitle;
-    return context.l10n.providerAccount(provider.label, serverId);
-  }
-}
-
-class _BilibiliSingleBindView extends StatelessWidget {
-  final _ProviderSpec provider;
-  final _ProviderBindItem? item;
-  final VoidCallback onBind;
-  final VoidCallback? onInfo;
-  final VoidCallback? onUnbind;
-
-  const _BilibiliSingleBindView({
-    required this.provider,
-    required this.item,
-    required this.onBind,
-    required this.onInfo,
-    required this.onUnbind,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final bound = item != null;
-    return Column(
-      children: [
-        Expanded(
-          child: Center(
-            child: AppPanelSurface(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              color: provider.color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: provider.color.withValues(alpha: 0.2)),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      AppIconBadge(
-                        icon: provider.icon,
-                        color: provider.color,
-                        size: 46,
-                        backgroundAlpha: 0.14,
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              bound
-                                  ? context.l10n.bilibiliBound
-                                  : context.l10n.bindProvider('Bilibili'),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              bound
-                                  ? context.l10n.bilibiliBoundDescription
-                                  : context.l10n.bilibiliBindingDescription,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                height: 1.35,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (bound) ...[
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _ProviderTinyChip(
-                          icon: Icons.account_tree_rounded,
-                          label: _providerInstanceLabel(
-                            item!.instanceName,
-                            context.l10n.localInstance,
-                          ),
-                          color: provider.color,
-                        ),
-                        if (item!.serverId.isNotEmpty)
-                          _ProviderTinyChip(
-                            icon: Icons.tag_rounded,
-                            label: item!.serverId,
-                            color: theme.colorScheme.secondary,
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-        Row(
-          children: [
-            if (bound) ...[
-              Expanded(
-                child: AppActionButton(
-                  onPressed: onInfo,
-                  icon: Icons.info_outline_rounded,
-                  label: context.l10n.viewStatus,
-                  style: AppActionButtonStyle.outlined,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppActionButton(
-                  onPressed: onBind,
-                  icon: Icons.sync_rounded,
-                  label: context.l10n.rebind,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppActionButton(
-                  onPressed: onUnbind,
-                  icon: Icons.link_off_rounded,
-                  label: context.l10n.unbind,
-                  style: AppActionButtonStyle.tonal,
-                ),
-              ),
-            ] else
-              Expanded(
-                child: AppActionButton(
-                  onPressed: onBind,
-                  icon: Icons.link_rounded,
-                  label: context.l10n.bindProvider('Bilibili'),
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _ProviderTinyChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _ProviderTinyChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBadge(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      borderRadius: BorderRadius.circular(999),
-      icon: icon,
-      iconSize: 13,
-      color: color,
-      backgroundColor: color.withValues(alpha: 0.1),
-      textStyle: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        color: Theme.of(context).colorScheme.onSurface,
-      ),
-      label: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 180),
-        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-      ),
-    );
-  }
 }

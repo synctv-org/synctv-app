@@ -12,9 +12,13 @@ final class SharedPreferencesPlayerVolumeStore
   @override
   Future<PlayerVolumePreferenceValues> load() async {
     final preferences = await SharedPreferences.getInstance();
+    final volume = preferences.get(_volumeKey);
+    final lastAudibleVolume = preferences.get(_lastAudibleVolumeKey);
     return PlayerVolumePreferenceValues(
-      volume: preferences.getDouble(_volumeKey) ?? 1,
-      lastAudibleVolume: preferences.getDouble(_lastAudibleVolumeKey) ?? 1,
+      volume: volume is num ? volume.toDouble() : 1,
+      lastAudibleVolume: lastAudibleVolume is num
+          ? lastAudibleVolume.toDouble()
+          : 1,
     );
   }
 

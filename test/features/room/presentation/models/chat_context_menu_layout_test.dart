@@ -2,6 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/features/room/presentation/models/chat_context_menu_layout.dart';
 
 void main() {
+  test('bounds wrapped menu height to the available viewport', () {
+    final layout = calculateChatContextMenuLayout(
+      viewportWidth: 150,
+      viewportHeight: 100,
+      anchorX: 140,
+      anchorY: 90,
+      reactionCount: 6,
+      actionCount: 6,
+    );
+    expect(layout.top + layout.height, lessThanOrEqualTo(88));
+  });
+
   test('uses the content width on a wide viewport', () {
     final layout = calculateChatContextMenuLayout(
       viewportWidth: 1000,
@@ -12,8 +24,8 @@ void main() {
       actionCount: 5,
     );
 
-    expect(layout.width, 199);
-    expect(layout.height, 83);
+    expect(layout.width, 201);
+    expect(layout.height, 85);
   });
 
   test('fits the menu inside a narrow viewport and accounts for wrapping', () {
@@ -27,7 +39,7 @@ void main() {
     );
 
     expect(layout.width, 126);
-    expect(layout.height, 145);
+    expect(layout.height, 147);
     expect(layout.left, 12);
   });
 

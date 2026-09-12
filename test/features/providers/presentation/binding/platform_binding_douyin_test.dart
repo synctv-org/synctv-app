@@ -43,7 +43,7 @@ void main() {
     expect(tester.widget<AppTextField>(cookieField).obscureText, isTrue);
 
     await tester.enterText(cookieField, 'sessionid=secret; ttwid=device');
-    await tester.tap(find.text('Default'));
+    await tester.tap(find.text('Local instance'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('douyin-edge').last);
     await tester.pumpAndSettle();

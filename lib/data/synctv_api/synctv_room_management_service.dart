@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
+import 'package:synctv_app/core/identifiers/event_sequence.dart';
 import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
@@ -187,14 +188,12 @@ class SyncTvRoomManagementDomainService {
   }
 
   Int64? _watchSequence(String version) {
-    if (version.isEmpty) return null;
-    final parsed = int.tryParse(version);
-    return parsed == null ? null : Int64(parsed);
+    return parseEventSequence(version);
   }
 
   String _cursorVersion(client.EventCursor cursor) {
-    final sequence = cursor.sequence.toInt();
-    return sequence == 0 ? cursor.eventId : sequence.toString();
+    final sequence = cursor.sequence;
+    return sequence == Int64.ZERO ? cursor.eventId : sequence.toString();
   }
 
   Future<SyncTvRoomSettings> getRoomSettings(
@@ -225,11 +224,7 @@ class SyncTvRoomManagementDomainService {
       roomId,
       roomSettingsUpdateRequestFromJson(settings.toJson()),
     );
-    _cache.put(
-      'room:$roomId:settings',
-      settings,
-      ttl: const Duration(minutes: 2),
-    );
+    _cache.invalidate('room:$roomId:settings');
   }
 
   Future<SyncTvRoom> updateRoomVisibility(String roomId, bool isPublic) async {

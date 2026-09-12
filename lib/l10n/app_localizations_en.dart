@@ -132,7 +132,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverAddressIdentityDescription =>
-      'The address above identifies this server on this device. The ID below is declared by the server and may be shared or imitated by another address.';
+      'The server address identifies this connection on this device. The server declares its own ID; other addresses may declare the same ID.';
 
   @override
   String serverDeclaredId(String serverId) {
@@ -342,7 +342,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String roomNameTooLong(int maxLength) {
-    return 'Room names can contain up to $maxLength characters';
+    String _temp0 = intl.Intl.pluralLogic(
+      maxLength,
+      locale: localeName,
+      other: '$maxLength characters',
+      one: '1 character',
+    );
+    return 'Room names can contain up to $_temp0';
   }
 
   @override
@@ -528,7 +534,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String roomPresenceSummary(int onlineMembers, int onlineGuests) {
-    return 'Online: $onlineMembers members · $onlineGuests guests';
+    String _temp0 = intl.Intl.pluralLogic(
+      onlineMembers,
+      locale: localeName,
+      other: '$onlineMembers members',
+      one: '1 member',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      onlineGuests,
+      locale: localeName,
+      other: '$onlineGuests guests',
+      one: '1 guest',
+    );
+    return 'Online: $_temp0 · $_temp1';
   }
 
   @override
@@ -542,7 +560,25 @@ class AppLocalizationsEn extends AppLocalizations {
     int onlineGuests,
     int memberCount,
   ) {
-    return '$onlineMembers members online · $onlineGuests guests online · $memberCount members total';
+    String _temp0 = intl.Intl.pluralLogic(
+      onlineMembers,
+      locale: localeName,
+      other: '$onlineMembers members',
+      one: '1 member',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      onlineGuests,
+      locale: localeName,
+      other: '$onlineGuests guests',
+      one: '1 guest',
+    );
+    String _temp2 = intl.Intl.pluralLogic(
+      memberCount,
+      locale: localeName,
+      other: '$memberCount members',
+      one: '1 member',
+    );
+    return '$_temp0 online · $_temp1 online · $_temp2 total';
   }
 
   @override
@@ -804,6 +840,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oauth2CallbackCompleteTitle => 'Authorization complete';
 
   @override
+  String get oauth2CallbackDispatchFailedTitle =>
+      'Unable to return authorization';
+
+  @override
+  String get oauth2CallbackDispatchFailedMessage =>
+      'The authorization result could not be sent to SyncTV. Try again. If this continues, return to SyncTV and restart sign-in.';
+
+  @override
   String get oauth2CallbackCompleteMessage =>
       'You can close this window and return to SyncTV.';
 
@@ -965,6 +1009,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverRequiredForInvite => 'Add the invite server';
 
   @override
+  String get inviteOnAnotherServer => 'Room on another server';
+
+  @override
+  String get webInviteServerDescription =>
+      'This room belongs to another SyncTV server. This browser session stays connected to the current server.';
+
+  @override
+  String get openInviteServer => 'Open server';
+
+  @override
+  String get openInviteServerFailed => 'Could not open the invite server';
+
+  @override
+  String get copyRoomId => 'Copy room ID';
+
+  @override
+  String get copyRoomIdFailed => 'Could not copy the room ID';
+
+  @override
   String get serverRequiredForInviteDescription =>
       'This invitation comes from another SyncTV server. Add its address so the app can identify it and continue joining the room.';
 
@@ -986,6 +1049,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String imageCropFailed(String error) {
     return 'Could not crop the image: $error';
   }
+
+  @override
+  String get imageCannotBeEdited =>
+      'This image cannot be edited. Try another image or upload the original.';
 
   @override
   String get cropForPurpose => 'Use target aspect ratio';
@@ -1054,7 +1121,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String retainEvents(int count) {
-    return 'Keep $count events';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events',
+      one: '1 event',
+    );
+    return 'Keep $_temp0';
   }
 
   @override
@@ -1118,7 +1191,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String filteredEventCount(int visible, int total) {
-    return '$visible / $total events';
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total events',
+      one: '1 event',
+    );
+    return '$visible / $_temp0';
   }
 
   @override
@@ -1156,7 +1235,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String byteCount(int count) {
-    return '$count bytes';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bytes',
+      one: '1 byte',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1422,12 +1507,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String playerBufferRangeCount(int count) {
-    return '$count ranges';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ranges',
+      one: '1 range',
+    );
+    return '$_temp0';
   }
 
   @override
   String playerConnectedPeerCount(int count) {
-    return '$count peers';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count peers',
+      one: '1 peer',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1595,6 +1692,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'No extra request headers are sent by default.';
 
   @override
+  String get nameRequired => 'Enter a name';
+
+  @override
   String get name => 'Name';
 
   @override
@@ -1675,6 +1775,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get liveSourceAddressHint =>
       'Enter an address matching the selected protocol';
+
+  @override
+  String get invalidRtmpSourceUrl =>
+      'Enter a complete rtmp:// address, including the host.';
+
+  @override
+  String get invalidRtspSourceUrl =>
+      'Enter a complete rtsp:// address, including the host.';
+
+  @override
+  String get invalidHttpFlvSourceUrl =>
+      'Enter an HTTP or HTTPS address whose path ends in .flv.';
+
+  @override
+  String get invalidWhepSourceUrl =>
+      'Enter a complete HTTP or HTTPS WHEP address.';
 
   @override
   String get rtspTransport => 'RTSP transport';
@@ -3140,12 +3256,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String viewsCount(int count) {
-    return '$count views';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count views',
+      one: '1 view',
+    );
+    return '$_temp0';
   }
 
   @override
   String viewersCount(int count) {
-    return '$count viewers';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count viewers',
+      one: '1 viewer',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -3165,6 +3293,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveRoomOrVideoUrl => 'Live room or video URL';
+
+  @override
+  String get liveReplay => 'Replay';
+
+  @override
+  String get liveDanmaku => 'Live danmaku';
+
+  @override
+  String cdnRoutesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count CDNs',
+      one: '1 CDN',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mediaStreamsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count streams',
+      one: '1 stream',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hlsVideo => 'HLS video';
+
+  @override
+  String get hlsAudio => 'HLS audio';
+
+  @override
+  String get protectedMedia => 'Protected';
 
   @override
   String get roomIdAliasOrUrl => 'Room ID, alias, or URL';
@@ -3232,27 +3397,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String formatsCount(int count) {
-    return '$count formats';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count formats',
+      one: '1 format',
+    );
+    return '$_temp0';
   }
 
   @override
   String subtitlesCount(int count) {
-    return '$count subtitles';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subtitles',
+      one: '1 subtitle',
+    );
+    return '$_temp0';
   }
 
   @override
   String variantsCount(int count) {
-    return '$count variants';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count variants',
+      one: '1 variant',
+    );
+    return '$_temp0';
   }
 
   @override
   String qualitiesCount(int count) {
-    return '$count qualities';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count qualities',
+      one: '1 quality',
+    );
+    return '$_temp0';
   }
 
   @override
   String chaptersCount(int count) {
-    return '$count chapters';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chapters',
+      one: '1 chapter',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4045,7 +4240,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String unreadTotalSummary(int unread, int total) {
-    return 'Unread $unread / Total $total';
+    return 'All unread $unread · Results $total';
   }
 
   @override
@@ -4508,6 +4703,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsUpdated => 'Settings updated';
+
+  @override
+  String get runtimeSettingChanged =>
+      'This setting changed while you were editing. Reopen it to review the latest value.';
 
   @override
   String get roomVisibilityUpdated => 'Room visibility updated';
@@ -5111,6 +5310,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMediaEntriesAtCurrentLevel => 'No media entries at this level';
 
   @override
+  String get noMatchingMediaEntries =>
+      'No media entries match the current filters';
+
+  @override
   String get realtimeDiagnostics => 'Realtime diagnostics';
 
   @override
@@ -5286,7 +5489,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String onlineMemberSummary(int online, int members) {
-    return '$online online / $members members';
+    String _temp0 = intl.Intl.pluralLogic(
+      members,
+      locale: localeName,
+      other: '$members members',
+      one: '1 member',
+    );
+    return '$online online / $_temp0';
   }
 
   @override
@@ -5350,6 +5559,7 @@ class AppLocalizationsEn extends AppLocalizations {
       size,
       locale: localeName,
       other: 'Dynamic media · $size bytes',
+      one: 'Dynamic media · 1 byte',
       zero: 'Dynamic media',
     );
     return '$_temp0';
@@ -5418,6 +5628,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get waitingForEvent => 'Waiting for event';
+
+  @override
+  String get messageContentRequired => 'Enter message content';
 
   @override
   String get messageContent => 'Message content';
@@ -5699,12 +5912,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String memberAdminSummary(int total, int online, int connections) {
-    return '$total members · $online online · $connections connections';
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total members',
+      one: '1 member',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      connections,
+      locale: localeName,
+      other: '$connections connections',
+      one: '1 connection',
+    );
+    return '$_temp0 · $online online · $_temp1';
   }
 
   @override
   String memberPageSummary(int total, int page, int pageCount) {
-    return '$total members · Page $page of $pageCount';
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total members',
+      one: '1 member',
+    );
+    return '$_temp0 · Page $page of $pageCount';
   }
 
   @override
@@ -5929,7 +6160,13 @@ class AppLocalizationsEn extends AppLocalizations {
     String emailStatus,
     String passkeyStatus,
   ) {
-    return '$count available factors: password $passwordStatus, email $emailStatus, passkey $passkeyStatus';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count available factors',
+      one: '1 available factor',
+    );
+    return '$_temp0: password $passwordStatus, email $emailStatus, passkey $passkeyStatus';
   }
 
   @override
@@ -6142,7 +6379,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String passwordMinimumLength(int count) {
-    return 'At least $count characters';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count characters',
+      one: '1 character',
+    );
+    return 'At least $_temp0';
   }
 
   @override
@@ -6544,6 +6787,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailWhitelist => 'Email whitelist';
 
   @override
+  String get registrationEmailWhitelistHint =>
+      'Registration email must match an address or domain allowed by this server.';
+
+  @override
   String get emailWhitelistDescription =>
       'Enter one email address or domain per line. Domains may use example.com or @example.com.';
 
@@ -6564,6 +6811,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get maxVoiceParticipantsPerRoomDescription =>
       'Maximum simultaneous voice participants in one room. Mesh voice supports 2 to 32; 8 is recommended for mobile clients.';
+
+  @override
+  String get runtimeServerName => 'Server name';
+
+  @override
+  String get runtimeServerNameDescription =>
+      'The display name shown in client server information.';
+
+  @override
+  String get maxPinnedMessagesPerRoom => 'Pinned messages per room';
+
+  @override
+  String get maxPinnedMessagesPerRoomDescription =>
+      'The maximum number of messages that can be pinned in each room.';
 
   @override
   String get chatMessagesPerRoom => 'Chat messages retained per room';
@@ -6625,7 +6886,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String oauthProviderSummary(int total, int configured) {
-    return '$total providers, $configured with a Client ID';
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total providers',
+      one: '1 provider',
+    );
+    return '$_temp0, $configured with a Client ID';
   }
 
   @override
@@ -6772,7 +7039,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socks5ProxyAddressRequired =>
-      'Enter an address beginning with socks5://';
+      'Enter a SOCKS5 host and optional port (0-65535), without credentials, path, query, or fragment.';
+
+  @override
+  String get smtpProxyCredentialTooLong =>
+      'SOCKS5 credentials must be at most 255 UTF-8 bytes per field.';
 
   @override
   String get proxyRequiresAuthentication => 'Proxy requires authentication';
@@ -6920,6 +7191,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get positiveIntegerRequired => 'Enter an integer greater than zero';
+
+  @override
+  String get validRuntimeIntegerRequired =>
+      'Enter an integer within the supported range';
 
   @override
   String get capabilityTypes => 'Capability types';
@@ -7098,7 +7373,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messages => 'Messages';
 
   @override
-  String get searchReportsHint => 'Search reasons, targets, or usr_/room_ IDs';
+  String get searchReportsHint => 'Search reasons or names';
+
+  @override
+  String get reportFilters => 'Report filters';
+
+  @override
+  String get reportFilterReporterId => 'Reporter user ID';
+
+  @override
+  String get reportFilterRoomId => 'Related room ID';
+
+  @override
+  String get reportFilterTargetRoomId => 'Reported room ID';
+
+  @override
+  String get reportFilterTargetUserId => 'Reported user ID';
+
+  @override
+  String get reportFilterMemberRoomId => 'Member room ID';
+
+  @override
+  String get reportFilterMemberId => 'Reported member user ID';
+
+  @override
+  String get reportFilterMessageId => 'Message ID';
 
   @override
   String get noReportRecords => 'No report records';
@@ -7139,7 +7438,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String messageFilter(int id) {
+  String messageFilter(String id) {
     return 'Message #$id';
   }
 
@@ -7159,9 +7458,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String chatMessageTarget(int id, String room) {
+  String chatMessageTarget(String id, String room) {
     return 'Chat message #$id · $room';
   }
+
+  @override
+  String get validMessageIdRequired =>
+      'Enter a message ID from 1 to 9223372036854775807';
 
   @override
   String unknownTarget(String id) {
@@ -7266,7 +7569,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String instanceNameTooLong(int maxLength) {
-    return 'Instance names can contain up to $maxLength characters';
+    String _temp0 = intl.Intl.pluralLogic(
+      maxLength,
+      locale: localeName,
+      other: '$maxLength characters',
+      one: '1 character',
+    );
+    return 'Instance names can contain up to $_temp0';
   }
 
   @override
@@ -7341,6 +7650,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loading => 'Loading';
+
+  @override
+  String get startupFailed => 'SyncTV could not start.';
 
   @override
   String get loadOlderMessages => 'Load older messages';
@@ -7689,4 +8001,41 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get blockedUsersTemporarilyUnavailable =>
       'Blocked users are temporarily unavailable';
+
+  @override
+  String get fnosTwoFactorSetupRequired =>
+      'Set up two-factor authentication in FNOS, then retry login.';
+
+  @override
+  String get browserLogin => 'Browser';
+
+  @override
+  String get appPassword => 'App password';
+
+  @override
+  String get openBrowser => 'Open browser';
+
+  @override
+  String get youtubeCredentialsRequired =>
+      'Label and at least one YouTube credential are required';
+
+  @override
+  String providerCookieRequired(String provider) {
+    return 'Label and $provider Cookie are required';
+  }
+
+  @override
+  String get viewImage => 'View image';
+
+  @override
+  String get zoomIn => 'Zoom in';
+
+  @override
+  String get zoomOut => 'Zoom out';
+
+  @override
+  String get imageLoadFailed => 'Could not load the image.';
+
+  @override
+  String get emailInvalidFormat => 'Enter a valid email address.';
 }

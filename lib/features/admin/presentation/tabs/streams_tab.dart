@@ -9,6 +9,7 @@ class AdminStreamsTab extends StatefulWidget {
 
 class _AdminStreamsTabState extends State<AdminStreamsTab> {
   bool _isLoading = true;
+  int _loadGeneration = 0;
   String _search = '';
   String _roomId = '';
   String _userId = '';
@@ -22,6 +23,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
   List<AdminActiveStream> _streams = const [];
   int _total = 0;
   final _searchController = TextEditingController();
+  final Set<(String, String)> _disconnecting = {};
 
   int get _pageCount =>
       _total <= 0 ? 1 : ((_total + _pageSize - 1) ~/ _pageSize);
@@ -46,6 +48,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
   }
 
   Future<void> _loadStreams({bool silent = false}) async {
+    final generation = ++_loadGeneration;
     if (!silent) setState(() => _isLoading = true);
     try {
       final page = await adminGateway.adminListActiveStreamsPage(
@@ -66,14 +69,20 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
         sortBy: _sortBy,
         sortDirection: _sortDirection,
       );
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
+      final lastPage = math.max(1, (page.total + _pageSize - 1) ~/ _pageSize);
+      if (_page > lastPage) {
+        setState(() => _page = lastPage);
+        await _loadStreams();
+        return;
+      }
       setState(() {
         _streams = page.streams;
         _total = page.total;
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() => _isLoading = false);
       AppNotifications.showError(
         context,
@@ -83,14 +92,19 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
   }
 
   Future<void> _kick(AdminActiveStream stream) async {
+    final key = (stream.roomId, stream.mediaId);
+    if (!mounted || _disconnecting.contains(key)) return;
+    setState(() => _disconnecting.add(key));
     try {
       await adminGateway.adminKickStream(stream);
       if (!mounted) return;
       AppNotifications.showSuccess(context, context.l10n.streamDisconnected);
-      _loadStreams(silent: true);
+      await _loadStreams(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(context, context.l10n.operationFailed('$e'));
+    } finally {
+      if (mounted) setState(() => _disconnecting.remove(key));
     }
   }
 
@@ -110,8 +124,8 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Column(
-      children: [
+    return _AdminPagedList(
+      header: [
         Padding(
           padding: const EdgeInsets.all(16),
           child: Wrap(
@@ -224,41 +238,32 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
                   _loadStreams();
                 },
         ),
-        Expanded(
-          child: _isLoading
-              ? const AppLoadingIndicator()
-              : _streams.isEmpty
-              ? Center(
-                  child: Text(
-                    context.l10n.noActiveStreams,
-                    style: TextStyle(color: theme.hintColor),
-                  ),
-                )
-              : AppListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  itemCount: _streams.length,
-                  itemBuilder: (context, index) {
-                    final stream = _streams[index];
-                    return _AdminPanelCard(
-                      isDark: isDark,
-                      child: AppTile(
-                        prefix: const Icon(Icons.podcasts_rounded),
-                        title: Text(stream.mediaId),
-                        subtitle: Text(
-                          '${stream.roomId} · ${stream.userId}\nNode: ${stream.nodeId} · ${_formatTimestamp(stream.startedAt)}',
-                        ),
-                        suffix: AppIconButton(
-                          tooltip: context.l10n.disconnectStream,
-                          icon: Icons.power_settings_new_rounded,
-                          style: AppIconButtonStyle.destructive,
-                          onPressed: () => _kick(stream),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
       ],
+      loading: _isLoading,
+      itemCount: _streams.length,
+      emptyMessage: context.l10n.noActiveStreams,
+      itemBuilder: (context, index) {
+        final stream = _streams[index];
+        return _AdminPanelCard(
+          isDark: isDark,
+          child: AppTile(
+            prefix: const Icon(Icons.podcasts_rounded),
+            title: Text(stream.mediaId),
+            subtitle: Text(
+              '${stream.roomId} · ${stream.userId}\nNode: ${stream.nodeId} · ${_formatTimestamp(stream.startedAt)}',
+            ),
+            suffix: AppIconButton(
+              tooltip: context.l10n.disconnectStream,
+              icon: Icons.power_settings_new_rounded,
+              style: AppIconButtonStyle.destructive,
+              onPressed:
+                  _disconnecting.contains((stream.roomId, stream.mediaId))
+                  ? null
+                  : () => _kick(stream),
+            ),
+          ),
+        );
+      },
     );
   }
 }

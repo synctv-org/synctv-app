@@ -28,7 +28,7 @@ client.FileMetadata _imageMetadata(LocalImageUpload upload) {
 class _OwnershipProofRange {
   const _OwnershipProofRange({required this.offset, required this.length});
 
-  final int offset;
+  final Int64 offset;
   final int length;
 }
 
@@ -38,12 +38,14 @@ class _UploadSessionResult<TSession> {
     required this.session,
     required this.manifestParts,
     required this.contentManifestSha256,
+    required this.ensureCurrent,
   });
 
   final client.FileUploadPlan plan;
   final TSession session;
   final List<client.FileUploadManifestPart> manifestParts;
   final String contentManifestSha256;
+  final void Function() ensureCurrent;
 }
 
 class _UploadedPart {
@@ -104,7 +106,9 @@ class SyncTvFileUploadDomainService {
       uploadHeaders: session.uploadHeaders,
       partUrls: session.partUrls,
       manifestParts: result.manifestParts,
+      ensureCurrent: result.ensureCurrent,
     );
+    result.ensureCurrent();
     final complete = await _api.room.completeChatAttachmentUploadSession(
       client.CompleteChatAttachmentUploadSessionRequest(
         roomId: roomId,
@@ -121,7 +125,7 @@ class SyncTvFileUploadDomainService {
           ranges: session.ownershipProofRanges
               .map(
                 (range) => _OwnershipProofRange(
-                  offset: range.offset.toInt(),
+                  offset: range.offset,
                   length: range.length,
                 ),
               )
@@ -129,6 +133,7 @@ class SyncTvFileUploadDomainService {
         ),
       ),
     );
+    result.ensureCurrent();
     if (!complete.complete) {
       throw const SyncTvFileUploadException('图片上传尚未完成，请稍后重试。');
     }
@@ -167,7 +172,9 @@ class SyncTvFileUploadDomainService {
       uploadHeaders: session.uploadHeaders,
       partUrls: session.partUrls,
       manifestParts: result.manifestParts,
+      ensureCurrent: result.ensureCurrent,
     );
+    result.ensureCurrent();
     final complete = await _api.user.completeUserAvatarUploadSession(
       client.CompleteUserAvatarUploadSessionRequest(
         encodedObjectKey: session.encodedObjectKey,
@@ -183,7 +190,7 @@ class SyncTvFileUploadDomainService {
           ranges: session.ownershipProofRanges
               .map(
                 (range) => _OwnershipProofRange(
-                  offset: range.offset.toInt(),
+                  offset: range.offset,
                   length: range.length,
                 ),
               )
@@ -191,12 +198,14 @@ class SyncTvFileUploadDomainService {
         ),
       ),
     );
+    result.ensureCurrent();
     if (!complete.complete) {
       throw const SyncTvFileUploadException('头像上传尚未完成，请稍后重试。');
     }
     final updated = await _api.user.updateUserAvatar(
       client.UpdateUserAvatarRequest(avatarReference: session.avatarReference),
     );
+    result.ensureCurrent();
     return updated;
   }
 
@@ -244,7 +253,9 @@ class SyncTvFileUploadDomainService {
       uploadHeaders: session.uploadHeaders,
       partUrls: session.partUrls,
       manifestParts: result.manifestParts,
+      ensureCurrent: result.ensureCurrent,
     );
+    result.ensureCurrent();
     final complete = await _api.room.completeRoomCoverUploadSession(
       client.CompleteRoomCoverUploadSessionRequest(
         encodedObjectKey: session.encodedObjectKey,
@@ -260,7 +271,7 @@ class SyncTvFileUploadDomainService {
           ranges: session.ownershipProofRanges
               .map(
                 (range) => _OwnershipProofRange(
-                  offset: range.offset.toInt(),
+                  offset: range.offset,
                   length: range.length,
                 ),
               )
@@ -268,6 +279,7 @@ class SyncTvFileUploadDomainService {
         ),
       ),
     );
+    result.ensureCurrent();
     if (!complete.complete) {
       throw const SyncTvFileUploadException('封面上传尚未完成，请稍后重试。');
     }
@@ -278,6 +290,7 @@ class SyncTvFileUploadDomainService {
         coverReference: session.coverReference,
       ),
     );
+    result.ensureCurrent();
     return updated.room;
   }
 
@@ -328,7 +341,9 @@ class SyncTvFileUploadDomainService {
       uploadHeaders: session.uploadHeaders,
       partUrls: session.partUrls,
       manifestParts: result.manifestParts,
+      ensureCurrent: result.ensureCurrent,
     );
+    result.ensureCurrent();
     final complete = await _api.room.completePlaylistCoverUploadSession(
       client.CompletePlaylistCoverUploadSessionRequest(
         encodedObjectKey: session.encodedObjectKey,
@@ -344,7 +359,7 @@ class SyncTvFileUploadDomainService {
           ranges: session.ownershipProofRanges
               .map(
                 (range) => _OwnershipProofRange(
-                  offset: range.offset.toInt(),
+                  offset: range.offset,
                   length: range.length,
                 ),
               )
@@ -352,6 +367,7 @@ class SyncTvFileUploadDomainService {
         ),
       ),
     );
+    result.ensureCurrent();
     if (!complete.complete) {
       throw const SyncTvFileUploadException('封面上传尚未完成，请稍后重试。');
     }
@@ -363,6 +379,7 @@ class SyncTvFileUploadDomainService {
         coverReference: session.coverReference,
       ),
     );
+    result.ensureCurrent();
     return updated;
   }
 
@@ -416,7 +433,9 @@ class SyncTvFileUploadDomainService {
       uploadHeaders: session.uploadHeaders,
       partUrls: session.partUrls,
       manifestParts: result.manifestParts,
+      ensureCurrent: result.ensureCurrent,
     );
+    result.ensureCurrent();
     final complete = await _api.room.completeMediaCoverUploadSession(
       client.CompleteMediaCoverUploadSessionRequest(
         encodedObjectKey: session.encodedObjectKey,
@@ -432,7 +451,7 @@ class SyncTvFileUploadDomainService {
           ranges: session.ownershipProofRanges
               .map(
                 (range) => _OwnershipProofRange(
-                  offset: range.offset.toInt(),
+                  offset: range.offset,
                   length: range.length,
                 ),
               )
@@ -440,6 +459,7 @@ class SyncTvFileUploadDomainService {
         ),
       ),
     );
+    result.ensureCurrent();
     if (!complete.complete) {
       throw const SyncTvFileUploadException('封面上传尚未完成，请稍后重试。');
     }
@@ -451,6 +471,7 @@ class SyncTvFileUploadDomainService {
         coverReference: session.coverReference,
       ),
     );
+    result.ensureCurrent();
     return updated;
   }
 
@@ -501,7 +522,9 @@ class SyncTvFileUploadDomainService {
       uploadHeaders: session.uploadHeaders,
       partUrls: session.partUrls,
       manifestParts: result.manifestParts,
+      ensureCurrent: result.ensureCurrent,
     );
+    result.ensureCurrent();
     final complete = await _api.room.completeMediaThumbnailUploadSession(
       client.CompleteMediaThumbnailUploadSessionRequest(
         encodedObjectKey: session.encodedObjectKey,
@@ -517,7 +540,7 @@ class SyncTvFileUploadDomainService {
           ranges: session.ownershipProofRanges
               .map(
                 (range) => _OwnershipProofRange(
-                  offset: range.offset.toInt(),
+                  offset: range.offset,
                   length: range.length,
                 ),
               )
@@ -525,6 +548,7 @@ class SyncTvFileUploadDomainService {
         ),
       ),
     );
+    result.ensureCurrent();
     if (!complete.complete) {
       throw const SyncTvFileUploadException('缩略图上传尚未完成，请稍后重试。');
     }
@@ -536,6 +560,7 @@ class SyncTvFileUploadDomainService {
         thumbnailReference: session.thumbnailReference,
       ),
     );
+    result.ensureCurrent();
     return updated;
   }
 
@@ -563,23 +588,35 @@ class SyncTvFileUploadDomainService {
     required bool Function(TResponse response) hasSession,
   }) async {
     try {
+      final endpointGeneration = _api.endpointGeneration;
+      final sessionGeneration = _api.session.generation;
+      void ensureCurrent() {
+        if (!_api.isEndpointGenerationCurrent(endpointGeneration)) {
+          throw const SyncTvStaleEndpointException();
+        }
+        _api.session.ensureCurrent(sessionGeneration);
+      }
+
       final planResponse = await createRequest(const []);
+      ensureCurrent();
       if (!hasPlan(planResponse)) {
         throw const SyncTvFileUploadException('图片上传会话缺少分片计划，请重新选择图片。');
       }
       final plan = planOf(planResponse);
       final manifestParts = _manifestPartsForPlan(upload, plan);
       final sessionResponse = await createRequest(manifestParts);
+      ensureCurrent();
       if (!hasSession(sessionResponse)) {
         throw const SyncTvFileUploadException('图片上传会话创建失败，请重新选择图片。');
       }
       return _UploadSessionResult<TSession>(
+        ensureCurrent: ensureCurrent,
         plan: plan,
         session: sessionOf(sessionResponse),
         manifestParts: manifestParts,
         contentManifestSha256: _contentManifestSha256(
           upload.sizeBytes,
-          plan.partSizeBytes.toInt(),
+          plan.partSizeBytes,
           manifestParts,
         ),
       );
@@ -595,14 +632,36 @@ class SyncTvFileUploadDomainService {
     if (plan.parts.isEmpty) {
       throw const SyncTvFileUploadException('图片上传会话缺少分片计划，请重新选择图片。');
     }
+    if (plan.checksumAlgorithm != 'sha256' ||
+        plan.partSizeBytes <= Int64.ZERO) {
+      throw const SyncTvFileUploadException('图片上传会话分片计划无效，请重新选择图片。');
+    }
+    final total = Int64(upload.sizeBytes);
+    var expectedOffset = Int64.ZERO;
+    var expectedNumber = 1;
+    // Validate the complete plan before hashing or sending any manifest.
+    for (final part in plan.parts) {
+      final remaining = total - expectedOffset;
+      final expectedSize = remaining < plan.partSizeBytes
+          ? remaining
+          : plan.partSizeBytes;
+      if (remaining <= Int64.ZERO ||
+          part.partNumber != expectedNumber ||
+          part.offsetBytes != expectedOffset ||
+          part.sizeBytes != expectedSize) {
+        throw const SyncTvFileUploadException('图片上传会话分片范围无效，请重新选择图片。');
+      }
+      expectedOffset += expectedSize;
+      expectedNumber++;
+    }
+    if (expectedOffset != total) {
+      throw const SyncTvFileUploadException('图片上传会话分片范围无效，请重新选择图片。');
+    }
     return plan.parts
         .map((part) {
           final offset = part.offsetBytes.toInt();
           final size = part.sizeBytes.toInt();
           final end = offset + size;
-          if (offset < 0 || size <= 0 || end > upload.bytes.length) {
-            throw const SyncTvFileUploadException('图片上传会话分片范围无效，请重新选择图片。');
-          }
           return client.FileUploadManifestPart(
             partNumber: part.partNumber,
             offsetBytes: part.offsetBytes,
@@ -622,13 +681,16 @@ class SyncTvFileUploadDomainService {
     required Map<String, String> uploadHeaders,
     required Iterable<client.FileUploadPartUrl> partUrls,
     required List<client.FileUploadManifestPart> manifestParts,
+    required void Function() ensureCurrent,
   }) async {
+    ensureCurrent();
     final uploaded = <_UploadedPart>[];
     final partUrlByNumber = {
       for (final partUrl in partUrls) partUrl.partNumber: partUrl,
     };
 
     for (final part in manifestParts) {
+      ensureCurrent();
       final checksum = part.checksumSha256;
       if (!sessionUploadRequired) {
         uploaded.add(
@@ -663,6 +725,7 @@ class SyncTvFileUploadDomainService {
         bytes: bytes,
         contentType: upload.mimeType,
       );
+      ensureCurrent();
       uploaded.add(
         _UploadedPart(
           part: part,
@@ -800,16 +863,18 @@ class SyncTvFileUploadDomainService {
     proofBytes.add(_int64ToBigEndian(upload.sizeBytes));
     proofBytes.add(_uint64ToBigEndian(ranges.length));
     for (final range in ranges) {
-      if (range.offset < 0 || range.length <= 0) {
+      if (range.offset < Int64.ZERO || range.length <= 0) {
         throw const SyncTvFileUploadException('图片上传会话包含无效验证范围，请重新选择图片。');
       }
-      final end = range.offset + range.length;
-      if (end > upload.bytes.length) {
+      if (range.offset > Int64(upload.sizeBytes) ||
+          Int64(range.length) > Int64(upload.sizeBytes) - range.offset) {
         throw const SyncTvFileUploadException('图片上传会话验证范围超出文件大小，请重新选择图片。');
       }
-      proofBytes.add(_int64ToBigEndian(range.offset));
+      final offset = range.offset.toInt();
+      final end = offset + range.length;
+      proofBytes.add(_int64ToBigEndian(offset));
       proofBytes.add(_int32ToBigEndian(range.length));
-      proofBytes.add(Uint8List.sublistView(upload.bytes, range.offset, end));
+      proofBytes.add(Uint8List.sublistView(upload.bytes, offset, end));
     }
 
     return sha256.convert(proofBytes.toBytes()).toString();
@@ -817,7 +882,7 @@ class SyncTvFileUploadDomainService {
 
   String _contentManifestSha256(
     int sizeBytes,
-    int partSizeBytes,
+    Int64 partSizeBytes,
     List<client.FileUploadManifestPart> parts,
   ) {
     final sorted = [...parts]
@@ -826,7 +891,7 @@ class SyncTvFileUploadDomainService {
     bytes.add(utf8.encode('synctv-file-part-manifest-sha256-v1'));
     bytes.add([0]);
     bytes.add(_int64ToBigEndian(sizeBytes));
-    bytes.add(_int64ToBigEndian(partSizeBytes));
+    bytes.add(partSizeBytes.toBytes().reversed.toList(growable: false));
     bytes.add(_uint64ToBigEndian(sorted.length));
     for (final part in sorted) {
       bytes.add(_int32ToBigEndian(part.partNumber));
@@ -845,13 +910,11 @@ class SyncTvFileUploadDomainService {
   }
 
   List<int> _int64ToBigEndian(int value) {
-    final data = ByteData(8)..setInt64(0, value, Endian.big);
-    return data.buffer.asUint8List();
+    return Int64(value).toBytes().reversed.toList(growable: false);
   }
 
   List<int> _uint64ToBigEndian(int value) {
-    final data = ByteData(8)..setUint64(0, value, Endian.big);
-    return data.buffer.asUint8List();
+    return Int64(value).toBytes().reversed.toList(growable: false);
   }
 
   List<int> _int32ToBigEndian(int value) {

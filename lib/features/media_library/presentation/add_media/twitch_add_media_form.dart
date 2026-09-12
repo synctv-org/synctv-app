@@ -393,7 +393,7 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
     return ProviderWorkspace(controls: content, results: _buildResults());
   }
 
-  Widget _buildResults() {
+  Widget? _buildResults() {
     final schedule = _schedulePreview();
     if (_hasListPreview) {
       if (schedule == null) return _listBrowser();
@@ -407,7 +407,7 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
       );
     }
     final preview = _preview();
-    if (preview == null && schedule == null) return const SizedBox();
+    if (preview == null && schedule == null) return null;
     return AppSingleChildScrollView(
       padding: EdgeInsets.zero,
       child: Column(

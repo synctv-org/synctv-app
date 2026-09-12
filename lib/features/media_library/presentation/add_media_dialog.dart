@@ -194,6 +194,7 @@ enum _RtspTrackMode { firstCompatible, explicitIndex, disabled }
 
 class _AddMediaDialogState extends State<AddMediaDialog> {
   int _selectedIndex = 0;
+  final Set<int> _visitedSources = {0};
 
   final _urlController = TextEditingController();
   final _urlFocusNode = FocusNode();
@@ -243,6 +244,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   _RtspTrackMode _liveProxyVideoTrackMode = _RtspTrackMode.firstCompatible;
   _RtspTrackMode _liveProxyAudioTrackMode = _RtspTrackMode.firstCompatible;
   provider_common.PreparedMediaSource? _liveProxyPreview;
+  bool _validateLiveProxyUrl = false;
 
   BilibiliParseInfo? _biliInfo;
   int _biliSelectedIndex = 0;
@@ -636,31 +638,29 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final narrow = constraints.maxWidth < 720;
-            if (narrow) {
-              return Column(
-                children: [
-                  _buildCompactSourceRail(theme),
-                  Expanded(child: _buildSourcePanel(theme, compact: true)),
-                ],
-              );
-            }
-            // This threshold only depends on the dialog width. The source rail
-            // therefore keeps a stable width while its content changes.
             final sourceDetails = constraints.maxWidth >= 1220;
-            return Row(
+            return Flex(
+              direction: narrow ? Axis.vertical : Axis.horizontal,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(
-                  width: sourceDetails ? 236 : 68,
-                  child: _buildSourceRail(theme, iconOnly: !sourceDetails),
-                ),
-                AppVerticalDivider(
-                  width: 1,
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.7,
+                if (narrow)
+                  _buildCompactSourceRail(theme)
+                else
+                  SizedBox(
+                    width: sourceDetails ? 236 : 68,
+                    child: _buildSourceRail(theme, iconOnly: !sourceDetails),
                   ),
+                if (!narrow)
+                  AppVerticalDivider(
+                    width: 1,
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.7,
+                    ),
+                  ),
+                Expanded(
+                  key: const ValueKey('add-media-source-panel'),
+                  child: _buildSourcePanel(theme, compact: narrow),
                 ),
-                Expanded(child: _buildSourcePanel(theme)),
               ],
             );
           },
@@ -907,6 +907,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
     setState(() {
       _selectedIndex = index;
+      _visitedSources.add(index);
     });
     if (index == 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1240,7 +1241,28 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   };
 
   Widget _buildContent(ThemeData theme) {
-    switch (_selectedIndex) {
+    final sources = _sourceSpecs;
+    return IndexedStack(
+      index: sources.indexWhere((source) => source.index == _selectedIndex),
+      sizing: StackFit.expand,
+      children: [
+        for (final source in sources)
+          TickerMode(
+            key: ValueKey(source.index),
+            enabled: source.index == _selectedIndex,
+            child: ExcludeFocus(
+              excluding: source.index != _selectedIndex,
+              child: _visitedSources.contains(source.index)
+                  ? _buildSourceContent(theme, source.index)
+                  : const SizedBox.shrink(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSourceContent(ThemeData theme, int index) {
+    switch (index) {
       case 0:
         return _buildDirectLinkContent(theme);
       case 1:
@@ -1393,7 +1415,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           prefixIcon: Icons.link_rounded,
           minLines: 1,
           maxLines: 2,
-          keyboardType: TextInputType.url,
+          keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
           autocorrect: false,
           smartDashesType: SmartDashesType.disabled,
@@ -1563,7 +1585,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       autocorrect: autocorrect,
-      enableSuggestions: keyboardType != TextInputType.url,
+      enableSuggestions: autocorrect && keyboardType != TextInputType.url,
       smartDashesType: smartDashesType,
       smartQuotesType: smartQuotesType,
       onChanged: onChanged,
@@ -1856,6 +1878,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           controller: _liveProxyUrlController,
           label: context.l10n.sourceAddress,
           hintText: context.l10n.liveSourceAddressHint,
+          errorText: _validateLiveProxyUrl ? _liveProxyUrlError : null,
           prefixIcon: Icons.sensors_rounded,
           keyboardType: TextInputType.url,
           textInputAction: TextInputAction.next,
@@ -3536,13 +3559,21 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildDirectPreview() {
+    final customName = _nameController.text.trim();
+    final singleSelection = _directSelection.length == 1;
     return DiscoveryBrowser(
       key: ValueKey('direct-preview:${_directPreview.length}'),
       items: [
         for (final (index, prepared) in _directPreview.indexed)
           DiscoveryBrowserEntry(
             key: 'direct-$index',
-            title: prepared.suggestedName,
+            title:
+                customName.isNotEmpty &&
+                    (_directPreview.length == 1 ||
+                        (singleSelection &&
+                            _directSelection.contains('direct-$index')))
+                ? customName
+                : prepared.suggestedName,
             subtitle: _playbackKindLabel(prepared.playbackKind),
             source: prepared.source.withPlaybackProxyMode(_directProxyMode),
             isContainer: false,
@@ -3688,7 +3719,32 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
+  String? get _liveProxyUrlError {
+    final uri = Uri.tryParse(_liveProxyUrlController.text.trim());
+    final hasHost = uri != null && uri.hasAuthority && uri.host.isNotEmpty;
+    final valid =
+        hasHost &&
+        switch (_liveProxyProtocol) {
+          _LivePullProtocol.rtmp => uri.scheme == 'rtmp',
+          _LivePullProtocol.rtsp => uri.scheme == 'rtsp',
+          _LivePullProtocol.httpFlv =>
+            (uri.scheme == 'http' || uri.scheme == 'https') &&
+                uri.path.endsWith('.flv'),
+          _LivePullProtocol.whep =>
+            uri.scheme == 'http' || uri.scheme == 'https',
+        };
+    if (valid) return null;
+    return switch (_liveProxyProtocol) {
+      _LivePullProtocol.rtmp => context.l10n.invalidRtmpSourceUrl,
+      _LivePullProtocol.rtsp => context.l10n.invalidRtspSourceUrl,
+      _LivePullProtocol.httpFlv => context.l10n.invalidHttpFlvSourceUrl,
+      _LivePullProtocol.whep => context.l10n.invalidWhepSourceUrl,
+    };
+  }
+
   Future<void> _prepareLiveProxy() async {
+    setState(() => _validateLiveProxyUrl = true);
+    if (_liveProxyUrlError != null) return;
     final url = _liveProxyUrlController.text.trim();
     late final provider_common.PrepareLiveProxyRequest intent;
     try {

@@ -7,14 +7,12 @@ class ProviderWorkspace extends StatelessWidget {
     super.key,
     required this.controls,
     required this.results,
-    this.hasResults = true,
     this.wideControlsWidth = 420,
     this.breakpoint = 860,
   });
 
   final Widget controls;
-  final Widget results;
-  final bool hasResults;
+  final Widget? results;
   final double wideControlsWidth;
   final double breakpoint;
 
@@ -22,10 +20,23 @@ class ProviderWorkspace extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final output = results;
+        if (output == null) {
+          final compact = constraints.maxWidth < breakpoint;
+          return Align(
+            alignment: AlignmentDirectional.topStart,
+            child: SizedBox(
+              width: compact ? double.infinity : wideControlsWidth,
+              child: AppSingleChildScrollView(
+                padding: compact
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.only(right: 12),
+                child: controls,
+              ),
+            ),
+          );
+        }
         if (constraints.maxWidth < breakpoint) {
-          if (!hasResults) {
-            return AppSingleChildScrollView(child: controls);
-          }
           return NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
               SliverToBoxAdapter(child: controls),
@@ -33,7 +44,7 @@ class ProviderWorkspace extends StatelessWidget {
               const SliverToBoxAdapter(child: AppDivider(height: 1)),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
             ],
-            body: results,
+            body: output,
           );
         }
 
@@ -53,7 +64,7 @@ class ProviderWorkspace extends StatelessWidget {
                   .withValues(alpha: 0.7),
             ),
             const SizedBox(width: 12),
-            Expanded(child: results),
+            Expanded(child: output),
           ],
         );
       },

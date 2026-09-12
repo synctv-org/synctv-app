@@ -93,7 +93,7 @@ void main() {
       find.byKey(const Key('acfun-resource')),
       'https://www.acfun.cn/bangumi/aa123?ac=456',
     );
-    await tester.tap(find.text('Local instance'));
+    await tester.tap(find.text('Default'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('acfun-edge').last);
     await tester.pumpAndSettle();

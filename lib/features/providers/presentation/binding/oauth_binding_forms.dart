@@ -60,7 +60,7 @@ class _YoutubeAccountBindingFormState extends State<YoutubeAccountBindingForm> {
           key: const Key('youtube-bind-label'),
           controller: _labelController,
           enabled: !_loading,
-          label: 'Label',
+          label: context.l10n.name,
           prefixIcon: Icons.label_outline,
         ),
         const SizedBox(height: 12),
@@ -96,15 +96,17 @@ class _YoutubeAccountBindingFormState extends State<YoutubeAccountBindingForm> {
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           initialValue: _instanceName,
-          decoration: const InputDecoration(
-            labelText: 'Provider instance',
-            prefixIcon: Icon(Icons.dns_outlined),
+          decoration: InputDecoration(
+            labelText: context.l10n.mediaSourceInstance,
+            prefixIcon: const Icon(Icons.dns_outlined),
           ),
           items: _instances
               .map(
                 (value) => DropdownMenuItem(
                   value: value,
-                  child: Text(value.isEmpty ? 'Default' : value),
+                  child: Text(
+                    value.isEmpty ? context.l10n.localInstance : value,
+                  ),
                 ),
               )
               .toList(),
@@ -125,7 +127,7 @@ class _YoutubeAccountBindingFormState extends State<YoutubeAccountBindingForm> {
                   ),
                 )
               : const Icon(Icons.link),
-          label: const Text('Bind YouTube'),
+          label: Text(context.l10n.bindProvider('YouTube')),
         ),
       ],
     );
@@ -138,7 +140,7 @@ class _YoutubeAccountBindingFormState extends State<YoutubeAccountBindingForm> {
             _cookieController.text.trim().isEmpty)) {
       AppNotifications.showError(
         context,
-        'Label and at least one YouTube credential are required',
+        context.l10n.youtubeCredentialsRequired,
       );
       return;
     }
@@ -226,7 +228,7 @@ class _DouyinAccountBindingFormState extends State<DouyinAccountBindingForm> {
           key: const Key('douyin-bind-label'),
           controller: _labelController,
           enabled: !_loading,
-          label: 'Label',
+          label: context.l10n.name,
           prefixIcon: Icons.label_outline,
         ),
         const SizedBox(height: 12),
@@ -243,15 +245,17 @@ class _DouyinAccountBindingFormState extends State<DouyinAccountBindingForm> {
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           initialValue: _instanceName,
-          decoration: const InputDecoration(
-            labelText: 'Provider instance',
-            prefixIcon: Icon(Icons.dns_outlined),
+          decoration: InputDecoration(
+            labelText: context.l10n.mediaSourceInstance,
+            prefixIcon: const Icon(Icons.dns_outlined),
           ),
           items: _instances
               .map(
                 (value) => DropdownMenuItem(
                   value: value,
-                  child: Text(value.isEmpty ? 'Default' : value),
+                  child: Text(
+                    value.isEmpty ? context.l10n.localInstance : value,
+                  ),
                 ),
               )
               .toList(),
@@ -272,7 +276,7 @@ class _DouyinAccountBindingFormState extends State<DouyinAccountBindingForm> {
                   ),
                 )
               : const Icon(Icons.link),
-          label: const Text('Bind Douyin'),
+          label: Text(context.l10n.bindProvider('Douyin')),
         ),
       ],
     );
@@ -283,7 +287,7 @@ class _DouyinAccountBindingFormState extends State<DouyinAccountBindingForm> {
         _cookieController.text.trim().isEmpty) {
       AppNotifications.showError(
         context,
-        'Label and Douyin Cookie are required',
+        context.l10n.providerCookieRequired('Douyin'),
       );
       return;
     }
@@ -367,7 +371,7 @@ class _TikTokAccountBindingFormState extends State<TikTokAccountBindingForm> {
           key: const Key('tiktok-bind-label'),
           controller: _labelController,
           enabled: !_loading,
-          label: 'Label',
+          label: context.l10n.name,
           prefixIcon: Icons.label_outline,
         ),
         const SizedBox(height: 12),
@@ -384,15 +388,17 @@ class _TikTokAccountBindingFormState extends State<TikTokAccountBindingForm> {
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           initialValue: _instanceName,
-          decoration: const InputDecoration(
-            labelText: 'Provider instance',
-            prefixIcon: Icon(Icons.dns_outlined),
+          decoration: InputDecoration(
+            labelText: context.l10n.mediaSourceInstance,
+            prefixIcon: const Icon(Icons.dns_outlined),
           ),
           items: _instances
               .map(
                 (value) => DropdownMenuItem(
                   value: value,
-                  child: Text(value.isEmpty ? 'Default' : value),
+                  child: Text(
+                    value.isEmpty ? context.l10n.localInstance : value,
+                  ),
                 ),
               )
               .toList(),
@@ -413,7 +419,7 @@ class _TikTokAccountBindingFormState extends State<TikTokAccountBindingForm> {
                   ),
                 )
               : const Icon(Icons.link),
-          label: const Text('Bind TikTok'),
+          label: Text(context.l10n.bindProvider('TikTok')),
         ),
       ],
     );
@@ -424,7 +430,7 @@ class _TikTokAccountBindingFormState extends State<TikTokAccountBindingForm> {
         _cookieController.text.trim().isEmpty) {
       AppNotifications.showError(
         context,
-        'Label and TikTok Cookie are required',
+        context.l10n.providerCookieRequired('TikTok'),
       );
       return;
     }

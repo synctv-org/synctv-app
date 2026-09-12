@@ -3,6 +3,10 @@ import 'dart:ui';
 
 import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
 
+// Duration stores microseconds. Reserve eight seconds for the comment lifetime
+// while keeping the result within JavaScript's exact integer range.
+const _maxPositionMs = 9007199254740 - 8000;
+
 List<DanmakuItem>? decodeAcFunDanmakuDocument(String content) {
   final Object? decoded;
   try {
@@ -24,7 +28,12 @@ List<DanmakuItem>? decodeAcFunDanmakuDocument(String content) {
 DanmakuItem? _decodeComment(Map<String, dynamic> value) {
   final text = value['text']?.toString().trim() ?? '';
   final positionMs = _integer(value['positionMs']);
-  if (text.isEmpty || positionMs == null || positionMs < 0) return null;
+  if (text.isEmpty ||
+      positionMs == null ||
+      positionMs < 0 ||
+      positionMs > _maxPositionMs) {
+    return null;
+  }
   final mode = _integer(value['mode']) ?? 1;
   final type = switch (mode) {
     4 => DanmakuType.bottom,
@@ -48,8 +57,7 @@ DanmakuItem? _decodeComment(Map<String, dynamic> value) {
 
 int? _integer(Object? value) {
   return switch (value) {
-    int number => number,
-    num number => number.toInt(),
+    num number when number.isFinite => number.toInt(),
     String text => int.tryParse(text),
     _ => null,
   };

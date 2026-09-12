@@ -9,6 +9,7 @@ void main() {
   testWidgets('collaboration tabs accept taps across the full tab area', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     final selected = <int>[];
 
     await tester.pumpWidget(
@@ -41,6 +42,9 @@ void main() {
     expect(byAppTooltip('Chat'), findsOneWidget);
     expect(byAppTooltip('Playlist'), findsOneWidget);
     expect(byAppTooltip('Members'), findsOneWidget);
+    for (final label in ['Chat', 'Playlist', 'Members']) {
+      expect(find.bySemanticsLabel(label), findsOneWidget);
+    }
 
     await tester.tapAt(const Offset(8, 28));
     await tester.tapAt(const Offset(128, 28));
@@ -48,6 +52,7 @@ void main() {
     await tester.pump();
 
     expect(selected, [0, 1, 2]);
+    semantics.dispose();
   });
 
   testWidgets('disabled collaboration tabs are hidden', (tester) async {

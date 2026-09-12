@@ -64,7 +64,7 @@ void main() {
     expect(find.text('CCTV Programme'), findsOneWidget);
     expect(find.textContaining('3 streams'), findsOneWidget);
     expect(find.textContaining('HLS video/HLS audio/HTTP'), findsOneWidget);
-    expect(find.textContaining('1 chapters'), findsOneWidget);
+    expect(find.textContaining('1 chapter'), findsOneWidget);
     expect(find.textContaining('CCTV-1'), findsOneWidget);
   });
 
@@ -96,7 +96,7 @@ void main() {
       find.byKey(const Key('cctv-resource')),
       '5C846C0518444308BA32C4159DF3B3E0',
     );
-    await tester.tap(find.text('Local instance'));
+    await tester.tap(find.text('Default'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('cctv-edge').last);
     await tester.pumpAndSettle();

@@ -2548,6 +2548,7 @@ const Room$json = {
       '17': true
     },
     {'1': 'creator_blocked', '3': 19, '4': 1, '5': 8, '10': 'creatorBlocked'},
+    {'1': 'password_enabled', '3': 20, '4': 1, '5': 8, '10': 'passwordEnabled'},
   ],
   '8': [
     {'1': '_is_public'},
@@ -2570,7 +2571,8 @@ final $typed_data.Uint8List roomDescriptor = $convert.base64Decode(
     'ISNwoIY2F0ZWdvcnkYECABKAsyGy5zeW5jdHYuY2xpZW50LlJvb21DYXRlZ29yeVIIY2F0ZWdv'
     'cnkSMAoGbGFiZWxzGBEgAygLMhguc3luY3R2LmNsaWVudC5Sb29tTGFiZWxSBmxhYmVscxIgCg'
     'lpc19wdWJsaWMYEiABKAhIAFIIaXNQdWJsaWOIAQESJwoPY3JlYXRvcl9ibG9ja2VkGBMgASgI'
-    'Ug5jcmVhdG9yQmxvY2tlZEIMCgpfaXNfcHVibGlj');
+    'Ug5jcmVhdG9yQmxvY2tlZBIpChBwYXNzd29yZF9lbmFibGVkGBQgASgIUg9wYXNzd29yZEVuYW'
+    'JsZWRCDAoKX2lzX3B1YmxpYw==');
 
 @$core.Deprecated('Use roomCategoryDescriptor instead')
 const RoomCategory$json = {

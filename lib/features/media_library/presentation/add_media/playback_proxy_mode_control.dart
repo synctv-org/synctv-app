@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
+import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/providers/application/provider_gateway.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
@@ -31,6 +32,7 @@ class PlaybackProxyModeControl extends StatefulWidget {
 }
 
 class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
+  ProviderGateway? _policyGateway;
   Future<provider_common.PlaybackProxyPolicy>? _policyFuture;
   provider_common.PlaybackProxyPolicy? _activePolicy;
   source_enum.PlaybackProxyMode? _pendingNormalizedValue;
@@ -38,7 +40,8 @@ class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _refreshPolicy();
+    final gateway = DependencyScope.maybeOf<ProviderGateway>(context);
+    if (!identical(gateway, _policyGateway)) _refreshPolicy();
   }
 
   @override
@@ -51,13 +54,14 @@ class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
   }
 
   void _refreshPolicy() {
+    final gateway = DependencyScope.maybeRead<ProviderGateway>(context);
+    _policyGateway = gateway;
     _activePolicy = null;
     _pendingNormalizedValue = null;
     if (widget.policy != null || widget.source == null) {
       _policyFuture = null;
       return;
     }
-    final gateway = DependencyScope.maybeRead<ProviderGateway>(context);
     try {
       _policyFuture = gateway?.resolvePlaybackProxyPolicy(widget.source!);
     } on Object {
@@ -91,6 +95,19 @@ class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
     });
   }
 
+  void _selectMode(
+    provider_common.PlaybackProxyPolicy policy,
+    source_enum.PlaybackProxyMode mode,
+  ) {
+    if (!mounted ||
+        !widget.enabled ||
+        !identical(_activePolicy, policy) ||
+        !policy.supportedModes.contains(mode)) {
+      return;
+    }
+    widget.onChanged(mode);
+  }
+
   @override
   Widget build(BuildContext context) {
     final policy = widget.policy;
@@ -98,7 +115,7 @@ class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
       _normalizeValue(policy);
       return _PlaybackProxyModeView(
         value: widget.value,
-        onChanged: widget.onChanged,
+        onChanged: (mode) => _selectMode(policy, mode),
         enabled: widget.enabled,
         policy: policy,
       );
@@ -113,10 +130,7 @@ class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
       future: _policyFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const SizedBox(
-            height: 40,
-            child: Center(child: CircularProgressIndicator.adaptive()),
-          );
+          return const SizedBox(height: 40, child: AppLoadingIndicator());
         }
         final resolvedPolicy = snapshot.data;
         if (resolvedPolicy == null || resolvedPolicy.supportedModes.isEmpty) {
@@ -129,7 +143,7 @@ class _PlaybackProxyModeControlState extends State<PlaybackProxyModeControl> {
         _normalizeValue(resolvedPolicy);
         return _PlaybackProxyModeView(
           value: widget.value,
-          onChanged: widget.onChanged,
+          onChanged: (mode) => _selectMode(resolvedPolicy, mode),
           enabled: widget.enabled,
           policy: resolvedPolicy,
         );
@@ -184,9 +198,11 @@ class _PlaybackProxyModeView extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 8),
-              Text(
-                context.l10n.playbackProxyMode,
-                style: theme.textTheme.labelLarge,
+              Expanded(
+                child: Text(
+                  context.l10n.playbackProxyMode,
+                  style: theme.textTheme.labelLarge,
+                ),
               ),
             ],
           ),
@@ -215,39 +231,60 @@ class _PlaybackProxyModeView extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 8),
-            Text(
-              context.l10n.playbackProxyMode,
-              style: theme.textTheme.labelLarge,
+            Expanded(
+              child: Text(
+                context.l10n.playbackProxyMode,
+                style: theme.textTheme.labelLarge,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 8),
         LayoutBuilder(
           builder: (context, constraints) {
-            if (constraints.maxWidth < _segmentedMinimumWidth) {
-              return DropdownButtonFormField<source_enum.PlaybackProxyMode>(
-                key: const Key('playback-proxy-mode-dropdown'),
-                initialValue: selectedValue,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                ),
-                items: [
-                  for (final option in options)
-                    DropdownMenuItem(
-                      value: option.value,
-                      child: _optionLabel(option),
+            final largeText = MediaQuery.textScalerOf(context).scale(13) > 19.5;
+            if (constraints.maxWidth < _segmentedMinimumWidth || largeText) {
+              final dropdown =
+                  DropdownButtonFormField<source_enum.PlaybackProxyMode>(
+                    key: const Key('playback-proxy-mode-dropdown'),
+                    initialValue: selectedValue,
+                    isExpanded: true,
+                    isDense: !largeText,
+                    itemHeight: null,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                     ),
-                ],
-                onChanged: enabled
-                    ? (selection) {
-                        if (selection != null) onChanged(selection);
-                      }
-                    : null,
+                    items: [
+                      for (final option in options)
+                        DropdownMenuItem(
+                          value: option.value,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: largeText ? 8 : 0,
+                            ),
+                            child: _optionLabel(option),
+                          ),
+                        ),
+                    ],
+                    onChanged: enabled
+                        ? (selection) {
+                            if (selection != null) onChanged(selection);
+                          }
+                        : null,
+                  );
+              if (enabled) return dropdown;
+              return Semantics(
+                container: true,
+                button: true,
+                enabled: false,
+                label: context.l10n.playbackProxyMode,
+                value: _labelForMode(context, selectedValue),
+                excludeSemantics: true,
+                child: dropdown,
               );
             }
             return SegmentedButton<source_enum.PlaybackProxyMode>(

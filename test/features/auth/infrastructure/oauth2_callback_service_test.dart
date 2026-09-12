@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
 import 'package:synctv_app/features/auth/domain/oauth2_callback_parser.dart';
 import 'package:synctv_app/features/auth/infrastructure/oauth2_callback_service.dart';
@@ -324,6 +325,81 @@ void main() {
       expect(payload.code, 'authorization-code');
       expect(payload.state, 'expected-state');
     });
+
+    for (final errorCallback in [false, true]) {
+      for (final invalidKind in ['duplicate state', 'foreign host']) {
+        test('ignores $invalidKind callback, error=$errorCallback', () async {
+          debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+          addTearDown(() => debugDefaultTargetPlatformOverride = null);
+          final session = await OAuth2CallbackService.createSession(
+            launchExternalUrl: (_) async => true,
+            activateAppWindow: () async {},
+          );
+          addTearDown(session.close);
+          var completed = false;
+          final authorization = session
+              .authorize(
+                authorizationUrl: Uri.parse(
+                  'https://auth.example.com/authorize',
+                ),
+                expectedState: 'expected-state',
+              )
+              .then<Object>(
+                (payload) {
+                  completed = true;
+                  return payload;
+                },
+                onError: (Object error) {
+                  completed = true;
+                  return error;
+                },
+              );
+          final client = HttpClient();
+          addTearDown(() => client.close(force: true));
+          final redirect = Uri.parse(session.redirectUrl);
+          final invalid = redirect.replace(
+            queryParameters: {
+              if (errorCallback)
+                'error': 'access_denied'
+              else
+                'code': 'foreign-code',
+              'state': invalidKind == 'duplicate state'
+                  ? ['foreign-state', 'expected-state']
+                  : 'expected-state',
+            },
+          );
+          final request = await client.getUrl(invalid);
+          if (invalidKind == 'foreign host') {
+            request.headers.set(
+              HttpHeaders.hostHeader,
+              'localhost:${redirect.port}',
+            );
+          }
+          final rejected = await request.close();
+          await rejected.drain<void>();
+          expect(rejected.statusCode, HttpStatus.badRequest);
+          expect(completed, isFalse);
+          final accepted = await (await client.getUrl(
+            redirect.replace(
+              queryParameters: {
+                'code': 'valid-code',
+                'state': 'expected-state',
+              },
+            ),
+          )).close();
+          await accepted.drain<void>();
+          expect(accepted.statusCode, HttpStatus.ok);
+          expect(
+            await authorization,
+            isA<OAuth2CallbackPayload>().having(
+              (payload) => payload.code,
+              'code',
+              'valid-code',
+            ),
+          );
+        });
+      }
+    }
 
     test('maps a state-matched access denial to cancellation', () async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;

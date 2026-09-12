@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
@@ -24,6 +26,87 @@ void main() {
     createdAt: 1,
     providerInstanceName: '',
   );
+
+  for (final failOld in [false, true]) {
+    testWidgets(
+      'Emby account replacement discards pending discovery, failure=$failOld',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(900, 850));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final requests = <Completer<EmbyListPage>>[];
+        final accounts = <String>[];
+        Widget app(List<EmbyBindInfo> binds) => MaterialApp(
+          builder: buildThemedTestApp,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: EmbyPlaylistForm(
+              roomId: 'room',
+              parentId: 'root',
+              binds: binds,
+              onDraftChanged: (_) {},
+              loader: (account, _, _, _, _, _, _) {
+                accounts.add(account.id);
+                final result = Completer<EmbyListPage>();
+                requests.add(result);
+                return result.future;
+              },
+            ),
+          ),
+        );
+        EmbyListPage result(String label) => EmbyListPage(
+          serverId: 'server',
+          providerInstanceName: '',
+          items: [
+            EmbyItemInfo(
+              id: label,
+              name: label,
+              type: 'Movie',
+              isDir: false,
+              parentId: '',
+              seriesName: '',
+              seriesId: '',
+              seasonName: '',
+              thumbnail: '',
+              source: testDiscoveredMediaSource(name: label),
+            ),
+          ],
+          total: 1,
+          source: testDiscoveredPlaylistSource(),
+        );
+        await tester.pumpWidget(app(const [bind]));
+        await tester.tap(find.byKey(const Key('emby-preview')));
+        await tester.pump();
+        await tester.pumpWidget(
+          app(const [
+            EmbyBindInfo(
+              id: 'replacement',
+              serverId: 'server2',
+              host: 'https://emby.example.com',
+              userId: 'other',
+              createdAt: 2,
+              providerInstanceName: '',
+            ),
+          ]),
+        );
+        await tester.tap(find.byKey(const Key('emby-preview')));
+        await tester.pump();
+        expect(accounts, ['1', 'replacement']);
+        requests[1].complete(result('current movie'));
+        await tester.pumpAndSettle();
+        if (failOld) {
+          requests[0].completeError(StateError('stale discovery'));
+        } else {
+          requests[0].complete(result('old movie'));
+        }
+        await tester.pumpAndSettle();
+        expect(find.text('current movie'), findsOneWidget);
+        expect(find.text('old movie'), findsNothing);
+        expect(find.textContaining('stale discovery'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets('lists Emby modes and separates selection from navigation', (
     tester,

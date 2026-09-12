@@ -8,6 +8,7 @@ import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/core/identifiers/decimal_int64.dart';
 import 'package:synctv_app/data/synctv_api/synctv_account_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_memory_cache.dart';
@@ -21,6 +22,12 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
     as provider_common_enum;
+
+Int64 _reportMessageId(String value) {
+  final decimal = normalizeInt64Decimal(value, allowZero: true);
+  if (decimal == null) throw FormatException('Invalid message ID', value);
+  return Int64.parseInt(decimal);
+}
 
 class SyncTvAdminDomainService {
   SyncTvAdminDomainService(this._api, {SyncTvMemoryCache? cache})
@@ -1019,7 +1026,7 @@ class SyncTvAdminDomainService {
     String targetUserId = '',
     String targetMemberRoomId = '',
     String targetMemberUserId = '',
-    int targetChatMessageId = 0,
+    String targetChatMessageId = '0',
     admin.ContentReportScope scope =
         admin.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED,
     String search = '',
@@ -1036,7 +1043,7 @@ class SyncTvAdminDomainService {
         targetUserId: targetUserId,
         targetMemberRoomId: targetMemberRoomId,
         targetMemberUserId: targetMemberUserId,
-        targetChatMessageId: Int64(targetChatMessageId),
+        targetChatMessageId: _reportMessageId(targetChatMessageId),
         scope: scope,
         search: search,
       ),
@@ -1080,7 +1087,7 @@ class SyncTvAdminDomainService {
     admin.ContentReportTargetType targetType =
         admin.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
     String targetMemberUserId = '',
-    int targetChatMessageId = 0,
+    String targetChatMessageId = '0',
     String search = '',
   }) async {
     final response = await _api.room.listRoomContentReports(
@@ -1091,7 +1098,7 @@ class SyncTvAdminDomainService {
         status: _clientContentReportStatus(status),
         targetType: _clientContentReportTargetType(targetType),
         targetMemberUserId: targetMemberUserId,
-        targetChatMessageId: Int64(targetChatMessageId),
+        targetChatMessageId: _reportMessageId(targetChatMessageId),
         search: search,
       ),
     );
@@ -1510,7 +1517,7 @@ class SyncTvAdminDomainService {
       targetMemberRoomName: report.targetMemberRoomName,
       targetMemberUserId: report.targetMemberUserId,
       targetMemberUsername: report.targetMemberUsername,
-      targetChatMessageId: report.targetChatMessageId.toInt(),
+      targetChatMessageId: report.targetChatMessageId.toString(),
       targetChatMessageCreatedAt: report.targetChatMessageCreatedAt.toInt(),
       targetChatMessagePreview: report.targetChatMessagePreview,
       reasonCode: report.reasonCode,
@@ -1546,7 +1553,7 @@ class SyncTvAdminDomainService {
       targetMemberRoomName: report.targetMemberRoomName,
       targetMemberUserId: report.targetMemberUserId,
       targetMemberUsername: report.targetMemberUsername,
-      targetChatMessageId: report.targetChatMessageId.toInt(),
+      targetChatMessageId: report.targetChatMessageId.toString(),
       targetChatMessageCreatedAt: report.targetChatMessageCreatedAt.toInt(),
       targetChatMessagePreview: report.targetChatMessagePreview,
       reasonCode: report.reasonCode,
@@ -1651,11 +1658,8 @@ class SyncTvAdminDomainService {
       rejectionReason: _optionalText(review.rejectionReason),
       requestedRole: review.requestedRole,
       detail: '${review.roomId} · ${review.userId}',
-      details: [
-        '房间 ${review.roomId}',
-        '用户 ${review.userId}',
-        '申请角色 ${review.requestedRole.value}',
-      ],
+      roomId: review.roomId,
+      userId: review.userId,
     );
   }
 

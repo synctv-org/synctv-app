@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:synctv_app/core/async/persisted_value_controller.dart';
 
 abstract interface class PlayerVolumePreferencesStore {
   Future<PlayerVolumePreferenceValues> load();
@@ -31,36 +32,25 @@ final class PlayerVolumePreferenceValues {
   }
 }
 
-final class PlayerVolumePreferencesController extends ChangeNotifier {
-  PlayerVolumePreferencesController({required this.store});
+final class PlayerVolumePreferencesController
+    extends PersistedValueController<PlayerVolumePreferenceValues> {
+  PlayerVolumePreferencesController({required this.store})
+    : super(
+        initialValue: const PlayerVolumePreferenceValues(),
+        read: store.load,
+        write: store.save,
+        normalize: (value) => value.normalized(),
+      );
 
   final PlayerVolumePreferencesStore store;
-  PlayerVolumePreferenceValues _value = const PlayerVolumePreferenceValues();
-
-  PlayerVolumePreferenceValues get value => _value;
-
-  Future<void> load() async {
-    _value = (await store.load()).normalized();
-    notifyListeners();
-  }
 
   Future<void> save({
     required double volume,
     required double lastAudibleVolume,
-  }) async {
-    final previous = _value;
-    final next = PlayerVolumePreferenceValues(
+  }) => persist(
+    PlayerVolumePreferenceValues(
       volume: volume,
       lastAudibleVolume: lastAudibleVolume,
-    ).normalized();
-    _value = next;
-    notifyListeners();
-    try {
-      await store.save(next);
-    } catch (_) {
-      _value = previous;
-      notifyListeners();
-      rethrow;
-    }
-  }
+    ),
+  );
 }

@@ -9,6 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
+import 'package:synctv_app/core/presentation/widgets/app_tab_activity.dart';
 
 enum AppActionButtonStyle { filled, tonal, outlined, text, destructive }
 
@@ -25,10 +26,16 @@ enum AppChipStyle { filled, tonal, outlined }
 /// Flutter's OverlayPortal tooltip can corrupt the desktop semantics tree when
 /// an anchored control disappears during a route or media transition.
 class AppTooltip extends StatefulWidget {
-  const AppTooltip({super.key, required this.message, required this.child});
+  const AppTooltip({
+    super.key,
+    required this.message,
+    required this.child,
+    this.excludeFromSemantics = false,
+  });
 
   final String message;
   final Widget child;
+  final bool excludeFromSemantics;
 
   @override
   State<AppTooltip> createState() => _AppTooltipState();
@@ -41,20 +48,67 @@ class _AppTooltipState extends State<AppTooltip> {
   static const _horizontalPadding = 10.0;
   static const _verticalPadding = 6.0;
   static const _maxTextWidth = 280.0;
+  static final _visibleTooltips = <_AppTooltipState>{};
+  static bool _escapeDown = false;
+
+  static KeyEventResult _handleKeyEvent(KeyEvent event) {
+    if (event.logicalKey != LogicalKeyboardKey.escape) {
+      return KeyEventResult.ignored;
+    }
+    if (_escapeDown) {
+      if (event is KeyUpEvent) {
+        _escapeDown = false;
+        _removeKeyHandlerIfIdle();
+      }
+      return KeyEventResult.handled;
+    }
+    if (event is! KeyDownEvent || _visibleTooltips.isEmpty) {
+      return KeyEventResult.ignored;
+    }
+    _escapeDown = true;
+    for (final tooltip in _visibleTooltips.toList()) {
+      tooltip._dismissed = true;
+      tooltip._hide();
+    }
+    return KeyEventResult.handled;
+  }
+
+  static void _removeKeyHandlerIfIdle() {
+    if (_visibleTooltips.isEmpty && !_escapeDown) {
+      FocusManager.instance.removeEarlyKeyEventHandler(_handleKeyEvent);
+    }
+  }
 
   OverlayEntry? _entry;
   Timer? _showTimer;
+  bool _hovered = false;
+  bool _focused = false;
+  bool _longPressed = false;
+  bool _dismissed = false;
 
   String get _message => widget.message;
 
+  void _updateVisibility() {
+    if (_dismissed && (_hovered || _focused || _longPressed)) return;
+    _dismissed = false;
+    if (_longPressed) {
+      _show();
+    } else if (_hovered || _focused) {
+      if (_entry == null && _showTimer?.isActive != true) _scheduleShow();
+    } else {
+      _hide();
+    }
+  }
+
   void _scheduleShow() {
     _showTimer?.cancel();
+    if (_dismissed) return;
     _showTimer = Timer(_showDelay, _show);
   }
 
   void _show() {
     _showTimer?.cancel();
-    if (!mounted || _entry != null || _message.isEmpty) return;
+    if (!mounted || _dismissed || _entry != null || _message.isEmpty) return;
     final overlay = Overlay.of(context, rootOverlay: true);
     final target = context.findRenderObject() as RenderBox?;
     final overlayBox = overlay.context.findRenderObject() as RenderBox?;
@@ -64,72 +118,139 @@ class _AppTooltipState extends State<AppTooltip> {
     final textStyle = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onInverseSurface,
     );
-    final textPainter = TextPainter(
-      text: TextSpan(text: _message, style: textStyle),
-      textDirection: Directionality.of(context),
-      textScaler: MediaQuery.textScalerOf(context),
-      maxLines: 8,
-    )..layout(maxWidth: _maxTextWidth);
-    final width = textPainter.width + _horizontalPadding * 2;
-    final height = textPainter.height + _verticalPadding * 2;
-    final targetOrigin = target.localToGlobal(
-      Offset.zero,
-      ancestor: overlayBox,
-    );
-    final targetRect = targetOrigin & target.size;
-    final left = (targetRect.center.dx - width / 2)
-        .clamp(
-          _margin,
-          math.max(_margin, overlayBox.size.width - width - _margin),
-        )
-        .toDouble();
-    final below = targetRect.bottom + _gap;
-    final top = below + height <= overlayBox.size.height - _margin
-        ? below
-        : math.max(_margin, targetRect.top - height - _gap).toDouble();
-    final background = theme.colorScheme.inverseSurface;
-    final borderRadius = BorderRadius.circular(6);
-
+    final direction = Directionality.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
     _entry = OverlayEntry(
-      builder: (_) => Positioned(
-        left: left,
-        top: top,
-        width: width,
-        child: IgnorePointer(
-          child: ExcludeSemantics(
-            child: Material(
-              color: Colors.transparent,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: background,
-                  borderRadius: borderRadius,
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x33000000),
-                      blurRadius: 8,
-                      offset: Offset(0, 3),
+      builder: (overlayContext) => Positioned.fill(
+        child: LayoutBuilder(
+          builder: (overlayContext, constraints) {
+            if (!mounted ||
+                !target.attached ||
+                !overlayBox.attached ||
+                !target.hasSize) {
+              return const SizedBox.shrink();
+            }
+            final media = MediaQuery.of(overlayContext);
+            final safeLeft =
+                math.max(media.padding.left, media.viewInsets.left) + _margin;
+            final safeTop =
+                math.max(media.padding.top, media.viewInsets.top) + _margin;
+            final safeRight =
+                constraints.maxWidth -
+                math.max(media.padding.right, media.viewInsets.right) -
+                _margin;
+            final safeBottom =
+                constraints.maxHeight -
+                math.max(media.padding.bottom, media.viewInsets.bottom) -
+                _margin;
+            final maxTextWidth = math.min(
+              _maxTextWidth,
+              math.max(1.0, safeRight - safeLeft - 2 * _horizontalPadding),
+            );
+            final maxTextHeight = math.max(
+              1.0,
+              safeBottom - safeTop - 2 * _verticalPadding,
+            );
+            final textPainter = TextPainter(
+              text: TextSpan(text: _message, style: textStyle),
+              textDirection: direction,
+              textScaler: textScaler,
+              maxLines: 8,
+              ellipsis: '\u2026',
+            );
+            late final double width;
+            late final double height;
+            var maxLines = 8;
+            try {
+              textPainter.layout(maxWidth: maxTextWidth);
+              var lineHeight = 0.0;
+              var fittingLines = 0;
+              for (final line in textPainter.computeLineMetrics()) {
+                lineHeight += line.height;
+                if (lineHeight > maxTextHeight) break;
+                fittingLines++;
+              }
+              maxLines = math.max(1, fittingLines);
+              if (maxLines < 8) {
+                textPainter.maxLines = maxLines;
+                textPainter.layout(maxWidth: maxTextWidth);
+              }
+              width = textPainter.width + _horizontalPadding * 2;
+              height = textPainter.height + _verticalPadding * 2;
+            } finally {
+              textPainter.dispose();
+            }
+            final targetOrigin = target.localToGlobal(
+              Offset.zero,
+              ancestor: overlayBox,
+            );
+            final targetRect = targetOrigin & target.size;
+            final left = (targetRect.center.dx - width / 2)
+                .clamp(safeLeft, math.max(safeLeft, safeRight - width))
+                .toDouble();
+            final below = targetRect.bottom + _gap;
+            final preferredTop = below + height <= safeBottom
+                ? below
+                : targetRect.top - height - _gap;
+            final top = preferredTop
+                .clamp(safeTop, math.max(safeTop, safeBottom - height))
+                .toDouble();
+            final background = theme.colorScheme.inverseSurface;
+            final borderRadius = BorderRadius.circular(6);
+
+            return Stack(
+              children: [
+                Positioned(
+                  left: left,
+                  top: top,
+                  width: width,
+                  child: IgnorePointer(
+                    child: ExcludeSemantics(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: background,
+                            borderRadius: borderRadius,
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x33000000),
+                                blurRadius: 8,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: _horizontalPadding,
+                              vertical: _verticalPadding,
+                            ),
+                            child: Text(
+                              _message,
+                              style: textStyle,
+                              textDirection: direction,
+                              textScaler: textScaler,
+                              maxLines: maxLines,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: _horizontalPadding,
-                    vertical: _verticalPadding,
-                  ),
-                  child: Text(
-                    _message,
-                    style: textStyle,
-                    maxLines: 8,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ),
-          ),
+              ],
+            );
+          },
         ),
       ),
     );
     overlay.insert(_entry!);
+    // Hovered tooltips must handle Escape before a dialog's dismiss shortcut.
+    if (_visibleTooltips.isEmpty && !_escapeDown) {
+      FocusManager.instance.addEarlyKeyEventHandler(_handleKeyEvent);
+    }
+    _visibleTooltips.add(this);
   }
 
   void _hide() {
@@ -139,12 +260,25 @@ class _AppTooltipState extends State<AppTooltip> {
     _entry = null;
     entry?.remove();
     entry?.dispose();
+    _visibleTooltips.remove(this);
+    _removeKeyHandlerIfIdle();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_entry == null && _showTimer?.isActive != true) return;
+    _hide();
+    if (_hovered || _focused || _longPressed) _scheduleShow();
   }
 
   @override
   void didUpdateWidget(covariant AppTooltip oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.message != widget.message) _hide();
+    if (oldWidget.message != widget.message) {
+      _hide();
+      if (_hovered || _focused || _longPressed) _scheduleShow();
+    }
   }
 
   @override
@@ -156,16 +290,35 @@ class _AppTooltipState extends State<AppTooltip> {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      tooltip: _message,
+      tooltip: widget.excludeFromSemantics ? null : _message,
       child: Focus(
-        onFocusChange: (focused) => focused ? _scheduleShow() : _hide(),
+        canRequestFocus: false,
+        onFocusChange: (focused) {
+          _focused = focused;
+          if (focused) _dismissed = false;
+          _updateVisibility();
+        },
         child: MouseRegion(
-          onEnter: (_) => _scheduleShow(),
-          onExit: (_) => _hide(),
+          onEnter: (_) {
+            _hovered = true;
+            _dismissed = false;
+            _updateVisibility();
+          },
+          onExit: (_) {
+            _hovered = false;
+            _updateVisibility();
+          },
           child: GestureDetector(
             behavior: HitTestBehavior.deferToChild,
-            onLongPressStart: (_) => _show(),
-            onLongPressEnd: (_) => _hide(),
+            onLongPressStart: (_) {
+              _longPressed = true;
+              _dismissed = false;
+              _updateVisibility();
+            },
+            onLongPressEnd: (_) {
+              _longPressed = false;
+              _updateVisibility();
+            },
             child: widget.child,
           ),
         ),
@@ -266,6 +419,18 @@ class AppAvatar extends StatelessWidget {
     final effectiveSize = size ?? radius * 2;
     final effectiveTextStyle = (textStyle ?? theme.textTheme.labelLarge)
         ?.copyWith(color: effectiveForeground, fontWeight: FontWeight.w800);
+    final initial = Padding(
+      padding: EdgeInsets.all(effectiveSize * 0.16),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          _initial,
+          style: effectiveTextStyle,
+          maxLines: 1,
+          softWrap: false,
+        ),
+      ),
+    );
     final resolvedImageUrl = imageUrl?.trim() ?? '';
     final image = resolvedImageUrl.isEmpty
         ? null
@@ -275,7 +440,7 @@ class AppAvatar extends StatelessWidget {
             height: effectiveSize,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              return Text(_initial, style: effectiveTextStyle);
+              return initial;
             },
           );
 
@@ -292,7 +457,7 @@ class AppAvatar extends StatelessWidget {
       child:
           image ??
           (_hasName
-              ? Text(_initial, style: effectiveTextStyle)
+              ? initial
               : Icon(
                   fallbackIcon,
                   color: effectiveForeground,
@@ -774,6 +939,7 @@ class AppTextField extends StatefulWidget {
   final FocusNode? focusNode;
   final String label;
   final bool showLabel;
+  final bool labelAbove;
   final String? hintText;
   final String? helperText;
   final String? errorText;
@@ -820,6 +986,7 @@ class AppTextField extends StatefulWidget {
     required this.controller,
     required this.label,
     this.showLabel = true,
+    this.labelAbove = false,
     this.focusNode,
     this.hintText,
     this.helperText,
@@ -970,7 +1137,24 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final maxLines = widget.obscureText ? 1 : widget.maxLines;
-    return _buildNativeTextField(context, maxLines);
+    final field = _buildNativeTextField(context, maxLines);
+    if (!widget.showLabel || !widget.labelAbove) return field;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ExcludeSemantics(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              widget.label,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
+        ),
+        Semantics(label: widget.label, child: field),
+      ],
+    );
   }
 
   Widget _buildNativeTextField(BuildContext context, int? maxLines) {
@@ -1026,6 +1210,7 @@ class _AppTextFieldState extends State<AppTextField> {
       onChanged: widget.onChanged,
       onFieldSubmitted: widget.onSubmitted,
       validator: widget.validator,
+      errorBuilder: (context, error) => _buildError(error),
       autovalidateMode: widget.autovalidateMode,
       selectAllOnFocus: widget.selectAllOnFocus,
       undoController: widget.undoController,
@@ -1035,13 +1220,13 @@ class _AppTextFieldState extends State<AppTextField> {
       style: widget.style ?? theme.textTheme.bodyMedium,
       decoration: InputDecoration(
         isDense: dense,
-        labelText: widget.showLabel ? widget.label : null,
+        labelText: widget.showLabel && !widget.labelAbove ? widget.label : null,
         hintText: widget.hintText,
         helperText: _showCapsLockWarning ? null : widget.helperText,
         helper: _showCapsLockWarning
             ? _PasswordCapsLockHelper(helperText: widget.helperText)
             : null,
-        errorText: widget.errorText,
+        error: widget.errorText == null ? null : _buildError(widget.errorText!),
         counterText: widget.counterText,
         filled: widget.filled || widget.fillColor != null,
         fillColor: widget.fillColor ?? scheme.surfaceContainerHighest,
@@ -1065,6 +1250,9 @@ class _AppTextFieldState extends State<AppTextField> {
       ),
     );
   }
+
+  Widget _buildError(String message) =>
+      Text(message, softWrap: true, overflow: TextOverflow.visible);
 
   Widget _buildNativeSuffix(BuildContext context) {
     final actions = <Widget>[];
@@ -1153,9 +1341,8 @@ class AppReadOnlyField extends StatefulWidget {
   final String label;
   final String value;
   final IconData? prefixIcon;
-  final int maxLines;
-  final TextOverflow overflow;
-  final bool selectable;
+  final int? maxLines;
+  final bool labelAbove;
 
   const AppReadOnlyField({
     super.key,
@@ -1163,8 +1350,7 @@ class AppReadOnlyField extends StatefulWidget {
     required this.value,
     this.prefixIcon,
     this.maxLines = 1,
-    this.overflow = TextOverflow.ellipsis,
-    this.selectable = true,
+    this.labelAbove = false,
   });
 
   @override
@@ -1199,6 +1385,7 @@ class _AppReadOnlyFieldState extends State<AppReadOnlyField> {
     return AppTextField(
       controller: _controller,
       label: widget.label,
+      labelAbove: widget.labelAbove,
       prefixIcon: widget.prefixIcon,
       readOnly: true,
       showClearButton: false,
@@ -1241,14 +1428,38 @@ class AppSearchField extends StatelessWidget {
       showClearButton: true,
       textInputAction: TextInputAction.search,
       onChanged: onChanged,
-      onSubmitted: onSubmitted,
+      onSubmitted: (value) => onSubmitted(value.trim()),
     );
     if (width == null) return field;
     return SizedBox(width: width, child: field);
   }
 }
 
+class _LoadingButtonSemantics extends StatelessWidget {
+  const _LoadingButtonSemantics({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    button: true,
+    enabled: false,
+    label: label,
+    value:
+        Localizations.of<AppLocalizations>(
+          context,
+          AppLocalizations,
+        )?.loading ??
+        'Loading',
+    excludeSemantics: true,
+    child: child,
+  );
+}
+
 class AppActionButton extends StatelessWidget {
+  final bool wrapLabel;
   final VoidCallback? onPressed;
   final IconData? icon;
   final Widget? prefix;
@@ -1262,6 +1473,7 @@ class AppActionButton extends StatelessWidget {
 
   const AppActionButton({
     super.key,
+    this.wrapLabel = false,
     required this.onPressed,
     required this.label,
     this.icon,
@@ -1278,13 +1490,22 @@ class AppActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveOnPressed = loading ? null : onPressed;
     final buttonIcon = loading
-        ? const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
+        ? SizedBox(
+            width: 18,
+            height: 18,
+            child: Builder(
+              builder: (context) => CircularProgressIndicator(
+                strokeWidth: 2,
+                color: DefaultTextStyle.of(context).style.color,
+              ),
+            ),
           )
         : prefix ?? (icon == null ? null : Icon(icon, size: 18));
-    final child = Text(label, overflow: TextOverflow.ellipsis);
+    final child = Text(
+      label,
+      overflow: wrapLabel ? TextOverflow.visible : TextOverflow.ellipsis,
+      textAlign: wrapLabel ? TextAlign.center : null,
+    );
     final buttonChild = buttonIcon == null
         ? child
         : Row(
@@ -1352,15 +1573,11 @@ class AppActionButton extends StatelessWidget {
         );
     }
 
-    return Semantics(
-      button: true,
-      enabled: effectiveOnPressed != null,
-      label: label,
-      onTap: effectiveOnPressed,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-        child: button,
-      ),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+      child: loading
+          ? _LoadingButtonSemantics(label: label, child: button)
+          : button,
     );
   }
 }
@@ -1403,16 +1620,26 @@ class AppIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveOnPressed = loading ? null : onPressed;
     final buttonSize = size == AppIconButtonSize.sm ? 36.0 : 44.0;
-    final child = loading
-        ? const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        : Icon(
-            selected && selectedIcon != null ? selectedIcon : icon,
-            size: iconSize,
-          );
+    final child = Semantics(
+      label: tooltip,
+      child: ExcludeSemantics(
+        child: loading
+            ? SizedBox(
+                width: 16,
+                height: 16,
+                child: Builder(
+                  builder: (context) => CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: IconTheme.of(context).color,
+                  ),
+                ),
+              )
+            : Icon(
+                selected && selectedIcon != null ? selectedIcon : icon,
+                size: iconSize,
+              ),
+      ),
+    );
     final destructive = style == AppIconButtonStyle.destructive;
     final baseStyle = IconButton.styleFrom(
       minimumSize: Size(buttonSize, buttonSize),
@@ -1480,14 +1707,25 @@ class AppIconButton extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
       child: button,
     );
+    if (loading) {
+      button = _LoadingButtonSemantics(label: tooltip, child: button);
+    }
 
-    return Semantics(
-      button: true,
-      enabled: effectiveOnPressed != null,
-      label: tooltip,
-      selected: selected,
-      onTap: effectiveOnPressed,
-      child: showTooltip ? AppTooltip(message: tooltip, child: button) : button,
+    return Focus(
+      canRequestFocus: false,
+      onFocusChange: (focused) {
+        if (!focused || !context.mounted) return;
+        // Web accessibility focus can bypass traversal's scroll request.
+        final target = context.findRenderObject();
+        if (target != null && target.attached) target.showOnScreen();
+      },
+      child: showTooltip
+          ? AppTooltip(
+              message: tooltip,
+              excludeFromSemantics: true,
+              child: button,
+            )
+          : button,
     );
   }
 }
@@ -1753,6 +1991,7 @@ class AppSegmentedControl<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
   final ButtonStyle? style;
   final bool showSelectedIcon;
+  final Axis direction;
 
   const AppSegmentedControl({
     super.key,
@@ -1761,11 +2000,13 @@ class AppSegmentedControl<T> extends StatelessWidget {
     required this.onChanged,
     this.style,
     this.showSelectedIcon = false,
+    this.direction = Axis.horizontal,
   });
 
   @override
   Widget build(BuildContext context) {
     return SegmentedButton<T>(
+      direction: direction,
       style: style,
       segments: segments,
       selected: {value},
@@ -1800,7 +2041,7 @@ class AppDefaultTabController extends StatelessWidget {
   }
 }
 
-class AppTabBar extends StatelessWidget {
+class AppTabBar extends StatefulWidget {
   final TabController? controller;
   final List<Widget> tabs;
   final bool isScrollable;
@@ -1837,7 +2078,75 @@ class AppTabBar extends StatelessWidget {
   });
 
   @override
+  State<AppTabBar> createState() => _AppTabBarState();
+}
+
+class _AppTabBarState extends State<AppTabBar> {
+  final _tabKeys = <GlobalKey>[];
+  final _scrollController = TabBarScrollController();
+  TabController? _controller;
+  double? _viewportDimension;
+  (TextScaler, TextDirection)? _textLayout;
+  bool _revealScheduled = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final previous = _textLayout;
+    _textLayout = (
+      MediaQuery.textScalerOf(context),
+      Directionality.of(context),
+    );
+    if (previous != null && previous != _textLayout) _scheduleReveal();
+  }
+
+  bool _handleMetrics(ScrollMetricsNotification notification) {
+    if (!widget.isScrollable ||
+        notification.depth != 0 ||
+        notification.metrics.axis != Axis.horizontal) {
+      return false;
+    }
+    final previous = _viewportDimension;
+    _viewportDimension = notification.metrics.viewportDimension;
+    if (previous != null && previous != _viewportDimension) _scheduleReveal();
+    return false;
+  }
+
+  void _scheduleReveal() {
+    if (_revealScheduled) return;
+    _revealScheduled = true;
+    // Resize and text scaling can move the selected tab outside the viewport.
+    // Scroll offsets alone must not interrupt manual browsing of other tabs.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _revealScheduled = false;
+      if (!mounted || !widget.isScrollable) return;
+      final index = _controller?.index;
+      if (index == null || index >= _tabKeys.length) return;
+      final tabContext = _tabKeys[index].currentContext;
+      final target = tabContext?.findRenderObject();
+      if (tabContext == null || target == null || !target.attached) return;
+      Scrollable.maybeOf(
+        tabContext,
+        axis: Axis.horizontal,
+      )?.position.ensureVisible(target, alignment: 0.5);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    _controller = widget.controller ?? DefaultTabController.maybeOf(context);
+    if (_tabKeys.length > widget.tabs.length) {
+      _tabKeys.removeRange(widget.tabs.length, _tabKeys.length);
+    }
+    while (_tabKeys.length < widget.tabs.length) {
+      _tabKeys.add(GlobalKey());
+    }
     final theme = Theme.of(context);
     final scrollBehavior = ScrollConfiguration.of(context).copyWith(
       dragDevices: const {
@@ -1847,35 +2156,63 @@ class AppTabBar extends StatelessWidget {
         PointerDeviceKind.trackpad,
       },
     );
-    return _HorizontalPointerScroller(
-      enabled: isScrollable,
-      child: ScrollConfiguration(
-        behavior: scrollBehavior,
-        child: TabBar(
-          controller: controller,
-          tabs: tabs,
-          isScrollable: isScrollable,
-          tabAlignment: tabAlignment,
-          padding: padding,
-          labelPadding: labelPadding,
-          indicator: indicator,
-          indicatorSize: indicatorSize ?? TabBarIndicatorSize.tab,
-          dividerColor: dividerColor ?? Colors.transparent,
-          labelColor: labelColor ?? theme.colorScheme.primary,
-          unselectedLabelColor:
-              unselectedLabelColor ?? theme.colorScheme.onSurfaceVariant,
-          labelStyle:
-              labelStyle ??
-              theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-          unselectedLabelStyle:
-              unselectedLabelStyle ??
-              theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-          physics: physics,
-          onTap: onTap,
+    return Shortcuts(
+      shortcuts: const <ShortcutActivator, Intent>{
+        SingleActivator(LogicalKeyboardKey.arrowLeft): DirectionalFocusIntent(
+          TraversalDirection.left,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowRight): DirectionalFocusIntent(
+          TraversalDirection.right,
+        ),
+      },
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: _handleMetrics,
+        child: _HorizontalPointerScroller(
+          enabled: widget.isScrollable,
+          controller: _scrollController,
+          child: ScrollConfiguration(
+            behavior: scrollBehavior,
+            child: TabBar(
+              controller: widget.controller,
+              scrollController: _scrollController,
+              tabs: [
+                for (var index = 0; index < widget.tabs.length; index++)
+                  if (widget.tabs[index] case final PreferredSizeWidget tab)
+                    PreferredSize(
+                      preferredSize: tab.preferredSize,
+                      child: KeyedSubtree(key: _tabKeys[index], child: tab),
+                    )
+                  else
+                    KeyedSubtree(
+                      key: _tabKeys[index],
+                      child: widget.tabs[index],
+                    ),
+              ],
+              isScrollable: widget.isScrollable,
+              tabAlignment: widget.tabAlignment,
+              padding: widget.padding,
+              labelPadding: widget.labelPadding,
+              indicator: widget.indicator,
+              indicatorSize: widget.indicatorSize ?? TabBarIndicatorSize.tab,
+              dividerColor: widget.dividerColor ?? Colors.transparent,
+              labelColor: widget.labelColor ?? theme.colorScheme.primary,
+              unselectedLabelColor:
+                  widget.unselectedLabelColor ??
+                  theme.colorScheme.onSurfaceVariant,
+              labelStyle:
+                  widget.labelStyle ??
+                  theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+              unselectedLabelStyle:
+                  widget.unselectedLabelStyle ??
+                  theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+              physics: widget.physics,
+              onTap: widget.onTap,
+            ),
+          ),
         ),
       ),
     );
@@ -1885,10 +2222,12 @@ class AppTabBar extends StatelessWidget {
 class _HorizontalPointerScroller extends StatefulWidget {
   const _HorizontalPointerScroller({
     required this.enabled,
+    required this.controller,
     required this.child,
   });
 
   final bool enabled;
+  final ScrollController controller;
   final Widget child;
 
   @override
@@ -1898,31 +2237,21 @@ class _HorizontalPointerScroller extends StatefulWidget {
 
 class _HorizontalPointerScrollerState
     extends State<_HorizontalPointerScroller> {
-  final _contentKey = GlobalKey();
   int? _mousePointer;
   double? _lastMouseX;
 
   ScrollPosition? get _position {
-    ScrollableState? scrollable;
-    void visit(Element element) {
-      if (scrollable != null) return;
-      if (element is StatefulElement && element.state is ScrollableState) {
-        scrollable = element.state as ScrollableState;
-        return;
-      }
-      element.visitChildren(visit);
-    }
-
-    final context = _contentKey.currentContext;
-    if (context is Element) context.visitChildren(visit);
-    return scrollable?.position;
+    return widget.controller.hasClients ? widget.controller.position : null;
   }
 
   void _moveBy(double delta) {
     final position = _position;
     if (position == null || !position.hasContentDimensions) return;
+    final directedDelta = axisDirectionIsReversed(position.axisDirection)
+        ? -delta
+        : delta;
     position.jumpTo(
-      (position.pixels + delta).clamp(
+      (position.pixels + directedDelta).clamp(
         position.minScrollExtent,
         position.maxScrollExtent,
       ),
@@ -1971,7 +2300,7 @@ class _HorizontalPointerScrollerState
       onPointerUp: _handlePointerEnd,
       onPointerCancel: _handlePointerEnd,
       onPointerSignal: _handlePointerSignal,
-      child: KeyedSubtree(key: _contentKey, child: widget.child),
+      child: widget.child,
     );
   }
 }
@@ -2010,13 +2339,52 @@ class AppTabBarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveController = controller ?? DefaultTabController.of(context);
     return TabBarView(
-      controller: controller,
+      controller: effectiveController,
       physics: physics,
       dragStartBehavior: dragStartBehavior,
       viewportFraction: viewportFraction,
       clipBehavior: clipBehavior,
-      children: children,
+      children: [
+        for (var index = 0; index < children.length; index++)
+          _AppTabPage(
+            key: children[index].key == null
+                ? null
+                : ValueKey(children[index].key),
+            controller: effectiveController,
+            index: index,
+            child: children[index],
+          ),
+      ],
+    );
+  }
+}
+
+class _AppTabPage extends StatelessWidget {
+  const _AppTabPage({
+    super.key,
+    required this.controller,
+    required this.index,
+    required this.child,
+  });
+
+  final TabController controller;
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final parentActive = AppTabActivity.of(context);
+    // TabBarView retains old child widgets during nonadjacent page animations.
+    // Each retained page must still observe controller changes independently.
+    return AnimatedBuilder(
+      animation: controller,
+      child: child,
+      builder: (context, child) => AppTabActivity(
+        active: parentActive && controller.index == index,
+        child: child!,
+      ),
     );
   }
 }
@@ -2028,6 +2396,7 @@ class AppLoadingIndicator extends StatelessWidget {
   final bool centered;
   final Color? color;
   final EdgeInsetsGeometry padding;
+  final String? semanticLabel;
 
   const AppLoadingIndicator({
     super.key,
@@ -2035,6 +2404,7 @@ class AppLoadingIndicator extends StatelessWidget {
     this.centered = true,
     this.color,
     this.padding = EdgeInsets.zero,
+    this.semanticLabel,
   });
 
   @override
@@ -2048,6 +2418,13 @@ class AppLoadingIndicator extends StatelessWidget {
       width: progressSize,
       height: progressSize,
       child: CircularProgressIndicator(
+        semanticsLabel:
+            semanticLabel ??
+            Localizations.of<AppLocalizations>(
+              context,
+              AppLocalizations,
+            )?.loading ??
+            'Loading',
         color: color,
         strokeWidth: size == AppLoadingSize.sm ? 2 : 3,
       ),
@@ -2064,6 +2441,7 @@ class AppLinearProgress extends StatelessWidget {
   final double minHeight;
   final Color? color;
   final Color? backgroundColor;
+  final String? semanticLabel;
 
   const AppLinearProgress({
     super.key,
@@ -2071,12 +2449,20 @@ class AppLinearProgress extends StatelessWidget {
     this.minHeight = 2,
     this.color,
     this.backgroundColor,
+    this.semanticLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return LinearProgressIndicator(
+      semanticsLabel:
+          semanticLabel ??
+          Localizations.of<AppLocalizations>(
+            context,
+            AppLocalizations,
+          )?.loading ??
+          'Loading',
       value: value,
       minHeight: minHeight,
       color: color ?? theme.colorScheme.primary,
@@ -2540,7 +2926,9 @@ class _AppGlassIconButtonState extends State<AppGlassIconButton>
   }
 
   void _handleTapDown(TapDownDetails details) {
-    if (widget.onPressed == null) return;
+    if (widget.onPressed == null || MediaQuery.disableAnimationsOf(context)) {
+      return;
+    }
     _scaleController.forward();
   }
 
@@ -2554,7 +2942,7 @@ class _AppGlassIconButtonState extends State<AppGlassIconButton>
 
   void _handleTap() {
     if (widget.onPressed == null) return;
-    if (widget.rotateOnPressed) {
+    if (widget.rotateOnPressed && !MediaQuery.disableAnimationsOf(context)) {
       _rotationController
         ?..reset()
         ..forward();
@@ -2587,16 +2975,17 @@ class _AppGlassIconButtonState extends State<AppGlassIconButton>
 
     return AppTooltip(
       message: widget.tooltip,
+      excludeFromSemantics: true,
       child: Semantics(
         button: true,
         enabled: widget.onPressed != null,
         label: widget.tooltip,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: _handleTapDown,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTapDown: widget.onPressed == null ? null : _handleTapDown,
           onTapUp: _handleTapUp,
           onTapCancel: _handleTapCancel,
-          onTap: _handleTap,
+          onTap: widget.onPressed == null ? null : _handleTap,
           child: AnimatedBuilder(
             animation: animation,
             builder: (context, child) {
@@ -3576,6 +3965,7 @@ class AppAccordionItem extends StatelessWidget {
   final Widget title;
   final Widget child;
   final bool initiallyExpanded;
+  final ValueChanged<bool>? onExpansionChanged;
   final EdgeInsetsGeometry? padding;
 
   const AppAccordionItem({
@@ -3583,6 +3973,7 @@ class AppAccordionItem extends StatelessWidget {
     required this.title,
     required this.child,
     this.initiallyExpanded = false,
+    this.onExpansionChanged,
     this.padding,
   });
 
@@ -3590,6 +3981,7 @@ class AppAccordionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget accordion = ExpansionTile(
       initiallyExpanded: initiallyExpanded,
+      onExpansionChanged: onExpansionChanged,
       title: title,
       childrenPadding: const EdgeInsets.only(bottom: 12),
       children: [child],
@@ -3606,6 +3998,7 @@ class AppTile extends StatelessWidget {
   final Widget? subtitle;
   final Widget? prefix;
   final Widget? suffix;
+  final bool stackedSuffix;
   final VoidCallback? onPressed;
   final VoidCallback? onLongPress;
   final bool enabled;
@@ -3623,6 +4016,7 @@ class AppTile extends StatelessWidget {
     this.subtitle,
     this.prefix,
     this.suffix,
+    this.stackedSuffix = false,
     this.onPressed,
     this.onLongPress,
     this.enabled = true,
@@ -3639,9 +4033,19 @@ class AppTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tile = ListTile(
       title: title,
-      subtitle: subtitle,
+      subtitle: stackedSuffix && suffix != null
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ?subtitle,
+                const SizedBox(height: 8),
+                Align(alignment: AlignmentDirectional.centerEnd, child: suffix),
+              ],
+            )
+          : subtitle,
       leading: prefix,
-      trailing: suffix,
+      trailing: stackedSuffix ? null : suffix,
       enabled: enabled,
       selected: selected,
       selectedTileColor: Theme.of(context).colorScheme.primaryContainer
@@ -3689,22 +4093,22 @@ class AppSwitchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveEnabled = enabled && onChanged != null;
-    return AppTile(
-      title: title,
+    Widget tile = SwitchListTile(
+      value: value,
+      onChanged: effectiveEnabled ? onChanged : null,
+      title: semanticsLabel == null
+          ? title
+          : Semantics(
+              label: semanticsLabel,
+              excludeSemantics: true,
+              child: title,
+            ),
       subtitle: subtitle,
-      prefix: prefix,
-      suffix: AppSwitch(
-        value: value,
-        onChanged: onChanged,
-        enabled: effectiveEnabled,
-        semanticsLabel: semanticsLabel,
-      ),
-      enabled: effectiveEnabled,
-      padding: padding,
+      secondary: prefix,
       contentPadding: contentPadding,
-      semanticsLabel: semanticsLabel,
-      onPressed: effectiveEnabled ? () => onChanged?.call(!value) : null,
     );
+    tile = Material(type: MaterialType.transparency, child: tile);
+    return padding == null ? tile : Padding(padding: padding!, child: tile);
   }
 }
 
@@ -3737,22 +4141,47 @@ class AppCheckboxTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveEnabled = enabled && onChanged != null;
-    return AppTile(
-      title: title,
-      subtitle: subtitle,
-      prefix: AppCheckbox(
-        value: value,
-        onChanged: onChanged,
-        enabled: effectiveEnabled,
-        semanticsLabel: semanticsLabel,
+    void toggle() => onChanged?.call(!value);
+    Widget tile = Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        excludeFromSemantics: true,
+        onTap: effectiveEnabled ? toggle : null,
+        child: Semantics(
+          checked: value,
+          enabled: effectiveEnabled,
+          label: semanticsLabel,
+          onTap: effectiveEnabled ? toggle : null,
+          child: ListTile(
+            title: prefix == null
+                ? title
+                : Row(
+                    children: [
+                      prefix!,
+                      const SizedBox(width: 8),
+                      Expanded(child: title),
+                    ],
+                  ),
+            subtitle: subtitle,
+            leading: ExcludeFocus(
+              child: ExcludeSemantics(
+                child: IgnorePointer(
+                  child: AppCheckbox(
+                    value: value,
+                    onChanged: onChanged,
+                    enabled: effectiveEnabled,
+                  ),
+                ),
+              ),
+            ),
+            trailing: suffix,
+            enabled: effectiveEnabled,
+            contentPadding: contentPadding,
+          ),
+        ),
       ),
-      suffix: suffix,
-      enabled: effectiveEnabled,
-      padding: padding,
-      contentPadding: contentPadding,
-      semanticsLabel: semanticsLabel,
-      onPressed: effectiveEnabled ? () => onChanged?.call(!value) : null,
     );
+    return padding == null ? tile : Padding(padding: padding!, child: tile);
   }
 }
 
@@ -3785,10 +4214,12 @@ class AppConfirmDialog extends StatelessWidget {
     return AlertDialog(
       icon: icon,
       title: Text(title),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 480),
-        child: SingleChildScrollView(child: content),
+      scrollable: true,
+      insetPadding: AppMetrics.dialogInsetPadding(context),
+      constraints: BoxConstraints(
+        maxHeight: AppMetrics.dialogMaxHeight(context, null),
       ),
+      content: content,
       actions: _actions(context),
     );
   }
@@ -3835,15 +4266,17 @@ class AppDialog extends StatelessWidget {
     return AlertDialog(
       icon: icon,
       title: title,
+      scrollable: true,
+      insetPadding: AppMetrics.dialogInsetPadding(context),
+      constraints: BoxConstraints(maxHeight: maxHeight),
       content: body == null
           ? null
           : ConstrainedBox(
               constraints: BoxConstraints(
                 minWidth: constraints.minWidth,
                 maxWidth: constraints.maxWidth,
-                maxHeight: maxHeight,
               ),
-              child: SingleChildScrollView(child: body),
+              child: body,
             ),
       actions: actions,
     );
@@ -4097,25 +4530,31 @@ class AppSwitch extends StatelessWidget {
               control,
             ],
           );
-    return Semantics(
-      label: semanticsLabel ?? label ?? context.l10n.switchControl,
-      toggled: value,
-      enabled: effectiveEnabled,
-      child: label == null
-          ? labelWidget
-          : InkWell(
-              onTap: effectiveEnabled ? () => onChanged?.call(!value) : null,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: labelWidget,
+    return MergeSemantics(
+      child: Semantics(
+        label: label == null
+            ? semanticsLabel ?? context.l10n.switchControl
+            : semanticsLabel,
+        child: label == null
+            ? labelWidget
+            : InkWell(
+                canRequestFocus: false,
+                excludeFromSemantics: true,
+                onTap: effectiveEnabled ? () => onChanged?.call(!value) : null,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: labelWidget,
+                ),
               ),
-            ),
+      ),
     );
   }
 }
 
 class AppCheckbox extends StatelessWidget {
   final bool value;
+  final Color? activeColor;
+  final OutlinedBorder? shape;
   final ValueChanged<bool>? onChanged;
   final String? label;
   final String? description;
@@ -4130,6 +4569,8 @@ class AppCheckbox extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
+    this.activeColor,
+    this.shape,
     this.label,
     this.description,
     this.errorText,
@@ -4145,6 +4586,9 @@ class AppCheckbox extends StatelessWidget {
     final effectiveEnabled = enabled && onChanged != null;
     final control = Checkbox(
       value: value,
+      activeColor: activeColor,
+      shape: shape,
+      semanticLabel: semanticsLabel,
       onChanged: effectiveEnabled
           ? (next) {
               if (next != null) onChanged?.call(next);
@@ -4154,12 +4598,7 @@ class AppCheckbox extends StatelessWidget {
       autofocus: autofocus,
     );
     if (label == null) {
-      return Semantics(
-        label: semanticsLabel,
-        checked: value,
-        enabled: effectiveEnabled,
-        child: control,
-      );
+      return control;
     }
     final labelWidget = Row(
       mainAxisSize: MainAxisSize.min,
@@ -4188,11 +4627,10 @@ class AppCheckbox extends StatelessWidget {
         control,
       ],
     );
-    return Semantics(
-      label: semanticsLabel ?? label,
-      checked: value,
-      enabled: effectiveEnabled,
+    return MergeSemantics(
       child: InkWell(
+        canRequestFocus: false,
+        excludeFromSemantics: true,
         onTap: effectiveEnabled ? () => onChanged?.call(!value) : null,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -4203,26 +4641,120 @@ class AppCheckbox extends StatelessWidget {
   }
 }
 
+class _AppSelectFormField<T> extends FormField<T> {
+  const _AppSelectFormField({
+    required super.builder,
+    super.initialValue,
+    super.validator,
+    super.autovalidateMode,
+    super.onSaved,
+    super.enabled,
+    required this.onChanged,
+    required this.acceptsValue,
+  });
+
+  final ValueChanged<T?> onChanged;
+  final bool Function(T?) acceptsValue;
+
+  @override
+  FormFieldState<T> createState() => _AppSelectFormFieldState<T>();
+}
+
+class _AppSelectFormFieldState<T> extends FormFieldState<T> {
+  bool focused = false;
+  final dropdownFocusNode = FocusNode();
+
+  void activateDropdown(FocusNode node) {
+    if (!mounted || !widget.enabled) return;
+    final context = node.context;
+    if (context != null && context.mounted) {
+      Actions.maybeInvoke(context, const ActivateIntent());
+    }
+  }
+
+  @override
+  void dispose() {
+    dropdownFocusNode.dispose();
+    super.dispose();
+  }
+
+  void changeFromUser(T? value) {
+    if (!mounted) return;
+    final field = widget as _AppSelectFormField<T>;
+    if (!field.enabled || !field.acceptsValue(value)) return;
+    didChange(value);
+  }
+
+  void setFocused(bool value) {
+    if (mounted && value != focused) setState(() => focused = value);
+  }
+
+  @override
+  void didChange(T? value) {
+    super.didChange(value);
+    (widget as _AppSelectFormField<T>).onChanged(value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _AppSelectFormField<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialValue != widget.initialValue) {
+      setValue(widget.initialValue);
+    }
+  }
+
+  @override
+  void reset() {
+    super.reset();
+    (widget as _AppSelectFormField<T>).onChanged(value);
+  }
+}
+
+class _AppSelectMenuSelection extends StatefulWidget {
+  const _AppSelectMenuSelection({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_AppSelectMenuSelection> createState() =>
+      _AppSelectMenuSelectionState();
+}
+
+class _AppSelectMenuSelectionState extends State<_AppSelectMenuSelection> {
+  @override
+  void initState() {
+    super.initState();
+    // Reveal after the eager menu has measured its multiline option heights.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+      Scrollable.ensureVisible(context);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class AppSelect<T> extends StatelessWidget {
   final T? value;
   final Map<String, T> options;
   final ValueChanged<T?>? onChanged;
   final String? label;
+  final bool labelAbove;
+  final bool wrapText;
+  final bool useAnchoredMenu;
   final String? hintText;
   final String? description;
   final String? errorText;
   final IconData? prefixIcon;
   final Widget Function(BuildContext context, T value)? optionPrefixBuilder;
   final FormFieldSetter<T>? onSaved;
-  final VoidCallback? onReset;
   final FormFieldValidator<T>? validator;
   final AutovalidateMode autovalidateMode;
   final bool enabled;
-  final bool expands;
   final bool clearable;
   final FocusNode? focusNode;
   final bool autofocus;
-  final bool canRequestFocus;
   final TextAlign textAlign;
   final double? width;
   final bool? compact;
@@ -4233,21 +4765,21 @@ class AppSelect<T> extends StatelessWidget {
     required this.options,
     required this.onChanged,
     this.label,
+    this.labelAbove = false,
+    this.wrapText = false,
+    this.useAnchoredMenu = false,
     this.hintText,
     this.description,
     this.errorText,
     this.prefixIcon,
     this.optionPrefixBuilder,
     this.onSaved,
-    this.onReset,
     this.validator,
     this.autovalidateMode = AutovalidateMode.onUnfocus,
     this.enabled = true,
-    this.expands = false,
     this.clearable = false,
     this.focusNode,
     this.autofocus = false,
-    this.canRequestFocus = true,
     this.textAlign = TextAlign.start,
     this.width,
     this.compact,
@@ -4255,50 +4787,135 @@ class AppSelect<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final field = DropdownButtonFormField<T>(
-      initialValue: value,
-      onChanged: enabled && onChanged != null ? _handleChange : null,
-      focusNode: focusNode,
-      autofocus: autofocus,
-      isExpanded: true,
-      alignment: textAlign == TextAlign.end
-          ? AlignmentDirectional.centerEnd
-          : AlignmentDirectional.centerStart,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText ?? context.l10n.selectOption,
-        helperText: description,
-        errorText: errorText,
-        prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, size: 18),
-      ),
+    final interactive = enabled && onChanged != null && options.isNotEmpty;
+    Widget field = _AppSelectFormField<T>(
+      initialValue: options.values.contains(value) ? value : null,
+      enabled: enabled && onChanged != null,
+      acceptsValue: (next) => next == null
+          ? clearable || options.values.contains(null)
+          : options.values.contains(next),
+      onChanged: _handleChange,
       validator: validator,
       autovalidateMode: autovalidateMode,
       onSaved: onSaved,
-      items: [
-        for (final entry in options.entries)
-          DropdownMenuItem<T>(
-            value: entry.value,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (optionPrefixBuilder != null) ...[
-                  optionPrefixBuilder!(context, entry.value),
-                  const SizedBox(width: 8),
-                ],
-                Flexible(child: Text(entry.key, textAlign: textAlign)),
-              ],
+      builder: (formState) {
+        final state = formState as _AppSelectFormFieldState<T>;
+        final effectiveFocusNode = focusNode ?? state.dropdownFocusNode;
+        return Focus(
+          canRequestFocus: false,
+          skipTraversal: true,
+          onFocusChange: state.setFocused,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
+            onTap: interactive
+                ? () => state.activateDropdown(effectiveFocusNode)
+                : null,
+            child: InputDecorator(
+              isFocused: state.focused,
+              isEmpty: !options.values.contains(state.value),
+              decoration: InputDecoration(
+                enabled: interactive,
+                labelText: labelAbove ? null : label,
+                helper: description == null ? null : Text(description!),
+                errorText: state.errorText ?? errorText,
+                prefixIcon: prefixIcon == null
+                    ? null
+                    : Icon(prefixIcon, size: 18),
+                suffixIcon:
+                    clearable && value != null && enabled && onChanged != null
+                    ? AppIconButton(
+                        tooltip: context.l10n.clear,
+                        icon: Icons.clear_rounded,
+                        onPressed: () {
+                          state.changeFromUser(null);
+                        },
+                      )
+                    : null,
+              ),
+              child: Semantics(
+                excludeSemantics: !interactive,
+                button: interactive ? null : true,
+                enabled: interactive ? null : false,
+                label: interactive
+                    ? null
+                    : options.entries
+                              .where((entry) => entry.value == state.value)
+                              .firstOrNull
+                              ?.key ??
+                          hintText ??
+                          context.l10n.selectOption,
+                child: useAnchoredMenu
+                    ? _anchoredMenu(
+                        context,
+                        state,
+                        effectiveFocusNode,
+                        interactive,
+                      )
+                    : DropdownButtonHideUnderline(
+                        child: DropdownButton<T>(
+                          value: state.value,
+                          onChanged: interactive ? state.changeFromUser : null,
+                          hint: Text(hintText ?? context.l10n.selectOption),
+                          focusNode: effectiveFocusNode,
+                          autofocus: autofocus,
+                          isExpanded: true,
+                          isDense: !wrapText,
+                          itemHeight: null,
+                          alignment: textAlign == TextAlign.end
+                              ? AlignmentDirectional.centerEnd
+                              : AlignmentDirectional.centerStart,
+                          items: [
+                            for (final entry in options.entries)
+                              DropdownMenuItem<T>(
+                                value: entry.value,
+                                child: _option(context, entry),
+                              ),
+                          ],
+                          selectedItemBuilder: (context) => [
+                            for (final entry in options.entries)
+                              Semantics(
+                                button: true,
+                                enabled:
+                                    enabled &&
+                                    onChanged != null &&
+                                    options.isNotEmpty,
+                                child: Text(
+                                  entry.key,
+                                  textAlign: textAlign,
+                                  overflow: wrapText
+                                      ? TextOverflow.visible
+                                      : TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+              ),
             ),
           ),
-      ],
-      selectedItemBuilder: (context) => [
-        for (final entry in options.entries)
-          Text(
-            entry.key,
-            textAlign: textAlign,
-            overflow: TextOverflow.ellipsis,
-          ),
-      ],
+        );
+      },
     );
+
+    if (labelAbove && label != null) {
+      field = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ExcludeSemantics(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                label!,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+          ),
+          Semantics(label: label, child: field),
+        ],
+      );
+    }
 
     final effectiveWidth = width ?? _defaultWidth(context);
     if (effectiveWidth == null) return field;
@@ -4312,10 +4929,110 @@ class AppSelect<T> extends StatelessWidget {
       callback(next);
       return;
     }
-    if (options.values.any((value) => value == null)) {
+    if (clearable || options.values.any((value) => value == null)) {
       callback(next);
     }
   }
+
+  Widget _option(BuildContext context, MapEntry<String, T> entry) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (optionPrefixBuilder != null) ...[
+          optionPrefixBuilder!(context, entry.value),
+          const SizedBox(width: 8),
+        ],
+        Flexible(child: Text(entry.key, textAlign: textAlign)),
+      ],
+    );
+  }
+
+  Widget _anchoredMenu(
+    BuildContext context,
+    _AppSelectFormFieldState<T> state,
+    FocusNode node,
+    bool interactive,
+  ) => LayoutBuilder(
+    builder: (context, constraints) {
+      final selected = options.entries
+          .where((entry) => entry.value == state.value)
+          .firstOrNull;
+      return MenuAnchor(
+        childFocusNode: node,
+        crossAxisUnconstrained: false,
+        consumeOutsideTap: true,
+        style: MenuStyle(
+          maximumSize: WidgetStatePropertyAll(
+            Size(constraints.maxWidth, double.infinity),
+          ),
+        ),
+        menuChildren: [
+          for (final entry in options.entries)
+            SizedBox(
+              width: constraints.maxWidth,
+              child: MergeSemantics(
+                child: Semantics(
+                  selected: entry.value == state.value,
+                  child: MenuItemButton(
+                    autofocus: entry.value == state.value,
+                    trailingIcon: entry.value == state.value
+                        ? const Icon(Icons.check_rounded, size: 18)
+                        : null,
+                    onPressed: interactive
+                        ? () => state.changeFromUser(entry.value)
+                        : null,
+                    child: entry.value == state.value
+                        ? _AppSelectMenuSelection(
+                            child: _option(context, entry),
+                          )
+                        : _option(context, entry),
+                  ),
+                ),
+              ),
+            ),
+        ],
+        builder: (context, controller, _) => MergeSemantics(
+          child: Semantics(
+            expanded: controller.isOpen,
+            child: TextButton(
+              focusNode: node,
+              autofocus: autofocus,
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                textStyle: Theme.of(context).textTheme.titleMedium,
+                alignment: AlignmentDirectional.centerStart,
+              ),
+              onPressed: !interactive
+                  ? null
+                  : () {
+                      if (controller.isOpen) {
+                        controller.close();
+                      } else {
+                        controller.open();
+                      }
+                    },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      selected?.key ?? hintText ?? context.l10n.selectOption,
+                      textAlign: textAlign,
+                      overflow: wrapText
+                          ? TextOverflow.visible
+                          : TextOverflow.ellipsis,
+                      maxLines: wrapText ? null : 1,
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 
   double? _defaultWidth(BuildContext context) {
     if (compact == false) return null;
@@ -4324,16 +5041,48 @@ class AppSelect<T> extends StatelessWidget {
     }
     if (options.isEmpty) return null;
 
-    final maxLabelLength = options.keys.fold<int>(
-      hintText?.characters.length ?? 0,
-      (max, label) => math.max(max, label.characters.length),
+    final theme = Theme.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    final painter = TextPainter(
+      textDirection: direction,
+      textScaler: textScaler,
+      maxLines: 1,
     );
-    final textWidth = maxLabelLength * 14.0;
-    final chromeWidth = prefixIcon == null ? 52.0 : 76.0;
-    final width = textWidth + chromeWidth;
+    var textWidth = 0.0;
+    try {
+      for (final label in [...options.keys, ?hintText]) {
+        painter.text = TextSpan(
+          text: label,
+          style: theme.textTheme.titleMedium,
+        );
+        painter.layout();
+        textWidth = math.max(textWidth, painter.width);
+      }
+    } finally {
+      painter.dispose();
+    }
+
+    // Include the decorated dropdown's arrow, gaps and leading inset.
+    final decoration = theme.inputDecorationTheme;
+    final padding = decoration.contentPadding?.resolve(direction);
+    final leadingPadding = direction == TextDirection.ltr
+        ? padding?.left ?? 12.0
+        : padding?.right ?? 12.0;
+    final leadingWidth = prefixIcon == null
+        ? leadingPadding + 4.0
+        : (decoration.prefixIconConstraints?.minWidth ?? 48.0) + 4.0;
+    final chromeWidth = leadingWidth + 40.0;
+    final width = (textWidth + chromeWidth).ceilToDouble();
     final dense = AppMetrics.usesDenseLayout(context);
     final minWidth = dense ? 86.0 : 96.0;
-    final maxWidth = dense ? 158.0 : 176.0;
+    final maxWidth = math.max(
+      minWidth,
+      math.min(
+        textScaler.scale(dense ? 240.0 : 280.0),
+        MediaQuery.sizeOf(context).width - 32.0,
+      ),
+    );
     return width.clamp(minWidth, maxWidth).toDouble();
   }
 }

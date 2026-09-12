@@ -8,6 +8,10 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/providers/application/desktop_web_verification_client.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'bilibili_geetest_html.dart';
+
+export 'bilibili_geetest_html.dart' show buildBilibiliGeetestHtml;
+
 class BilibiliGeetestResult {
   final String validate;
 
@@ -17,7 +21,7 @@ class BilibiliGeetestResult {
 class BilibiliGeetestService {
   BilibiliGeetestService._();
 
-  static const _bridgeName = 'SyncTVGeetest';
+  static const _bridgeName = bilibiliGeetestBridgeName;
 
   static Future<BilibiliGeetestResult> verify(
     BuildContext context, {
@@ -109,143 +113,6 @@ class BilibiliGeetestService {
 }
 
 @visibleForTesting
-String buildBilibiliGeetestHtml({
-  required String gt,
-  required String challenge,
-}) {
-  final gtJson = _scriptSafeJsonString(gt);
-  final challengeJson = _scriptSafeJsonString(challenge);
-  return '''
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bilibili 安全验证</title>
-  <script src="https://static.geetest.com/static/tools/gt.js"></script>
-  <style>
-    :root { color-scheme: light dark; }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f7f8fb;
-      color: #1f2328;
-    }
-    main {
-      width: min(360px, calc(100vw - 32px));
-      display: grid;
-      gap: 18px;
-      justify-items: stretch;
-    }
-    h1 {
-      margin: 0;
-      font-size: 22px;
-      line-height: 1.25;
-      font-weight: 700;
-    }
-    p {
-      margin: 0;
-      color: #59636e;
-      font-size: 14px;
-      line-height: 1.55;
-    }
-    #captcha {
-      min-height: 48px;
-      display: grid;
-      align-items: center;
-    }
-    #status {
-      min-height: 20px;
-      font-size: 13px;
-      color: #59636e;
-    }
-    @media (prefers-color-scheme: dark) {
-      body { background: #111318; color: #f0f3f6; }
-      p, #status { color: #aeb6c2; }
-    }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Bilibili 安全验证</h1>
-    <p>完成验证后会自动回到 SyncTV 继续发送短信验证码。</p>
-    <div id="captcha"></div>
-    <div id="status">正在加载验证组件...</div>
-  </main>
-  <script>
-    const gt = $gtJson;
-    const challenge = $challengeJson;
-    const status = document.getElementById('status');
-
-    function sendMessage(payload) {
-      const message = JSON.stringify(payload);
-      if (window.${BilibiliGeetestService._bridgeName}) {
-        window.${BilibiliGeetestService._bridgeName}.postMessage(message);
-      } else if (
-        window.webkit &&
-        window.webkit.messageHandlers &&
-        window.webkit.messageHandlers.${BilibiliGeetestService._bridgeName}
-      ) {
-        window.webkit.messageHandlers.${BilibiliGeetestService._bridgeName}
-          .postMessage(message);
-      } else if (window.chrome && window.chrome.webview) {
-        window.chrome.webview.postMessage(message);
-      } else {
-        status.textContent = '验证结果无法返回 SyncTV，请升级客户端后重试。';
-      }
-    }
-
-    function reportError(message) {
-      status.textContent = message;
-      sendMessage({ error: message });
-    }
-
-    function finish(result) {
-      const validate = result && result.geetest_validate
-        ? String(result.geetest_validate)
-        : '';
-      if (!validate) {
-        reportError('验证结果无效，请刷新后重试。');
-        return;
-      }
-      status.textContent = '验证完成，正在继续发送短信验证码。';
-      sendMessage({ validate: validate });
-    }
-
-    if (typeof initGeetest !== 'function') {
-      reportError('验证组件加载失败，请检查网络后重试。');
-    } else {
-      initGeetest({
-        gt: gt,
-        challenge: challenge,
-        offline: false,
-        new_captcha: true,
-        product: 'popup',
-        width: '100%'
-      }, function(captcha) {
-        captcha.appendTo('#captcha');
-        captcha.onReady(function() {
-          status.textContent = '请完成下方验证。';
-        });
-        captcha.onSuccess(function() {
-          finish(captcha.getValidate());
-        });
-        captcha.onError(function() {
-          reportError('验证组件出错，请刷新后重试。');
-        });
-      });
-    }
-  </script>
-</body>
-</html>
-''';
-}
-
-@visibleForTesting
 BilibiliGeetestResult parseBilibiliGeetestMessage(String message) {
   final decoded = jsonDecode(message);
   if (decoded is! Map<String, dynamic>) {
@@ -263,15 +130,6 @@ BilibiliGeetestResult parseBilibiliGeetestMessage(String message) {
   }
 
   return BilibiliGeetestResult(validate: validate);
-}
-
-String _scriptSafeJsonString(String value) {
-  return jsonEncode(value)
-      .replaceAll('<', r'\u003c')
-      .replaceAll('>', r'\u003e')
-      .replaceAll('&', r'\u0026')
-      .replaceAll('\u2028', r'\u2028')
-      .replaceAll('\u2029', r'\u2029');
 }
 
 class _BilibiliGeetestDialog extends StatefulWidget {
@@ -303,41 +161,75 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
   String? _errorText;
   bool _completed = false;
   bool _loading = true;
+  bool _configured = false;
+  bool _requesting = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.transparent)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (_) {
-            if (mounted) setState(() => _loading = false);
-          },
-          onWebResourceError: (error) {
-            if (!mounted || _completed) return;
-            setState(() => _errorText = '验证页面加载失败: ${error.description}');
-          },
-        ),
-      )
-      ..addJavaScriptChannel(
-        BilibiliGeetestService._bridgeName,
-        onMessageReceived: _handleMessage,
-      )
-      ..loadHtmlString(
-        buildBilibiliGeetestHtml(gt: widget.gt, challenge: widget.challenge),
-        baseUrl: 'https://passport.bilibili.com/',
-      );
+    _controller = WebViewController();
+    unawaited(_load());
 
     _timer = Timer(widget.timeout, () {
-      if (!mounted || _completed) return;
-      _completed = true;
-      Navigator.of(context).pop(
+      _finish(
         _BilibiliGeetestDialogOutcome.error(
           TimeoutException('Bilibili 验证超时', widget.timeout),
         ),
       );
+    });
+  }
+
+  bool get _active => mounted && !_completed;
+
+  Future<void> _load() async {
+    if (!_active || _requesting) return;
+    setState(() {
+      _requesting = true;
+      _loading = true;
+      _errorText = null;
+    });
+    try {
+      if (!_configured) {
+        await _controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+        if (!_active) return;
+        await _controller.setBackgroundColor(Colors.transparent);
+        if (!_active) return;
+        await _controller.setNavigationDelegate(
+          NavigationDelegate(
+            onPageFinished: (_) {
+              if (_active) setState(() => _loading = false);
+            },
+            onWebResourceError: (error) {
+              _showError('验证页面加载失败: ${error.description}');
+            },
+          ),
+        );
+        if (!_active) return;
+        await _controller.addJavaScriptChannel(
+          BilibiliGeetestService._bridgeName,
+          onMessageReceived: _handleMessage,
+        );
+        if (!_active) return;
+        await _controller.loadHtmlString(
+          buildBilibiliGeetestHtml(gt: widget.gt, challenge: widget.challenge),
+          baseUrl: 'https://passport.bilibili.com/',
+        );
+        _configured = true;
+      } else {
+        await _controller.reload();
+      }
+    } catch (error) {
+      _showError('验证页面加载失败: $error');
+    } finally {
+      if (_active) setState(() => _requesting = false);
+    }
+  }
+
+  void _showError(String error) {
+    if (!_active) return;
+    setState(() {
+      _loading = false;
+      _errorText = error;
     });
   }
 
@@ -352,10 +244,23 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
 
     try {
       final result = parseBilibiliGeetestMessage(message.message);
-      _completed = true;
-      Navigator.of(context).pop(_BilibiliGeetestDialogOutcome.result(result));
+      _finish(_BilibiliGeetestDialogOutcome.result(result));
     } catch (error) {
-      setState(() => _errorText = error.toString());
+      _showError(error.toString());
+    }
+  }
+
+  void _finish(_BilibiliGeetestDialogOutcome? outcome) {
+    if (!mounted || _completed) return;
+    final route = ModalRoute.of(context);
+    if (route == null || !route.isActive) return;
+    _completed = true;
+    _timer?.cancel();
+    final navigator = Navigator.of(context);
+    if (route.isCurrent) {
+      navigator.pop(outcome);
+    } else {
+      navigator.removeRoute(route, outcome);
     }
   }
 
@@ -402,7 +307,7 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
                   ),
                   AppIconButton(
                     tooltip: '取消',
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => _finish(null),
                     icon: Icons.close_rounded,
                   ),
                 ],
@@ -453,7 +358,7 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
               child: SizedBox(
                 width: double.infinity,
                 child: AppActionButton(
-                  onPressed: () => _controller.reload(),
+                  onPressed: _requesting ? null : _load,
                   icon: Icons.refresh_rounded,
                   label: '刷新验证',
                   style: AppActionButtonStyle.outlined,

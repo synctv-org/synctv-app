@@ -15,6 +15,9 @@ class DanmakuOverlay extends StatefulWidget {
   final double? opacity;
   final DanmakuOption option;
 
+  DanmakuOption get _effectiveOption =>
+      opacity == null ? option : option.copyWith(opacity: opacity);
+
   const DanmakuOverlay({
     super.key,
     required this.videoController,
@@ -33,11 +36,12 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
   DanmakuController? _danmakuController;
   Timer? _syncTimer;
   Duration _lastVideoPosition = Duration.zero;
-  final Set<int> _processedDanmakuIndices = {};
+  final Set<local.DanmakuItem> _processedDanmaku = Set.identity();
 
   @override
   void initState() {
     super.initState();
+    widget.videoController?.addListener(_syncPlaybackState);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startVideoSync();
     });
@@ -45,6 +49,7 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
 
   @override
   void dispose() {
+    widget.videoController?.removeListener(_syncPlaybackState);
     _syncTimer?.cancel();
     super.dispose();
   }
@@ -53,13 +58,18 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
   void didUpdateWidget(DanmakuOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (_optionsDiffer(widget.option, oldWidget.option)) {
-      _danmakuController?.updateOption(widget.option);
+    if (widget.videoController != oldWidget.videoController) {
+      oldWidget.videoController?.removeListener(_syncPlaybackState);
+      widget.videoController?.addListener(_syncPlaybackState);
+    }
+
+    if (_optionsDiffer(widget._effectiveOption, oldWidget._effectiveOption)) {
+      _danmakuController?.updateOption(widget._effectiveOption);
     }
 
     // 如果弹幕列表变化，重置处理状态
     if (widget.danmakuList != oldWidget.danmakuList) {
-      _processedDanmakuIndices.clear();
+      _processedDanmaku.clear();
       _lastVideoPosition = Duration.zero;
       _danmakuController?.clear();
     }
@@ -70,8 +80,28 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
         _startVideoSync();
       } else {
         _pauseVideoSync();
+        _processedDanmaku.clear();
         _danmakuController?.clear();
+        _danmakuController = null;
       }
+    }
+    _syncPlaybackState();
+  }
+
+  void _syncPlaybackState() {
+    final controller = _danmakuController;
+    if (!mounted || controller == null) return;
+    final video = widget.videoController?.value;
+    final shouldRun =
+        widget.isEnabled &&
+        video != null &&
+        video.isInitialized &&
+        video.isPlaying &&
+        !video.isBuffering;
+    if (shouldRun && !controller.running) {
+      controller.resume();
+    } else if (!shouldRun && controller.running) {
+      controller.pause();
     }
   }
 
@@ -95,7 +125,7 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
 
   /// 开始视频同步
   void _startVideoSync() {
-    if (!widget.isEnabled) return;
+    if (!mounted || !widget.isEnabled) return;
 
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -120,7 +150,8 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
     final currentPosition = widget.videoController!.value.position;
 
     // 检查视频是否在播放
-    if (!widget.videoController!.value.isPlaying) {
+    if (!widget.videoController!.value.isPlaying ||
+        widget.videoController!.value.isBuffering) {
       return;
     }
 
@@ -128,23 +159,26 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
     if ((currentPosition - _lastVideoPosition).abs() >
         const Duration(seconds: 2)) {
       debugPrint('Video seek detected; resetting danmaku state');
-      _processedDanmakuIndices.clear();
+      _processedDanmaku.clear();
       _danmakuController!.clear();
     }
 
     _lastVideoPosition = currentPosition;
 
-    // 找到需要显示的弹幕
-    int addedCount = 0;
-    for (int i = 0; i < widget.danmakuList.length; i++) {
-      final danmaku = widget.danmakuList[i];
+    // The controller trims its mutable list in place. Track objects, not slots,
+    // and release consumed entries once they leave the current data window.
+    final currentItems = Set<local.DanmakuItem>.identity()
+      ..addAll(widget.danmakuList);
+    _processedDanmaku.retainAll(currentItems);
 
+    int addedCount = 0;
+    for (final danmaku in widget.danmakuList) {
       if (widget.origin != null && danmaku.origin != widget.origin) {
         continue;
       }
 
       // 如果这条弹幕已经处理过，跳过
-      if (_processedDanmakuIndices.contains(i)) {
+      if (_processedDanmaku.contains(danmaku)) {
         continue;
       }
 
@@ -154,7 +188,7 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
           'DanmakuOverlay: showing [${danmaku.text}] at ${currentPosition.inSeconds}s (start: ${danmaku.startTime.inSeconds}s)',
         );
         _addDanmakuToScreen(danmaku);
-        _processedDanmakuIndices.add(i);
+        _processedDanmaku.add(danmaku);
         addedCount++;
       }
     }
@@ -219,10 +253,9 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
       createdController: (controller) {
         debugPrint('Danmaku controller created');
         _danmakuController = controller;
+        _syncPlaybackState();
       },
-      option: widget.opacity == null
-          ? widget.option
-          : widget.option.copyWith(opacity: widget.opacity),
+      option: widget._effectiveOption,
     );
   }
 }

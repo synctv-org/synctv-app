@@ -10,16 +10,15 @@ import 'package:video_player_platform_interface/video_player_platform_interface.
 import 'package:web/web.dart' as web;
 
 import 'video_player_runtime.dart';
+import 'web_engine_loader.dart';
 import 'web_playback_engine.dart';
+import 'web_video_playback_controller.dart';
 
 const bool usesPlatformWebVideoPlayerRuntime = true;
 bool get browserPictureInPictureAvailable =>
     web.document.has('pictureInPictureEnabled') &&
     web.document.pictureInPictureEnabled &&
     web.HTMLVideoElement().has('requestPictureInPicture');
-const _engineAssetBase = String.fromEnvironment(
-  'SYNCTV_WEB_PLAYBACK_ENGINE_ASSET_BASE',
-);
 
 VideoPlayerRuntime createPlatformWebVideoPlayerRuntime(int textureId) =>
     WebVideoPlayerRuntime(textureId);
@@ -53,6 +52,7 @@ class WebVideoPlayerRuntime
         ..controls = false
         ..playsInline = true {
     ui_web.platformViewRegistry.registerViewFactory(_viewType, (viewId) {
+      _playback.prepareForMount();
       restoreMountedWebVideoStyle(_video);
       return _video;
     });
@@ -69,17 +69,18 @@ class WebVideoPlayerRuntime
     _subscribeToMediaEvents();
   }
 
-  static const _hlsBundle = _WebEngineBundle(
-    path: 'playback/hls-1.7.1.min.js',
-    integrity: 'sha256-bPrXAaYfuKma3V6ERJ5kZhFpsGUr9EzrKihGXIgXtfE=',
+  static final _engineLoader = WebEngineLoader();
+  static const _hlsBundle = WebEngineBundle(
+    path: 'playback/hls-1.7.2.min.js',
+    integrity: 'sha256-r83gdDfshLBy/oeC53LOtQRurHUbJxn3OuDYPXY7w/U=',
     globalName: 'Hls',
   );
-  static const _dashBundle = _WebEngineBundle(
+  static const _dashBundle = WebEngineBundle(
     path: 'playback/dash-5.2.1.min.js',
     integrity: 'sha256-OiKx9FdqspT0HlbxVs7Hlypfg+3aN5QWd4KT/yLS60k=',
     globalName: 'dashjs',
   );
-  static const _mpegTsBundle = _WebEngineBundle(
+  static const _mpegTsBundle = WebEngineBundle(
     path: 'playback/mpegts-1.8.2.js',
     integrity: 'sha256-vaMXSHNqacthDC7fRiPmM/H09Htb2oNmjI0oflGww6g=',
     globalName: 'mpegts',
@@ -87,6 +88,10 @@ class WebVideoPlayerRuntime
 
   final String _viewType;
   final web.HTMLVideoElement _video;
+  late final _playback = WebVideoPlaybackController(
+    _video,
+    onError: reportOpenError,
+  );
   final StreamController<VideoEvent> _events = StreamController<VideoEvent>();
   final StreamController<AdaptiveVideoTrackSnapshot> _adaptiveTracks =
       StreamController<AdaptiveVideoTrackSnapshot>.broadcast();
@@ -203,7 +208,7 @@ class WebVideoPlayerRuntime
   }
 
   Future<bool> _openHls(String uri, int generation) async {
-    final constructor = await _WebEngineLoader.load(_hlsBundle) as JSFunction;
+    final constructor = await _engineLoader.load(_hlsBundle) as JSFunction;
     if (!_isCurrentMediaGeneration(generation)) return false;
     final supported = constructor.callMethod<JSBoolean>('isSupported'.toJS);
     if (!supported.toDart) {
@@ -250,7 +255,7 @@ class WebVideoPlayerRuntime
   }
 
   Future<bool> _openDash(String uri, int generation) async {
-    final dashjs = await _WebEngineLoader.load(_dashBundle);
+    final dashjs = await _engineLoader.load(_dashBundle);
     if (!_isCurrentMediaGeneration(generation)) return false;
     final mediaPlayerFactory = dashjs.getProperty<JSFunction>(
       'MediaPlayer'.toJS,
@@ -290,7 +295,7 @@ class WebVideoPlayerRuntime
     WebPlaybackTransport transport,
     int generation,
   ) async {
-    final mpegts = await _WebEngineLoader.load(_mpegTsBundle);
+    final mpegts = await _engineLoader.load(_mpegTsBundle);
     if (!_isCurrentMediaGeneration(generation)) return false;
     final supported = mpegts.callMethod<JSBoolean>('isSupported'.toJS);
     if (!supported.toDart) {
@@ -340,13 +345,13 @@ class WebVideoPlayerRuntime
       final details = _readString(data, 'details');
       final type = _readString(data, 'type');
       final error = _readString(data, 'error');
-      final message = <String>[
+      final message = <String>{
         ?type,
         ?details,
         ?error,
         ?_readScalarString(event),
         ?_readScalarString(data),
-      ].toSet().join(': ');
+      }.join(': ');
       reportOpenError(
         PlatformException(
           code: code,
@@ -799,23 +804,10 @@ class WebVideoPlayerRuntime
   }
 
   @override
-  Future<void> play() async {
-    try {
-      await _video.play().toDart;
-    } catch (error) {
-      if (error is JSObject && error.isA<web.DOMException>()) {
-        final exception = error as web.DOMException;
-        throw PlatformException(
-          code: exception.name,
-          message: exception.message,
-        );
-      }
-      rethrow;
-    }
-  }
+  Future<void> play() => _playback.play();
 
   @override
-  Future<void> pause() async => _video.pause();
+  Future<void> pause() async => _playback.pause();
 
   @override
   Future<void> setLooping(bool looping) async => _video.loop = looping;
@@ -922,6 +914,7 @@ class WebVideoPlayerRuntime
   }
 
   Future<void> _resetMedia() async {
+    _playback.pause();
     _initialized = false;
     _initializationTimeoutTimer?.cancel();
     _initializationTimeoutTimer = null;
@@ -963,7 +956,6 @@ class WebVideoPlayerRuntime
           break;
       }
     }
-    _video.pause();
     _video.removeAttribute('src');
     _video.load();
   }
@@ -990,6 +982,7 @@ class WebVideoPlayerRuntime
     if (_disposed) return;
     final shouldExitPictureInPicture = _isPictureInPictureActive;
     _disposed = true;
+    _playback.dispose();
     _mediaGeneration++;
     if (shouldExitPictureInPicture) {
       try {
@@ -1023,83 +1016,6 @@ class WebVideoPlayerRuntime
     await _adaptiveTracks.close();
     await _adaptiveAudioTracks.close();
     await _events.close();
-  }
-}
-
-class _WebEngineBundle {
-  const _WebEngineBundle({
-    required this.path,
-    required this.integrity,
-    required this.globalName,
-  });
-
-  final String path;
-  final String integrity;
-  final String globalName;
-}
-
-class _WebEngineLoader {
-  const _WebEngineLoader._();
-
-  static final Map<String, Future<JSObject>> _loads = {};
-
-  static Future<JSObject> load(_WebEngineBundle bundle) {
-    final existing = globalContext.getProperty<JSObject?>(
-      bundle.globalName.toJS,
-    );
-    if (existing != null) return Future.value(existing);
-    return _loads.putIfAbsent(bundle.globalName, () async {
-      try {
-        return await _load(bundle);
-      } on Object {
-        _loads.remove(bundle.globalName);
-        rethrow;
-      }
-    });
-  }
-
-  static Future<JSObject> _load(_WebEngineBundle bundle) async {
-    final baseUri = _engineAssetBase.isEmpty
-        ? Uri.parse(web.document.baseURI)
-        : Uri.parse(
-            _engineAssetBase.endsWith('/')
-                ? _engineAssetBase
-                : '$_engineAssetBase/',
-          );
-    final script = web.HTMLScriptElement()
-      ..src = baseUri.resolve(bundle.path).toString()
-      ..async = true
-      ..integrity = bundle.integrity
-      ..crossOrigin = 'anonymous'
-      ..dataset['synctvPlaybackEngine'] = bundle.globalName;
-    final completer = Completer<void>();
-    late final StreamSubscription<Object?> loadSubscription;
-    late final StreamSubscription<Object?> errorSubscription;
-    loadSubscription = script.onLoad.listen((_) {
-      if (!completer.isCompleted) completer.complete();
-      unawaited(errorSubscription.cancel());
-    });
-    errorSubscription = script.onError.listen((_) {
-      if (!completer.isCompleted) {
-        completer.completeError(
-          StateError('Unable to load ${bundle.globalName} from ${bundle.path}'),
-        );
-      }
-      unawaited(loadSubscription.cancel());
-    });
-    web.document.head?.append(script);
-    try {
-      await completer.future;
-    } finally {
-      await loadSubscription.cancel();
-      await errorSubscription.cancel();
-      script.remove();
-    }
-    final global = globalContext.getProperty<JSObject?>(bundle.globalName.toJS);
-    if (global == null) {
-      throw StateError('${bundle.globalName} did not register its global API');
-    }
-    return global;
   }
 }
 

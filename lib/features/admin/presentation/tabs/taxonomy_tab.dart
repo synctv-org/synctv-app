@@ -9,6 +9,7 @@ class AdminRoomTaxonomyTab extends StatefulWidget {
 
 class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
   bool _isLoading = true;
+  int _loadGeneration = 0;
   List<RoomCategoryInfo> _categories = const [];
   List<RoomLabelInfo> _labels = const [];
 
@@ -26,6 +27,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
   }
 
   Future<void> _load({bool silent = false}) async {
+    final loadGeneration = ++_loadGeneration;
     if (!silent) setState(() => _isLoading = true);
     try {
       final results = await Future.wait([
@@ -35,7 +37,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         ),
         adminGateway.adminListRoomLabels(includeDisabled: true, refresh: true),
       ]);
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _loadGeneration) return;
       final categories = results[0].cast<RoomCategoryInfo>().toList()
         ..sort(_compareCategories);
       final labels = results[1].cast<RoomLabelInfo>().toList()
@@ -46,7 +48,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _loadGeneration) return;
       setState(() => _isLoading = false);
       AppNotifications.showError(
         context,
@@ -183,11 +185,24 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
       actions: [
         AppDialogs.createCancelButton(context),
         const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: context.l10n.save,
-        ),
+        AppDialogs.createConfirmButton(context, () {
+          if (keyController.text.trim().isEmpty ||
+              nameController.text.trim().isEmpty) {
+            AppNotifications.showWarning(
+              context,
+              context.l10n.categoryIdAndNameRequired,
+            );
+            return;
+          }
+          if (int.tryParse(sortController.text.trim()) == null) {
+            AppNotifications.showWarning(
+              context,
+              context.l10n.sortMustBeInteger,
+            );
+            return;
+          }
+          Navigator.pop(context, true);
+        }, text: context.l10n.save),
       ],
     );
     if (confirmed != true) return;
@@ -195,26 +210,13 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     final key = keyController.text.trim();
     final name = nameController.text.trim();
     final sortOrder = int.tryParse(sortController.text.trim());
-    if (key.isEmpty || name.isEmpty) {
-      if (!mounted) return;
-      AppNotifications.showWarning(
-        context,
-        context.l10n.categoryIdAndNameRequired,
-      );
-      return;
-    }
-    if (sortOrder == null) {
-      if (!mounted) return;
-      AppNotifications.showWarning(context, context.l10n.sortMustBeInteger);
-      return;
-    }
 
     try {
       await adminGateway.adminUpsertRoomCategory(
         key: key,
         name: name,
         description: descriptionController.text.trim(),
-        sortOrder: sortOrder,
+        sortOrder: sortOrder!,
         isEnabled: enabled,
       );
       if (!mounted) return;
@@ -384,11 +386,33 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
       actions: [
         AppDialogs.createCancelButton(context),
         const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: context.l10n.save,
-        ),
+        AppDialogs.createConfirmButton(context, () {
+          if (keyController.text.trim().isEmpty ||
+              nameController.text.trim().isEmpty) {
+            AppNotifications.showWarning(
+              context,
+              context.l10n.labelIdAndNameRequired,
+            );
+            return;
+          }
+          if (int.tryParse(sortController.text.trim()) == null) {
+            AppNotifications.showWarning(
+              context,
+              context.l10n.sortMustBeInteger,
+            );
+            return;
+          }
+          final color = _normalizeColor(colorController.text);
+          if (color.isNotEmpty &&
+              !RegExp(r'^#[0-9A-F]{6}$').hasMatch(color.toUpperCase())) {
+            AppNotifications.showWarning(
+              context,
+              context.l10n.colorFormatExample,
+            );
+            return;
+          }
+          Navigator.pop(context, true);
+        }, text: context.l10n.save),
       ],
     );
     if (confirmed != true) return;
@@ -397,25 +421,6 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     final name = nameController.text.trim();
     final sortOrder = int.tryParse(sortController.text.trim());
     final color = _normalizeColor(colorController.text);
-    if (key.isEmpty || name.isEmpty) {
-      if (!mounted) return;
-      AppNotifications.showWarning(
-        context,
-        context.l10n.labelIdAndNameRequired,
-      );
-      return;
-    }
-    if (sortOrder == null) {
-      if (!mounted) return;
-      AppNotifications.showWarning(context, context.l10n.sortMustBeInteger);
-      return;
-    }
-    if (color.isNotEmpty &&
-        !RegExp(r'^#[0-9A-F]{6}$').hasMatch(color.toUpperCase())) {
-      if (!mounted) return;
-      AppNotifications.showWarning(context, context.l10n.colorFormatExample);
-      return;
-    }
 
     try {
       await adminGateway.adminUpsertRoomLabel(
@@ -424,7 +429,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         description: descriptionController.text.trim(),
         color: color,
         categoryId: categoryId,
-        sortOrder: sortOrder,
+        sortOrder: sortOrder!,
         isEnabled: enabled,
       );
       if (!mounted) return;

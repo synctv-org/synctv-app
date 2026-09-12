@@ -241,8 +241,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('YouTube video'), findsOneWidget);
-    expect(find.textContaining('1 formats'), findsOneWidget);
-    expect(find.textContaining('1 subtitles'), findsOneWidget);
+    expect(find.textContaining('1 format'), findsOneWidget);
+    expect(find.textContaining('1 subtitle'), findsOneWidget);
 
     await tester.tap(find.text('Share my credentials'));
     await tester.pump(const Duration(milliseconds: 50));

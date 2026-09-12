@@ -53,6 +53,7 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
   int _page = 1;
   bool _hasMore = false;
   bool _loading = false;
+  int _loadGeneration = 0;
   List<TrueNasFileItemInfo> _items = const [];
   provider_common.DiscoveredSource? _listSource;
   source_enum.PlaybackProxyMode _proxyMode =
@@ -72,9 +73,15 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
   @override
   void didUpdateWidget(covariant TrueNasAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
-        widget.binds.isNotEmpty) {
-      _bind = widget.binds.first;
+    if (_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) {
+      ++_loadGeneration;
+      _loading = false;
+      _bind = widget.binds.firstOrNull;
+      _path = '/mnt';
+      _page = 1;
+      _items = const [];
+      _listSource = null;
+      _selection.clear();
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
   }
@@ -274,7 +281,8 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
 
   Future<void> _load({int? page}) async {
     final bind = _bind;
-    if (bind == null || _loading) return;
+    if (!mounted || bind == null) return;
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _selection.clear();
@@ -288,7 +296,7 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
         page ?? _page,
         _pageSize,
       );
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _items = result.items;
         _page = result.page;
@@ -296,11 +304,13 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
         _listSource = result.source;
       });
     } catch (error) {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         AppNotifications.showError(context, '$error');
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loading = false);
+      }
     }
   }
 

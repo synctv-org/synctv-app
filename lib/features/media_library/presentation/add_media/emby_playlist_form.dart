@@ -94,6 +94,7 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
   int _total = 0;
   bool _hasMore = false;
   bool _loading = false;
+  int _loadGeneration = 0;
 
   provider_common.DiscoveredSource? get _playbackPolicySource =>
       _selection.entries.firstOrNull?.source ?? _listSource;
@@ -414,6 +415,8 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
   String get _targetId => _locations.lastOrNull?.targetId ?? '';
 
   void _resetDiscovery({bool keepLocation = false}) {
+    ++_loadGeneration;
+    _loading = false;
     _items = const [];
     _listSource = null;
     _selection.clear();
@@ -437,7 +440,8 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
 
   Future<void> _load({int? page, bool preserveSelection = false}) async {
     final bind = _bind;
-    if (bind == null || _loading) return;
+    if (!mounted || bind == null) return;
+    final generation = ++_loadGeneration;
     final nextPage = page ?? 1;
     setState(() {
       _loading = true;
@@ -464,7 +468,7 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
                 serverId: bind.serverId,
                 instanceName: bind.providerInstanceName,
               ));
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _items = page.items;
         _page = nextPage;
@@ -473,9 +477,13 @@ class _EmbyPlaylistFormState extends State<EmbyPlaylistForm> {
         _listSource = page.source;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted && generation == _loadGeneration) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loading = false);
+      }
     }
   }
 

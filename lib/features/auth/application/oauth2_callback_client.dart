@@ -78,3 +78,11 @@ final class OAuth2CallbackBindFailed implements Exception {
   @override
   String toString() => 'Failed to bind the OAuth2 callback listener: $cause';
 }
+
+final class OAuth2CallbackStorageUnavailable implements Exception {
+  const OAuth2CallbackStorageUnavailable();
+
+  @override
+  String toString() =>
+      'Browser storage is unavailable for authorization callbacks. Allow site storage and try again.';
+}

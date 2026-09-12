@@ -17,7 +17,7 @@ final class ContentReportsQuery {
     this.targetUserId = '',
     this.targetMemberRoomId = '',
     this.targetMemberUserId = '',
-    this.targetChatMessageId = 0,
+    this.targetChatMessageId = '0',
     this.scope = admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED,
     this.search = '',
   });
@@ -33,7 +33,7 @@ final class ContentReportsQuery {
   final String targetUserId;
   final String targetMemberRoomId;
   final String targetMemberUserId;
-  final int targetChatMessageId;
+  final String targetChatMessageId;
   final admin_enum.ContentReportScope scope;
   final String search;
 }

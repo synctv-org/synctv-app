@@ -1,13 +1,26 @@
+import 'package:synctv_app/core/presentation/image/app_image_preview.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:synctv_app/core/async/async_operation_coordinator.dart';
+import 'package:synctv_app/features/admin/application/runtime_setting_number.dart';
+import 'package:synctv_app/features/admin/application/runtime_smtp_proxy.dart';
 import 'package:synctv_app/core/config/distribution_profile.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/features/admin/presentation/admin_gateway_scope.dart';
 import 'package:synctv_app/features/admin/presentation/admin_chat_moderation_optimism.dart';
+import 'package:synctv_app/features/room/presentation/widgets/room_member_text_dialog.dart';
+import 'package:synctv_app/features/admin/presentation/widgets/add_room_member_dialog.dart';
+import 'package:synctv_app/features/admin/presentation/widgets/add_user_dialog.dart';
+import 'package:synctv_app/features/admin/presentation/widgets/edit_user_dialog.dart';
+import 'package:synctv_app/features/admin/presentation/widgets/add_administrator_dialog.dart';
+import 'package:synctv_app/features/admin/presentation/widgets/kick_room_member_dialog.dart';
+import 'package:synctv_app/features/admin/presentation/widgets/send_test_email_dialog.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/content_reports/presentation/content_reports_view.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
@@ -22,11 +35,14 @@ import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/features/room/domain/chat_reactions.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/features/room/presentation/room_taxonomy.dart';
+import 'package:synctv_app/features/room/presentation/widgets/member_permission_dialog.dart';
 import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
 import 'package:synctv_app/core/presentation/media_provider_brand.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/core/presentation/widgets/app_responsive_layout.dart';
 
 part 'admin_shared_widgets.dart';
+part 'widgets/room_members_dialog.dart';
 part 'tabs/administrators_tab.dart';
 part 'tabs/ban_records_tab.dart';
 part 'tabs/cache_tab.dart';
@@ -52,9 +68,9 @@ class _AdminSection {
 
 class _AdminToolbarItem {
   final Widget child;
-  final double width;
+  final double? width;
 
-  const _AdminToolbarItem({required this.child, required this.width});
+  const _AdminToolbarItem({required this.child, this.width});
 }
 
 class _AdminToolbarWrap extends StatelessWidget {
@@ -77,9 +93,9 @@ class _AdminToolbarWrap extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             for (final item in items)
-              SizedBox(
-                width: math.min(item.width, availableWidth),
-                child: item.child,
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: availableWidth),
+                child: SizedBox(width: item.width, child: item.child),
               ),
           ],
         );
@@ -120,7 +136,7 @@ Future<void> _openContentReportsViewer(
   String targetUserId = '',
   String targetMemberRoomId = '',
   String targetMemberUserId = '',
-  int targetChatMessageId = 0,
+  String targetChatMessageId = '0',
   admin_enum.ContentReportScope scope =
       admin_enum.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED,
   String search = '',
@@ -216,23 +232,24 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
   late TabController _tabController;
   int _selectedSectionIndex = 0;
   final Set<int> _builtSectionIndexes = <int>{0};
+  final GlobalKey _tabViewKey = GlobalKey();
   static const int _sectionCount = 12;
 
   List<_AdminSection> get _sections => [
     _AdminSection(
       label: context.l10n.overview,
       icon: Icons.dashboard_rounded,
-      page: const AdminOverviewTab(),
+      page: AdminOverviewTab(isActive: _selectedSectionIndex == 0),
     ),
     _AdminSection(
       label: context.l10n.administrators,
       icon: Icons.admin_panel_settings_rounded,
-      page: const AdministratorsTab(),
+      page: AdministratorsTab(isActive: _selectedSectionIndex == 1),
     ),
     _AdminSection(
       label: context.l10n.rooms,
       icon: Icons.meeting_room_rounded,
-      page: const RoomManagementTab(),
+      page: RoomManagementTab(isActive: _selectedSectionIndex == 2),
     ),
     _AdminSection(
       label: context.l10n.categoriesAndLabels,
@@ -242,7 +259,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
     _AdminSection(
       label: context.l10n.users,
       icon: Icons.people_alt_rounded,
-      page: const UserManagementTab(),
+      page: UserManagementTab(isActive: _selectedSectionIndex == 4),
     ),
     _AdminSection(
       label: context.l10n.review,
@@ -272,7 +289,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
     _AdminSection(
       label: context.l10n.bans,
       icon: Icons.gavel_rounded,
-      page: const AdminBanRecordsTab(),
+      page: AdminBanRecordsTab(isActive: _selectedSectionIndex == 10),
     ),
     _AdminSection(
       label: context.l10n.settings,
@@ -353,7 +370,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
             if (!useRail) {
               return Column(
                 children: [
-                  _buildTopTabs(theme, isDark),
+                  _buildTopTabs(theme),
                   Expanded(child: _buildTabView()),
                 ],
               );
@@ -387,6 +404,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
 
   Widget _buildTabView() {
     return IndexedStack(
+      key: _tabViewKey,
       index: _selectedSectionIndex,
       children: List.generate(_sections.length, (index) {
         if (!_builtSectionIndexes.contains(index)) {
@@ -395,7 +413,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
 
         final section = _sections[index];
         return KeyedSubtree(
-          key: PageStorageKey<String>('admin_section_${section.label}'),
+          key: PageStorageKey<String>('admin_section_$index'),
           child: section.page,
         );
       }),
@@ -456,131 +474,66 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
     );
   }
 
-  Widget _buildTopTabs(ThemeData theme, bool isDark) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 640;
-        return AppInkSurface(
-          color: theme.colorScheme.surface,
-          elevation: 0,
+  Widget _buildTopTabs(ThemeData theme) {
+    final labelStyle = theme.textTheme.labelMedium!;
+    final tabHeight = math.max(
+      44.0,
+      MediaQuery.textScalerOf(context).scale(labelStyle.fontSize!) *
+              (labelStyle.height ?? 1.4) +
+          16,
+    );
+    return AppInkSurface(
+      color: theme.colorScheme.surface,
+      elevation: 0,
+      clipBehavior: Clip.none,
+      child: AppSafeArea(
+        bottom: false,
+        child: AppPanelSurface(
+          borderRadius: BorderRadius.zero,
           clipBehavior: Clip.none,
-          child: AppSafeArea(
-            bottom: false,
-            child: AppPanelSurface(
-              borderRadius: BorderRadius.zero,
-              clipBehavior: Clip.none,
-              border: Border(
-                bottom: BorderSide(
-                  color: theme.dividerColor.withValues(alpha: 0.65),
-                ),
-              ),
-              padding: compact
-                  ? const EdgeInsets.fromLTRB(10, 6, 10, 8)
-                  : const EdgeInsets.fromLTRB(8, 6, 8, 8),
-              child: compact
-                  ? _buildCompactTopTabs(theme)
-                  : AppTabBar(
-                      controller: _tabController,
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      onTap: (index) =>
-                          _selectSection(index, syncController: false),
-                      dividerColor: Colors.transparent,
-                      indicator: appTabPillIndicator(
-                        color: theme.colorScheme.primary.withValues(
-                          alpha: 0.10,
-                        ),
-                      ),
-                      labelColor: theme.colorScheme.primary,
-                      unselectedLabelColor: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.62),
-                      labelStyle: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      unselectedLabelStyle: theme.textTheme.labelMedium
-                          ?.copyWith(fontWeight: FontWeight.w500),
-                      tabs: _sections
-                          .map(
-                            (section) => Tab(
-                              height: 42,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(section.icon, size: 18),
-                                    const SizedBox(width: 6),
-                                    Text(section.label),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withValues(alpha: 0.65),
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCompactTopTabs(ThemeData theme) {
-    return AnimatedBuilder(
-      animation: _tabController,
-      builder: (context, _) {
-        return AppGridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            mainAxisExtent: 42,
-            mainAxisSpacing: 6,
-            crossAxisSpacing: 6,
-          ),
-          itemCount: _sections.length,
-          itemBuilder: (context, index) {
-            final section = _sections[index];
-            final selected = _selectedSectionIndex == index;
-            final foreground = selected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurface.withValues(alpha: 0.68);
-            return AppInkSurface(
-              color: selected
-                  ? theme.colorScheme.primary.withValues(alpha: 0.12)
-                  : theme.colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.42,
-                    ),
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => _selectSection(index),
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(section.icon, size: 16, color: foreground),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      section.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: foreground,
-                        fontWeight: selected
-                            ? FontWeight.w800
-                            : FontWeight.w600,
-                      ),
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+          child: AppTabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            onTap: (index) => _selectSection(index, syncController: false),
+            dividerColor: Colors.transparent,
+            indicator: appTabPillIndicator(
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
+            ),
+            labelColor: theme.colorScheme.primary,
+            unselectedLabelColor: theme.colorScheme.onSurface.withValues(
+              alpha: 0.62,
+            ),
+            labelStyle: labelStyle.copyWith(fontWeight: FontWeight.w700),
+            unselectedLabelStyle: labelStyle.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+            tabs: [
+              for (final section in _sections)
+                Tab(
+                  height: tabHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(section.icon, size: 18),
+                        const SizedBox(width: 6),
+                        Text(section.label),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -632,7 +585,9 @@ class _SettingsNavTile extends StatelessWidget {
 }
 
 class AdminOverviewTab extends StatefulWidget {
-  const AdminOverviewTab({super.key});
+  const AdminOverviewTab({super.key, this.isActive = true});
+
+  final bool isActive;
 
   @override
   State<AdminOverviewTab> createState() => _AdminOverviewTabState();
@@ -641,6 +596,15 @@ class AdminOverviewTab extends StatefulWidget {
 class _AdminOverviewTabState extends State<AdminOverviewTab> {
   AdminServiceState? _stats;
   bool _isLoading = true;
+  int _loadGeneration = 0;
+
+  @override
+  void didUpdateWidget(covariant AdminOverviewTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      unawaited(_load(silent: true));
+    }
+  }
 
   @override
   void initState() {
@@ -649,16 +613,17 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
   }
 
   Future<void> _load({bool silent = false}) async {
+    final generation = ++_loadGeneration;
     if (!silent) setState(() => _isLoading = true);
     try {
       final stats = await adminGateway.adminGetServiceState();
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _stats = stats;
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() => _isLoading = false);
       AppNotifications.showError(
         context,
@@ -681,7 +646,9 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
           if (stats == null)
             AppEmptyMessage(message: context.l10n.noStatistics)
           else
-            Wrap(
+            AppResponsiveWrap(
+              minItemWidth: MediaQuery.textScalerOf(context).scale(156),
+              maxColumns: 6,
               spacing: 12,
               runSpacing: 12,
               children: [

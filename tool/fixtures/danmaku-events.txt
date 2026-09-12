@@ -1,0 +1,15 @@
+: connected
+event: danmaku
+data: {"message":"First chat"}
+
+event: error
+data: {"message":"Provider unavailable","code":500}
+
+event: danmaku
+data:{"message":"Compact chat"}
+
+event: danmaku
+data: {"message":
+data: "Multiline chat"}
+
+

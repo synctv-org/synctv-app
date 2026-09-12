@@ -66,6 +66,30 @@ jobs:
       - name: Check Dart formatting
         run: dart format --output=none --set-exit-if-changed lib test tool packages
 
+      - name: Check frontend source audit inventory
+        run: dart run tool/frontend_audit_inventory.dart --check
+
+      - name: Set up Node.js for Web runtime tests
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Test Web bootstrap, service worker and P2P bridge
+        run: node --test tool/web_bootstrap_test.mjs tool/web_service_worker_test.mjs tool/web_p2p_bridge_test.mjs
+
+      - name: Test browser and native-generated provider verification
+        env:
+          GEETEST_NATIVE_HTML: ${{ runner.temp }}/synctv-geetest.html
+        run: |
+          dart run tool/export_geetest_html.dart "$GEETEST_NATIVE_HTML"
+          node --test tool/provider_verification_test.mjs tool/native_provider_verification_test.mjs
+
+      - name: Check bundled UI font coverage
+        run: |
+          python3 -m venv build/font-tools
+          build/font-tools/bin/pip install fonttools==4.61.1
+          build/font-tools/bin/python tool/subset_ui_font.py --check
+
       - name: Check automation scripts
         run: |
           find tool -type f -name '*.sh' -print0 | xargs -0 bash -n
@@ -81,6 +105,21 @@ jobs:
 
       - name: Run Flutter tests
         run: flutter test
+
+      - name: Verify Android OAuth timeout contract
+        run: >-
+          flutter test
+          --dart-define=SYNCTV_OAUTH2_APP_LINK_ORIGIN=https://example.test
+          test/features/auth/infrastructure/oauth2_android_timeout_test.dart
+
+      - name: Verify Web permission bit semantics
+        run: flutter test test/contracts/room_permission_bits_test.dart --platform chrome
+
+      - name: Verify Web P2P engine lifecycle
+        run: flutter test test/features/media_p2p/infrastructure/p2p_media_engine_web_test.dart --platform chrome
+
+      - name: Verify Web OAuth callback isolation
+        run: flutter test test/features/auth/infrastructure/oauth2_web_callback_session_test.dart --platform chrome
 
       - name: Run Darwin Passkey package tests
         working-directory: packages/passkeys_darwin

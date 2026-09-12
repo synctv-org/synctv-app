@@ -1,7 +1,9 @@
 part of '../admin_settings_page.dart';
 
 class AdminBanRecordsTab extends StatefulWidget {
-  const AdminBanRecordsTab({super.key});
+  const AdminBanRecordsTab({super.key, this.isActive = true});
+
+  final bool isActive;
 
   @override
   State<AdminBanRecordsTab> createState() => _AdminBanRecordsTabState();
@@ -9,6 +11,7 @@ class AdminBanRecordsTab extends StatefulWidget {
 
 class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
   bool _isLoading = true;
+  int _loadGeneration = 0;
   admin_enum.BanTargetType _targetType =
       admin_enum.BanTargetType.BAN_TARGET_TYPE_UNSPECIFIED;
   bool? _active = true;
@@ -20,8 +23,17 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
   int _total = 0;
   List<AdminBanRecord> _records = const [];
   final _searchController = TextEditingController();
+  final Set<(admin_enum.BanTargetType, String)> _unbanning = {};
 
   bool _initialized = false;
+
+  @override
+  void didUpdateWidget(covariant AdminBanRecordsTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      unawaited(_loadRecords(silent: true));
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -41,6 +53,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
   }
 
   Future<void> _loadRecords({bool silent = false}) async {
+    final generation = ++_loadGeneration;
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = await adminGateway.adminListBanRecordsPage(
@@ -51,14 +64,20 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
         userId: _userId,
         roomId: _roomId,
       );
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
+      final lastPage = math.max(1, (data.total + _pageSize - 1) ~/ _pageSize);
+      if (_page > lastPage) {
+        setState(() => _page = lastPage);
+        await _loadRecords();
+        return;
+      }
       setState(() {
         _records = data.records;
         _total = data.total;
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() => _isLoading = false);
       AppNotifications.showError(
         context,
@@ -69,16 +88,23 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
 
   void _applyBanSearch(String value) {
     final normalized = value.trim();
+    final isUserId = normalized.startsWith('usr_') && normalized.length > 4;
+    final isRoomId = normalized.startsWith('room_') && normalized.length > 5;
+    if (normalized.isNotEmpty && !isUserId && !isRoomId) {
+      AppNotifications.showWarning(context, context.l10n.userOrRoomIdHint);
+      return;
+    }
     setState(() {
       _search = normalized;
-      _userId = normalized.startsWith('usr_') ? normalized : '';
-      _roomId = normalized.startsWith('room_') ? normalized : '';
+      _userId = isUserId ? normalized : '';
+      _roomId = isRoomId ? normalized : '';
       _page = 1;
     });
     _loadRecords();
   }
 
   Future<void> _unbanRecord(AdminBanRecord record) async {
+    if (!mounted) return;
     final isUserBan =
         record.targetType == admin_enum.BanTargetType.BAN_TARGET_TYPE_USER;
     final targetName = isUserBan
@@ -93,24 +119,27 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
       return;
     }
 
-    final confirmed = await AppDialogs.showStyledDialog<bool>(
-      context: context,
-      title: isUserBan ? context.l10n.unbanUser : context.l10n.unbanRoom,
-      icon: const Icon(Icons.lock_open_rounded, color: Colors.green),
-      content: Text(context.l10n.confirmUnban(targetName)),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: context.l10n.unban,
-        ),
-      ],
-    );
-    if (confirmed != true) return;
-
+    final key = (record.targetType, targetId);
+    if (_unbanning.contains(key)) return;
+    setState(() => _unbanning.add(key));
     try {
+      final confirmed = await AppDialogs.showStyledDialog<bool>(
+        context: context,
+        title: isUserBan ? context.l10n.unbanUser : context.l10n.unbanRoom,
+        icon: const Icon(Icons.lock_open_rounded, color: Colors.green),
+        content: Text(context.l10n.confirmUnban(targetName)),
+        actions: [
+          AppDialogs.createCancelButton(context),
+          const SizedBox(width: 8),
+          AppDialogs.createConfirmButton(
+            context,
+            () => Navigator.pop(context, true),
+            text: context.l10n.unban,
+          ),
+        ],
+      );
+      if (confirmed != true || !mounted) return;
+
       if (isUserBan) {
         await adminGateway.adminBanUser(targetId, false);
       } else {
@@ -118,10 +147,12 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
       }
       if (!mounted) return;
       AppNotifications.showSuccess(context, context.l10n.unbanned);
-      _loadRecords(silent: true);
+      await _loadRecords(silent: true);
     } catch (e) {
       if (!mounted) return;
       AppNotifications.showError(context, context.l10n.unbanFailed('$e'));
+    } finally {
+      if (mounted) setState(() => _unbanning.remove(key));
     }
   }
 
@@ -134,8 +165,8 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Column(
-      children: [
+    return _AdminPagedList(
+      header: [
         Padding(
           padding: const EdgeInsets.all(16),
           child: Wrap(
@@ -239,58 +270,52 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
                   _loadRecords();
                 },
         ),
-        Expanded(
-          child: _isLoading
-              ? const AppLoadingIndicator()
-              : _records.isEmpty
-              ? Center(
-                  child: Text(
-                    context.l10n.noBanRecords,
-                    style: TextStyle(color: theme.hintColor),
-                  ),
-                )
-              : AppListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  itemCount: _records.length,
-                  itemBuilder: (context, index) {
-                    final record = _records[index];
-                    final target =
-                        record.targetType ==
-                            admin_enum.BanTargetType.BAN_TARGET_TYPE_USER
-                        ? '${record.username} (${record.userId})'
-                        : '${record.roomName} (${record.roomId})';
-                    return _AdminPanelCard(
-                      isDark: isDark,
-                      child: AppTile(
-                        prefix: Icon(
-                          record.isActive
-                              ? Icons.block_rounded
-                              : Icons.check_circle_outline,
-                          color: record.isActive ? Colors.red : Colors.green,
-                        ),
-                        title: Text(target),
-                        subtitle: Text(
-                          context.l10n.banRecordSummary(
-                            record.reason.isEmpty
-                                ? context.l10n.noReason
-                                : record.reason,
-                            record.bannedByUsername,
-                            _formatTimestamp(record.startsAt),
-                          ),
-                        ),
-                        suffix: record.isActive
-                            ? AppIconButton(
-                                tooltip: context.l10n.unban,
-                                icon: Icons.lock_open_rounded,
-                                onPressed: () => _unbanRecord(record),
-                              )
-                            : Text(context.l10n.ended),
-                      ),
-                    );
-                  },
-                ),
-        ),
       ],
+      loading: _isLoading,
+      itemCount: _records.length,
+      emptyMessage: context.l10n.noBanRecords,
+      itemBuilder: (context, index) {
+        final record = _records[index];
+        final target =
+            record.targetType == admin_enum.BanTargetType.BAN_TARGET_TYPE_USER
+            ? '${record.username} (${record.userId})'
+            : '${record.roomName} (${record.roomId})';
+        return _AdminPanelCard(
+          isDark: isDark,
+          child: AppTile(
+            prefix: Icon(
+              record.isActive
+                  ? Icons.block_rounded
+                  : Icons.check_circle_outline,
+              color: record.isActive ? Colors.red : Colors.green,
+            ),
+            title: Text(target),
+            subtitle: Text(
+              context.l10n.banRecordSummary(
+                record.reason.isEmpty ? context.l10n.noReason : record.reason,
+                record.bannedByUsername,
+                _formatTimestamp(record.startsAt),
+              ),
+            ),
+            suffix: record.isActive
+                ? AppIconButton(
+                    tooltip: context.l10n.unban,
+                    icon: Icons.lock_open_rounded,
+                    onPressed:
+                        _unbanning.contains((
+                          record.targetType,
+                          record.targetType ==
+                                  admin_enum.BanTargetType.BAN_TARGET_TYPE_USER
+                              ? record.userId
+                              : record.roomId,
+                        ))
+                        ? null
+                        : () => _unbanRecord(record),
+                  )
+                : Text(context.l10n.ended),
+          ),
+        );
+      },
     );
   }
 }

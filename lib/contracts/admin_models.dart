@@ -316,7 +316,7 @@ class AdminContentReport {
   final String targetMemberRoomName;
   final String targetMemberUserId;
   final String targetMemberUsername;
-  final int targetChatMessageId;
+  final String targetChatMessageId;
   final int targetChatMessageCreatedAt;
   final String targetChatMessagePreview;
   final String reasonCode;
@@ -462,6 +462,8 @@ final class AdminRoomCreationReview extends AdminReviewItem {
 
 final class AdminRoomJoinReview extends AdminReviewItem {
   final common_enum.RoomMemberRole requestedRole;
+  final String roomId;
+  final String userId;
 
   const AdminRoomJoinReview({
     required super.id,
@@ -475,6 +477,8 @@ final class AdminRoomJoinReview extends AdminReviewItem {
     required super.reviewedBy,
     required super.rejectionReason,
     required this.requestedRole,
+    this.roomId = '',
+    this.userId = '',
   });
 
   @override

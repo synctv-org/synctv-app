@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_source_preview.dart';
+import 'package:synctv_app/core/presentation/dependency_scope.dart';
+import 'package:synctv_app/features/providers/application/provider_gateway.dart';
+import 'package:synctv_app/core/async/async_operation_coordinator.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_instance_selector.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/src/generated/proto/providers/douyu.pb.dart'
     as douyu;
@@ -47,8 +53,48 @@ class _DouyuAddMediaFormState extends State<DouyuAddMediaForm> {
   final _resourceController = TextEditingController();
   final _nameController = TextEditingController();
   String _instanceName = '';
-  bool _loading = false;
+  bool _previewLoading = false;
+  bool _adding = false;
+  bool get _loading => _previewLoading || _adding;
+  ProviderGateway? _observedGateway;
+  final _operationEpoch = AsyncStateEpoch();
   douyu.ResolveResponse? _resolved;
+
+  bool get _canInteract =>
+      mounted && !_loading && (ModalRoute.of(context)?.isCurrent ?? true);
+
+  bool _ownsOperation(Object epoch) =>
+      mounted && _operationEpoch.isCurrent(epoch);
+
+  void _invalidateOperation() {
+    _operationEpoch.advance();
+    _previewLoading = false;
+    _adding = false;
+    _resolved = null;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final gateway = DependencyScope.maybeOf<ProviderGateway>(context);
+    if (!identical(gateway, _observedGateway)) {
+      _observedGateway = gateway;
+      _invalidateOperation();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant DouyuAddMediaForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final instanceRemoved =
+        _instanceName.isNotEmpty && !widget.instances.contains(_instanceName);
+    if (oldWidget.roomId != widget.roomId ||
+        oldWidget.playlistId != widget.playlistId ||
+        instanceRemoved) {
+      _invalidateOperation();
+    }
+    if (instanceRemoved) _instanceName = '';
+  }
 
   @override
   void dispose() {
@@ -58,7 +104,8 @@ class _DouyuAddMediaFormState extends State<DouyuAddMediaForm> {
   }
 
   void _changed() {
-    _resolved = null;
+    if (!mounted) return;
+    _invalidateOperation();
     widget.onDraftChanged(
       _resourceController.text.trim().isNotEmpty ||
           _nameController.text.trim().isNotEmpty,
@@ -83,12 +130,12 @@ class _DouyuAddMediaFormState extends State<DouyuAddMediaForm> {
   @override
   Widget build(BuildContext context) {
     final instances = {'', ...widget.instances}.toList();
-    if (!instances.contains(_instanceName)) _instanceName = '';
     final controls = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppTextField(
           key: const Key('douyu-resource'),
+          labelAbove: true,
           controller: _resourceController,
           enabled: !_loading,
           label: context.l10n.roomIdAliasOrUrl,
@@ -98,6 +145,7 @@ class _DouyuAddMediaFormState extends State<DouyuAddMediaForm> {
         const SizedBox(height: 12),
         AppTextField(
           key: const Key('douyu-name'),
+          labelAbove: true,
           controller: _nameController,
           enabled: !_loading,
           label: context.l10n.name,
@@ -105,46 +153,51 @@ class _DouyuAddMediaFormState extends State<DouyuAddMediaForm> {
           onChanged: (_) => _nameChanged(),
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          initialValue: _instanceName,
-          decoration: InputDecoration(
-            labelText: context.l10n.providerInstance,
-            prefixIcon: const Icon(Icons.dns_outlined),
-          ),
-          items: instances
-              .map(
-                (value) => DropdownMenuItem(
-                  value: value,
-                  child: Text(value.isEmpty ? 'Default' : value),
-                ),
-              )
-              .toList(),
-          onChanged: _loading
-              ? null
-              : (value) => setState(() {
-                  _instanceName = value ?? '';
-                  _resolved = null;
-                }),
+        ProviderInstanceSelector(
+          instances: instances,
+          value: _instanceName,
+          enabled: !_loading,
+          onChanged: (value) {
+            if (!mounted ||
+                _loading ||
+                value == _instanceName ||
+                !(ModalRoute.of(context)?.isCurrent ?? true)) {
+              return;
+            }
+            setState(() {
+              _instanceName = value;
+              _invalidateOperation();
+            });
+          },
         ),
         const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 10,
+          runSpacing: 8,
           children: [
             OutlinedButton.icon(
               key: const Key('douyu-preview'),
               onPressed: _loading || _resourceController.text.trim().isEmpty
                   ? null
                   : _loadPreview,
-              icon: const Icon(Icons.preview_outlined),
+              icon: _previewLoading
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: AppLoadingIndicator(
+                        size: AppLoadingSize.sm,
+                        centered: false,
+                      ),
+                    )
+                  : const Icon(Icons.preview_outlined),
               label: Text(context.l10n.preview),
             ),
-            const SizedBox(width: 10),
             FilledButton.icon(
               key: const Key('douyu-submit'),
-              onPressed: _loading || _resolved?.hasSource() != true
+              onPressed: _loading || _resolved?.source.hasMediaSource != true
                   ? null
                   : _submit,
-              icon: _loading
+              icon: _adding
                   ? const SizedBox.square(
                       dimension: 18,
                       child: AppLoadingIndicator(
@@ -162,16 +215,21 @@ class _DouyuAddMediaFormState extends State<DouyuAddMediaForm> {
     return ProviderWorkspace(controls: controls, results: _buildResults());
   }
 
-  Widget _buildResults() {
+  Widget? _buildResults() {
     final preview = _preview();
     return preview == null
-        ? const SizedBox()
+        ? null
         : AppSingleChildScrollView(padding: EdgeInsets.zero, child: preview);
+  }
+
+  String get _previewTitle {
+    final title = _resolved?.metadata.title.trim() ?? '';
+    return title.isEmpty ? _resourceController.text.trim() : title;
   }
 
   Widget? _preview() {
     final response = _resolved;
-    if (response == null || !response.hasMetadata()) return null;
+    if (response == null) return null;
     final metadata = response.metadata;
     final formats = response.qualities
         .map((quality) => _formatName(quality.format))
@@ -191,54 +249,21 @@ class _DouyuAddMediaFormState extends State<DouyuAddMediaForm> {
     final details = <String>[
       if (metadata.author.isNotEmpty) metadata.author,
       if (metadata.hasCategory()) metadata.category,
-      metadata.isReplay ? 'Replay' : (metadata.isLive ? 'Live' : 'Offline'),
+      metadata.isReplay
+          ? context.l10n.liveReplay
+          : (metadata.isLive ? context.l10n.live : context.l10n.offline),
       if (metadata.isVip) 'VIP',
-      '${response.qualities.length} qualities',
+      context.l10n.qualitiesCount(response.qualities.length),
       if (codecs.isNotEmpty) codecs,
       if (formats.isNotEmpty) formats,
-      if (cdns > 0) '$cdns CDNs',
-      if (metadata.hasViewerCount()) '${metadata.viewerCount} viewers',
+      if (cdns > 0) context.l10n.cdnRoutesCount(cdns),
+      if (metadata.hasViewerCount())
+        context.l10n.viewersCount(metadata.viewerCount.toInt()),
     ];
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          if (metadata.hasThumbnailUrl() && metadata.thumbnailUrl.isNotEmpty)
-            AppImageThumbnail(
-              url: metadata.thumbnailUrl,
-              width: 112,
-              height: 72,
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(7),
-              ),
-              fit: BoxFit.cover,
-              errorChild: const SizedBox(width: 112, height: 72),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    metadata.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    details.join(' · '),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return ProviderSourcePreview(
+      title: _previewTitle,
+      details: response.hasMetadata() ? details : const [],
+      thumbnailUrl: metadata.thumbnailUrl,
     );
   }
 
@@ -256,28 +281,45 @@ class _DouyuAddMediaFormState extends State<DouyuAddMediaForm> {
   };
 
   Future<void> _loadPreview() async {
-    setState(() => _loading = true);
+    if (!_canInteract || _resourceController.text.trim().isEmpty) return;
+    _operationEpoch.advance();
+    final epoch = _operationEpoch.capture();
+    final resource = _resourceController.text.trim();
+    setState(() {
+      _previewLoading = true;
+      _resolved = null;
+    });
     try {
-      _resolved =
-          await (widget.onResolve?.call(_request.resource) ??
+      final resolved =
+          await (widget.onResolve?.call(resource) ??
               providerGateway.resolveDouyu(
-                _request.resource,
+                resource,
                 instanceName: _instanceName,
               ));
+      if (_ownsOperation(epoch)) _resolved = resolved;
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted &&
+          _ownsOperation(epoch) &&
+          (ModalRoute.of(context)?.isCurrent ?? true)) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (_ownsOperation(epoch)) setState(() => _previewLoading = false);
     }
   }
 
   Future<void> _submit() async {
+    if (!_canInteract) return;
     final resolved = _resolved;
-    if (resolved == null) {
+    if (resolved == null || !resolved.source.hasMediaSource) {
       AppNotifications.showError(context, context.l10n.previewSourceFirst);
       return;
     }
-    setState(() => _loading = true);
+    _operationEpoch.advance();
+    final epoch = _operationEpoch.capture();
+    final draftResource = _resourceController.text;
+    final draftName = _nameController.text;
+    setState(() => _adding = true);
     try {
       final request = _request;
       if (widget.onSubmit case final submit?) {
@@ -287,20 +329,31 @@ class _DouyuAddMediaFormState extends State<DouyuAddMediaForm> {
           widget.roomId,
           playlistId: widget.playlistId,
           source: resolved.source,
-          name: request.name.isEmpty ? resolved.metadata.title : request.name,
+          name: request.name.isEmpty ? _previewTitle : request.name,
         );
       }
-      if (!mounted) return;
+      if (!mounted ||
+          !_ownsOperation(epoch) ||
+          _resourceController.text != draftResource ||
+          _nameController.text != draftName) {
+        return;
+      }
       _resourceController.clear();
       _nameController.clear();
       _resolved = null;
       widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
+      if (ModalRoute.of(context)?.isCurrent ?? true) {
+        AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
+      }
       setState(() {});
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted &&
+          _ownsOperation(epoch) &&
+          (ModalRoute.of(context)?.isCurrent ?? true)) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (_ownsOperation(epoch)) setState(() => _adding = false);
     }
   }
 }

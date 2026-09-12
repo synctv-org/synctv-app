@@ -317,7 +317,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverAddressIdentityDescription.
   ///
   /// In en, this message translates to:
-  /// **'The address above identifies this server on this device. The ID below is declared by the server and may be shared or imitated by another address.'**
+  /// **'The server address identifies this connection on this device. The server declares its own ID; other addresses may declare the same ID.'**
   String get serverAddressIdentityDescription;
 
   /// No description provided for @serverDeclaredId.
@@ -665,7 +665,7 @@ abstract class AppLocalizations {
   /// No description provided for @roomNameTooLong.
   ///
   /// In en, this message translates to:
-  /// **'Room names can contain up to {maxLength} characters'**
+  /// **'Room names can contain up to {maxLength, plural, =1{1 character} other{{maxLength} characters}}'**
   String roomNameTooLong(int maxLength);
 
   /// No description provided for @roomPasswordRequired.
@@ -1001,7 +1001,7 @@ abstract class AppLocalizations {
   /// No description provided for @roomPresenceSummary.
   ///
   /// In en, this message translates to:
-  /// **'Online: {onlineMembers} members · {onlineGuests} guests'**
+  /// **'Online: {onlineMembers, plural, =1{1 member} other{{onlineMembers} members}} · {onlineGuests, plural, =1{1 guest} other{{onlineGuests} guests}}'**
   String roomPresenceSummary(int onlineMembers, int onlineGuests);
 
   /// No description provided for @roomOnlineTotal.
@@ -1013,7 +1013,7 @@ abstract class AppLocalizations {
   /// No description provided for @roomPresenceWithMembers.
   ///
   /// In en, this message translates to:
-  /// **'{onlineMembers} members online · {onlineGuests} guests online · {memberCount} members total'**
+  /// **'{onlineMembers, plural, =1{1 member} other{{onlineMembers} members}} online · {onlineGuests, plural, =1{1 guest} other{{onlineGuests} guests}} online · {memberCount, plural, =1{1 member} other{{memberCount} members}} total'**
   String roomPresenceWithMembers(
     int onlineMembers,
     int onlineGuests,
@@ -1470,6 +1470,18 @@ abstract class AppLocalizations {
   /// **'Authorization complete'**
   String get oauth2CallbackCompleteTitle;
 
+  /// No description provided for @oauth2CallbackDispatchFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to return authorization'**
+  String get oauth2CallbackDispatchFailedTitle;
+
+  /// No description provided for @oauth2CallbackDispatchFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The authorization result could not be sent to SyncTV. Try again. If this continues, return to SyncTV and restart sign-in.'**
+  String get oauth2CallbackDispatchFailedMessage;
+
   /// No description provided for @oauth2CallbackCompleteMessage.
   ///
   /// In en, this message translates to:
@@ -1710,6 +1722,42 @@ abstract class AppLocalizations {
   /// **'Add the invite server'**
   String get serverRequiredForInvite;
 
+  /// No description provided for @inviteOnAnotherServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Room on another server'**
+  String get inviteOnAnotherServer;
+
+  /// No description provided for @webInviteServerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This room belongs to another SyncTV server. This browser session stays connected to the current server.'**
+  String get webInviteServerDescription;
+
+  /// No description provided for @openInviteServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open server'**
+  String get openInviteServer;
+
+  /// No description provided for @openInviteServerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the invite server'**
+  String get openInviteServerFailed;
+
+  /// No description provided for @copyRoomId.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy room ID'**
+  String get copyRoomId;
+
+  /// No description provided for @copyRoomIdFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the room ID'**
+  String get copyRoomIdFailed;
+
   /// No description provided for @serverRequiredForInviteDescription.
   ///
   /// In en, this message translates to:
@@ -1745,6 +1793,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not crop the image: {error}'**
   String imageCropFailed(String error);
+
+  /// No description provided for @imageCannotBeEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'This image cannot be edited. Try another image or upload the original.'**
+  String get imageCannotBeEdited;
 
   /// No description provided for @cropForPurpose.
   ///
@@ -1875,7 +1929,7 @@ abstract class AppLocalizations {
   /// No description provided for @retainEvents.
   ///
   /// In en, this message translates to:
-  /// **'Keep {count} events'**
+  /// **'Keep {count, plural, =1{1 event} other{{count} events}}'**
   String retainEvents(int count);
 
   /// No description provided for @customValue.
@@ -1959,7 +2013,7 @@ abstract class AppLocalizations {
   /// No description provided for @filteredEventCount.
   ///
   /// In en, this message translates to:
-  /// **'{visible} / {total} events'**
+  /// **'{visible} / {total, plural, =1{1 event} other{{total} events}}'**
   String filteredEventCount(int visible, int total);
 
   /// No description provided for @realtimeEvents.
@@ -2007,7 +2061,7 @@ abstract class AppLocalizations {
   /// No description provided for @byteCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} bytes'**
+  /// **'{count, plural, =1{1 byte} other{{count} bytes}}'**
   String byteCount(int count);
 
   /// No description provided for @brightness.
@@ -2511,13 +2565,13 @@ abstract class AppLocalizations {
   /// No description provided for @playerBufferRangeCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} ranges'**
+  /// **'{count, plural, =1{1 range} other{{count} ranges}}'**
   String playerBufferRangeCount(int count);
 
   /// No description provided for @playerConnectedPeerCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} peers'**
+  /// **'{count, plural, =1{1 peer} other{{count} peers}}'**
   String playerConnectedPeerCount(int count);
 
   /// No description provided for @unknown.
@@ -2790,6 +2844,12 @@ abstract class AppLocalizations {
   /// **'No extra request headers are sent by default.'**
   String get noExtraRequestHeaders;
 
+  /// No description provided for @nameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get nameRequired;
+
   /// No description provided for @name.
   ///
   /// In en, this message translates to:
@@ -2939,6 +2999,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter an address matching the selected protocol'**
   String get liveSourceAddressHint;
+
+  /// No description provided for @invalidRtmpSourceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a complete rtmp:// address, including the host.'**
+  String get invalidRtmpSourceUrl;
+
+  /// No description provided for @invalidRtspSourceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a complete rtsp:// address, including the host.'**
+  String get invalidRtspSourceUrl;
+
+  /// No description provided for @invalidHttpFlvSourceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an HTTP or HTTPS address whose path ends in .flv.'**
+  String get invalidHttpFlvSourceUrl;
+
+  /// No description provided for @invalidWhepSourceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a complete HTTP or HTTPS WHEP address.'**
+  String get invalidWhepSourceUrl;
 
   /// No description provided for @rtspTransport.
   ///
@@ -5457,13 +5541,13 @@ abstract class AppLocalizations {
   /// No description provided for @viewsCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} views'**
+  /// **'{count, plural, =1{1 view} other{{count} views}}'**
   String viewsCount(int count);
 
   /// No description provided for @viewersCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} viewers'**
+  /// **'{count, plural, =1{1 viewer} other{{count} viewers}}'**
   String viewersCount(int count);
 
   /// No description provided for @previewSourceFirst.
@@ -5501,6 +5585,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Live room or video URL'**
   String get liveRoomOrVideoUrl;
+
+  /// No description provided for @liveReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get liveReplay;
+
+  /// No description provided for @liveDanmaku.
+  ///
+  /// In en, this message translates to:
+  /// **'Live danmaku'**
+  String get liveDanmaku;
+
+  /// No description provided for @cdnRoutesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 CDN} other{{count} CDNs}}'**
+  String cdnRoutesCount(int count);
+
+  /// No description provided for @mediaStreamsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 stream} other{{count} streams}}'**
+  String mediaStreamsCount(int count);
+
+  /// No description provided for @hlsVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'HLS video'**
+  String get hlsVideo;
+
+  /// No description provided for @hlsAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'HLS audio'**
+  String get hlsAudio;
+
+  /// No description provided for @protectedMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected'**
+  String get protectedMedia;
 
   /// No description provided for @roomIdAliasOrUrl.
   ///
@@ -5625,31 +5751,31 @@ abstract class AppLocalizations {
   /// No description provided for @formatsCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} formats'**
+  /// **'{count, plural, =1{1 format} other{{count} formats}}'**
   String formatsCount(int count);
 
   /// No description provided for @subtitlesCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} subtitles'**
+  /// **'{count, plural, =1{1 subtitle} other{{count} subtitles}}'**
   String subtitlesCount(int count);
 
   /// No description provided for @variantsCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} variants'**
+  /// **'{count, plural, =1{1 variant} other{{count} variants}}'**
   String variantsCount(int count);
 
   /// No description provided for @qualitiesCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} qualities'**
+  /// **'{count, plural, =1{1 quality} other{{count} qualities}}'**
   String qualitiesCount(int count);
 
   /// No description provided for @chaptersCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} chapters'**
+  /// **'{count, plural, =1{1 chapter} other{{count} chapters}}'**
   String chaptersCount(int count);
 
   /// No description provided for @watermarkFreeCount.
@@ -6939,7 +7065,7 @@ abstract class AppLocalizations {
   /// No description provided for @unreadTotalSummary.
   ///
   /// In en, this message translates to:
-  /// **'Unread {unread} / Total {total}'**
+  /// **'All unread {unread} · Results {total}'**
   String unreadTotalSummary(int unread, int total);
 
   /// No description provided for @selectedCount.
@@ -7739,6 +7865,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings updated'**
   String get settingsUpdated;
+
+  /// No description provided for @runtimeSettingChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'This setting changed while you were editing. Reopen it to review the latest value.'**
+  String get runtimeSettingChanged;
 
   /// No description provided for @roomVisibilityUpdated.
   ///
@@ -8736,6 +8868,12 @@ abstract class AppLocalizations {
   /// **'No media entries at this level'**
   String get noMediaEntriesAtCurrentLevel;
 
+  /// No description provided for @noMatchingMediaEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No media entries match the current filters'**
+  String get noMatchingMediaEntries;
+
   /// No description provided for @realtimeDiagnostics.
   ///
   /// In en, this message translates to:
@@ -9033,7 +9171,7 @@ abstract class AppLocalizations {
   /// No description provided for @onlineMemberSummary.
   ///
   /// In en, this message translates to:
-  /// **'{online} online / {members} members'**
+  /// **'{online} online / {members, plural, =1{1 member} other{{members} members}}'**
   String onlineMemberSummary(int online, int members);
 
   /// No description provided for @approve.
@@ -9141,7 +9279,7 @@ abstract class AppLocalizations {
   /// No description provided for @dynamicMediaSize.
   ///
   /// In en, this message translates to:
-  /// **'{size, plural, =0{Dynamic media} other{Dynamic media · {size} bytes}}'**
+  /// **'{size, plural, =0{Dynamic media} =1{Dynamic media · 1 byte} other{Dynamic media · {size} bytes}}'**
   String dynamicMediaSize(int size);
 
   /// No description provided for @online.
@@ -9257,6 +9395,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for event'**
   String get waitingForEvent;
+
+  /// No description provided for @messageContentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter message content'**
+  String get messageContentRequired;
 
   /// No description provided for @messageContent.
   ///
@@ -9693,13 +9837,13 @@ abstract class AppLocalizations {
   /// No description provided for @memberAdminSummary.
   ///
   /// In en, this message translates to:
-  /// **'{total} members · {online} online · {connections} connections'**
+  /// **'{total, plural, =1{1 member} other{{total} members}} · {online} online · {connections, plural, =1{1 connection} other{{connections} connections}}'**
   String memberAdminSummary(int total, int online, int connections);
 
   /// No description provided for @memberPageSummary.
   ///
   /// In en, this message translates to:
-  /// **'{total} members · Page {page} of {pageCount}'**
+  /// **'{total, plural, =1{1 member} other{{total} members}} · Page {page} of {pageCount}'**
   String memberPageSummary(int total, int page, int pageCount);
 
   /// No description provided for @toggleAdministrator.
@@ -10065,7 +10209,7 @@ abstract class AppLocalizations {
   /// No description provided for @authenticationFactorsSummary.
   ///
   /// In en, this message translates to:
-  /// **'{count} available factors: password {passwordStatus}, email {emailStatus}, passkey {passkeyStatus}'**
+  /// **'{count, plural, =1{1 available factor} other{{count} available factors}}: password {passwordStatus}, email {emailStatus}, passkey {passkeyStatus}'**
   String authenticationFactorsSummary(
     int count,
     String passwordStatus,
@@ -10369,7 +10513,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordMinimumLength.
   ///
   /// In en, this message translates to:
-  /// **'At least {count} characters'**
+  /// **'At least {count, plural, =1{1 character} other{{count} characters}}'**
   String passwordMinimumLength(int count);
 
   /// No description provided for @auditReason.
@@ -11080,6 +11224,12 @@ abstract class AppLocalizations {
   /// **'Email whitelist'**
   String get emailWhitelist;
 
+  /// No description provided for @registrationEmailWhitelistHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration email must match an address or domain allowed by this server.'**
+  String get registrationEmailWhitelistHint;
+
   /// No description provided for @emailWhitelistDescription.
   ///
   /// In en, this message translates to:
@@ -11115,6 +11265,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Maximum simultaneous voice participants in one room. Mesh voice supports 2 to 32; 8 is recommended for mobile clients.'**
   String get maxVoiceParticipantsPerRoomDescription;
+
+  /// No description provided for @runtimeServerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Server name'**
+  String get runtimeServerName;
+
+  /// No description provided for @runtimeServerNameDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The display name shown in client server information.'**
+  String get runtimeServerNameDescription;
+
+  /// No description provided for @maxPinnedMessagesPerRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned messages per room'**
+  String get maxPinnedMessagesPerRoom;
+
+  /// No description provided for @maxPinnedMessagesPerRoomDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The maximum number of messages that can be pinned in each room.'**
+  String get maxPinnedMessagesPerRoomDescription;
 
   /// No description provided for @chatMessagesPerRoom.
   ///
@@ -11215,7 +11389,7 @@ abstract class AppLocalizations {
   /// No description provided for @oauthProviderSummary.
   ///
   /// In en, this message translates to:
-  /// **'{total} providers, {configured} with a Client ID'**
+  /// **'{total, plural, =1{1 provider} other{{total} providers}}, {configured} with a Client ID'**
   String oauthProviderSummary(int total, int configured);
 
   /// No description provided for @noIceServersConfigured.
@@ -11425,8 +11599,14 @@ abstract class AppLocalizations {
   /// No description provided for @socks5ProxyAddressRequired.
   ///
   /// In en, this message translates to:
-  /// **'Enter an address beginning with socks5://'**
+  /// **'Enter a SOCKS5 host and optional port (0-65535), without credentials, path, query, or fragment.'**
   String get socks5ProxyAddressRequired;
+
+  /// No description provided for @smtpProxyCredentialTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'SOCKS5 credentials must be at most 255 UTF-8 bytes per field.'**
+  String get smtpProxyCredentialTooLong;
 
   /// No description provided for @proxyRequiresAuthentication.
   ///
@@ -11691,6 +11871,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter an integer greater than zero'**
   String get positiveIntegerRequired;
+
+  /// No description provided for @validRuntimeIntegerRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an integer within the supported range'**
+  String get validRuntimeIntegerRequired;
 
   /// No description provided for @capabilityTypes.
   ///
@@ -12007,8 +12193,56 @@ abstract class AppLocalizations {
   /// No description provided for @searchReportsHint.
   ///
   /// In en, this message translates to:
-  /// **'Search reasons, targets, or usr_/room_ IDs'**
+  /// **'Search reasons or names'**
   String get searchReportsHint;
+
+  /// No description provided for @reportFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Report filters'**
+  String get reportFilters;
+
+  /// No description provided for @reportFilterReporterId.
+  ///
+  /// In en, this message translates to:
+  /// **'Reporter user ID'**
+  String get reportFilterReporterId;
+
+  /// No description provided for @reportFilterRoomId.
+  ///
+  /// In en, this message translates to:
+  /// **'Related room ID'**
+  String get reportFilterRoomId;
+
+  /// No description provided for @reportFilterTargetRoomId.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported room ID'**
+  String get reportFilterTargetRoomId;
+
+  /// No description provided for @reportFilterTargetUserId.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported user ID'**
+  String get reportFilterTargetUserId;
+
+  /// No description provided for @reportFilterMemberRoomId.
+  ///
+  /// In en, this message translates to:
+  /// **'Member room ID'**
+  String get reportFilterMemberRoomId;
+
+  /// No description provided for @reportFilterMemberId.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported member user ID'**
+  String get reportFilterMemberId;
+
+  /// No description provided for @reportFilterMessageId.
+  ///
+  /// In en, this message translates to:
+  /// **'Message ID'**
+  String get reportFilterMessageId;
 
   /// No description provided for @noReportRecords.
   ///
@@ -12062,7 +12296,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Message #{id}'**
-  String messageFilter(int id);
+  String messageFilter(String id);
 
   /// No description provided for @roomTarget.
   ///
@@ -12086,7 +12320,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Chat message #{id} · {room}'**
-  String chatMessageTarget(int id, String room);
+  String chatMessageTarget(String id, String room);
+
+  /// No description provided for @validMessageIdRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a message ID from 1 to 9223372036854775807'**
+  String get validMessageIdRequired;
 
   /// No description provided for @unknownTarget.
   ///
@@ -12271,7 +12511,7 @@ abstract class AppLocalizations {
   /// No description provided for @instanceNameTooLong.
   ///
   /// In en, this message translates to:
-  /// **'Instance names can contain up to {maxLength} characters'**
+  /// **'Instance names can contain up to {maxLength, plural, =1{1 character} other{{maxLength} characters}}'**
   String instanceNameTooLong(int maxLength);
 
   /// No description provided for @instanceNameExists.
@@ -12381,6 +12621,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading'**
   String get loading;
+
+  /// No description provided for @startupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'SyncTV could not start.'**
+  String get startupFailed;
 
   /// No description provided for @loadOlderMessages.
   ///
@@ -12945,6 +13191,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Blocked users are temporarily unavailable'**
   String get blockedUsersTemporarilyUnavailable;
+
+  /// No description provided for @fnosTwoFactorSetupRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up two-factor authentication in FNOS, then retry login.'**
+  String get fnosTwoFactorSetupRequired;
+
+  /// No description provided for @browserLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser'**
+  String get browserLogin;
+
+  /// No description provided for @appPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'App password'**
+  String get appPassword;
+
+  /// No description provided for @openBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open browser'**
+  String get openBrowser;
+
+  /// No description provided for @youtubeCredentialsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Label and at least one YouTube credential are required'**
+  String get youtubeCredentialsRequired;
+
+  /// No description provided for @providerCookieRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Label and {provider} Cookie are required'**
+  String providerCookieRequired(String provider);
+
+  /// No description provided for @viewImage.
+  ///
+  /// In en, this message translates to:
+  /// **'View image'**
+  String get viewImage;
+
+  /// No description provided for @zoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get zoomIn;
+
+  /// No description provided for @zoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get zoomOut;
+
+  /// No description provided for @imageLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the image.'**
+  String get imageLoadFailed;
+
+  /// No description provided for @emailInvalidFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get emailInvalidFormat;
 }
 
 class _AppLocalizationsDelegate

@@ -18,34 +18,44 @@ class AppDialogs {
       context: context,
       builder: (context) => AppDialogFrame(
         maxWidth: 520,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _DialogHeaderBar(
-              title: title,
-              icon: icon.icon ?? Icons.info_outline_rounded,
-              color: accent,
-              onClose: () => Navigator.of(context).pop(),
-            ),
-            Flexible(
-              child: AppSingleChildScrollView(
+        child: AppSingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _DialogHeaderBar(
+                title: title,
+                icon: icon.icon ?? Icons.info_outline_rounded,
+                color: accent,
+                onClose: () => _closeCurrentRoute(context),
+              ),
+              Padding(
                 padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
                 child: Align(alignment: Alignment.centerLeft, child: content),
               ),
-            ),
-            _DialogActionBar(actions: actions),
-          ],
+              _DialogActionBar(actions: actions),
+            ],
+          ),
         ),
       ),
     );
   }
 
   static Widget createCancelButton(BuildContext context) {
-    return AppActionButton(
-      onPressed: () => Navigator.pop(context),
-      label: context.l10n.cancel,
-      style: AppActionButtonStyle.outlined,
+    final label = context.l10n.cancel;
+    return Builder(
+      builder: (buttonContext) => AppActionButton(
+        wrapLabel: true,
+        onPressed: () => _closeCurrentRoute(buttonContext),
+        label: label,
+        style: AppActionButtonStyle.outlined,
+      ),
     );
+  }
+
+  static void _closeCurrentRoute(BuildContext context) {
+    if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    Navigator.of(context).pop();
   }
 
   static Widget createConfirmButton(
@@ -53,9 +63,19 @@ class AppDialogs {
     VoidCallback onTap, {
     String? text,
   }) {
-    return AppActionButton(
-      onPressed: onTap,
-      label: text ?? context.l10n.confirm,
+    final label = text ?? context.l10n.confirm;
+    return Builder(
+      builder: (buttonContext) => AppActionButton(
+        wrapLabel: true,
+        onPressed: () {
+          if (!buttonContext.mounted ||
+              ModalRoute.of(buttonContext)?.isCurrent != true) {
+            return;
+          }
+          onTap();
+        },
+        label: label,
+      ),
     );
   }
 
@@ -64,6 +84,7 @@ class AppDialogs {
     required BuildContext context,
     required String label,
     required TextEditingController controller,
+    bool labelAbove = false,
     String? hintText,
     bool obscureText = false,
     String? helperText,
@@ -82,6 +103,7 @@ class AppDialogs {
       key: key,
       controller: controller,
       label: label,
+      labelAbove: labelAbove,
       hintText: hintText,
       helperText: helperText,
       obscureText: obscureText,
@@ -115,38 +137,54 @@ class _DialogHeaderBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleLarge?.copyWith(
+      fontWeight: FontWeight.w800,
+    );
+    final titleText = Text(title, style: titleStyle);
+    final iconBadge = AppIconBadge(
+      icon: icon,
+      color: color,
+      iconColor: Colors.white,
+      backgroundColor: color,
+      size: 42,
+      iconSize: 22,
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
+    );
+    final closeButton = AppIconButton(
+      tooltip: context.l10n.close,
+      icon: Icons.close_rounded,
+      onPressed: onClose,
+    );
     return AppPanelSurface(
       padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.38),
       borderRadius: BorderRadius.zero,
-      child: Row(
-        children: [
-          AppIconBadge(
-            icon: icon,
-            color: color,
-            iconColor: Colors.white,
-            backgroundColor: color,
-            size: 42,
-            iconSize: 22,
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          AppIconButton(
-            tooltip: context.l10n.close,
-            icon: Icons.close_rounded,
-            onPressed: onClose,
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final fontSize = titleStyle?.fontSize ?? 22;
+          final stacked =
+              constraints.maxWidth < 360 ||
+              MediaQuery.textScalerOf(context).scale(fontSize) > fontSize * 1.5;
+          if (stacked) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(children: [iconBadge, const Spacer(), closeButton]),
+                const SizedBox(height: 12),
+                titleText,
+              ],
+            );
+          }
+          return Row(
+            children: [
+              iconBadge,
+              const SizedBox(width: 14),
+              Expanded(child: titleText),
+              closeButton,
+            ],
+          );
+        },
       ),
     );
   }

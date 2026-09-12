@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/core/async/async_operation_coordinator.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
@@ -76,11 +77,93 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
   ProviderAddTarget _target = ProviderAddTarget.parse;
   YoutubeChannelMode _channelMode = YoutubeChannelMode.videos;
   bool _shared = false;
-  bool _loading = false;
+  bool _previewLoading = false;
+  bool _adding = false;
+  final _previewEpoch = AsyncStateEpoch();
   String _instanceName = '';
   String _selectedBindId = '';
   youtube.ResolveResponse? _resolved;
   youtube.ListResponse? _listPreview;
+  final _addedPreviewItems = Set<youtube.ListItem>.identity();
+
+  bool get _loading => _previewLoading || _adding;
+  bool get _canInteract =>
+      mounted && !_loading && (ModalRoute.of(context)?.isCurrent ?? true);
+  Object get _previewIdentity => (
+    _mode,
+    _channelMode,
+    _inputValue,
+    _instanceName,
+    _shared,
+    _selectedBindId,
+    widget.roomId,
+    widget.playlistId,
+  );
+  Object get _submissionIdentity =>
+      (_previewEpoch.capture(), _previewIdentity, _nameController.text);
+
+  bool _ownsSubmission(Object identity) =>
+      mounted && identity == _submissionIdentity;
+
+  void _completeSubmission(Object identity) {
+    if (!_ownsSubmission(identity)) return;
+    _valueController.clear();
+    _nameController.clear();
+    _invalidatePreview();
+    widget.onDraftChanged(false);
+    if (ModalRoute.of(context)?.isCurrent ?? true) {
+      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
+    }
+    setState(() {});
+  }
+
+  YoutubeBindInfo? _selectedBinding(List<YoutubeBindInfo> binds) => binds
+      .where(
+        (bind) => _selectedBindId.isEmpty
+            ? bind.providerInstanceName == _instanceName
+            : bind.id == _selectedBindId,
+      )
+      .firstOrNull;
+
+  Object? _bindingIdentity(List<YoutubeBindInfo> binds) {
+    final bind = _selectedBinding(binds);
+    return bind == null
+        ? null
+        : (
+            bind.id,
+            bind.serverId,
+            bind.providerInstanceName,
+            bind.hasVisitorData,
+            bind.hasPoToken,
+            bind.hasCookie,
+            bind.createdAt,
+          );
+  }
+
+  @override
+  void didUpdateWidget(covariant YoutubeAddMediaForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final bindingChanged =
+        _bindingIdentity(oldWidget.binds) != _bindingIdentity(widget.binds);
+    if (bindingChanged ||
+        oldWidget.roomId != widget.roomId ||
+        oldWidget.playlistId != widget.playlistId) {
+      final bind = _selectedBinding(widget.binds);
+      if (_selectedBindId.isNotEmpty) {
+        _selectedBindId = bind?.id ?? '';
+        _instanceName = bind?.providerInstanceName ?? '';
+      }
+      _invalidatePreview();
+    }
+  }
+
+  void _invalidatePreview() {
+    _previewEpoch.advance();
+    _previewLoading = false;
+    _resolved = null;
+    _listPreview = null;
+    _addedPreviewItems.clear();
+  }
 
   @override
   void dispose() {
@@ -90,8 +173,8 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
   }
 
   void _changed() {
-    _resolved = null;
-    _listPreview = null;
+    if (!mounted) return;
+    _invalidatePreview();
     widget.onDraftChanged(
       _valueController.text.trim().isNotEmpty ||
           _nameController.text.trim().isNotEmpty,
@@ -109,11 +192,6 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
 
   @override
   Widget build(BuildContext context) {
-    if (_selectedBindId.isNotEmpty &&
-        !widget.binds.any((bind) => bind.id == _selectedBindId)) {
-      _selectedBindId = '';
-      _instanceName = '';
-    }
     final controls = <Widget>[
       ProviderAddTargetSelector(
         value: _target,
@@ -129,6 +207,7 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
         const SizedBox(height: 12),
         DropdownButtonFormField<YoutubeAddMode>(
           key: const Key('youtube-mode'),
+          isExpanded: true,
           initialValue: _mode,
           decoration: InputDecoration(
             labelText: context.l10n.source,
@@ -233,12 +312,14 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
         },
         includeDefault: true,
         enabled: !_loading,
-        onChanged: (bind) => setState(() {
-          _selectedBindId = bind?.id ?? '';
-          _instanceName = bind?.providerInstanceName ?? '';
-          _resolved = null;
-          _listPreview = null;
-        }),
+        onChanged: (bind) {
+          if (!_canInteract) return;
+          setState(() {
+            _selectedBindId = bind?.id ?? '';
+            _instanceName = bind?.providerInstanceName ?? '';
+            _invalidatePreview();
+          });
+        },
       ),
       AppSwitchTile(
         contentPadding: EdgeInsets.zero,
@@ -248,11 +329,13 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
         value: _shared,
         onChanged: _loading
             ? null
-            : (value) => setState(() {
-                _shared = value;
-                _resolved = null;
-                _listPreview = null;
-              }),
+            : (value) {
+                if (!_canInteract) return;
+                setState(() {
+                  _shared = value;
+                  _invalidatePreview();
+                });
+              },
       ),
       const SizedBox(height: 8),
       Wrap(
@@ -297,10 +380,11 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     );
   }
 
-  Widget _buildResults(BuildContext context) {
+  Widget? _buildResults(BuildContext context) {
     if (_listPreview case final preview?) {
       return YoutubePlaylistPreview(
         items: preview.items,
+        addedItems: _addedPreviewItems,
         loading: _loading,
         hasMore: _playlistPreviewHasMore,
         onLoadMore: () => _loadPreview(loadMore: true),
@@ -313,7 +397,7 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     if (_resolved case final resolved?) {
       return AppSingleChildScrollView(child: _preview(resolved));
     }
-    return const SizedBox();
+    return null;
   }
 
   Widget _preview(youtube.ResolveResponse resolved) {
@@ -372,8 +456,9 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
   }
 
   Future<void> _loadPreview({bool loadMore = false}) async {
+    if (!_canInteract) return;
     final value = _inputValue;
-    if (value == null) {
+    if (value == null || !_valid) {
       AppNotifications.showError(context, context.l10n.completeAllFields);
       return;
     }
@@ -387,17 +472,23 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     );
     final current = _listPreview;
     if (loadMore && (current == null || !_playlistPreviewHasMore)) return;
-    setState(() => _loading = true);
+    final epoch = _previewEpoch.capture();
+    final identity = _previewIdentity;
+    bool isCurrent() => mounted && _previewEpoch.isCurrent(epoch);
+    bool isRelevant() => isCurrent() && identity == _previewIdentity;
+    setState(() => _previewLoading = true);
     try {
       if (_mode == YoutubeAddMode.video) {
         final resolve = widget.onResolve;
-        _resolved = resolve != null
+        final resolved = resolve != null
             ? await resolve(request)
             : await providerGateway.resolveYoutube(
                 value,
                 instanceName: _instanceName,
                 shared: _shared,
               );
+        if (!isRelevant()) return;
+        _resolved = resolved;
       } else {
         final listRequest = _listRequest(
           value,
@@ -408,6 +499,8 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
         final page =
             await (widget.onList?.call(listRequest) ??
                 providerGateway.listYoutube(listRequest));
+        if (!isRelevant()) return;
+        if (!loadMore) _addedPreviewItems.clear();
         _listPreview = loadMore && current != null
             ? youtube.ListResponse(
                 items: [...current.items, ...page.items],
@@ -418,9 +511,11 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
             : page;
       }
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted && isRelevant()) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (isCurrent()) setState(() => _previewLoading = false);
     }
   }
 
@@ -478,6 +573,7 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
   };
 
   Future<void> _submit() async {
+    if (!_canInteract) return;
     final value = _inputValue;
     if (value == null || !_previewReady) {
       AppNotifications.showError(context, context.l10n.previewSourceFirst);
@@ -491,7 +587,8 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
       shared: _shared,
       instanceName: _instanceName,
     );
-    setState(() => _loading = true);
+    final identity = _submissionIdentity;
+    setState(() => _adding = true);
     try {
       if (widget.onSubmit case final submit?) {
         await submit(request);
@@ -511,45 +608,61 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
           playlistId: widget.playlistId,
         );
       }
-      if (!mounted) return;
-      _valueController.clear();
-      _nameController.clear();
-      _resolved = null;
-      _listPreview = null;
-      widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
-      setState(() {});
+      _completeSubmission(identity);
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted &&
+          _ownsSubmission(identity) &&
+          (ModalRoute.of(context)?.isCurrent ?? true)) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _adding = false);
     }
   }
 
   Future<void> _addSelectedPreviewItems(List<youtube.ListItem> items) async {
-    if (items.isEmpty) return;
-    setState(() => _loading = true);
+    if (!_canInteract || _target != ProviderAddTarget.media || items.isEmpty) {
+      return;
+    }
+    final identity = _submissionIdentity;
+    final roomId = widget.roomId;
+    final playlistId = widget.playlistId;
+    final currentItems = Set<youtube.ListItem>.identity()
+      ..addAll(_listPreview?.items ?? const []);
+    final seen = Set<youtube.ListItem>.identity();
+    // Keep the accepted batch independent of later view and source changes.
+    final batch = [
+      for (final item in items)
+        if (item.hasSource() &&
+            currentItems.contains(item) &&
+            !_addedPreviewItems.contains(item) &&
+            seen.add(item))
+          (original: item, source: item.source.deepCopy(), name: item.title),
+    ];
+    if (batch.isEmpty) return;
+    final gateway = providerGateway;
+    setState(() => _adding = true);
     try {
-      for (final item in items) {
-        if (!item.hasSource()) continue;
-        await providerGateway.addDiscoveredSource(
-          widget.roomId,
-          playlistId: widget.playlistId,
+      for (final item in batch) {
+        await gateway.addDiscoveredSource(
+          roomId,
+          playlistId: playlistId,
           source: item.source,
-          name: item.title,
+          name: item.name,
         );
+        if (_ownsSubmission(identity)) {
+          setState(() => _addedPreviewItems.add(item.original));
+        }
       }
-      if (!mounted) return;
-      _valueController.clear();
-      _nameController.clear();
-      _listPreview = null;
-      widget.onDraftChanged(false);
-      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
-      setState(() {});
+      _completeSubmission(identity);
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted &&
+          _ownsSubmission(identity) &&
+          (ModalRoute.of(context)?.isCurrent ?? true)) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _adding = false);
     }
   }
 
@@ -606,7 +719,7 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
   ];
 
   void _selectTarget(ProviderAddTarget target) {
-    if (target == _target) return;
+    if (!_canInteract || target == _target) return;
     _target = target;
     _mode = target == ProviderAddTarget.parse
         ? YoutubeAddMode.video

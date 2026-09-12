@@ -102,15 +102,17 @@ class AppTheme {
     );
   }
 
-  static ButtonStyle _buttonStyle() {
-    return const ButtonStyle(
-      minimumSize: WidgetStatePropertyAll(_controlMinSize),
+  static ButtonStyle _buttonStyle(ThemeData theme) {
+    return ButtonStyle(
+      minimumSize: const WidgetStatePropertyAll(_controlMinSize),
       tapTargetSize: MaterialTapTargetSize.padded,
       visualDensity: VisualDensity.standard,
-      shape: WidgetStatePropertyAll(
+      shape: const WidgetStatePropertyAll(
         RoundedRectangleBorder(borderRadius: _controlRadius),
       ),
-      textStyle: WidgetStatePropertyAll(TextStyle(fontWeight: FontWeight.w700)),
+      textStyle: WidgetStatePropertyAll(
+        theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+      ),
     );
   }
 
@@ -127,8 +129,12 @@ class AppTheme {
     );
   }
 
-  static ThemeData get light {
+  static final ThemeData light = _buildLight();
+  static final ThemeData dark = _buildDark();
+
+  static ThemeData _buildLight() {
     final theme = FlexThemeData.light(
+      fontFamilyFallback: const ['SyncTV UI CJK'],
       colors: _scheme.light,
       surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
       blendLevel: 3,
@@ -142,8 +148,9 @@ class AppTheme {
     return _finishLight(theme);
   }
 
-  static ThemeData get dark {
+  static ThemeData _buildDark() {
     final theme = FlexThemeData.dark(
+      fontFamilyFallback: const ['SyncTV UI CJK'],
       colors: _scheme.dark,
       surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
       blendLevel: 8,
@@ -203,10 +210,10 @@ class AppTheme {
         errorColor: const Color(0xFFDC2626),
         iconColor: const Color(0xFF64748B),
       ),
-      filledButtonTheme: FilledButtonThemeData(style: _buttonStyle()),
-      elevatedButtonTheme: ElevatedButtonThemeData(style: _buttonStyle()),
-      outlinedButtonTheme: OutlinedButtonThemeData(style: _buttonStyle()),
-      textButtonTheme: TextButtonThemeData(style: _buttonStyle()),
+      filledButtonTheme: FilledButtonThemeData(style: _buttonStyle(theme)),
+      elevatedButtonTheme: ElevatedButtonThemeData(style: _buttonStyle(theme)),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: _buttonStyle(theme)),
+      textButtonTheme: TextButtonThemeData(style: _buttonStyle(theme)),
       iconButtonTheme: _iconButtonTheme(),
       dividerTheme: const DividerThemeData(color: Color(0xFFE1E7F0)),
       textTheme: theme.textTheme.apply(
@@ -218,6 +225,11 @@ class AppTheme {
 
   static ThemeData _finishDark(ThemeData theme) {
     return theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(
+        onError: const Color(0xFF450A0A),
+        errorContainer: const Color(0xFF7F1D1D),
+        onErrorContainer: const Color(0xFFFEE2E2),
+      ),
       scaffoldBackgroundColor: _darkScaffold,
       cardTheme: const CardThemeData(
         color: _darkSurface,
@@ -263,10 +275,10 @@ class AppTheme {
         errorColor: const Color(0xFFF87171),
         iconColor: const Color(0xFF94A3B8),
       ),
-      filledButtonTheme: FilledButtonThemeData(style: _buttonStyle()),
-      elevatedButtonTheme: ElevatedButtonThemeData(style: _buttonStyle()),
-      outlinedButtonTheme: OutlinedButtonThemeData(style: _buttonStyle()),
-      textButtonTheme: TextButtonThemeData(style: _buttonStyle()),
+      filledButtonTheme: FilledButtonThemeData(style: _buttonStyle(theme)),
+      elevatedButtonTheme: ElevatedButtonThemeData(style: _buttonStyle(theme)),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: _buttonStyle(theme)),
+      textButtonTheme: TextButtonThemeData(style: _buttonStyle(theme)),
       iconButtonTheme: _iconButtonTheme(),
       dividerTheme: const DividerThemeData(color: Color(0xFF2B303B)),
       textTheme: theme.textTheme.apply(

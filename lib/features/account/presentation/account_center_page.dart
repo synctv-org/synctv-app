@@ -110,6 +110,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   static const String _moduleAccountPreferences = 'account_preferences';
   static const String _moduleNotifications = 'notifications';
   static const String _moduleRooms = 'rooms';
+  static const String _moduleOverviewRooms = 'overview_rooms';
   static const String _moduleBlockedUsers = 'blocked_users';
   final DeviceDisplayNameService _deviceDisplayNameService =
       DeviceDisplayNameService();
@@ -160,6 +161,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       impact: context.l10n.myRoomsUnavailableImpact,
       icon: Icons.meeting_room_outlined,
     ),
+    _moduleOverviewRooms: _AccountModuleInfo(
+      label: context.l10n.recentRooms,
+      impact: context.l10n.myRoomsUnavailableImpact,
+      icon: Icons.meeting_room_outlined,
+    ),
     _moduleBlockedUsers: _AccountModuleInfo(
       label: context.l10n.blockedUsers,
       impact: context.l10n.blockedUsersDescription,
@@ -197,6 +203,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   AccountPreferences? _preferences;
   UserNotificationsPage? _notifications;
   RoomsPage? _myRooms;
+  RoomsPage? _overviewRooms;
+  bool _loadingOverviewRooms = false;
+  int _overviewRoomLoadRevision = 0;
   BlockedUsersPage? _blockedUsers;
   PublicSettingsInfo? _publicSettings;
   List<OAuth2ProviderOption> _availableOAuth2 = const [];
@@ -209,6 +218,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   bool _bindingPasskey = false;
   bool _passkeyAvailable = false;
   String? _bindProvider;
+  bool _unlinkingOAuth2 = false;
   int _bindAttempt = 0;
   bool? _notificationReadFilter;
   client_enum.NotificationType? _notificationTypeFilter;
@@ -230,7 +240,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL;
   client_enum.MyRoomListSortBy _roomSortBy =
       client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_FREQUENT;
-  final Set<int> _selectedNotificationIds = <int>{};
+  final Set<String> _selectedNotificationIds = <String>{};
+  bool _notificationMutationInFlight = false;
+  bool _closingAccount = false;
   final TextEditingController _notificationSearchController =
       TextEditingController();
   final TextEditingController _roomSearchController = TextEditingController();
@@ -301,35 +313,31 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     );
     final operations = <Future<void>>[
       _loadCurrentUser(revision, refresh: refresh),
+      _reloadOverviewRooms(refresh: refresh),
       _loadModule<AccountPreferences>(
         revision: revision,
         label: _moduleAccountPreferences,
         load: () => _gateway.getPreferences(refresh: refresh),
         apply: (value) => _preferences = value,
       ),
-      _loadModule<UserNotificationsPage>(
+      _loadModule<({UserNotificationsPage notifications, int page})>(
         revision: revision,
         label: _moduleNotifications,
-        load: () => _gateway.listNotifications(
-          page: _notificationPage,
-          pageSize: _notificationPageSize,
-          refresh: refresh,
-        ),
-        apply: (value) => _notifications = value,
+        load: () =>
+            _fetchValidNotificationsPage(_notificationPage, refresh: refresh),
+        apply: (value) => _applyNotificationsPage(value),
         onComplete: () => _loadingNotifications = false,
         isModuleCurrent: () =>
             notificationRevision == _notificationLoadRevision,
       ),
-      _loadModule<RoomsPage>(
+      _loadModule<({RoomsPage rooms, int page})>(
         revision: revision,
         label: _moduleRooms,
-        load: () => _gateway.getRooms(
-          page: _roomsPage,
-          pageSize: _roomsPageSize,
-          relation: _roomRelationFilter,
-          sortBy: _roomSortBy,
-        ),
-        apply: (value) => _myRooms = value,
+        load: () => _fetchValidRoomsPage(_roomsPage, refresh: refresh),
+        apply: (value) {
+          _myRooms = value.rooms;
+          _roomsPage = value.page;
+        },
         onComplete: () => _loadingRooms = false,
         isModuleCurrent: () => roomRevision == _roomLoadRevision,
       ),
@@ -441,7 +449,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _rename() async {
-    final next = await showAppDialog<String>(
+    await showAppDialog<String>(
       context: context,
       builder: (_) => _SingleTextInputDialog(
         title: context.l10n.changeUsername,
@@ -450,23 +458,21 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         label: context.l10n.username,
         initialValue: _user.username,
         primaryLabel: context.l10n.save,
+        requiredError: context.l10n.usernameRequired,
+        onSave: (next) async {
+          if (!mounted || next == _user.username) return null;
+          try {
+            final user = await _gateway.updateUsername(next);
+            if (!mounted) return null;
+            setState(() => _user = user);
+            AppNotifications.showSuccess(context, context.l10n.usernameUpdated);
+            return null;
+          } catch (e) {
+            return mounted ? context.l10n.updateUsernameFailed('$e') : null;
+          }
+        },
       ),
     );
-    if (next == null || next.isEmpty || next == _user.username) return;
-
-    try {
-      final user = await _gateway.updateUsername(next);
-      if (!mounted) return;
-      setState(() => _user = user);
-      AppNotifications.showSuccess(context, context.l10n.usernameUpdated);
-    } catch (e) {
-      if (mounted) {
-        AppNotifications.showError(
-          context,
-          context.l10n.updateUsernameFailed('$e'),
-        );
-      }
-    }
   }
 
   Future<void> _updateAvatar() async {
@@ -660,7 +666,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         canUsePasskey: canUsePasskey,
       ),
     );
-    if (result == null) return;
+    if (!mounted || result == null) return;
 
     try {
       final user = switch (result.method) {
@@ -679,6 +685,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             newPassword: result.newPassword,
           ),
       };
+      if (!mounted) return;
       final updatedPreferences = await _gateway.getPreferences();
       if (!mounted) return;
       setState(() {
@@ -707,7 +714,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       context: context,
       builder: (context) => _PasswordResetDialog(email: email),
     );
-    if (result == null) return;
+    if (!mounted || result == null) return;
 
     try {
       await _opaqueAuthenticator.resetWithEmailToken(
@@ -830,7 +837,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _setupTotp() async {
     final verificationId = await _verifySensitiveOperation();
-    if (verificationId == null || verificationId.isEmpty) return;
+    if (!mounted || verificationId == null || verificationId.isEmpty) return;
     try {
       final setup = await _gateway.startTotpSetup(
         verificationId: verificationId,
@@ -840,19 +847,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         context: context,
         builder: (context) => _TotpSetupDialog(setup: setup),
       );
-      if (code == null || code.isEmpty) return;
+      if (!mounted || code == null || code.isEmpty) return;
       final recoveryCodes = await _gateway.finishTotpSetup(
         setupId: setup.setupId,
         code: code,
       );
-      final preferences = await _gateway.getPreferences(refresh: true);
-      if (!mounted) return;
-      setState(() => _preferences = preferences);
-      await showAppDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => _TotpRecoveryCodesDialog(codes: recoveryCodes),
-      );
+      await _showTotpRecoveryCodes(recoveryCodes);
     } catch (error) {
       if (mounted) {
         AppNotifications.showError(
@@ -865,19 +865,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _regenerateTotpRecoveryCodes() async {
     final verificationId = await _verifySensitiveOperation();
-    if (verificationId == null || verificationId.isEmpty) return;
+    if (!mounted || verificationId == null || verificationId.isEmpty) return;
     try {
       final codes = await _gateway.regenerateTotpRecoveryCodes(
         verificationId: verificationId,
       );
-      final preferences = await _gateway.getPreferences(refresh: true);
-      if (!mounted) return;
-      setState(() => _preferences = preferences);
-      await showAppDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => _TotpRecoveryCodesDialog(codes: codes),
-      );
+      await _showTotpRecoveryCodes(codes);
     } catch (error) {
       if (mounted) {
         AppNotifications.showError(
@@ -886,6 +879,25 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         );
       }
     }
+  }
+
+  Future<void> _showTotpRecoveryCodes(List<String> codes) async {
+    if (!mounted) return;
+    final dialog = showAppDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _TotpRecoveryCodesDialog(codes: codes),
+    );
+    // A secondary refresh must never hide the one-time recovery codes.
+    unawaited(
+      _loadModule<AccountPreferences>(
+        revision: _loadRevision,
+        label: _moduleAccountPreferences,
+        load: () => _gateway.getPreferences(refresh: true),
+        apply: (value) => _preferences = value,
+      ),
+    );
+    await dialog;
   }
 
   Future<void> _deleteTotp() async {
@@ -928,6 +940,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _markAllRead() async {
+    if (_notificationMutationInFlight) return;
+    setState(() => _notificationMutationInFlight = true);
     try {
       await _gateway.markAllNotificationsAsRead();
       await _reloadNotifications(refresh: true);
@@ -938,17 +952,21 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       if (mounted) {
         AppNotifications.showError(context, context.l10n.operationFailed('$e'));
       }
+    } finally {
+      if (mounted) setState(() => _notificationMutationInFlight = false);
     }
   }
 
   Future<void> _markSelectedRead() async {
+    if (_notificationMutationInFlight) return;
     final ids = _selectedNotificationIds.toList(growable: false);
     if (ids.isEmpty) return;
+    setState(() => _notificationMutationInFlight = true);
 
     try {
       await _gateway.markNotificationsAsRead(ids);
       if (!mounted) return;
-      setState(() => _selectedNotificationIds.clear());
+      setState(() => _selectedNotificationIds.removeAll(ids));
       await _reloadNotifications(refresh: true);
       if (mounted) {
         AppNotifications.showSuccess(
@@ -960,10 +978,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       if (mounted) {
         AppNotifications.showError(context, context.l10n.markFailed('$e'));
       }
+    } finally {
+      if (mounted) setState(() => _notificationMutationInFlight = false);
     }
   }
 
   Future<void> _deleteAllRead() async {
+    if (_notificationMutationInFlight) return;
+    setState(() => _notificationMutationInFlight = true);
     try {
       await _gateway.deleteAllReadNotifications();
       await _reloadNotifications(refresh: true);
@@ -980,28 +1002,36 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           context.l10n.deleteEntryFailed('$e'),
         );
       }
+    } finally {
+      if (mounted) setState(() => _notificationMutationInFlight = false);
     }
   }
 
   Future<void> _markRead(UserNotificationItem item) async {
+    if (_notificationMutationInFlight) return;
+    setState(() => _notificationMutationInFlight = true);
     try {
       await _gateway.markNotificationAsRead(item);
       if (mounted) {
-        setState(() => _selectedNotificationIds.remove(item.numericId));
+        setState(() => _selectedNotificationIds.remove(item.id));
       }
       await _reloadNotifications(refresh: true);
     } catch (e) {
       if (mounted) {
         AppNotifications.showError(context, context.l10n.markFailed('$e'));
       }
+    } finally {
+      if (mounted) setState(() => _notificationMutationInFlight = false);
     }
   }
 
   Future<void> _deleteNotification(UserNotificationItem item) async {
+    if (_notificationMutationInFlight) return;
+    setState(() => _notificationMutationInFlight = true);
     try {
       await _gateway.deleteNotification(item);
       if (mounted) {
-        setState(() => _selectedNotificationIds.remove(item.numericId));
+        setState(() => _selectedNotificationIds.remove(item.id));
       }
       await _reloadNotifications(refresh: true);
     } catch (e) {
@@ -1011,13 +1041,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           context.l10n.deleteEntryFailed('$e'),
         );
       }
+    } finally {
+      if (mounted) setState(() => _notificationMutationInFlight = false);
     }
   }
 
   Future<void> _openNotification(UserNotificationItem item) async {
     UserNotificationItem detail = item;
     try {
-      detail = await _gateway.getNotification(item.numericId);
+      detail = await _gateway.getNotification(item.id);
     } catch (e) {
       if (mounted) {
         AppNotifications.showWarning(
@@ -1050,35 +1082,19 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _reloadNotifications({int? page, bool refresh = true}) async {
+    if (!mounted) return;
     final revision = ++_notificationLoadRevision;
-    var targetPage = page ?? _notificationPage;
-    if (targetPage < 1) targetPage = 1;
     setState(() => _loadingNotifications = true);
     try {
-      var notifications = await _fetchNotificationsPage(
-        targetPage,
+      final value = await _fetchValidNotificationsPage(
+        page ?? _notificationPage,
         refresh: refresh,
       );
-      var actualPage = targetPage;
-      final maxPage = _notificationMaxPage(notifications.total);
-      if (targetPage > maxPage) {
-        actualPage = maxPage;
-        notifications = await _fetchNotificationsPage(
-          actualPage,
-          refresh: refresh,
-        );
-      }
       if (!mounted || revision != _notificationLoadRevision) return;
       setState(() {
-        _notifications = notifications;
-        _notificationPage = actualPage;
+        _applyNotificationsPage(value);
         _loadingNotifications = false;
         _clearLoadError(_moduleNotifications);
-        final visibleIds = notifications.notifications
-            .map((item) => item.numericId)
-            .where((id) => id > 0)
-            .toSet();
-        _selectedNotificationIds.removeWhere((id) => !visibleIds.contains(id));
       });
     } catch (e) {
       if (!mounted || revision != _notificationLoadRevision) return;
@@ -1091,6 +1107,36 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         context.l10n.loadNotificationsFailed('$e'),
       );
     }
+  }
+
+  Future<({UserNotificationsPage notifications, int page})>
+  _fetchValidNotificationsPage(int page, {bool refresh = false}) async {
+    final targetPage = page < 1 ? 1 : page;
+    var notifications = await _fetchNotificationsPage(
+      targetPage,
+      refresh: refresh,
+    );
+    final maxPage = _notificationMaxPage(notifications.total);
+    final actualPage = targetPage > maxPage ? maxPage : targetPage;
+    if (actualPage != targetPage) {
+      notifications = await _fetchNotificationsPage(
+        actualPage,
+        refresh: refresh,
+      );
+    }
+    return (notifications: notifications, page: actualPage);
+  }
+
+  void _applyNotificationsPage(
+    ({UserNotificationsPage notifications, int page}) value,
+  ) {
+    _notifications = value.notifications;
+    _notificationPage = value.page;
+    final visibleIds = value.notifications.notifications
+        .where((item) => item.hasValidId)
+        .map((item) => item.id)
+        .toSet();
+    _selectedNotificationIds.removeWhere((id) => !visibleIds.contains(id));
   }
 
   Future<UserNotificationsPage> _fetchNotificationsPage(
@@ -1120,17 +1166,36 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _startOAuth2Bind(OAuth2ProviderOption provider) async {
+    if (!mounted || _bindProvider != null || _unlinkingOAuth2) return;
     final authorizationMode = selectOAuth2AuthorizationMode(
       provider,
       platform: defaultTargetPlatform,
       browserAvailable: _oauth2Callbacks(context).canCreateSession,
       nativeAvailable: _nativeAppleSignIn(context).isSupported,
     );
-    if (authorizationMode == OAuth2ClientAuthorizationMode.native) {
-      await _startNativeAppleOAuth2Bind(provider);
-      return;
+    if (authorizationMode == null) return;
+    final attempt = ++_bindAttempt;
+    setState(() => _bindProvider = provider.name);
+    try {
+      switch (authorizationMode) {
+        case OAuth2ClientAuthorizationMode.native:
+          await _startNativeAppleOAuth2Bind(provider, attempt);
+        case OAuth2ClientAuthorizationMode.browser:
+          await _startBrowserOAuth2Bind(provider, attempt);
+      }
+    } finally {
+      if (_isCurrentBindAttempt(attempt)) {
+        setState(() => _bindProvider = null);
+      }
     }
-    if (authorizationMode != OAuth2ClientAuthorizationMode.browser) return;
+  }
+
+  bool _isCurrentBindAttempt(int attempt) => mounted && attempt == _bindAttempt;
+
+  Future<void> _startBrowserOAuth2Bind(
+    OAuth2ProviderOption provider,
+    int attempt,
+  ) async {
     final oauth2Callbacks = _oauth2Callbacks(context);
     try {
       for (
@@ -1138,15 +1203,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         bindAttempt <= oauth2CallbackBindMaxAttempts;
         bindAttempt++
       ) {
+        if (!_isCurrentBindAttempt(attempt)) return;
         try {
           await withOAuth2CallbackSession(oauth2Callbacks, (
             callbackSession,
           ) async {
+            if (!_isCurrentBindAttempt(attempt)) return;
             final verificationId = await _verifySensitiveOperation();
-            if (verificationId == null) {
-              if (mounted && _bindProvider != null) {
-                setState(() => _bindProvider = null);
-              }
+            if (!_isCurrentBindAttempt(attempt) || verificationId == null) {
               return;
             }
             final start = await _gateway.startOAuth2Bind(
@@ -1154,12 +1218,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               redirectUrl: callbackSession.redirectUrl,
               verificationId: verificationId,
             );
-            if (!mounted) return;
-            setState(() {
-              _bindProvider = provider.name;
-              _bindAttempt++;
-            });
-            final attempt = _bindAttempt;
+            if (!_isCurrentBindAttempt(attempt)) return;
             final authorizationUrl = start.authorizationUrl;
             if (authorizationUrl == null || authorizationUrl.isEmpty) {
               throw StateError('Browser authorization URL is missing');
@@ -1172,13 +1231,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 expectedState: start.state,
               );
             } on OAuth2AuthorizationCanceled {
-              if (mounted && attempt == _bindAttempt) {
-                setState(() => _bindProvider = null);
-              }
               return;
             } on OAuth2AuthorizationTimedOut {
-              if (mounted && attempt == _bindAttempt) {
-                setState(() => _bindProvider = null);
+              if (mounted && _isCurrentBindAttempt(attempt)) {
                 AppNotifications.showError(
                   context,
                   context.l10n.oauthAuthorizationTimedOut,
@@ -1186,17 +1241,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               }
               return;
             }
-            if (!mounted || attempt != _bindAttempt) return;
+            if (!_isCurrentBindAttempt(attempt)) return;
             await _gateway.finishOAuth2Bind(
               code: parsed.code,
               state: parsed.state,
             );
+            if (!_isCurrentBindAttempt(attempt)) return;
             final linked = await _gateway.getLinkedOAuth2Accounts();
-            if (!mounted) return;
+            if (!mounted || !_isCurrentBindAttempt(attempt)) return;
             setState(() {
               _linkedOAuth2 = linked;
               _clearLoadError(_moduleOAuthLinks);
-              _bindProvider = null;
             });
             AppNotifications.showSuccess(
               context,
@@ -1205,17 +1260,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           }, maxBindAttempts: 1);
           return;
         } on OAuth2CallbackBindFailed {
-          if (mounted && _bindProvider != null) {
-            setState(() => _bindProvider = null);
-          }
+          if (!_isCurrentBindAttempt(attempt)) return;
           if (bindAttempt >= oauth2CallbackBindMaxAttempts) {
             rethrow;
           }
         }
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _bindProvider = null);
+      if (mounted && _isCurrentBindAttempt(attempt)) {
         AppNotifications.showError(
           context,
           context.l10n.oauthBindingFailed('$e'),
@@ -1226,50 +1278,44 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _startNativeAppleOAuth2Bind(
     OAuth2ProviderOption provider,
+    int attempt,
   ) async {
     try {
       final verificationId = await _verifySensitiveOperation();
-      if (verificationId == null) return;
+      if (!_isCurrentBindAttempt(attempt) || verificationId == null) return;
       final start = await _gateway.startOAuth2Bind(
         provider.name,
         verificationId: verificationId,
         native: true,
       );
+      if (!mounted || !_isCurrentBindAttempt(attempt)) return;
       final nonce = start.nonce;
       if (nonce == null || nonce.isEmpty) {
         throw StateError('Apple authorization nonce is missing');
       }
-      if (!mounted) return;
-      setState(() {
-        _bindProvider = provider.name;
-        _bindAttempt++;
-      });
-      final attempt = _bindAttempt;
       final parsed = await _nativeAppleSignIn(context)
           .authorize(expectedState: start.state, nonce: nonce);
-      if (!mounted || attempt != _bindAttempt) return;
+      if (!_isCurrentBindAttempt(attempt)) return;
       await _gateway.finishOAuth2Bind(code: parsed.code, state: parsed.state);
+      if (!_isCurrentBindAttempt(attempt)) return;
       final linked = await _gateway.getLinkedOAuth2Accounts();
-      if (!mounted) return;
+      if (!mounted || !_isCurrentBindAttempt(attempt)) return;
       setState(() {
         _linkedOAuth2 = linked;
         _clearLoadError(_moduleOAuthLinks);
-        _bindProvider = null;
       });
       AppNotifications.showSuccess(context, context.l10n.oauthAccountBound);
     } on OAuth2AuthorizationCanceled {
-      if (mounted) setState(() => _bindProvider = null);
+      return;
     } on OAuth2AuthorizationTimedOut {
-      if (mounted) {
-        setState(() => _bindProvider = null);
+      if (mounted && _isCurrentBindAttempt(attempt)) {
         AppNotifications.showError(
           context,
           context.l10n.oauthAuthorizationTimedOut,
         );
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _bindProvider = null);
+      if (mounted && _isCurrentBindAttempt(attempt)) {
         AppNotifications.showError(
           context,
           context.l10n.oauthBindingFailed('$e'),
@@ -1279,13 +1325,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _unlinkOAuth2(OAuth2LinkedAccount account) async {
+    if (!mounted || _unlinkingOAuth2 || _bindProvider != null) return;
+    setState(() => _unlinkingOAuth2 = true);
     try {
       final verificationId = await _verifySensitiveOperation();
-      if (verificationId == null) return;
+      if (!mounted || verificationId == null) return;
       await _gateway.unlinkOAuth2Account(
         account,
         verificationId: verificationId,
       );
+      if (!mounted) return;
       final linked = await _gateway.getLinkedOAuth2Accounts();
       if (!mounted) return;
       setState(() {
@@ -1297,7 +1346,34 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       if (mounted) {
         AppNotifications.showError(context, context.l10n.unbindFailed('$e'));
       }
+    } finally {
+      if (mounted) setState(() => _unlinkingOAuth2 = false);
     }
+  }
+
+  Future<void> _reloadOverviewRooms({bool refresh = true}) async {
+    final revision = ++_overviewRoomLoadRevision;
+    setState(() => _loadingOverviewRooms = true);
+    await _loadModule<RoomsPage>(
+      revision: _loadRevision,
+      label: _moduleOverviewRooms,
+      load: () => _gateway.getRooms(
+        page: 1,
+        pageSize: 3,
+        relation: client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL,
+        sortBy:
+            client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_LAST_VISITED_AT,
+        sortDirection: client_enum.SortDirection.SORT_DIRECTION_DESC,
+        refresh: refresh,
+      ),
+      apply: (value) => _overviewRooms = value,
+      onComplete: () => _loadingOverviewRooms = false,
+      isModuleCurrent: () => revision == _overviewRoomLoadRevision,
+    );
+  }
+
+  Future<void> _refreshRoomMembership({int? page}) async {
+    await Future.wait([_reloadRooms(page: page), _reloadOverviewRooms()]);
   }
 
   Future<void> _reloadRooms({int? page, bool refresh = true}) async {
@@ -1306,17 +1382,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     if (targetPage < 1) targetPage = 1;
     setState(() => _loadingRooms = true);
     try {
-      var rooms = await _fetchRoomsPage(targetPage, refresh: refresh);
-      var actualPage = targetPage;
-      final maxPage = _roomsMaxPage(rooms.total);
-      if (targetPage > maxPage) {
-        actualPage = maxPage;
-        rooms = await _fetchRoomsPage(actualPage, refresh: refresh);
-      }
+      final result = await _fetchValidRoomsPage(targetPage, refresh: refresh);
       if (!mounted || revision != _roomLoadRevision) return;
       setState(() {
-        _myRooms = rooms;
-        _roomsPage = actualPage;
+        _myRooms = result.rooms;
+        _roomsPage = result.page;
         _loadingRooms = false;
         _clearLoadError(_moduleRooms);
       });
@@ -1377,7 +1447,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   int _blockedUsersMaxPage(int total) {
     if (total <= 0) return 1;
-    return ((total + _blockedUsersPageSize - 1) / _blockedUsersPageSize).ceil();
+    return (total + _blockedUsersPageSize - 1) ~/ _blockedUsersPageSize;
   }
 
   Future<void> _unblockUser(BlockedUserInfo blockedUser) async {
@@ -1424,6 +1494,19 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     _loadErrors = Map.unmodifiable(next);
   }
 
+  Future<({RoomsPage rooms, int page})> _fetchValidRoomsPage(
+    int page, {
+    bool refresh = false,
+  }) async {
+    var rooms = await _fetchRoomsPage(page, refresh: refresh);
+    final maxPage = _roomsMaxPage(rooms.total);
+    if (page > maxPage) {
+      page = maxPage;
+      rooms = await _fetchRoomsPage(page, refresh: refresh);
+    }
+    return (rooms: rooms, page: page);
+  }
+
   Future<RoomsPage> _fetchRoomsPage(int page, {bool refresh = false}) {
     return _gateway.getRooms(
       page: page,
@@ -1442,13 +1525,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   int _roomsMaxPage(int total) {
     if (total <= 0) return 1;
-    return ((total + _roomsPageSize - 1) / _roomsPageSize).ceil();
+    return (total + _roomsPageSize - 1) ~/ _roomsPageSize;
   }
 
   Future<void> _openRoom(SyncTvRoom room) async {
     try {
       await widget.onOpenRoom(room);
-      if (mounted) await _reloadRooms();
+      if (mounted) await _refreshRoomMembership();
     } catch (e) {
       if (mounted) {
         AppNotifications.showError(context, context.l10n.openRoomFailed('$e'));
@@ -1458,13 +1541,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _createRoom() async {
     await widget.onCreateRoom();
-    if (mounted) await _reloadRooms(page: 1, refresh: true);
+    if (mounted) await _refreshRoomMembership(page: 1);
   }
 
   Future<void> _manageRoom(SyncTvRoom room) async {
     try {
       await widget.onManageRoom(room);
-      if (mounted) await _reloadRooms(refresh: true);
+      if (mounted) await _refreshRoomMembership();
     } catch (e) {
       if (mounted) {
         AppNotifications.showError(
@@ -1512,7 +1595,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       } else {
         await _gateway.leaveRoom(room.roomId);
       }
-      await _reloadRooms();
+      if (!mounted) return;
+      await _refreshRoomMembership();
       if (mounted) {
         AppNotifications.showSuccess(
           context,
@@ -1530,6 +1614,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _closeAccount() async {
+    if (_closingAccount) return;
     final confirmationText = context.l10n.closeAccount;
     final controller = TextEditingController();
     final confirmed = await AppDialogs.showStyledDialog<bool>(
@@ -1581,6 +1666,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       }
       return;
     }
+    if (!mounted) return;
+    setState(() => _closingAccount = true);
 
     try {
       await _gateway.closeAccount();
@@ -1594,6 +1681,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           context.l10n.closeAccountFailed('$e'),
         );
       }
+    } finally {
+      if (mounted) setState(() => _closingAccount = false);
     }
   }
 
@@ -1653,7 +1742,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
           return Row(
             children: [
-              _buildSideNavigation(theme),
+              _buildSideNavigation(theme, maxWidth: constraints.maxWidth / 3),
               AppVerticalDivider(
                 width: 1,
                 thickness: 1,
@@ -1682,12 +1771,32 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     );
   }
 
-  Widget _buildSideNavigation(ThemeData theme) {
+  Widget _buildSideNavigation(ThemeData theme, {required double maxWidth}) {
+    var width = 232.0;
+    final painter = TextPainter(
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      locale: Localizations.localeOf(context),
+    );
+    for (final section in _sections) {
+      painter.text = TextSpan(
+        text: section.label,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w800,
+        ),
+      );
+      painter.layout();
+      // Outer/tile padding plus the icon and its gap occupy 80 logical pixels.
+      final requiredWidth = painter.width.ceilToDouble() + 80;
+      if (requiredWidth > width) width = requiredWidth;
+    }
+    painter.dispose();
+    width = width.clamp(232.0, maxWidth);
     return AnimatedBuilder(
       animation: _tabController,
       builder: (context, _) {
         return SizedBox(
-          width: 232,
+          width: width,
           child: AppInkSurface(
             color: theme.colorScheme.surface,
             clipBehavior: Clip.none,
@@ -1695,58 +1804,50 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               top: false,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _user.username.isEmpty
-                                ? context.l10n.currentAccount
-                                : _user.username,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          if (_user.hasEmail)
+                child: AppSingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              _user.email!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.58,
-                                ),
+                              _user.username.isEmpty
+                                  ? context.l10n.currentAccount
+                                  : _user.username,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
-                        ],
+                            const SizedBox(height: 4),
+                            if (_user.hasEmail)
+                              Text(
+                                _user.email!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.58,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: AppListView.separated(
-                        itemCount: _sections.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 4),
-                        itemBuilder: (context, index) {
-                          final section = _sections[index];
-                          final selected = _tabController.index == index;
-                          return _AccountNavTile(
-                            icon: section.icon,
-                            label: section.label,
-                            selected: selected,
+                      for (var index = 0; index < _sections.length; index++)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: _AccountNavTile(
+                            icon: _sections[index].icon,
+                            label: _sections[index].label,
+                            selected: _tabController.index == index,
                             onTap: () => setState(() {
                               _tabController.animateTo(index);
                             }),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1841,8 +1942,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Widget _buildOverviewTab(ThemeData theme) {
+    final layoutScale = (MediaQuery.textScalerOf(context).scale(14) / 14).clamp(
+      1.0,
+      double.infinity,
+    );
     final preferences = _preferences;
-    final rooms = _myRooms;
+    final rooms = _overviewRooms;
     final emailStatus = _emailStatusView(theme);
     final unread = _notifications?.unreadCount ?? 0;
     final roomCount = rooms?.total ?? 0;
@@ -1874,55 +1979,41 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           ),
         ],
         const SizedBox(height: 12),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final tiles = [
+        AppResponsiveWrap(
+          minItemWidth: 180 * layoutScale,
+          maxColumns: _showEmailBindingControls ? 4 : 3,
+          children: [
+            _MetricTile(
+              icon: Icons.meeting_room_outlined,
+              label: context.l10n.myRooms,
+              value: rooms == null ? '-' : '$roomCount',
+              tone: theme.colorScheme.primary,
+            ),
+            _MetricTile(
+              icon: Icons.notifications_none_rounded,
+              label: context.l10n.unreadNotifications,
+              value: _notifications == null ? '-' : '$unread',
+              tone: const Color(0xFF0F766E),
+            ),
+            _MetricTile(
+              icon: Icons.security_rounded,
+              label: context.l10n.loginFactors,
+              value: preferences == null ? '-' : '$activeFactors',
+              tone: const Color(0xFFB45309),
+            ),
+            if (_showEmailBindingControls)
               _MetricTile(
-                icon: Icons.meeting_room_outlined,
-                label: context.l10n.myRooms,
-                value: rooms == null ? '-' : '$roomCount',
-                tone: theme.colorScheme.primary,
+                icon: emailStatus.icon,
+                label: context.l10n.emailStatus,
+                value: emailStatus.label,
+                tone: emailStatus.tone,
               ),
-              _MetricTile(
-                icon: Icons.notifications_none_rounded,
-                label: context.l10n.unreadNotifications,
-                value: _notifications == null ? '-' : '$unread',
-                tone: const Color(0xFF0F766E),
-              ),
-              _MetricTile(
-                icon: Icons.security_rounded,
-                label: context.l10n.loginFactors,
-                value: preferences == null ? '-' : '$activeFactors',
-                tone: const Color(0xFFB45309),
-              ),
-              if (_showEmailBindingControls)
-                _MetricTile(
-                  icon: emailStatus.icon,
-                  label: context.l10n.emailStatus,
-                  value: emailStatus.label,
-                  tone: emailStatus.tone,
-                ),
-            ];
-            final columns = constraints.maxWidth >= 820
-                ? tiles.length.clamp(1, 4)
-                : tiles.length == 1
-                ? 1
-                : 2;
-            return AppGridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: columns,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: columns == 4 ? 1.75 : 1.95,
-              children: tiles,
-            );
-          },
+          ],
         ),
         const SizedBox(height: 12),
         LayoutBuilder(
           builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 840;
+            final wide = constraints.maxWidth >= 840 * layoutScale;
             final panels = [
               _buildQuickProfilePanel(theme),
               _buildQuickSecurityPanel(theme),
@@ -1970,7 +2061,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _Section(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 620;
+              final wide =
+                  constraints.maxWidth >=
+                  MediaQuery.textScalerOf(context).scale(620);
               final avatar = _EditableProfileAvatar(
                 username: _user.username,
                 avatarUrl: _user.avatarUrl,
@@ -2031,19 +2124,28 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               final action = AppActionButton(
                 onPressed: _rename,
                 icon: Icons.edit_rounded,
-                label: context.l10n.changeUsername,
+                label: context.l10n.edit,
+                wrapLabel: true,
               );
               if (!wide) {
+                final stackIdentity =
+                    constraints.maxWidth <
+                    MediaQuery.textScalerOf(context).scale(420);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        avatar,
-                        const SizedBox(width: 14),
-                        Expanded(child: details),
-                      ],
-                    ),
+                    if (stackIdentity) ...[
+                      avatar,
+                      const SizedBox(height: 14),
+                      SizedBox(width: double.infinity, child: details),
+                    ] else
+                      Row(
+                        children: [
+                          avatar,
+                          const SizedBox(width: 14),
+                          Expanded(child: details),
+                        ],
+                      ),
                     const SizedBox(height: 16),
                     SizedBox(width: double.infinity, child: action),
                   ],
@@ -2053,9 +2155,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 children: [
                   avatar,
                   const SizedBox(width: 18),
-                  Expanded(child: details),
+                  Expanded(flex: 2, child: details),
                   const SizedBox(width: 16),
-                  action,
+                  Flexible(child: action),
                 ],
               );
             },
@@ -2184,221 +2286,231 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         ? 0
         : (_roomsPage * _roomsPageSize).clamp(0, total);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1040),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _SectionHeader(
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1040),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _SectionHeader(
                           title: context.l10n.myRooms,
                           subtitle: context.l10n.myRoomsDescription,
                           icon: Icons.meeting_room_outlined,
                           dense: true,
                         ),
-                      ),
-                      AppActionButton(
-                        onPressed: _createRoom,
-                        icon: Icons.add_rounded,
-                        label: context.l10n.createRoom,
-                      ),
-                      if (_loadingRooms)
-                        const Padding(
-                          padding: EdgeInsetsDirectional.only(start: 10),
-                          child: SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: AppLoadingIndicator(
-                              size: AppLoadingSize.sm,
-                              centered: false,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final wide = constraints.maxWidth >= 760;
-                      final search = AppSearchField(
-                        controller: _roomSearchController,
-                        hintText: context.l10n.searchRoomNameOrDescription,
-                        onChanged: (value) {
-                          if (value.isEmpty) _reloadRoomsFromFirstPage();
-                        },
-                        onSubmitted: (_) => _reloadRoomsFromFirstPage(),
-                      );
-                      final filters = Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          _RelationChip(
-                            label: context.l10n.all,
-                            value:
-                                client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL,
-                            groupValue: _roomRelationFilter,
-                            onSelected: _setRoomRelationFilter,
-                          ),
-                          _RelationChip(
-                            label: context.l10n.createdByMe,
-                            value: client_enum
-                                .MyRoomRelation
-                                .MY_ROOM_RELATION_CREATED,
-                            groupValue: _roomRelationFilter,
-                            onSelected: _setRoomRelationFilter,
-                          ),
-                          _RelationChip(
-                            label: context.l10n.joinedByMe,
-                            value: client_enum
-                                .MyRoomRelation
-                                .MY_ROOM_RELATION_PARTICIPATING,
-                            groupValue: _roomRelationFilter,
-                            onSelected: _setRoomRelationFilter,
-                          ),
-                          AppSelect<client_enum.MyRoomListSortBy>(
-                            value: _roomSortBy,
-                            options: {
-                              context.l10n.frequentlyVisited: client_enum
-                                  .MyRoomListSortBy
-                                  .MY_ROOM_LIST_SORT_BY_FREQUENT,
-                              context.l10n.recentlyVisited: client_enum
-                                  .MyRoomListSortBy
-                                  .MY_ROOM_LIST_SORT_BY_LAST_VISITED_AT,
-                              context.l10n.recentActivity: client_enum
-                                  .MyRoomListSortBy
-                                  .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-                              context.l10n.updatedAt: client_enum
-                                  .MyRoomListSortBy
-                                  .MY_ROOM_LIST_SORT_BY_UPDATED_AT,
-                              context.l10n.createdAt: client_enum
-                                  .MyRoomListSortBy
-                                  .MY_ROOM_LIST_SORT_BY_CREATED_AT,
-                              context.l10n.name: client_enum
-                                  .MyRoomListSortBy
-                                  .MY_ROOM_LIST_SORT_BY_NAME,
-                            },
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() => _roomSortBy = value);
-                              _reloadRoomsFromFirstPage();
-                            },
-                          ),
-                          AppIconButton(
-                            onPressed: _reloadRooms,
-                            icon: Icons.refresh_rounded,
-                            tooltip: context.l10n.refreshRooms,
-                          ),
-                        ],
-                      );
-                      if (!wide) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                        const SizedBox(height: 8),
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 10,
+                          runSpacing: 8,
                           children: [
-                            search,
-                            const SizedBox(height: 10),
-                            filters,
+                            AppActionButton(
+                              onPressed: _createRoom,
+                              icon: Icons.add_rounded,
+                              label: context.l10n.createRoom,
+                              wrapLabel: true,
+                            ),
+                            if (_loadingRooms)
+                              const Padding(
+                                padding: EdgeInsetsDirectional.only(start: 10),
+                                child: SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: AppLoadingIndicator(
+                                    size: AppLoadingSize.sm,
+                                    centered: false,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final wide = constraints.maxWidth >= 760;
+                        final search = AppSearchField(
+                          controller: _roomSearchController,
+                          hintText: context.l10n.searchRoomNameOrDescription,
+                          onChanged: (value) {
+                            if (value.isEmpty) _reloadRoomsFromFirstPage();
+                          },
+                          onSubmitted: (_) => _reloadRoomsFromFirstPage(),
+                        );
+                        final filters = Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            _RelationChip(
+                              label: context.l10n.all,
+                              value: client_enum
+                                  .MyRoomRelation
+                                  .MY_ROOM_RELATION_ALL,
+                              groupValue: _roomRelationFilter,
+                              onSelected: _setRoomRelationFilter,
+                            ),
+                            _RelationChip(
+                              label: context.l10n.createdByMe,
+                              value: client_enum
+                                  .MyRoomRelation
+                                  .MY_ROOM_RELATION_CREATED,
+                              groupValue: _roomRelationFilter,
+                              onSelected: _setRoomRelationFilter,
+                            ),
+                            _RelationChip(
+                              label: context.l10n.joinedByMe,
+                              value: client_enum
+                                  .MyRoomRelation
+                                  .MY_ROOM_RELATION_PARTICIPATING,
+                              groupValue: _roomRelationFilter,
+                              onSelected: _setRoomRelationFilter,
+                            ),
+                            AppSelect<client_enum.MyRoomListSortBy>(
+                              value: _roomSortBy,
+                              options: {
+                                context.l10n.frequentlyVisited: client_enum
+                                    .MyRoomListSortBy
+                                    .MY_ROOM_LIST_SORT_BY_FREQUENT,
+                                context.l10n.recentlyVisited: client_enum
+                                    .MyRoomListSortBy
+                                    .MY_ROOM_LIST_SORT_BY_LAST_VISITED_AT,
+                                context.l10n.recentActivity: client_enum
+                                    .MyRoomListSortBy
+                                    .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+                                context.l10n.updatedAt: client_enum
+                                    .MyRoomListSortBy
+                                    .MY_ROOM_LIST_SORT_BY_UPDATED_AT,
+                                context.l10n.createdAt: client_enum
+                                    .MyRoomListSortBy
+                                    .MY_ROOM_LIST_SORT_BY_CREATED_AT,
+                                context.l10n.name: client_enum
+                                    .MyRoomListSortBy
+                                    .MY_ROOM_LIST_SORT_BY_NAME,
+                              },
+                              onChanged: (value) {
+                                if (value == null) return;
+                                setState(() => _roomSortBy = value);
+                                _reloadRoomsFromFirstPage();
+                              },
+                            ),
+                            AppIconButton(
+                              onPressed: _reloadRooms,
+                              icon: Icons.refresh_rounded,
+                              tooltip: context.l10n.refreshRooms,
+                            ),
                           ],
                         );
-                      }
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: search),
-                          const SizedBox(width: 12),
-                          Flexible(child: filters),
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  AppPaginationBar(
-                    padding: EdgeInsets.zero,
-                    label: context.l10n.pageRangeSummary(
-                      _roomsPage,
-                      maxPage,
-                      pageStart,
-                      pageEnd,
-                      total,
+                        if (!wide) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              search,
+                              const SizedBox(height: 10),
+                              filters,
+                            ],
+                          );
+                        }
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: search),
+                            const SizedBox(width: 12),
+                            Flexible(child: filters),
+                          ],
+                        );
+                      },
                     ),
-                    onPrevious: _loadingRooms || _roomsPage <= 1
-                        ? null
-                        : () => _reloadRooms(page: _roomsPage - 1),
-                    onNext: _loadingRooms || _roomsPage >= maxPage
-                        ? null
-                        : () => _reloadRooms(page: _roomsPage + 1),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    AppPaginationBar(
+                      padding: EdgeInsets.zero,
+                      label: context.l10n.pageRangeSummary(
+                        _roomsPage,
+                        maxPage,
+                        pageStart,
+                        pageEnd,
+                        total,
+                      ),
+                      onPrevious: _loadingRooms || _roomsPage <= 1
+                          ? null
+                          : () => _reloadRooms(page: _roomsPage - 1),
+                      onNext: _loadingRooms || _roomsPage >= maxPage
+                          ? null
+                          : () => _reloadRooms(page: _roomsPage + 1),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-        Expanded(
-          child: _loadingRooms && page == null
-              ? const AppLoadingIndicator()
-              : loadError != null && page == null
-              ? Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    child: _LoadErrorBanner(
-                      title: context.l10n.myRoomsTemporarilyUnavailable,
-                      moduleInfo: _moduleInfo[_moduleRooms],
-                      message: loadError,
-                      onRetry: _reloadRooms,
-                    ),
-                  ),
-                )
-              : rooms.isEmpty
-              ? AppEmptyMessage(message: context.l10n.noMatchingRooms)
-              : AppRefreshIndicator(
-                  onRefresh: _reloadRooms,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final maxWidth = constraints.maxWidth >= 1180
-                          ? 1040.0
-                          : constraints.maxWidth >= 760
-                          ? 900.0
-                          : double.infinity;
-                      return AppListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-                        itemCount: rooms.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final room = rooms[index];
-                          return Center(
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: maxWidth),
-                              child: _RoomManagementTile(
-                                room: room,
-                                roleLabel: _roomRoleLabel(room.myRole),
-                                relationLabel: _roomRelationLabel(
-                                  room.myRelation,
-                                ),
-                                updatedAtLabel: _formatTimestamp(
-                                  room.updatedAt,
-                                ),
-                                isOwner: _isMyCreatedRoom(room),
-                                canManage: _canManageRoomFromListEntry(room),
-                                onOpen: () => _openRoom(room),
-                                onManage: () => _manageRoom(room),
-                                onLeaveOrDelete: () => _leaveOrDeleteRoom(room),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
+      ],
+      body: _loadingRooms && page == null
+          ? const AppLoadingIndicator()
+          : loadError != null && page == null
+          ? AppSingleChildScrollView(
+              primary: true,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: _LoadErrorBanner(
+                    title: context.l10n.myRoomsTemporarilyUnavailable,
+                    moduleInfo: _moduleInfo[_moduleRooms],
+                    message: loadError,
+                    onRetry: _reloadRooms,
                   ),
                 ),
-        ),
-      ],
+              ),
+            )
+          : rooms.isEmpty
+          ? AppEmptyMessage(message: context.l10n.noMatchingRooms)
+          : AppRefreshIndicator(
+              onRefresh: _reloadRooms,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxWidth = constraints.maxWidth >= 1180
+                      ? 1040.0
+                      : constraints.maxWidth >= 760
+                      ? 900.0
+                      : double.infinity;
+                  return AppListView.separated(
+                    primary: true,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+                    itemCount: rooms.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final room = rooms[index];
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: maxWidth),
+                          child: _RoomManagementTile(
+                            room: room,
+                            roleLabel: _roomRoleLabel(room.myRole),
+                            relationLabel: _roomRelationLabel(room.myRelation),
+                            updatedAtLabel: _formatTimestamp(room.updatedAt),
+                            isOwner: _isMyCreatedRoom(room),
+                            canManage: _canManageRoomFromListEntry(room),
+                            onOpen: () => _openRoom(room),
+                            onManage: () => _manageRoom(room),
+                            onLeaveOrDelete: () => _leaveOrDeleteRoom(room),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
     );
   }
 
@@ -2415,142 +2527,151 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         ? 0
         : (_blockedUsersPage * _blockedUsersPageSize).clamp(0, total);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 900),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _SectionHeader(
-                          title: context.l10n.blockedUsers,
-                          subtitle: context.l10n.blockedUsersDescription,
-                          icon: Icons.person_off_outlined,
-                          dense: true,
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SectionHeader(
+                            title: context.l10n.blockedUsers,
+                            subtitle: context.l10n.blockedUsersDescription,
+                            icon: Icons.person_off_outlined,
+                            dense: true,
+                          ),
                         ),
-                      ),
-                      AppIconButton(
-                        onPressed: _loadingBlockedUsers
-                            ? null
-                            : _reloadBlockedUsers,
-                        icon: Icons.refresh_rounded,
-                        tooltip: context.l10n.refresh,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  AppSearchField(
-                    controller: _blockedUserSearchController,
-                    hintText: context.l10n.searchBlockedUsers,
-                    enabled: !_loadingBlockedUsers,
-                    onChanged: (value) {
-                      if (value.isEmpty) _reloadBlockedUsersFromFirstPage();
-                    },
-                    onSubmitted: (_) => _reloadBlockedUsersFromFirstPage(),
-                  ),
-                  const SizedBox(height: 8),
-                  AppPaginationBar(
-                    padding: EdgeInsets.zero,
-                    label: context.l10n.pageRangeSummary(
-                      _blockedUsersPage,
-                      maxPage,
-                      pageStart,
-                      pageEnd,
-                      total,
+                        AppIconButton(
+                          onPressed: _loadingBlockedUsers
+                              ? null
+                              : _reloadBlockedUsers,
+                          icon: Icons.refresh_rounded,
+                          tooltip: context.l10n.refresh,
+                        ),
+                      ],
                     ),
-                    onPrevious: _loadingBlockedUsers || _blockedUsersPage <= 1
-                        ? null
-                        : () =>
-                              _reloadBlockedUsers(page: _blockedUsersPage - 1),
-                    onNext: _loadingBlockedUsers || _blockedUsersPage >= maxPage
-                        ? null
-                        : () =>
-                              _reloadBlockedUsers(page: _blockedUsersPage + 1),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    AppSearchField(
+                      controller: _blockedUserSearchController,
+                      hintText: context.l10n.searchBlockedUsers,
+                      enabled: !_loadingBlockedUsers,
+                      onChanged: (value) {
+                        if (value.isEmpty) _reloadBlockedUsersFromFirstPage();
+                      },
+                      onSubmitted: (_) => _reloadBlockedUsersFromFirstPage(),
+                    ),
+                    const SizedBox(height: 8),
+                    AppPaginationBar(
+                      padding: EdgeInsets.zero,
+                      label: context.l10n.pageRangeSummary(
+                        _blockedUsersPage,
+                        maxPage,
+                        pageStart,
+                        pageEnd,
+                        total,
+                      ),
+                      onPrevious: _loadingBlockedUsers || _blockedUsersPage <= 1
+                          ? null
+                          : () => _reloadBlockedUsers(
+                              page: _blockedUsersPage - 1,
+                            ),
+                      onNext:
+                          _loadingBlockedUsers || _blockedUsersPage >= maxPage
+                          ? null
+                          : () => _reloadBlockedUsers(
+                              page: _blockedUsersPage + 1,
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-        Expanded(
-          child: _loadingBlockedUsers && page == null
-              ? const AppLoadingIndicator()
-              : loadError != null && page == null
-              ? Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    child: _LoadErrorBanner(
-                      title: context.l10n.blockedUsersTemporarilyUnavailable,
-                      moduleInfo: _moduleInfo[_moduleBlockedUsers],
-                      message: loadError,
-                      onRetry: _reloadBlockedUsers,
-                    ),
-                  ),
-                )
-              : users.isEmpty
-              ? AppEmptyMessage(message: context.l10n.noBlockedUsers)
-              : AppRefreshIndicator(
-                  onRefresh: _reloadBlockedUsers,
-                  child: AppListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-                    itemCount: users.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final blockedUser = users[index];
-                      final user = blockedUser.user;
-                      final name = user.username.trim().isEmpty
-                          ? user.id
-                          : user.username.trim();
-                      return Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 900),
-                          child: AppPanelSurface(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: theme.dividerColor.withValues(alpha: 0.6),
-                            ),
-                            child: AppTile(
-                              prefix: AppAvatar(
-                                name: name,
-                                imageUrl: user.avatarUrl,
-                                size: 42,
-                              ),
-                              title: Text(
-                                name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                context.l10n.blockedAt(
-                                  _formatTimestamp(blockedUser.blockedAt),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              suffix: AppActionButton(
-                                onPressed: _loadingBlockedUsers
-                                    ? null
-                                    : () => _unblockUser(blockedUser),
-                                icon: Icons.person_add_alt_1_outlined,
-                                label: context.l10n.unblockUser,
-                                style: AppActionButtonStyle.outlined,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+      ],
+      body: _loadingBlockedUsers && page == null
+          ? const AppLoadingIndicator()
+          : loadError != null && page == null
+          ? AppSingleChildScrollView(
+              primary: true,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: _LoadErrorBanner(
+                    title: context.l10n.blockedUsersTemporarilyUnavailable,
+                    moduleInfo: _moduleInfo[_moduleBlockedUsers],
+                    message: loadError,
+                    onRetry: _reloadBlockedUsers,
                   ),
                 ),
-        ),
-      ],
+              ),
+            )
+          : users.isEmpty
+          ? AppEmptyMessage(message: context.l10n.noBlockedUsers)
+          : AppRefreshIndicator(
+              onRefresh: _reloadBlockedUsers,
+              child: AppListView.separated(
+                primary: true,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+                itemCount: users.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final blockedUser = users[index];
+                  final user = blockedUser.user;
+                  final name = user.username.trim().isEmpty
+                      ? user.id
+                      : user.username.trim();
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 900),
+                      child: AppPanelSurface(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: theme.dividerColor.withValues(alpha: 0.6),
+                        ),
+                        child: AppTile(
+                          prefix: AppAvatar(
+                            name: name,
+                            imageUrl: user.avatarUrl,
+                            size: 42,
+                          ),
+                          title: Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            context.l10n.blockedAt(
+                              _formatTimestamp(blockedUser.blockedAt),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          stackedSuffix: true,
+                          suffix: AppActionButton(
+                            onPressed: _loadingBlockedUsers
+                                ? null
+                                : () => _unblockUser(blockedUser),
+                            icon: Icons.person_add_alt_1_outlined,
+                            label: context.l10n.unblockUser,
+                            wrapLabel: true,
+                            style: AppActionButtonStyle.outlined,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 
@@ -2600,17 +2721,20 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           ? _user.email!
                           : context.l10n.bindEmailDescription,
                     ),
+                    stackedSuffix: true,
                     suffix: _user.hasEmail
                         ? AppActionButton(
                             onPressed: _unbindEmail,
                             icon: Icons.link_off_rounded,
                             label: context.l10n.unbind,
+                            wrapLabel: true,
                             style: AppActionButtonStyle.outlined,
                           )
                         : AppActionButton(
                             onPressed: _emailFeatureEnabled ? _bindEmail : null,
                             icon: Icons.add_link_rounded,
                             label: context.l10n.bind,
+                            wrapLabel: true,
                             style: AppActionButtonStyle.tonal,
                           ),
                   ),
@@ -2621,6 +2745,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   prefix: const Icon(Icons.password_rounded),
                   title: Text(context.l10n.loginPassword),
                   subtitle: Text(context.l10n.opaquePasswordDescription),
+                  stackedSuffix: true,
                   suffix: Wrap(
                     spacing: 8,
                     children: [
@@ -2628,11 +2753,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         AppActionButton(
                           onPressed: _resetPasswordByEmail,
                           label: context.l10n.emailReset,
+                          wrapLabel: true,
                           style: AppActionButtonStyle.outlined,
                         ),
                       AppActionButton(
                         onPressed: _changePassword,
                         label: context.l10n.edit,
+                        wrapLabel: true,
                       ),
                     ],
                   ),
@@ -2674,6 +2801,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       )
                     : context.l10n.authenticatorAppSetupHint,
               ),
+              stackedSuffix: true,
               suffix: preferences.canUseTotp
                   ? Wrap(
                       spacing: 8,
@@ -2682,6 +2810,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           onPressed: _regenerateTotpRecoveryCodes,
                           icon: Icons.refresh_rounded,
                           label: context.l10n.recoveryCodes,
+                          wrapLabel: true,
                           style: AppActionButtonStyle.outlined,
                         ),
                         AppIconButton(
@@ -2696,6 +2825,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       onPressed: _setupTotp,
                       icon: Icons.add_rounded,
                       label: context.l10n.setup,
+                      wrapLabel: true,
                       style: AppActionButtonStyle.tonal,
                     ),
             ),
@@ -2709,21 +2839,23 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     const Text(
                       'Passkey',
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
-                    const Spacer(),
                     AppActionButton(
                       onPressed: _passkeyAvailable ? _bindPasskey : null,
                       loading: _bindingPasskey,
                       icon: Icons.add_rounded,
                       label: context.l10n.bind,
+                      wrapLabel: true,
                       style: AppActionButtonStyle.tonal,
                     ),
-                    const SizedBox(width: 8),
                     AppActionButton(
                       onPressed: () async {
                         final passkeys = await _gateway.listPasskeys();
@@ -2731,6 +2863,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       },
                       icon: Icons.refresh_rounded,
                       label: context.l10n.refresh,
+                      wrapLabel: true,
                       style: AppActionButtonStyle.text,
                     ),
                   ],
@@ -2785,17 +2918,26 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           title: context.l10n.dangerousActions,
           subtitle: context.l10n.dangerousActionsDescription,
           danger: true,
-          child: AppTile(
-            contentPadding: EdgeInsets.zero,
-            prefix: const Icon(Icons.person_off_rounded, color: Colors.red),
-            title: Text(context.l10n.closeAccount),
-            subtitle: Text(context.l10n.closeAccountTileDescription),
-            suffix: AppActionButton(
-              onPressed: _closeAccount,
-              icon: Icons.person_remove_rounded,
-              label: context.l10n.close,
-              style: AppActionButtonStyle.destructive,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppTile(
+                contentPadding: EdgeInsets.zero,
+                prefix: const Icon(Icons.person_off_rounded, color: Colors.red),
+                title: Text(context.l10n.closeAccount),
+                subtitle: Text(context.l10n.closeAccountTileDescription),
+              ),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: AppActionButton(
+                  onPressed: _closingAccount ? null : _closeAccount,
+                  icon: Icons.person_remove_rounded,
+                  label: context.l10n.close,
+                  wrapLabel: true,
+                  style: AppActionButtonStyle.destructive,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -2807,8 +2949,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final loadError = _loadError(_moduleNotifications);
     final items = page?.notifications ?? const <UserNotificationItem>[];
     final unreadSelectableIds = items
-        .where((item) => !item.isRead && item.numericId > 0)
-        .map((item) => item.numericId)
+        .where((item) => !item.isRead && item.hasValidId)
+        .map((item) => item.id)
         .toSet();
     final selectedUnreadCount = _selectedNotificationIds
         .where(unreadSelectableIds.contains)
@@ -2821,339 +2963,342 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final pageEnd = total == 0
         ? 0
         : (_notificationPage * _notificationPageSize).clamp(0, total);
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Text(
-                    context.l10n.unreadTotalSummary(
-                      page?.unreadCount ?? 0,
-                      total,
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Column(
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      context.l10n.unreadTotalSummary(
+                        page?.unreadCount ?? 0,
+                        total,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  if (_loadingNotifications)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
+                    if (_loadingNotifications)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: AppLoadingIndicator(
+                            size: AppLoadingSize.sm,
+                            centered: false,
+                          ),
                         ),
                       ),
-                    ),
-                  if (_selectedNotificationIds.isNotEmpty) ...[
-                    AppActionButton(
-                      onPressed: () =>
-                          setState(() => _selectedNotificationIds.clear()),
-                      icon: Icons.close_rounded,
-                      label: context.l10n.selectedCount(
-                        _selectedNotificationIds.length,
+                    if (_selectedNotificationIds.isNotEmpty) ...[
+                      AppActionButton(
+                        onPressed: () =>
+                            setState(() => _selectedNotificationIds.clear()),
+                        icon: Icons.close_rounded,
+                        label: context.l10n.selectedCount(
+                          _selectedNotificationIds.length,
+                        ),
+                        wrapLabel: true,
+                        style: AppActionButtonStyle.text,
                       ),
-                      style: AppActionButtonStyle.text,
+                      AppIconButton(
+                        onPressed:
+                            _notificationMutationInFlight ||
+                                selectedUnreadCount == 0
+                            ? null
+                            : _markSelectedRead,
+                        icon: Icons.mark_email_read_rounded,
+                        tooltip: context.l10n.markSelectedUnreadNotifications,
+                      ),
+                    ] else
+                      AppIconButton(
+                        onPressed: unreadSelectableIds.isEmpty
+                            ? null
+                            : () => setState(() {
+                                _selectedNotificationIds
+                                  ..clear()
+                                  ..addAll(unreadSelectableIds);
+                              }),
+                        icon: Icons.select_all_rounded,
+                        tooltip: context.l10n.selectCurrentUnreadNotifications,
+                      ),
+                    AppIconButton(
+                      onPressed: _notificationMutationInFlight || items.isEmpty
+                          ? null
+                          : _markAllRead,
+                      icon: Icons.done_all_rounded,
+                      tooltip: context.l10n.markAllRead,
                     ),
                     AppIconButton(
-                      onPressed: selectedUnreadCount == 0
+                      onPressed: _notificationMutationInFlight || items.isEmpty
                           ? null
-                          : _markSelectedRead,
-                      icon: Icons.mark_email_read_rounded,
-                      tooltip: context.l10n.markSelectedUnreadNotifications,
+                          : _deleteAllRead,
+                      icon: Icons.delete_sweep_rounded,
+                      tooltip: context.l10n.deleteReadNotifications,
+                      style: AppIconButtonStyle.destructive,
                     ),
-                  ] else
-                    AppIconButton(
-                      onPressed: unreadSelectableIds.isEmpty
-                          ? null
-                          : () => setState(() {
-                              _selectedNotificationIds
-                                ..clear()
-                                ..addAll(unreadSelectableIds);
-                            }),
-                      icon: Icons.select_all_rounded,
-                      tooltip: context.l10n.selectCurrentUnreadNotifications,
-                    ),
-                  AppIconButton(
-                    onPressed: items.isEmpty ? null : _markAllRead,
-                    icon: Icons.done_all_rounded,
-                    tooltip: context.l10n.markAllRead,
-                  ),
-                  AppIconButton(
-                    onPressed: items.isEmpty ? null : _deleteAllRead,
-                    icon: Icons.delete_sweep_rounded,
-                    tooltip: context.l10n.deleteReadNotifications,
-                    style: AppIconButtonStyle.destructive,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              AppSearchField(
-                controller: _notificationSearchController,
-                hintText: context.l10n.searchTitleOrContent,
-                onChanged: (value) {
-                  if (value.isEmpty) _reloadNotificationsFromFirstPage();
-                },
-                onSubmitted: (_) => _reloadNotificationsFromFirstPage(),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _NotificationFilterChip(
-                    label: context.l10n.all,
-                    selected: _notificationReadFilter == null,
-                    onSelected: () {
-                      setState(() => _notificationReadFilter = null);
-                      _reloadNotificationsFromFirstPage();
-                    },
-                  ),
-                  _NotificationFilterChip(
-                    label: context.l10n.unread,
-                    selected: _notificationReadFilter == false,
-                    onSelected: () {
-                      setState(() => _notificationReadFilter = false);
-                      _reloadNotificationsFromFirstPage();
-                    },
-                  ),
-                  _NotificationFilterChip(
-                    label: context.l10n.read,
-                    selected: _notificationReadFilter == true,
-                    onSelected: () {
-                      setState(() => _notificationReadFilter = true);
-                      _reloadNotificationsFromFirstPage();
-                    },
-                  ),
-                  AppSelect<client_enum.NotificationType?>(
-                    value: _notificationTypeFilter,
-                    hintText: context.l10n.notificationType,
-                    options: {
-                      context.l10n.allTypes: null,
-                      context.l10n.roomInvitation: client_enum
-                          .NotificationType
-                          .NOTIFICATION_TYPE_ROOM_INVITATION,
-                      context.l10n.systemAnnouncement: client_enum
-                          .NotificationType
-                          .NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
-                      context.l10n.roomEvent: client_enum
-                          .NotificationType
-                          .NOTIFICATION_TYPE_ROOM_EVENT,
-                      context.l10n.passwordResetNotification: client_enum
-                          .NotificationType
-                          .NOTIFICATION_TYPE_PASSWORD_RESET,
-                      if (_showEmailBindingControls)
-                        context.l10n.emailBinding: client_enum
-                            .NotificationType
-                            .NOTIFICATION_TYPE_EMAIL_BIND,
-                    },
-                    onChanged: (value) {
-                      setState(() => _notificationTypeFilter = value);
-                      _reloadNotificationsFromFirstPage();
-                    },
-                  ),
-                  AppSelect<client_enum.NotificationListSortBy>(
-                    value: _notificationSortBy,
-                    options: {
-                      context.l10n.createdAt: client_enum
-                          .NotificationListSortBy
-                          .NOTIFICATION_LIST_SORT_BY_CREATED_AT,
-                      context.l10n.updatedAt: client_enum
-                          .NotificationListSortBy
-                          .NOTIFICATION_LIST_SORT_BY_UPDATED_AT,
-                      context.l10n.title: client_enum
-                          .NotificationListSortBy
-                          .NOTIFICATION_LIST_SORT_BY_TITLE,
-                    },
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() => _notificationSortBy = value);
-                      _reloadNotificationsFromFirstPage();
-                    },
-                  ),
-                  AppIconButton(
-                    onPressed: () {
-                      setState(() {
-                        _notificationSortDirection =
-                            _notificationSortDirection ==
-                                client_enum.SortDirection.SORT_DIRECTION_DESC
-                            ? client_enum.SortDirection.SORT_DIRECTION_ASC
-                            : client_enum.SortDirection.SORT_DIRECTION_DESC;
-                      });
-                      _reloadNotificationsFromFirstPage();
-                    },
-                    icon:
-                        _notificationSortDirection ==
-                            client_enum.SortDirection.SORT_DIRECTION_DESC
-                        ? Icons.south_rounded
-                        : Icons.north_rounded,
-                    tooltip:
-                        _notificationSortDirection ==
-                            client_enum.SortDirection.SORT_DIRECTION_DESC
-                        ? context.l10n.descending
-                        : context.l10n.ascending,
-                    style: AppIconButtonStyle.outlined,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              AppPaginationBar(
-                padding: EdgeInsets.zero,
-                label: context.l10n.notificationPageRange(
-                  _notificationPage,
-                  maxPage,
-                  pageStart,
-                  pageEnd,
+                  ],
                 ),
-                onPrevious: _loadingNotifications || _notificationPage <= 1
-                    ? null
-                    : () => _reloadNotifications(page: _notificationPage - 1),
-                onNext: _loadingNotifications || _notificationPage >= maxPage
-                    ? null
-                    : () => _reloadNotifications(page: _notificationPage + 1),
-              ),
-            ],
+                const SizedBox(height: 8),
+                AppSearchField(
+                  controller: _notificationSearchController,
+                  hintText: context.l10n.searchTitleOrContent,
+                  onChanged: (value) {
+                    if (value.isEmpty) _reloadNotificationsFromFirstPage();
+                  },
+                  onSubmitted: (_) => _reloadNotificationsFromFirstPage(),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _NotificationFilterChip(
+                      label: context.l10n.all,
+                      selected: _notificationReadFilter == null,
+                      onSelected: () {
+                        setState(() => _notificationReadFilter = null);
+                        _reloadNotificationsFromFirstPage();
+                      },
+                    ),
+                    _NotificationFilterChip(
+                      label: context.l10n.unread,
+                      selected: _notificationReadFilter == false,
+                      onSelected: () {
+                        setState(() => _notificationReadFilter = false);
+                        _reloadNotificationsFromFirstPage();
+                      },
+                    ),
+                    _NotificationFilterChip(
+                      label: context.l10n.read,
+                      selected: _notificationReadFilter == true,
+                      onSelected: () {
+                        setState(() => _notificationReadFilter = true);
+                        _reloadNotificationsFromFirstPage();
+                      },
+                    ),
+                    AppSelect<client_enum.NotificationType?>(
+                      value: _notificationTypeFilter,
+                      hintText: context.l10n.notificationType,
+                      options: {
+                        context.l10n.allTypes: null,
+                        context.l10n.roomInvitation: client_enum
+                            .NotificationType
+                            .NOTIFICATION_TYPE_ROOM_INVITATION,
+                        context.l10n.systemAnnouncement: client_enum
+                            .NotificationType
+                            .NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
+                        context.l10n.roomEvent: client_enum
+                            .NotificationType
+                            .NOTIFICATION_TYPE_ROOM_EVENT,
+                        context.l10n.passwordResetNotification: client_enum
+                            .NotificationType
+                            .NOTIFICATION_TYPE_PASSWORD_RESET,
+                        if (_showEmailBindingControls)
+                          context.l10n.emailBinding: client_enum
+                              .NotificationType
+                              .NOTIFICATION_TYPE_EMAIL_BIND,
+                      },
+                      onChanged: (value) {
+                        setState(() => _notificationTypeFilter = value);
+                        _reloadNotificationsFromFirstPage();
+                      },
+                    ),
+                    AppSelect<client_enum.NotificationListSortBy>(
+                      value: _notificationSortBy,
+                      options: {
+                        context.l10n.createdAt: client_enum
+                            .NotificationListSortBy
+                            .NOTIFICATION_LIST_SORT_BY_CREATED_AT,
+                        context.l10n.updatedAt: client_enum
+                            .NotificationListSortBy
+                            .NOTIFICATION_LIST_SORT_BY_UPDATED_AT,
+                        context.l10n.title: client_enum
+                            .NotificationListSortBy
+                            .NOTIFICATION_LIST_SORT_BY_TITLE,
+                      },
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() => _notificationSortBy = value);
+                        _reloadNotificationsFromFirstPage();
+                      },
+                    ),
+                    AppIconButton(
+                      onPressed: () {
+                        setState(() {
+                          _notificationSortDirection =
+                              _notificationSortDirection ==
+                                  client_enum.SortDirection.SORT_DIRECTION_DESC
+                              ? client_enum.SortDirection.SORT_DIRECTION_ASC
+                              : client_enum.SortDirection.SORT_DIRECTION_DESC;
+                        });
+                        _reloadNotificationsFromFirstPage();
+                      },
+                      icon:
+                          _notificationSortDirection ==
+                              client_enum.SortDirection.SORT_DIRECTION_DESC
+                          ? Icons.south_rounded
+                          : Icons.north_rounded,
+                      tooltip:
+                          _notificationSortDirection ==
+                              client_enum.SortDirection.SORT_DIRECTION_DESC
+                          ? context.l10n.descending
+                          : context.l10n.ascending,
+                      style: AppIconButtonStyle.outlined,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                AppPaginationBar(
+                  padding: EdgeInsets.zero,
+                  label: context.l10n.notificationPageRange(
+                    _notificationPage,
+                    maxPage,
+                    pageStart,
+                    pageEnd,
+                  ),
+                  onPrevious: _loadingNotifications || _notificationPage <= 1
+                      ? null
+                      : () => _reloadNotifications(page: _notificationPage - 1),
+                  onNext: _loadingNotifications || _notificationPage >= maxPage
+                      ? null
+                      : () => _reloadNotifications(page: _notificationPage + 1),
+                ),
+              ],
+            ),
           ),
         ),
-        Expanded(
-          child: _loadingNotifications && page == null
-              ? const AppLoadingIndicator()
-              : loadError != null && page == null
-              ? Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    child: _LoadErrorBanner(
-                      title: context.l10n.notificationsTemporarilyUnavailable,
-                      moduleInfo: _moduleInfo[_moduleNotifications],
-                      message: loadError,
-                      onRetry: _reloadNotifications,
-                    ),
-                  ),
-                )
-              : items.isEmpty
-              ? AppEmptyMessage(message: context.l10n.noNotifications)
-              : AppRefreshIndicator(
-                  onRefresh: _reloadNotifications,
-                  child: AppListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      final selected = _selectedNotificationIds.contains(
-                        item.numericId,
-                      );
-                      final selectable = item.numericId > 0;
-                      return _Section(
-                        child: AppTile(
-                          contentPadding: EdgeInsets.zero,
-                          selected: selected,
-                          onPressed: selected
-                              ? () {
-                                  if (!selectable) return;
-                                  setState(() {
-                                    _selectedNotificationIds.remove(
-                                      item.numericId,
-                                    );
-                                  });
-                                }
-                              : () => _openNotification(item),
-                          onLongPress: selectable
-                              ? () => setState(() {
-                                  if (selected) {
-                                    _selectedNotificationIds.remove(
-                                      item.numericId,
-                                    );
-                                  } else {
-                                    _selectedNotificationIds.add(
-                                      item.numericId,
-                                    );
-                                  }
-                                })
-                              : null,
-                          prefix: AppCheckbox(
-                            value: selected,
-                            semanticsLabel: context.l10n.selectNotification,
-                            onChanged: selectable
-                                ? (value) => setState(() {
-                                    if (value) {
-                                      _selectedNotificationIds.add(
-                                        item.numericId,
-                                      );
-                                    } else {
-                                      _selectedNotificationIds.remove(
-                                        item.numericId,
-                                      );
-                                    }
-                                  })
-                                : null,
-                          ),
-                          title: Text(
-                            item.title.isEmpty
-                                ? _notificationType(item.type)
-                                : item.title,
-                            style: TextStyle(
-                              fontWeight: item.isRead
-                                  ? FontWeight.w500
-                                  : FontWeight.w700,
-                            ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (item.content.isNotEmpty) Text(item.content),
-                              const SizedBox(height: 4),
-                              Text(
-                                _formatTimestamp(item.createdAt),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: theme.hintColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          suffix: Wrap(
-                            spacing: 2,
-                            children: [
-                              AppIconButton(
-                                onPressed: selected
-                                    ? null
-                                    : () => _openNotification(item),
-                                icon: Icons.open_in_new_rounded,
-                                tooltip: context.l10n.viewDetails,
-                                size: AppIconButtonSize.sm,
-                              ),
-                              if (!item.isRead)
-                                AppIconButton(
-                                  onPressed: selected
-                                      ? null
-                                      : () => _markRead(item),
-                                  icon: Icons.mark_email_read_rounded,
-                                  tooltip: context.l10n.markRead,
-                                  size: AppIconButtonSize.sm,
-                                ),
-                              AppIconButton(
-                                onPressed: selected
-                                    ? null
-                                    : () => _deleteNotification(item),
-                                icon: Icons.delete_outline_rounded,
-                                tooltip: context.l10n.delete,
-                                size: AppIconButtonSize.sm,
-                                style: AppIconButtonStyle.destructive,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+      ],
+      body: _loadingNotifications && page == null
+          ? const AppLoadingIndicator()
+          : loadError != null && page == null
+          ? AppSingleChildScrollView(
+              primary: true,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: _LoadErrorBanner(
+                    title: context.l10n.notificationsTemporarilyUnavailable,
+                    moduleInfo: _moduleInfo[_moduleNotifications],
+                    message: loadError,
+                    onRetry: _reloadNotifications,
                   ),
                 ),
-        ),
-      ],
+              ),
+            )
+          : items.isEmpty
+          ? AppEmptyMessage(message: context.l10n.noNotifications)
+          : AppRefreshIndicator(
+              onRefresh: _reloadNotifications,
+              child: AppListView.separated(
+                primary: true,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                itemCount: items.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  final selected = _selectedNotificationIds.contains(item.id);
+                  final selectable = item.hasValidId;
+                  return _Section(
+                    child: AppTile(
+                      contentPadding: EdgeInsets.zero,
+                      selected: selected,
+                      onPressed: selected
+                          ? () {
+                              if (!selectable) return;
+                              setState(() {
+                                _selectedNotificationIds.remove(item.id);
+                              });
+                            }
+                          : () => _openNotification(item),
+                      onLongPress: selectable
+                          ? () => setState(() {
+                              if (selected) {
+                                _selectedNotificationIds.remove(item.id);
+                              } else {
+                                _selectedNotificationIds.add(item.id);
+                              }
+                            })
+                          : null,
+                      prefix: AppCheckbox(
+                        value: selected,
+                        semanticsLabel: context.l10n.selectNotification,
+                        onChanged: selectable
+                            ? (value) => setState(() {
+                                if (value) {
+                                  _selectedNotificationIds.add(item.id);
+                                } else {
+                                  _selectedNotificationIds.remove(item.id);
+                                }
+                              })
+                            : null,
+                      ),
+                      title: Text(
+                        item.title.isEmpty
+                            ? _notificationType(item.type)
+                            : item.title,
+                        style: TextStyle(
+                          fontWeight: item.isRead
+                              ? FontWeight.w500
+                              : FontWeight.w700,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (item.content.isNotEmpty) Text(item.content),
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatTimestamp(item.createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.hintColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      stackedSuffix: true,
+                      suffix: Wrap(
+                        spacing: 2,
+                        children: [
+                          AppIconButton(
+                            onPressed: selected
+                                ? null
+                                : () => _openNotification(item),
+                            icon: Icons.open_in_new_rounded,
+                            tooltip: context.l10n.viewDetails,
+                            size: AppIconButtonSize.sm,
+                          ),
+                          if (!item.isRead)
+                            AppIconButton(
+                              onPressed:
+                                  selected || _notificationMutationInFlight
+                                  ? null
+                                  : () => _markRead(item),
+                              icon: Icons.mark_email_read_rounded,
+                              tooltip: context.l10n.markRead,
+                              size: AppIconButtonSize.sm,
+                            ),
+                          AppIconButton(
+                            onPressed: selected || _notificationMutationInFlight
+                                ? null
+                                : () => _deleteNotification(item),
+                            icon: Icons.delete_outline_rounded,
+                            tooltip: context.l10n.delete,
+                            size: AppIconButtonSize.sm,
+                            style: AppIconButtonStyle.destructive,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 
@@ -3179,142 +3324,151 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     return AppListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _Section(
-          title: context.l10n.mediaSourceAccounts,
-          subtitle: context.l10n.mediaSourceAccountsDescription,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 640;
-              final cards = [
-                _MediaProviderBindCard(
-                  label: 'AList',
-                  description: context.l10n.alistAccountDescription,
-                  icon: Icons.cloud_circle_rounded,
-                  color: Colors.amber,
-                  onTap: () => widget.onOpenProviderBinding('alist'),
-                ),
-                _MediaProviderBindCard(
-                  label: 'Cloudreve',
-                  description: context.l10n.cloudreveAccountDescription,
-                  icon: Icons.cloud_rounded,
-                  color: Colors.teal,
-                  onTap: () => widget.onOpenProviderBinding('cloudreve'),
-                ),
-                _MediaProviderBindCard(
-                  label: 'Emby',
-                  description: context.l10n.embyAccountDescription,
-                  icon: Icons.video_library_rounded,
-                  color: Colors.green,
-                  onTap: () => widget.onOpenProviderBinding('emby'),
-                ),
-                if (ProviderDistributionPolicy.current.allowsProvider(
-                  'bilibili',
-                ))
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              context.l10n.mediaSourceAccounts,
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              context.l10n.mediaSourceAccountsDescription,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Builder(
+              builder: (context) {
+                final layoutScale =
+                    (MediaQuery.textScalerOf(context).scale(14) / 14).clamp(
+                      1.0,
+                      double.infinity,
+                    );
+                final cards = [
                   _MediaProviderBindCard(
-                    label: 'Bilibili',
-                    description: context.l10n.bilibiliAccountDescription,
-                    icon: Icons.tv_rounded,
-                    color: const Color(0xFFFB7299),
-                    onTap: () => widget.onOpenProviderBinding('bilibili'),
+                    label: 'AList',
+                    description: context.l10n.alistAccountDescription,
+                    icon: Icons.cloud_circle_rounded,
+                    color: Colors.amber,
+                    onTap: () => widget.onOpenProviderBinding('alist'),
                   ),
-                if (ProviderDistributionPolicy.current.allowsProvider('twitch'))
                   _MediaProviderBindCard(
-                    label: 'Twitch',
-                    description: context.l10n.twitchAccountDescription,
-                    icon: Icons.live_tv_rounded,
-                    color: const Color(0xFF9146FF),
-                    onTap: () => widget.onOpenProviderBinding('twitch'),
+                    label: 'Cloudreve',
+                    description: context.l10n.cloudreveAccountDescription,
+                    icon: Icons.cloud_rounded,
+                    color: Colors.teal,
+                    onTap: () => widget.onOpenProviderBinding('cloudreve'),
                   ),
-                _MediaProviderBindCard(
-                  label: 'FNOS',
-                  description: context.l10n.fnosAccountDescription,
-                  icon: Icons.storage_rounded,
-                  color: const Color(0xFF087F5B),
-                  onTap: () => widget.onOpenProviderBinding('fnos'),
-                ),
-                _MediaProviderBindCard(
-                  label: 'QNAP',
-                  description: context.l10n.qnapAccountDescription,
-                  icon: Icons.storage_rounded,
-                  color: const Color(0xFF0076A8),
-                  onTap: () => widget.onOpenProviderBinding('qnap'),
-                ),
-                _MediaProviderBindCard(
-                  label: 'Synology DSM',
-                  description: context.l10n.synologyAccountDescription,
-                  icon: Icons.video_library_rounded,
-                  color: const Color(0xFF1578D3),
-                  onTap: () => widget.onOpenProviderBinding('synology'),
-                ),
-                _MediaProviderBindCard(
-                  label: 'Nextcloud',
-                  description: context.l10n.nextcloudAccountDescription,
-                  icon: Icons.cloud_outlined,
-                  color: const Color(0xFF0082C9),
-                  onTap: () => widget.onOpenProviderBinding('nextcloud'),
-                ),
-                _MediaProviderBindCard(
-                  label: 'Seafile',
-                  description: context.l10n.seafileAccountDescription,
-                  icon: Icons.cloud_queue_rounded,
-                  color: const Color(0xFFED7109),
-                  onTap: () => widget.onOpenProviderBinding('seafile'),
-                ),
-                _MediaProviderBindCard(
-                  label: 'TrueNAS',
-                  description: context.l10n.truenasAccountDescription,
-                  icon: Icons.dns_rounded,
-                  color: const Color(0xFF0095D5),
-                  onTap: () => widget.onOpenProviderBinding('truenas'),
-                ),
-                if (ProviderDistributionPolicy.current.allowsProvider(
-                  'youtube',
-                ))
                   _MediaProviderBindCard(
-                    label: 'YouTube',
-                    description: context.l10n.youtubeAccountDescription,
-                    icon: Icons.smart_display_rounded,
-                    color: const Color(0xFFFF0033),
-                    onTap: () => widget.onOpenProviderBinding('youtube'),
+                    label: 'Emby',
+                    description: context.l10n.embyAccountDescription,
+                    icon: Icons.video_library_rounded,
+                    color: Colors.green,
+                    onTap: () => widget.onOpenProviderBinding('emby'),
                   ),
-                if (ProviderDistributionPolicy.current.allowsProvider('douyin'))
+                  if (ProviderDistributionPolicy.current.allowsProvider(
+                    'bilibili',
+                  ))
+                    _MediaProviderBindCard(
+                      label: 'Bilibili',
+                      description: context.l10n.bilibiliAccountDescription,
+                      icon: Icons.tv_rounded,
+                      color: const Color(0xFFFB7299),
+                      onTap: () => widget.onOpenProviderBinding('bilibili'),
+                    ),
+                  if (ProviderDistributionPolicy.current.allowsProvider(
+                    'twitch',
+                  ))
+                    _MediaProviderBindCard(
+                      label: 'Twitch',
+                      description: context.l10n.twitchAccountDescription,
+                      icon: Icons.live_tv_rounded,
+                      color: const Color(0xFF9146FF),
+                      onTap: () => widget.onOpenProviderBinding('twitch'),
+                    ),
                   _MediaProviderBindCard(
-                    label: 'Douyin',
-                    description: context.l10n.douyinAccountDescription,
-                    icon: Icons.music_video_rounded,
-                    color: const Color(0xFF00AFA7),
-                    onTap: () => widget.onOpenProviderBinding('douyin'),
+                    label: 'FNOS',
+                    description: context.l10n.fnosAccountDescription,
+                    icon: Icons.storage_rounded,
+                    color: const Color(0xFF087F5B),
+                    onTap: () => widget.onOpenProviderBinding('fnos'),
                   ),
-                if (ProviderDistributionPolicy.current.allowsProvider('tiktok'))
                   _MediaProviderBindCard(
-                    label: 'TikTok',
-                    description: context.l10n.tiktokAccountDescription,
-                    icon: Icons.music_video_rounded,
-                    color: const Color(0xFFFE2C55),
-                    onTap: () => widget.onOpenProviderBinding('tiktok'),
+                    label: 'QNAP',
+                    description: context.l10n.qnapAccountDescription,
+                    icon: Icons.storage_rounded,
+                    color: const Color(0xFF0076A8),
+                    onTap: () => widget.onOpenProviderBinding('qnap'),
                   ),
-              ];
-              if (compact) {
-                return Column(
-                  children: [
-                    for (final card in cards) ...[
-                      card,
-                      if (card != cards.last) const SizedBox(height: 10),
-                    ],
-                  ],
+                  _MediaProviderBindCard(
+                    label: 'Synology DSM',
+                    description: context.l10n.synologyAccountDescription,
+                    icon: Icons.video_library_rounded,
+                    color: const Color(0xFF1578D3),
+                    onTap: () => widget.onOpenProviderBinding('synology'),
+                  ),
+                  _MediaProviderBindCard(
+                    label: 'Nextcloud',
+                    description: context.l10n.nextcloudAccountDescription,
+                    icon: Icons.cloud_outlined,
+                    color: const Color(0xFF0082C9),
+                    onTap: () => widget.onOpenProviderBinding('nextcloud'),
+                  ),
+                  _MediaProviderBindCard(
+                    label: 'Seafile',
+                    description: context.l10n.seafileAccountDescription,
+                    icon: Icons.cloud_queue_rounded,
+                    color: const Color(0xFFED7109),
+                    onTap: () => widget.onOpenProviderBinding('seafile'),
+                  ),
+                  _MediaProviderBindCard(
+                    label: 'TrueNAS',
+                    description: context.l10n.truenasAccountDescription,
+                    icon: Icons.dns_rounded,
+                    color: const Color(0xFF0095D5),
+                    onTap: () => widget.onOpenProviderBinding('truenas'),
+                  ),
+                  if (ProviderDistributionPolicy.current.allowsProvider(
+                    'youtube',
+                  ))
+                    _MediaProviderBindCard(
+                      label: 'YouTube',
+                      description: context.l10n.youtubeAccountDescription,
+                      icon: Icons.smart_display_rounded,
+                      color: const Color(0xFFFF0033),
+                      onTap: () => widget.onOpenProviderBinding('youtube'),
+                    ),
+                  if (ProviderDistributionPolicy.current.allowsProvider(
+                    'douyin',
+                  ))
+                    _MediaProviderBindCard(
+                      label: 'Douyin',
+                      description: context.l10n.douyinAccountDescription,
+                      icon: Icons.music_video_rounded,
+                      color: const Color(0xFF00AFA7),
+                      onTap: () => widget.onOpenProviderBinding('douyin'),
+                    ),
+                  if (ProviderDistributionPolicy.current.allowsProvider(
+                    'tiktok',
+                  ))
+                    _MediaProviderBindCard(
+                      label: 'TikTok',
+                      description: context.l10n.tiktokAccountDescription,
+                      icon: Icons.music_video_rounded,
+                      color: const Color(0xFFFE2C55),
+                      onTap: () => widget.onOpenProviderBinding('tiktok'),
+                    ),
+                ];
+                return AppResponsiveWrap(
+                  minItemWidth: 280 * layoutScale,
+                  children: cards,
                 );
-              }
-              final cardWidth = (constraints.maxWidth - 20) / 3;
-              return Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  for (final card in cards)
-                    SizedBox(width: cardWidth, child: card),
-                ],
-              );
-            },
-          ),
+              },
+            ),
+          ],
         ),
         if (ProviderDistributionPolicy.current.allowsOAuth2 &&
             showOAuth2Bindings) ...[
@@ -3337,32 +3491,20 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     )
                   else
                     for (final account in _linkedOAuth2)
-                      AppTile(
-                        contentPadding: EdgeInsets.zero,
-                        prefix: OAuthProviderIcon(
-                          type: account.providerType,
-                          name: account.providerInstanceName,
-                        ),
-                        title: Text(
-                          '${account.providerType} / ${account.providerInstanceName}',
-                        ),
-                        subtitle: Text(
-                          [
-                            if (account.providerUsername.isNotEmpty)
-                              account.providerUsername,
-                            if (account.providerUserId.isNotEmpty)
-                              account.providerUserId,
-                            if (account.providerIssuer.isNotEmpty)
-                              account.providerIssuer,
-                            _formatTimestamp(account.linkedAt),
-                          ].join(' · '),
-                        ),
-                        suffix: AppIconButton(
-                          onPressed: () => _unlinkOAuth2(account),
-                          icon: Icons.link_off_rounded,
-                          tooltip: context.l10n.unbind,
-                          style: AppIconButtonStyle.destructive,
-                        ),
+                      _LinkedOAuthAccountRow(
+                        account: account,
+                        description: [
+                          if (account.providerUsername.isNotEmpty)
+                            account.providerUsername,
+                          if (account.providerUserId.isNotEmpty)
+                            account.providerUserId,
+                          if (account.providerIssuer.isNotEmpty)
+                            account.providerIssuer,
+                          _formatTimestamp(account.linkedAt),
+                        ].join(' · '),
+                        onUnlink: _unlinkingOAuth2 || _bindProvider != null
+                            ? null
+                            : () => _unlinkOAuth2(account),
                       ),
                 ],
               ),
@@ -3405,6 +3547,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             SizedBox(
                               width: 240,
                               child: AppleSignInButton(
+                                enabled:
+                                    _bindProvider == null && !_unlinkingOAuth2,
                                 semanticLabel: context.l10n
                                     .continueWithProvider('Apple'),
                                 onPressed: () => _startOAuth2Bind(provider),
@@ -3413,13 +3557,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           else
                             AppActionButton(
                               onPressed:
-                                  selectOAuth2AuthorizationMode(
-                                        provider,
-                                        platform: defaultTargetPlatform,
-                                        browserAvailable: browserAvailable,
-                                        nativeAvailable: nativeAvailable,
-                                      ) !=
-                                      null
+                                  _bindProvider == null &&
+                                      !_unlinkingOAuth2 &&
+                                      selectOAuth2AuthorizationMode(
+                                            provider,
+                                            platform: defaultTargetPlatform,
+                                            browserAvailable: browserAvailable,
+                                            nativeAvailable: nativeAvailable,
+                                          ) !=
+                                          null
                                   ? () => _startOAuth2Bind(provider)
                                   : null,
                               prefix: OAuthProviderIcon(
@@ -3428,6 +3574,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                               ),
                               label:
                                   '${oauthProviderDisplayName(type: provider.type, name: provider.name)} (${provider.name})',
+                              wrapLabel: true,
                               style: AppActionButtonStyle.outlined,
                             ),
                         ],
@@ -3502,6 +3649,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               onPressed: () => _tabController.animateTo(1),
               icon: Icons.person_outline_rounded,
               label: context.l10n.viewProfile,
+              wrapLabel: true,
               style: AppActionButtonStyle.outlined,
             ),
           ),
@@ -3543,6 +3691,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               onPressed: () => _tabController.animateTo(4),
               icon: Icons.security_rounded,
               label: context.l10n.manageSecurity,
+              wrapLabel: true,
               style: AppActionButtonStyle.outlined,
             ),
           ),
@@ -3552,13 +3701,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Widget _buildRecentRoomsPanel(ThemeData theme) {
-    final rooms = (_myRooms?.rooms ?? const <SyncTvRoom>[]).take(3).toList();
+    final rooms = (_overviewRooms?.rooms ?? const <SyncTvRoom>[])
+        .take(3)
+        .toList();
     return _Section(
       title: context.l10n.recentRooms,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_loadingRooms && _myRooms == null)
+          if (_loadingOverviewRooms && _overviewRooms == null)
             const AppLoadingIndicator(size: AppLoadingSize.sm, centered: false)
           else if (rooms.isEmpty)
             AppEmptyMessage(
@@ -3592,6 +3743,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               onPressed: _createRoom,
               icon: Icons.add_rounded,
               label: context.l10n.createRoom,
+              wrapLabel: true,
             ),
           ),
           const SizedBox(height: 8),
@@ -3601,6 +3753,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               onPressed: () => _tabController.animateTo(2),
               icon: Icons.meeting_room_outlined,
               label: context.l10n.manageRooms,
+              wrapLabel: true,
               style: AppActionButtonStyle.outlined,
             ),
           ),

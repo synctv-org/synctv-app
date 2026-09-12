@@ -265,11 +265,11 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
     return ProviderWorkspace(controls: content, results: _buildResults());
   }
 
-  Widget _buildResults() {
+  Widget? _buildResults() {
     if (_posts != null) return _postsBrowser();
     final preview = _preview();
     return preview == null
-        ? const SizedBox()
+        ? null
         : AppSingleChildScrollView(padding: EdgeInsets.zero, child: preview);
   }
 

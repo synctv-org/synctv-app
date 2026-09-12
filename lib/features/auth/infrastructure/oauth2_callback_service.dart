@@ -90,6 +90,7 @@ class OAuth2CallbackService {
           redirectUri: redirectUri,
           callbackUrlScheme: callbackUrlSchemeFor(redirectUri),
           options: optionsFor(redirectUri),
+          authorizationTimeout: authorizationTimeout,
         ),
       OAuth2CallbackTransport.loopbackHttpServer =>
         _LoopbackHttpCallbackSession(
@@ -279,19 +280,22 @@ final class _LoopbackHttpCallbackSession implements OAuth2CallbackSession {
       return;
     }
 
+    if (!OAuth2CallbackParser.belongsToSession(
+      request.requestedUri.toString(),
+      expectedState: expectedState,
+      expectedRedirectUri: redirectUri,
+    )) {
+      await _respond(
+        request,
+        HttpStatus.badRequest,
+        'Invalid OAuth2 callback.',
+      );
+      return;
+    }
+
     final parameters = request.uri.queryParameters;
     final authorizationError = parameters['error']?.trim() ?? '';
     if (authorizationError.isNotEmpty) {
-      final state = parameters['state']?.trim() ?? '';
-      if (state.isEmpty ||
-          (expectedState.isNotEmpty && state != expectedState)) {
-        await _respond(
-          request,
-          HttpStatus.badRequest,
-          'Invalid OAuth2 callback.',
-        );
-        return;
-      }
       if (_callbackAccepted) {
         await _respond(
           request,
@@ -338,6 +342,7 @@ final class _LoopbackHttpCallbackSession implements OAuth2CallbackSession {
       payload = OAuth2CallbackParser.parse(
         request.requestedUri,
         expectedState: expectedState,
+        expectedRedirectUri: redirectUri,
       );
     } on ArgumentError {
       await _respond(
@@ -409,11 +414,13 @@ final class _FlutterWebAuth2CallbackSession implements OAuth2CallbackSession {
     required this.redirectUri,
     required this.callbackUrlScheme,
     required this.options,
+    required this.authorizationTimeout,
   });
 
   final Uri redirectUri;
   final String callbackUrlScheme;
   final FlutterWebAuth2Options options;
+  final Duration authorizationTimeout;
 
   @override
   String get redirectUrl => redirectUri.toString();
@@ -430,7 +437,7 @@ final class _FlutterWebAuth2CallbackSession implements OAuth2CallbackSession {
             callbackUrlScheme: callbackUrlScheme,
             options: options,
           ).timeout(
-            oauth2AuthorizationTimeout,
+            authorizationTimeout,
             onTimeout: () => throw const OAuth2AuthorizationTimedOut(),
           );
       return OAuth2CallbackParser.parse(

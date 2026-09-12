@@ -32,6 +32,7 @@ class AppNotifications {
     } on StateError {
       // The owning overlay was disposed before the queued removal ran.
     }
+    entry.dispose();
   }
 
   static void showSuccess(
@@ -44,7 +45,7 @@ class AppNotifications {
     _showToast(
       context,
       message,
-      backgroundColor: Colors.green.shade600,
+      backgroundColor: Colors.green.shade800,
       icon: Icons.check_circle_outline,
       duration: duration,
       action: _actionFromSnackBarAction(action),
@@ -60,7 +61,7 @@ class AppNotifications {
     _showToast(
       context,
       message,
-      backgroundColor: Colors.red.shade600,
+      backgroundColor: Colors.red.shade700,
       icon: Icons.error_outline,
       duration: duration,
       action: _actionFromSnackBarAction(action),
@@ -77,6 +78,7 @@ class AppNotifications {
       context,
       message,
       backgroundColor: Colors.orange.shade600,
+      textColor: Colors.black,
       icon: Icons.warning_amber_rounded,
       duration: duration,
       action: _actionFromSnackBarAction(action),
@@ -113,106 +115,308 @@ class AppNotifications {
     dismissAll();
     final overlayState = Overlay.of(context, rootOverlay: true);
     late final OverlayEntry overlayEntry;
+    var timeoutPaused = false;
+    var accessibilityRetained = false;
+    var hovered = false;
+    var focused = false;
+    void scheduleTimeout() {
+      _activeToastTimer?.cancel();
+      _activeToastTimer = Timer(duration, () {
+        if (identical(_activeToast, overlayEntry)) dismissAll();
+      });
+    }
+
+    void updateTimeout() {
+      if (!identical(_activeToast, overlayEntry)) return;
+      final paused = accessibilityRetained || hovered || focused;
+      if (paused == timeoutPaused) return;
+      timeoutPaused = paused;
+      if (paused) {
+        _activeToastTimer?.cancel();
+        _activeToastTimer = null;
+      } else {
+        scheduleTimeout();
+      }
+    }
+
     overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        bottom: 70 + MediaQuery.of(context).padding.bottom,
-        left: 24,
-        right: 24,
-        child: AppOverlaySurface(
-          child: Center(
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, child) {
-                final animationValue = value.clamp(0.0, 1.0);
-                return Transform.translate(
-                  offset: Offset(0, 16 * (1 - animationValue)),
-                  child: Opacity(opacity: animationValue, child: child),
-                );
-              },
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: AppPanelSurface(
-                  color: backgroundColor,
-                  borderRadius: const BorderRadius.all(Radius.circular(16)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (loading) ...[
-                          AppLoadingIndicator(
-                            size: AppLoadingSize.sm,
-                            centered: false,
-                            color: indicatorColor ?? textColor,
-                          ),
-                          const SizedBox(width: 10),
-                        ] else if (icon != null) ...[
-                          Icon(icon, color: textColor, size: 20),
-                          const SizedBox(width: 10),
-                        ],
-                        Flexible(
-                          child: Text(
-                            message,
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              height: 1.35,
-                            ),
+      builder: (context) {
+        final media = MediaQuery.of(context);
+        final bottom = (70 + media.padding.bottom).clamp(
+          media.viewInsets.bottom + 16,
+          double.infinity,
+        );
+        return Positioned(
+          bottom: bottom,
+          left: 24,
+          right: 24,
+          child: AppOverlaySurface(
+            child: Center(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  final animationValue = value.clamp(0.0, 1.0);
+                  return Transform.translate(
+                    offset: Offset(0, 16 * (1 - animationValue)),
+                    child: Opacity(opacity: animationValue, child: child),
+                  );
+                },
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: 520,
+                    maxHeight:
+                        (media.size.height - bottom - media.padding.top - 16)
+                            .clamp(1.0, double.infinity),
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      const messageStyle = TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      );
+                      final style = DefaultTextStyle.of(context).style
+                          .merge(messageStyle.copyWith(color: textColor));
+                      final painter =
+                          TextPainter(
+                            text: TextSpan(text: message, style: style),
+                            textDirection: Directionality.of(context),
+                            textScaler: MediaQuery.textScalerOf(context),
                             maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
+                            ellipsis: '\u2026',
+                          )..layout(
+                            maxWidth:
+                                (constraints.maxWidth -
+                                        28 -
+                                        (loading || icon != null ? 30 : 0))
+                                    .clamp(1.0, double.infinity),
+                          );
+                      final truncated = painter.didExceedMaxLines;
+                      painter.dispose();
+                      final interactive = action != null || truncated;
+                      if (!interactive) {
+                        hovered = false;
+                        focused = false;
+                      }
+                      final retain = media.accessibleNavigation && interactive;
+                      accessibilityRetained = retain;
+                      updateTimeout();
+                      final toast = IgnorePointer(
+                        ignoring: action == null && !truncated,
+                        child: AppSingleChildScrollView(
+                          child: AppPanelSurface(
+                            color: backgroundColor,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(16),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.18),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  if (retain)
+                                    IconButtonTheme(
+                                      data: IconButtonThemeData(
+                                        style: IconButton.styleFrom(
+                                          foregroundColor: textColor,
+                                        ),
+                                      ),
+                                      child: AppIconButton(
+                                        icon: Icons.close_rounded,
+                                        tooltip: MaterialLocalizations.of(
+                                          context,
+                                        ).closeButtonTooltip,
+                                        onPressed: () {
+                                          if (identical(
+                                            _activeToast,
+                                            overlayEntry,
+                                          )) {
+                                            dismissAll();
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (loading) ...[
+                                        AppLoadingIndicator(
+                                          size: AppLoadingSize.sm,
+                                          centered: false,
+                                          color: indicatorColor ?? textColor,
+                                        ),
+                                        const SizedBox(width: 10),
+                                      ] else if (icon != null) ...[
+                                        Icon(icon, color: textColor, size: 20),
+                                        const SizedBox(width: 10),
+                                      ],
+                                      Flexible(
+                                        child: Semantics(
+                                          liveRegion: true,
+                                          child: Text(
+                                            message,
+                                            style: style,
+                                            maxLines: 3,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (truncated)
+                                    IconButtonTheme(
+                                      data: IconButtonThemeData(
+                                        style: IconButton.styleFrom(
+                                          foregroundColor: textColor,
+                                        ),
+                                      ),
+                                      child: AppIconButton(
+                                        icon: Icons.open_in_full_rounded,
+                                        tooltip:
+                                            Localizations.of<AppLocalizations>(
+                                              context,
+                                              AppLocalizations,
+                                            )?.details ??
+                                            MaterialLocalizations.of(context)
+                                                .moreButtonTooltip,
+                                        onPressed: () {
+                                          if (!identical(
+                                            _activeToast,
+                                            overlayEntry,
+                                          )) {
+                                            return;
+                                          }
+                                          _showDetails(
+                                            context,
+                                            message,
+                                            action,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  if (action != null) ...[
+                                    const SizedBox(height: 8),
+                                    AppActionButton(
+                                      wrapLabel: true,
+                                      style: AppActionButtonStyle.text,
+                                      size: AppActionButtonSize.sm,
+                                      foregroundColor: textColor,
+                                      onPressed: () {
+                                        if (!identical(
+                                          _activeToast,
+                                          overlayEntry,
+                                        )) {
+                                          return;
+                                        }
+                                        dismissAll();
+                                        action.onPressed();
+                                      },
+                                      label: action.label,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        if (action != null) ...[
-                          const SizedBox(width: 12),
-                          AppActionButton(
-                            style: AppActionButtonStyle.text,
-                            size: AppActionButtonSize.sm,
-                            foregroundColor: textColor,
-                            onPressed: () {
-                              _removeToast(overlayEntry);
-                              if (identical(_activeToast, overlayEntry)) {
-                                _activeToast = null;
-                                _activeToastTimer?.cancel();
-                                _activeToastTimer = null;
-                              }
-                              action.onPressed();
-                            },
-                            label: action.label,
-                          ),
-                        ],
-                      ],
-                    ),
+                      );
+                      if (!interactive) return toast;
+                      return MouseRegion(
+                        onEnter: (_) {
+                          hovered = true;
+                          updateTimeout();
+                        },
+                        onExit: (_) {
+                          hovered = false;
+                          updateTimeout();
+                        },
+                        child: Focus(
+                          canRequestFocus: false,
+                          onFocusChange: (value) {
+                            focused = value;
+                            updateTimeout();
+                          },
+                          child: toast,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
 
     overlayState.insert(overlayEntry);
     _activeToast = overlayEntry;
-    _activeToastTimer = Timer(duration, () {
-      _removeToast(overlayEntry);
-      if (identical(_activeToast, overlayEntry)) {
-        _activeToast = null;
-        _activeToastTimer = null;
-      }
-    });
+    scheduleTimeout();
+  }
+
+  static void _showDetails(
+    BuildContext context,
+    String message,
+    _ToastAction? action,
+  ) {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    dismissAll();
+    var handled = false;
+    showAppDialog<void>(
+      context: navigator.context,
+      builder: (context) => AppDialog(
+        title: Text(
+          Localizations.of<AppLocalizations>(
+                context,
+                AppLocalizations,
+              )?.message ??
+              MaterialLocalizations.of(context).alertDialogLabel,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        body: AppSelectableText(message),
+        actions: [
+          AppActionButton(
+            label: MaterialLocalizations.of(context).closeButtonTooltip,
+            wrapLabel: true,
+            onPressed: () {
+              if (context.mounted &&
+                  ModalRoute.of(context)?.isCurrent == true) {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+          if (action != null)
+            AppActionButton(
+              label: action.label,
+              wrapLabel: true,
+              onPressed: () {
+                if (handled ||
+                    !context.mounted ||
+                    ModalRoute.of(context)?.isCurrent != true) {
+                  return;
+                }
+                handled = true;
+                Navigator.of(context).pop();
+                action.onPressed();
+              },
+            ),
+        ],
+      ),
+    );
   }
 
   static _ToastAction? _actionFromSnackBarAction(SnackBarAction? action) {
@@ -269,8 +473,9 @@ class AppNotifications {
       context,
       message,
       backgroundColor: isEnabled
-          ? Colors.green.shade600
+          ? Colors.green.shade800
           : Colors.orange.shade600,
+      textColor: isEnabled ? Colors.white : Colors.black,
       duration: duration,
     );
   }

@@ -62,13 +62,26 @@ final class _WebOAuth2CallbackSession implements OAuth2CallbackSession {
     }
 
     final storageKey = oauth2WebCallbackStorageKey(expectedState);
-    web.window.localStorage
-      ..removeItem(oauth2WebCallbackMessageKey)
-      ..removeItem(storageKey);
+    try {
+      // Callback delivery needs writable storage when the popup has no opener.
+      web.window.localStorage
+        ..removeItem(oauth2WebCallbackMessageKey)
+        ..setItem(storageKey, '')
+        ..removeItem(storageKey);
+    } catch (_) {
+      throw const OAuth2CallbackStorageUnavailable();
+    }
     final callback = Completer<String>();
     _pendingCallback = callback;
 
     void complete(String callbackUrl) {
+      if (!OAuth2CallbackParser.belongsToSession(
+        callbackUrl,
+        expectedState: expectedState,
+        expectedRedirectUri: redirectUri,
+      )) {
+        return;
+      }
       if (!callback.isCompleted) callback.complete(callbackUrl);
     }
 
@@ -88,11 +101,21 @@ final class _WebOAuth2CallbackSession implements OAuth2CallbackSession {
           if (value != null) complete(value);
         });
     _pollTimer = Timer.periodic(_closedWindowPollInterval, (_) {
-      final callbackUrl = web.window.localStorage.getItem(storageKey);
-      if (callbackUrl != null) {
-        complete(callbackUrl);
-      } else if (_popup.closed && !callback.isCompleted) {
-        callback.completeError(const OAuth2AuthorizationCanceled());
+      try {
+        final callbackUrl = web.window.localStorage.getItem(storageKey);
+        if (callbackUrl != null) {
+          complete(callbackUrl);
+        }
+        if (_popup.closed && !callback.isCompleted) {
+          callback.completeError(const OAuth2AuthorizationCanceled());
+        }
+      } catch (_, stackTrace) {
+        if (!callback.isCompleted) {
+          callback.completeError(
+            const OAuth2CallbackStorageUnavailable(),
+            stackTrace,
+          );
+        }
       }
     });
     _timeoutTimer = Timer(authorizationTimeout, () {
@@ -113,9 +136,14 @@ final class _WebOAuth2CallbackSession implements OAuth2CallbackSession {
     } finally {
       await _clearListeners();
       _pendingCallback = null;
-      web.window.localStorage
-        ..removeItem(oauth2WebCallbackMessageKey)
-        ..removeItem(storageKey);
+      // Cleanup failure must not replace the authorization result.
+      for (final key in [oauth2WebCallbackMessageKey, storageKey]) {
+        try {
+          web.window.localStorage.removeItem(key);
+        } catch (_) {
+          // Attempt the other key even if one removal fails.
+        }
+      }
     }
   }
 

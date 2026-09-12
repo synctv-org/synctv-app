@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:synctv_app/core/async/persisted_value_controller.dart';
 
 @immutable
 final class DanmakuOverlayStyle {
@@ -232,32 +233,18 @@ abstract interface class PlaybackOverlayPreferencesStore {
   Future<void> save(PlaybackOverlayPreferenceValues values);
 }
 
-final class PlaybackOverlayPreferencesController extends ChangeNotifier {
-  PlaybackOverlayPreferencesController({required this.store});
+final class PlaybackOverlayPreferencesController
+    extends PersistedValueController<PlaybackOverlayPreferenceValues> {
+  PlaybackOverlayPreferencesController({required this.store})
+    : super(
+        initialValue: const PlaybackOverlayPreferenceValues(),
+        read: store.load,
+        write: store.save,
+        normalize: (value) => value.normalized(),
+      );
 
   final PlaybackOverlayPreferencesStore store;
-  PlaybackOverlayPreferenceValues _value =
-      const PlaybackOverlayPreferenceValues();
-
-  PlaybackOverlayPreferenceValues get value => _value;
-
-  Future<void> load() async {
-    _value = (await store.load()).normalized();
-    notifyListeners();
-  }
-
-  Future<void> save(PlaybackOverlayPreferenceValues value) async {
-    final previous = _value;
-    _value = value.normalized();
-    notifyListeners();
-    try {
-      await store.save(_value);
-    } catch (_) {
-      _value = previous;
-      notifyListeners();
-      rethrow;
-    }
-  }
+  Future<void> save(PlaybackOverlayPreferenceValues value) => persist(value);
 
   Future<void> reset() => save(const PlaybackOverlayPreferenceValues());
 }

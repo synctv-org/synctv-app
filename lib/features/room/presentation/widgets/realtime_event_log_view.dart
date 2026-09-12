@@ -34,6 +34,7 @@ class RealtimeEventLogView extends StatefulWidget {
 
 class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
   final Set<String> _hiddenGroupKeys = {};
+  final Set<String> _expandedGroupKeys = {};
   RealtimeEventLogPreferencesController get _preferences =>
       DependencyScope.read<RealtimeEventLogPreferencesController>(context);
 
@@ -48,6 +49,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
     super.didUpdateWidget(oldWidget);
     final availableKeys = widget.events.map((event) => event.groupKey).toSet();
     _hiddenGroupKeys.removeWhere((key) => !availableKeys.contains(key));
+    _expandedGroupKeys.removeWhere((key) => !availableKeys.contains(key));
   }
 
   Future<void> _copy(BuildContext context) async {
@@ -60,58 +62,21 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
   }
 
   Future<void> _changeMaxEntries(BuildContext context, int value) async {
+    final preferences = _preferences;
     var nextValue = value;
     if (value == -1) {
-      final controller = TextEditingController(
-        text: _preferences.maxEntries.value.toString(),
+      final selected = await showAppDialog<int>(
+        context: context,
+        builder: (_) =>
+            _RetentionLimitDialog(initialValue: preferences.maxEntries.value),
       );
-      nextValue =
-          await showAppDialog<int>(
-            context: context,
-            builder: (dialogContext) {
-              return AppDialog(
-                title: Text(context.l10n.retentionCount),
-                body: AppTextField(
-                  controller: controller,
-                  label: context.l10n.recentEventCount,
-                  helperText: context.l10n.eventCountRange,
-                  prefixIcon: Icons.format_list_numbered_rounded,
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) {
-                    final parsed = int.tryParse(controller.text.trim());
-                    if (parsed == null) return;
-                    Navigator.pop(dialogContext, parsed);
-                  },
-                ),
-                actions: [
-                  AppActionButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    label: context.l10n.cancel,
-                    style: AppActionButtonStyle.outlined,
-                  ),
-                  AppActionButton(
-                    onPressed: () {
-                      final parsed = int.tryParse(controller.text.trim());
-                      if (parsed == null) return;
-                      Navigator.pop(dialogContext, parsed);
-                    },
-                    label: context.l10n.save,
-                  ),
-                ],
-              );
-            },
-          ) ??
-          _preferences.maxEntries.value;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        controller.dispose();
-      });
+      if (!mounted || selected == null) return;
+      nextValue = selected;
     }
 
-    await _preferences.setMaxEntries(nextValue);
-    onMaxEntriesChanged?.call(nextValue);
+    final normalized = preferences.normalizeMaxEntries(nextValue);
+    await preferences.setMaxEntries(normalized);
+    if (mounted) onMaxEntriesChanged?.call(normalized);
   }
 
   Future<void> _handleOverflowAction(
@@ -624,8 +589,20 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                         separatorBuilder: (_, _) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           return _RealtimeEventGroupTile(
+                            key: ValueKey(groups[index].latest.groupKey),
                             group: groups[index],
                             isDark: isDark,
+                            initiallyExpanded: _expandedGroupKeys.contains(
+                              groups[index].latest.groupKey,
+                            ),
+                            onExpansionChanged: (expanded) {
+                              final key = groups[index].latest.groupKey;
+                              if (expanded) {
+                                _expandedGroupKeys.add(key);
+                              } else {
+                                _expandedGroupKeys.remove(key);
+                              }
+                            },
                           );
                         },
                       );
@@ -660,6 +637,74 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
     return groups.values.toList(growable: false)
       ..sort((a, b) => a.latest.timestamp.compareTo(b.latest.timestamp));
   }
+}
+
+class _RetentionLimitDialog extends StatefulWidget {
+  const _RetentionLimitDialog({required this.initialValue});
+  final int initialValue;
+  @override
+  State<_RetentionLimitDialog> createState() => _RetentionLimitDialogState();
+}
+
+class _RetentionLimitDialogState extends State<_RetentionLimitDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final _controller = TextEditingController(
+    text: '${widget.initialValue}',
+  );
+  bool _closing = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _finish(int? value) {
+    if (_closing || ModalRoute.of(context)?.isCurrent != true) return;
+    _closing = true;
+    Navigator.pop(context, value);
+  }
+
+  void _submit() {
+    if (_formKey.currentState?.validate() != true) return;
+    final parsed = int.tryParse(_controller.text.trim());
+    if (parsed != null) _finish(parsed);
+  }
+
+  @override
+  Widget build(BuildContext context) => AppDialog(
+    title: Text(context.l10n.retentionCount),
+    body: Form(
+      key: _formKey,
+      child: AppTextField(
+        controller: _controller,
+        label: context.l10n.recentEventCount,
+        helperText: context.l10n.eventCountRange,
+        prefixIcon: Icons.format_list_numbered_rounded,
+        autofocus: true,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+        validator: (value) {
+          final text = value?.trim() ?? '';
+          if (text.isEmpty) return context.l10n.valueRequired;
+          if (int.tryParse(text) == null) {
+            return context.l10n.validNumberRequired;
+          }
+          return null;
+        },
+      ),
+    ),
+    actions: [
+      AppActionButton(
+        onPressed: () => _finish(null),
+        label: context.l10n.cancel,
+        style: AppActionButtonStyle.outlined,
+      ),
+      AppActionButton(onPressed: _submit, label: context.l10n.save),
+    ],
+  );
 }
 
 class _RealtimeEventGroup {
@@ -721,8 +766,16 @@ class _DirectionPill extends StatelessWidget {
 class _RealtimeEventGroupTile extends StatelessWidget {
   final _RealtimeEventGroup group;
   final bool isDark;
+  final bool initiallyExpanded;
+  final ValueChanged<bool> onExpansionChanged;
 
-  const _RealtimeEventGroupTile({required this.group, required this.isDark});
+  const _RealtimeEventGroupTile({
+    super.key,
+    required this.group,
+    required this.isDark,
+    required this.initiallyExpanded,
+    required this.onExpansionChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -730,6 +783,8 @@ class _RealtimeEventGroupTile extends StatelessWidget {
     return AppCard(
       padding: EdgeInsets.zero,
       child: AppAccordionItem(
+        initiallyExpanded: initiallyExpanded,
+        onExpansionChanged: onExpansionChanged,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

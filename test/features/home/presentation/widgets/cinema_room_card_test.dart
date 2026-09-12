@@ -9,7 +9,7 @@ import 'package:synctv_app/features/home/presentation/widgets/cinema_room_card.d
 
 import '../../../../test_app.dart';
 
-Widget _app(Widget child, {double height = 318}) {
+Widget _app(Widget child, {double height = 318, double textScale = 1}) {
   return MaterialApp(
     builder: buildThemedTestApp,
     locale: const Locale('en'),
@@ -19,7 +19,10 @@ Widget _app(Widget child, {double height = 318}) {
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
     ),
     home: Scaffold(
-      body: SizedBox(width: 340, height: height, child: child),
+      body: MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+        child: SizedBox(width: 340, height: height, child: child),
+      ),
     ),
   );
 }
@@ -55,6 +58,28 @@ CinemaRoomCard _card({
 }
 
 void main() {
+  testWidgets('cards retain actions and content at large text sizes', (
+    tester,
+  ) async {
+    for (final height in [196.0, 294.0, 318.0]) {
+      await tester.pumpWidget(
+        _app(
+          _card(
+            description: 'A complete room description',
+            canJoin: true,
+            onTap: () {},
+            onFavoritePressed: () {},
+          ),
+          height: height,
+          textScale: 2,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: 'card height: $height');
+      expect(find.text('Online: 7'), findsOneWidget);
+    }
+  });
+
   testWidgets('total presence is shown with a detailed tooltip', (
     tester,
   ) async {

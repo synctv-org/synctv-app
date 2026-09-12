@@ -1,6 +1,8 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -32,46 +34,905 @@ Finder _byTooltip(String message) {
 }
 
 void main() {
-  testWidgets('scrollable tabs accept mouse drag input', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(320, 240));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+  Finder progressSemantics(Key key) => find.descendant(
+    of: find.byKey(key),
+    matching: find.byWidgetPredicate(
+      (widget) =>
+          widget is Semantics &&
+          (widget.properties.role == ui.SemanticsRole.loadingSpinner ||
+              widget.properties.role == ui.SemanticsRole.progressBar),
+    ),
+  );
 
+  for (final scale in [1.0, 3.0]) {
+    for (final target in ['prefix', 'padding']) {
+      testWidgets('AppSelect activates from $target at ${scale}x', (
+        tester,
+      ) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(320, 568);
+        addTearDown(tester.view.reset);
+        tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final focusNode = scale == 3 ? FocusNode() : null;
+        addTearDown(() => focusNode?.dispose());
+        late StateSetter update;
+        var enabled = false;
+        String? selected = 'music';
+        final changes = <String?>[];
+        await tester.pumpWidget(
+          _app(
+            Center(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  update = setState;
+                  return AppSelect<String>(
+                    value: selected,
+                    options: const {'Music': 'music', 'Film': 'film'},
+                    enabled: enabled,
+                    prefixIcon: Icons.music_note,
+                    focusNode: focusNode,
+                    clearable: true,
+                    onChanged: (value) {
+                      changes.add(value);
+                      setState(() => selected = value);
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+        Future<void> tapTarget() => tester.tapAt(
+          target == 'prefix'
+              ? tester.getCenter(find.byIcon(Icons.music_note))
+              : tester.getTopLeft(find.byType(InputDecorator)) +
+                    const Offset(12, 2),
+        );
+        await tapTarget();
+        await tester.pumpAndSettle();
+        expect(find.text('Film').hitTestable(), findsNothing);
+        update(() => enabled = true);
+        await tester.pumpAndSettle();
+        await tapTarget();
+        await tester.pumpAndSettle();
+        expect(find.text('Film').hitTestable(), findsOneWidget);
+        await tester.tap(find.text('Film').hitTestable());
+        await tester.pumpAndSettle();
+        expect(changes, ['film']);
+        await tester.tap(find.byType(AppIconButton));
+        await tester.pumpAndSettle();
+        expect(changes, ['film', null]);
+        expect(find.text('Film').hitTestable(), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
+  for (final action in ['clear', 'select']) {
+    for (final invalidation in [
+      'disabled',
+      'callback',
+      'disposed',
+      'options',
+    ]) {
+      testWidgets('AppSelect ignores stale $action after $invalidation', (
+        tester,
+      ) async {
+        late StateSetter update;
+        var enabled = true;
+        var callbackAvailable = true;
+        var show = true;
+        var options = <String, String>{'Music': 'music', 'Film': 'film'};
+        var clearable = true;
+        final changes = <String?>[];
+        await tester.pumpWidget(
+          _app(
+            StatefulBuilder(
+              builder: (context, setState) {
+                update = setState;
+                return show
+                    ? AppSelect<String>(
+                        value: 'music',
+                        options: options,
+                        enabled: enabled,
+                        clearable: clearable,
+                        onChanged: callbackAvailable ? changes.add : null,
+                      )
+                    : const SizedBox();
+              },
+            ),
+          ),
+        );
+        final dropdown = tester.widget<DropdownButton<String>>(
+          find.byType(DropdownButton<String>),
+        );
+        final clear = tester
+            .widget<AppIconButton>(find.byType(AppIconButton))
+            .onPressed!;
+        update(() {
+          switch (invalidation) {
+            case 'disabled':
+              enabled = false;
+            case 'callback':
+              callbackAvailable = false;
+            case 'disposed':
+              show = false;
+            case 'options':
+              options = {'Music': 'music'};
+              clearable = false;
+          }
+        });
+        await tester.pumpAndSettle();
+        if (action == 'clear') {
+          clear();
+        } else {
+          dropdown.onChanged!('film');
+        }
+        await tester.pumpAndSettle();
+        expect(changes, isEmpty);
+        if (show) {
+          expect(
+            tester
+                .widget<DropdownButton<String>>(
+                  find.byType(DropdownButton<String>),
+                )
+                .value,
+            'music',
+          );
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
+  testWidgets(
+    'AppSelect does not submit an option removed while menu is open',
+    (tester) async {
+      late StateSetter update;
+      var options = <String, String>{'Music': 'music', 'Film': 'film'};
+      final changes = <String?>[];
+      await tester.pumpWidget(
+        _app(
+          StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return AppSelect<String>(
+                value: 'music',
+                options: options,
+                onChanged: changes.add,
+              );
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.byType(DropdownButton<String>));
+      await tester.pumpAndSettle();
+      update(() => options = {'Music': 'music'});
+      await tester.pumpAndSettle();
+      final obsolete = find.widgetWithText(DropdownMenuItem<String>, 'Film');
+      if (obsolete.evaluate().isNotEmpty) {
+        await tester.tap(obsolete.last);
+        await tester.pumpAndSettle();
+      }
+      expect(changes, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('AppSelect reconciles removed and returning option values', (
+    tester,
+  ) async {
+    final form = GlobalKey<FormState>();
+    late StateSetter update;
+    var options = <String, String>{'Music': 'music', 'Film': 'film'};
+    String? saved = 'unset';
+    var changes = 0;
     await tester.pumpWidget(
       _app(
-        const DefaultTabController(
-          length: 4,
-          child: AppTabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [
-              SizedBox(width: 120, child: Tab(text: 'Overview')),
-              SizedBox(width: 120, child: Tab(text: 'Users')),
-              SizedBox(width: 120, child: Tab(text: 'Providers')),
-              SizedBox(width: 120, child: Tab(text: 'Settings')),
+        Form(
+          key: form,
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return AppSelect<String>(
+                value: 'music',
+                options: options,
+                hintText: 'Choose a category',
+                label: 'Category',
+                onChanged: (_) => changes++,
+                onSaved: (value) => saved = value,
+                validator: (value) => value == null ? 'Required' : null,
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    for (final next in [
+      <String, String>{'Film': 'film'},
+      <String, String>{},
+      <String, String>{'Music': 'music'},
+    ]) {
+      update(() => options = next);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      form.currentState!.save();
+      expect(saved, next.containsValue('music') ? 'music' : null);
+      expect(form.currentState!.validate(), next.containsValue('music'));
+      await tester.pumpAndSettle();
+      expect(changes, 0);
+    }
+  });
+
+  testWidgets(
+    'AppSelect menu allows long options to grow at large text scale',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 568);
+      addTearDown(tester.view.reset);
+      const label = 'International cinema screenings';
+      tester.platformDispatcher.textScaleFactorTestValue = 3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      String? selected;
+      await tester.pumpWidget(
+        _app(
+          MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 568),
+              textScaler: TextScaler.linear(3),
+            ),
+            child: Center(
+              child: SizedBox(
+                width: 280,
+                child: AppSelect<String>(
+                  value: 'short',
+                  options: const {'Music': 'short', label: 'long'},
+                  onChanged: (value) => selected = value,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(DropdownButton<String>));
+      await tester.pumpAndSettle();
+      final item = find.widgetWithText(DropdownMenuItem<String>, label).last;
+      expect(
+        tester.getSize(item).height,
+        greaterThan(kMinInteractiveDimension),
+      );
+      await tester.ensureVisible(item);
+      await tester.pumpAndSettle();
+      await tester.tap(item);
+      await tester.pumpAndSettle();
+      expect(selected, 'long');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final axis in Axis.values) {
+    for (final showTooltip in [true, false]) {
+      testWidgets(
+        'AppIconButton reveals direct focus $axis tooltip=$showTooltip',
+        (tester) async {
+          final controller = ScrollController();
+          final first = FocusNode();
+          final last = FocusNode();
+          addTearDown(controller.dispose);
+          addTearDown(first.dispose);
+          addTearDown(last.dispose);
+          const viewportKey = ValueKey('focus-viewport');
+          const firstKey = ValueKey('first-focus-button');
+          const lastKey = ValueKey('last-focus-button');
+          final children = [
+            AppIconButton(
+              key: firstKey,
+              focusNode: first,
+              showTooltip: showTooltip,
+              tooltip: 'First',
+              icon: Icons.settings,
+              onPressed: () {},
+            ),
+            SizedBox(
+              width: axis == Axis.horizontal ? 600 : 0,
+              height: axis == Axis.vertical ? 600 : 0,
+            ),
+            AppIconButton(
+              key: lastKey,
+              focusNode: last,
+              showTooltip: showTooltip,
+              tooltip: 'Last',
+              icon: Icons.copy,
+              onPressed: () {},
+            ),
+          ];
+          await tester.pumpWidget(
+            _app(
+              Center(
+                child: SizedBox(
+                  key: viewportKey,
+                  width: 220,
+                  height: 220,
+                  child: SingleChildScrollView(
+                    controller: controller,
+                    scrollDirection: axis,
+                    child: axis == Axis.vertical
+                        ? Column(children: children)
+                        : Row(children: children),
+                  ),
+                ),
+              ),
+            ),
+          );
+          final viewport = tester.getRect(find.byKey(viewportKey));
+          first.requestFocus();
+          await tester.pumpAndSettle();
+          expect(controller.offset, 0);
+          last.requestFocus();
+          await tester.pumpAndSettle();
+          final lastBounds = tester.getRect(find.byKey(lastKey));
+          expect(viewport.contains(lastBounds.center), isTrue);
+          expect(
+            axis == Axis.vertical ? lastBounds.bottom : lastBounds.right,
+            lessThanOrEqualTo(
+              axis == Axis.vertical ? viewport.bottom : viewport.right,
+            ),
+          );
+          final offset = controller.offset;
+          last.requestFocus();
+          await tester.pumpAndSettle();
+          expect(controller.offset, offset);
+          first.requestFocus();
+          await tester.pumpAndSettle();
+          expect(
+            viewport.contains(tester.getRect(find.byKey(firstKey)).center),
+            isTrue,
+          );
+          expect(controller.offset, 0);
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
+  for (final enabled in [true, false]) {
+    for (final invalid in [true, false]) {
+      for (final selected in [null, 'music']) {
+        testWidgets(
+          'AppSelect selected value retains button semantics enabled=$enabled invalid=$invalid value=$selected',
+          (tester) async {
+            final semantics = tester.ensureSemantics();
+            await tester.pumpWidget(
+              _app(
+                AppSelect<String?>(
+                  value: selected,
+                  options: const {'Music': 'music', 'None': null},
+                  label: 'Category',
+                  labelAbove: true,
+                  enabled: enabled,
+                  errorText: invalid ? 'Required' : null,
+                  onChanged: (_) {},
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            final node = tester.getSemantics(
+              find.text(selected == null ? 'None' : 'Music'),
+            );
+            expect(node.getSemanticsData().flagsCollection.isButton, isTrue);
+            expect(
+              node.getSemanticsData().flagsCollection.isEnabled,
+              enabled ? ui.Tristate.isTrue : ui.Tristate.isFalse,
+            );
+            expect(
+              node.getSemanticsData().hasAction(ui.SemanticsAction.tap),
+              enabled,
+            );
+            semantics.dispose();
+          },
+        );
+      }
+    }
+  }
+  testWidgets('External field label wraps and names the password input', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final controller = TextEditingController(text: ' untouched password ');
+    addTearDown(controller.dispose);
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    const label = 'Confirm new password';
+    await tester.pumpWidget(
+      _app(
+        MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(3)),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: AppTextField(
+              controller: controller,
+              label: label,
+              labelAbove: true,
+              obscureText: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    final text = tester.renderObject<RenderParagraph>(find.text(label));
+    expect(text.didExceedMaxLines, isFalse);
+    expect(text.size.height, greaterThan(50));
+    final named = find.bySemanticsLabel(label);
+    expect(named, findsOneWidget);
+    expect(
+      tester.getSemantics(named).getSemanticsData().flagsCollection.isTextField,
+      isTrue,
+    );
+    await tester.tap(_byTooltip('显示密码'));
+    await tester.pump();
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).obscureText,
+      isFalse,
+    );
+    expect(controller.text, ' untouched password ');
+    expect(find.bySemanticsLabel(label), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets('Multiline read-only fields reveal the full value and update', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    for (final value in [
+      'preview.account@example.test',
+      'second.account@example.test',
+    ]) {
+      await tester.pumpWidget(
+        _app(
+          MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(3)),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: AppReadOnlyField(
+                label: 'Recipient email',
+                value: value,
+                labelAbove: true,
+                maxLines: null,
+              ),
+            ),
+          ),
+        ),
+      );
+      final editable = tester.widget<EditableText>(find.byType(EditableText));
+      expect(editable.readOnly, isTrue);
+      expect(editable.enableInteractiveSelection, isTrue);
+      expect(editable.controller.text, value);
+      final render = tester
+          .state<EditableTextState>(find.byType(EditableText))
+          .renderEditable;
+      expect(render.maxScrollExtent, 0);
+      expect(render.size.height, greaterThan(80));
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('AppTile stacked actions wrap and preserve independent taps', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    var rowTaps = 0;
+    var actionTaps = 0;
+    await tester.pumpWidget(
+      _app(
+        MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(3)),
+          child: ListView(
+            children: [
+              AppTile(
+                title: const Text('Account'),
+                subtitle: const Text('Security settings'),
+                prefix: const Icon(Icons.security),
+                stackedSuffix: true,
+                onPressed: () => rowTaps++,
+                suffix: AppActionButton(
+                  label: 'Manage recovery codes',
+                  wrapLabel: true,
+                  onPressed: () => actionTaps++,
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
-
-    final scrollable = find.descendant(
-      of: find.byType(AppTabBar),
-      matching: find.byType(Scrollable),
+    expect(tester.takeException(), isNull);
+    final action = find.text('Manage recovery codes');
+    expect(
+      tester.renderObject<RenderParagraph>(action).didExceedMaxLines,
+      isFalse,
     );
-    final position = tester.state<ScrollableState>(scrollable).position;
-    expect(position.pixels, 0);
-
-    final mouse = await tester.createGesture(kind: ui.PointerDeviceKind.mouse);
-    addTearDown(mouse.removePointer);
-    final start = tester.getCenter(find.text('Users'));
-    await mouse.addPointer(location: start);
-    await mouse.down(start);
-    await mouse.moveBy(const Offset(-140, 0));
-    await mouse.up();
-    await tester.pumpAndSettle();
-
-    expect(position.pixels, greaterThan(0));
+    await tester.tap(action);
+    expect(actionTaps, 1);
+    expect(rowTaps, 0);
+    await tester.tap(find.text('Account'));
+    expect(rowTaps, 1);
+    expect(actionTaps, 1);
   });
+
+  for (final validated in [false, true]) {
+    for (final width in [320.0, 740.0]) {
+      testWidgets(
+        'AppTextField wraps complete errors at $width, validator=$validated',
+        (tester) async {
+          const message =
+              'Enter a SOCKS5 host and optional port (0-65535), without credentials, path, query, or fragment.';
+          final controller = TextEditingController();
+          final form = GlobalKey<FormState>();
+          addTearDown(controller.dispose);
+          await tester.binding.setSurfaceSize(Size(width, 900));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+          await tester.pumpWidget(
+            _app(
+              MediaQuery(
+                data: MediaQueryData(
+                  size: Size(width, 900),
+                  textScaler: const TextScaler.linear(2),
+                ),
+                child: Form(
+                  key: form,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: AppTextField(
+                      controller: controller,
+                      label: 'Proxy',
+                      errorText: validated ? null : message,
+                      validator: validated ? (_) => message : null,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          if (validated) form.currentState!.validate();
+          await tester.pumpAndSettle();
+          final error = tester.renderObject<RenderParagraph>(
+            find.text(message),
+          );
+          expect(error.didExceedMaxLines, isFalse);
+          expect(error.size.height, greaterThan(40));
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
+
+  testWidgets('checkbox tiles expose one toggle and keep links actionable', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    var toggles = 0;
+    var links = 0;
+    await tester.pumpWidget(
+      _app(
+        AppCheckboxTile(
+          value: false,
+          semanticsLabel: 'Accept terms',
+          prefix: const Icon(Icons.policy),
+          title: Wrap(
+            children: [
+              const Text('I agree to'),
+              AppActionButton(
+                onPressed: () => links++,
+                label: 'Terms',
+                style: AppActionButtonStyle.text,
+              ),
+            ],
+          ),
+          onChanged: (_) => toggles++,
+        ),
+      ),
+    );
+    final togglesFinder = find.semantics.byPredicate(
+      (node) =>
+          node.getSemanticsData().flagsCollection.isChecked !=
+          ui.CheckedState.none,
+      describeMatch: (_) => 'checkbox semantics',
+    );
+    expect(togglesFinder, findsOneWidget);
+    expect(find.byIcon(Icons.policy), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+    expect(
+      find.semantics.byPredicate((node) {
+        final data = node.getSemanticsData();
+        return data.flagsCollection.isChecked == ui.CheckedState.isFalse &&
+            data.flagsCollection.isFocused == ui.Tristate.isTrue &&
+            data.label.contains('Accept terms');
+      }),
+      findsOneWidget,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pumpAndSettle();
+    expect(toggles, 1);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(links, 1);
+    expect(toggles, 1);
+    await tester.tap(find.text('Terms'));
+    expect(links, 2);
+    expect(toggles, 1);
+    await tester.tap(find.text('I agree to'));
+    expect(toggles, 2);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets('disabled checkbox tile keeps its link independently focusable', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    var toggles = 0;
+    var links = 0;
+    await tester.pumpWidget(
+      _app(
+        AppCheckboxTile(
+          value: true,
+          enabled: false,
+          semanticsLabel: 'Accept terms',
+          onChanged: (_) => toggles++,
+          title: AppActionButton(label: 'Terms', onPressed: () => links++),
+        ),
+      ),
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+    expect(
+      find.semantics.byPredicate((node) {
+        final data = node.getSemanticsData();
+        return data.flagsCollection.isChecked == ui.CheckedState.isTrue &&
+            data.flagsCollection.isEnabled == ui.Tristate.isFalse &&
+            data.flagsCollection.isFocused != ui.Tristate.isTrue &&
+            !data.hasAction(ui.SemanticsAction.tap);
+      }),
+      findsOneWidget,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(links, 1);
+    expect(toggles, 0);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets('buttons expose one named semantic action', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      _app(
+        Column(
+          children: [
+            AppActionButton(onPressed: () {}, label: 'Create room'),
+            AppIconButton(
+              onPressed: () {},
+              icon: Icons.refresh,
+              tooltip: 'Refresh rooms',
+            ),
+          ],
+        ),
+      ),
+    );
+    final buttons = find.semantics.byPredicate(
+      (node) => node.getSemanticsData().flagsCollection.isButton,
+      describeMatch: (_) => 'button semantics',
+    );
+    expect(buttons, findsNWidgets(2));
+    expect(find.bySemanticsLabel('Create room'), findsOneWidget);
+    expect(find.bySemanticsLabel('Refresh rooms'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  for (final direction in TextDirection.values) {
+    for (final change in ['viewport', 'text scale']) {
+      for (final explicitController in [false, true]) {
+        testWidgets(
+          'scrollable tabs reveal selection after $change $direction explicit=$explicitController',
+          (tester) async {
+            await tester.binding.setSurfaceSize(const Size(1200, 400));
+            addTearDown(() => tester.binding.setSurfaceSize(null));
+            var scale = 1.0;
+            late StateSetter rebuild;
+            await tester.pumpWidget(
+              _app(
+                Directionality(
+                  textDirection: direction,
+                  child: DefaultTabController(
+                    length: 5,
+                    initialIndex: 3,
+                    child: StatefulBuilder(
+                      builder: (context, setState) {
+                        rebuild = setState;
+                        return MediaQuery(
+                          data: MediaQuery.of(context)
+                              .copyWith(textScaler: TextScaler.linear(scale)),
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: AppTabBar(
+                              controller: explicitController
+                                  ? DefaultTabController.of(context)
+                                  : null,
+                              isScrollable: true,
+                              tabAlignment: TabAlignment.start,
+                              tabs: const [
+                                Tab(text: 'Overview'),
+                                Tab(text: 'Library'),
+                                Tab(text: 'Providers'),
+                                Tab(text: 'Selected account'),
+                                Tab(text: 'Settings'),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            if (change == 'viewport') {
+              await tester.binding.setSurfaceSize(const Size(320, 400));
+            } else {
+              rebuild(() => scale = 3);
+            }
+            await tester.pumpAndSettle();
+
+            final bounds = tester.getRect(find.byType(AppTabBar));
+            final selected = tester.getRect(find.text('Selected account'));
+            expect(selected.left, greaterThanOrEqualTo(bounds.left));
+            expect(selected.right, lessThanOrEqualTo(bounds.right));
+            final position = tester
+                .state<ScrollableState>(
+                  find.descendant(
+                    of: find.byType(AppTabBar),
+                    matching: find.byType(Scrollable),
+                  ),
+                )
+                .position;
+            position.jumpTo(position.minScrollExtent);
+            await tester.pumpAndSettle();
+            rebuild(() {});
+            await tester.pumpAndSettle();
+            expect(position.pixels, position.minScrollExtent);
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
+  }
+
+  for (final direction in TextDirection.values) {
+    testWidgets('scrollable tabs accept mouse drag input $direction', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(320, 240));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        _app(
+          Directionality(
+            textDirection: direction,
+            child: const DefaultTabController(
+              length: 4,
+              child: AppTabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                tabs: [
+                  SizedBox(width: 120, child: Tab(text: 'Overview')),
+                  SizedBox(width: 120, child: Tab(text: 'Users')),
+                  SizedBox(width: 120, child: Tab(text: 'Providers')),
+                  SizedBox(width: 120, child: Tab(text: 'Settings')),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final scrollable = find.descendant(
+        of: find.byType(AppTabBar),
+        matching: find.byType(Scrollable),
+      );
+      final position = tester.state<ScrollableState>(scrollable).position;
+      expect(position.pixels, 0);
+
+      final mouse = await tester.createGesture(
+        kind: ui.PointerDeviceKind.mouse,
+      );
+      addTearDown(mouse.removePointer);
+      final start = tester.getCenter(find.text('Users'));
+      await mouse.addPointer(location: start);
+      await mouse.down(start);
+      final delta = direction == TextDirection.ltr ? -140.0 : 140.0;
+      await mouse.moveBy(Offset(delta, 0));
+      await mouse.up();
+      await tester.pumpAndSettle();
+
+      expect(position.pixels, closeTo(140, 0.01));
+      final controller = DefaultTabController.of(
+        tester.element(find.byType(AppTabBar)),
+      );
+      expect(controller.index, 0);
+      final returnStart = tester.getCenter(find.byType(AppTabBar));
+      await mouse.down(returnStart);
+      await mouse.moveBy(Offset(-delta, 0));
+      await mouse.up();
+      await tester.pumpAndSettle();
+      expect(position.pixels, 0);
+      expect(controller.index, 0);
+    });
+    for (final axis in Axis.values) {
+      testWidgets('scrollable tabs map $axis wheel input in $direction', (
+        tester,
+      ) async {
+        await tester.binding.setSurfaceSize(const Size(320, 240));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await tester.pumpWidget(
+          _app(
+            Directionality(
+              textDirection: direction,
+              child: const DefaultTabController(
+                length: 4,
+                child: AppTabBar(
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  tabs: [
+                    SizedBox(width: 120, child: Tab(text: 'Overview')),
+                    SizedBox(width: 120, child: Tab(text: 'Users')),
+                    SizedBox(width: 120, child: Tab(text: 'Providers')),
+                    SizedBox(width: 120, child: Tab(text: 'Settings')),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final position = tester
+            .state<ScrollableState>(
+              find.descendant(
+                of: find.byType(AppTabBar),
+                matching: find.byType(Scrollable),
+              ),
+            )
+            .position;
+        final start = position.maxScrollExtent / 2;
+        position.jumpTo(start);
+        await tester.pumpAndSettle();
+        await tester.sendEventToBinding(
+          PointerScrollEvent(
+            position: tester.getCenter(find.byType(AppTabBar)),
+            scrollDelta: axis == Axis.horizontal
+                ? const Offset(40, 0)
+                : const Offset(0, 40),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          position.pixels,
+          closeTo(start + (direction == TextDirection.ltr ? 40 : -40), 0.01),
+        );
+        expect(
+          DefaultTabController.of(tester.element(find.byType(AppTabBar))).index,
+          0,
+        );
+      });
+    }
+  }
 
   testWidgets('AppDialog keeps actions visible when its body is tall', (
     tester,
@@ -149,6 +1010,279 @@ void main() {
     expect(find.text('Playback settings'), findsNothing);
     semantics.dispose();
   });
+
+  for (final release in ['hover', 'focus']) {
+    testWidgets(
+      'AppTooltip retains the other interaction after $release exits',
+      (tester) async {
+        final focus = FocusNode();
+        addTearDown(focus.dispose);
+        await tester.pumpWidget(
+          _app(
+            Center(
+              child: AppTooltip(
+                message: 'Playback settings',
+                child: IconButton(
+                  focusNode: focus,
+                  onPressed: () {},
+                  icon: const Icon(Icons.settings),
+                ),
+              ),
+            ),
+          ),
+        );
+        final mouse = await tester.createGesture(
+          kind: ui.PointerDeviceKind.mouse,
+        );
+        await mouse.addPointer(
+          location: tester.getCenter(find.byIcon(Icons.settings)),
+        );
+        addTearDown(mouse.removePointer);
+        focus.requestFocus();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(find.text('Playback settings'), findsOneWidget);
+        if (release == 'hover') {
+          await mouse.moveTo(Offset.zero);
+        } else {
+          focus.unfocus();
+        }
+        await tester.pump();
+        expect(find.text('Playback settings'), findsOneWidget);
+        await mouse.moveTo(Offset.zero);
+        focus.unfocus();
+        await tester.pump();
+        expect(find.text('Playback settings'), findsNothing);
+      },
+    );
+  }
+
+  testWidgets('AppTooltip bounds long text within a narrow overlay', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(240, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const message = 'View all playback settings and available quality options';
+    await tester.pumpWidget(
+      _app(
+        const Center(
+          child: AppTooltip(message: message, child: Icon(Icons.settings)),
+        ),
+      ),
+    );
+    final mouse = await tester.createGesture(kind: ui.PointerDeviceKind.mouse);
+    await mouse.addPointer(
+      location: tester.getCenter(find.byIcon(Icons.settings)),
+    );
+    addTearDown(mouse.removePointer);
+    await tester.pump(const Duration(milliseconds: 500));
+    final bounds = tester.getRect(find.text(message));
+    expect(bounds.left, greaterThanOrEqualTo(8));
+    expect(bounds.right, lessThanOrEqualTo(232));
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final size in [const Size(740, 200), const Size(320, 568)]) {
+    testWidgets('AppTooltip fits safe bounds and keyboard at $size', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final keyboard = size.width == 320 ? 300.0 : 0.0;
+      final keyboardInset = ValueNotifier(0.0);
+      addTearDown(keyboardInset.dispose);
+      const padding = EdgeInsets.fromLTRB(24, 20, 32, 16);
+      const message =
+          'View all playback settings and available quality options for this video';
+      final focus = FocusNode();
+      addTearDown(focus.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => ValueListenableBuilder<double>(
+            valueListenable: keyboardInset,
+            builder: (context, inset, _) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: const TextScaler.linear(3),
+                padding: padding,
+                viewInsets: EdgeInsets.only(bottom: inset),
+              ),
+              child: child!,
+            ),
+          ),
+          home: Scaffold(
+            body: SafeArea(
+              child: Center(
+                child: AppTooltip(
+                  message: message,
+                  child: IconButton(
+                    focusNode: focus,
+                    onPressed: () {},
+                    icon: const Icon(Icons.settings),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      focus.requestFocus();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text(message), findsOneWidget);
+      keyboardInset.value = keyboard;
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      final bounds = tester.getRect(find.text(message));
+      expect(bounds.left, greaterThanOrEqualTo(padding.left + 8));
+      expect(bounds.right, lessThanOrEqualTo(size.width - padding.right - 8));
+      expect(bounds.top, greaterThanOrEqualTo(padding.top + 8));
+      expect(
+        bounds.bottom,
+        lessThanOrEqualTo(
+          size.height - (keyboard > 0 ? keyboard : padding.bottom) - 8,
+        ),
+      );
+      expect(tester.widget<Text>(find.text(message)).maxLines, lessThan(8));
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('AppTooltip refreshes focused content and resized bounds', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final message = ValueNotifier('Playback settings');
+    final focus = FocusNode();
+    addTearDown(message.dispose);
+    addTearDown(focus.dispose);
+    await tester.pumpWidget(
+      _app(
+        Center(
+          child: ValueListenableBuilder<String>(
+            valueListenable: message,
+            builder: (context, value, _) => AppTooltip(
+              message: value,
+              child: IconButton(
+                focusNode: focus,
+                onPressed: () {},
+                icon: const Icon(Icons.settings),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    focus.requestFocus();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Playback settings'), findsOneWidget);
+    message.value = 'View all playback settings and available quality options';
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Playback settings'), findsNothing);
+    expect(find.text(message.value), findsOneWidget);
+    tester.view.physicalSize = const Size(240, 568);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(
+      tester.getRect(find.text(message.value)).right,
+      lessThanOrEqualTo(232),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text(message.value), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final interaction in ['hover', 'focus', 'both']) {
+    testWidgets('Escape dismisses $interaction tooltips before the dialog', (
+      tester,
+    ) async {
+      final focus = FocusNode();
+      addTearDown(focus.dispose);
+      late BuildContext context;
+      await tester.pumpWidget(
+        _app(
+          Builder(
+            builder: (value) {
+              context = value;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppTooltip(
+                message: 'Playback settings',
+                child: IconButton(
+                  focusNode: focus,
+                  onPressed: () {},
+                  icon: const Icon(Icons.settings),
+                ),
+              ),
+              AppTooltip(
+                message: 'Refresh',
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.refresh),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final mouse = await tester.createGesture(
+        kind: ui.PointerDeviceKind.mouse,
+      );
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      if (interaction != 'focus') {
+        await mouse.moveTo(tester.getCenter(find.byIcon(Icons.refresh)));
+      }
+      if (interaction != 'hover') focus.requestFocus();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      if (interaction != 'focus') expect(find.text('Refresh'), findsOneWidget);
+      if (interaction != 'hover') {
+        expect(find.text('Playback settings'), findsOneWidget);
+      }
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.escape);
+      await tester.sendKeyRepeatEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Refresh'), findsNothing);
+      expect(find.text('Playback settings'), findsNothing);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.escape);
+      if (interaction != 'hover') expect(focus.hasFocus, isTrue);
+      await mouse.moveTo(Offset.zero);
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Playback settings'), findsNothing);
+      await mouse.moveTo(tester.getCenter(find.byIcon(Icons.refresh)));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Refresh'), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Refresh'), findsNothing);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('AppSlider exposes one formatted adjustable semantics node', (
     tester,
@@ -298,6 +1432,29 @@ void main() {
     expect(_byTooltip('粘贴'), findsNothing);
 
     controller.dispose();
+  });
+
+  testWidgets('AppSearchField trims submitted query boundaries', (
+    tester,
+  ) async {
+    final controller = TextEditingController();
+    final submitted = <String>[];
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        AppSearchField(
+          controller: controller,
+          hintText: 'Search',
+          onSubmitted: submitted.add,
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(EditableText), '  movie night  ');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pump();
+    expect(submitted, ['movie night']);
+    expect(controller.text, '  movie night  ');
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('AppResponsiveWrap keeps children within narrow constraints', (
@@ -640,6 +1797,40 @@ void main() {
     expect(editable.readOnly, isTrue);
   });
 
+  testWidgets(
+    'AppReadOnlyField updates dynamic values without becoming editable',
+    (tester) async {
+      var value = 'old-server.example.test';
+      await tester.pumpWidget(
+        _app(
+          StatefulBuilder(
+            builder: (context, setState) => Column(
+              children: [
+                AppReadOnlyField(label: 'Server', value: value, maxLines: null),
+                TextButton(
+                  onPressed: () =>
+                      setState(() => value = 'new-server.example.test/path'),
+                  child: const Text('Update'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(find.text('old-server.example.test'), findsOneWidget);
+      await tester.tap(find.text('Update'));
+      await tester.pumpAndSettle();
+      expect(find.text('new-server.example.test/path'), findsOneWidget);
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).readOnly,
+        isTrue,
+      );
+      expect(_byTooltip('清空'), findsNothing);
+      expect(_byTooltip('粘贴'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('AppSelectableText keeps native selectable text behavior', (
     tester,
   ) async {
@@ -817,6 +2008,7 @@ void main() {
   });
 
   testWidgets('AppGlassIconButton centralizes glass icon taps', (tester) async {
+    final semantics = tester.ensureSemantics();
     var presses = 0;
 
     await tester.pumpWidget(
@@ -839,6 +2031,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 150));
 
     expect(presses, 1);
+    expect(find.bySemanticsLabel('选择图片'), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(presses, 2);
+    semantics.dispose();
   });
 
   testWidgets('AppOverlayActionButton keeps overlay actions tappable', (
@@ -921,6 +2119,47 @@ void main() {
     expect(selected, 'mine');
   });
 
+  for (final locale in ['en', 'zh']) {
+    for (final kind in ['circular', 'linear', 'determinate']) {
+      testWidgets('$kind loading semantics in $locale', (tester) async {
+        final semantics = tester.ensureSemantics();
+        try {
+          const progressKey = ValueKey('progress');
+          await tester.pumpWidget(
+            MaterialApp(
+              locale: Locale(locale),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: kind == 'circular'
+                    ? const AppLoadingIndicator(key: progressKey)
+                    : AppLinearProgress(
+                        key: progressKey,
+                        value: kind == 'determinate' ? 0.42 : null,
+                      ),
+              ),
+            ),
+          );
+          final data = tester
+              .getSemantics(progressSemantics(progressKey))
+              .getSemanticsData();
+          final label = tester.element(find.byKey(progressKey)).l10n.loading;
+          expect(data.label, label);
+          expect(
+            data.role,
+            kind == 'determinate'
+                ? ui.SemanticsRole.progressBar
+                : ui.SemanticsRole.loadingSpinner,
+          );
+          expect(data.value, kind == 'determinate' ? '42' : '');
+          expect(find.text(label), findsNothing);
+        } finally {
+          semantics.dispose();
+        }
+      });
+    }
+  }
+
   testWidgets(
     'AppLoadingIndicator and AppLinearProgress wrap progress states',
     (tester) async {
@@ -940,6 +2179,83 @@ void main() {
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
     },
   );
+
+  for (final linear in [false, true]) {
+    testWidgets(
+      'loading semantics support fallback and custom labels linear=$linear',
+      (tester) async {
+        final semantics = tester.ensureSemantics();
+        try {
+          const key = ValueKey('progress');
+          String? label;
+          late StateSetter update;
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: StatefulBuilder(
+                  builder: (context, setState) {
+                    update = setState;
+                    return linear
+                        ? AppLinearProgress(
+                            key: key,
+                            value: 0.5,
+                            semanticLabel: label,
+                          )
+                        : AppLoadingIndicator(
+                            key: key,
+                            centered: false,
+                            semanticLabel: label,
+                          );
+                  },
+                ),
+              ),
+            ),
+          );
+          final bounds = tester.getRect(find.byKey(key));
+          expect(tester.getSemantics(progressSemantics(key)).label, 'Loading');
+          update(() => label = 'Uploading media');
+          await tester.pump();
+          final data = tester
+              .getSemantics(progressSemantics(key))
+              .getSemanticsData();
+          expect(data.label, 'Uploading media');
+          expect(data.value, linear ? '50' : '');
+          expect(tester.getRect(find.byKey(key)), bounds);
+          expect(find.text('Uploading media'), findsNothing);
+          expect(tester.takeException(), isNull);
+        } finally {
+          semantics.dispose();
+        }
+      },
+    );
+  }
+
+  testWidgets('loading semantics update with locale and disappear on removal', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      const key = ValueKey('progress');
+      Widget app(String locale) => MaterialApp(
+        locale: Locale(locale),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(body: AppLoadingIndicator(key: key)),
+      );
+      await tester.pumpWidget(app('en'));
+      final english = tester.getSemantics(progressSemantics(key)).label;
+      await tester.pumpWidget(app('zh'));
+      await tester.pump();
+      final chinese = tester.element(find.byKey(key)).l10n.loading;
+      expect(chinese, isNot(english));
+      expect(tester.getSemantics(progressSemantics(key)).label, chinese);
+      await tester.pumpWidget(const SizedBox.shrink());
+      expect(find.bySemanticsLabel(chinese), findsNothing);
+      expect(tester.takeException(), isNull);
+    } finally {
+      semantics.dispose();
+    }
+  });
 
   testWidgets('App tab wrappers keep controller-based navigation', (
     tester,
@@ -1232,6 +2548,70 @@ void main() {
       find.ancestor(of: find.byType(ListTile), matching: find.byType(Material)),
       findsWidgets,
     );
+  });
+
+  testWidgets('AppTile exposes enabled semantics and focus behavior', (
+    tester,
+  ) async {
+    final enabledNode = FocusNode();
+    final disabledNode = FocusNode();
+    addTearDown(enabledNode.dispose);
+    addTearDown(disabledNode.dispose);
+
+    await tester.pumpWidget(
+      _app(
+        Column(
+          children: [
+            AppTile(
+              title: const Text('可用项目'),
+              focusNode: enabledNode,
+              onPressed: () {},
+            ),
+            AppTile(
+              title: const Text('禁用项目'),
+              enabled: false,
+              focusNode: disabledNode,
+              onPressed: () {},
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final enabledSemantics = tester.getSemantics(find.text('可用项目'));
+    expect(
+      enabledSemantics.getSemanticsData().actions & SemanticsAction.tap.index,
+      isNonZero,
+    );
+    expect(
+      enabledSemantics
+          .getSemanticsData()
+          .flagsCollection
+          .isEnabled
+          .toBoolOrNull(),
+      true,
+    );
+
+    final disabledSemantics = tester.getSemantics(find.text('禁用项目'));
+    expect(
+      disabledSemantics.getSemanticsData().actions & SemanticsAction.tap.index,
+      isZero,
+    );
+    expect(
+      disabledSemantics
+          .getSemanticsData()
+          .flagsCollection
+          .isEnabled
+          .toBoolOrNull(),
+      false,
+    );
+
+    enabledNode.requestFocus();
+    await tester.pump();
+    expect(enabledNode.hasFocus, isTrue);
+    disabledNode.requestFocus();
+    await tester.pump();
+    expect(disabledNode.hasFocus, isFalse);
   });
 
   testWidgets('AppInkSurface centralizes tappable material surfaces', (
@@ -1539,7 +2919,47 @@ void main() {
     expect(find.text('分组内容'), findsOneWidget);
   });
 
-  testWidgets('AppSwitch and AppCheckbox use ForUI controls', (tester) async {
+  testWidgets('switches expose one named and actionable semantic node', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final changes = <bool>[];
+    await tester.pumpWidget(
+      _app(
+        Column(
+          children: [
+            AppSwitch(
+              value: false,
+              label: 'Standalone',
+              onChanged: changes.add,
+            ),
+            AppSwitchTile(
+              value: true,
+              title: const Text('Notifications'),
+              onChanged: changes.add,
+            ),
+          ],
+        ),
+      ),
+    );
+    final switches = find.semantics.byPredicate(
+      (node) =>
+          !node.isMergedIntoParent &&
+          node.getSemanticsData().flagsCollection.isToggled != ui.Tristate.none,
+      describeMatch: (_) => 'switch semantics',
+    );
+    expect(switches, findsNWidgets(2));
+    expect(find.bySemanticsLabel('Standalone'), findsOneWidget);
+    expect(find.bySemanticsLabel('Notifications'), findsOneWidget);
+    await tester.tap(find.text('Standalone'));
+    await tester.tap(find.text('Notifications'));
+    expect(changes, [true, false]);
+    semantics.dispose();
+  });
+
+  testWidgets('AppSwitch and AppCheckbox use Material controls', (
+    tester,
+  ) async {
     var switchValue = false;
     var checkboxValue = false;
 
@@ -1572,6 +2992,31 @@ void main() {
 
     expect(switchValue, isTrue);
     expect(checkboxValue, isTrue);
+  });
+
+  testWidgets('checkbox has one named state for screen readers', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      _app(
+        AppCheckbox(
+          value: true,
+          semanticsLabel: 'Select room',
+          onChanged: (_) {},
+        ),
+      ),
+    );
+    expect(find.bySemanticsLabel('Select room'), findsOneWidget);
+    final checked = find.semantics.byPredicate(
+      (node) =>
+          !node.isMergedIntoParent &&
+          node.getSemanticsData().flagsCollection.isChecked !=
+              ui.CheckedState.none,
+      describeMatch: (_) => 'checkbox semantic state',
+    );
+    expect(checked, findsOneWidget);
+    semantics.dispose();
   });
 
   testWidgets('AppSwitchTile and AppCheckboxTile toggle from tile presses', (
@@ -1685,9 +3130,151 @@ void main() {
     expect(pressed, isTrue);
   });
 
-  testWidgets('AppSelect uses ForUI select and reports changes', (
-    tester,
-  ) async {
+  for (final width in [320.0, 1200.0]) {
+    for (final scale in [1.0, 1.5, 2.0]) {
+      for (final prefix in [false, true]) {
+        testWidgets(
+          'compact selects fit translated labels: $width/$scale/$prefix',
+          (tester) async {
+            await tester.binding.setSurfaceSize(Size(width, 900));
+            addTearDown(() => tester.binding.setSurfaceSize(null));
+            for (final labels in [
+              ['全部角色', '加入时间'],
+              ['All roles', 'Joined at'],
+            ]) {
+              await tester.pumpWidget(
+                _app(
+                  MediaQuery(
+                    data: MediaQueryData(
+                      size: Size(width, 900),
+                      textScaler: TextScaler.linear(scale),
+                    ),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: AppSelect<int>(
+                        value: 1,
+                        prefixIcon: prefix ? Icons.sort : null,
+                        options: {labels.first: 1, labels.last: 2},
+                        onChanged: (_) {},
+                      ),
+                    ),
+                  ),
+                ),
+              );
+              await tester.pumpAndSettle();
+              final text = find.text(labels.first);
+              final paragraph = tester.renderObject<RenderParagraph>(
+                find.descendant(of: text, matching: find.byType(RichText)),
+              );
+              // Long scaled text may truncate only when the viewport is exhausted.
+              if (width == 1200 || scale == 1 || labels.first == '全部角色') {
+                expect(paragraph.didExceedMaxLines, isFalse);
+              }
+              expect(
+                tester.getSize(find.byType(AppSelect<int>)).width,
+                lessThanOrEqualTo(width - 32),
+              );
+              expect(tester.takeException(), isNull);
+            }
+          },
+        );
+      }
+    }
+  }
+
+  testWidgets(
+    'compact select preserves width across selection in a narrow parent',
+    (tester) async {
+      var value = 1;
+      await tester.pumpWidget(
+        _app(
+          Center(
+            child: SizedBox(
+              width: 180,
+              child: StatefulBuilder(
+                builder: (context, setState) => AppSelect<int>(
+                  value: value,
+                  options: const {
+                    'Short': 1,
+                    'A much longer selected label': 2,
+                  },
+                  onChanged: (next) => setState(() => value = next!),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      final before = tester.getSize(find.byType(AppSelect<int>));
+      await tester.tap(find.text('Short'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('A much longer selected label').last);
+      await tester.pumpAndSettle();
+      expect(value, 2);
+      expect(tester.getSize(find.byType(AppSelect<int>)), before);
+      expect(before.width, 180);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final width in [220.0, 440.0]) {
+    for (final language in ['en', 'zh']) {
+      testWidgets('multiline select $language/$width at 3x', (tester) async {
+        await tester.binding.setSurfaceSize(const Size(600, 1000));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final label = language == 'en' ? 'Media source instance' : '媒体源实例';
+        final first = language == 'en' ? 'Local instance' : '本地实例';
+        final second = language == 'en' ? 'Remote media server' : '远程媒体服务器';
+        var selected = 1;
+        await tester.pumpWidget(
+          _app(
+            MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(3)),
+              child: SizedBox(
+                width: width,
+                child: StatefulBuilder(
+                  builder: (context, setState) => AppSelect<int>(
+                    value: selected,
+                    label: label,
+                    labelAbove: true,
+                    wrapText: true,
+                    prefixIcon: Icons.account_tree_outlined,
+                    options: {first: 1, second: 2},
+                    onChanged: (value) => setState(() => selected = value!),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        for (final text in [label, first]) {
+          final paragraph = tester.renderObject<RenderParagraph>(
+            find.text(text),
+          );
+          expect(paragraph.didExceedMaxLines, isFalse, reason: text);
+          expect(paragraph.size.width, lessThanOrEqualTo(width));
+        }
+        final initialSize = tester.getSize(find.byType(AppSelect<int>));
+        await tester.tap(find.text(first));
+        await tester.pumpAndSettle();
+        final option = find.text(second).last;
+        await tester.ensureVisible(option);
+        await tester.pumpAndSettle();
+        expect(
+          tester.renderObject<RenderParagraph>(option).didExceedMaxLines,
+          isFalse,
+        );
+        await tester.tap(option);
+        await tester.pumpAndSettle();
+        expect(selected, 2);
+        expect(tester.getSize(find.byType(AppSelect<int>)), initialSize);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
+  testWidgets('AppSelect reports changes', (tester) async {
     var selected = 'created';
 
     await tester.pumpWidget(
@@ -1776,6 +3363,65 @@ void main() {
     expect(changes.last, isNull);
   });
 
+  for (final enabled in [true, false]) {
+    for (final nullableOption in [true, false]) {
+      testWidgets('AppSelect clear enabled=$enabled nullable=$nullableOption', (
+        tester,
+      ) async {
+        final formKey = GlobalKey<FormState>();
+        String? selected = 'music';
+        String? saved = 'unchanged';
+        final changes = <String?>[];
+        var formChanges = 0;
+        await tester.pumpWidget(
+          _app(
+            Form(
+              key: formKey,
+              onChanged: () => formChanges++,
+              child: StatefulBuilder(
+                builder: (context, setState) => AppSelect<String?>(
+                  value: selected,
+                  label: 'Category',
+                  clearable: true,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  validator: (value) =>
+                      value == null ? 'Choose a category' : null,
+                  enabled: enabled,
+                  options: {if (nullableOption) 'None': null, 'Music': 'music'},
+                  onSaved: (value) => saved = value,
+                  onChanged: (value) {
+                    changes.add(value);
+                    setState(() => selected = value);
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final clear = _byTooltip('清空');
+        if (!enabled) {
+          expect(clear, findsNothing);
+          formKey.currentState!.save();
+          expect(saved, 'music');
+          expect(changes, isEmpty);
+          return;
+        }
+        expect(clear, findsOneWidget);
+        await tester.tap(clear);
+        await tester.pumpAndSettle();
+        expect(changes, [null]);
+        expect(selected, isNull);
+        expect(formChanges, 1);
+        expect(find.text('Choose a category'), findsOneWidget);
+        formKey.currentState!.save();
+        expect(saved, isNull);
+        expect(clear, findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
   testWidgets('AppSelect participates in Flutter forms', (tester) async {
     final formKey = GlobalKey<FormState>();
     var selected = 3;
@@ -1843,6 +3489,42 @@ void main() {
 
     expect(refreshed, isTrue);
   });
+
+  for (final shape in BoxShape.values) {
+    for (final size in [24.0, 60.0]) {
+      for (final scale in [1.0, 3.0]) {
+        testWidgets('Avatar initial fits $shape/$size/$scale', (tester) async {
+          await tester.pumpWidget(
+            _app(
+              MediaQuery(
+                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                child: Center(
+                  child: AppAvatar(
+                    name: 'wide',
+                    size: size,
+                    shape: shape,
+                    textStyle: const TextStyle(fontSize: 36),
+                  ),
+                ),
+              ),
+            ),
+          );
+          final avatar = tester.getRect(find.byType(AppAvatar));
+          final glyph = tester.renderObject<RenderBox>(find.text('W'));
+          final glyphBounds = MatrixUtils.transformRect(
+            glyph.getTransformTo(null),
+            Offset.zero & glyph.size,
+          );
+          expect(avatar.size, Size.square(size));
+          expect(glyphBounds.left, greaterThanOrEqualTo(avatar.left));
+          expect(glyphBounds.top, greaterThanOrEqualTo(avatar.top));
+          expect(glyphBounds.right, lessThanOrEqualTo(avatar.right));
+          expect(glyphBounds.bottom, lessThanOrEqualTo(avatar.bottom));
+          expect(tester.takeException(), isNull);
+        });
+      }
+    }
+  }
 
   testWidgets('AppAvatar renders initials and fallback consistently', (
     tester,

@@ -1,5 +1,7 @@
 part of '../admin_settings_page.dart';
 
+class _RuntimeSettingConflict implements Exception {}
+
 class RuntimeSettingsSectionsTab extends StatefulWidget {
   const RuntimeSettingsSectionsTab({super.key});
 
@@ -15,6 +17,10 @@ class _RuntimeSettingsSectionsTabState
   RuntimeSettingsModel? _settings;
   String? _selectedSection;
   final Set<String> _savingSettings = <String>{};
+  final Set<String> _settingIntents = <String>{};
+  final _settingWrites = SerialAsyncOperationCoordinator();
+  int _loadGeneration = 0;
+  bool _testEmailOpen = false;
 
   bool _initialized = false;
 
@@ -33,10 +39,12 @@ class _RuntimeSettingsSectionsTabState
     bool silent = false,
     bool refresh = false,
   }) async {
+    if (!mounted || _savingSettings.isNotEmpty) return;
+    final loadGeneration = ++_loadGeneration;
     if (!silent) setState(() => _isLoading = true);
     try {
       final settings = await adminGateway.runtimeGetSettings(refresh: refresh);
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _loadGeneration) return;
       setState(() {
         _settings = settings;
         final visibleSections = settings.sections
@@ -53,8 +61,11 @@ class _RuntimeSettingsSectionsTabState
         _isLoadingSection = false;
       });
     } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      if (!mounted || loadGeneration != _loadGeneration) return;
+      setState(() {
+        _isLoading = false;
+        _isLoadingSection = false;
+      });
       AppNotifications.showError(
         context,
         context.l10n.loadSettingsFailed('$e'),
@@ -73,51 +84,111 @@ class _RuntimeSettingsSectionsTabState
     bool silent = false,
     bool refresh = true,
   }) async {
+    if (!mounted || _savingSettings.isNotEmpty) return;
     final l10n = context.l10n;
     final sectionName = _selectedSection;
     if (sectionName == null) return;
+    final loadGeneration = ++_loadGeneration;
     if (!silent) setState(() => _isLoadingSection = true);
     try {
       final settings = await adminGateway.runtimeGetSettings(refresh: refresh);
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _loadGeneration) return;
       setState(() {
         _settings = settings;
+        _isLoading = false;
         _isLoadingSection = false;
       });
     } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoadingSection = false);
+      if (!mounted || loadGeneration != _loadGeneration) return;
+      setState(() {
+        _isLoading = false;
+        _isLoadingSection = false;
+      });
       AppNotifications.showError(context, l10n.refreshSettingsFailed('$e'));
     }
   }
 
-  Future<void> _updateSetting(
+  Future<bool> _updateSetting(
     RuntimeSettingsSection section,
     String key,
     dynamic nextValue,
   ) async {
+    if (!mounted) return false;
     final l10n = context.l10n;
     final settingId = '${section.name}.$key';
-    setState(() => _savingSettings.add(settingId));
+    if (_savingSettings.contains(settingId)) return false;
+    ++_loadGeneration;
+    setState(() {
+      _savingSettings.add(settingId);
+      _isLoading = false;
+      _isLoadingSection = false;
+    });
 
     try {
       final current = _settings;
       if (current == null) throw StateError('settings are not loaded');
-      final updated = await adminGateway.runtimeUpdateSettingInSection(
-        section.name,
-        key,
-        identical(nextValue, _clearRuntimeSettingValue) ? null : nextValue,
-      );
-      if (!mounted) return;
+      final gateway = adminGateway;
+      final updated = await _settingWrites.run(() async {
+        if (!mounted) return null;
+        final latest = _settings?.section(section.name);
+        if (latest == null ||
+            latest.settings.containsKey(key) !=
+                section.settings.containsKey(key) ||
+            !const DeepCollectionEquality().equals(
+              latest.settings[key],
+              section.settings[key],
+            )) {
+          throw _RuntimeSettingConflict();
+        }
+        final updated = await gateway.runtimeUpdateSettingInSection(
+          section.name,
+          key,
+          identical(nextValue, _clearRuntimeSettingValue) ? null : nextValue,
+        );
+        if (mounted) {
+          // Publish the response before the next queued write checks its draft.
+          setState(() {
+            _settings = (_settings ?? current).replaceSection(updated);
+          });
+        }
+        return updated;
+      });
+      if (!mounted || updated == null) return false;
       setState(() {
-        _settings = current.replaceSection(updated);
         _savingSettings.remove(settingId);
       });
       AppNotifications.showSuccess(context, l10n.settingsUpdated);
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() => _savingSettings.remove(settingId));
-      AppNotifications.showError(context, l10n.updateSettingsFailed('$e'));
+      AppNotifications.showError(
+        context,
+        e is _RuntimeSettingConflict
+            ? l10n.runtimeSettingChanged
+            : l10n.updateSettingsFailed('$e'),
+      );
+      return false;
+    }
+  }
+
+  bool get _canInteract => mounted && ModalRoute.of(context)?.isCurrent == true;
+
+  Future<void> _runSettingIntent(
+    RuntimeSettingsSection section,
+    String key,
+    Future<void> Function() operation,
+  ) async {
+    final id = '${section.name}.$key';
+    if (!_canInteract ||
+        _savingSettings.contains(id) ||
+        !_settingIntents.add(id)) {
+      return;
+    }
+    try {
+      await operation();
+    } finally {
+      _settingIntents.remove(id);
     }
   }
 
@@ -125,7 +196,7 @@ class _RuntimeSettingsSectionsTabState
     RuntimeSettingsSection section,
     String key,
     dynamic value,
-  ) async {
+  ) => _runSettingIntent(section, key, () async {
     final descriptor = _settingDescriptor(
       context.l10n,
       section.name,
@@ -136,32 +207,40 @@ class _RuntimeSettingsSectionsTabState
 
     if (normalizedValue is bool) {
       final confirmed = await _confirmRiskIfNeeded(descriptor);
-      if (!confirmed) return;
+      if (!_canInteract || !confirmed) return;
       await _updateSetting(section, key, !normalizedValue);
       return;
     }
 
-    final nextValue = await showAppDialog<dynamic>(
+    await showAppDialog<dynamic>(
       context: context,
-      builder: (context) => _SettingEditorSheet(
+      builder: (dialogContext) => _SettingEditorSheet(
         descriptor: descriptor,
         sectionName: section.name,
         settingKey: key,
         value: normalizedValue,
+        onSave: (nextValue) async {
+          final confirmed = await _confirmRiskIfNeeded(
+            descriptor,
+            sourceContext: dialogContext,
+          );
+          if (!mounted ||
+              !dialogContext.mounted ||
+              !confirmed ||
+              ModalRoute.of(dialogContext)?.isCurrent != true) {
+            return false;
+          }
+          return _updateSetting(section, key, nextValue);
+        },
       ),
     );
-    if (nextValue == null) return;
-
-    final confirmed = await _confirmRiskIfNeeded(descriptor);
-    if (!confirmed) return;
-    await _updateSetting(section, key, nextValue);
-  }
+  });
 
   Future<void> _editOAuth2Provider(
     RuntimeSettingsSection section,
     Map<String, dynamic> providers,
     String? name,
-  ) async {
+  ) => _runSettingIntent(section, 'providers', () async {
     final l10n = context.l10n;
     final current = name == null
         ? <String, dynamic>{}
@@ -174,7 +253,7 @@ class _RuntimeSettingsSectionsTabState
         existingNames: providers.keys.toSet(),
       ),
     );
-    if (result == null) return;
+    if (!_canInteract || result == null) return;
 
     final descriptor = _settingDescriptor(
       l10n,
@@ -183,7 +262,7 @@ class _RuntimeSettingsSectionsTabState
       providers,
     );
     final confirmed = await _confirmRiskIfNeeded(descriptor);
-    if (!confirmed) return;
+    if (!_canInteract || !confirmed) return;
 
     final next = Map<String, dynamic>.from(providers);
     if (name != null && name != result.name) next.remove(name);
@@ -193,95 +272,102 @@ class _RuntimeSettingsSectionsTabState
       'providers',
       _oauth2ProvidersToProtoList(next),
     );
-  }
+  });
 
   Future<void> _deleteOAuth2Provider(
     RuntimeSettingsSection section,
     Map<String, dynamic> providers,
     String name,
-  ) async {
+  ) => _runSettingIntent(section, 'providers', () async {
     final l10n = context.l10n;
-    final confirmed = await AppDialogs.showStyledDialog<bool>(
-      context: context,
+    final confirmed = await _confirmRuntimeChange(
       title: l10n.deleteLoginProvider,
       icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFE5484D)),
       content: Text(l10n.confirmDeleteLoginProvider(name)),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: l10n.delete,
-        ),
-      ],
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
-    if (confirmed != true) return;
+    if (!_canInteract || !confirmed) return;
     final next = Map<String, dynamic>.from(providers)..remove(name);
     await _updateSetting(
       section,
       'providers',
       _oauth2ProvidersToProtoList(next),
     );
-  }
+  });
 
-  Future<bool> _confirmRiskIfNeeded(_SettingDescriptor descriptor) async {
+  Future<bool> _confirmRiskIfNeeded(
+    _SettingDescriptor descriptor, {
+    BuildContext? sourceContext,
+  }) async {
     final warning = descriptor.warning;
     if (warning == null || warning.isEmpty) return true;
-    final confirmed = await AppDialogs.showStyledDialog<bool>(
-      context: context,
+    return _confirmRuntimeChange(
+      sourceContext: sourceContext,
       title: context.l10n.confirmChanges,
       icon: const Icon(Icons.warning_amber_rounded, color: Color(0xFFE09F3E)),
       content: Text(warning),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: context.l10n.confirmChanges,
-        ),
-      ],
+      confirmLabel: context.l10n.confirmChanges,
+    );
+  }
+
+  Future<bool> _confirmRuntimeChange({
+    BuildContext? sourceContext,
+    required String title,
+    required Widget icon,
+    required Widget content,
+    required String confirmLabel,
+    bool destructive = false,
+  }) async {
+    final origin = sourceContext ?? context;
+    if (!mounted ||
+        !origin.mounted ||
+        ModalRoute.of(origin)?.isCurrent != true) {
+      return false;
+    }
+    var closing = false;
+    final confirmed = await showAppDialog<bool>(
+      context: origin,
+      builder: (dialogContext) {
+        void finish(bool value) {
+          if (closing ||
+              !dialogContext.mounted ||
+              ModalRoute.of(dialogContext)?.isCurrent != true) {
+            return;
+          }
+          closing = true;
+          Navigator.pop(dialogContext, value);
+        }
+
+        return AppConfirmDialog(
+          title: title,
+          icon: icon,
+          content: content,
+          confirmLabel: confirmLabel,
+          destructive: destructive,
+          onConfirm: () => finish(true),
+          onCancel: () => finish(false),
+        );
+      },
     );
     return confirmed == true;
   }
 
   Future<void> _sendTestEmail() async {
-    final l10n = context.l10n;
-    final controller = TextEditingController();
-    final email = await AppDialogs.showStyledDialog<String>(
-      context: context,
-      title: l10n.sendTestEmail,
-      icon: const Icon(Icons.outgoing_mail, color: Color(0xFF5D5FEF)),
-      content: AppDialogs.createFormField(
-        context: context,
-        label: l10n.recipient,
-        controller: controller,
-        hintText: 'name@example.com',
-        prefixIcon: Icons.email_outlined,
-        keyboardType: TextInputType.emailAddress,
-      ),
-      actions: [
-        AppDialogs.createCancelButton(context),
-        const SizedBox(width: 8),
-        AppDialogs.createConfirmButton(
-          context,
-          () => Navigator.pop(context, controller.text.trim()),
-          text: l10n.send,
-        ),
-      ],
-    );
-    if (email == null || email.isEmpty) return;
+    if (!mounted || _testEmailOpen) return;
+    _testEmailOpen = true;
     try {
-      final message = await adminGateway.adminSendTestEmail(email);
-      if (!mounted) return;
+      final message = await showAppDialog<String>(
+        context: context,
+        builder: (_) => const SendTestEmailDialog(),
+      );
+      if (!mounted || message == null) return;
       AppNotifications.showSuccess(
         context,
-        message.isEmpty ? l10n.testEmailSent : message,
+        message.isEmpty ? context.l10n.testEmailSent : message,
       );
-    } catch (e) {
-      if (!mounted) return;
-      AppNotifications.showError(context, l10n.sendTestEmailFailed('$e'));
+    } finally {
+      _testEmailOpen = false;
     }
   }
 
@@ -306,7 +392,45 @@ class _RuntimeSettingsSectionsTabState
         : (selected.settings.entries.toList()
             ..sort((a, b) => a.key.compareTo(b.key)));
     final useTwoPane =
-        AppBreakpoints.widthOf(context) >= AppBreakpoints.expandedStart;
+        AppBreakpoints.widthOf(context) >=
+        AppBreakpoints.expandedStart *
+            math.max(1, MediaQuery.textScalerOf(context).scale(14) / 14);
+    final toolbar = Padding(
+      padding: EdgeInsets.fromLTRB(
+        useTwoPane ? 16 : 0,
+        16,
+        useTwoPane ? 16 : 0,
+        12,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: useTwoPane
+                ? Text(
+                    context.l10n.runtimeSettings,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                : _SettingsSectionDropdown(
+                    sections: sections,
+                    selectedSection: _selectedSection,
+                    enabled: !_isLoadingSection,
+                    onChanged: _selectSection,
+                  ),
+          ),
+          const SizedBox(width: 12),
+          AppIconButton(
+            tooltip: context.l10n.refreshAll,
+            icon: Icons.sync_rounded,
+            style: AppIconButtonStyle.tonal,
+            onPressed: _isLoadingSection || _savingSettings.isNotEmpty
+                ? null
+                : () => _loadSettings(silent: true, refresh: true),
+          ),
+        ],
+      ),
+    );
 
     final isOAuth2Section =
         selected?.name == 'oauth2' &&
@@ -322,11 +446,18 @@ class _RuntimeSettingsSectionsTabState
         : <String, dynamic>{};
 
     final settingsList = selected == null || entries.isEmpty
-        ? AppEmptyMessage(message: context.l10n.noSettings)
+        ? AppListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              if (!useTwoPane) toolbar,
+              AppEmptyMessage(message: context.l10n.noSettings),
+            ],
+          )
         : isOAuth2Section
         ? AppListView(
             padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
             children: [
+              if (!useTwoPane) toolbar,
               _SettingsSectionHeader(
                 sectionName: selected.name,
                 entryCount: oauth2Providers.length,
@@ -342,7 +473,7 @@ class _RuntimeSettingsSectionsTabState
                           null,
                         ),
                 ),
-                onRefresh: _isLoadingSection
+                onRefresh: _isLoadingSection || _savingSettings.isNotEmpty
                     ? null
                     : () => _refreshSelectedSection(refresh: true),
               ),
@@ -383,8 +514,12 @@ class _RuntimeSettingsSectionsTabState
           )
         : AppListView.builder(
             padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
-            itemCount: entries.length + 1,
+            itemCount: entries.length + (useTwoPane ? 1 : 2),
             itemBuilder: (context, index) {
+              if (!useTwoPane) {
+                if (index == 0) return toolbar;
+                index -= 1;
+              }
               if (index == 0) {
                 return _SettingsSectionHeader(
                   sectionName: selected.name,
@@ -398,7 +533,7 @@ class _RuntimeSettingsSectionsTabState
                           style: AppActionButtonStyle.tonal,
                         )
                       : null,
-                  onRefresh: _isLoadingSection
+                  onRefresh: _isLoadingSection || _savingSettings.isNotEmpty
                       ? null
                       : () => _refreshSelectedSection(refresh: true),
                 );
@@ -428,68 +563,38 @@ class _RuntimeSettingsSectionsTabState
             },
           );
 
+    if (!useTwoPane) return settingsList;
+
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+        toolbar,
+        Expanded(
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: useTwoPane
-                    ? Text(
-                        context.l10n.runtimeSettings,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
+              SizedBox(
+                width: 240,
+                child: AppListView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 8, 24),
+                  children: [
+                    for (final section in sections)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _SettingsSectionButton(
+                          sectionName: section.name,
+                          selected: section.name == _selectedSection,
+                          count: section.settings.length,
+                          onTap: _isLoadingSection
+                              ? null
+                              : () => _selectSection(section.name),
                         ),
-                      )
-                    : _SettingsSectionDropdown(
-                        sections: sections,
-                        selectedSection: _selectedSection,
-                        enabled: !_isLoadingSection,
-                        onChanged: _selectSection,
                       ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 12),
-              AppIconButton(
-                tooltip: context.l10n.refreshAll,
-                icon: Icons.sync_rounded,
-                style: AppIconButtonStyle.tonal,
-                onPressed: _isLoadingSection
-                    ? null
-                    : () => _loadSettings(silent: true, refresh: true),
-              ),
+              Expanded(child: settingsList),
             ],
           ),
-        ),
-        Expanded(
-          child: useTwoPane
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 240,
-                      child: AppListView(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 8, 24),
-                        children: [
-                          for (final section in sections)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: _SettingsSectionButton(
-                                sectionName: section.name,
-                                selected: section.name == _selectedSection,
-                                count: section.settings.length,
-                                onTap: _isLoadingSection
-                                    ? null
-                                    : () => _selectSection(section.name),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Expanded(child: settingsList),
-                  ],
-                )
-              : settingsList,
         ),
       ],
     );
@@ -499,10 +604,12 @@ class _RuntimeSettingsSectionsTabState
     final descriptor = _settingDescriptor(context.l10n, group, key, value);
     if (value is String) {
       switch (descriptor.kind) {
+        case _SettingEditorKind.permissionList:
+          // Protobuf uint64 strings must not pass through JSON's Web numbers.
+          return value;
         case _SettingEditorKind.oauth2Providers:
         case _SettingEditorKind.iceServers:
         case _SettingEditorKind.stringList:
-        case _SettingEditorKind.permissionList:
         case _SettingEditorKind.smtpCredentials:
         case _SettingEditorKind.smtpProxy:
         case _SettingEditorKind.map:
@@ -716,6 +823,14 @@ _SettingDescriptor _settingDescriptor(
 ) {
   final id = '$section.$key';
   final known = <String, _SettingDescriptor>{
+    'server.name': _SettingDescriptor(
+      group: 'server',
+      key: 'name',
+      title: l10n.runtimeServerName,
+      description: l10n.runtimeServerNameDescription,
+      icon: Icons.dns_outlined,
+      kind: _SettingEditorKind.text,
+    ),
     'roomDefaults.defaultMaxMembers': _SettingDescriptor(
       group: 'roomDefaults',
       key: 'defaultMaxMembers',
@@ -964,6 +1079,14 @@ _SettingDescriptor _settingDescriptor(
       icon: Icons.chat_bubble_outline_rounded,
       kind: _SettingEditorKind.number,
     ),
+    'chat.maxPinnedMessagesPerRoom': _SettingDescriptor(
+      group: 'chat',
+      key: 'maxPinnedMessagesPerRoom',
+      title: l10n.maxPinnedMessagesPerRoom,
+      description: l10n.maxPinnedMessagesPerRoomDescription,
+      icon: Icons.push_pin_outlined,
+      kind: _SettingEditorKind.number,
+    ),
     'chat.messageRetentionDays': _SettingDescriptor(
       group: 'chat',
       key: 'messageRetentionDays',
@@ -1189,26 +1312,32 @@ Set<String> _permissionsFromValue(dynamic value) {
   if (value is List || value is String && value.trim().startsWith('[')) {
     return _valueAsStringList(value).toSet();
   }
-  final bits = value is num
-      ? value.toInt()
-      : int.tryParse(value?.toString() ?? '') ?? 0;
+  final bits = _permissionBits(value);
   return {
     for (final entry in _runtimePermissionBits.entries)
-      if ((bits & entry.value) != 0) entry.key,
+      if ((bits & BigInt.from(entry.value)) != BigInt.zero) entry.key,
   };
 }
 
-int _permissionsToBits(dynamic value) {
+BigInt _permissionBits(dynamic value) =>
+    BigInt.tryParse(value?.toString() ?? '', radix: 10) ?? BigInt.zero;
+
+String _permissionsToBits(dynamic value, {required dynamic originalValue}) {
   final names = value is Set<String>
       ? value
       : value is Iterable
       ? value.map((item) => item.toString()).toSet()
       : _permissionsFromValue(value);
-  var bits = 0;
+  final knownMask = _runtimePermissionBits.values.fold(
+    BigInt.zero,
+    (mask, bit) => mask | BigInt.from(bit),
+  );
+  // Retain permissions introduced by newer servers when editing known bits.
+  var bits = _permissionBits(originalValue) & ~knownMask;
   for (final name in names) {
-    bits |= _runtimePermissionBits[name] ?? 0;
+    bits |= BigInt.from(_runtimePermissionBits[name] ?? 0);
   }
-  return bits;
+  return bits.toString();
 }
 
 class _SettingsSectionDropdown extends StatelessWidget {
@@ -1307,40 +1436,58 @@ class _SettingsSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final title = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _settingsSectionLabel(context.l10n, sectionName),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          context.l10n.configurableSettingsCount(entryCount),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+    final controls = Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        ?action,
+        AppIconButton(
+          tooltip: context.l10n.refreshCurrentSection,
+          icon: Icons.refresh_rounded,
+          loading: isLoading,
+          style: AppIconButtonStyle.tonal,
+          onPressed: onRefresh,
+        ),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _settingsSectionLabel(context.l10n, sectionName),
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.configurableSettingsCount(entryCount),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (action != null) ...[const SizedBox(width: 12), action!],
-          const SizedBox(width: 8),
-          AppIconButton(
-            tooltip: context.l10n.refreshCurrentSection,
-            icon: Icons.refresh_rounded,
-            loading: isLoading,
-            style: AppIconButtonStyle.tonal,
-            onPressed: onRefresh,
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+          if (constraints.maxWidth < 640 * math.max(1, scale)) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [title, const SizedBox(height: 12), controls],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: title),
+              const SizedBox(width: 12),
+              controls,
+            ],
+          );
+        },
       ),
     );
   }
@@ -1364,76 +1511,69 @@ class _SettingTile extends StatelessWidget {
     final theme = Theme.of(context);
     final isBool =
         descriptor.kind == _SettingEditorKind.boolean && value is bool;
-    return Padding(
-      padding: const EdgeInsets.all(14),
-      child: Row(
+    return _AdminRecordTile(
+      contentPadding: const EdgeInsets.all(14),
+      prefix: AppIconBadge(
+        icon: descriptor.icon,
+        color: theme.colorScheme.primary,
+        backgroundColor: theme.colorScheme.primaryContainer.withValues(
+          alpha: 0.65,
+        ),
+        size: 42,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      title: Text(
+        descriptor.title,
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppIconBadge(
-            icon: descriptor.icon,
-            color: theme.colorScheme.primary,
-            backgroundColor: theme.colorScheme.primaryContainer.withValues(
-              alpha: 0.65,
-            ),
-            size: 42,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  descriptor.title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  descriptor.description,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  _settingSummary(context.l10n, value, descriptor),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium,
-                ),
-                if (descriptor.warning != null) ...[
-                  const SizedBox(height: 10),
-                  _InlineWarning(text: descriptor.warning!),
-                ],
-              ],
+          const SizedBox(height: 4),
+          Text(
+            descriptor.description,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(width: 12),
-          if (saving)
-            const SizedBox.square(
-              dimension: 22,
-              child: AppLoadingIndicator(
-                size: AppLoadingSize.sm,
-                centered: false,
-              ),
-            )
-          else if (isBool)
-            AppSwitch(
-              value: value == true,
-              semanticsLabel: descriptor.title,
-              onChanged: (_) => onEdit(),
-            )
-          else
-            AppIconButton(
-              tooltip: context.l10n.edit,
-              icon: Icons.edit_outlined,
-              style: AppIconButtonStyle.tonal,
-              onPressed: onEdit,
-            ),
+          const SizedBox(height: 10),
+          Text(
+            _settingSummary(context.l10n, value, descriptor),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium,
+          ),
+          if (descriptor.warning != null) ...[
+            const SizedBox(height: 10),
+            _InlineWarning(text: descriptor.warning!),
+          ],
         ],
       ),
+      actions: [
+        if (saving)
+          const SizedBox.square(
+            dimension: 22,
+            child: AppLoadingIndicator(
+              size: AppLoadingSize.sm,
+              centered: false,
+            ),
+          )
+        else if (isBool)
+          AppSwitch(
+            value: value == true,
+            semanticsLabel: descriptor.title,
+            onChanged: (_) => onEdit(),
+          )
+        else
+          AppIconButton(
+            tooltip: context.l10n.edit,
+            icon: Icons.edit_outlined,
+            style: AppIconButtonStyle.tonal,
+            onPressed: onEdit,
+          ),
+      ],
     );
   }
 }
@@ -1540,14 +1680,14 @@ class _SettingsDialogHeader extends StatelessWidget {
 }
 
 class _SettingsDialogActions extends StatelessWidget {
-  final String confirmLabel;
   final VoidCallback onCancel;
-  final VoidCallback onConfirm;
+  final VoidCallback? onConfirm;
+  final bool saving;
 
   const _SettingsDialogActions({
-    required this.confirmLabel,
     required this.onCancel,
     required this.onConfirm,
+    this.saving = false,
   });
 
   @override
@@ -1565,22 +1705,20 @@ class _SettingsDialogActions extends StatelessWidget {
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
           ),
         ),
-        child: Row(
+        child: Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 12,
+          runSpacing: 8,
           children: [
-            Expanded(
-              child: AppActionButton(
-                onPressed: onCancel,
-                label: context.l10n.cancel,
-                style: AppActionButtonStyle.outlined,
-              ),
+            AppActionButton(
+              onPressed: onCancel,
+              label: context.l10n.cancel,
+              style: AppActionButtonStyle.outlined,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AppActionButton(
-                icon: Icons.check_rounded,
-                label: confirmLabel,
-                onPressed: onConfirm,
-              ),
+            AppActionButton(
+              label: context.l10n.save,
+              onPressed: onConfirm,
+              loading: saving,
             ),
           ],
         ),
@@ -1589,17 +1727,86 @@ class _SettingsDialogActions extends StatelessWidget {
   }
 }
 
+class _SettingsEditorFrame extends StatelessWidget {
+  const _SettingsEditorFrame({
+    required this.formKey,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onClose,
+    required this.onConfirm,
+    required this.child,
+    this.warning,
+    this.saving = false,
+  });
+
+  final GlobalKey<FormState> formKey;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onClose;
+  final VoidCallback? onConfirm;
+  final bool saving;
+  final Widget child;
+  final String? warning;
+
+  @override
+  Widget build(BuildContext context) => AppDialogFrame(
+    maxWidth: 780,
+    maxHeight: 760,
+    child: Form(
+      key: formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: AppSingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _SettingsDialogHeader(
+                    icon: icon,
+                    title: title,
+                    subtitle: subtitle,
+                    onClose: onClose,
+                  ),
+                  if (warning != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                      child: _InlineWarning(text: warning!),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+                    child: child,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          _SettingsDialogActions(
+            onCancel: onClose,
+            onConfirm: onConfirm,
+            saving: saving,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class _SettingEditorSheet extends StatefulWidget {
   final _SettingDescriptor descriptor;
   final String sectionName;
   final String settingKey;
   final dynamic value;
+  final Future<bool> Function(dynamic value) onSave;
 
   const _SettingEditorSheet({
     required this.descriptor,
     required this.sectionName,
     required this.settingKey,
     required this.value,
+    required this.onSave,
   });
 
   @override
@@ -1608,6 +1815,8 @@ class _SettingEditorSheet extends StatefulWidget {
 
 class _SettingEditorSheetState extends State<_SettingEditorSheet> {
   final _formKey = GlobalKey<FormState>();
+  bool _closing = false;
+  bool _saving = false;
   late dynamic _value;
   final Map<String, TextEditingController> _controllers = {};
   bool _optionalConfigEnabled = false;
@@ -1642,46 +1851,28 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
     );
   }
 
+  void _finish([dynamic result]) {
+    if (!mounted || _closing || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    _closing = true;
+    Navigator.pop(context, result);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    return AppDialogFrame(
-      maxWidth: 780,
-      maxHeight: 760,
-      insetPadding: EdgeInsets.fromLTRB(16, 24, 16, 24 + bottom),
-      borderRadius: const BorderRadius.all(Radius.circular(22)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 780, maxHeight: 760),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _SettingsDialogHeader(
-                icon: widget.descriptor.icon,
-                title: widget.descriptor.title,
-                subtitle: widget.descriptor.description,
-                onClose: () => Navigator.pop(context),
-              ),
-              if (widget.descriptor.warning != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 14),
-                  child: _InlineWarning(text: widget.descriptor.warning!),
-                ),
-              Flexible(
-                child: AppSingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(22, 4, 22, 22),
-                  child: _buildEditor(),
-                ),
-              ),
-              _SettingsDialogActions(
-                confirmLabel: context.l10n.save,
-                onCancel: () => Navigator.pop(context),
-                onConfirm: _save,
-              ),
-            ],
-          ),
-        ),
+    return _SettingsEditorFrame(
+      formKey: _formKey,
+      icon: widget.descriptor.icon,
+      title: widget.descriptor.title,
+      subtitle: widget.descriptor.description,
+      warning: widget.descriptor.warning,
+      onClose: _finish,
+      onConfirm: _saving ? null : _save,
+      saving: _saving && ModalRoute.of(context)?.isCurrent == true,
+      child: AbsorbPointer(
+        absorbing: _saving,
+        child: ExcludeFocus(excluding: _saving, child: _buildEditor()),
       ),
     );
   }
@@ -1691,6 +1882,8 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
       case _SettingEditorKind.number:
         return _NumberSettingEditor(
           controller: _controller('number', _value?.toString() ?? ''),
+          section: widget.sectionName,
+          settingKey: widget.settingKey,
         );
       case _SettingEditorKind.text:
         return _TextSettingEditor(
@@ -1757,15 +1950,24 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
     }
   }
 
-  void _save() {
+  Future<void> _save() async {
+    if (!mounted ||
+        _closing ||
+        _saving ||
+        ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
     if (!(_formKey.currentState?.validate() ?? false)) return;
     dynamic result = _value;
     switch (widget.descriptor.kind) {
       case _SettingEditorKind.number:
         final raw = _controller('number').text.trim();
-        result = num.tryParse(raw);
+        result = parseRuntimeSettingNumber(
+          widget.sectionName,
+          widget.settingKey,
+          raw,
+        );
         if (result == null) return;
-        if (!raw.contains('.') && result is num) result = result.toInt();
         break;
       case _SettingEditorKind.text:
         result = _controller('text').text.trim();
@@ -1781,7 +1983,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
         result = _value;
         break;
       case _SettingEditorKind.permissionList:
-        result = _permissionsToBits(_value);
+        result = _permissionsToBits(_value, originalValue: widget.value);
         break;
       case _SettingEditorKind.smtpCredentials:
         result = _smtpCredentialsUpdateValue();
@@ -1796,7 +1998,24 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
         result = _value;
         break;
     }
-    Navigator.pop(context, result);
+    setState(() => _saving = true);
+    try {
+      final saved = await widget.onSave(result);
+      if (saved && mounted && !_closing) {
+        final route = ModalRoute.of(context);
+        if (route?.isActive == true) {
+          _closing = true;
+          final navigator = Navigator.of(context);
+          if (route!.isCurrent) {
+            navigator.pop(result);
+          } else {
+            navigator.removeRoute(route, result);
+          }
+        }
+      }
+    } finally {
+      if (mounted && !_closing) setState(() => _saving = false);
+    }
   }
 
   Widget _buildOptionalTextEditor() {
@@ -1910,7 +2129,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
             autocorrect: false,
             validator: (value) {
               final url = value?.trim() ?? '';
-              return url.startsWith('socks5://')
+              return isValidRuntimeSmtpProxyUrl(url)
                   ? null
                   : context.l10n.socks5ProxyAddressRequired;
             },
@@ -1929,9 +2148,13 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
               controller: _controller('proxyUsername', currentUsername),
               label: context.l10n.proxyUsername,
               prefixIcon: Icons.manage_accounts_outlined,
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? context.l10n.proxyUsernameRequired
-                  : null,
+              validator: (value) {
+                final username = value?.trim() ?? '';
+                if (username.isEmpty) return context.l10n.proxyUsernameRequired;
+                return utf8.encode(username).length > 255
+                    ? context.l10n.smtpProxyCredentialTooLong
+                    : null;
+              },
             ),
             const SizedBox(height: 12),
             AppTextField(
@@ -1945,6 +2168,9 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
               autocorrect: false,
               validator: (value) {
                 final username = _controller('proxyUsername').text.trim();
+                if (utf8.encode(value ?? '').length > 255) {
+                  return context.l10n.smtpProxyCredentialTooLong;
+                }
                 final usernameChanged = username != currentUsername;
                 if ((currentUsername.isEmpty || usernameChanged) &&
                     (value == null || value.isEmpty)) {
@@ -2001,8 +2227,14 @@ dynamic _deepCopySettingValue(dynamic value) {
 
 class _NumberSettingEditor extends StatelessWidget {
   final TextEditingController controller;
+  final String section;
+  final String settingKey;
 
-  const _NumberSettingEditor({required this.controller});
+  const _NumberSettingEditor({
+    required this.controller,
+    required this.section,
+    required this.settingKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2010,13 +2242,18 @@ class _NumberSettingEditor extends StatelessWidget {
       controller: controller,
       label: context.l10n.value,
       prefixIcon: Icons.pin_outlined,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      keyboardType: TextInputType.numberWithOptions(
+        decimal: !isIntegerRuntimeSetting(section, settingKey),
+        signed: true,
+      ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
           return context.l10n.valueRequired;
         }
-        return num.tryParse(value.trim()) == null
-            ? context.l10n.validNumberRequired
+        return parseRuntimeSettingNumber(section, settingKey, value) == null
+            ? isIntegerRuntimeSetting(section, settingKey)
+                  ? context.l10n.validRuntimeIntegerRequired
+                  : context.l10n.validNumberRequired
             : null;
       },
     );
@@ -2576,6 +2813,16 @@ class _OAuth2ProviderEditorSheet extends StatefulWidget {
 class _OAuth2ProviderEditorSheetState
     extends State<_OAuth2ProviderEditorSheet> {
   final _formKey = GlobalKey<FormState>();
+  bool _closing = false;
+
+  void _finish([_OAuth2ProviderEditResult? result]) {
+    if (!mounted || _closing || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    _closing = true;
+    Navigator.pop(context, result);
+  }
+
   late final TextEditingController _name;
   late final TextEditingController _clientId;
   late final TextEditingController _clientSecret;
@@ -2671,216 +2918,185 @@ class _OAuth2ProviderEditorSheetState
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    return AppDialogFrame(
-      maxWidth: 740,
-      maxHeight: 760,
-      insetPadding: EdgeInsets.fromLTRB(16, 24, 16, 24 + bottom),
-      borderRadius: const BorderRadius.all(Radius.circular(22)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 740, maxHeight: 760),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _SettingsDialogHeader(
-                icon: Icons.login_rounded,
-                title: widget.initialName == null
-                    ? context.l10n.addExternalLogin
-                    : context.l10n.editExternalLogin,
-                subtitle: context.l10n.externalLoginEditorDescription,
-                onClose: () => Navigator.pop(context),
-              ),
-              Flexible(
-                child: AppSingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
-                  child: Column(
-                    children: [
-                      AppTextField(
-                        controller: _name,
-                        label: context.l10n.instanceName,
-                        helperText: context.l10n.instanceNameFormatHint,
-                        prefixIcon: Icons.badge_outlined,
-                        validator: _validateProviderName,
-                        onChanged: (_) => setState(() {}),
-                        autocorrect: false,
-                        smartDashesType: SmartDashesType.disabled,
-                        smartQuotesType: SmartQuotesType.disabled,
-                      ),
-                      const SizedBox(height: 12),
-                      AppSelect<String>(
-                        value: _type,
-                        label: context.l10n.providerType,
-                        prefixIcon: Icons.account_tree_outlined,
-                        options: {
-                          for (final type in _oauth2ProviderTypes)
-                            _oauth2ProviderTypeLabels[type] ?? type: type,
-                        },
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            _type = value;
-                            if (widget.initialName == null &&
-                                (_name.text.trim().isEmpty ||
-                                    _oauth2ProviderTypes.contains(
-                                      _name.text.trim(),
-                                    ))) {
-                              _name.text = value;
-                            }
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      if (_type == 'apple') ...[
-                        _oauthTextField(
-                          _appleWebClientId,
-                          'Apple Services ID',
-                          Icons.language_outlined,
-                          onChanged: (_) => setState(() {}),
-                          hintText: 'org.example.app.web',
-                        ),
-                        const SizedBox(height: 12),
-                        _oauthSecretField(
-                          _appleWebClientSecret,
-                          'Apple Services ID Secret',
-                          _canPreserveAppleWebClientSecret,
-                          required: false,
-                        ),
-                        const SizedBox(height: 12),
-                        _oauthTextField(
-                          _appleNativeClientId,
-                          'Apple App ID (Bundle ID)',
-                          Icons.phone_iphone_outlined,
-                          onChanged: (_) => setState(() {}),
-                          hintText: 'org.example.app',
-                        ),
-                        const SizedBox(height: 12),
-                        _oauthSecretField(
-                          _appleNativeClientSecret,
-                          'Apple App ID Secret',
-                          _canPreserveAppleNativeClientSecret,
-                          required: false,
-                        ),
-                      ] else ...[
-                        _oauthTextField(
-                          _clientId,
-                          'Client ID',
-                          Icons.key_outlined,
-                          required: true,
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: 12),
-                        _oauthSecretField(
-                          _clientSecret,
-                          'Client Secret',
-                          _canPreserveClientSecret,
-                        ),
-                      ],
-                      if (_type == 'microsoft') ...[
-                        const SizedBox(height: 12),
-                        _oauthTextField(
-                          _tenant,
-                          'Microsoft Tenant',
-                          Icons.domain_outlined,
-                          required: true,
-                          hintText: 'common',
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      if (_type == 'logto') ...[
-                        const SizedBox(height: 12),
-                        _oauthTextField(
-                          _endpoint,
-                          'Logto Endpoint',
-                          Icons.hub_outlined,
-                          required: true,
-                          hintText: 'https://auth.example.com',
-                          validator: _validateHttpUrl,
-                        ),
-                      ],
-                      if (_type == 'feishu') ...[
-                        const SizedBox(height: 12),
-                        _oauthTextField(
-                          _endpoint,
-                          'Feishu Endpoint',
-                          Icons.hub_outlined,
-                          hintText: 'https://open.feishu.cn',
-                          validator: _validateOptionalHttpUrl,
-                        ),
-                      ],
-                      if (_type == 'oidc' || _type == 'casdoor') ...[
-                        const SizedBox(height: 12),
-                        _oauthTextField(
-                          _issuer,
-                          'Issuer',
-                          Icons.verified_outlined,
-                          required: true,
-                          hintText: 'https://issuer.example.com',
-                          validator: _validateHttpUrl,
-                        ),
-                        const SizedBox(height: 12),
-                        _oauthTextField(
-                          _authUrl,
-                          context.l10n.authorizationEndpoint,
-                          Icons.open_in_browser_rounded,
-                          hintText: context.l10n.emptyUsesOidcDiscovery,
-                          validator: _validateOptionalHttpUrl,
-                        ),
-                        const SizedBox(height: 12),
-                        _oauthTextField(
-                          _tokenUrl,
-                          context.l10n.tokenEndpoint,
-                          Icons.token_outlined,
-                          hintText: context.l10n.emptyUsesOidcDiscovery,
-                          validator: _validateOptionalHttpUrl,
-                        ),
-                        const SizedBox(height: 12),
-                        _oauthTextField(
-                          _userinfoUrl,
-                          context.l10n.userInfoEndpoint,
-                          Icons.person_search_outlined,
-                          hintText: context.l10n.emptyUsesOidcDiscovery,
-                          validator: _validateOptionalHttpUrl,
-                        ),
-                        const SizedBox(height: 12),
-                        _oauthTextField(
-                          _jwksUrl,
-                          context.l10n.jwksEndpoint,
-                          Icons.security_rounded,
-                          hintText: context.l10n.emptyUsesOidcDiscovery,
-                          validator: _validateOptionalHttpUrl,
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-                      AppSwitchTile(
-                        value: _enableSignup,
-                        onChanged: (value) =>
-                            setState(() => _enableSignup = value),
-                        title: Text(context.l10n.allowProviderSignup),
-                        subtitle: Text(
-                          context.l10n.allowProviderSignupDescription,
-                        ),
-                      ),
-                      AppSwitchTile(
-                        value: _signupNeedReview,
-                        onChanged: _enableSignup
-                            ? (value) =>
-                                  setState(() => _signupNeedReview = value)
-                            : null,
-                        title: Text(context.l10n.signupRequiresReview),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              _SettingsDialogActions(
-                confirmLabel: context.l10n.saveInstance,
-                onCancel: () => Navigator.pop(context),
-                onConfirm: _save,
-              ),
-            ],
+    return _SettingsEditorFrame(
+      formKey: _formKey,
+      icon: Icons.login_rounded,
+      title: widget.initialName == null
+          ? context.l10n.addExternalLogin
+          : context.l10n.editExternalLogin,
+      subtitle: context.l10n.externalLoginEditorDescription,
+      onClose: _finish,
+      onConfirm: _save,
+      child: Column(
+        children: [
+          AppTextField(
+            controller: _name,
+            label: context.l10n.instanceName,
+            helperText: context.l10n.instanceNameFormatHint,
+            prefixIcon: Icons.badge_outlined,
+            validator: _validateProviderName,
+            onChanged: (_) => setState(() {}),
+            autocorrect: false,
+            smartDashesType: SmartDashesType.disabled,
+            smartQuotesType: SmartQuotesType.disabled,
           ),
-        ),
+          const SizedBox(height: 12),
+          AppSelect<String>(
+            value: _type,
+            label: context.l10n.providerType,
+            prefixIcon: Icons.account_tree_outlined,
+            options: {
+              for (final type in _oauth2ProviderTypes)
+                _oauth2ProviderTypeLabels[type] ?? type: type,
+            },
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() {
+                _type = value;
+                if (widget.initialName == null &&
+                    (_name.text.trim().isEmpty ||
+                        _oauth2ProviderTypes.contains(_name.text.trim()))) {
+                  _name.text = value;
+                }
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+          if (_type == 'apple') ...[
+            _oauthTextField(
+              _appleWebClientId,
+              'Apple Services ID',
+              Icons.language_outlined,
+              onChanged: (_) => setState(() {}),
+              hintText: 'org.example.app.web',
+            ),
+            const SizedBox(height: 12),
+            _oauthSecretField(
+              _appleWebClientSecret,
+              'Apple Services ID Secret',
+              _canPreserveAppleWebClientSecret,
+              required: false,
+            ),
+            const SizedBox(height: 12),
+            _oauthTextField(
+              _appleNativeClientId,
+              'Apple App ID (Bundle ID)',
+              Icons.phone_iphone_outlined,
+              onChanged: (_) => setState(() {}),
+              hintText: 'org.example.app',
+            ),
+            const SizedBox(height: 12),
+            _oauthSecretField(
+              _appleNativeClientSecret,
+              'Apple App ID Secret',
+              _canPreserveAppleNativeClientSecret,
+              required: false,
+            ),
+          ] else ...[
+            _oauthTextField(
+              _clientId,
+              'Client ID',
+              Icons.key_outlined,
+              required: true,
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+            _oauthSecretField(
+              _clientSecret,
+              'Client Secret',
+              _canPreserveClientSecret,
+            ),
+          ],
+          if (_type == 'microsoft') ...[
+            const SizedBox(height: 12),
+            _oauthTextField(
+              _tenant,
+              'Microsoft Tenant',
+              Icons.domain_outlined,
+              required: true,
+              hintText: 'common',
+            ),
+          ],
+          const SizedBox(height: 12),
+          if (_type == 'logto') ...[
+            const SizedBox(height: 12),
+            _oauthTextField(
+              _endpoint,
+              'Logto Endpoint',
+              Icons.hub_outlined,
+              required: true,
+              hintText: 'https://auth.example.com',
+              validator: _validateHttpUrl,
+            ),
+          ],
+          if (_type == 'feishu') ...[
+            const SizedBox(height: 12),
+            _oauthTextField(
+              _endpoint,
+              'Feishu Endpoint',
+              Icons.hub_outlined,
+              hintText: 'https://open.feishu.cn',
+              validator: _validateOptionalHttpUrl,
+            ),
+          ],
+          if (_type == 'oidc' || _type == 'casdoor') ...[
+            const SizedBox(height: 12),
+            _oauthTextField(
+              _issuer,
+              'Issuer',
+              Icons.verified_outlined,
+              required: true,
+              hintText: 'https://issuer.example.com',
+              validator: _validateHttpUrl,
+            ),
+            const SizedBox(height: 12),
+            _oauthTextField(
+              _authUrl,
+              context.l10n.authorizationEndpoint,
+              Icons.open_in_browser_rounded,
+              hintText: context.l10n.emptyUsesOidcDiscovery,
+              validator: _validateOptionalHttpUrl,
+            ),
+            const SizedBox(height: 12),
+            _oauthTextField(
+              _tokenUrl,
+              context.l10n.tokenEndpoint,
+              Icons.token_outlined,
+              hintText: context.l10n.emptyUsesOidcDiscovery,
+              validator: _validateOptionalHttpUrl,
+            ),
+            const SizedBox(height: 12),
+            _oauthTextField(
+              _userinfoUrl,
+              context.l10n.userInfoEndpoint,
+              Icons.person_search_outlined,
+              hintText: context.l10n.emptyUsesOidcDiscovery,
+              validator: _validateOptionalHttpUrl,
+            ),
+            const SizedBox(height: 12),
+            _oauthTextField(
+              _jwksUrl,
+              context.l10n.jwksEndpoint,
+              Icons.security_rounded,
+              hintText: context.l10n.emptyUsesOidcDiscovery,
+              validator: _validateOptionalHttpUrl,
+            ),
+          ],
+          const SizedBox(height: 8),
+          AppSwitchTile(
+            value: _enableSignup,
+            onChanged: (value) => setState(() => _enableSignup = value),
+            title: Text(context.l10n.allowProviderSignup),
+            subtitle: Text(context.l10n.allowProviderSignupDescription),
+          ),
+          AppSwitchTile(
+            value: _signupNeedReview,
+            onChanged: _enableSignup
+                ? (value) => setState(() => _signupNeedReview = value)
+                : null,
+            title: Text(context.l10n.signupRequiresReview),
+          ),
+        ],
       ),
     );
   }
@@ -2987,6 +3203,9 @@ class _OAuth2ProviderEditorSheetState
       _appleNativeClientId.text.trim() == _initialAppleNativeClientId;
 
   void _save() {
+    if (!mounted || _closing || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final config = <String, dynamic>{};
     if (_type == 'apple') {
@@ -3029,8 +3248,7 @@ class _OAuth2ProviderEditorSheetState
         if (entry.value.isNotEmpty) config[entry.key] = entry.value;
       }
     }
-    Navigator.pop(
-      context,
+    _finish(
       _OAuth2ProviderEditResult(_name.text.trim(), {
         'enableSignup': _enableSignup,
         'signupNeedReview': _enableSignup && _signupNeedReview,

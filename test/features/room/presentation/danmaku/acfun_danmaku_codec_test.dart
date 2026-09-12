@@ -4,6 +4,32 @@ import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart'
 
 void main() {
   group('decodeAcFunDanmakuDocument', () {
+    test('invalid numeric fields do not discard valid sibling comments', () {
+      final items = decodeAcFunDanmakuDocument('''{"comments":[
+        {"text":"before","positionMs":0},
+        {"text":"overflow position","positionMs":1e999},
+        {"text":"invalid optional fields","positionMs":1000,"mode":1e999,"size":-1e999},
+        {"text":"after","positionMs":2000}
+      ]}''');
+      expect(items!.map((item) => item.text), [
+        'before',
+        'invalid optional fields',
+        'after',
+      ]);
+      expect(items[1].type, DanmakuType.floating);
+      expect(items[1].fontSize, 25);
+    });
+
+    test('rejects timestamps that cannot form a portable duration', () {
+      final items = decodeAcFunDanmakuDocument('''{"comments":[
+        {"text":"native overflow","positionMs":"9223372036854775807"},
+        {"text":"web precision loss","positionMs":9007199254740991},
+        {"text":"normal","positionMs":"3600000"}
+      ]}''');
+      expect(items!.map((item) => item.text), ['normal']);
+      expect(items.single.startTime, const Duration(hours: 1));
+    });
+
     test('maps timing, color, size and fixed modes', () {
       final items = decodeAcFunDanmakuDocument('''
         {

@@ -16,6 +16,12 @@ final class DependencyScope<T extends Object> extends InheritedWidget {
     return scope?.value ?? DependencyRegistryScope.read<T>(context);
   }
 
+  static T? maybeOf<T extends Object>(BuildContext context) {
+    final scope = context
+        .dependOnInheritedWidgetOfExactType<DependencyScope<T>>();
+    return scope?.value ?? DependencyRegistryScope.maybeOf<T>(context);
+  }
+
   static T? maybeRead<T extends Object>(BuildContext context) {
     final scope = context.getInheritedWidgetOfExactType<DependencyScope<T>>();
     return scope?.value ?? DependencyRegistryScope.maybeRead<T>(context);
@@ -45,6 +51,12 @@ final class DependencyRegistryScope extends InheritedWidget {
     final scope = context
         .getInheritedWidgetOfExactType<DependencyRegistryScope>();
     return scope?._lookup<T>() ?? _missing<T>();
+  }
+
+  static T? maybeOf<T extends Object>(BuildContext context) {
+    final scope = context
+        .dependOnInheritedWidgetOfExactType<DependencyRegistryScope>();
+    return scope?._lookup<T>();
   }
 
   static T? maybeRead<T extends Object>(BuildContext context) {

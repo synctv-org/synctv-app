@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/core/media/local_image_upload.dart';
 import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
@@ -207,6 +208,16 @@ void main() {
     await SyncTvService.init();
     await SyncTvService.setBaseUrl(baseUrl);
     await _loginRoot(rootPassword);
+    await SyncTvService.runtimeUpdateSettingInSection(
+      'user',
+      'enablePasswordSignup',
+      true,
+    );
+    await SyncTvService.runtimeUpdateSettingInSection(
+      'user',
+      'passwordSignupNeedReview',
+      false,
+    );
 
     await _clearExistingShowcase();
     final taxonomy = await _createTaxonomy();
@@ -325,7 +336,7 @@ Future<void> _createUsers() async {
       email: '',
       password: _password,
     );
-    if (!result.authenticated) {
+    if (result is! Authenticated) {
       throw StateError('OPAQUE registration did not authenticate $username');
     }
     await SyncTvService.logout();
@@ -490,7 +501,7 @@ Future<void> _login(String username, String password) async {
     loginSessionId: login.sessionId,
     password: password,
   );
-  if (!result.authenticated) {
+  if (result is! Authenticated) {
     throw StateError('OPAQUE login did not authenticate $username');
   }
 }
@@ -501,7 +512,7 @@ Future<void> _loginRoot(String password) async {
     loginSessionId: login.sessionId,
     password: password,
   );
-  if (!result.authenticated) {
+  if (result is! Authenticated) {
     throw StateError('Direct password login did not authenticate root');
   }
 }

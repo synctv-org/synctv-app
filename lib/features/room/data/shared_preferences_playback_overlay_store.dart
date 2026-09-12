@@ -12,8 +12,8 @@ final class SharedPreferencesPlaybackOverlayStore
   @override
   Future<PlaybackOverlayPreferenceValues> load() async {
     final preferences = await SharedPreferences.getInstance();
-    final raw = preferences.getString(_key);
-    if (raw == null || raw.isEmpty) {
+    final raw = preferences.get(_key);
+    if (raw is! String || raw.isEmpty) {
       return const PlaybackOverlayPreferenceValues();
     }
     try {

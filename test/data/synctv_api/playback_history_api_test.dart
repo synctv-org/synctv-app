@@ -12,7 +12,7 @@ void main() {
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
+        baseUrl: 'https://example.test',
         session: SyncTvSession()..updateAccountTokens(accessToken: 'token'),
         httpClient: MockClient((request) async {
           requests.add(request);

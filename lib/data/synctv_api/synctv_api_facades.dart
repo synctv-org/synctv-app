@@ -296,6 +296,7 @@ class SyncTvAuthApi {
   Future<client.RefreshTokenResponse> refreshToken(
     client.RefreshTokenRequest request,
   ) async {
+    final sessionGeneration = _api.session.generation;
     final response = await _api._sendWithoutRefresh(
       'POST',
       '/api/auth/refresh',
@@ -303,7 +304,13 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response, response.accessToken, response.refreshToken);
+    _api.session.ensureCurrent(sessionGeneration);
+    _api._storeLogin(
+      response,
+      response.accessToken,
+      response.refreshToken,
+      isRefresh: true,
+    );
     return response;
   }
 }
@@ -315,6 +322,7 @@ class SyncTvUserApi {
 
   Future<client.LogoutResponse> logout(client.LogoutRequest request) async {
     final generation = _api._requestGeneration();
+    final sessionGeneration = _api.session.generation;
     var response = client.LogoutResponse();
     if (_api.session.identity
         case AccountSessionIdentity(accessToken: final token)
@@ -330,7 +338,7 @@ class SyncTvUserApi {
         debugPrint('Logout request failed before local session clear: $e');
       }
     }
-    _api._clearSessionForGeneration(generation);
+    _api._clearSessionForGeneration(generation, sessionGeneration);
     return response;
   }
 
@@ -661,13 +669,14 @@ class SyncTvUserApi {
     client.CloseAccountRequest request,
   ) async {
     final generation = _api._requestGeneration();
+    final sessionGeneration = _api.session.generation;
     final response = await _api._send(
       'POST',
       '/api/user/account-closure',
       client.CloseAccountResponse.create,
       body: request,
     );
-    _api._clearSessionForGeneration(generation);
+    _api._clearSessionForGeneration(generation, sessionGeneration);
     return response;
   }
 

@@ -75,6 +75,12 @@ void main() {
     await _pumpDialog(tester, gateway);
 
     expect(find.byKey(const Key('discovery-add-selected')), findsNothing);
+    final urlInput = tester.widget<EditableText>(
+      find.byType(EditableText).first,
+    );
+    expect(urlInput.keyboardType, TextInputType.multiline);
+    expect(urlInput.textInputAction, TextInputAction.newline);
+    expect(urlInput.enableSuggestions, isFalse);
     await tester.enterText(
       find.byType(EditableText).first,
       'media.example.test/one.mp4\nhttps://media.example.test/two.m3u8',
@@ -117,6 +123,13 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Selected 1'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('discovery-item-direct-0')),
+        matching: find.text('Custom name'),
+      ),
+      findsOneWidget,
+    );
 
     await _tapVisible(tester, find.byKey(const Key('discovery-add-selected')));
     await tester.pump();
@@ -130,6 +143,35 @@ void main() {
       source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_ONLY,
     );
     expect(gateway.addedNames.single, 'Custom name');
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('single direct-link preview follows the editable saved name', (
+    tester,
+  ) async {
+    final gateway = _PrepareGateway();
+    await _pumpDialog(tester, gateway);
+    await tester.enterText(
+      find.byType(EditableText).first,
+      'https://media.example.test/video.mp4',
+    );
+    await tester.enterText(find.byType(EditableText).at(1), 'Initial title');
+    await _tapVisible(tester, find.byKey(const Key('direct-url-preview')));
+    await tester.pumpAndSettle();
+    final entry = find.byKey(const ValueKey('discovery-item-direct-0'));
+    expect(
+      find.descendant(of: entry, matching: find.text('Initial title')),
+      findsOneWidget,
+    );
+    await tester.enterText(find.byType(EditableText).at(1), 'Updated title');
+    await tester.pump();
+    expect(
+      find.descendant(of: entry, matching: find.text('Updated title')),
+      findsOneWidget,
+    );
+    await _tapVisible(tester, find.byKey(const Key('discovery-add-selected')));
+    await tester.pump();
+    expect(gateway.addedNames.single, 'Updated title');
     await tester.pump(const Duration(seconds: 4));
   });
 
@@ -241,6 +283,49 @@ void main() {
     expect(tester.widget<FilledButton>(submit).onPressed, isNull);
     expect(find.text('Live proxy preview'), findsNothing);
   });
+
+  for (final (protocol, invalid, valid) in [
+    ('RTMP', 'invalid-source', 'rtmp://upstream.example.test/live'),
+    (
+      'RTSP',
+      'rtmp://upstream.example.test/live',
+      'rtsp://upstream.example.test/live',
+    ),
+    (
+      'HTTP-FLV',
+      'https://upstream.example.test/live?file=.flv',
+      'https://upstream.example.test/live.flv?token=test',
+    ),
+    ('WHEP', 'https:///live', 'https://upstream.example.test/whep'),
+  ]) {
+    testWidgets(
+      '$protocol invalid URL is local and recovers after correction',
+      (tester) async {
+        final gateway = _PrepareGateway();
+        await _pumpDialog(tester, gateway);
+        await _selectSource(tester, 2);
+        await _tapVisible(tester, find.text(protocol));
+        await tester.enterText(find.byType(EditableText).first, invalid);
+        await _tapVisible(tester, find.byKey(const Key('live-proxy-preview')));
+        await tester.pumpAndSettle();
+        expect(gateway.liveIntents, isEmpty);
+        expect(gateway.addedSources, isEmpty);
+        final field = find.byWidgetPredicate(
+          (widget) =>
+              widget is AppTextField && widget.label == 'Source address',
+        );
+        expect(tester.widget<AppTextField>(field).errorText, isNotNull);
+        expect(find.byType(AddMediaDialog), findsOneWidget);
+        await tester.enterText(find.byType(EditableText).first, valid);
+        await tester.pump();
+        expect(tester.widget<AppTextField>(field).errorText, isNull);
+        await _tapVisible(tester, find.byKey(const Key('live-proxy-preview')));
+        await tester.pumpAndSettle();
+        expect(gateway.liveIntents, hasLength(1));
+        expect(find.text('Live proxy preview'), findsOneWidget);
+      },
+    );
+  }
 
   testWidgets('WHEP live proxy preserves an optional authorization header', (
     tester,

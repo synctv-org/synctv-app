@@ -5,6 +5,55 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/features/media_p2p/domain/p2p_transfer_protocol.dart';
 
 void main() {
+  test('invalid transfer reaches an already waiting caller without uncaught errors', () async {
+    final transfer = P2pIncomingTransfer()..begin(2);
+    final result = expectLater(
+      transfer.wait(
+        idleTimeout: const Duration(seconds: 1),
+        completionBudget: const Duration(seconds: 2),
+      ),
+      throwsFormatException,
+    );
+    await Future<void>.delayed(Duration.zero);
+    transfer.completeInvalid();
+    await result;
+  });
+
+  test(
+    'invalid transfer can be observed after a delayed subscription',
+    () async {
+      final transfer = P2pIncomingTransfer()..begin(2);
+      transfer.completeInvalid();
+      await Future<void>.delayed(Duration.zero);
+      await expectLater(
+        transfer.wait(
+          idleTimeout: const Duration(seconds: 1),
+          completionBudget: const Duration(seconds: 2),
+        ),
+        throwsFormatException,
+      );
+    },
+  );
+
+  for (final repeated in [false, true]) {
+    test('invalid begin fails transfer: repeated=$repeated', () async {
+      final transfer = P2pIncomingTransfer();
+      if (repeated) {
+        transfer.begin(2);
+        transfer.add(Uint8List.fromList([1]), 16);
+      }
+      transfer.begin(repeated ? 1 : -1);
+      expect(transfer.isCompleted, isTrue);
+      await expectLater(
+        transfer.wait(
+          idleTimeout: const Duration(milliseconds: 20),
+          completionBudget: const Duration(seconds: 1),
+        ),
+        throwsFormatException,
+      );
+    });
+  }
+
   test('incoming transfer accepts matching length', () async {
     final bytes = Uint8List.fromList([1, 2, 3, 4]);
     final transfer = P2pIncomingTransfer()

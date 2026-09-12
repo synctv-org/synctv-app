@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/contracts/account_models.dart';
 import 'package:synctv_app/core/network/server_endpoint_identity.dart';
+import 'package:synctv_app/core/async/async_operation_coordinator.dart';
 
 class SyncTvServerProfile {
   SyncTvServerProfile({
@@ -62,6 +63,7 @@ class SyncTvServerProfile {
     if (rawEndpoint.isEmpty) return null;
     try {
       final endpoint = ServerEndpointIdentity.normalize(rawEndpoint);
+      final rawSession = json['session'];
       return SyncTvServerProfile(
         endpoint: endpoint,
         declaredServerId: json['declared_server_id']?.toString().trim() ?? '',
@@ -70,7 +72,7 @@ class SyncTvServerProfile {
         allowInsecureTls: json['allow_insecure_tls'] == true,
         lastSeenAt: DateTime.tryParse(json['last_seen_at']?.toString() ?? ''),
         sessionData: SyncTvServerSessionData.fromJson(
-          (json['session'] as Map?) ?? const {},
+          rawSession is Map ? rawSession : const {},
         ),
       );
     } on FormatException {
@@ -80,10 +82,14 @@ class SyncTvServerProfile {
 }
 
 class SyncTvSessionStore {
-  SyncTvSessionStore(this.session, {String? builtInServerUrl})
-    : _builtInServerUrl = _normalizeOptionalBaseUrl(
-        builtInServerUrl ?? SyncTvSessionStore.builtInServerUrl,
-      ) {
+  SyncTvSessionStore(
+    this.session, {
+    String? builtInServerUrl,
+    Future<SharedPreferences> Function()? preferencesLoader,
+  }) : _preferencesLoader = preferencesLoader ?? SharedPreferences.getInstance,
+       _builtInServerUrl = builtInServerUrl == null
+           ? SyncTvSessionStore.builtInServerUrl
+           : _normalizeOptionalBaseUrl(builtInServerUrl) {
     baseUrl = _builtInServerUrl;
   }
 
@@ -105,7 +111,7 @@ class SyncTvSessionStore {
     required bool debugMode,
   }) {
     final value = configuredUrl.trim();
-    if (value.isNotEmpty) return ServerEndpointIdentity.normalize(value);
+    if (value.isNotEmpty) return ServerEndpointIdentity.fromUserInput(value);
     return debugMode ? fallbackClientBaseUrl : '';
   }
 
@@ -116,6 +122,11 @@ class SyncTvSessionStore {
       hasBuiltInServer ? builtInServerUrl : fallbackClientBaseUrl;
 
   final SyncTvSession session;
+  final Future<SharedPreferences> Function() _preferencesLoader;
+  final _persistence = SerialAsyncOperationCoordinator();
+  int _loadRevision = 0;
+  int _mutationRevision = 0;
+  int _pendingSaves = 0;
   final String _builtInServerUrl;
 
   late String baseUrl;
@@ -130,10 +141,24 @@ class SyncTvSessionStore {
       _serverByEndpoint(activeServerEndpoint);
 
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    servers = _decodeServers(prefs.getString(serversKey));
+    final revision = ++_loadRevision;
+    final mutationRevision = _mutationRevision;
+    final identity = session.identity;
+    final sessionGeneration = session.generation;
+    // Preferences may still contain an older or partially written session.
+    if (_pendingSaves > 0) return;
+    final prefs = await _preferencesLoader();
+    if (revision != _loadRevision ||
+        mutationRevision != _mutationRevision ||
+        sessionGeneration != session.generation ||
+        !identical(identity, session.identity)) {
+      return;
+    }
+    final rawServers = prefs.get(serversKey);
+    final rawActiveServer = prefs.get(activeServerKey);
+    servers = _decodeServers(rawServers is String ? rawServers : null);
     activeServerEndpoint = _normalizeStoredEndpoint(
-      prefs.getString(activeServerKey),
+      rawActiveServer is String ? rawActiveServer : null,
     );
     var changed = _reconcileBuiltInServer();
 
@@ -147,7 +172,16 @@ class SyncTvSessionStore {
 
     baseUrl = activeServer?.endpoint ?? _builtInServerUrl;
     _loadSessionFromActiveServer();
-    if (changed) await _persistServers(prefs);
+    if (changed) {
+      _pendingSaves++;
+      try {
+        await _persistServers(prefs);
+      } catch (error) {
+        debugPrint('Failed to persist restored server preferences: $error');
+      } finally {
+        _pendingSaves--;
+      }
+    }
   }
 
   Future<SyncTvServerProfile> forceSingleServer(String endpoint) async {
@@ -166,8 +200,7 @@ class SyncTvSessionStore {
     activeServerEndpoint = normalizedEndpoint;
     baseUrl = normalizedEndpoint;
     _loadProfileSession(profile);
-    final prefs = await SharedPreferences.getInstance();
-    await _persistServers(prefs);
+    await _persistCurrentState();
     return profile;
   }
 
@@ -215,8 +248,7 @@ class SyncTvSessionStore {
       _loadProfileSession(profile);
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    await _persistServers(prefs);
+    await _persistCurrentState();
     return profile;
   }
 
@@ -227,8 +259,7 @@ class SyncTvSessionStore {
       activeServerEndpoint = null;
       baseUrl = _builtInServerUrl;
       _clearInMemorySession();
-      final prefs = await SharedPreferences.getInstance();
-      await _persistServers(prefs);
+      await _persistCurrentState();
       return;
     }
 
@@ -242,8 +273,7 @@ class SyncTvSessionStore {
     activeServerEndpoint = endpoint;
     baseUrl = endpoint;
     _loadProfileSession(target);
-    final prefs = await SharedPreferences.getInstance();
-    await _persistServers(prefs);
+    await _persistCurrentState();
   }
 
   Future<void> activateServer(String endpoint) async {
@@ -257,8 +287,7 @@ class SyncTvSessionStore {
     activeServerEndpoint = target.endpoint;
     baseUrl = target.endpoint;
     _loadProfileSession(target);
-    final prefs = await SharedPreferences.getInstance();
-    await _persistServers(prefs);
+    await _persistCurrentState();
   }
 
   Future<void> removeServer(String endpoint) async {
@@ -274,14 +303,12 @@ class SyncTvSessionStore {
       baseUrl = next?.endpoint ?? _builtInServerUrl;
       next == null ? _clearInMemorySession() : _loadProfileSession(next);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await _persistServers(prefs);
+    await _persistCurrentState();
   }
 
   Future<void> persistSession() async {
     _captureSessionToActiveServer();
-    final prefs = await SharedPreferences.getInstance();
-    await _persistServers(prefs);
+    await _persistCurrentState();
   }
 
   Future<void> clearSessionAndPersist() async {
@@ -339,7 +366,7 @@ class SyncTvSessionStore {
 
   static String _normalizeOptionalBaseUrl(String value) {
     final trimmed = value.trim();
-    return trimmed.isEmpty ? '' : ServerEndpointIdentity.normalize(trimmed);
+    return trimmed.isEmpty ? '' : ServerEndpointIdentity.fromUserInput(trimmed);
   }
 
   static String? _normalizeStoredEndpoint(String? value) {
@@ -370,17 +397,36 @@ class SyncTvSessionStore {
     }
   }
 
-  Future<void> _persistServers(SharedPreferences prefs) async {
-    await prefs.setString(
-      serversKey,
-      jsonEncode(servers.map((server) => server.toJson()).toList()),
+  Future<void> _persistCurrentState() async {
+    _mutationRevision++;
+    _pendingSaves++;
+    try {
+      final prefs = await _preferencesLoader();
+      await _persistServers(prefs);
+    } finally {
+      _pendingSaves--;
+    }
+  }
+
+  Future<void> _persistServers(SharedPreferences prefs) {
+    final encoded = jsonEncode(
+      servers.map((server) => server.toJson()).toList(),
     );
     final active = activeServerEndpoint;
-    if (active == null) {
-      await prefs.remove(activeServerKey);
-    } else {
-      await prefs.setString(activeServerKey, active);
-    }
+    return _persistence.run(() async {
+      if (!await prefs.setString(serversKey, encoded)) {
+        throw StateError('Could not persist server sessions');
+      }
+      if (active == null) {
+        if (!await prefs.remove(activeServerKey)) {
+          throw StateError('Could not clear the active server preference');
+        }
+      } else {
+        if (!await prefs.setString(activeServerKey, active)) {
+          throw StateError('Could not persist the active server preference');
+        }
+      }
+    });
   }
 
   void _loadSessionFromActiveServer() {
@@ -485,13 +531,13 @@ sealed class SyncTvServerSessionData {
   factory SyncTvServerSessionData.fromJson(Map<dynamic, dynamic> json) {
     return switch (json['kind']?.toString()) {
       'account' => SyncTvServerSessionData.account(
-        accessToken: json['access_token']?.toString(),
-        refreshToken: json['refresh_token']?.toString(),
+        accessToken: _storedSessionString(json['access_token']),
+        refreshToken: _storedSessionString(json['refresh_token']),
       ),
       'guest' => SyncTvServerSessionData.guest(
-        accessToken: json['access_token']?.toString() ?? '',
-        roomId: json['room_id']?.toString() ?? '',
-        displayName: json['display_name']?.toString() ?? '',
+        accessToken: _storedSessionString(json['access_token']) ?? '',
+        roomId: _storedSessionString(json['room_id']) ?? '',
+        displayName: _storedSessionString(json['display_name']) ?? '',
       ),
       _ => const AnonymousServerSessionData(),
     };
@@ -545,3 +591,5 @@ String? _nonEmptySessionValue(String? value) {
   final trimmed = value?.trim() ?? '';
   return trimmed.isEmpty ? null : trimmed;
 }
+
+String? _storedSessionString(Object? value) => value is String ? value : null;

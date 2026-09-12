@@ -79,6 +79,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
   int _page = 1;
   bool _hasMore = false;
   bool _loading = false;
+  int _loadGeneration = 0;
   provider_common.DiscoveredSource? _listSource;
   source_enum.PlaybackProxyMode _proxyMode =
       source_enum.PlaybackProxyMode.PLAYBACK_PROXY_MODE_AUTO;
@@ -97,9 +98,22 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
   @override
   void didUpdateWidget(covariant SynologyAddMediaForm oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if ((_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) &&
-        widget.binds.isNotEmpty) {
-      _bind = widget.binds.first;
+    if (_bind == null || !widget.binds.any((bind) => bind.id == _bind!.id)) {
+      ++_loadGeneration;
+      _loading = false;
+      _bind = widget.binds.firstOrNull;
+      _path = '';
+      _page = 1;
+      _files = const [];
+      _videos = const [];
+      _libraries = const [];
+      _library = null;
+      _tvShow = null;
+      if (_bind?.videoStationAvailable != true) {
+        _mode = _SynologyBrowseMode.files;
+      }
+      _listSource = null;
+      _selection.clear();
       WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     }
   }
@@ -503,7 +517,8 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
 
   Future<void> _loadFiles() async {
     final bind = _bind;
-    if (bind == null) return;
+    if (!mounted || bind == null) return;
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _listSource = null;
@@ -526,22 +541,27 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
                 search: _searchController.text,
                 instanceName: bind.providerInstanceName,
               ));
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _files = page.items;
         _hasMore = page.hasMore;
         _listSource = page.source;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted && generation == _loadGeneration) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loading = false);
+      }
     }
   }
 
   Future<void> _loadVideoMode() async {
     final bind = _bind;
-    if (bind == null || !bind.videoStationAvailable) return;
+    if (!mounted || bind == null || !bind.videoStationAvailable) return;
+    final generation = ++_loadGeneration;
     if (_libraries.isEmpty) {
       setState(() {
         _loading = true;
@@ -555,24 +575,29 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
                   bind.serverId,
                   instanceName: bind.providerInstanceName,
                 ));
-        if (!mounted) return;
+        if (!mounted || generation != _loadGeneration) return;
         setState(() {
           _libraries = libraries.where((library) => library.visible).toList();
           _library = _libraries.firstOrNull;
         });
       } catch (error) {
-        if (mounted) AppNotifications.showError(context, '$error');
+        if (mounted && generation == _loadGeneration) {
+          AppNotifications.showError(context, '$error');
+        }
       } finally {
-        if (mounted) setState(() => _loading = false);
+        if (mounted && generation == _loadGeneration) {
+          setState(() => _loading = false);
+        }
       }
     }
-    await _loadVideos();
+    if (mounted && generation == _loadGeneration) await _loadVideos();
   }
 
   Future<void> _loadVideos() async {
     final bind = _bind;
     final library = _library;
-    if (bind == null || library == null) return;
+    if (!mounted || bind == null || library == null) return;
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _listSource = null;
@@ -602,16 +627,20 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
                 search: _searchController.text,
                 instanceName: bind.providerInstanceName,
               ));
-      if (!mounted) return;
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _videos = page.items;
         _hasMore = page.hasMore;
         _listSource = page.source;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted && generation == _loadGeneration) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loading = false);
+      }
     }
   }
 

@@ -8,6 +8,14 @@ class ServerInfo {
   const ServerInfo({required this.serverId, required this.serverName});
 }
 
+enum AuthPolicyHint {
+  passwordReview,
+  emailReview,
+  passkeyReview,
+  emailWhitelist,
+  guestDisabled,
+}
+
 class PublicSettingsInfo {
   final bool roomCreationEnabled;
   final int maxRoomsPerUser;
@@ -51,22 +59,22 @@ class PublicSettingsInfo {
     required this.rtmpAdvertiseAddress,
   });
 
-  List<String> get authPolicyHints {
-    final hints = <String>[];
+  List<AuthPolicyHint> get authPolicyHints {
+    final hints = <AuthPolicyHint>[];
     if (passwordSignupNeedReview && enablePasswordSignup) {
-      hints.add('密码注册需要管理员审核');
+      hints.add(AuthPolicyHint.passwordReview);
     }
     if (emailSignupNeedReview && enableEmailSignup) {
-      hints.add('邮箱注册需要管理员审核');
+      hints.add(AuthPolicyHint.emailReview);
     }
     if (webauthnSignupNeedReview && enableWebauthnSignup) {
-      hints.add('Passkey 注册需要管理员审核');
+      hints.add(AuthPolicyHint.passkeyReview);
     }
     if (emailWhitelistEnabled) {
-      hints.add('服务器启用了邮箱白名单，注册邮箱需要在白名单内');
+      hints.add(AuthPolicyHint.emailWhitelist);
     }
     if (!enableGuest) {
-      hints.add('访客访问未启用');
+      hints.add(AuthPolicyHint.guestDisabled);
     }
     return List.unmodifiable(hints);
   }

@@ -1,6 +1,5 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/contracts/provider_models.dart';
-import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/src/generated/proto/providers/alist.pb.dart'
     as alist;
@@ -515,17 +514,7 @@ class SyncTvProviderDomainService {
     return response.binds.map(_fnosBindFromProto).toList();
   }
 
-  Future<List<FnosBindInfo>> getAllFnosBindInfos() async {
-    final instances = await _availableInstanceNames('fnos');
-    final lists = await Future.wait(
-      _withDefaultInstance(instances)
-          .map((instanceName) => getFnosBindInfos(instanceName: instanceName)),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<FnosBindInfo>> getAllFnosBindInfos() => getFnosBindInfos();
 
   Future<FnosFileListPage> listFnosFiles(
     String serverId,
@@ -732,17 +721,7 @@ class SyncTvProviderDomainService {
     return response.binds.map(_qnapBindFromProto).toList();
   }
 
-  Future<List<QnapBindInfo>> getAllQnapBindInfos() async {
-    final instances = await _availableInstanceNames('qnap');
-    final lists = await Future.wait(
-      _withDefaultInstance(instances)
-          .map((instanceName) => getQnapBindInfos(instanceName: instanceName)),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<QnapBindInfo>> getAllQnapBindInfos() => getQnapBindInfos();
 
   Future<QnapCapabilitiesInfo> getQnapCapabilities(
     String serverId, {
@@ -934,18 +913,8 @@ class SyncTvProviderDomainService {
         .toList();
   }
 
-  Future<List<NextcloudBindInfo>> getAllNextcloudBindInfos() async {
-    final instances = await _availableInstanceNames('nextcloud');
-    final lists = await Future.wait(
-      _withDefaultInstance(instances).map(
-        (instanceName) => getNextcloudBindInfos(instanceName: instanceName),
-      ),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<NextcloudBindInfo>> getAllNextcloudBindInfos() =>
+      getNextcloudBindInfos();
 
   Future<NextcloudFileListPage> listNextcloudFiles(
     String serverId,
@@ -1107,18 +1076,8 @@ class SyncTvProviderDomainService {
         .toList();
   }
 
-  Future<List<SeafileBindInfo>> getAllSeafileBindInfos() async {
-    final instances = await _availableInstanceNames('seafile');
-    final lists = await Future.wait(
-      _withDefaultInstance(
-        instances,
-      ).map((instanceName) => getSeafileBindInfos(instanceName: instanceName)),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<SeafileBindInfo>> getAllSeafileBindInfos() =>
+      getSeafileBindInfos();
 
   Future<SeafileFileListPage> listSeafileRepositories(
     String serverId, {
@@ -1278,17 +1237,8 @@ class SyncTvProviderDomainService {
         .toList();
   }
 
-  Future<List<TrueNasBindInfo>> getAllTrueNasBindInfos() async {
-    final instances = await _availableInstanceNames('truenas');
-    final lists = await Future.wait(
-      _withDefaultInstance(instances)
-          .map((name) => getTrueNasBindInfos(instanceName: name)),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<TrueNasBindInfo>> getAllTrueNasBindInfos() =>
+      getTrueNasBindInfos();
 
   Future<TrueNasFileListPage> listTrueNasFiles(
     String serverId,
@@ -1354,18 +1304,8 @@ class SyncTvProviderDomainService {
     return response.binds.map(_synologyBindFromProto).toList();
   }
 
-  Future<List<SynologyBindInfo>> getAllSynologyBindInfos() async {
-    final instances = await _availableInstanceNames('synology');
-    final lists = await Future.wait(
-      _withDefaultInstance(
-        instances,
-      ).map((instanceName) => getSynologyBindInfos(instanceName: instanceName)),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<SynologyBindInfo>> getAllSynologyBindInfos() =>
+      getSynologyBindInfos();
 
   Future<SynologyFileListPage> listSynologyFiles(
     String serverId,
@@ -1569,18 +1509,7 @@ class SyncTvProviderDomainService {
         .toList();
   }
 
-  Future<List<TwitchBindInfo>> getAllTwitchBindInfos() async {
-    final instances = await _availableInstanceNames('twitch');
-    final lists = await Future.wait(
-      _withDefaultInstance(
-        instances,
-      ).map((instanceName) => getTwitchBindInfos(instanceName: instanceName)),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<TwitchBindInfo>> getAllTwitchBindInfos() => getTwitchBindInfos();
 
   Future<List<YoutubeBindInfo>> getYoutubeBindInfos({
     String instanceName = '',
@@ -1604,18 +1533,8 @@ class SyncTvProviderDomainService {
         .toList();
   }
 
-  Future<List<YoutubeBindInfo>> getAllYoutubeBindInfos() async {
-    final instances = await _availableInstanceNames('youtube');
-    final lists = await Future.wait(
-      _withDefaultInstance(
-        instances,
-      ).map((instanceName) => getYoutubeBindInfos(instanceName: instanceName)),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<YoutubeBindInfo>> getAllYoutubeBindInfos() =>
+      getYoutubeBindInfos();
 
   Future<List<DouyinBindInfo>> getDouyinBindInfos({
     String instanceName = '',
@@ -1637,18 +1556,7 @@ class SyncTvProviderDomainService {
         .toList();
   }
 
-  Future<List<DouyinBindInfo>> getAllDouyinBindInfos() async {
-    final instances = await _availableInstanceNames('douyin');
-    final lists = await Future.wait(
-      _withDefaultInstance(
-        instances,
-      ).map((instanceName) => getDouyinBindInfos(instanceName: instanceName)),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<DouyinBindInfo>> getAllDouyinBindInfos() => getDouyinBindInfos();
 
   Future<List<TikTokBindInfo>> getTikTokBindInfos({
     String instanceName = '',
@@ -1670,18 +1578,7 @@ class SyncTvProviderDomainService {
         .toList();
   }
 
-  Future<List<TikTokBindInfo>> getAllTikTokBindInfos() async {
-    final instances = await _availableInstanceNames('tiktok');
-    final lists = await Future.wait(
-      _withDefaultInstance(
-        instances,
-      ).map((instanceName) => getTikTokBindInfos(instanceName: instanceName)),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<TikTokBindInfo>> getAllTikTokBindInfos() => getTikTokBindInfos();
 
   Future<void> logoutEmby(String serverId) {
     return _api.embyProvider.logout(emby.LogoutRequest(serverId: serverId));
@@ -2006,18 +1903,7 @@ class SyncTvProviderDomainService {
     return response.binds.map(_alistBindFromProto).toList();
   }
 
-  Future<List<AlistBindInfo>> getAllAlistBindInfos() async {
-    final instances = await _availableInstanceNames('alist');
-    final lists = await Future.wait(
-      _withDefaultInstance(instances).map((instanceName) {
-        return getAlistBindInfos(instanceName: instanceName);
-      }),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<AlistBindInfo>> getAllAlistBindInfos() => getAlistBindInfos();
 
   Future<List<EmbyBindInfo>> getEmbyBindInfos({
     String instanceName = '',
@@ -2048,31 +1934,10 @@ class SyncTvProviderDomainService {
         .toList();
   }
 
-  Future<List<CloudreveBindInfo>> getAllCloudreveBindInfos() async {
-    final instances = await _availableInstanceNames('cloudreve');
-    final lists = await Future.wait(
-      _withDefaultInstance(instances).map(
-        (instanceName) => getCloudreveBindInfos(instanceName: instanceName),
-      ),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<CloudreveBindInfo>> getAllCloudreveBindInfos() =>
+      getCloudreveBindInfos();
 
-  Future<List<EmbyBindInfo>> getAllEmbyBindInfos() async {
-    final instances = await _availableInstanceNames('emby');
-    final lists = await Future.wait(
-      _withDefaultInstance(instances).map((instanceName) {
-        return getEmbyBindInfos(instanceName: instanceName);
-      }),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<EmbyBindInfo>> getAllEmbyBindInfos() => getEmbyBindInfos();
 
   Future<List<BilibiliBindInfo>> getBilibiliBindInfos({
     String instanceName = '',
@@ -2083,18 +1948,8 @@ class SyncTvProviderDomainService {
     return response.binds.map(_bilibiliBindFromProto).toList();
   }
 
-  Future<List<BilibiliBindInfo>> getAllBilibiliBindInfos() async {
-    final instances = await _availableInstanceNames('bilibili');
-    final lists = await Future.wait(
-      _withDefaultInstance(instances).map((instanceName) {
-        return getBilibiliBindInfos(instanceName: instanceName);
-      }),
-    );
-    return _dedupeBy(
-      lists.expand((list) => list),
-      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
-    );
-  }
+  Future<List<BilibiliBindInfo>> getAllBilibiliBindInfos() =>
+      getBilibiliBindInfos();
 
   Future<AlistAccountInfo> getAlistAccount(
     String serverId, {
@@ -2758,38 +2613,5 @@ class SyncTvProviderDomainService {
       description: item.description,
       source: item.source.deepCopy(),
     );
-  }
-
-  Future<List<String>> _availableInstanceNames(String providerType) async {
-    final response = await _api.providerCommon.listAvailableProviderInstances(
-      provider_common.ListAvailableProviderInstancesRequest(
-        providerType: SourceConfigCodec.providerFromString(providerType),
-      ),
-    );
-    final names = <String>[];
-    for (final instance in response.instances) {
-      final trimmed = instance.trim();
-      if (!names.contains(trimmed)) {
-        names.add(trimmed);
-      }
-    }
-    return names;
-  }
-
-  List<String> _withDefaultInstance(List<String> instances) {
-    final names = <String>[''];
-    for (final instance in instances) {
-      if (!names.contains(instance)) names.add(instance);
-    }
-    return names;
-  }
-
-  List<T> _dedupeBy<T>(Iterable<T> values, String Function(T value) keyOf) {
-    final seen = <String>{};
-    final result = <T>[];
-    for (final value in values) {
-      if (seen.add(keyOf(value))) result.add(value);
-    }
-    return result;
   }
 }

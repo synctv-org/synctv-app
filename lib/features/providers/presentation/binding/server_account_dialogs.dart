@@ -1,258 +1,5 @@
 part of 'platform_binding_dialog.dart';
 
-enum _NextcloudLoginMode { browser, appPassword }
-
-class _NextcloudAccountDialog extends StatefulWidget {
-  const _NextcloudAccountDialog({
-    required this.instanceNamesLoader,
-    required this.onSuccess,
-  });
-
-  final Future<List<String>> Function() instanceNamesLoader;
-  final VoidCallback onSuccess;
-
-  @override
-  State<_NextcloudAccountDialog> createState() =>
-      _NextcloudAccountDialogState();
-}
-
-class _NextcloudAccountDialogState extends State<_NextcloudAccountDialog> {
-  final _endpointController = TextEditingController();
-  final _usernameController = TextEditingController();
-  final _appPasswordController = TextEditingController();
-  List<String> _instanceNames = const [''];
-  String _instanceName = '';
-  _NextcloudLoginMode _mode = _NextcloudLoginMode.browser;
-  bool _loadingInstances = true;
-  bool _submitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadInstances();
-  }
-
-  @override
-  void dispose() {
-    _endpointController.dispose();
-    _usernameController.dispose();
-    _appPasswordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadInstances() async {
-    try {
-      final names = await widget.instanceNamesLoader();
-      if (!mounted) return;
-      setState(() {
-        _instanceNames = _mergeInstanceNames(names);
-        _instanceName = _instanceNames.first;
-        _loadingInstances = false;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _loadingInstances = false);
-      AppNotifications.showError(
-        context,
-        context.l10n.loadMediaSourceInstancesFailed('$error'),
-      );
-    }
-  }
-
-  Future<void> _submit() {
-    return switch (_mode) {
-      _NextcloudLoginMode.browser => _loginWithBrowser(),
-      _NextcloudLoginMode.appPassword => _loginWithAppPassword(),
-    };
-  }
-
-  Future<void> _loginWithAppPassword() async {
-    if (_endpointController.text.trim().isEmpty ||
-        _usernameController.text.trim().isEmpty ||
-        _appPasswordController.text.isEmpty) {
-      AppNotifications.showError(context, context.l10n.completeAllFields);
-      return;
-    }
-    setState(() => _submitting = true);
-    try {
-      await providerGateway.loginNextcloud(
-        endpoint: _endpointController.text,
-        username: _usernameController.text,
-        appPassword: _appPasswordController.text,
-        instanceName: _instanceName,
-      );
-      _completeLogin();
-    } catch (error) {
-      if (mounted) {
-        AppNotifications.showError(
-          context,
-          context.l10n.bindingFailed('$error'),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-  Future<void> _loginWithBrowser() async {
-    final endpoint = _endpointController.text.trim();
-    if (endpoint.isEmpty) {
-      AppNotifications.showError(context, context.l10n.completeAllFields);
-      return;
-    }
-    setState(() => _submitting = true);
-    try {
-      final flow = await providerGateway.startNextcloudLoginFlow(endpoint);
-      final loginUri = Uri.parse(flow.loginUrl);
-      final launched = await launchUrl(
-        loginUri,
-        mode: LaunchMode.externalApplication,
-      );
-      if (!launched) throw StateError('Unable to open Nextcloud login');
-
-      Object? lastError;
-      for (var attempt = 0; attempt < 90 && mounted; attempt++) {
-        try {
-          await providerGateway.pollNextcloudLoginFlow(
-            endpoint: endpoint,
-            flow: flow,
-            instanceName: _instanceName,
-          );
-          _completeLogin();
-          return;
-        } catch (error) {
-          lastError = error;
-          await Future<void>.delayed(const Duration(seconds: 2));
-        }
-      }
-      if (mounted) {
-        throw StateError('Nextcloud login timed out: $lastError');
-      }
-    } catch (error) {
-      if (mounted) {
-        AppNotifications.showError(
-          context,
-          context.l10n.bindingFailed('$error'),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-  void _completeLogin() {
-    if (!mounted) return;
-    Navigator.pop(context);
-    AppNotifications.showSuccess(context, context.l10n.boundSuccessfully);
-    widget.onSuccess();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const color = Color(0xFF0082C9);
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 560),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: AppSingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _ProviderFormSection(
-                    icon: Icons.hub_outlined,
-                    title: context.l10n.connectionTarget,
-                    color: color,
-                    children: [
-                      _ProviderInstanceSelector(
-                        instanceNames: _instanceNames,
-                        selected: _instanceName,
-                        loading: _loadingInstances,
-                        onChanged: (value) =>
-                            setState(() => _instanceName = value),
-                      ),
-                      const SizedBox(height: 12),
-                      AppDialogs.createFormField(
-                        context: context,
-                        label: 'Nextcloud URL',
-                        controller: _endpointController,
-                        hintText: 'https://cloud.example.com',
-                        prefixIcon: Icons.dns_outlined,
-                        keyboardType: TextInputType.url,
-                        enableSuggestions: false,
-                        autocorrect: false,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  AppSegmentedControl<_NextcloudLoginMode>(
-                    segments: const [
-                      ButtonSegment(
-                        value: _NextcloudLoginMode.browser,
-                        icon: Icon(Icons.open_in_browser_rounded),
-                        label: Text('Browser'),
-                      ),
-                      ButtonSegment(
-                        value: _NextcloudLoginMode.appPassword,
-                        icon: Icon(Icons.key_rounded),
-                        label: Text('App password'),
-                      ),
-                    ],
-                    value: _mode,
-                    onChanged: (value) {
-                      if (_submitting) return;
-                      setState(() => _mode = value);
-                    },
-                  ),
-                  if (_mode == _NextcloudLoginMode.appPassword) ...[
-                    const SizedBox(height: 14),
-                    _ProviderFormSection(
-                      icon: Icons.key_rounded,
-                      title: context.l10n.loginCredentials,
-                      color: color,
-                      children: [
-                        AppDialogs.createFormField(
-                          context: context,
-                          label: context.l10n.username,
-                          controller: _usernameController,
-                          prefixIcon: Icons.person_outline_rounded,
-                          enableSuggestions: false,
-                          autocorrect: false,
-                        ),
-                        const SizedBox(height: 12),
-                        AppDialogs.createFormField(
-                          context: context,
-                          label: 'App password',
-                          controller: _appPasswordController,
-                          prefixIcon: Icons.lock_outline_rounded,
-                          obscureText: true,
-                          enableSuggestions: false,
-                          autocorrect: false,
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          _DialogActions(
-            isLoading: _submitting,
-            onSubmit: _submit,
-            submitText: _mode == _NextcloudLoginMode.browser
-                ? 'Open browser'
-                : context.l10n.login,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SynologyAccountDialog extends StatefulWidget {
   const _SynologyAccountDialog({
     required this.instanceNamesLoader,
@@ -412,7 +159,7 @@ class _SynologyAccountDialogState extends State<_SynologyAccountDialog> {
                       const SizedBox(height: 12),
                       AppDialogs.createFormField(
                         context: context,
-                        label: 'OTP',
+                        label: context.l10n.oneTimeCode,
                         controller: _otpController,
                         prefixIcon: Icons.password_rounded,
                         keyboardType: TextInputType.number,
@@ -422,7 +169,7 @@ class _SynologyAccountDialogState extends State<_SynologyAccountDialog> {
                       const SizedBox(height: 12),
                       AppDialogs.createFormField(
                         context: context,
-                        label: 'Device name',
+                        label: context.l10n.deviceName,
                         controller: _deviceController,
                         prefixIcon: Icons.devices_rounded,
                         enableSuggestions: false,
@@ -639,12 +386,51 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
   bool _loadingInstances = true;
   bool _submitting = false;
   bool _twoFactorRequired = false;
+  bool _twoFactorSetupRequired = false;
   bool _trustDevice = true;
+  (String, String, String, String, String) _lastCredentials = (
+    '',
+    '',
+    '',
+    '',
+    '',
+  );
 
   @override
   void initState() {
     super.initState();
+    for (final controller in [
+      _endpointController,
+      _webdavController,
+      _mediaController,
+      _usernameController,
+      _passwordController,
+    ]) {
+      controller.addListener(_onCredentialsChanged);
+    }
     _loadInstances();
+  }
+
+  void _onCredentialsChanged() {
+    final credentials = (
+      _endpointController.text,
+      _webdavController.text,
+      _mediaController.text,
+      _usernameController.text,
+      _passwordController.text,
+    );
+    if (credentials == _lastCredentials) return;
+    _lastCredentials = credentials;
+    _resetChallenge();
+  }
+
+  void _resetChallenge() {
+    if (!mounted || (!_twoFactorRequired && !_twoFactorSetupRequired)) return;
+    setState(() {
+      _twoFactorRequired = false;
+      _twoFactorSetupRequired = false;
+      _twoFactorController.clear();
+    });
   }
 
   @override
@@ -678,10 +464,15 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
   }
 
   Future<void> _submit() async {
+    if (!mounted || _submitting || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    final twoFactorCode = _twoFactorController.text.trim();
     if (_endpointController.text.trim().isEmpty ||
         _usernameController.text.trim().isEmpty ||
         _passwordController.text.isEmpty ||
-        (_twoFactorRequired && _twoFactorController.text.trim().length != 6)) {
+        (_twoFactorRequired &&
+            !RegExp(r'^[0-9]{6}$').hasMatch(twoFactorCode))) {
       AppNotifications.showError(context, context.l10n.completeAllFields);
       return;
     }
@@ -693,21 +484,25 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
         mediaEndpoint: _mediaController.text,
         username: _usernameController.text,
         password: _passwordController.text,
-        twoFactorCode: _twoFactorController.text,
+        twoFactorCode: twoFactorCode,
         trustDevice: _trustDevice,
         instanceName: _instanceName,
       );
-      if (!mounted) return;
+      if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
       switch (result) {
         case FnosAuthenticatedInfo():
           Navigator.pop(context);
           AppNotifications.showSuccess(context, context.l10n.boundSuccessfully);
           widget.onSuccess();
-        case FnosTwoFactorRequiredInfo():
-          setState(() => _twoFactorRequired = true);
+        case FnosTwoFactorRequiredInfo(:final setupRequired):
+          setState(() {
+            _twoFactorSetupRequired = setupRequired;
+            _twoFactorRequired = !setupRequired;
+            _twoFactorController.clear();
+          });
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && ModalRoute.of(context)?.isCurrent == true) {
         AppNotifications.showError(
           context,
           context.l10n.bindingFailed('$error'),
@@ -742,13 +537,19 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
                         instanceNames: _instanceNames,
                         selected: _instanceName,
                         loading: _loadingInstances,
-                        onChanged: (value) =>
-                            setState(() => _instanceName = value),
+                        enabled: !_submitting,
+                        onChanged: (value) {
+                          if (_submitting || value == _instanceName) return;
+                          _resetChallenge();
+                          setState(() => _instanceName = value);
+                        },
                       ),
                       const SizedBox(height: 12),
                       AppDialogs.createFormField(
                         context: context,
                         label: 'FNOS WebSocket / Host',
+                        enabled: !_submitting,
+                        labelAbove: true,
                         controller: _endpointController,
                         prefixIcon: Icons.dns_outlined,
                         keyboardType: TextInputType.url,
@@ -760,6 +561,8 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
                         context: context,
                         label: 'WebDAV URL',
                         controller: _webdavController,
+                        enabled: !_submitting,
+                        labelAbove: true,
                         prefixIcon: Icons.folder_shared_outlined,
                         keyboardType: TextInputType.url,
                         enableSuggestions: false,
@@ -770,6 +573,8 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
                         context: context,
                         label: 'Media API URL',
                         controller: _mediaController,
+                        enabled: !_submitting,
+                        labelAbove: true,
                         prefixIcon: Icons.video_library_outlined,
                         keyboardType: TextInputType.url,
                         enableSuggestions: false,
@@ -786,7 +591,9 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
                       AppDialogs.createFormField(
                         context: context,
                         label: context.l10n.username,
+                        labelAbove: true,
                         controller: _usernameController,
+                        enabled: !_submitting,
                         prefixIcon: Icons.person_outline_rounded,
                         enableSuggestions: false,
                         autocorrect: false,
@@ -795,43 +602,66 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
                       AppDialogs.createFormField(
                         context: context,
                         label: context.l10n.password,
+                        labelAbove: true,
                         controller: _passwordController,
+                        enabled: !_submitting,
                         prefixIcon: Icons.lock_outline_rounded,
                         obscureText: true,
                         enableSuggestions: false,
                         autocorrect: false,
                       ),
+                      if (_twoFactorSetupRequired) ...[
+                        const SizedBox(height: 12),
+                        AppInfoBanner(
+                          icon: Icons.shield_outlined,
+                          title: Text(context.l10n.fnosTwoFactorSetupRequired),
+                        ),
+                      ],
                       if (_twoFactorRequired) ...[
                         const SizedBox(height: 12),
                         AppDialogs.createFormField(
                           context: context,
                           label: '2FA',
+                          labelAbove: true,
                           controller: _twoFactorController,
+                          enabled: !_submitting,
                           prefixIcon: Icons.shield_outlined,
                           keyboardType: TextInputType.number,
                           enableSuggestions: false,
                           autocorrect: false,
                         ),
                         const SizedBox(height: 8),
-                        AppSwitchTile(
-                          value: _trustDevice,
-                          onChanged: (value) =>
-                              setState(() => _trustDevice = value),
-                          title: const Text('Trust device'),
-                          prefix: const Icon(Icons.verified_user_outlined),
+                        MergeSemantics(
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 12,
+                            children: [
+                              Text(
+                                'Trust device',
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ),
+                              AppSwitch(
+                                value: _trustDevice,
+                                enabled: !_submitting,
+                                onChanged: (value) =>
+                                    setState(() => _trustDevice = value),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ],
                   ),
+                  const SizedBox(height: 14),
+                  _DialogActions(
+                    isLoading: _submitting,
+                    onSubmit: _submit,
+                    submitText: context.l10n.login,
+                  ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 14),
-          _DialogActions(
-            isLoading: _submitting,
-            onSubmit: _submit,
-            submitText: context.l10n.login,
           ),
         ],
       ),
@@ -1169,7 +999,9 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                         AppDialogs.createFormField(
                           key: _isEmby ? const Key('emby-bind-username') : null,
                           context: context,
-                          label: _isCloudreve ? 'Email' : context.l10n.username,
+                          label: _isCloudreve
+                              ? context.l10n.email
+                              : context.l10n.username,
                           controller: _usernameController,
                           prefixIcon: Icons.person_outline_rounded,
                         ),

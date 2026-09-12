@@ -1,4 +1,5 @@
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/core/identifiers/decimal_int64.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -467,7 +468,6 @@ class TotpSetupInfo {
 }
 
 class UserNotificationItem {
-  final int numericId;
   final String id;
   final client_enum.NotificationType type;
   final String title;
@@ -478,7 +478,6 @@ class UserNotificationItem {
   final int updatedAt;
 
   const UserNotificationItem({
-    required this.numericId,
     required this.id,
     required this.type,
     required this.title,
@@ -488,6 +487,8 @@ class UserNotificationItem {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  bool get hasValidId => normalizeInt64Decimal(id) != null;
 }
 
 class UserNotificationsPage {

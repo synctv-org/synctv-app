@@ -1,33 +1,44 @@
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:synctv_app/core/async/persisted_value_controller.dart';
 
 enum AppLocalePreference { system, simplifiedChinese, english }
 
-class AppLocaleController extends ChangeNotifier {
+class AppLocaleController
+    extends PersistedValueController<AppLocalePreference> {
+  AppLocaleController({
+    Future<AppLocalePreference> Function()? read,
+    Future<void> Function(AppLocalePreference)? write,
+  }) : super(
+         initialValue: AppLocalePreference.system,
+         read: read ?? _readPreference,
+         write: write ?? _writePreference,
+       );
+
   static const preferenceKey = 'synctv.locale';
 
-  AppLocalePreference _preference = AppLocalePreference.system;
+  AppLocalePreference get preference => value;
 
-  AppLocalePreference get preference => _preference;
-
-  Locale? get locale => switch (_preference) {
+  Locale? get locale => switch (preference) {
     AppLocalePreference.system => null,
     AppLocalePreference.simplifiedChinese => const Locale('zh'),
     AppLocalePreference.english => const Locale('en'),
   };
 
-  Future<void> load() async {
+  Future<void> setPreference(AppLocalePreference preference) =>
+      persist(preference);
+
+  static Future<AppLocalePreference> _readPreference() async {
     final preferences = await SharedPreferences.getInstance();
-    _preference = _decode(preferences.getString(preferenceKey));
+    final raw = preferences.get(preferenceKey);
+    return _decode(raw is String ? raw : null);
   }
 
-  Future<void> setPreference(AppLocalePreference preference) async {
-    if (_preference == preference) return;
-    _preference = preference;
-    notifyListeners();
-
+  static Future<void> _writePreference(AppLocalePreference preference) async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setString(preferenceKey, preference.name);
+    if (!await preferences.setString(preferenceKey, preference.name)) {
+      throw StateError('Could not persist language preference');
+    }
   }
 
   static AppLocalePreference _decode(String? value) {

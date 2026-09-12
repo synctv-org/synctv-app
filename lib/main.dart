@@ -1,14 +1,16 @@
+import 'package:synctv_app/features/room_invite/domain/room_invite.dart';
+
 import 'dart:async';
 
-import 'package:accessibility_tools/accessibility_tools.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/app_shell/presentation/app_shell.dart';
 import 'package:synctv_app/app/app_dependencies.dart';
+import 'package:synctv_app/app/app_startup.dart';
+import 'package:synctv_app/app/app_viewport.dart';
 import 'package:synctv_app/features/auth/data/synctv_auth_gateway.dart';
 import 'package:synctv_app/features/auth/infrastructure/platform_passkey_client.dart';
 import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
@@ -49,12 +51,11 @@ import 'package:synctv_app/features/auth/presentation/oauth2_callback_page.dart'
 import 'package:synctv_app/features/room/infrastructure/picture_in_picture_service.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_chat_manager.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
-import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/theme/app_theme.dart';
 import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
-void main(List<String> args) async {
+void main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
   if (runWebViewTitleBarWidget(args)) {
     return;
@@ -75,7 +76,7 @@ void main(List<String> args) async {
   final realtimeEventLogPreferences = RealtimeEventLogPreferencesController(
     store: const SharedPreferencesRealtimeEventLogStore(),
   );
-  await Future.wait([
+  Future<void> initialize() => Future.wait([
     appLocaleController.load(),
     SyncTvService.init(),
     p2pMediaPreferences.load(),
@@ -127,10 +128,13 @@ void main(List<String> args) async {
     serverConnectionGateway: const SyncTvServerConnectionGateway(),
     voiceChatSessionFactory: const NativeVoiceChatSessionFactory(),
   );
-  runApp(MyApp(dependencies: dependencies));
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    _initializeDeferredRuntime();
-  });
+  runApp(
+    AppStartup(
+      initialize: initialize,
+      onReady: _initializeDeferredRuntime,
+      child: MyApp(dependencies: dependencies),
+    ),
+  );
 }
 
 Future<void> _configureDesktopWindow() async {
@@ -174,14 +178,28 @@ void _initializeDeferredRuntime() {
   }
 }
 
-const _enableAccessibilityTools = bool.fromEnvironment(
-  'SYNCTV_ENABLE_ACCESSIBILITY_TOOLS',
-);
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.dependencies});
 
   final AppDependencies dependencies;
+
+  Route<dynamic>? _generateRoute(RouteSettings settings) {
+    final callback = generateOAuth2CallbackRoute(
+      settings,
+      dispatcher: const PlatformOAuth2CallbackDispatcher(),
+    );
+    if (callback != null) return callback;
+    final path = Uri.tryParse(settings.name ?? '')?.path;
+    final isInvite = path == RoomInviteService.linkPath;
+    if (path != '/' && !isInvite) return null;
+    return MaterialPageRoute<void>(
+      settings: settings,
+      builder: (_) => AppShell(
+        dependencies: dependencies.appShell,
+        initialInvite: isInvite ? settings.name : null,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -197,34 +215,13 @@ class MyApp extends StatelessWidget {
         localizationsDelegates: const [
           ...AppLocalizations.localizationsDelegates,
         ],
-        builder: (context, child) {
-          final mediaQueryData = MediaQuery.of(context);
-          final newMediaQueryData = mediaQueryData.copyWith(
-            textScaler: mediaQueryData.textScaler.clamp(
-              minScaleFactor: 0.85,
-              maxScaleFactor: 1.3,
-            ),
-          );
-          Widget appChild = MediaQuery(data: newMediaQueryData, child: child!);
-          appChild = ResponsiveBreakpoints.builder(
-            breakpoints: AppBreakpoints.values,
-            child: appChild,
-          );
-          if (kDebugMode && _enableAccessibilityTools) {
-            appChild = AccessibilityTools(
-              checkFontOverflows: true,
-              buttonsAlignment: ButtonsAlignment.bottomLeft,
-              child: appChild,
-            );
-          }
-
-          return dependencies.scope(child: appChild);
-        },
-        onGenerateRoute: (settings) => generateOAuth2CallbackRoute(
-          settings,
-          dispatcher: const PlatformOAuth2CallbackDispatcher(),
-        ),
-        home: AppShell(dependencies: dependencies.appShell),
+        builder: (context, child) =>
+            dependencies.scope(child: AppViewport(child: child!)),
+        onGenerateRoute: _generateRoute,
+        onGenerateInitialRoutes: (name) => [
+          _generateRoute(RouteSettings(name: name)) ??
+              _generateRoute(const RouteSettings(name: '/'))!,
+        ],
       ),
     );
   }

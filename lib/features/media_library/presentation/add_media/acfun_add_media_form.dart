@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/contracts/discovered_source.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_source_preview.dart';
+import 'package:synctv_app/core/presentation/dependency_scope.dart';
+import 'package:synctv_app/features/providers/application/provider_gateway.dart';
+import 'package:synctv_app/core/async/async_operation_coordinator.dart';
+import 'package:synctv_app/features/media_library/presentation/add_media/provider_instance_selector.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
 import 'package:synctv_app/src/generated/proto/providers/acfun.pb.dart'
@@ -48,7 +54,11 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
   final _urlController = TextEditingController();
   final _nameController = TextEditingController();
   String _instanceName = '';
-  bool _loading = false;
+  bool _previewLoading = false;
+  bool _adding = false;
+  bool get _loading => _previewLoading || _adding;
+  ProviderGateway? _observedGateway;
+  final _operationEpoch = AsyncStateEpoch();
   acfun.ResolveResponse? _resolved;
 
   @override
@@ -56,6 +66,42 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
     super.initState();
     _urlController.addListener(_resourceChanged);
     _nameController.addListener(_nameChanged);
+  }
+
+  bool get _canInteract =>
+      mounted && !_loading && (ModalRoute.of(context)?.isCurrent ?? true);
+
+  bool _ownsOperation(Object epoch) =>
+      mounted && _operationEpoch.isCurrent(epoch);
+
+  void _invalidateOperation() {
+    _operationEpoch.advance();
+    _previewLoading = false;
+    _adding = false;
+    _resolved = null;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final gateway = DependencyScope.maybeOf<ProviderGateway>(context);
+    if (!identical(gateway, _observedGateway)) {
+      _observedGateway = gateway;
+      _invalidateOperation();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant AcFunAddMediaForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final instanceRemoved =
+        _instanceName.isNotEmpty && !widget.instances.contains(_instanceName);
+    if (oldWidget.roomId != widget.roomId ||
+        oldWidget.playlistId != widget.playlistId ||
+        instanceRemoved) {
+      _invalidateOperation();
+    }
+    if (instanceRemoved) _instanceName = '';
   }
 
   @override
@@ -68,7 +114,8 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
   }
 
   void _resourceChanged() {
-    _resolved = null;
+    if (!mounted) return;
+    _invalidateOperation();
     _notifyDraftChanged();
   }
 
@@ -85,12 +132,12 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
   @override
   Widget build(BuildContext context) {
     final instances = {'', ...widget.instances}.toList();
-    if (!instances.contains(_instanceName)) _instanceName = '';
     final controls = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppTextField(
           key: const Key('acfun-resource'),
+          labelAbove: true,
           label: context.l10n.acfunUrl,
           controller: _urlController,
           prefixIcon: Icons.link_rounded,
@@ -102,52 +149,58 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
         const SizedBox(height: 12),
         AppTextField(
           key: const Key('acfun-name'),
+          labelAbove: true,
           label: context.l10n.name,
           controller: _nameController,
           prefixIcon: Icons.title_rounded,
           enabled: !_loading,
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          initialValue: _instanceName,
-          decoration: InputDecoration(
-            labelText: context.l10n.instance,
-            prefixIcon: const Icon(Icons.account_tree_outlined),
-          ),
-          items: instances
-              .map(
-                (name) => DropdownMenuItem(
-                  value: name,
-                  child: Text(name.isEmpty ? context.l10n.localInstance : name),
-                ),
-              )
-              .toList(),
-          onChanged: _loading
-              ? null
-              : (value) => setState(() {
-                  _instanceName = value ?? '';
-                  _resolved = null;
-                }),
+        ProviderInstanceSelector(
+          instances: instances,
+          value: _instanceName,
+          enabled: !_loading,
+          onChanged: (value) {
+            if (!mounted ||
+                _loading ||
+                value == _instanceName ||
+                !(ModalRoute.of(context)?.isCurrent ?? true)) {
+              return;
+            }
+            setState(() {
+              _instanceName = value;
+              _invalidateOperation();
+            });
+          },
         ),
         const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 10,
+          runSpacing: 8,
           children: [
             OutlinedButton.icon(
               key: const Key('acfun-preview'),
               onPressed: _loading || _urlController.text.trim().isEmpty
                   ? null
                   : _loadPreview,
-              icon: const Icon(Icons.preview_outlined),
+              icon: _previewLoading
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: AppLoadingIndicator(
+                        size: AppLoadingSize.sm,
+                        centered: false,
+                      ),
+                    )
+                  : const Icon(Icons.preview_outlined),
               label: Text(context.l10n.preview),
             ),
-            const SizedBox(width: 10),
             FilledButton.icon(
               key: const Key('acfun-submit'),
-              onPressed: _loading || _resolved?.hasSource() != true
+              onPressed: _loading || _resolved?.source.hasMediaSource != true
                   ? null
                   : _submit,
-              icon: _loading
+              icon: _adding
                   ? const SizedBox.square(
                       dimension: 18,
                       child: AppLoadingIndicator(
@@ -165,16 +218,21 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
     return ProviderWorkspace(controls: controls, results: _buildResults());
   }
 
-  Widget _buildResults() {
+  Widget? _buildResults() {
     final preview = _preview();
     return preview == null
-        ? const SizedBox()
+        ? null
         : AppSingleChildScrollView(padding: EdgeInsets.zero, child: preview);
+  }
+
+  String get _previewTitle {
+    final title = _resolved?.metadata.title.trim() ?? '';
+    return title.isEmpty ? _urlController.text.trim() : title;
   }
 
   Widget? _preview() {
     final response = _resolved;
-    if (response == null || !response.hasMetadata()) return null;
+    if (response == null) return null;
     final metadata = response.metadata;
     final formats = response.qualities
         .map(
@@ -190,52 +248,16 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
     final details = <String>[
       if (metadata.author.isNotEmpty) metadata.author,
       _kindName(response.kind),
-      '${response.qualities.length} qualities',
+      context.l10n.qualitiesCount(response.qualities.length),
       if (formats.isNotEmpty) formats,
-      if (metadata.hasDanmaku) 'Danmaku',
-      if (metadata.hasLiveDanmaku) 'Live danmaku',
+      if (metadata.hasDanmaku) context.l10n.danmaku,
+      if (metadata.hasLiveDanmaku) context.l10n.liveDanmaku,
       if (metadata.tags.isNotEmpty) metadata.tags.take(2).join('/'),
     ];
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          if (metadata.hasThumbnailUrl() && metadata.thumbnailUrl.isNotEmpty)
-            AppImageThumbnail(
-              url: metadata.thumbnailUrl,
-              width: 112,
-              height: 72,
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(7),
-              ),
-              fit: BoxFit.cover,
-              errorChild: const SizedBox(width: 112, height: 72),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    metadata.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    details.join(' · '),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return ProviderSourcePreview(
+      title: _previewTitle,
+      details: response.hasMetadata() ? details : const [],
+      thumbnailUrl: metadata.thumbnailUrl,
     );
   }
 
@@ -247,29 +269,45 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
   };
 
   Future<void> _loadPreview() async {
-    setState(() => _loading = true);
+    if (!_canInteract || _urlController.text.trim().isEmpty) return;
+    _operationEpoch.advance();
+    final epoch = _operationEpoch.capture();
+    final resource = _urlController.text.trim();
+    setState(() {
+      _previewLoading = true;
+      _resolved = null;
+    });
     try {
-      final resource = _urlController.text.trim();
-      _resolved =
+      final resolved =
           await (widget.onResolve?.call(resource) ??
               providerGateway.resolveAcFun(
                 resource,
                 instanceName: _instanceName,
               ));
+      if (_ownsOperation(epoch)) _resolved = resolved;
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted &&
+          _ownsOperation(epoch) &&
+          (ModalRoute.of(context)?.isCurrent ?? true)) {
+        AppNotifications.showError(context, '$error');
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (_ownsOperation(epoch)) setState(() => _previewLoading = false);
     }
   }
 
   Future<void> _submit() async {
+    if (!_canInteract) return;
     final resolved = _resolved;
-    if (resolved == null) {
+    if (resolved == null || !resolved.source.hasMediaSource) {
       AppNotifications.showError(context, context.l10n.previewSourceFirst);
       return;
     }
-    setState(() => _loading = true);
+    _operationEpoch.advance();
+    final epoch = _operationEpoch.capture();
+    final draftResource = _urlController.text;
+    final draftName = _nameController.text;
+    setState(() => _adding = true);
     try {
       final request = AcFunAddRequest(
         resource: _urlController.text.trim(),
@@ -283,22 +321,31 @@ class _AcFunAddMediaFormState extends State<AcFunAddMediaForm> {
           widget.roomId,
           playlistId: widget.playlistId,
           source: resolved.source,
-          name: request.name.isEmpty ? resolved.metadata.title : request.name,
+          name: request.name.isEmpty ? _previewTitle : request.name,
         );
       }
-      if (!mounted) return;
+      if (!mounted ||
+          !_ownsOperation(epoch) ||
+          _urlController.text != draftResource ||
+          _nameController.text != draftName) {
+        return;
+      }
       _urlController.clear();
       _nameController.clear();
       _resolved = null;
       widget.onDraftChanged?.call(false);
-      AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
+      if (ModalRoute.of(context)?.isCurrent ?? true) {
+        AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
+      }
       setState(() {});
     } catch (error) {
-      if (mounted) {
+      if (mounted &&
+          _ownsOperation(epoch) &&
+          (ModalRoute.of(context)?.isCurrent ?? true)) {
         AppNotifications.showError(context, context.l10n.addFailed('$error'));
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (_ownsOperation(epoch)) setState(() => _adding = false);
     }
   }
 }

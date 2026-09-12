@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 
@@ -113,7 +115,13 @@ class AppAdaptiveSplitView extends StatelessWidget {
         }
 
         final secondaryWidth = (availableWidth * 0.32)
-            .clamp(minSecondaryWidth, maxSecondaryWidth)
+            .clamp(
+              minSecondaryWidth,
+              math.min(
+                maxSecondaryWidth,
+                availableWidth - minPrimaryWidth - spacing,
+              ),
+            )
             .toDouble();
         return Row(
           crossAxisAlignment: crossAxisAlignment,

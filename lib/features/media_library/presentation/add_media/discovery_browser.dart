@@ -135,6 +135,10 @@ class DiscoveryBrowser extends StatefulWidget {
 class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
   late DiscoverySelectionController _selection;
   ProviderAddTarget _target = ProviderAddTarget.media;
+  bool _loadingMore = false;
+  bool _submitting = false;
+
+  bool get _busy => widget.loading || _submitting;
 
   @override
   void initState() {
@@ -166,48 +170,34 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: widget.items.isEmpty
-              ? widget.loading
-                    ? const Center(
-                        child: AppLoadingIndicator(size: AppLoadingSize.md),
-                      )
-                    : LayoutBuilder(
-                        builder: (context, constraints) {
-                          final emptyState = AppEmptyState(
-                            icon: widget.emptyIcon,
-                            title: widget.emptyTitle ?? context.l10n.noItems,
-                            iconSize: 32,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          );
-                          // A compact dialog can leave only a sliver of the
-                          // preview viewport after its controls and warning banner.
-                          // Let the empty state scroll in that case instead of
-                          // forcing its intrinsic column into a tight height.
-                          if (constraints.maxHeight < 96) {
-                            return AppSingleChildScrollView(child: emptyState);
-                          }
-                          return Center(child: emptyState);
-                        },
-                      )
+          child: !isPageMode && widget.items.isEmpty
+              ? _emptyContent(context)
               : isPageMode
               ? LayoutBuilder(
                   builder: (context, constraints) {
+                    final origin = widget;
                     final pagination = AppPaginationBar.page(
                       context: context,
                       page: widget.page,
                       pageSize: widget.pageSize,
                       total: widget.total,
-                      onPrevious: widget.onPreviousPage,
-                      onNext: widget.onNextPage,
+                      onPrevious:
+                          _busy ||
+                              widget.page <= 1 ||
+                              widget.onPreviousPage == null
+                          ? null
+                          : () => _changePage(origin, next: false),
+                      onNext:
+                          _busy || !widget.hasMore || widget.onNextPage == null
+                          ? null
+                          : () => _changePage(origin, next: true),
                     );
                     if (constraints.hasBoundedHeight &&
                         constraints.maxHeight < 300) {
                       return AppSingleChildScrollView(
                         child: Column(
                           children: [
+                            if (widget.items.isEmpty) _emptyContent(context),
                             for (
                               var index = 0;
                               index < widget.items.length;
@@ -224,14 +214,16 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                     return Column(
                       children: [
                         Flexible(
-                          child: AppListView.separated(
-                            primary: true,
-                            itemCount: widget.items.length,
-                            separatorBuilder: (_, _) =>
-                                const AppDivider(height: 1),
-                            itemBuilder: (context, index) =>
-                                _item(widget.items[index]),
-                          ),
+                          child: widget.items.isEmpty
+                              ? _emptyContent(context)
+                              : AppListView.separated(
+                                  primary: true,
+                                  itemCount: widget.items.length,
+                                  separatorBuilder: (_, _) =>
+                                      const AppDivider(height: 1),
+                                  itemBuilder: (context, index) =>
+                                      _item(widget.items[index]),
+                                ),
                         ),
                         pagination,
                       ],
@@ -240,12 +232,10 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                 )
               : NotificationListener<ScrollNotification>(
                   onNotification: (notification) {
-                    if (!widget.loading &&
-                        widget.hasMore &&
-                        widget.onLoadMore != null &&
+                    if (notification.depth == 0 &&
                         notification.metrics.pixels >=
                             notification.metrics.maxScrollExtent - 200) {
-                      widget.onLoadMore!();
+                      _loadMore();
                     }
                     return false;
                   },
@@ -256,8 +246,10 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                     itemBuilder: (context, index) {
                       if (index == widget.items.length) {
                         return AppLoadMoreFooter(
-                          loading: widget.loading,
-                          onPressed: widget.onLoadMore,
+                          loading: widget.loading || _loadingMore,
+                          onPressed: widget.onLoadMore == null
+                              ? null
+                              : _loadMore,
                         );
                       }
                       return _item(widget.items[index]);
@@ -265,11 +257,35 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                   ),
                 ),
         ),
-        if (widget.items.isNotEmpty || widget.onAddCurrentList != null) ...[
+        if ((_selectionEnabled && widget.items.isNotEmpty) ||
+            _showsTargetSelector ||
+            (target != ProviderAddTarget.media &&
+                widget.onAddCurrentList != null)) ...[
           const AppDivider(height: 1),
           _selectionBar(context, target),
         ],
       ],
+    );
+  }
+
+  Widget _emptyContent(BuildContext context) {
+    if (widget.loading) {
+      return const Center(child: AppLoadingIndicator(size: AppLoadingSize.md));
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final emptyState = AppEmptyState(
+          icon: widget.emptyIcon,
+          title: widget.emptyTitle ?? context.l10n.noItems,
+          iconSize: 32,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        );
+        // Compact provider dialogs can leave only a sliver for the empty state.
+        if (constraints.maxHeight < 96) {
+          return AppSingleChildScrollView(child: emptyState);
+        }
+        return Center(child: emptyState);
+      },
     );
   }
 
@@ -286,6 +302,93 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
       widget.onAddSelected != null &&
       widget.onAddCurrentList != null;
 
+  bool get _selectionEnabled =>
+      _effectiveTarget == ProviderAddTarget.media &&
+      widget.onAddSelected != null;
+
+  bool get _canInteract =>
+      mounted && !_busy && (ModalRoute.of(context)?.isCurrent ?? true);
+
+  void _selectAll() {
+    if (!_canInteract || !_selectionEnabled) return;
+    setState(() => _selection.selectAll(widget.items));
+    widget.onSelectionChanged?.call();
+  }
+
+  void _clearSelection() {
+    if (!_canInteract || !_selectionEnabled || _selection.isEmpty) return;
+    setState(_selection.clear);
+    widget.onSelectionChanged?.call();
+  }
+
+  void _changeTarget(ProviderAddTarget target) {
+    if (!_canInteract || !_showsTargetSelector) return;
+    setState(() => _target = target);
+  }
+
+  Future<void> _addSelected() async {
+    final add = widget.onAddSelected;
+    if (!_canInteract ||
+        !_selectionEnabled ||
+        _selection.isEmpty ||
+        add == null) {
+      return;
+    }
+    final entries = _selection.entries;
+    await _submit(() => add(entries));
+  }
+
+  Future<void> _addCurrentList() async {
+    final add = widget.onAddCurrentList;
+    if (!_canInteract ||
+        _effectiveTarget == ProviderAddTarget.media ||
+        add == null) {
+      return;
+    }
+    await _submit(add);
+  }
+
+  Future<void> _submit(Future<void> Function() action) async {
+    setState(() => _submitting = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  bool _canUseItem(DiscoveryBrowserEntry item) =>
+      _canInteract && widget.items.contains(item);
+
+  void _changePage(DiscoveryBrowser origin, {required bool next}) {
+    if (!_canInteract ||
+        widget.paginationMode != DiscoveryPaginationMode.page ||
+        origin.page != widget.page ||
+        origin.selectionScope != widget.selectionScope ||
+        (next ? !widget.hasMore : widget.page <= 1)) {
+      return;
+    }
+    final change = next ? widget.onNextPage : widget.onPreviousPage;
+    change?.call();
+  }
+
+  Future<void> _loadMore() async {
+    final load = widget.onLoadMore;
+    if (!_canInteract ||
+        _loadingMore ||
+        !widget.hasMore ||
+        widget.paginationMode != DiscoveryPaginationMode.cursor ||
+        load == null) {
+      return;
+    }
+    setState(() => _loadingMore = true);
+    try {
+      await load();
+    } finally {
+      if (mounted) setState(() => _loadingMore = false);
+    }
+  }
+
   Widget _selectionBar(BuildContext context, ProviderAddTarget target) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -299,12 +402,12 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                 ProviderAddTarget.media,
                 ProviderAddTarget.playlist,
               ],
-              enabled: !widget.loading,
-              onChanged: (value) => setState(() => _target = value),
+              enabled: !_busy,
+              onChanged: _changeTarget,
             ),
             const SizedBox(height: 8),
           ],
-          if (target == ProviderAddTarget.media)
+          if (_selectionEnabled)
             LayoutBuilder(
               builder: (context, constraints) {
                 final compact = constraints.maxWidth < 480;
@@ -314,19 +417,29 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                 return _expandedSelectionActions(context);
               },
             )
-          else if (widget.onAddCurrentList != null)
-            Row(
+          else if (target != ProviderAddTarget.media &&
+              widget.onAddCurrentList != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (widget.playlistActionLeading case final leading?) ...[
-                  Expanded(child: leading),
-                  const SizedBox(width: 8),
+                  leading,
+                  const SizedBox(height: 8),
                 ],
-                FilledButton.tonalIcon(
-                  key: const Key('discovery-add-current-list'),
-                  onPressed: widget.loading ? null : widget.onAddCurrentList,
-                  icon: const Icon(Icons.playlist_add_rounded),
-                  label: Text(
-                    widget.currentListLabel ?? context.l10n.addCurrentList,
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FilledButton.tonalIcon(
+                    key: const Key('discovery-add-current-list'),
+                    onPressed: _busy ? null : _addCurrentList,
+                    icon: _submitting
+                        ? const AppLoadingIndicator(
+                            size: AppLoadingSize.sm,
+                            centered: false,
+                          )
+                        : const Icon(Icons.playlist_add_rounded),
+                    label: Text(
+                      widget.currentListLabel ?? context.l10n.addCurrentList,
+                    ),
                   ),
                 ),
               ],
@@ -348,35 +461,27 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
         ),
         TextButton.icon(
           key: const Key('discovery-select-all'),
-          onPressed: widget.loading
-              ? null
-              : () => setState(() {
-                  _selection.selectAll(widget.items);
-                  widget.onSelectionChanged?.call();
-                }),
+          onPressed: _busy ? null : _selectAll,
           icon: const Icon(Icons.select_all_rounded),
           label: Text(context.l10n.selectAll),
         ),
         TextButton.icon(
           key: const Key('discovery-clear-selection'),
-          onPressed: widget.loading || _selection.isEmpty
-              ? null
-              : () => setState(() {
-                  _selection.clear();
-                  widget.onSelectionChanged?.call();
-                }),
+          onPressed: _busy || _selection.isEmpty ? null : _clearSelection,
           icon: const Icon(Icons.deselect_rounded),
           label: Text(context.l10n.clear),
         ),
         FilledButton.tonalIcon(
           key: const Key('discovery-add-selected'),
-          onPressed:
-              widget.loading ||
-                  _selection.isEmpty ||
-                  widget.onAddSelected == null
+          onPressed: _busy || _selection.isEmpty || widget.onAddSelected == null
               ? null
-              : () => widget.onAddSelected!(_selection.entries),
-          icon: const Icon(Icons.playlist_add_check_rounded),
+              : _addSelected,
+          icon: _submitting
+              ? const AppLoadingIndicator(
+                  size: AppLoadingSize.sm,
+                  centered: false,
+                )
+              : const Icon(Icons.playlist_add_check_rounded),
           label: Text(context.l10n.addSelectedCount(_selection.length)),
         ),
       ],
@@ -398,34 +503,22 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
           key: const Key('discovery-select-all'),
           tooltip: context.l10n.selectAll,
           icon: Icons.select_all_rounded,
-          onPressed: widget.loading
-              ? null
-              : () => setState(() {
-                  _selection.selectAll(widget.items);
-                  widget.onSelectionChanged?.call();
-                }),
+          onPressed: _busy ? null : _selectAll,
         ),
         AppIconButton(
           key: const Key('discovery-clear-selection'),
           tooltip: context.l10n.clear,
           icon: Icons.deselect_rounded,
-          onPressed: widget.loading || _selection.isEmpty
-              ? null
-              : () => setState(() {
-                  _selection.clear();
-                  widget.onSelectionChanged?.call();
-                }),
+          onPressed: _busy || _selection.isEmpty ? null : _clearSelection,
         ),
         AppIconButton(
           key: const Key('discovery-add-selected'),
           tooltip: context.l10n.addSelectedCount(_selection.length),
           icon: Icons.playlist_add_check_rounded,
-          onPressed:
-              widget.loading ||
-                  _selection.isEmpty ||
-                  widget.onAddSelected == null
+          loading: _submitting,
+          onPressed: _busy || _selection.isEmpty || widget.onAddSelected == null
               ? null
-              : () => widget.onAddSelected!(_selection.entries),
+              : _addSelected,
           style: AppIconButtonStyle.filled,
         ),
       ],
@@ -433,9 +526,7 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
   }
 
   Widget _item(DiscoveryBrowserEntry item) {
-    final selectionEnabled =
-        _effectiveTarget == ProviderAddTarget.media &&
-        widget.onAddSelected != null;
+    final selectionEnabled = _selectionEnabled;
     final selected = _selection.contains(item.key);
     return ListTile(
       key: ValueKey('discovery-item-${item.key}'),
@@ -446,7 +537,7 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
           if (selectionEnabled)
             AppCheckbox(
               value: selected,
-              enabled: !widget.loading && item.selectable,
+              enabled: !_busy && item.selectable,
               semanticsLabel: context.l10n.selectItem(item.title),
               onChanged: (_) => _toggle(item),
             ),
@@ -466,7 +557,9 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
       subtitle: item.subtitle.isEmpty
           ? null
           : Text(item.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-      onTap: widget.loading || !item.selectable ? null : () => _toggle(item),
+      onTap: !selectionEnabled || _busy || !item.selectable
+          ? null
+          : () => _toggle(item),
       trailing: item.actions.isEmpty && !item.isContainer
           ? null
           : Row(
@@ -477,9 +570,9 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                   AppIconButton(
                     key: ValueKey('discovery-open-${item.key}'),
                     tooltip: item.openTooltip,
-                    onPressed: widget.loading || widget.onOpen == null
+                    onPressed: _busy || widget.onOpen == null
                         ? null
-                        : () => widget.onOpen!(item),
+                        : () => _open(item),
                     icon: item.openIcon,
                   ),
               ],
@@ -488,9 +581,15 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
   }
 
   void _toggle(DiscoveryBrowserEntry item) {
+    if (!_canUseItem(item) || !_selectionEnabled || !item.selectable) return;
     setState(() {
       _selection.toggle(item);
       widget.onSelectionChanged?.call();
     });
+  }
+
+  void _open(DiscoveryBrowserEntry item) {
+    if (!_canUseItem(item) || !item.isContainer) return;
+    widget.onOpen?.call(item);
   }
 }

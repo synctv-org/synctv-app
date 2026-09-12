@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:synctv_app/core/async/persisted_value_controller.dart';
 import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 
 abstract interface class PlaybackModePreferencesStore {
@@ -7,39 +7,16 @@ abstract interface class PlaybackModePreferencesStore {
   Future<void> save(PlaybackModeConfig config);
 }
 
-final class PlaybackModePreferencesController extends ChangeNotifier {
-  PlaybackModePreferencesController({required this._store});
+final class PlaybackModePreferencesController
+    extends PersistedValueController<PlaybackModeConfig> {
+  PlaybackModePreferencesController({
+    required PlaybackModePreferencesStore store,
+  }) : super(
+         initialValue: PlaybackModeConfig.defaults,
+         read: store.load,
+         write: store.save,
+         normalize: (value) => value.normalized(),
+       );
 
-  final PlaybackModePreferencesStore _store;
-  PlaybackModeConfig _value = PlaybackModeConfig.defaults;
-  Future<void>? _loading;
-  bool _loaded = false;
-
-  PlaybackModeConfig get value => _value;
-
-  Future<void> load() {
-    if (_loaded) return Future.value();
-    return _loading ??= _store
-        .load()
-        .then((value) {
-          _value = value.normalized();
-          _loaded = true;
-          notifyListeners();
-        })
-        .whenComplete(() => _loading = null);
-  }
-
-  Future<void> update(PlaybackModeConfig config) async {
-    final previous = _value;
-    _value = config.normalized();
-    _loaded = true;
-    notifyListeners();
-    try {
-      await _store.save(_value);
-    } catch (_) {
-      _value = previous;
-      notifyListeners();
-      rethrow;
-    }
-  }
+  Future<void> update(PlaybackModeConfig config) => persist(config);
 }

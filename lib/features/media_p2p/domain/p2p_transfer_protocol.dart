@@ -57,6 +57,8 @@ class P2pPermitPool {
 
 class P2pIncomingTransfer {
   final Completer<Uint8List?> _completer = Completer<Uint8List?>();
+  FormatException? _error;
+  StackTrace? _errorStack;
   final List<Uint8List> _chunks = [];
   int? _expectedLength;
   int _receivedBytes = 0;
@@ -69,6 +71,11 @@ class P2pIncomingTransfer {
   }
 
   void begin(int length) {
+    if (_completer.isCompleted) return;
+    if (length < 0 || _expectedLength != null) {
+      completeInvalid();
+      return;
+    }
     _expectedLength = length;
     _notifyActivity();
   }
@@ -92,8 +99,7 @@ class P2pIncomingTransfer {
     }
     final bytes = builder.takeBytes();
     if (bytes.length != _expectedLength) {
-      _completer.completeError(const FormatException('Invalid P2P piece'));
-      _notifyActivity();
+      completeInvalid();
       return;
     }
     _completer.complete(bytes);
@@ -107,7 +113,10 @@ class P2pIncomingTransfer {
 
   void completeInvalid() {
     if (!_completer.isCompleted) {
-      _completer.completeError(const FormatException('Invalid P2P piece'));
+      // A failure may arrive before wait subscribes or after its timeout.
+      _error = const FormatException('Invalid P2P piece');
+      _errorStack = StackTrace.current;
+      _completer.complete(null);
       _notifyActivity();
     }
   }
@@ -127,6 +136,8 @@ class P2pIncomingTransfer {
       await activity.future.timeout(wait);
       if (identical(activity, _activity)) _activity = Completer<void>();
     }
+    final error = _error;
+    if (error != null) Error.throwWithStackTrace(error, _errorStack!);
     return _completer.future;
   }
 }
