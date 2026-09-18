@@ -48,7 +48,7 @@ dependencies:
   web_socket_channel: ^3.0.3
   crypto: ^3.0.7
   xml: ^7.0.1
-  file_picker: ^12.2.0
+  file_picker: ^13.1.0
   shared_preferences: ^2.5.5
   screen_brightness: ^2.1.11
   volume_controller: ^3.6.1
