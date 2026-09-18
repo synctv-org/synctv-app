@@ -77,7 +77,7 @@ dependencies:
   flex_color_scheme: ^8.4.0
   responsive_framework: ^1.5.1
   flutter_layout_grid: ^2.0.8
-  accessibility_tools: ^2.8.0
+  accessibility_tools: ^3.0.0
   crop_your_image: ^2.0.0
   uuid: ^4.6.0
   device_info_plus: ^13.2.0
