@@ -40,7 +40,7 @@ dependencies:
   intl: ^0.20.3
 
   video_player: ^2.14.0
-  protobuf: ^6.0.0
+  protobuf: ^6.1.0
   fixnum: ^1.1.1
   http: ^1.6.0
   mime: ^2.0.0
@@ -65,7 +65,7 @@ dependencies:
   flutter_web_auth_2: ^6.0.0-alpha.8
   url_launcher: ^6.3.2
   flutter_markdown_plus: ^1.0.12
-  passkeys: ^2.22.3
+  passkeys: ^2.23.1
   synctv_opaque:
     path: packages/synctv_opaque
   qr_flutter: ^4.1.0
