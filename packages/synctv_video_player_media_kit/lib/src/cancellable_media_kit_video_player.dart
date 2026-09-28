@@ -416,7 +416,7 @@ class _MediaKitVideoPlayerRuntime
     return Video(
       key: ValueKey(_videoController),
       controller: _videoController,
-      wakelock: false,
+      wakelock: true,
       controls: NoVideoControls,
       fill: const Color(0x00000000),
       pauseUponEnteringBackgroundMode: false,
