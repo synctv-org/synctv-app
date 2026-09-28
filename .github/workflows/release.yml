@@ -55,7 +55,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FLUTTER_VERSION: "3.47.2"
+  FLUTTER_VERSION: "3.47.5"
   NODE_VERSION: "24"
   RUST_VERSION: "1.98.0"
   SYNCTV_BUILT_IN_SERVER_URL: ${{ vars.SYNCTV_BUILT_IN_SERVER_URL }}

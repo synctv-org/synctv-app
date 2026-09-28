@@ -25,7 +25,7 @@
 
 <p align="center">
   <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/synctv-org/synctv-app?display_name=tag&sort=semver" alt="Latest release"></a>
-  <img src="https://img.shields.io/badge/Flutter-3.47.2-02569B?logo=flutter&logoColor=white" alt="Flutter 3.47.2">
+  <img src="https://img.shields.io/badge/Flutter-3.47.5-02569B?logo=flutter&logoColor=white" alt="Flutter 3.47.5">
   <img src="https://img.shields.io/badge/platforms-Web%20%7C%20Android%20%7C%20iOS%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux-495057" alt="Supported platforms">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-2F855A" alt="Apache-2.0 license"></a>
 </p>
@@ -97,7 +97,7 @@ Every GitHub Release contains a quick-download matrix and `SHA256SUMS.txt`. Nati
 
 ### Prerequisites
 
-- [FVM](https://fvm.app/) with Flutter `3.47.2` and Dart `3.13.2`.
+- [FVM](https://fvm.app/) with Flutter `3.47.5` and Dart `3.13.4`.
 - Node.js `24` and npm for macOS DMG packaging.
 - Rust `1.98.0` for the OPAQUE native asset.
 - Protobuf compiler `36.0` and Dart `protoc_plugin 25.0.0` when regenerating API code.

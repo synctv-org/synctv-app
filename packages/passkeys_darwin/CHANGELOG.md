@@ -1,14 +1,25 @@
-## SyncTV fork
+## SyncTV fork (0.4.5+1)
 
-- Forward WebAuthn `userVerification` through Pigeon to every Darwin request.
-- Make overlapping authenticator operation ownership race-safe.
-- Handle registration responses with a nil raw attestation object.
-- Document the upstream baseline and the conditions for removing this fork.
+- Rebase onto upstream `passkeys_darwin 0.4.5`: adopt the upstream
+  `userVerification` forwarding from 0.4.4 (#309), the `canBeSecurityKey`
+  authenticate opt-out from 0.4.4 (#310), the Pigeon 26.3.4 bindings from
+  0.4.4 (#306), and the `meta` dependency declaration from 0.4.5 (#313).
+- Keep the fork patches: operation-ID controller lifecycle and nil
+  `rawAttestationObject` guards.
+
+## 0.4.5
+
+ - **FIX**(passkeys): declare the meta dependency required by Pigeon generated code ([#313](https://github.com/corbado/flutter-passkeys/issues/313)). ([e1f12615](https://github.com/corbado/flutter-passkeys/commit/e1f126157ef1498ff563d9c4e8622eddd16a1a50))
+
+## 0.4.4
+
+ - **REFACTOR**(passkeys): regenerate Pigeon bindings with Pigeon 26.3.4 ([#306](https://github.com/corbado/flutter-passkeys/issues/306)). ([aaa15472](https://github.com/corbado/flutter-passkeys/commit/aaa15472b4fa4f0ca4842508232506403033bc6e))
+ - **FIX**(passkeys_darwin): add canBeSecurityKey to authenticate ([#310](https://github.com/corbado/flutter-passkeys/issues/310)). ([c66a16eb](https://github.com/corbado/flutter-passkeys/commit/c66a16eba8a51400bfa8bb52e40c97098b8b7aa0))
+ - **FIX**(passkeys_darwin): forward userVerification preference to AuthenticationServices ([#309](https://github.com/corbado/flutter-passkeys/issues/309)). ([0dc05c95](https://github.com/corbado/flutter-passkeys/commit/0dc05c95dffc3d7c679f70863784e05757bff1a6))
 
 ## 0.4.3+3
 
-- **FIX**(passkeys_darwin): compile out Signal API on Xcode older than 26.2
-  ([#289](https://github.com/corbado/flutter-passkeys/issues/289)).
+ - **FIX**(passkeys_darwin): compile out Signal API on Xcode older than 26.2 ([#289](https://github.com/corbado/flutter-passkeys/issues/289)). ([3731dc07](https://github.com/corbado/flutter-passkeys/commit/3731dc07755001735daef9e1b2a61ad718b1d26f))
 
 ## 0.4.2+2
 

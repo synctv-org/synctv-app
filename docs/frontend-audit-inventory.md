@@ -17,7 +17,7 @@ Test-file links identify evidence to inspect; their existence does not prove a
 passing run or complete behavioral coverage.
 
 Indexed handwritten/support sources: 480 files,
-157666 lines.
+157681 lines.
 
 ## Modules
 
@@ -46,7 +46,7 @@ Indexed handwritten/support sources: 480 files,
 | l10n | 1 | 48 | 1 | 0 | 0 | 0 |
 | linux | 3 | 175 | 3 | 0 | 0 | 0 |
 | macos | 2 | 390 | 2 | 0 | 0 | 0 |
-| packages/passkeys_darwin | 7 | 1149 | 7 | 0 | 0 | 0 |
+| packages/passkeys_darwin | 7 | 1164 | 7 | 0 | 0 | 0 |
 | packages/synctv_opaque | 28 | 3423 | 28 | 0 | 0 | 0 |
 | packages/synctv_video_player_media_kit | 9 | 2369 | 6 | 3 | 0 | 0 |
 | theme | 2 | 491 | 1 | 1 | 0 | 0 |
@@ -380,10 +380,10 @@ Indexed handwritten/support sources: 480 files,
 | [packages/passkeys_darwin/darwin/passkeys_darwin/Package.swift](../packages/passkeys_darwin/darwin/passkeys_darwin/Package.swift) | 20 | unreviewed |  |  |
 | [packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/AuthenticateController.swift](../packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/AuthenticateController.swift) | 126 | unreviewed |  |  |
 | [packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/ErrorExtension.swift](../packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/ErrorExtension.swift) | 106 | unreviewed |  |  |
-| [packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/PasskeysPlugin.swift](../packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/PasskeysPlugin.swift) | 449 | unreviewed |  |  |
+| [packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/PasskeysPlugin.swift](../packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/PasskeysPlugin.swift) | 462 | unreviewed |  |  |
 | [packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/RegisterController.swift](../packages/passkeys_darwin/darwin/passkeys_darwin/Sources/passkeys_darwin/RegisterController.swift) | 145 | unreviewed |  |  |
-| [packages/passkeys_darwin/lib/passkeys_darwin.dart](../packages/passkeys_darwin/lib/passkeys_darwin.dart) | 140 | unreviewed |  |  |
-| [packages/passkeys_darwin/pigeons/messages.dart](../packages/passkeys_darwin/pigeons/messages.dart) | 163 | unreviewed |  |  |
+| [packages/passkeys_darwin/lib/passkeys_darwin.dart](../packages/passkeys_darwin/lib/passkeys_darwin.dart) | 141 | unreviewed |  |  |
+| [packages/passkeys_darwin/pigeons/messages.dart](../packages/passkeys_darwin/pigeons/messages.dart) | 164 | unreviewed |  |  |
 | [packages/synctv_opaque/hook/build.dart](../packages/synctv_opaque/hook/build.dart) | 277 | unreviewed |  |  |
 | [packages/synctv_opaque/lib/src/opaque/ksf.dart](../packages/synctv_opaque/lib/src/opaque/ksf.dart) | 1 | unreviewed |  |  |
 | [packages/synctv_opaque/lib/src/opaque/ksf_default.dart](../packages/synctv_opaque/lib/src/opaque/ksf_default.dart) | 22 | unreviewed |  |  |

@@ -38,7 +38,7 @@ class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthori
         switch authorization.credential {
         case let credentialRegistration as ASAuthorizationPlatformPublicKeyCredentialRegistration:
             guard let attestationObject = credentialRegistration.rawAttestationObject else {
-                completion?(.failure(FlutterError(
+                completion?(.failure(PigeonError(
                     code: CustomErrors.unexpectedAuthorizationResponse,
                     message: "Passkey registration response is missing attestation data"
                 )))
@@ -66,7 +66,7 @@ class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthori
             break
         case let securityKeyRegistration as ASAuthorizationSecurityKeyPublicKeyCredentialRegistration:
             guard let attestationObject = securityKeyRegistration.rawAttestationObject else {
-                completion?(.failure(FlutterError(
+                completion?(.failure(PigeonError(
                     code: CustomErrors.unexpectedAuthorizationResponse,
                     message: "Security key registration response is missing attestation data"
                 )))
@@ -106,19 +106,19 @@ class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthori
             break
         default:
             let message = "Expected instance of ASAuthorizationPlatformPublicKeyCredentialRegistration or ASAuthorizationSecurityKeyPublicKeyCredentialRegistration but got: " + authorization.credential.description
-            completion?(.failure(FlutterError(code: CustomErrors.unexpectedAuthorizationResponse, message: message)))
+            completion?(.failure(PigeonError(code: CustomErrors.unexpectedAuthorizationResponse, message: message)))
         }
 
     }
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         if let err = error as? ASAuthorizationError {
-            completion?(.failure(FlutterError(from: err)))
+            completion?(.failure(PigeonError(from: err)))
             return
         }
         
         let nsErr = error as NSError
-        completion?(.failure(FlutterError(fromNSError: nsErr)))
+        completion?(.failure(PigeonError(fromNSError: nsErr)))
         return
     }
 

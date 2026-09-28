@@ -52,8 +52,8 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
         canBePlatformAuthenticator: Bool = true,
         canBeSecurityKey: Bool = true,
         residentKeyPreference: String?,
-        userVerificationPreference: String?,
         attestationPreference: String?,
+        userVerificationPreference: String?,
         salt: String?,
         completion: @escaping (Result<RegisterResponse, Error>) -> Void
     ) {
@@ -83,8 +83,10 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
                 name: user.name,
                 userID: decodedUserId
             )
-            platformRequest.userVerificationPreference = parseUserVerificationPreference(userVerificationPreference)
-            
+
+            if let userVerificationPreference = parseUserVerificationPreference(userVerificationPreference) {
+                platformRequest.userVerificationPreference = userVerificationPreference
+            }
 
             if #available(iOS 17.4, *) {
                 let excluded = parseCredentials(credentials: excludeCredentials)
@@ -111,7 +113,6 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
                 name: user.name,
                 userID: decodedUserId
             )
-            externalRequest.userVerificationPreference = parseUserVerificationPreference(userVerificationPreference)
 
             switch residentKeyPreference {
             case .some("preferred"):
@@ -132,8 +133,11 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
             default:
                 break
             }
-            
-            
+
+            if let userVerificationPreference = parseUserVerificationPreference(userVerificationPreference) {
+                externalRequest.userVerificationPreference = userVerificationPreference
+            }
+
             if #available(iOS 17.4, *) {
                 let excludedSecurityKeys = parseSecurityKeyCredentials(credentials: excludeCredentials)
                 externalRequest.excludedCredentials = excludedSecurityKeys
@@ -155,7 +159,7 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
             finishOperation(operationID)
             completion(result)
         }
-        
+
         let con = RegisterController(completion: wrappedCompletion)
         beginOperation(operationID, controller: con)
         con.run(requests: requests)
@@ -169,6 +173,7 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
         preferImmediatelyAvailableCredentials: Bool,
         userVerificationPreference: String?,
         salt: String?,
+        canBeSecurityKey: Bool = true,
         completion: @escaping (Result<AuthenticateResponse, Error>) -> Void
     ) {
         guard (try? canAuthenticate()) == true else {
@@ -186,7 +191,9 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
         let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: relyingPartyId)
         let platformRequest = platformProvider.createCredentialAssertionRequest(challenge: decodedChallenge)
         platformRequest.allowedCredentials = parseCredentials(credentials: allowedCredentials)
-        platformRequest.userVerificationPreference = parseUserVerificationPreference(userVerificationPreference)
+        if let userVerificationPreference = parseUserVerificationPreference(userVerificationPreference) {
+            platformRequest.userVerificationPreference = userVerificationPreference
+        }
         
         // PRF
         if #available(iOS 18.0, macOS 15.0, *),
@@ -200,11 +207,14 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
         
         // We should not show the security key flow when preferImmediatelyAvailable is set to true
         // Also skip security key requests when using conditional UI, which doesn't support them
-        if !preferImmediatelyAvailableCredentials && !conditionalUI {
+        // The relying party can opt out of security keys entirely with canBeSecurityKey
+        if canBeSecurityKey && !preferImmediatelyAvailableCredentials && !conditionalUI {
             let securityKeyProvider = ASAuthorizationSecurityKeyPublicKeyCredentialProvider(relyingPartyIdentifier: relyingPartyId)
             let externalRequest = securityKeyProvider.createCredentialAssertionRequest(challenge: decodedChallenge)
             externalRequest.allowedCredentials = parseSecurityKeyCredentials(credentials: allowedCredentials)
-            externalRequest.userVerificationPreference = parseUserVerificationPreference(userVerificationPreference)
+            if let userVerificationPreference = parseUserVerificationPreference(userVerificationPreference) {
+                externalRequest.userVerificationPreference = userVerificationPreference
+            }
             requests.append(externalRequest)
         }
         
@@ -253,7 +263,8 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
         }
 
         // ASCredentialDataManager only exists in the 26.2 SDK (Xcode 26.2,
-        // Swift 6.2.3), so it must also be compiled out on older toolchains.
+        // Swift 6.2.3), so it has to be compiled out on older toolchains
+        // instead of only being guarded at runtime.
         #if compiler(>=6.2.3)
         if #available(iOS 26.2, macOS 26.2, *) {
             Task {
@@ -265,7 +276,7 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
                     DispatchQueue.main.async { completion(.success(())) }
                 } catch {
                     DispatchQueue.main.async {
-                        completion(.failure(FlutterError(fromNSError: error as NSError)))
+                        completion(.failure(PigeonError(fromNSError: error as NSError)))
                     }
                 }
             }
@@ -295,6 +306,7 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
             credentialIDs.append(credentialData)
         }
 
+        // See the comment in signalUnknownCredential above.
         #if compiler(>=6.2.3)
         if #available(iOS 26.2, macOS 26.2, *) {
             Task {
@@ -307,7 +319,7 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
                     DispatchQueue.main.async { completion(.success(())) }
                 } catch {
                     DispatchQueue.main.async {
-                        completion(.failure(FlutterError(fromNSError: error as NSError)))
+                        completion(.failure(PigeonError(fromNSError: error as NSError)))
                     }
                 }
             }
@@ -326,19 +338,6 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
                 return nil
             }
             return ASAuthorizationPlatformPublicKeyCredentialDescriptor(credentialID: credentialData)
-        }
-    }
-
-    private func parseUserVerificationPreference(
-        _ preference: String?
-    ) -> ASAuthorizationPublicKeyCredentialUserVerificationPreference {
-        switch preference {
-        case "required":
-            return .required
-        case "discouraged":
-            return .discouraged
-        default:
-            return .preferred
         }
     }
     
@@ -365,6 +364,19 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
                 credentialID: credentialData,
                 transports: parsedTransports
             )
+        }
+    }
+
+    private func parseUserVerificationPreference(_ preference: String?) -> ASAuthorizationPublicKeyCredentialUserVerificationPreference? {
+        switch preference {
+        case .some("required"):
+            return .required
+        case .some("preferred"):
+            return .preferred
+        case .some("discouraged"):
+            return .discouraged
+        default:
+            return nil
         }
     }
 }
@@ -447,3 +459,4 @@ public extension String {
         return nil
     }
 }
+

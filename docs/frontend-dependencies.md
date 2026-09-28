@@ -1,6 +1,6 @@
 # Frontend Dependency Audit
 
-Checked on 2026-09-08 with Flutter 3.47.2 / Dart 3.13.2.
+Checked on 2026-09-28 with Flutter 3.47.5 / Dart 3.13.4.
 This records dependency resolution and the stated verification scope.
 It is not a complete security, native-device or performance audit.
 
@@ -8,15 +8,34 @@ It is not a complete security, native-device or performance audit.
 
 | Package | Previous | Current | Review |
 | --- | --- | --- | --- |
-| flutter_webrtc | 1.6.1 | 1.6.2 | Published 2026-09-07. Adds opt-in WARP and zero-playout-delay initialization options on native platforms. Both remain disabled by default. Dart Web implementation is unchanged. |
-| platform | 3.1.6 | 3.2.0 | Transitive dependency through path_provider_platform_interface. Introduces new platform APIs; legacy APIs remain available through compatibility wrappers. Application code has no direct package imports. |
+| file_picker | 12.2.0 | 13.1.0 | Breaking-major per resolver. The `FilePicker` facade API used by the app is unchanged; platform implementations moved to 2.x line. |
+| accessibility_tools | 2.8.0 | 3.0.0 | Breaking-major per resolver. No app API changes required. |
+| flutter_webrtc | 1.6.2+hotfix.1 | 1.6.2+hotfix.3 | Patch hotfix, native binaries only; Dart API unchanged. |
+| passkeys | 2.22.3 | 2.23.1 | Requires `passkeys_platform_interface 2.10` and `passkeys_darwin 0.4.5` Pigeon contracts. The vendored fork was rebased onto upstream 0.4.5 first (see below). |
+| protobuf | 6.0.0 | 6.1.0 | Runtime patch; generated code unaffected. |
+| volume_controller | 3.6.1 | 3.7.1 | Patch-level. |
+| wakelock_plus (transitive) | 1.7.0 | 1.8.0 | Used by the media_kit `Video` wakelock integration. |
 
-The WebRTC native change also updates Windows/Linux libwebrtc from
-m150.7871.00 to m150.7871.01. Darwin retains the 150.7871.01 binary and changes
-field-trial configuration. WARP is experimental and process-wide; enabling it
-requires native peer interoperability and connection-time measurements.
-Zero playout delay trades jitter smoothing for latency and needs separate
-adverse-network testing.
+Flutter SDK and FVM pin moved from 3.47.2 to 3.47.5 (stable, 2026-09-18);
+CI, the setup-build action, README badges and docs were updated to match.
+
+### passkeys_darwin fork rebase
+
+The vendored `packages/passkeys_darwin` fork moved from upstream `0.4.3+3` to
+`0.4.5+1`: upstream 0.4.4/0.4.5 adopted the fork's `userVerification`
+forwarding (#309), added a `canBeSecurityKey` authenticate opt-out (#310),
+regenerated Pigeon bindings with 26.3.4 (#306), and declared the `meta`
+dependency (#313). The fork keeps its two remaining patches: the operation-ID
+controller lifecycle and the nil `rawAttestationObject` guards. Removal
+criteria are updated in the package README.
+
+### flex_color_scheme stays on 8.x
+
+flex_color_scheme 9.0.0 targets the SDK-decoupled `material_ui` widget stack:
+its `FlexThemeData` returns `material_ui`'s `ThemeData` and the README
+requires importing `package:material_ui` for `MaterialApp` and widgets. The
+app is still on `package:flutter/material.dart`, so 9.x is pinned out with a
+pubspec comment until the widget stack migration happens as its own change.
 
 ## Constrained Updates
 
@@ -25,6 +44,8 @@ current constraints. These newer transitive releases cannot currently resolve:
 
 | Package | Resolved | Latest Reported | Constraint Owner |
 | --- | --- | --- | --- |
+| flex_color_scheme | 8.4.0 | 9.0.0 | pubspec pins ^8.4.0; 9.x requires the material_ui widget stack |
+| xml | 7.0.1 | 7.1.0 | resolver keeps 7.0.1 even when requested explicitly |
 | cli_util | 0.4.2 | 0.6.0 | flutter_launcher_icons 0.14.4 requires ^0.4.1 |
 | flex_seed_scheme | 4.0.1 | 5.0.1 | flex_color_scheme 8.4.0 requires ^4.0.0 |
 | material_color_utilities | 0.13.0 | 0.13.1 | Flutter SDK pins 0.13.0 |
@@ -32,7 +53,7 @@ current constraints. These newer transitive releases cannot currently resolve:
 | test_api | 0.7.12 | 0.7.14 | flutter_test pins 0.7.12 |
 
 No overrides were added to bypass these constraints. The existing
-passkeys_darwin fork remains based on the latest published 0.4.3+3; its removal
+passkeys_darwin fork is rebased onto the latest published 0.4.5; its removal
 criteria remain in the package README. Upstream unreleased changes were not
 re-audited in this pass.
 

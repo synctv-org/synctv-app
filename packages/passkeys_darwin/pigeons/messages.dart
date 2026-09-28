@@ -1,10 +1,10 @@
-// Pigeon Host API parameters stay positional to match the generated codecs.
 // ignore_for_file: avoid_positional_boolean_parameters
 import 'package:pigeon/pigeon.dart';
 
 /// Represents a relying party
 @ConfigurePigeon(
   PigeonOptions(
+    copyrightHeader: 'pigeons/header.txt',
     dartOut: 'lib/messages.g.dart',
     swiftOut: 'darwin/passkeys_darwin/Sources/passkeys_darwin/messages.swift',
   ),
@@ -132,8 +132,8 @@ abstract class PasskeysApi {
     bool canBePlatformAuthenticator,
     bool canBeSecurityKey,
     String? residentKeyPreference,
-    String? userVerificationPreference,
     String? attestationPreference,
+    String? userVerificationPreference,
     String? salt,
   );
 
@@ -146,6 +146,7 @@ abstract class PasskeysApi {
     bool preferImmediatelyAvailableCredentials,
     String? userVerificationPreference,
     String? salt,
+    bool canBeSecurityKey,
   );
 
   @async

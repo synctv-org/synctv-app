@@ -28,7 +28,7 @@ file or every runtime state has been reviewed.
 
 ## Baseline
 
-- Flutter 3.47.2 / Dart 3.13.2, using the repository FVM configuration.
+- Flutter 3.47.5 / Dart 3.13.4, using the repository FVM configuration.
 - Production web build succeeds before changes.
 - Direct updates available: file_picker 12.2.0 and flutter_webrtc 1.6.1.
 - Discovery currently nests a shrink-wrapped grid inside a complete page
