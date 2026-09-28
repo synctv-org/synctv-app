@@ -152,7 +152,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Java
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: "17"
@@ -834,7 +834,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Ruby and Fastlane
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1
         with:
           ruby-version: "3.4"
           bundler-cache: true
@@ -878,7 +878,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Ruby and Fastlane
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1
         with:
           ruby-version: "3.4"
           bundler-cache: true
@@ -993,7 +993,7 @@ jobs:
             "dist/SyncTV-${{ needs.metadata.outputs.artifact-version }}-macos-app-store.pkg"
 
       - name: Set up Ruby and Fastlane
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1
         with:
           ruby-version: "3.4"
           bundler-cache: true
