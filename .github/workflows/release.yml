@@ -55,7 +55,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FLUTTER_VERSION: "3.47.5"
+  FLUTTER_VERSION: "3.47.7"
   NODE_VERSION: "24"
   RUST_VERSION: "1.98.0"
   SYNCTV_BUILT_IN_SERVER_URL: ${{ vars.SYNCTV_BUILT_IN_SERVER_URL }}
@@ -152,7 +152,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Java
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: "17"
@@ -294,7 +294,7 @@ jobs:
 
       - name: Upload Google Play artifact
         if: github.event_name == 'workflow_dispatch' && inputs.publish_google_play
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: store-android-google-play
           path: store-dist/*
@@ -314,7 +314,7 @@ jobs:
             "$output"
 
       - name: Upload Android artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-android
           path: dist/*
@@ -378,7 +378,7 @@ jobs:
         run: bash tool/ci/package_release.sh linux "${{ matrix.architecture }}" "${{ needs.metadata.outputs.artifact-version }}" dist
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-linux-${{ matrix.architecture }}
           path: dist/*
@@ -472,7 +472,7 @@ jobs:
           -Path "dist/SyncTV-${{ needs.metadata.outputs.artifact-version }}-windows-x64-setup.exe"
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-windows-x64
           path: dist/*
@@ -501,7 +501,7 @@ jobs:
           rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - name: Set up Node.js for macOS packaging
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -641,7 +641,7 @@ jobs:
           fi
 
       - name: Upload universal macOS artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-macos-universal
           path: dist/universal/*
@@ -650,7 +650,7 @@ jobs:
           compression-level: 0
 
       - name: Upload arm64 macOS artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-macos-arm64
           path: dist/arm64/*
@@ -659,7 +659,7 @@ jobs:
           compression-level: 0
 
       - name: Upload x64 macOS artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-macos-x64
           path: dist/x64/*
@@ -746,7 +746,7 @@ jobs:
         run: bash tool/ci/package_release.sh ios arm64 "${{ needs.metadata.outputs.artifact-version }}" dist
 
       - name: Upload iOS artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-ios-${{ steps.signing.outputs.mode }}
           path: dist/*
@@ -811,7 +811,7 @@ jobs:
           needs.metadata.outputs.stable == 'true' &&
           vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
           (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store))
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: store-ios-app-store
           path: store-dist/*
@@ -834,13 +834,13 @@ jobs:
           persist-credentials: false
 
       - name: Set up Ruby and Fastlane
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
         with:
           ruby-version: "3.4"
           bundler-cache: true
 
       - name: Download Google Play artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: store-android-google-play
           path: dist
@@ -878,13 +878,13 @@ jobs:
           persist-credentials: false
 
       - name: Set up Ruby and Fastlane
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
         with:
           ruby-version: "3.4"
           bundler-cache: true
 
       - name: Download iOS App Store artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: store-ios-app-store
           path: dist
@@ -993,7 +993,7 @@ jobs:
             "dist/SyncTV-${{ needs.metadata.outputs.artifact-version }}-macos-app-store.pkg"
 
       - name: Set up Ruby and Fastlane
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
         with:
           ruby-version: "3.4"
           bundler-cache: true
@@ -1025,7 +1025,7 @@ jobs:
           persist-credentials: false
 
       - name: Download release artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: release-*
           path: dist
