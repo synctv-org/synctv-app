@@ -1203,7 +1203,12 @@ class _AppTextFieldState extends State<AppTextField> {
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
       inputFormatters: widget.inputFormatters,
-      autofillHints: widget.autofillHints,
+      // Default to an empty autofill hint list instead of null: a null list
+      // selects the engine's autofill-disabled text input path, which on
+      // mobile browsers dismisses the keyboard right after focus
+      // (flutter/flutter#164071). An empty enabled configuration is inert on
+      // every platform and keeps the soft keyboard open.
+      autofillHints: widget.autofillHints ?? const <String>[],
       smartDashesType: widget.smartDashesType,
       smartQuotesType: widget.smartQuotesType,
       onTap: widget.onTap,
