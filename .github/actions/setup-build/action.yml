@@ -17,7 +17,7 @@ inputs:
   rust-version:
     description: Rust toolchain version used by the OPAQUE native asset.
     required: false
-    default: "1.99.0"
+    default: "1.99.1"
   rust-targets:
     description: Optional comma-separated Rust compilation targets.
     required: false
@@ -77,7 +77,7 @@ runs:
         "$FLUTTER_ROOT/bin/flutter" --version
 
     - name: Set up Rust
-      uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
       with:
         toolchain: ${{ inputs.rust-version }}
         targets: ${{ inputs.rust-targets }}
