@@ -70,6 +70,10 @@ dependencies:
     path: packages/synctv_opaque
   qr_flutter: ^4.1.0
   webview_flutter: ^4.14.1
+  # 0.4.0 is a native-window rewrite: removes runWebViewTitleBarWidget and
+  # the platform JS bridges used by the desktop Bilibili verification flow
+  # (Windows/Linux only, not runtime-testable locally). Revisit once the
+  # 0.4 line has settled; 0.3.2 has no known advisories.
   desktop_webview_window: ^0.3.0
   media_kit_libs_macos_video: ^1.1.4
   window_manager: ^0.5.2
