@@ -664,6 +664,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         canUseCurrentPassword: canUseCurrentPassword,
         canUseEmail: canUseEmail,
         canUsePasskey: canUsePasskey,
+        email: _user.email ?? '',
       ),
     );
     if (!mounted || result == null) return;
