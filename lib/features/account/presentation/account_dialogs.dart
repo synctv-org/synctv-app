@@ -231,11 +231,13 @@ class _PasswordUpdateDialog extends StatefulWidget {
   final bool canUseCurrentPassword;
   final bool canUseEmail;
   final bool canUsePasskey;
+  final String email;
 
   const _PasswordUpdateDialog({
     required this.canUseCurrentPassword,
     required this.canUseEmail,
     required this.canUsePasskey,
+    required this.email,
   });
 
   @override
@@ -243,12 +245,16 @@ class _PasswordUpdateDialog extends StatefulWidget {
 }
 
 class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
+  AccountGateway get _gateway => _accountGateway(context);
+
   final _formKey = GlobalKey<FormState>();
   late _PasswordUpdateMethod _method;
   final _currentPasswordController = TextEditingController();
   final _emailTokenController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  bool _sendingCode = false;
+  bool _codeSent = false;
 
   @override
   void initState() {
@@ -267,6 +273,31 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _sendEmailCode() async {
+    final email = widget.email.trim();
+    if (_sendingCode) return;
+    if (email.isEmpty) {
+      AppNotifications.showWarning(context, context.l10n.emailRequired);
+      return;
+    }
+    setState(() => _sendingCode = true);
+    try {
+      final message = await _gateway.requestPasswordReset(email);
+      if (!mounted) return;
+      setState(() => _codeSent = true);
+      AppNotifications.showSuccess(
+        context,
+        message.isEmpty ? context.l10n.verificationCodeSent : message,
+      );
+    } catch (e) {
+      if (mounted) {
+        AppNotifications.showError(context, context.l10n.sendCodeFailed('$e'));
+      }
+    } finally {
+      if (mounted) setState(() => _sendingCode = false);
+    }
   }
 
   void _submit() {
@@ -372,15 +403,57 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
                     textInputAction: TextInputAction.next,
                   ),
                 if (_method == _PasswordUpdateMethod.emailToken)
-                  _DialogTextField(
-                    controller: _emailTokenController,
-                    validator: (value) => (value ?? '').trim().isEmpty
-                        ? context.l10n.enterEmailCode
-                        : null,
-                    autofocus: true,
-                    label: context.l10n.emailVerificationCode,
-                    icon: Icons.mark_email_read_outlined,
-                    textInputAction: TextInputAction.next,
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final compact = constraints.maxWidth < 420;
+                      final field = _DialogTextField(
+                        controller: _emailTokenController,
+                        validator: (value) => (value ?? '').trim().isEmpty
+                            ? context.l10n.enterEmailCode
+                            : null,
+                        autofocus: true,
+                        label: context.l10n.emailVerificationCode,
+                        icon: Icons.mark_email_read_outlined,
+                        textInputAction: TextInputAction.next,
+                      );
+                      final sendButton = AppActionButton(
+                        onPressed: _sendingCode ? null : _sendEmailCode,
+                        loading: _sendingCode,
+                        icon: Icons.send_rounded,
+                        label: _codeSent
+                            ? context.l10n.resend
+                            : context.l10n.sendVerificationCode,
+                        style: AppActionButtonStyle.outlined,
+                      );
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (compact) ...[
+                            field,
+                            const SizedBox(height: 10),
+                            sendButton,
+                          ] else
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: field),
+                                const SizedBox(width: 10),
+                                SizedBox(height: 48, child: sendButton),
+                              ],
+                            ),
+                          if (widget.email.trim().isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              context.l10n.codeSentTo(widget.email.trim()),
+                              style: TextStyle(
+                                color: Theme.of(context).hintColor,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 if (_method == _PasswordUpdateMethod.passkey)
                   _DialogNotice(

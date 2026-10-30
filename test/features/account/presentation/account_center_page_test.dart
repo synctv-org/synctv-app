@@ -1022,6 +1022,66 @@ void main() {
     }
   }
 
+  testWidgets('Password email method requests a verification code', (
+    tester,
+  ) async {
+    final gateway = _PasswordCodeRequestGateway();
+    await tester.binding.setSurfaceSize(const Size(1200, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => DependencyRegistryScope(
+          values: {
+            AccountGateway: gateway,
+            OpaqueAuthenticatorService: _RecordingPasswordAuthenticator(),
+            OAuth2CallbackClient: _UnavailableOAuth2Callbacks(),
+            NativeAppleSignInClient: _UnavailableAppleSignIn(),
+            PasskeyClient: _AvailablePasskeyClient(),
+            ResourceUrlResolver: const IdentityResourceUrlResolver(),
+          },
+          child: child!,
+        ),
+        home: AccountCenterPage(
+          initialUser: PopulatedAccountPreviewGateway.user,
+          onOpenRoom: (_) async {},
+          onCreateRoom: () async {},
+          onManageRoom: (_) async {},
+          onOpenProviderBinding: (_) async {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Security').first);
+    await tester.pumpAndSettle();
+    final open = find.text('Edit');
+    await tester.ensureVisible(open);
+    await tester.tap(open);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Email').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Email').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Send verification code'), findsOneWidget);
+    expect(
+      find.text('A verification code will be sent to preview@example.test'),
+      findsOneWidget,
+    );
+    expect(gateway.requestedEmails, isEmpty);
+
+    await tester.ensureVisible(find.text('Send verification code'));
+    await tester.tap(find.text('Send verification code'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+    expect(gateway.requestedEmails, ['preview@example.test']);
+    expect(find.text('Resend'), findsOneWidget);
+    expect(find.text('Send verification code'), findsNothing);
+  });
+
   for (final phase in [
     'duplicate',
     'session',
@@ -2206,6 +2266,16 @@ class _HangingAccountGateway implements AccountGateway {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => pending.future;
+}
+
+class _PasswordCodeRequestGateway extends PopulatedAccountPreviewGateway {
+  final requestedEmails = <String>[];
+
+  @override
+  Future<String> requestPasswordReset(String email) async {
+    requestedEmails.add(email);
+    return '';
+  }
 }
 
 class _AccountLayoutGateway extends _HangingAccountGateway {
