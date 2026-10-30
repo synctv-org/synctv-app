@@ -34,8 +34,10 @@ final class NativeDesktopWebVerificationClient
         title: title,
         windowWidth: windowWidth.toInt(),
         windowHeight: windowHeight.toInt(),
-        userDataFolderWindows:
-            '${appDirectory.path}${Platform.pathSeparator}web_verification',
+        windows: WindowsWebviewOptions(
+          userDataFolder:
+              '${appDirectory.path}${Platform.pathSeparator}web_verification',
+        ),
       ),
     );
     final completer = Completer<String>();
@@ -57,15 +59,10 @@ final class NativeDesktopWebVerificationClient
         completer.completeError(StateError('Bilibili 安全验证已取消'));
       }
     });
-    if (Platform.isLinux) {
-      webview.registerJavaScriptMessageHandler(
-        bridgeName,
-        (_, body) => completeMessage(body),
-      );
-    }
-    if (Platform.isWindows) {
-      webview.addOnWebMessageReceivedCallback(completeMessage);
-    }
+    webview.addJavaScriptHandler(
+      bridgeName,
+      (data, origin) => completeMessage(data),
+    );
 
     final timer = Timer(timeout, () {
       if (!completer.isCompleted) {

@@ -2,7 +2,6 @@ import 'package:synctv_app/features/room_invite/domain/room_invite.dart';
 
 import 'dart:async';
 
-import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -57,9 +56,6 @@ import 'package:window_manager/window_manager.dart';
 
 void main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
-  if (runWebViewTitleBarWidget(args)) {
-    return;
-  }
   usePathUrlStrategy();
   final p2pMediaPreferences = P2pMediaPreferencesController(
     store: const SharedPreferencesP2pMediaPreferencesStore(),

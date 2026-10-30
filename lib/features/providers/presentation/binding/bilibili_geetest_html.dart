@@ -77,7 +77,15 @@ String buildBilibiliGeetestHtml({
 
     function sendMessage(payload) {
       const message = JSON.stringify(payload);
-      if (window.$bilibiliGeetestBridgeName) {
+      if (
+        window.desktopWebview &&
+        window.desktopWebview.postMessage
+      ) {
+        window.desktopWebview.postMessage(
+          '$bilibiliGeetestBridgeName',
+          message,
+        );
+      } else if (window.$bilibiliGeetestBridgeName) {
         window.$bilibiliGeetestBridgeName.postMessage(message);
       } else if (
         window.webkit &&
