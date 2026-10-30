@@ -62,7 +62,7 @@ dependencies:
   media_kit_libs_ios_video: ^1.1.4
   media_kit_libs_windows_video: ^1.0.11
   # 6.0.0-alpha.8+ adopts AGP 9 Built-in Kotlin.
-  flutter_web_auth_2: ^6.0.0-alpha.8
+  flutter_web_auth_2: ^6.0.0-alpha.9
   url_launcher: ^6.3.2
   flutter_markdown_plus: ^1.0.12
   passkeys: ^2.22.3
@@ -70,11 +70,7 @@ dependencies:
     path: packages/synctv_opaque
   qr_flutter: ^4.1.0
   webview_flutter: ^4.14.1
-  # 0.4.0 is a native-window rewrite: removes runWebViewTitleBarWidget and
-  # the platform JS bridges used by the desktop Bilibili verification flow
-  # (Windows/Linux only, not runtime-testable locally). Revisit once the
-  # 0.4 line has settled; 0.3.2 has no known advisories.
-  desktop_webview_window: ^0.3.0
+  desktop_webview_window: ^0.4.0
   media_kit_libs_macos_video: ^1.1.4
   window_manager: ^0.5.2
   window_to_front: ^1.0.0

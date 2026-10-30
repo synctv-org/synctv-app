@@ -7,5 +7,14 @@
   },
   "dependencies": {
     "create-dmg": "8.1.0"
+  },
+  "overrides": {
+    "image-size": "^2.0.3"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.1"
+  },
+  "scripts": {
+    "postinstall": "patch-package"
   }
 }
