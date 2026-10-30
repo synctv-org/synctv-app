@@ -74,7 +74,7 @@ dependencies:
   # the platform JS bridges used by the desktop Bilibili verification flow
   # (Windows/Linux only, not runtime-testable locally). Revisit once the
   # 0.4 line has settled; 0.3.2 has no known advisories.
-  desktop_webview_window: ^0.3.0
+  desktop_webview_window: ^0.4.0
   media_kit_libs_macos_video: ^1.1.4
   window_manager: ^0.5.2
   window_to_front: ^1.0.0
