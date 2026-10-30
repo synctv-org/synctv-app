@@ -1221,7 +1221,6 @@ class _AppTextFieldState extends State<AppTextField> {
       undoController: widget.undoController,
       spellCheckConfiguration: widget.spellCheckConfiguration,
       contentInsertionConfiguration: widget.contentInsertionConfiguration,
-      onTapOutside: (_) => FocusScope.of(context).unfocus(),
       style: widget.style ?? theme.textTheme.bodyMedium,
       decoration: InputDecoration(
         isDense: dense,
