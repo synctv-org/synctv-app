@@ -26851,6 +26851,201 @@ class UnobserveResource extends $pb.GeneratedMessage {
   void clearObserveId() => $_clearField(1);
 }
 
+/// Creates a server-side realtime session whose lifetime is owned by a lease
+/// (refreshed by the attached SSE stream and incoming message posts) instead of
+/// a socket. The session carries the same semantics as a WebSocket connection:
+/// admission, presence, observations with cursors, and WebRTC signaling.
+class CreateRealtimeSessionRequest extends $pb.GeneratedMessage {
+  factory CreateRealtimeSessionRequest({
+    $core.Iterable<ObserveResource>? initialObservations,
+  }) {
+    final result = create();
+    if (initialObservations != null)
+      result.initialObservations.addAll(initialObservations);
+    return result;
+  }
+
+  CreateRealtimeSessionRequest._();
+
+  factory CreateRealtimeSessionRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateRealtimeSessionRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateRealtimeSessionRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pPM<ObserveResource>(1, _omitFieldNames ? '' : 'initialObservations',
+        subBuilder: ObserveResource.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateRealtimeSessionRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateRealtimeSessionRequest copyWith(
+          void Function(CreateRealtimeSessionRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as CreateRealtimeSessionRequest))
+          as CreateRealtimeSessionRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateRealtimeSessionRequest create() =>
+      CreateRealtimeSessionRequest._();
+  @$core.override
+  CreateRealtimeSessionRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateRealtimeSessionRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateRealtimeSessionRequest>(create);
+  static CreateRealtimeSessionRequest? _defaultInstance;
+
+  /// Observations to establish immediately after the session joins the room.
+  @$pb.TagNumber(1)
+  $pb.PbList<ObserveResource> get initialObservations => $_getList(0);
+}
+
+class CreateRealtimeSessionResponse extends $pb.GeneratedMessage {
+  factory CreateRealtimeSessionResponse({
+    $core.String? sessionId,
+    $fixnum.Int64? leaseTtlMs,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    if (leaseTtlMs != null) result.leaseTtlMs = leaseTtlMs;
+    return result;
+  }
+
+  CreateRealtimeSessionResponse._();
+
+  factory CreateRealtimeSessionResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateRealtimeSessionResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateRealtimeSessionResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..aInt64(2, _omitFieldNames ? '' : 'leaseTtlMs')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateRealtimeSessionResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateRealtimeSessionResponse copyWith(
+          void Function(CreateRealtimeSessionResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as CreateRealtimeSessionResponse))
+          as CreateRealtimeSessionResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateRealtimeSessionResponse create() =>
+      CreateRealtimeSessionResponse._();
+  @$core.override
+  CreateRealtimeSessionResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateRealtimeSessionResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateRealtimeSessionResponse>(create);
+  static CreateRealtimeSessionResponse? _defaultInstance;
+
+  /// Opaque session identifier used by the events/messages endpoints.
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+
+  /// Lease TTL in milliseconds. The session is torn down when neither the SSE
+  /// stream nor a message post refreshes it within this window.
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get leaseTtlMs => $_getI64(1);
+  @$pb.TagNumber(2)
+  set leaseTtlMs($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLeaseTtlMs() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLeaseTtlMs() => $_clearField(2);
+}
+
+/// A single client message posted to an HTTP realtime session. The payload is
+/// exactly the WebSocket/gRPC `ClientMessage`; the server processes it through
+/// the same handler, so behavior is transport-independent.
+class SendRealtimeSessionMessageRequest extends $pb.GeneratedMessage {
+  factory SendRealtimeSessionMessageRequest({
+    ClientMessage? message,
+  }) {
+    final result = create();
+    if (message != null) result.message = message;
+    return result;
+  }
+
+  SendRealtimeSessionMessageRequest._();
+
+  factory SendRealtimeSessionMessageRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SendRealtimeSessionMessageRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SendRealtimeSessionMessageRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<ClientMessage>(1, _omitFieldNames ? '' : 'message',
+        subBuilder: ClientMessage.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SendRealtimeSessionMessageRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SendRealtimeSessionMessageRequest copyWith(
+          void Function(SendRealtimeSessionMessageRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as SendRealtimeSessionMessageRequest))
+          as SendRealtimeSessionMessageRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SendRealtimeSessionMessageRequest create() =>
+      SendRealtimeSessionMessageRequest._();
+  @$core.override
+  SendRealtimeSessionMessageRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SendRealtimeSessionMessageRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SendRealtimeSessionMessageRequest>(
+          create);
+  static SendRealtimeSessionMessageRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ClientMessage get message => $_getN(0);
+  @$pb.TagNumber(1)
+  set message(ClientMessage value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMessage() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMessage() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ClientMessage ensureMessage() => $_ensure(0);
+}
+
 class ObservePlaybackState extends $pb.GeneratedMessage {
   factory ObservePlaybackState({
     $fixnum.Int64? eventSequence,
@@ -46754,14 +46949,89 @@ class GetServerInfoRequest extends $pb.GeneratedMessage {
   static GetServerInfoRequest? _defaultInstance;
 }
 
+class RealtimeTransportCapability extends $pb.GeneratedMessage {
+  factory RealtimeTransportCapability({
+    RealtimeTransportKind? kind,
+    $core.String? path,
+  }) {
+    final result = create();
+    if (kind != null) result.kind = kind;
+    if (path != null) result.path = path;
+    return result;
+  }
+
+  RealtimeTransportCapability._();
+
+  factory RealtimeTransportCapability.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RealtimeTransportCapability.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RealtimeTransportCapability',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aE<RealtimeTransportKind>(1, _omitFieldNames ? '' : 'kind',
+        enumValues: RealtimeTransportKind.values)
+    ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RealtimeTransportCapability clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RealtimeTransportCapability copyWith(
+          void Function(RealtimeTransportCapability) updates) =>
+      super.copyWith(
+              (message) => updates(message as RealtimeTransportCapability))
+          as RealtimeTransportCapability;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RealtimeTransportCapability create() =>
+      RealtimeTransportCapability._();
+  @$core.override
+  RealtimeTransportCapability createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RealtimeTransportCapability getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RealtimeTransportCapability>(create);
+  static RealtimeTransportCapability? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  RealtimeTransportKind get kind => $_getN(0);
+  @$pb.TagNumber(1)
+  set kind(RealtimeTransportKind value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasKind() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKind() => $_clearField(1);
+
+  /// Base path or endpoint pattern for the transport, e.g. `/ws/rooms/{roomId}`
+  /// or `/api/rooms/{roomId}/realtime/sessions`. Informational: clients
+  /// generally derive concrete URLs from their own server endpoint config.
+  @$pb.TagNumber(2)
+  $core.String get path => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set path($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPath() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPath() => $_clearField(2);
+}
+
 class GetServerInfoResponse extends $pb.GeneratedMessage {
   factory GetServerInfoResponse({
     $core.String? serverId,
     $core.String? serverName,
+    $core.Iterable<RealtimeTransportCapability>? transports,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
     if (serverName != null) result.serverName = serverName;
+    if (transports != null) result.transports.addAll(transports);
     return result;
   }
 
@@ -46780,6 +47050,8 @@ class GetServerInfoResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
     ..aOS(2, _omitFieldNames ? '' : 'serverName')
+    ..pPM<RealtimeTransportCapability>(3, _omitFieldNames ? '' : 'transports',
+        subBuilder: RealtimeTransportCapability.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -46821,6 +47093,10 @@ class GetServerInfoResponse extends $pb.GeneratedMessage {
   $core.bool hasServerName() => $_has(1);
   @$pb.TagNumber(2)
   void clearServerName() => $_clearField(2);
+
+  /// Realtime transports this deployment advertises.
+  @$pb.TagNumber(3)
+  $pb.PbList<RealtimeTransportCapability> get transports => $_getList(2);
 }
 
 class GetServerTimeRequest extends $pb.GeneratedMessage {

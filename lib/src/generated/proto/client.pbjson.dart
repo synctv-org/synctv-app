@@ -993,6 +993,25 @@ final $typed_data.Uint8List contentReportStatusDescriptor = $convert.base64Decod
     'U1RBVFVTX1JFVklFV0lORxACEiIKHkNPTlRFTlRfUkVQT1JUX1NUQVRVU19SRVNPTFZFRBADEi'
     'MKH0NPTlRFTlRfUkVQT1JUX1NUQVRVU19ESVNNSVNTRUQQBA==');
 
+@$core.Deprecated('Use realtimeTransportKindDescriptor instead')
+const RealtimeTransportKind$json = {
+  '1': 'RealtimeTransportKind',
+  '2': [
+    {'1': 'REALTIME_TRANSPORT_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'REALTIME_TRANSPORT_KIND_WEB_SOCKET', '2': 1},
+    {'1': 'REALTIME_TRANSPORT_KIND_SSE', '2': 2},
+    {'1': 'REALTIME_TRANSPORT_KIND_WEB_TRANSPORT', '2': 3},
+    {'1': 'REALTIME_TRANSPORT_KIND_GRPC', '2': 4},
+  ],
+};
+
+/// Descriptor for `RealtimeTransportKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List realtimeTransportKindDescriptor = $convert.base64Decode(
+    'ChVSZWFsdGltZVRyYW5zcG9ydEtpbmQSJwojUkVBTFRJTUVfVFJBTlNQT1JUX0tJTkRfVU5TUE'
+    'VDSUZJRUQQABImCiJSRUFMVElNRV9UUkFOU1BPUlRfS0lORF9XRUJfU09DS0VUEAESHwobUkVB'
+    'TFRJTUVfVFJBTlNQT1JUX0tJTkRfU1NFEAISKQolUkVBTFRJTUVfVFJBTlNQT1JUX0tJTkRfV0'
+    'VCX1RSQU5TUE9SVBADEiAKHFJFQUxUSU1FX1RSQU5TUE9SVF9LSU5EX0dSUEMQBA==');
+
 @$core.Deprecated('Use notificationTypeDescriptor instead')
 const NotificationType$json = {
   '1': 'NotificationType',
@@ -11102,6 +11121,64 @@ final $typed_data.Uint8List unobserveResourceDescriptor = $convert.base64Decode(
     'ChFVbm9ic2VydmVSZXNvdXJjZRIpCgpvYnNlcnZlX2lkGAEgASgJQgq6SAdyBRABGIABUglvYn'
     'NlcnZlSWQ=');
 
+@$core.Deprecated('Use createRealtimeSessionRequestDescriptor instead')
+const CreateRealtimeSessionRequest$json = {
+  '1': 'CreateRealtimeSessionRequest',
+  '2': [
+    {
+      '1': 'initial_observations',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.ObserveResource',
+      '10': 'initialObservations'
+    },
+  ],
+};
+
+/// Descriptor for `CreateRealtimeSessionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createRealtimeSessionRequestDescriptor =
+    $convert.base64Decode(
+        'ChxDcmVhdGVSZWFsdGltZVNlc3Npb25SZXF1ZXN0ElEKFGluaXRpYWxfb2JzZXJ2YXRpb25zGA'
+        'EgAygLMh4uc3luY3R2LmNsaWVudC5PYnNlcnZlUmVzb3VyY2VSE2luaXRpYWxPYnNlcnZhdGlv'
+        'bnM=');
+
+@$core.Deprecated('Use createRealtimeSessionResponseDescriptor instead')
+const CreateRealtimeSessionResponse$json = {
+  '1': 'CreateRealtimeSessionResponse',
+  '2': [
+    {'1': 'session_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'sessionId'},
+    {'1': 'lease_ttl_ms', '3': 2, '4': 1, '5': 3, '10': 'leaseTtlMs'},
+  ],
+};
+
+/// Descriptor for `CreateRealtimeSessionResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createRealtimeSessionResponseDescriptor =
+    $convert.base64Decode(
+        'Ch1DcmVhdGVSZWFsdGltZVNlc3Npb25SZXNwb25zZRIpCgpzZXNzaW9uX2lkGAEgASgJQgq6SA'
+        'dyBRAIGIABUglzZXNzaW9uSWQSIAoMbGVhc2VfdHRsX21zGAIgASgDUgpsZWFzZVR0bE1z');
+
+@$core.Deprecated('Use sendRealtimeSessionMessageRequestDescriptor instead')
+const SendRealtimeSessionMessageRequest$json = {
+  '1': 'SendRealtimeSessionMessageRequest',
+  '2': [
+    {
+      '1': 'message',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ClientMessage',
+      '10': 'message'
+    },
+  ],
+};
+
+/// Descriptor for `SendRealtimeSessionMessageRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sendRealtimeSessionMessageRequestDescriptor =
+    $convert.base64Decode(
+        'CiFTZW5kUmVhbHRpbWVTZXNzaW9uTWVzc2FnZVJlcXVlc3QSNgoHbWVzc2FnZRgBIAEoCzIcLn'
+        'N5bmN0di5jbGllbnQuQ2xpZW50TWVzc2FnZVIHbWVzc2FnZQ==');
+
 @$core.Deprecated('Use observePlaybackStateDescriptor instead')
 const ObservePlaybackState$json = {
   '1': 'ObservePlaybackState',
@@ -18339,19 +18416,52 @@ const GetServerInfoRequest$json = {
 final $typed_data.Uint8List getServerInfoRequestDescriptor =
     $convert.base64Decode('ChRHZXRTZXJ2ZXJJbmZvUmVxdWVzdA==');
 
+@$core.Deprecated('Use realtimeTransportCapabilityDescriptor instead')
+const RealtimeTransportCapability$json = {
+  '1': 'RealtimeTransportCapability',
+  '2': [
+    {
+      '1': 'kind',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.RealtimeTransportKind',
+      '8': {},
+      '10': 'kind'
+    },
+    {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
+  ],
+};
+
+/// Descriptor for `RealtimeTransportCapability`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List realtimeTransportCapabilityDescriptor =
+    $convert.base64Decode(
+        'ChtSZWFsdGltZVRyYW5zcG9ydENhcGFiaWxpdHkSRAoEa2luZBgBIAEoDjIkLnN5bmN0di5jbG'
+        'llbnQuUmVhbHRpbWVUcmFuc3BvcnRLaW5kQgq6SAeCAQQQASAAUgRraW5kEhIKBHBhdGgYAiAB'
+        'KAlSBHBhdGg=');
+
 @$core.Deprecated('Use getServerInfoResponseDescriptor instead')
 const GetServerInfoResponse$json = {
   '1': 'GetServerInfoResponse',
   '2': [
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '10': 'serverId'},
     {'1': 'server_name', '3': 2, '4': 1, '5': 9, '10': 'serverName'},
+    {
+      '1': 'transports',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.RealtimeTransportCapability',
+      '10': 'transports'
+    },
   ],
 };
 
 /// Descriptor for `GetServerInfoResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getServerInfoResponseDescriptor = $convert.base64Decode(
     'ChVHZXRTZXJ2ZXJJbmZvUmVzcG9uc2USGwoJc2VydmVyX2lkGAEgASgJUghzZXJ2ZXJJZBIfCg'
-    'tzZXJ2ZXJfbmFtZRgCIAEoCVIKc2VydmVyTmFtZQ==');
+    'tzZXJ2ZXJfbmFtZRgCIAEoCVIKc2VydmVyTmFtZRJKCgp0cmFuc3BvcnRzGAMgAygLMiouc3lu'
+    'Y3R2LmNsaWVudC5SZWFsdGltZVRyYW5zcG9ydENhcGFiaWxpdHlSCnRyYW5zcG9ydHM=');
 
 @$core.Deprecated('Use getServerTimeRequestDescriptor instead')
 const GetServerTimeRequest$json = {
@@ -21906,6 +22016,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.GetPublicSettingsResponse': GetPublicSettingsResponse$json,
   '.synctv.client.GetServerInfoRequest': GetServerInfoRequest$json,
   '.synctv.client.GetServerInfoResponse': GetServerInfoResponse$json,
+  '.synctv.client.RealtimeTransportCapability':
+      RealtimeTransportCapability$json,
   '.synctv.client.GetServerTimeRequest': GetServerTimeRequest$json,
   '.synctv.client.GetServerTimeResponse': GetServerTimeResponse$json,
 };
