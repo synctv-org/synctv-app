@@ -8,7 +8,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(
-    'security mode defaults to standard and persists origin sampling',
+    'security mode defaults to origin sampling and persists standard',
     () async {
       SharedPreferences.setMockInitialValues({});
       final preferences = P2pMediaPreferencesController(
@@ -16,17 +16,17 @@ void main() {
       );
 
       await preferences.load();
-      expect(preferences.securityMode, P2pMediaSecurityMode.standard);
+      expect(preferences.securityMode, P2pMediaSecurityMode.sampledOrigin);
       expect(
         preferences.cacheSizeMiB,
         P2pMediaPreferenceValues.defaultCacheSizeMiB,
       );
 
-      await preferences.setSecurityMode(P2pMediaSecurityMode.sampledOrigin);
+      await preferences.setSecurityMode(P2pMediaSecurityMode.standard);
       final storage = await SharedPreferences.getInstance();
       expect(
         storage.getString('playback.p2p_media_security_mode'),
-        P2pMediaSecurityMode.sampledOrigin.name,
+        P2pMediaSecurityMode.standard.name,
       );
 
       await preferences.setCacheSizeMiB(512);

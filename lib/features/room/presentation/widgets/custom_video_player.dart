@@ -21,6 +21,7 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
 import 'package:synctv_app/features/room/presentation/danmaku/acfun_danmaku_codec.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
+import 'package:synctv_app/features/room/domain/media_document_parsing.dart';
 import 'package:synctv_app/core/network/resource_url_resolver.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/browser_autoplay_controller.dart';
@@ -203,7 +204,27 @@ class DanmakuController extends ChangeNotifier {
       if (_disposed || generation != _documentGeneration || content == null) {
         return;
       }
-      _parseDanmaku(content);
+      // Documents are untrusted (server, provider host, or P2P peer): parse
+      // off the UI isolate with a hard size cap.
+      if (content.length > maxDanmakuDocumentChars) {
+        debugPrint('Danmaku document exceeds size cap, skipping');
+        return;
+      }
+      final acFunItems = await documentParseRunner(
+        decodeAcFunDanmakuDocument,
+        content,
+      );
+      if (_disposed || generation != _documentGeneration) return;
+      if (acFunItems != null) {
+        replaceVideoItems(acFunItems);
+      } else {
+        final records = await documentParseRunner(
+          parseBilibiliDanmakuXml,
+          content,
+        );
+        if (_disposed || generation != _documentGeneration) return;
+        replaceVideoItems(_danmakuItemsFromRecords(records));
+      }
       _documentLoaded = true;
     } catch (e) {
       debugPrint('Failed to load danmaku: $e');
@@ -212,64 +233,6 @@ class DanmakuController extends ChangeNotifier {
         _documentLoading = false;
       }
     }
-  }
-
-  void _parseDanmaku(String content) {
-    final acFunItems = decodeAcFunDanmakuDocument(content);
-    if (acFunItems != null) {
-      replaceVideoItems(acFunItems);
-      return;
-    }
-    String normalized = content
-        .replaceAll('\u00A0', ' ')
-        .replaceAll('\u3000', ' ')
-        .replaceAll(RegExp(r'\s+'), ' ');
-
-    final regex = RegExp(r'<d\s+p="([^"]*)"\s*>((?:.|\n)*?)<\/d>');
-    final matches = regex.allMatches(normalized);
-
-    final List<DanmakuItem> newItems = [];
-
-    for (final match in matches) {
-      final p = match.group(1) ?? '';
-      String text = (match.group(2) ?? '').trim();
-      final parts = p.split(',');
-      if (parts.isNotEmpty) {
-        final timeSec = double.tryParse(parts[0]) ?? 0.0;
-        final mode = int.tryParse(parts.length > 1 ? parts[1] : '1') ?? 1;
-        final colorInt =
-            int.tryParse(parts.length > 3 ? parts[3] : '16777215') ?? 16777215;
-
-        DanmakuType type = DanmakuType.floating;
-        if (mode == 4) type = DanmakuType.bottom;
-        if (mode == 5) type = DanmakuType.top;
-
-        // Color is decimal RGB
-        final color = Color(0xFF000000 | (colorInt & 0x00FFFFFF));
-        final startTime = Duration(milliseconds: (timeSec * 1000).toInt());
-        final duration = type == DanmakuType.floating
-            ? const Duration(seconds: 8)
-            : const Duration(seconds: 4);
-
-        // Remove HTML entities if present
-        text = text
-            .replaceAll('&amp;', '&')
-            .replaceAll('&lt;', '<')
-            .replaceAll('&gt;', '>');
-
-        newItems.add(
-          DanmakuItem(
-            text: text,
-            startTime: startTime,
-            endTime: startTime + duration,
-            color: color,
-            type: type,
-          ),
-        );
-      }
-    }
-
-    replaceVideoItems(newItems);
   }
 
   Future<void> _replaceDanmakuStream() async {
@@ -1765,18 +1728,22 @@ VideoPlayerInteractionMode videoPlayerInteractionModeForPlatform(
   _ => VideoPlayerInteractionMode.desktop,
 };
 
-String sanitizeSubtitleText(String text) {
-  return text
-      .replaceAll(RegExp(r'<(?:\d{2}:)?\d{2}:\d{2}[.,]\d{3}>'), '')
-      .replaceAll(RegExp(r'<[^>]+>'), '')
-      .replaceAll('&nbsp;', ' ')
-      .replaceAll('&amp;', '&')
-      .replaceAll('&lt;', '<')
-      .replaceAll('&gt;', '>')
-      .split('\n')
-      .map((line) => line.trim())
-      .where((line) => line.isNotEmpty)
-      .join('\n');
+/// Maps parsed danmaku records onto the presentation model.
+List<DanmakuItem> _danmakuItemsFromRecords(List<DanmakuRecord> records) {
+  return [
+    for (final record in records)
+      DanmakuItem(
+        text: record.text,
+        startTime: record.start,
+        endTime: record.end,
+        color: Color(0xFF000000 | record.colorRgb),
+        type: switch (record.placement) {
+          DanmakuPlacement.floating => DanmakuType.floating,
+          DanmakuPlacement.top => DanmakuType.top,
+          DanmakuPlacement.bottom => DanmakuType.bottom,
+        },
+      ),
+  ];
 }
 
 String subtitleDisplayLabel(String key, dynamic value) {
@@ -1938,7 +1905,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   double _sliderDragValue = 0.0;
 
   // Subtitles
-  final List<_SubtitleItem> _subtitleItems = [];
+  final List<SubtitleCue> _subtitleItems = [];
   String _currentSubtitle = '';
   Timer? _subtitleTimer;
   String? _selectedSubtitleKey;
@@ -2150,7 +2117,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _currentSubtitle = _subtitleItems
         .firstWhere(
           (item) => item.start <= position && item.end >= position,
-          orElse: () => _SubtitleItem(Duration.zero, Duration.zero, ''),
+          orElse: () => const SubtitleCue(Duration.zero, Duration.zero, ''),
         )
         .text;
   }
@@ -2255,22 +2222,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         headers: resource.headers,
       );
       if (mounted && generation == _subtitleLoadGeneration && bytes != null) {
-        // Robust decoding (handles UTF-16 BOM)
-        String content = _decodeSubtitleContent(bytes);
-
-        // Debug content header
-        debugPrint(
-          'Subtitle Content Start: ${content.substring(0, min(200, content.length)).replaceAll('\n', '\\n')}',
+        // Documents are untrusted (server, provider host, or P2P peer):
+        // decode and parse off the UI isolate with a hard size cap.
+        final document = await documentParseRunner(
+          parseSubtitleDocumentBytes,
+          SubtitleParseRequest(bytes: bytes, format: format),
         );
-
-        // Determine format
-        if (_parseBilibiliJsonSubtitles(content, format: format)) {
-          // Bilibili player-v2 subtitle documents use JSON body entries.
-        } else if (content.contains('[Script Info]') ||
-            content.contains('[Events]')) {
-          _parseAssSubtitles(content);
+        if (!mounted || generation != _subtitleLoadGeneration) return;
+        if (document.isDanmaku) {
+          _subtitleItems.clear();
+          widget.danmakuController?.replaceVideoItems(
+            _danmakuItemsFromRecords(document.danmaku),
+          );
+          debugPrint(
+            'Parsed ${document.danmaku.length} danmaku items from ASS',
+          );
         } else {
-          _parseSubtitles(content);
+          _subtitleItems
+            ..clear()
+            ..addAll(document.cues);
+          debugPrint('Parsed ${_subtitleItems.length} subtitles');
         }
 
         _subtitleLoaded = true;
@@ -2292,386 +2263,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   Map<String, String> _headersFromDynamicMap(dynamic value) {
     if (value is! Map) return const {};
     return value.map((key, value) => MapEntry('$key', '$value'));
-  }
-
-  String _decodeSubtitleContent(Uint8List bytes) {
-    if (bytes.length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE) {
-      debugPrint('Detected UTF-16 LE BOM');
-      final List<int> codes = [];
-      for (int i = 2; i < bytes.length - 1; i += 2) {
-        codes.add(bytes[i] | (bytes[i + 1] << 8));
-      }
-      return String.fromCharCodes(codes);
-    }
-
-    if (bytes.length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF) {
-      debugPrint('Detected UTF-16 BE BOM');
-      final List<int> codes = [];
-      for (int i = 2; i < bytes.length - 1; i += 2) {
-        codes.add((bytes[i] << 8) | bytes[i + 1]);
-      }
-      return String.fromCharCodes(codes);
-    }
-
-    int start = 0;
-    if (bytes.length >= 3 &&
-        bytes[0] == 0xEF &&
-        bytes[1] == 0xBB &&
-        bytes[2] == 0xBF) {
-      debugPrint('Detected UTF-8 BOM');
-      start = 3;
-    }
-
-    try {
-      return utf8.decode(bytes.sublist(start), allowMalformed: false);
-    } catch (e) {
-      debugPrint('UTF-8 decode failed, trying lenient decode: $e');
-      return utf8.decode(bytes, allowMalformed: true);
-    }
-  }
-
-  void _parseAssSubtitles(String content) {
-    if (content.contains('Script generated by danmu2ass')) {
-      debugPrint('Detected danmu2ass script, parsing as Danmaku...');
-      _parseAssToDanmaku(content);
-      return;
-    }
-
-    debugPrint('Parsing ASS subtitles...');
-    _subtitleItems.clear();
-    final lines = LineSplitter.split(content).toList();
-
-    List<String> formatFields = [];
-
-    bool inEvents = false;
-
-    for (String line in lines) {
-      line = line.trim();
-      if (line == '[Events]') {
-        inEvents = true;
-        continue;
-      }
-
-      if (!inEvents) continue;
-
-      if (line.startsWith('Format:')) {
-        final formatStr = line.substring(7).trim();
-        formatFields = formatStr
-            .split(',')
-            .map((e) => e.trim().toLowerCase())
-            .toList();
-        debugPrint('ASS Format: $formatFields');
-        continue;
-      }
-
-      if (line.startsWith('Dialogue:')) {
-        if (formatFields.isEmpty) {
-          formatFields = [
-            'layer',
-            'start',
-            'end',
-            'style',
-            'name',
-            'marginl',
-            'marginr',
-            'marginv',
-            'effect',
-            'text',
-          ];
-        }
-
-        final contentStr = line.substring(9).trim();
-
-        List<String> parts = [];
-        int currentStart = 0;
-        for (int i = 0; i < formatFields.length - 1; i++) {
-          int commaIndex = contentStr.indexOf(',', currentStart);
-          if (commaIndex == -1) break;
-          parts.add(contentStr.substring(currentStart, commaIndex));
-          currentStart = commaIndex + 1;
-        }
-        // The rest is the text
-        if (currentStart < contentStr.length) {
-          parts.add(contentStr.substring(currentStart));
-        } else {
-          parts.add('');
-        }
-
-        if (parts.length == formatFields.length) {
-          try {
-            int startIndex = formatFields.indexOf('start');
-            int endIndex = formatFields.indexOf('end');
-            int textIndex = formatFields.indexOf('text');
-
-            if (startIndex != -1 && endIndex != -1 && textIndex != -1) {
-              final start = _parseAssDuration(parts[startIndex]);
-              final end = _parseAssDuration(parts[endIndex]);
-              String text = parts[textIndex];
-
-              text = text.replaceAll(RegExp(r'\{.*?\}'), '');
-              // Replace \N with newline
-              text = text.replaceAll(r'\N', '\n');
-              text = text.trim();
-
-              if (text.isNotEmpty) {
-                _subtitleItems.add(_SubtitleItem(start, end, text));
-              }
-            }
-          } catch (e) {
-            debugPrint('ASS subtitle parse error: $e');
-          }
-        }
-      }
-    }
-    debugPrint('Parsed ${_subtitleItems.length} ASS subtitles');
-  }
-
-  bool _parseBilibiliJsonSubtitles(String content, {String? format}) {
-    if (format?.trim().toLowerCase() != 'json') return false;
-    try {
-      final decoded = jsonDecode(content);
-      if (decoded is! Map || decoded['body'] is! List) return false;
-
-      final items = <_SubtitleItem>[];
-      for (final value in decoded['body'] as List) {
-        if (value is! Map) continue;
-        final startSeconds = _subtitleSeconds(value['from']);
-        final endSeconds = _subtitleSeconds(value['to']);
-        final text = sanitizeSubtitleText(value['content']?.toString() ?? '');
-        if (startSeconds == null ||
-            endSeconds == null ||
-            endSeconds < startSeconds ||
-            text.isEmpty) {
-          continue;
-        }
-        items.add(
-          _SubtitleItem(
-            Duration(milliseconds: (startSeconds * 1000).round()),
-            Duration(milliseconds: (endSeconds * 1000).round()),
-            text,
-          ),
-        );
-      }
-      _subtitleItems
-        ..clear()
-        ..addAll(items);
-      debugPrint('Parsed ${_subtitleItems.length} Bilibili subtitles');
-      return true;
-    } catch (error) {
-      debugPrint('Bilibili subtitle JSON parse error: $error');
-      return false;
-    }
-  }
-
-  double? _subtitleSeconds(Object? value) => switch (value) {
-    num value => value.toDouble(),
-    String value => double.tryParse(value),
-    _ => null,
-  };
-
-  void _parseAssToDanmaku(String content) {
-    if (widget.danmakuController == null) return;
-
-    final lines = LineSplitter.split(content).toList();
-    List<DanmakuItem> danmakuItems = [];
-
-    List<String> formatFields = [];
-    bool inEvents = false;
-
-    for (String line in lines) {
-      line = line.trim();
-      if (line == '[Events]') {
-        inEvents = true;
-        continue;
-      }
-      if (!inEvents) continue;
-
-      if (line.startsWith('Format:')) {
-        final formatStr = line.substring(7).trim();
-        formatFields = formatStr
-            .split(',')
-            .map((e) => e.trim().toLowerCase())
-            .toList();
-        continue;
-      }
-
-      if (line.startsWith('Dialogue:')) {
-        if (formatFields.isEmpty) {
-          formatFields = [
-            'layer',
-            'start',
-            'end',
-            'style',
-            'name',
-            'marginl',
-            'marginr',
-            'marginv',
-            'effect',
-            'text',
-          ];
-        }
-
-        final contentStr = line.substring(9).trim();
-        List<String> parts = [];
-        int currentStart = 0;
-        for (int i = 0; i < formatFields.length - 1; i++) {
-          int commaIndex = contentStr.indexOf(',', currentStart);
-          if (commaIndex == -1) break;
-          parts.add(contentStr.substring(currentStart, commaIndex));
-          currentStart = commaIndex + 1;
-        }
-        if (currentStart < contentStr.length) {
-          parts.add(contentStr.substring(currentStart));
-        } else {
-          parts.add('');
-        }
-
-        if (parts.length == formatFields.length) {
-          try {
-            int startIndex = formatFields.indexOf('start');
-            int endIndex = formatFields.indexOf('end');
-            int textIndex = formatFields.indexOf('text');
-            int styleIndex = formatFields.indexOf('style');
-
-            if (startIndex != -1 && endIndex != -1 && textIndex != -1) {
-              final start = _parseAssDuration(parts[startIndex]);
-              final end = _parseAssDuration(parts[endIndex]);
-              String rawText = parts[textIndex];
-              String style = styleIndex != -1 ? parts[styleIndex] : '';
-
-              // Extract color from tags if present {\c&HBBGGRR&}
-              Color color = Colors.white;
-              final colorMatch = RegExp(r'\\c&H([0-9a-fA-F]{6})&')
-                  .firstMatch(rawText);
-              if (colorMatch != null) {
-                final hex = colorMatch.group(1)!; // BBGGRR
-                final b = int.parse(hex.substring(0, 2), radix: 16);
-                final g = int.parse(hex.substring(2, 4), radix: 16);
-                final r = int.parse(hex.substring(4, 6), radix: 16);
-                color = Color.fromARGB(255, r, g, b);
-              }
-
-              // Remove tags
-              String text = rawText
-                  .replaceAll(RegExp(r'\{.*?\}'), '')
-                  .replaceAll(r'\N', '\n')
-                  .trim();
-
-              if (text.isNotEmpty) {
-                DanmakuType type = DanmakuType.floating;
-                if (style.toLowerCase().contains('top')) {
-                  type = DanmakuType.top;
-                }
-                if (style.toLowerCase().contains('bottom')) {
-                  type = DanmakuType.bottom;
-                }
-
-                danmakuItems.add(
-                  DanmakuItem(
-                    text: text,
-                    startTime: start,
-                    endTime: end, // DanmakuOverlay uses internal duration usually, but we can pass it
-                    color: color,
-                    type: type,
-                  ),
-                );
-              }
-            }
-          } catch (e) {
-            // ignore
-          }
-        }
-      }
-    }
-
-    _subtitleItems.clear();
-
-    // Add to danmaku controller
-    widget.danmakuController!.replaceVideoItems(danmakuItems);
-    debugPrint(
-      'Parsed and added ${danmakuItems.length} danmaku items from ASS',
-    );
-  }
-
-  Duration _parseAssDuration(String s) {
-    // h:mm:ss.cc
-    final parts = s.split(':');
-
-    int hours = int.parse(parts[0]);
-    int minutes = int.parse(parts[1]);
-    final secParts = parts[2].split('.');
-    int seconds = int.parse(secParts[0]);
-    int centiseconds = int.parse(secParts[1]);
-
-    return Duration(
-      hours: hours,
-      minutes: minutes,
-      seconds: seconds,
-      milliseconds: centiseconds * 10,
-    );
-  }
-
-  void _parseSubtitles(String content) {
-    _subtitleItems.clear();
-    final lines = LineSplitter.split(content).toList();
-    final regex = RegExp(
-      r'((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3}) --> ((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3})',
-    );
-
-    for (int i = 0; i < lines.length; i++) {
-      final line = lines[i].trim();
-      final match = regex.firstMatch(line);
-      if (match != null) {
-        try {
-          final start = _parseDuration(match.group(1)!);
-          final end = _parseDuration(match.group(2)!);
-
-          String text = '';
-          int j = i + 1;
-          while (j < lines.length && lines[j].trim().isNotEmpty) {
-            text += '${lines[j].trim()}\n';
-            j++;
-          }
-
-          final sanitizedText = sanitizeSubtitleText(text);
-          if (sanitizedText.isNotEmpty) {
-            _subtitleItems.add(_SubtitleItem(start, end, sanitizedText));
-          }
-          i = j;
-        } catch (e) {
-          debugPrint('Error parsing subtitle line: $line, error: $e');
-        }
-      }
-    }
-    debugPrint('Parsed ${_subtitleItems.length} subtitles');
-  }
-
-  Duration _parseDuration(String s) {
-    final parts = s.split(':');
-    int hours = 0;
-    int minutes = 0;
-    int seconds = 0;
-    int milliseconds = 0;
-
-    if (parts.length == 3) {
-      hours = int.parse(parts[0]);
-      minutes = int.parse(parts[1]);
-      final secondsParts = parts[2].split(RegExp(r'[.,]'));
-      seconds = int.parse(secondsParts[0]);
-      milliseconds = int.parse(secondsParts[1]);
-    } else if (parts.length == 2) {
-      minutes = int.parse(parts[0]);
-      final secondsParts = parts[1].split(RegExp(r'[.,]'));
-      seconds = int.parse(secondsParts[0]);
-      milliseconds = int.parse(secondsParts[1]);
-    }
-
-    return Duration(
-      hours: hours,
-      minutes: minutes,
-      seconds: seconds,
-      milliseconds: milliseconds,
-    );
   }
 
   void _startHideTimer() {
@@ -5471,12 +5062,4 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
       ),
     );
   }
-}
-
-class _SubtitleItem {
-  final Duration start;
-  final Duration end;
-  final String text;
-
-  _SubtitleItem(this.start, this.end, this.text);
 }

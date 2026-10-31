@@ -918,7 +918,7 @@
   "p2pCacheSizeDescription": "Persistent LRU cache shared across playback sessions. Entries expire after 10 minutes without access.",
   "p2pSecurityMode": "Peer data validation",
   "p2pSecurityStandard": "Standard",
-  "p2pSecurityStandardDescription": "Checks framing, declared length, size limits, and timeouts. Validation adds no network traffic; scheduling can still race origins and peers.",
+  "p2pSecurityStandardDescription": "Checks framing, declared length, size limits, and timeouts only. Bytes from room peers are never compared with the origin, so a peer can alter or corrupt played media. Use when bandwidth matters more than integrity.",
   "p2pSecuritySampled": "Origin sampling",
   "p2pSecuritySampledDescription": "Compares 10% of peer pieces with the origin using SHA-256. Conflicting peers are isolated for the current swarm session.",
   "p2pIntegrityChecks": "Integrity checks",

@@ -110,6 +110,28 @@ class P2pMediaManager implements P2pMediaSession {
   @override
   int get uploadedBytes => _uploadedBytes;
 
+  /// Peers currently holding a pending ICE candidate queue.
+  @visibleForTesting
+  int get pendingCandidatePeerCount => _negotiation.pendingPeerCount;
+
+  /// Pending ICE candidates buffered for one peer.
+  @visibleForTesting
+  int pendingCandidateCount(String remoteId, String swarmId) =>
+      _negotiation.pendingCandidateCount(_PeerKey(remoteId, swarmId));
+
+  /// A peer may hold negotiation state only after it registered in the swarm
+  /// (join or server peer list) or already has a live or in-flight connection.
+  bool _isAdmittedPeer(_PeerKey key) =>
+      _remoteSwarmMemberships.containsKey(key) ||
+      _peerConnections.containsKey(key) ||
+      _connectingPeers.contains(key);
+
+  void _prunePendingCandidates() {
+    _negotiation.prunePendingCandidates(
+      (key) => _activeSwarms.containsKey(key.swarmId) && _isAdmittedPeer(key),
+    );
+  }
+
   @override
   bool hasConnectedPeer(String swarmId) => _channels.entries.any(
     (entry) =>
@@ -158,6 +180,7 @@ class P2pMediaManager implements P2pMediaSession {
     for (final swarmId in removed) {
       _finishPeerDiscovery(swarmId);
       _integrityBlockedPeers.removeWhere((peer) => peer.swarmId == swarmId);
+      _remoteSwarmMemberships.removeWhere((peer, _) => peer.swarmId == swarmId);
     }
     for (final swarmId in added.followedBy(changed)) {
       _startPeerDiscovery(swarmId);
@@ -168,6 +191,7 @@ class P2pMediaManager implements P2pMediaSession {
             .toList(growable: false)) {
       await _closePeer(key);
     }
+    _prunePendingCandidates();
     for (final swarmId in added.followedBy(changed)) {
       _sendSwarmMembership('media_swarm_join', swarmId, next[swarmId]!);
     }
@@ -184,6 +208,8 @@ class P2pMediaManager implements P2pMediaSession {
       await _closePeer(key);
     }
     _remoteSwarmMemberships.clear();
+    // Peers must re-register on the new session; stale queues cannot drain.
+    _negotiation.clear();
     if (_activeSwarms.isNotEmpty) {
       for (final swarmId in _activeSwarms.keys) {
         _startPeerDiscovery(swarmId);
@@ -196,23 +222,33 @@ class P2pMediaManager implements P2pMediaSession {
   void handleSignalingMessage(String type, Map<String, dynamic> data) {
     if (_disposed) return;
     if (type == 'media_swarm_peers') {
-      unawaited(_handleSwarmPeers(data));
+      _runHandler('swarm peers', () => _handleSwarmPeers(data));
       return;
     }
     final remoteId = data['from']?.toString() ?? '';
     if (remoteId.isEmpty) return;
     switch (type) {
       case 'media_swarm_join':
-        unawaited(_handleSwarmJoin(remoteId, data));
+        _runHandler('swarm join', () => _handleSwarmJoin(remoteId, data));
       case 'media_swarm_leave':
-        unawaited(_handleSwarmLeave(remoteId, data));
+        _runHandler('swarm leave', () => _handleSwarmLeave(remoteId, data));
       case 'offer':
-        unawaited(_handleOffer(remoteId, data));
+        _runHandler('offer', () => _handleOffer(remoteId, data));
       case 'answer':
-        unawaited(_handleAnswer(remoteId, data));
+        _runHandler('answer', () => _handleAnswer(remoteId, data));
       case 'candidate':
-        unawaited(_handleCandidate(remoteId, data));
+        _runHandler('candidate', () => _handleCandidate(remoteId, data));
     }
+  }
+
+  /// Signaling payloads are peer-authored; a malformed one must not escape as
+  /// an unhandled zone error.
+  void _runHandler(String what, Future<void> Function() handler) {
+    unawaited(
+      Future<void>.sync(handler).catchError((Object error) {
+        debugPrint('P2P media $what failed: $error');
+      }),
+    );
   }
 
   @override
@@ -473,6 +509,7 @@ class P2pMediaManager implements P2pMediaSession {
     for (final key in expired) {
       _remoteSwarmMemberships.remove(key);
     }
+    _prunePendingCandidates();
     for (final key in _remoteSwarmMemberships.keys.toList(growable: false)) {
       await _connectRemoteSwarm(key);
     }
@@ -487,7 +524,7 @@ class P2pMediaManager implements P2pMediaSession {
         _peerCountForSwarm(swarmId) >= _hardPeersPerSwarm) {
       return;
     }
-    final incomingTieBreaker = data['tie_breaker'] as int? ?? 0;
+    final incomingTieBreaker = _readInt(data['tie_breaker']) ?? 0;
     if (!_negotiation.shouldAcceptRemoteOffer(key, incomingTieBreaker)) {
       return;
     }
@@ -541,13 +578,14 @@ class P2pMediaManager implements P2pMediaSession {
   ) async {
     final key = _PeerKey(remoteId, data['media_swarm_id']?.toString() ?? '');
     if (_integrityBlockedPeers.contains(key) ||
-        !_activeSwarms.containsKey(key.swarmId)) {
+        !_activeSwarms.containsKey(key.swarmId) ||
+        !_isAdmittedPeer(key)) {
       return;
     }
     final candidate = RTCIceCandidate(
       data['candidate']?.toString(),
       data['sdpMid']?.toString(),
-      data['sdpMLineIndex'] as int?,
+      _readInt(data['sdpMLineIndex']),
     );
     final pc = _peerConnections[key];
     if (pc == null || !_negotiation.hasRemoteDescription(key)) {
@@ -731,7 +769,7 @@ class P2pMediaManager implements P2pMediaSession {
     if (transfer == null) return;
     switch (type) {
       case 'begin':
-        final expectedLength = decoded['n'] as int?;
+        final expectedLength = _readInt(decoded['n']);
         if (expectedLength == null ||
             expectedLength < 0 ||
             expectedLength > _maxPieceBytes) {
@@ -1164,6 +1202,14 @@ class P2pMediaManager implements P2pMediaSession {
     }
   }
 }
+
+/// Reads an integer from peer-authored JSON without trusting its runtime type.
+int? _readInt(Object? value) => switch (value) {
+  int v => v,
+  num v when v.isFinite && v == v.truncateToDouble() => v.toInt(),
+  String s => int.tryParse(s),
+  _ => null,
+};
 
 @immutable
 class _PeerKey {

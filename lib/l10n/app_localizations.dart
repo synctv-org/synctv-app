@@ -4797,7 +4797,7 @@ abstract class AppLocalizations {
   /// No description provided for @p2pSecurityStandardDescription.
   ///
   /// In en, this message translates to:
-  /// **'Checks framing, declared length, size limits, and timeouts. Validation adds no network traffic; scheduling can still race origins and peers.'**
+  /// **'Checks framing, declared length, size limits, and timeouts only. Bytes from room peers are never compared with the origin, so a peer can alter or corrupt played media. Use when bandwidth matters more than integrity.'**
   String get p2pSecurityStandardDescription;
 
   /// No description provided for @p2pSecuritySampled.

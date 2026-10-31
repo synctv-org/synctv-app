@@ -804,7 +804,7 @@
   "p2pCacheSizeDescription": "跨播放会话复用的持久化 LRU 缓存。条目连续 10 分钟未访问后过期。",
   "p2pSecurityMode": "Peer 数据校验",
   "p2pSecurityStandard": "标准",
-  "p2pSecurityStandardDescription": "检查传输帧、声明长度、大小上限与超时。安全校验本身不增加网络流量；调度仍可能并行竞速来源与 Peer。",
+  "p2pSecurityStandardDescription": "仅检查传输帧、声明长度、大小上限与超时，从不与来源对比内容，房间 Peer 可以篡改或损坏播放的媒体。仅在带宽比完整性更重要时使用。",
   "p2pSecuritySampled": "来源抽样",
   "p2pSecuritySampledDescription": "使用 SHA-256 对比 10% 的 Peer 分片与来源数据，并在当前 swarm 会话隔离冲突 Peer。",
   "p2pIntegrityChecks": "完整性检查",

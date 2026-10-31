@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/data/danmaku_event_decoder.dart';
+import 'package:synctv_app/features/room/domain/media_document_parsing.dart';
 
 final class HttpDanmakuSource implements DanmakuSource {
   const HttpDanmakuSource();
@@ -14,6 +15,9 @@ final class HttpDanmakuSource implements DanmakuSource {
   }) async {
     final response = await http.get(uri, headers: headers);
     if (response.statusCode != 200) return null;
+    if (response.bodyBytes.length > maxDanmakuDocumentBytes) {
+      throw const DanmakuDocumentTooLargeException();
+    }
     return utf8.decode(response.bodyBytes, allowMalformed: true);
   }
 

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/features/room/presentation/widgets/custom_video_player.dart';
+import 'package:synctv_app/features/room/domain/media_document_parsing.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_options_control.dart';
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/browser_autoplay_controller.dart';
@@ -189,7 +190,15 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
   }
 }
 
+/// Spawned isolates do not complete inside fake async; parse inline instead.
+Future<R> parseInline<Q, R>(R Function(Q) callback, Q message) async =>
+    callback(message);
+
 void main() {
+  setUp(() {
+    documentParseRunner = parseInline;
+  });
+
   testWidgets(
     'subtitle choices survive player replacement and stay resource scoped',
     (tester) async {

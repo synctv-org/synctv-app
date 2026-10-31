@@ -17,3 +17,11 @@ final class DanmakuAccessExpiredException implements Exception {
 final class DanmakuAccessDeniedException implements Exception {
   const DanmakuAccessDeniedException();
 }
+
+/// A danmaku document exceeded the post-decompression size cap.
+final class DanmakuDocumentTooLargeException implements Exception {
+  const DanmakuDocumentTooLargeException();
+
+  @override
+  String toString() => 'Danmaku document exceeds the size cap';
+}

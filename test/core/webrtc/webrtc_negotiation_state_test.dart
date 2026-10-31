@@ -60,4 +60,48 @@ void main() {
 
     expect(state.takeCandidates('peer'), [1]);
   });
+
+  test('per-peer pending candidates are capped and extras are dropped', () {
+    final state = WebRtcNegotiationState<String, int>(
+      maxPendingCandidatesPerPeer: 3,
+    );
+    expect(state.queueCandidate('peer', 1), isTrue);
+    expect(state.queueCandidate('peer', 2), isTrue);
+    expect(state.queueCandidate('peer', 3), isTrue);
+    expect(state.queueCandidate('peer', 4), isFalse);
+    expect(state.pendingCandidateCount('peer'), 3);
+    expect(state.takeCandidates('peer'), [1, 2, 3]);
+  });
+
+  test('pending peer key space is capped', () {
+    final state = WebRtcNegotiationState<String, int>(maxPendingPeers: 2);
+    expect(state.queueCandidate('a', 1), isTrue);
+    expect(state.queueCandidate('b', 1), isTrue);
+    expect(state.queueCandidate('c', 1), isFalse);
+    expect(state.pendingPeerCount, 2);
+    // Draining a peer frees a slot.
+    state.takeCandidates('a');
+    expect(state.queueCandidate('c', 1), isTrue);
+  });
+
+  test('restore trims to the per-peer cap and bypasses the peer cap', () {
+    final state = WebRtcNegotiationState<String, int>(
+      maxPendingCandidatesPerPeer: 2,
+      maxPendingPeers: 1,
+    );
+    state.queueCandidate('other', 9);
+    state.restoreCandidates('peer', [1, 2, 3]);
+    expect(state.pendingPeerCount, 2);
+    expect(state.takeCandidates('peer'), [1, 2]);
+  });
+
+  test('prune drops queues of peers that are no longer live', () {
+    final state = WebRtcNegotiationState<String, int>();
+    state.queueCandidate('live', 1);
+    state.queueCandidate('stale', 1);
+    state.prunePendingCandidates((peer) => peer == 'live');
+    expect(state.pendingPeerCount, 1);
+    expect(state.takeCandidates('stale'), isEmpty);
+    expect(state.takeCandidates('live'), [1]);
+  });
 }
