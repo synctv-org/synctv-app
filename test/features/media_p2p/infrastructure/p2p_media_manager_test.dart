@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/core/webrtc/webrtc_negotiation_state.dart';
 import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_manager.dart';
 
 import '../../../support/p2p_replacement_candidates.dart';
@@ -205,6 +206,139 @@ void main() {
       expect(signals.single.data['media_swarm_ticket'], 'ticket-2');
       unawaited(manager.dispose());
       async.flushMicrotasks();
+    });
+  });
+
+  group('ICE candidate admission', () {
+    P2pMediaManager buildManager() => P2pMediaManager(
+      onSignalingMessage: (_, _) {},
+      loadIceServers: () async => const [],
+      loadCachedPiece: (swarmId, pieceKey) async => null,
+      onStateChange: () {},
+      createConnection: (_) async => throw StateError('no transport'),
+    );
+
+    void sendCandidate(
+      P2pMediaManager manager,
+      String from,
+      String swarm, [
+      Object? sdpMLineIndex = 0,
+    ]) {
+      manager.handleSignalingMessage('candidate', {
+        'from': from,
+        'media_swarm_id': swarm,
+        'candidate': 'candidate:1 1 udp 1 192.0.2.1 9 typ host',
+        'sdpMid': '0',
+        'sdpMLineIndex': sdpMLineIndex,
+      });
+    }
+
+    test('candidates from unregistered peers are dropped', () async {
+      final manager = buildManager();
+      await manager.setActiveSwarms({'sm1_test': 'ticket'});
+      for (var i = 0; i < 5000; i++) {
+        sendCandidate(manager, 'attacker-$i:conn', 'sm1_test');
+      }
+      await Future<void>.delayed(Duration.zero);
+      expect(manager.pendingCandidatePeerCount, 0);
+      await manager.dispose();
+    });
+
+    test(
+      'per-peer candidate floods are capped even for admitted peers',
+      () async {
+        final manager = buildManager();
+        await manager.setActiveSwarms({'sm1_test': 'ticket'});
+        manager.handleSignalingMessage('media_swarm_join', {
+          'from': 'peer:1',
+          'media_swarm_id': 'sm1_test',
+        });
+        await Future<void>.delayed(Duration.zero);
+        for (var i = 0; i < 5000; i++) {
+          sendCandidate(manager, 'peer:1', 'sm1_test');
+        }
+        await Future<void>.delayed(Duration.zero);
+        expect(manager.pendingCandidatePeerCount, 1);
+        expect(
+          manager.pendingCandidateCount('peer:1', 'sm1_test'),
+          WebRtcNegotiationState.defaultMaxPendingCandidatesPerPeer,
+        );
+        await manager.dispose();
+      },
+    );
+
+    test(
+      'swarm registration admits candidates from registered peers',
+      () async {
+        final manager = buildManager();
+        await manager.setActiveSwarms({'sm1_test': 'ticket'});
+        manager.handleSignalingMessage('media_swarm_join', {
+          'from': 'peer:1',
+          'media_swarm_id': 'sm1_test',
+        });
+        await Future<void>.delayed(Duration.zero);
+        sendCandidate(manager, 'peer:1', 'sm1_test');
+        await Future<void>.delayed(Duration.zero);
+        expect(manager.pendingCandidatePeerCount, 1);
+        await manager.dispose();
+      },
+    );
+
+    test('signaling session reset reclaims never-connected queues', () async {
+      final manager = buildManager();
+      await manager.setActiveSwarms({'sm1_test': 'ticket'});
+      manager.handleSignalingMessage('media_swarm_join', {
+        'from': 'peer:1',
+        'media_swarm_id': 'sm1_test',
+      });
+      await Future<void>.delayed(Duration.zero);
+      sendCandidate(manager, 'peer:1', 'sm1_test');
+      await Future<void>.delayed(Duration.zero);
+      expect(manager.pendingCandidatePeerCount, 1);
+
+      await manager.resetSignalingSession();
+      expect(manager.pendingCandidatePeerCount, 0);
+      await manager.dispose();
+    });
+
+    test('leaving the swarm reclaims its pending queues', () async {
+      final manager = buildManager();
+      await manager.setActiveSwarms({'sm1_test': 'ticket'});
+      manager.handleSignalingMessage('media_swarm_join', {
+        'from': 'peer:1',
+        'media_swarm_id': 'sm1_test',
+      });
+      await Future<void>.delayed(Duration.zero);
+      sendCandidate(manager, 'peer:1', 'sm1_test');
+      await Future<void>.delayed(Duration.zero);
+      expect(manager.pendingCandidatePeerCount, 1);
+
+      await manager.setActiveSwarms({});
+      expect(manager.pendingCandidatePeerCount, 0);
+      await manager.dispose();
+    });
+
+    test('malformed candidate fields do not escape as zone errors', () async {
+      final manager = buildManager();
+      await manager.setActiveSwarms({'sm1_test': 'ticket'});
+      manager.handleSignalingMessage('media_swarm_join', {
+        'from': 'peer:1',
+        'media_swarm_id': 'sm1_test',
+      });
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        () => sendCandidate(manager, 'peer:1', 'sm1_test', 'not-a-number'),
+        returnsNormally,
+      );
+      manager.handleSignalingMessage('offer', {
+        'from': 'peer:1',
+        'media_swarm_id': 'sm1_test',
+        'sdp': 'v=0',
+        'type': 'offer',
+        'tie_breaker': 'bogus',
+      });
+      await Future<void>.delayed(Duration.zero);
+      await manager.dispose();
     });
   });
 }

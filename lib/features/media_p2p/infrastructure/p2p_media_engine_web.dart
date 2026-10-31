@@ -364,10 +364,14 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         await _sendBytes(port, 200, _headersFor(resource), cached, method);
         return;
       }
+      // Whole-resource peer pieces face the pinned length when known;
+      // unknown lengths rely on sampledOrigin content verification instead
+      // of an extra origin round trip before serving.
       final peer = await _loadPeerPiece(
         resource,
         key,
         cancellation: cancellation,
+        expectedLength: resource.length,
       );
       if (peer != null) {
         await _sendBytes(port, 200, _headersFor(resource), peer, method);
@@ -510,36 +514,61 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       cancellation: cancellation,
     );
     _ensureRequestActive(cancellation);
-    final cachedLength = _decodeLengthMetadata(resource, cached);
-    if (cachedLength > 0) {
+    final cachedLength = decodeP2pResourceLength(cached) ?? -1;
+    if (cachedLength > 0 && cachedLength <= maxP2pResourceLength) {
       resource.length = cachedLength;
+      resource.lengthFromPeer = false;
+      if (cached != null) {
+        resource.originAcceptsRanges = decodeP2pRangeCapability(cached);
+      }
       return cachedLength;
     }
 
-    final result = Completer<int>();
+    final result = Completer<_LengthCandidate>();
     final resolutionCancellation = P2pPieceRequestCancellation();
     unawaited(
       cancellation.whenCancelled.then((_) => resolutionCancellation.cancel()),
     );
     final requestPeer = canRequestPeer(resource.swarmId) && resource.shareable;
     var pending = requestPeer ? 2 : 1;
-    void completeCandidate(int length) {
-      if (length > 0 && length <= maxP2pResourceLength) {
-        if (!result.isCompleted) result.complete(length);
+    _LengthCandidate? adopted;
+    void completeCandidate(_LengthCandidate candidate) {
+      if (candidate.length > 0 && candidate.length <= maxP2pResourceLength) {
+        if (adopted == null) {
+          adopted = candidate;
+          if (!result.isCompleted) result.complete(candidate);
+          return;
+        }
+        // The origin is authoritative: a late origin answer replaces a
+        // peer-derived value and reports a peer that disagreed.
+        if (candidate.peerSource == null &&
+            adopted!.peerSource != null &&
+            candidate.length != adopted!.length) {
+          final lyingPeer = adopted!.peerSource;
+          adopted = candidate;
+          resource.length = candidate.length;
+          resource.lengthFromPeer = false;
+          if (lyingPeer case final source?) {
+            unawaited(_reportPeerIntegrity(source, false));
+          }
+          unawaited(_rememberLength(resource, pieceKey, candidate.length));
+        }
         return;
       }
       pending--;
-      if (pending == 0 && !result.isCompleted) result.complete(-1);
+      if (pending == 0 && !result.isCompleted) {
+        result.complete(_LengthCandidate(-1, null));
+      }
     }
 
     unawaited(
       _resolveOriginLength(resource, resolutionCancellation).then(
-        completeCandidate,
+        (length) => completeCandidate(_LengthCandidate(length, null)),
         onError: (Object error, StackTrace stackTrace) {
           if (!resolutionCancellation.isCancelled) {
             debugPrint('P2P media origin length lookup failed: $error');
           }
-          completeCandidate(-1);
+          completeCandidate(const _LengthCandidate(-1, null));
         },
       ),
     );
@@ -551,23 +580,27 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
             if (!resolutionCancellation.isCancelled) {
               debugPrint('P2P media peer length lookup failed: $error');
             }
-            completeCandidate(-1);
+            completeCandidate(const _LengthCandidate(-1, null));
           },
         ),
       );
     }
-    final int length;
+    final _LengthCandidate resolution;
     try {
-      length = await _awaitRequest(result.future, cancellation);
+      resolution = await _awaitRequest(result.future, cancellation);
     } finally {
       resolutionCancellation.cancel();
     }
     _ensureRequestActive(cancellation);
-    if (length > 0) {
-      resource.length = length;
-      await _rememberLength(resource, pieceKey, length);
+    if (resolution.length > 0) {
+      resource.length = resolution.length;
+      // Peer metadata is a session hint until the origin confirms it.
+      resource.lengthFromPeer = resolution.peerSource != null;
+      if (resolution.peerSource == null) {
+        await _rememberLength(resource, pieceKey, resolution.length);
+      }
     }
-    return length;
+    return resolution.length;
   }
 
   Future<int> _resolveOriginLength(
@@ -598,7 +631,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     return probed <= maxP2pResourceLength ? probed : -1;
   }
 
-  Future<int> _resolvePeerLength(
+  Future<_LengthCandidate> _resolvePeerLength(
     _WebResource resource,
     String pieceKey,
     P2pPieceRequestCancellation cancellation,
@@ -608,22 +641,16 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       requestPeerPiece(resource.swarmId, pieceKey, cancellation),
       cancellation,
     );
-    if (peer == null || cancellation.isCancelled) return -1;
-    final length = _decodeLengthMetadata(resource, peer.bytes);
+    if (peer == null || cancellation.isCancelled) {
+      return const _LengthCandidate(-1, null);
+    }
+    final length = decodeP2pResourceLength(peer.bytes) ?? -1;
     if (length <= 0 || length > maxP2pResourceLength) {
       await _reportPeerIntegrity(peer.source, false);
-      return -1;
+      return const _LengthCandidate(-1, null);
     }
     _recordP2p(peer.bytes.length);
-    return length;
-  }
-
-  int _decodeLengthMetadata(_WebResource resource, Uint8List? metadata) {
-    final length = decodeP2pResourceLength(metadata);
-    if (length == null || metadata == null) return -1;
-    if (length <= 0 || length > maxP2pResourceLength) return -1;
-    resource.originAcceptsRanges = decodeP2pRangeCapability(metadata);
-    return length;
+    return _LengthCandidate(length, peer.source);
   }
 
   Future<void> _rememberLength(
@@ -830,8 +857,12 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       final bytes = peer.bytes;
       _recordP2p(bytes.length);
       if (expectedLength != null && bytes.length != expectedLength) {
-        await _reportPeerIntegrity(peer.source, false);
-        _ensureRequestActive(requestCancellation);
+        // An expectation derived from unconfirmed peer metadata cannot
+        // convict the data peer; only origin-backed expectations do.
+        if (!resource.lengthFromPeer) {
+          await _reportPeerIntegrity(peer.source, false);
+          _ensureRequestActive(requestCancellation);
+        }
         stats.value = stats.value.copyWith(
           integrityChecks: stats.value.integrityChecks + 1,
           integrityMismatches: stats.value.integrityMismatches + 1,
@@ -1206,7 +1237,17 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }
 }
 
-final class _WebResource {
+final
+/// A resource-length candidate together with its source. A null [peerSource]
+/// means the origin supplied the value and it is authoritative.
+class _LengthCandidate {
+  const _LengthCandidate(this.length, this.peerSource);
+
+  final int length;
+  final P2pPeerSource? peerSource;
+}
+
+class _WebResource {
   _WebResource({
     required this.id,
     required this.upstream,
@@ -1226,6 +1267,9 @@ final class _WebResource {
   final bool shareable;
   final bool isDirectory;
   int? length;
+
+  /// True while [length] comes from unconfirmed peer metadata.
+  bool lengthFromPeer = false;
   bool? originAcceptsRanges;
   DateTime lastAccessed = DateTime.now();
 

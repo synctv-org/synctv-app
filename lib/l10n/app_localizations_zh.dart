@@ -2600,7 +2600,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get p2pSecurityStandardDescription =>
-      '检查传输帧、声明长度、大小上限与超时。安全校验本身不增加网络流量；调度仍可能并行竞速来源与 Peer。';
+      '仅检查传输帧、声明长度、大小上限与超时，从不与来源对比内容，房间 Peer 可以篡改或损坏播放的媒体。仅在带宽比完整性更重要时使用。';
 
   @override
   String get p2pSecuritySampled => '来源抽样';

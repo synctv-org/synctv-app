@@ -48,6 +48,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async {
         requestedPieces.add('$swarm|$key');
         return null;
@@ -108,6 +109,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         requestPeerPiece: (swarm, key, cancellation) async => null,
       );
       addTearDown(() async {
@@ -172,6 +174,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -236,6 +239,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -294,6 +298,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -321,6 +326,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -352,6 +358,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async {
         return key == 'root:segment:0:0' ? _peerPiece([5, 6]) : null;
       },
@@ -394,6 +401,7 @@ segment.ts?token=secret
       'http://${origin.address.address}:${origin.port}/subtitle.vtt',
     );
     final first = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       persistentCache: P2pMediaPersistentCache(
         directory: directory,
         maxBytes: 1024,
@@ -416,6 +424,7 @@ segment.ts?token=secret
 
       var peerRequests = 0;
       second = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         persistentCache: P2pMediaPersistentCache(
           directory: directory,
           maxBytes: 1024,
@@ -455,6 +464,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
       cacheTtl: const Duration(minutes: 10),
       clock: () => now,
@@ -501,6 +511,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
       cacheTtl: const Duration(minutes: 10),
       clock: () => now,
@@ -560,6 +571,7 @@ segment.ts?token=secret
         'http://${origin.address.address}:${origin.port}/video.mp4',
       );
       final first = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         persistentCache: P2pMediaPersistentCache(
           directory: directory,
           maxBytes: 1024 * 1024,
@@ -580,6 +592,7 @@ segment.ts?token=secret
         await first.dispose();
 
         second = P2pMediaEngine(
+          securityMode: P2pMediaSecurityMode.standard,
           persistentCache: P2pMediaPersistentCache(
             directory: directory,
             maxBytes: 1024 * 1024,
@@ -636,6 +649,7 @@ segment.ts?token=secret
         }
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         originHeaderPeerRetryDelay: const Duration(milliseconds: 20),
         requestPeerPiece: (swarm, key, cancellation) async {
           peerRequests++;
@@ -680,6 +694,7 @@ segment.ts?token=secret
       }
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 20),
       originHeaderTimeout: const Duration(milliseconds: 300),
       peerMissingRetryDelay: const Duration(milliseconds: 20),
@@ -726,6 +741,7 @@ segment.ts?token=secret
         }
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         originHeaderPeerRetryDelay: const Duration(milliseconds: 20),
         originHeaderTimeout: const Duration(milliseconds: 400),
         peerMissingRetryDelay: const Duration(milliseconds: 20),
@@ -767,6 +783,7 @@ segment.ts?token=secret
       }
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 10),
       originHeaderTimeout: const Duration(milliseconds: 50),
       originHeaderPeerRecoveryTimeout: const Duration(milliseconds: 200),
@@ -810,6 +827,7 @@ segment.ts?token=secret
       '${unavailableOrigin.port}/subtitle.vtt',
     );
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 10),
       originHeaderTimeout: const Duration(milliseconds: 40),
       originHeaderPeerRecoveryTimeout: const Duration(milliseconds: 60),
@@ -851,6 +869,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 60),
       requestPeerPiece: (swarm, key, cancellation) async {
         peerRequests++;
@@ -1087,27 +1106,29 @@ segment.ts?token=secret
   });
 
   test('stalled origin body retries peer after receiving headers', () async {
+    // The peer piece matches the origin-declared total; a mismatched piece
+    // would be rejected by the whole-resource length expectation.
     const peerBytes = [6, 7, 8, 9];
-    final firstOriginChunk = Uint8List(64 * 1024);
     var peerRequests = 0;
     final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     origin.listen((request) async {
-      request.response.headers.contentLength = firstOriginChunk.length + 3;
+      request.response.headers.contentLength = peerBytes.length;
       if (request.method == 'HEAD') {
         await request.response.close();
         return;
       }
-      request.response.add(firstOriginChunk);
+      request.response.add(const [6]);
       await request.response.flush();
       await Future<void>.delayed(const Duration(milliseconds: 160));
       try {
-        request.response.add([2, 3, 4]);
+        request.response.add(const [7, 8, 9]);
         await request.response.close();
       } catch (_) {
         // The stalled-body peer retry won and aborted the origin response.
       }
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 500),
       originBodyStallPeerRetryDelay: const Duration(milliseconds: 20),
       requestPeerPiece: (swarm, key, cancellation) async {
@@ -1130,7 +1151,6 @@ segment.ts?token=secret
 
     expect(await _getBytes(local), peerBytes);
     expect(peerRequests, 2);
-    expect(engine.stats.value.httpBytes, firstOriginChunk.length);
     expect(engine.stats.value.p2pBytes, peerBytes.length);
     await Future<void>.delayed(const Duration(milliseconds: 180));
   });
@@ -1155,6 +1175,7 @@ segment.ts?token=secret
         }
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         originHeaderPeerRetryDelay: const Duration(milliseconds: 500),
         originBodyStallPeerRetryDelay: const Duration(milliseconds: 20),
         peerMissingRetryDelay: const Duration(milliseconds: 20),
@@ -1200,6 +1221,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 500),
       originBodyStallPeerRetryDelay: const Duration(milliseconds: 100),
       originBodySlowObservation: const Duration(milliseconds: 40),
@@ -1242,6 +1264,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 500),
       originBodyStallPeerRetryDelay: const Duration(milliseconds: 20),
       requestPeerPiece: (swarm, key, cancellation) async {
@@ -1294,6 +1317,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 500),
       originBodyStallPeerRetryDelay: const Duration(milliseconds: 200),
       requestPeerPiece: (swarm, key, cancellation) async {
@@ -1349,6 +1373,7 @@ segment.ts?token=secret
       }
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 20),
       requestPeerPiece: (swarm, key, cancellation) async {
         peerRequests++;
@@ -1400,6 +1425,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -1441,6 +1467,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         requestPeerPiece: (swarm, key, cancellation) async => null,
       );
       addTearDown(() async {
@@ -1512,6 +1539,7 @@ segment.ts?token=secret
         await sourceSocket!.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         canRequestPeer: (_) => false,
         requestPeerPiece: (swarm, key, cancellation) async => null,
       );
@@ -1616,6 +1644,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -1675,6 +1704,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
       maxCacheBytes: 2 * 1024 * 1024,
     );
@@ -1724,6 +1754,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async {
         requestedPieces.add('$swarm|$key');
         return null;
@@ -1771,6 +1802,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async {
         peerRequests++;
         return null;
@@ -1812,6 +1844,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       canRequestPeer: (_) => false,
       requestPeerPiece: (swarm, key, cancellation) {
         peerRequests++;
@@ -1873,6 +1906,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         canRequestPeer: (_) => false,
         requestPeerPiece: (swarm, key, cancellation) {
           peerRequests++;
@@ -1928,6 +1962,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         canRequestPeer: (_) => false,
         originHeaderTimeout: const Duration(milliseconds: 300),
         originHeaderPeerRetryDelay: const Duration(milliseconds: 5),
@@ -1984,6 +2019,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         canRequestPeer: (_) => false,
         originBodyStallPeerRetryDelay: const Duration(milliseconds: 20),
         requestPeerPiece: (swarm, key, cancellation) {
@@ -2054,6 +2090,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -2172,6 +2209,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         requestPeerPiece: (swarm, key, cancellation) async => null,
         peerMissingRetryDelay: const Duration(milliseconds: 10),
         progressiveOriginPeerRecoveryTimeout: const Duration(milliseconds: 80),
@@ -2286,6 +2324,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     final client = HttpClient();
@@ -2372,6 +2411,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -2446,6 +2486,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -2513,6 +2554,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -2547,6 +2589,7 @@ segment.ts?token=secret
     final lengthBytes = encodeP2pResourceLength(4);
     final requestedPieces = <String>[];
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       originHeaderPeerRetryDelay: const Duration(milliseconds: 20),
       requestPeerPiece: (swarm, key, cancellation) async {
         requestedPieces.add(key);
@@ -2575,6 +2618,110 @@ segment.ts?token=secret
     expect(requestedPieces, containsAll(['root:length', 'root:piece:0']));
   });
 
+  test(
+    'peer length metadata stays a session hint and never enters the cache',
+    () async {
+      final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      origin.listen((request) async {
+        // Origin headers never arrive; the peer owns metadata and data.
+      });
+      final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
+        originHeaderPeerRetryDelay: const Duration(milliseconds: 20),
+        requestPeerPiece: (swarm, key, cancellation) async {
+          if (key == 'root:length') {
+            return _peerPiece(encodeP2pResourceLength(4));
+          }
+          if (key == 'root:piece:0') return _peerPiece([4, 3, 2, 1]);
+          return null;
+        },
+      );
+      addTearDown(() async {
+        await engine.dispose();
+        await origin.close(force: true);
+      });
+      final local = await engine.localize(
+        upstream: Uri.parse(
+          'http://${origin.address.address}:${origin.port}/hint.mp4',
+        ),
+        headers: const {},
+        swarmId: 'sm3_peer_length_hint',
+        format: 'mp4',
+      );
+
+      final response = await _getResponse(local, range: 'bytes=0-3');
+      expect(response.statusCode, HttpStatus.partialContent);
+      expect(response.bytes, [4, 3, 2, 1]);
+      // The peer-derived length served this session but must not be cached
+      // where the swarm could read it back.
+      expect(
+        await engine.cachedPiece('sm3_peer_length_hint', 'root:length'),
+        isNull,
+      );
+    },
+  );
+
+  test(
+    'a late origin answer corrects a lying peer length and reports it',
+    () async {
+      const body = [1, 2, 3, 4];
+      final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      origin.listen((request) async {
+        if (request.method == 'HEAD') {
+          await Future<void>.delayed(const Duration(milliseconds: 250));
+        }
+        request.response.headers.contentLength = body.length;
+        if (request.method != 'HEAD') {
+          request.response.add(body);
+        }
+        await request.response.close();
+      });
+      final reported = <(String, bool)>[];
+      final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
+        // Let the peer answer before the delayed origin HEAD.
+        originHeaderPeerRetryDelay: const Duration(milliseconds: 20),
+        reportPeerIntegrity: (source, valid) async {
+          reported.add((source.peerId, valid));
+        },
+        requestPeerPiece: (swarm, key, cancellation) async {
+          if (key == 'root:length') {
+            // The peer claims the resource is twice its real size.
+            return _peerPiece(encodeP2pResourceLength(body.length * 2));
+          }
+          if (key == 'root:piece:0') return _peerPiece(body);
+          return null;
+        },
+      );
+      addTearDown(() async {
+        await engine.dispose();
+        await origin.close(force: true);
+      });
+      final local = await engine.localize(
+        upstream: Uri.parse(
+          'http://${origin.address.address}:${origin.port}/lying-peer.mp4',
+        ),
+        headers: const {},
+        swarmId: 'sm4_lying_peer_length',
+        format: 'mp4',
+      );
+
+      final response = await _getResponse(local, range: 'bytes=0-3');
+      expect(response.bytes, body);
+
+      // The delayed origin HEAD (4) contradicts the peer claim (8).
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(reported, [('peer-1', false)]);
+      // The authoritative origin value replaces the peer hint.
+      expect(
+        decodeP2pResourceLength(
+          await engine.cachedPiece('sm4_lying_peer_length', 'root:length'),
+        ),
+        body.length,
+      );
+    },
+  );
+
   test('progressive length metadata survives piece LRU pressure', () async {
     const body = [4, 3, 2, 1];
     final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -2602,6 +2749,7 @@ segment.ts?token=secret
       cleanupInterval: Duration.zero,
     );
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
       persistentCache: cache,
       maxCacheBytes: 9,
@@ -2647,6 +2795,7 @@ segment.ts?token=secret
       final lengthBytes = encodeP2pResourceLength(body.length);
       var lengthRequests = 0;
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         originHeaderPeerRetryDelay: const Duration(milliseconds: 10),
         originHeaderTimeout: const Duration(milliseconds: 250),
         peerMissingRetryDelay: const Duration(milliseconds: 10),
@@ -2700,6 +2849,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         requestPeerPiece: (swarm, key, cancellation) async => null,
       );
       addTearDown(() async {
@@ -2744,6 +2894,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         requestPeerPiece: (swarm, key, cancellation) async => null,
       );
       addTearDown(() async {
@@ -2782,6 +2933,7 @@ segment.ts?token=secret
       await request.response.close();
     });
     final engine = P2pMediaEngine(
+      securityMode: P2pMediaSecurityMode.standard,
       requestPeerPiece: (swarm, key, cancellation) async => null,
     );
     addTearDown(() async {
@@ -2841,6 +2993,7 @@ segment.ts?token=secret
         await request.response.close();
       });
       final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
         requestPeerPiece: (swarm, key, cancellation) async {
           peerPieces.add(key);
           final match = RegExp(r':piece:(\d+)$').firstMatch(key);

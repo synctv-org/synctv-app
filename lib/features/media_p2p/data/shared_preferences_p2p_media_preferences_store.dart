@@ -18,7 +18,7 @@ class SharedPreferencesP2pMediaPreferencesStore
       enabled: preferences.getBool(_enabledKey) ?? false,
       securityMode: P2pMediaSecurityMode.values.firstWhere(
         (mode) => mode.name == preferences.getString(_securityModeKey),
-        orElse: () => P2pMediaSecurityMode.standard,
+        orElse: () => P2pMediaPreferenceValues.defaultSecurityMode,
       ),
       cacheSizeMiB:
           P2pMediaPreferenceValues.cacheSizeOptionsMiB.contains(storedCacheSize)

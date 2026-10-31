@@ -48,7 +48,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     this.originBodyHedgeDelay = const Duration(seconds: 5),
     this.originBodyMinimumRateBytesPerSecond = 256 * 1024,
     this.progressiveOriginPeerRecoveryTimeout = const Duration(seconds: 2),
-    this.securityMode = P2pMediaSecurityMode.standard,
+    this.securityMode = P2pMediaSecurityMode.sampledOrigin,
     this.originSampleRate = 0.10,
   }) : cacheTtl =
            cacheTtl ?? persistentCache?.ttl ?? const Duration(minutes: 10),
@@ -106,6 +106,9 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   final HttpClient _httpClient = HttpClient();
   final Map<String, _GatewayResource> _resources = {};
   final Map<String, _CachedLength> _progressiveLengths = {};
+  final Map<String, P2pPeerSource> _peerLengthSources = {};
+
+  /// Peer that supplied the length currently being remembered, if any.
   final Map<String, Future<Uint8List?>> _pieceLoads = {};
   final Map<String, _CompleteOriginLoad> _completeOriginLoads = {};
   final Map<String, _PeerPrefetch> _peerPrefetches = {};
@@ -358,6 +361,10 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     await request.response.close();
   }
 
+  /// Peer pieces face a length expectation whenever the total is already
+  /// known (range requests and pre-resolved totals). Whole-resource requests
+  /// with an unknown total rely on sampledOrigin content verification instead
+  /// of an extra origin round trip before serving.
   Future<void> _serveWholePiece(
     HttpRequest request,
     _GatewayResource resource, {
@@ -393,7 +400,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       pieceKey,
       rangeHeader: range?.header,
       requestedRange: range,
-      expectedLength: range?.length,
+      expectedLength: range?.length ?? totalLength,
     );
     if (bytes == null) {
       if (range == null) {
@@ -444,7 +451,6 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         '${resource.logicalKey}:piece:${alignedStart ~/ progressivePieceSize}';
     final loadKey = _cacheKey(resource.swarmId, pieceKey);
     final originRange = 'bytes=$alignedStart-$alignedEnd';
-    await _rememberResourceLength(resource, resolvedTotalLength);
     Uint8List? bytes = await cachedPiece(resource.swarmId, pieceKey);
     var pendingPrefetch = _peerPrefetches[loadKey];
     final reservation = _peerPrefetchReservations[loadKey];
@@ -524,7 +530,11 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
             _putCache(resource.swarmId, pieceKey, bytes);
           }
         }
-        await _rememberResourceLength(resource, resolvedTotalLength);
+        await _rememberResourceLength(
+          resource,
+          resolvedTotalLength,
+          fromOrigin: true,
+        );
       } else {
         request.response.statusCode = HttpStatus.badGateway;
         await request.response.close();
@@ -1336,7 +1346,11 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
       final peerBytes = peer.bytes;
       _recordP2p(peerBytes.length);
       if (expectedLength != null && peerBytes.length != expectedLength) {
-        await _reportPeerIntegrity(peer.source, false);
+        // An expectation derived from unconfirmed peer metadata cannot
+        // convict the data peer; only origin-backed expectations do.
+        if (!_hasPeerSourcedLength(resource)) {
+          await _reportPeerIntegrity(peer.source, false);
+        }
         _recordIntegrityMismatch();
         return null;
       }
@@ -1584,43 +1598,69 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
 
     if (!_canRequestPeer(resource)) {
       final length = await _probeLength(resource);
-      await _rememberResourceLength(resource, length);
+      await _rememberResourceLength(resource, length, fromOrigin: true);
       return length;
     }
 
     final cancellation = P2pPieceRequestCancellation();
     _activePeerRequests.add(cancellation);
-    final result = Completer<int>();
+    final result = Completer<_LengthResolution>();
+    _LengthResolution? adopted;
+    void adopt(_LengthResolution candidate) {
+      if (adopted == null) {
+        adopted = candidate;
+        if (!result.isCompleted) result.complete(candidate);
+        return;
+      }
+      // The origin is authoritative: a late origin answer replaces a
+      // peer-derived value and reports a peer that disagreed.
+      if (candidate.peerSource == null &&
+          adopted!.peerSource != null &&
+          candidate.length != adopted!.length) {
+        adopted = candidate;
+        // _rememberResourceLength reports the disagreeing peer once while
+        // replacing the peer-derived value with the authoritative one.
+        unawaited(
+          _rememberResourceLength(resource, candidate.length, fromOrigin: true),
+        );
+      }
+    }
+
     unawaited(
       _probeLength(resource).then((length) {
-        if (length > 0 && !result.isCompleted) result.complete(length);
+        if (length > 0) adopt(_LengthResolution(length, null));
       }),
     );
     unawaited(
-      _retryPeerResourceLength(resource, cancellation).then((length) {
-        if (length > 0 && !result.isCompleted) result.complete(length);
+      _retryPeerResourceLength(resource, cancellation).then((resolution) {
+        if (resolution.length > 0) adopt(resolution);
       }),
     );
     final timeout = Timer(
       originHeaderTimeout + originHeaderPeerRecoveryTimeout,
       () {
-        if (!result.isCompleted) result.complete(-1);
+        if (!result.isCompleted) result.complete(_LengthResolution(-1, null));
       },
     );
-    final length = await result.future;
+    final resolution = await result.future;
     timeout.cancel();
     cancellation.cancel();
     _activePeerRequests.remove(cancellation);
-    await _rememberResourceLength(resource, length);
-    return length;
+    await _rememberResourceLength(
+      resource,
+      resolution.length,
+      fromOrigin: resolution.peerSource == null,
+      peerSource: resolution.peerSource,
+    );
+    return resolution.length;
   }
 
-  Future<int> _retryPeerResourceLength(
+  Future<_LengthResolution> _retryPeerResourceLength(
     _GatewayResource resource,
     P2pPieceRequestCancellation cancellation,
   ) async {
     if (!await _waitUnlessCancelled(originHeaderPeerRetryDelay, cancellation)) {
-      return -1;
+      return const _LengthResolution(-1, null);
     }
     final pieceKey = '${resource.logicalKey}:length';
     while (!cancellation.isCancelled && !_disposed) {
@@ -1634,9 +1674,10 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         if (bytes != null) {
           final length = decodeP2pResourceLength(bytes);
           if (length != null && length > 0 && length <= maxP2pResourceLength) {
-            resource.originAcceptsRanges = decodeP2pRangeCapability(bytes);
             _recordP2p(bytes.length);
-            return length;
+            // Peer length metadata is a hint until the origin confirms it;
+            // it never sets range capability and is never persisted.
+            return _LengthResolution(length, peer?.source);
           }
           if (peer != null) await _reportPeerIntegrity(peer.source, false);
         }
@@ -1647,17 +1688,41 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
         break;
       }
     }
-    return -1;
+    return const _LengthResolution(-1, null);
   }
+
+  bool _hasPeerSourcedLength(_GatewayResource resource) => _peerLengthSources
+      .containsKey(_cacheKey(resource.swarmId, resource.logicalKey));
 
   Future<void> _rememberResourceLength(
     _GatewayResource resource,
-    int length,
-  ) async {
+    int length, {
+    required bool fromOrigin,
+    P2pPeerSource? peerSource,
+  }) async {
     if (length <= 0) return;
     final now = _clock();
     _evictExpiredProgressiveLengths(now);
     final lengthKey = _cacheKey(resource.swarmId, resource.logicalKey);
+    final previousPeer = _peerLengthSources[lengthKey];
+    if (fromOrigin) {
+      _peerLengthSources.remove(lengthKey);
+      // A peer-supplied length that the origin contradicts is a lie.
+      if (previousPeer case final source?) {
+        final previous = _progressiveLengths[lengthKey]?.value;
+        if (previous != null && previous != length) {
+          unawaited(_reportPeerIntegrity(source, false));
+        }
+      }
+    } else {
+      // Keep the session hint only; peer lengths never enter any cache the
+      // swarm can read back.
+      _progressiveLengths[lengthKey] = _CachedLength(length, now);
+      if (previousPeer == null && peerSource != null) {
+        _peerLengthSources[lengthKey] = peerSource;
+      }
+      return;
+    }
     _progressiveLengths[lengthKey] = _CachedLength(length, now);
     final metadataKey = '$lengthKey:length';
     final cached = await _readCachedPiece(metadataKey, recordStats: false);
@@ -1679,9 +1744,14 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
   }
 
   void _evictExpiredProgressiveLengths(DateTime now) {
-    _progressiveLengths.removeWhere(
-      (_, entry) => now.difference(entry.lastAccessed) >= cacheTtl,
-    );
+    final expired = <String>{};
+    _progressiveLengths.removeWhere((key, entry) {
+      final isExpired = now.difference(entry.lastAccessed) >= cacheTtl;
+      if (isExpired) expired.add(key);
+      return isExpired;
+    });
+    if (expired.isEmpty) return;
+    _peerLengthSources.removeWhere((key, _) => expired.contains(key));
   }
 
   Future<Uint8List?> _readAll(
@@ -2005,6 +2075,7 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     _httpClient.close(force: true);
     _resources.clear();
     _progressiveLengths.clear();
+    _peerLengthSources.clear();
     _pieceLoads.clear();
     for (final load in _completeOriginLoads.values) {
       load.finish();
@@ -2339,6 +2410,15 @@ class _MemoryCacheEntry {
 
   final Uint8List value;
   DateTime lastAccessed;
+}
+
+/// A resource-length candidate together with its source. A null [peerSource]
+/// means the origin supplied the value and it is authoritative.
+class _LengthResolution {
+  const _LengthResolution(this.length, this.peerSource);
+
+  final int length;
+  final P2pPeerSource? peerSource;
 }
 
 class _CachedLength {

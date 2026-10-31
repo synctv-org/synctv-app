@@ -36,30 +36,28 @@ void main() {
     );
 
     expect(find.text('Peer data validation'), findsOneWidget);
-    expect(find.text('Standard'), findsOneWidget);
+    // Origin sampling ships as the default; peers are untrusted.
+    expect(find.text('Origin sampling'), findsOneWidget);
     expect(find.text('Cache capacity'), findsOneWidget);
     expect(find.text('128 MiB'), findsOneWidget);
     expect(find.textContaining('expire after 10 minutes'), findsOneWidget);
-    expect(
-      find.textContaining('Validation adds no network traffic'),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('scheduling can still race origins and peers'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Compares 10%'), findsOneWidget);
 
-    await tester.tap(find.text('Standard'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Origin sampling'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Standard'));
+    await tester.pumpAndSettle();
 
-    expect(preferences.securityMode, P2pMediaSecurityMode.sampledOrigin);
-    expect(find.textContaining('Compares 10%'), findsOneWidget);
+    expect(preferences.securityMode, P2pMediaSecurityMode.standard);
+    // The opt-out copy states plainly that peer bytes are not verified.
+    expect(
+      find.textContaining('never compared with the origin'),
+      findsOneWidget,
+    );
     final storage = await SharedPreferences.getInstance();
     expect(
       storage.getString('playback.p2p_media_security_mode'),
-      P2pMediaSecurityMode.sampledOrigin.name,
+      P2pMediaSecurityMode.standard.name,
     );
 
     await tester.tap(find.text('128 MiB'));
