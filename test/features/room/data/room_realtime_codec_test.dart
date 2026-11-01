@@ -4,6 +4,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
+import 'package:synctv_app/features/room/application/realtime_observation_registry.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -14,7 +15,65 @@ import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_config;
 
+final _testCodec = RoomRealtimeCodec(registry: RealtimeObservationRegistry());
+
 void main() {
+  test('heartbeat ack keeps the server millisecond timestamp', () {
+    final encoded = client.ServerMessage(
+      heartbeatAck: client.HeartbeatAck(timestamp: Int64(1_761_950_400_000)),
+    ).writeToBuffer();
+
+    final decoded = _testCodec.decode(Uint8List.fromList(encoded));
+    expect(decoded.kind, RoomRealtimeMessageKind.checkStatus);
+    expect(decoded.timestampMillis, 1_761_950_400_000);
+  });
+
+  test('decodes server termination with a stable code', () {
+    final encoded = client.ServerMessage(
+      termination: client.RealtimeTermination(
+        message: 'room closed',
+        code: client
+            .RealtimeTerminationCode
+            .REALTIME_TERMINATION_CODE_ROOM_DELETED,
+      ),
+    ).writeToBuffer();
+
+    final decoded = _testCodec.decode(Uint8List.fromList(encoded));
+    expect(decoded.kind, RoomRealtimeMessageKind.terminated);
+    expect(decoded.termination!.code, RoomRealtimeTerminationCode.roomDeleted);
+    expect(decoded.termination!.code.isRoomGone, isTrue);
+    expect(decoded.termination!.displayMessage, 'room closed');
+    // A message-less termination still explains itself.
+    final bare = _testCodec.decode(
+      Uint8List.fromList(
+        client.ServerMessage(
+          termination: client.RealtimeTermination(
+            code: client
+                .RealtimeTerminationCode
+                .REALTIME_TERMINATION_CODE_CONNECTION_REVOKED,
+          ),
+        ).writeToBuffer(),
+      ),
+    );
+    expect(bare.termination!.displayMessage, isNotEmpty);
+  });
+
+  test('decodes user notifications', () {
+    final encoded = client.ServerMessage(
+      notification: client.UserNotification(
+        notificationId: 'n-9',
+        title: 'Invite',
+        content: 'You were invited',
+        timestamp: Int64(1_761_950_400),
+      ),
+    ).writeToBuffer();
+
+    final decoded = _testCodec.decode(Uint8List.fromList(encoded));
+    expect(decoded.kind, RoomRealtimeMessageKind.notification);
+    expect(decoded.userNotification!.notificationId, 'n-9');
+    expect(decoded.userNotification!.timestampMillis, 1_761_950_400_000);
+  });
+
   test('room presence keeps member and guest counts separate', () {
     final encoded = client.ServerMessage(
       resourceEvent: client.ResourceEvent(
@@ -26,7 +85,7 @@ void main() {
       ),
     ).writeToBuffer();
 
-    final decoded = RoomRealtimeCodec.decode(Uint8List.fromList(encoded));
+    final decoded = _testCodec.decode(Uint8List.fromList(encoded));
 
     expect(decoded.kind, RoomRealtimeMessageKind.presenceCount);
     expect(decoded.onlineMemberCount, 4);
@@ -42,7 +101,7 @@ void main() {
       ),
     ).writeToBuffer();
 
-    final decoded = RoomRealtimeCodec.decode(Uint8List.fromList(encoded));
+    final decoded = _testCodec.decode(Uint8List.fromList(encoded));
 
     expect(
       decoded.error?.clientOperationId,
@@ -63,7 +122,7 @@ void main() {
       ),
     ).writeToBuffer();
 
-    final decoded = RoomRealtimeCodec.decode(Uint8List.fromList(encoded));
+    final decoded = _testCodec.decode(Uint8List.fromList(encoded));
     final status = decoded.playbackStatus!;
 
     expect(decoded.kind, RoomRealtimeMessageKind.status);
@@ -124,7 +183,7 @@ void main() {
           ),
         ),
       );
-      final decoded = RoomRealtimeCodec.decode(
+      final decoded = _testCodec.decode(
         Uint8List.fromList(message.writeToBuffer()),
       );
       expect(decoded.playbackHistory?.historyCursorId, 'ph_current');
@@ -193,7 +252,7 @@ void main() {
       ),
     );
 
-    final decoded = RoomRealtimeCodec.decode(
+    final decoded = _testCodec.decode(
       Uint8List.fromList(message.writeToBuffer()),
     );
 
@@ -277,13 +336,21 @@ void main() {
   });
 
   test('static playlist response keeps the requested page', () {
-    RoomRealtimeCodec.encodePlaylistObservation(
-      observeId: 'playlist_page',
-      playlistId: 'pl_static',
-      page: 4,
+    // The send path records the observation before the server responds; the
+    // decode path reads the page back out of the registry.
+    final registry = RealtimeObservationRegistry();
+    final codec = RoomRealtimeCodec(registry: registry);
+    registry.record(
+      client.ClientMessage.fromBuffer(
+        RoomRealtimeCodec.encodePlaylistObservation(
+          observeId: 'playlist_page',
+          playlistId: 'pl_static',
+          page: 4,
+        ),
+      ).observeResource,
     );
 
-    final decoded = RoomRealtimeCodec.decode(
+    final decoded = codec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'playlist_page',
@@ -327,7 +394,7 @@ void main() {
       ),
     );
 
-    final decoded = RoomRealtimeCodec.decode(
+    final decoded = _testCodec.decode(
       Uint8List.fromList(message.writeToBuffer()),
     );
     final status = decoded.playbackStatus!;
@@ -369,7 +436,7 @@ void main() {
       }
     ''');
 
-    final decoded = RoomRealtimeCodec.decode(
+    final decoded = _testCodec.decode(
       Uint8List.fromList(decodedMessage.writeToBuffer()),
     );
 

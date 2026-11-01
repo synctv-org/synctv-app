@@ -37,6 +37,8 @@ enum RoomRealtimeMessageKind {
   webrtcMediaIceCandidate,
   webrtcMediaSwarmPeers,
   webrtcMediaPeerLeft,
+  terminated,
+  notification,
 }
 
 enum RoomRealtimeChatEventKind { created, edited, deleted, reactionsChanged }
@@ -71,6 +73,104 @@ class RoomRealtimeError {
   bool get isConflict => code == 2003;
 
   bool get isPermissionDenied => code == 4000;
+}
+
+/// Server-initiated end of the realtime stream, sent right before the
+/// transport closes. Terminal: the client must stop reconnecting.
+class RoomRealtimeTermination {
+  const RoomRealtimeTermination({required this.message, required this.code});
+
+  final String message;
+  final RoomRealtimeTerminationCode code;
+
+  /// The user-facing explanation of why the stream ended.
+  String get displayMessage => message.isEmpty ? code.label : message;
+}
+
+enum RoomRealtimeTerminationCode {
+  unspecified,
+  connectionRevoked,
+  userAccessRevoked,
+  roomAccessRevoked,
+  roomMembershipRevoked,
+  guestAccessRevoked,
+  roomDeleted,
+  roomBanned,
+  roomOwnerInactive,
+  unknown;
+
+  String get label => switch (this) {
+    connectionRevoked => 'Realtime connection was revoked',
+    userAccessRevoked => 'Your account access was revoked',
+    roomAccessRevoked => 'Access to this room was revoked',
+    roomMembershipRevoked => 'Your membership in this room was revoked',
+    guestAccessRevoked => 'Guest access is no longer allowed',
+    roomDeleted => 'This room was deleted',
+    roomBanned => 'This room was banned',
+    roomOwnerInactive => 'The room owner account went inactive',
+    unspecified || unknown => 'The realtime session ended',
+  };
+
+  /// Whether the room can still be reached (kicked) versus gone for
+  /// everyone (deleted/banned).
+  bool get isRoomGone => this == roomDeleted || this == roomBanned;
+
+  static RoomRealtimeTerminationCode fromProto(
+    client_enum.RealtimeTerminationCode code,
+  ) {
+    return switch (code) {
+      client_enum
+          .RealtimeTerminationCode
+          .REALTIME_TERMINATION_CODE_CONNECTION_REVOKED =>
+        connectionRevoked,
+      client_enum
+          .RealtimeTerminationCode
+          .REALTIME_TERMINATION_CODE_USER_ACCESS_REVOKED =>
+        userAccessRevoked,
+      client_enum
+          .RealtimeTerminationCode
+          .REALTIME_TERMINATION_CODE_ROOM_ACCESS_REVOKED =>
+        roomAccessRevoked,
+      client_enum
+          .RealtimeTerminationCode
+          .REALTIME_TERMINATION_CODE_ROOM_MEMBERSHIP_REVOKED =>
+        roomMembershipRevoked,
+      client_enum
+          .RealtimeTerminationCode
+          .REALTIME_TERMINATION_CODE_GUEST_ACCESS_REVOKED =>
+        guestAccessRevoked,
+      client_enum
+          .RealtimeTerminationCode
+          .REALTIME_TERMINATION_CODE_ROOM_DELETED =>
+        roomDeleted,
+      client_enum
+          .RealtimeTerminationCode
+          .REALTIME_TERMINATION_CODE_ROOM_BANNED =>
+        roomBanned,
+      client_enum
+          .RealtimeTerminationCode
+          .REALTIME_TERMINATION_CODE_ROOM_OWNER_INACTIVE =>
+        roomOwnerInactive,
+      _ => unknown,
+    };
+  }
+}
+
+/// In-app notification pushed over the realtime stream.
+class RoomRealtimeUserNotification {
+  const RoomRealtimeUserNotification({
+    required this.notificationId,
+    required this.type,
+    required this.title,
+    required this.content,
+    required this.timestampMillis,
+  });
+
+  final String notificationId;
+  final client_enum.NotificationType type;
+  final String title;
+  final String content;
+  final int timestampMillis;
 }
 
 class RoomRealtimeOnlineEvent {
@@ -308,6 +408,8 @@ class RoomRealtimeMessage {
     this.selfMember,
     this.onlineEvent,
     this.error,
+    this.termination,
+    this.userNotification,
     this.webRtc,
     this.resourceObserveId = '',
     this.resourceVersion = '',
@@ -349,6 +451,8 @@ class RoomRealtimeMessage {
   final AdminRoomMember? selfMember;
   final RoomRealtimeOnlineEvent? onlineEvent;
   final RoomRealtimeError? error;
+  final RoomRealtimeTermination? termination;
+  final RoomRealtimeUserNotification? userNotification;
   final RoomRealtimeWebRtcSignal? webRtc;
   final String resourceObserveId;
   final String resourceVersion;

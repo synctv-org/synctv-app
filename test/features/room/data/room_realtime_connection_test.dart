@@ -18,7 +18,6 @@ void main() {
           createWebSocketUri: (_) async => throw StateError('ticket failed'),
           encodeMessage: (_) => '',
           decodeMessage: (_) => client.ServerMessage(),
-          nowMillis: () => 0,
         );
 
         final readyFailure = expectLater(
@@ -62,7 +61,6 @@ void main() {
             Uri.parse('ws://127.0.0.1:${server.port}/ws/room_1'),
         encodeMessage: (message) => message.writeToJson(),
         decodeMessage: (_) => client.ServerMessage(),
-        nowMillis: () => 0,
         initialMessages: RoomRealtimeCodec.encodeInitialObservations(),
       );
 

@@ -1,0 +1,16 @@
+[package]
+name = "synctv_webtransport"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+tokio = { version = "1.47.1", features = ["rt-multi-thread", "macros", "time", "io-util", "sync"] }
+wtransport = { version = "0.7.2", default-features = false, features = ["quinn", "ring"] }
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+strip = "symbols"

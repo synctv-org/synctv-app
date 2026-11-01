@@ -17,7 +17,6 @@ void main() {
         createWebSocketUri: (_) => throw failure,
         encodeMessage: (_) => '',
         decodeMessage: (_) => client.ServerMessage(),
-        nowMillis: () => 0,
       );
       final ready = expectLater(connection.ready, throwsA(same(failure)));
       await expectLater(
@@ -40,7 +39,6 @@ void main() {
           connectSocket: (_, {required allowInsecureTls}) async => socket,
           encodeMessage: (_) => 'encoded',
           decodeMessage: (_) => client.ServerMessage(),
-          nowMillis: () => 0,
         );
         if (!pendingSetup) async.flushMicrotasks();
         var completions = 0;
@@ -65,7 +63,6 @@ void main() {
       connectSocket: (_, {required allowInsecureTls}) async => socket,
       encodeMessage: (_) => 'encoded',
       decodeMessage: (_) => client.ServerMessage(),
-      nowMillis: () => 0,
     );
     await Future.wait([connection.close(), connection.close()]);
     expect(socket.closeCalls, 1);
@@ -83,7 +80,6 @@ void main() {
         connectSocket: (_, {required allowInsecureTls}) async => socket,
         encodeMessage: (_) => 'encoded',
         decodeMessage: (_) => throw FormatException('bad frame'),
-        nowMillis: () => 0,
       );
       final subscription = connection.stream.listen(
         (_) {},
@@ -114,7 +110,6 @@ void main() {
           decoded++;
           return client.ServerMessage();
         },
-        nowMillis: () => 0,
       );
       final subscription = connection.stream.listen(
         (_) {},
@@ -153,7 +148,6 @@ void main() {
             if (stage == 'observe') throw failure;
           },
           decodeMessage: (_) => client.ServerMessage(),
-          nowMillis: () => 0,
         );
         final subscription = connection.stream.listen(
           (_) {},
@@ -173,30 +167,6 @@ void main() {
     });
   }
 
-  test('remote close stops heartbeats while incoming listener is paused', () {
-    fakeAsync((async) {
-      final socket = _Socket();
-      final connection = RoomRealtimeConnection.connect(
-        'room',
-        createWebSocketUri: (_) async => Uri.parse('ws://example.test'),
-        connectSocket: (_, {required allowInsecureTls}) async => socket,
-        encodeMessage: (_) => 'heartbeat',
-        decodeMessage: (_) => client.ServerMessage(),
-        nowMillis: () => 0,
-      );
-      final subscription = connection.stream.listen((_) {})..pause();
-      async.flushMicrotasks();
-      expect(async.periodicTimerCount, 1);
-      socket.frames.close();
-      async.flushMicrotasks();
-      expect(async.periodicTimerCount, 0);
-      async.elapse(const Duration(seconds: 30));
-      expect(socket.sent, isEmpty);
-      subscription.cancel();
-      async.flushMicrotasks();
-    });
-  });
-
   for (final cancelStream in [false, true]) {
     test('pending connection cleanup is bounded, cancel=$cancelStream', () {
       fakeAsync((async) {
@@ -208,7 +178,6 @@ void main() {
           connectSocket: (_, {required allowInsecureTls}) => connecting.future,
           encodeMessage: (_) => '',
           decodeMessage: (_) => client.ServerMessage(),
-          nowMillis: () => 0,
         );
         final subscription = connection.stream.listen((_) {});
         async.flushMicrotasks();

@@ -1,11 +1,28 @@
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
 
 class ServerInfo {
   final String serverId;
   final String serverName;
 
-  const ServerInfo({required this.serverId, required this.serverName});
+  /// Realtime transports the server advertises, in the server's preference
+  /// order. Empty on servers that do not advertise (older versions): callers
+  /// fall back to their platform default.
+  final List<client_enum.RealtimeTransportKind> realtimeTransports;
+
+  /// Base64 SHA-256 of the WebTransport listener certificate, advertised so
+  /// self-signed deployments work without manual pinning. Null when the
+  /// server does not advertise one (or has no WebTransport transport).
+  final String? webTransportCertificateHash;
+
+  const ServerInfo({
+    required this.serverId,
+    required this.serverName,
+    this.realtimeTransports = const [],
+    this.webTransportCertificateHash,
+  });
 }
 
 enum AuthPolicyHint {

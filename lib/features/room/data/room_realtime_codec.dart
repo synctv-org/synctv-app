@@ -21,12 +21,19 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/features/room/application/realtime_observation_registry.dart';
 
+/// Encoder/decoder between realtime protobuf messages and the app's domain
+/// models.
+///
+/// Encoding is stateless (static). Decoding is bound to a session's
+/// [RealtimeObservationRegistry] so decoded payload annotations (playlist
+/// context, delivery modes) reflect the requesting session instead of
+/// process-global state.
 class RoomRealtimeCodec {
-  static final Map<String, String> _playlistObserveParents = <String, String>{};
-  static final Map<String, int> _playlistObservePages = <String, int>{};
-  static final Map<String, client.ResourceDeliveryMode> _observeDeliveryModes =
-      <String, client.ResourceDeliveryMode>{};
+  RoomRealtimeCodec({required this.registry});
+
+  final RealtimeObservationRegistry registry;
 
   static RealtimeEventLogEntry describeOutgoing(List<int> data) {
     try {
@@ -374,16 +381,6 @@ class RoomRealtimeCodec {
     client_enum.ResourceAvailabilityFilter availability =
         client_enum.ResourceAvailabilityFilter.RESOURCE_AVAILABILITY_FILTER_ALL,
   }) {
-    if (playlistId.isEmpty) {
-      _playlistObserveParents.remove(observeId);
-    } else {
-      _playlistObserveParents[observeId] = playlistId;
-    }
-    if (page == null && (cursor == null || cursor.isEmpty)) {
-      _playlistObservePages.remove(observeId);
-    } else {
-      _playlistObservePages[observeId] = page ?? 1;
-    }
     return _observe(
       observeId,
       playlistItems: client.ObservePlaylistItems(
@@ -548,9 +545,6 @@ class RoomRealtimeCodec {
   }
 
   static List<int> encodeUnobserveResource(String observeId) {
-    _observeDeliveryModes.remove(observeId);
-    _playlistObserveParents.remove(observeId);
-    _playlistObservePages.remove(observeId);
     return client.ClientMessage(
       unobserveResource: client.UnobserveResource(observeId: observeId),
     ).writeToBuffer();
@@ -572,7 +566,6 @@ class RoomRealtimeCodec {
     client.ResourceDeliveryMode deliveryMode =
         client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
   }) {
-    _observeDeliveryModes[observeId] = deliveryMode;
     return client.ClientMessage(
       observeResource: client.ObserveResource(
         observeId: observeId,
@@ -688,13 +681,14 @@ class RoomRealtimeCodec {
     return client.ClientMessage(webrtc: command).writeToBuffer();
   }
 
-  static RoomRealtimeMessage decode(Uint8List data) {
+  RoomRealtimeMessage decode(Uint8List data) {
     final message = client.ServerMessage.fromBuffer(data);
     switch (message.whichMessage()) {
       case client.ServerMessage_Message.heartbeatAck:
+        // The server timestamp is already in milliseconds.
         return RoomRealtimeMessage(
           kind: RoomRealtimeMessageKind.checkStatus,
-          timestampMillis: message.heartbeatAck.timestamp.toInt() * 1000,
+          timestampMillis: message.heartbeatAck.timestamp.toInt(),
         );
       case client.ServerMessage_Message.error:
         return RoomRealtimeMessage(
@@ -704,6 +698,18 @@ class RoomRealtimeCodec {
             code: message.error.code,
             detail: message.error.detail,
             clientOperationId: message.error.clientOperationId,
+          ),
+        );
+      case client.ServerMessage_Message.notification:
+        return _notification(message.notification);
+      case client.ServerMessage_Message.termination:
+        return RoomRealtimeMessage(
+          kind: RoomRealtimeMessageKind.terminated,
+          termination: RoomRealtimeTermination(
+            message: message.termination.message,
+            code: RoomRealtimeTerminationCode.fromProto(
+              message.termination.code,
+            ),
           ),
         );
       case client.ServerMessage_Message.resourceEvent:
@@ -730,6 +736,19 @@ class RoomRealtimeCodec {
       default:
         return const RoomRealtimeMessage(kind: RoomRealtimeMessageKind.unknown);
     }
+  }
+
+  static RoomRealtimeMessage _notification(client.UserNotification value) {
+    return RoomRealtimeMessage(
+      kind: RoomRealtimeMessageKind.notification,
+      userNotification: RoomRealtimeUserNotification(
+        notificationId: value.notificationId,
+        type: value.notificationType,
+        title: value.title,
+        content: value.content,
+        timestampMillis: value.timestamp.toInt() * 1000,
+      ),
+    );
   }
 
   static RoomRealtimeMessage _chatEvent(
@@ -826,17 +845,18 @@ class RoomRealtimeCodec {
     );
   }
 
-  static RoomRealtimeMessage _playlistItems(
+  RoomRealtimeMessage _playlistItems(
     client.ListPlaylistItemsResponse response, {
     String observeId = '',
     String version = '',
   }) {
+    final context = registry.playlistContext(observeId);
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.mediaLibrary,
       mediaLibrary: _mediaLibraryPageFromProto(
         response,
-        parentId: _playlistObserveParents[observeId] ?? '',
-        requestedPage: _playlistObservePages[observeId],
+        parentId: context?.parentId ?? '',
+        requestedPage: context?.page,
       ),
       resourceObserveId: observeId,
       resourceVersion: version,
@@ -879,7 +899,7 @@ class RoomRealtimeCodec {
     );
   }
 
-  static RoomRealtimeMessage _resourceEvent(client.ResourceEvent changed) {
+  RoomRealtimeMessage _resourceEvent(client.ResourceEvent changed) {
     switch (changed.whichPayload()) {
       case client.ResourceEvent_Payload.playbackState:
         return _playbackState(changed.playbackState);
@@ -1009,8 +1029,8 @@ class RoomRealtimeCodec {
     );
   }
 
-  static bool _isNotifyOnlyObserveId(String observeId) {
-    return _observeDeliveryModes[observeId] ==
+  bool _isNotifyOnlyObserveId(String observeId) {
+    return registry.deliveryMode(observeId) ==
         client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY;
   }
 

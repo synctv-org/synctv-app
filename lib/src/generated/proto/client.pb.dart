@@ -46953,10 +46953,12 @@ class RealtimeTransportCapability extends $pb.GeneratedMessage {
   factory RealtimeTransportCapability({
     RealtimeTransportKind? kind,
     $core.String? path,
+    $core.String? certificateHash,
   }) {
     final result = create();
     if (kind != null) result.kind = kind;
     if (path != null) result.path = path;
+    if (certificateHash != null) result.certificateHash = certificateHash;
     return result;
   }
 
@@ -46976,6 +46978,7 @@ class RealtimeTransportCapability extends $pb.GeneratedMessage {
     ..aE<RealtimeTransportKind>(1, _omitFieldNames ? '' : 'kind',
         enumValues: RealtimeTransportKind.values)
     ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..aOS(3, _omitFieldNames ? '' : 'certificateHash')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -47020,6 +47023,22 @@ class RealtimeTransportCapability extends $pb.GeneratedMessage {
   $core.bool hasPath() => $_has(1);
   @$pb.TagNumber(2)
   void clearPath() => $_clearField(2);
+
+  /// Base64 SHA-256 of the WebTransport listener certificate's DER encoding.
+  /// Present on WEB_TRANSPORT capabilities whenever the certificate hash is
+  /// readable; clients pass it as a WebTransport `serverCertificateHashes`
+  /// entry so self-signed deployments work without manual pinning, refreshing
+  /// it from each server-info response. It is delivered inside the
+  /// server-info response, so an on-path attacker cannot substitute a pin
+  /// without breaking the enclosing channel.
+  @$pb.TagNumber(3)
+  $core.String get certificateHash => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set certificateHash($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCertificateHash() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCertificateHash() => $_clearField(3);
 }
 
 class GetServerInfoResponse extends $pb.GeneratedMessage {

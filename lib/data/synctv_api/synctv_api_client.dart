@@ -629,6 +629,139 @@ class SyncTvApiClient {
     );
   }
 
+  /// Like [_send], but for endpoints that answer `204 No Content`.
+  Future<void> _sendNoContent(
+    String method,
+    String path, {
+    Object? body,
+    Map<String, Object?> query = const {},
+    bool auth = true,
+  }) async {
+    final generation = _endpointGeneration;
+    final sessionGeneration = session.generation;
+    final uri = _uri(path, query);
+    final encodedBody = _encodeBody(body);
+    var response = await _sendHttp(
+      method,
+      uri,
+      headers: _headers(auth: auth),
+      body: encodedBody,
+    );
+    _ensureCurrentEndpoint(generation);
+    if (auth) session.ensureCurrent(sessionGeneration);
+
+    if (_shouldRefresh(response, auth: auth, path: path)) {
+      final refreshed = await _tryRefreshToken(generation);
+      _ensureCurrentEndpoint(generation);
+      session.ensureCurrent(sessionGeneration);
+      if (refreshed) {
+        response = await _sendHttp(
+          method,
+          uri,
+          headers: _headers(auth: auth),
+          body: encodedBody,
+        );
+        _ensureCurrentEndpoint(generation);
+        session.ensureCurrent(sessionGeneration);
+      } else {
+        _notifyAuthError(generation);
+      }
+    } else if (response.statusCode == 401 && auth) {
+      _notifyAuthError(generation);
+    }
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _apiException(response, method: method, uri: uri);
+    }
+  }
+
+  Stream<Uint8List> _watchRealtimeSessionEvents(
+    String roomId,
+    String sessionId,
+  ) async* {
+    final path =
+        '/api/rooms/${Uri.encodeComponent(roomId)}/realtime/sessions'
+        '/${Uri.encodeComponent(sessionId)}/events';
+    final generation = _endpointGeneration;
+    final sessionGeneration = session.generation;
+    var request = _sseRequest(path, {'format': 'protobuf'}, generation);
+    var response = await _http.send(request);
+    _ensureCurrentEndpoint(generation);
+    session.ensureCurrent(sessionGeneration);
+    var refreshedSession = false;
+    var authErrorNotified = false;
+    if (_shouldRefresh(response, auth: true, path: path)) {
+      final refreshed = await _tryRefreshToken(generation);
+      _ensureCurrentEndpoint(generation);
+      session.ensureCurrent(sessionGeneration);
+      if (refreshed) {
+        refreshedSession = true;
+        request = _sseRequest(path, {'format': 'protobuf'}, generation);
+        response = await _http.send(request);
+        _ensureCurrentEndpoint(generation);
+        session.ensureCurrent(sessionGeneration);
+      } else {
+        _notifyAuthError(generation);
+        authErrorNotified = true;
+      }
+    }
+    if (response.statusCode == 401 && !refreshedSession && !authErrorNotified) {
+      _notifyAuthError(generation);
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final body = await response.stream.bytesToString();
+      final errorResponse = http.Response(
+        body.isEmpty ? '{"message":"Realtime session attach failed"}' : body,
+        response.statusCode,
+        headers: response.headers,
+      );
+      throw _apiException(
+        errorResponse,
+        method: request.method,
+        uri: request.url,
+      );
+    }
+
+    var eventName = '';
+    final dataLines = <String>[];
+    await for (final line
+        in response.stream
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())) {
+      _ensureCurrentEndpoint(generation);
+      session.ensureCurrent(sessionGeneration);
+      if (line.isEmpty) {
+        final bytes = _decodeRealtimeSessionEvent(eventName, dataLines);
+        eventName = '';
+        dataLines.clear();
+        if (bytes != null) yield bytes;
+        continue;
+      }
+      if (line.startsWith(':')) continue;
+      if (line.startsWith('event:')) {
+        eventName = line.substring(6).trim();
+        continue;
+      }
+      if (line.startsWith('data:')) {
+        dataLines.add(line.substring(5).trimLeft());
+      }
+    }
+  }
+
+  Uint8List? _decodeRealtimeSessionEvent(
+    String eventName,
+    List<String> dataLines,
+  ) {
+    if (dataLines.isEmpty) return null;
+    if (eventName != 'message') return null;
+    final data = dataLines.join('\n');
+    try {
+      return base64Decode(data);
+    } on FormatException {
+      return null;
+    }
+  }
+
   Future<http.Response> _sendHttp(
     String method,
     Uri uri, {
@@ -1378,6 +1511,18 @@ class SyncTvApiClient {
       scheme: wsScheme,
       path: '/ws/rooms/$encodedRoomId',
       queryParameters: {'ticket': ticket, 'format': 'json'},
+    );
+  }
+
+  /// WebTransport room endpoint on the server's HTTP/3 (QUIC) listener.
+  /// The browser discovers the h3 endpoint via the Alt-Svc header the TCP
+  /// API advertises, so the origin stays the API base URL.
+  Uri roomWebTransportUri(String roomId, {required String ticket}) {
+    final encodedRoomId = Uri.encodeComponent(roomId);
+    return _baseUri.replace(
+      scheme: 'https',
+      path: '/wt/rooms/$encodedRoomId',
+      queryParameters: {'ticket': ticket, 'format': 'protobuf'},
     );
   }
 

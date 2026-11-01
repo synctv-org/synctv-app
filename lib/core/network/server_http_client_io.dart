@@ -3,11 +3,18 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:synctv_app/core/network/server_endpoint_identity.dart';
+import 'package:synctv_app/core/network/server_http_client_native.dart';
 
 http.Client createServerHttpClient(
   String endpoint, {
   required bool allowInsecureTls,
 }) {
+  // Native stacks cannot honor the self-signed TLS bypass; only use them
+  // for endpoints that verify normally.
+  if (!allowInsecureTls) {
+    final native = createNativeServerHttpClient();
+    if (native != null) return native;
+  }
   final uri = Uri.parse(ServerEndpointIdentity.normalize(endpoint));
   return IOClient(
     createServerIoHttpClient(uri, allowInsecureTls: allowInsecureTls),

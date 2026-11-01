@@ -1068,6 +1068,48 @@ class SyncTvRoomApi {
     );
   }
 
+  /// Creates an HTTP realtime session (SSE downlink + REST uplink).
+  Future<client.CreateRealtimeSessionResponse> createRealtimeSession(
+    String roomId,
+    client.CreateRealtimeSessionRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/${Uri.encodeComponent(roomId)}/realtime/sessions',
+      client.CreateRealtimeSessionResponse.create,
+      body: request,
+    );
+  }
+
+  /// Posts one [client.ClientMessage] into a realtime session.
+  Future<void> sendRealtimeSessionMessage(
+    String roomId,
+    String sessionId,
+    client.SendRealtimeSessionMessageRequest request,
+  ) {
+    return _api._sendNoContent(
+      'POST',
+      '/api/rooms/${Uri.encodeComponent(roomId)}/realtime/sessions'
+          '/${Uri.encodeComponent(sessionId)}/messages',
+      body: request,
+    );
+  }
+
+  /// Gracefully ends a realtime session.
+  Future<void> deleteRealtimeSession(String roomId, String sessionId) {
+    return _api._sendNoContent(
+      'DELETE',
+      '/api/rooms/${Uri.encodeComponent(roomId)}/realtime/sessions'
+          '/${Uri.encodeComponent(sessionId)}',
+    );
+  }
+
+  /// Attaches to a realtime session's SSE downlink and yields the raw
+  /// `ServerMessage` bytes of each `message` event (base64 protobuf).
+  Stream<Uint8List> realtimeSessionEvents(String roomId, String sessionId) {
+    return _api._watchRealtimeSessionEvents(roomId, sessionId);
+  }
+
   Stream<client.WatchPlaybackStateEvent> watchPlaybackState(
     String roomId,
     client.WatchPlaybackStateRequest request,

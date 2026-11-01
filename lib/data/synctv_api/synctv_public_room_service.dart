@@ -109,9 +109,32 @@ class SyncTvPublicRoomDomainService {
     final response = await _api.publicService.getServerInfo(
       client.GetServerInfoRequest(),
     );
+    final webTransportHash = response.transports
+        .where(
+          (capability) =>
+              capability.kind ==
+              client_enum
+                  .RealtimeTransportKind
+                  .REALTIME_TRANSPORT_KIND_WEB_TRANSPORT,
+        )
+        .map((capability) => capability.certificateHash)
+        .firstWhere((hash) => hash.isNotEmpty, orElse: () => '');
     return ServerInfo(
       serverId: response.serverId,
       serverName: response.serverName,
+      realtimeTransports: response.transports
+          .map((capability) => capability.kind)
+          .where(
+            (kind) =>
+                kind !=
+                client_enum
+                    .RealtimeTransportKind
+                    .REALTIME_TRANSPORT_KIND_UNSPECIFIED,
+          )
+          .toList(growable: false),
+      webTransportCertificateHash: webTransportHash.isEmpty
+          ? null
+          : webTransportHash,
     );
   }
 

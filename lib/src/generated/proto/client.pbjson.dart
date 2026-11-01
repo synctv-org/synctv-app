@@ -18430,6 +18430,7 @@ const RealtimeTransportCapability$json = {
       '10': 'kind'
     },
     {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
+    {'1': 'certificate_hash', '3': 3, '4': 1, '5': 9, '10': 'certificateHash'},
   ],
 };
 
@@ -18438,7 +18439,7 @@ final $typed_data.Uint8List realtimeTransportCapabilityDescriptor =
     $convert.base64Decode(
         'ChtSZWFsdGltZVRyYW5zcG9ydENhcGFiaWxpdHkSRAoEa2luZBgBIAEoDjIkLnN5bmN0di5jbG'
         'llbnQuUmVhbHRpbWVUcmFuc3BvcnRLaW5kQgq6SAeCAQQQASAAUgRraW5kEhIKBHBhdGgYAiAB'
-        'KAlSBHBhdGg=');
+        'KAlSBHBhdGgSKQoQY2VydGlmaWNhdGVfaGFzaBgDIAEoCVIPY2VydGlmaWNhdGVIYXNo');
 
 @$core.Deprecated('Use getServerInfoResponseDescriptor instead')
 const GetServerInfoResponse$json = {
