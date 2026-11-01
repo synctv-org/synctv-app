@@ -4,12 +4,13 @@ import 'dart:typed_data';
 
 import 'src/synctv_webtransport_native.dart' as native;
 
-/// A native WebTransport session carrying length-prefixed frames on one
-/// bidirectional stream.
+/// A native WebTransport session carrying length-prefixed frames: the
+/// bidirectional control stream plus any per-observation unidirectional
+/// push streams the server opens, multiplexed into one frame stream.
 ///
 /// Connecting and receiving run off the main isolate (the native receive
-/// call blocks until a whole frame arrives); sending is a short native call
-/// that hands the frame to the QUIC stack.
+/// call blocks until a whole frame arrives from any stream); sending is a
+/// short native call that hands the frame to the QUIC stack.
 class NativeWebTransportSession {
   NativeWebTransportSession._(this._handle);
 

@@ -17,9 +17,17 @@ bool isWebTransportSupported() {
 /// WebTransport channel over the browser's `WebTransport` API.
 ///
 /// The wire format matches the server's WebTransport transport: one
-/// bidirectional stream carrying length-prefixed protobuf frames.
+/// bidirectional control stream carrying length-prefixed protobuf frames,
+/// plus — when the server honors the multi-stream revision requested on the
+/// connect URI — per-observation frames arriving on server-initiated
+/// unidirectional streams. Both sources feed the same frame stream; the
+/// protocol guarantees ordering only within one observation, which each
+/// server-side stream preserves.
 class WebTransportRoomRealtimeChannel implements RoomRealtimeChannel {
   WebTransportRoomRealtimeChannel._(this._session, this._writer, this._reader) {
+    // Start reading eagerly: without a consumer the stream's flow control
+    // blocks the server's writes, so a lazily-started pump would starve the
+    // channel even though the session itself is healthy.
     _handshake = _startReadLoop();
   }
 
@@ -65,7 +73,6 @@ class WebTransportRoomRealtimeChannel implements RoomRealtimeChannel {
   final web.ReadableStreamDefaultReader _reader;
 
   final StreamController<Uint8List> _incoming = StreamController<Uint8List>();
-  final RealtimeFrameReader _frameReader = RealtimeFrameReader();
   Future<void>? _readLoop;
   Future<void>? _closeFuture;
   bool _writerLocked = true;
@@ -82,31 +89,77 @@ class WebTransportRoomRealtimeChannel implements RoomRealtimeChannel {
   late final Future<void> _handshake;
 
   Future<void> _startReadLoop() async {
-    _readLoop = _pump();
+    _readLoop = _pumpStream(_reader, 'control');
+    unawaited(_pumpIncomingStreams());
     await _readLoop;
   }
 
-  Future<void> _pump() async {
+  /// Accepts server-initiated unidirectional streams (per-observation push
+  /// lanes) and pumps their frames into the shared incoming stream.
+  Future<void> _pumpIncomingStreams() async {
+    try {
+      final acceptReader =
+          _session.incomingUnidirectionalStreams.getReader()
+              as web.ReadableStreamDefaultReader;
+      while (true) {
+        final result = await acceptReader.read().toDart;
+        if (result.done) return;
+        final stream = result.value;
+        if (stream == null) continue;
+        unawaited(
+          _pumpStream(
+            (stream as web.ReadableStream).getReader()
+                as web.ReadableStreamDefaultReader,
+            'push stream',
+          ),
+        );
+      }
+    } catch (error) {
+      _failChannel('WebTransport stream accept failed: $error');
+    }
+  }
+
+  /// Pumps length-prefixed frames from one stream. Each stream keeps its own
+  /// incremental frame reader — streams interleave at frame boundaries only.
+  Future<void> _pumpStream(
+    web.ReadableStreamDefaultReader reader,
+    String source,
+  ) async {
+    final frameReader = RealtimeFrameReader();
     try {
       while (true) {
-        final result = await _reader.read().toDart;
+        final result = await reader.read().toDart;
         if (result.done) break;
         final chunk = result.value;
         if (chunk == null) continue;
-        for (final frame in _frameReader.addChunk(
+        for (final frame in frameReader.addChunk(
           (chunk as JSUint8Array).toDart,
         )) {
           if (_incoming.isClosed) return;
           _incoming.add(frame);
         }
       }
-    } catch (error) {
-      if (!_incoming.isClosed) {
-        _incoming.addError(StateError('WebTransport read failed: $error'));
+      if (source == 'control') {
+        // The server closed the control stream: the session is over. Push
+        // lanes end with it, so closing here covers the whole channel.
+        unawaited(close());
       }
-    } finally {
-      unawaited(close());
+    } catch (error) {
+      if (source == 'control') {
+        _failChannel('WebTransport read failed: $error');
+      } else {
+        // Push lanes exist only inside a live session; an error on one means
+        // the session is unhealthy. Failing the channel makes the engine
+        // reconnect and resynchronize from its observation cursors.
+        _failChannel('WebTransport $source failed: $error');
+      }
     }
+  }
+
+  void _failChannel(String message) {
+    if (_incoming.isClosed) return;
+    _incoming.addError(StateError(message));
+    unawaited(close());
   }
 
   @override

@@ -1516,13 +1516,17 @@ class SyncTvApiClient {
 
   /// WebTransport room endpoint on the server's HTTP/3 (QUIC) listener.
   /// The browser discovers the h3 endpoint via the Alt-Svc header the TCP
-  /// API advertises, so the origin stays the API base URL.
+  /// API advertises, so the origin stays the API base URL. `streams=1`
+  /// requests the multi-stream revision: control traffic on the
+  /// bidirectional stream plus per-observation unidirectional push streams.
+  /// Servers that do not know the parameter ignore it and serve the
+  /// single-stream layout, which this client also handles.
   Uri roomWebTransportUri(String roomId, {required String ticket}) {
     final encodedRoomId = Uri.encodeComponent(roomId);
     return _baseUri.replace(
       scheme: 'https',
       path: '/wt/rooms/$encodedRoomId',
-      queryParameters: {'ticket': ticket, 'format': 'protobuf'},
+      queryParameters: {'ticket': ticket, 'format': 'protobuf', 'streams': '1'},
     );
   }
 

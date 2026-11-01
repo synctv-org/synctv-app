@@ -9807,6 +9807,24 @@ void main() {
     expect(uri.queryParameters, {'ticket': 'ws_ticket', 'format': 'json'});
   });
 
+  test('room webtransport uri pins protobuf frames and multi-stream', () async {
+    final api = SyncTvApiClient(
+      baseUrl: 'http://example.test',
+      session: SyncTvSession(),
+      httpClient: MockClient((request) async => http.Response('{}', 200)),
+    );
+
+    final uri = api.roomWebTransportUri('room_1', ticket: 'wt_ticket');
+
+    expect(uri.scheme, 'https');
+    expect(uri.path, '/wt/rooms/room_1');
+    expect(uri.queryParameters, {
+      'ticket': 'wt_ticket',
+      'format': 'protobuf',
+      'streams': '1',
+    });
+  });
+
   test(
     'admin review endpoints use current protobuf query and body contracts',
     () async {

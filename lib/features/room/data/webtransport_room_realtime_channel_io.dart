@@ -21,8 +21,10 @@ RoomRealtimeChannelFactory? webTransportChannelFactory({
 }
 
 /// [RoomRealtimeChannelFactory] over the native WebTransport bridge. The
-/// wire format matches the server's WebTransport transport: one
-/// bidirectional stream carrying length-prefixed protobuf frames.
+/// wire format matches the server's WebTransport transport: a bidirectional
+/// control stream carrying length-prefixed protobuf frames, plus the
+/// per-observation unidirectional push streams the native bridge multiplexes
+/// into the same frame stream.
 class NativeWebTransportChannelFactory implements RoomRealtimeChannelFactory {
   NativeWebTransportChannelFactory({
     required this.createUri,

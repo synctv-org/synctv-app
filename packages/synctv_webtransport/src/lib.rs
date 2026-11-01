@@ -2,10 +2,13 @@
 //!
 //! One C ABI surface, driven by Dart FFI:
 //! - [`synctv_wt_connect`] establishes a WebTransport session and opens the
-//!   bidirectional frame stream (length-prefixed frames, 64 KiB cap, the
+//!   bidirectional control stream (length-prefixed frames, 64 KiB cap, the
 //!   same wire format as the web adapter);
-//! - [`synctv_wt_send`] / [`synctv_wt_recv`] exchange frames (recv blocks
-//!   until a full frame arrives — call it from a reader isolate);
+//! - [`synctv_wt_send`] hands frames to the control stream's writer task;
+//! - [`synctv_wt_recv`] returns the next frame from any stream — the control
+//!   stream plus the per-observation unidirectional push streams the server
+//!   opens for multi-stream sessions — blocking until one arrives (call it
+//!   from a reader isolate);
 //! - [`synctv_wt_close`] tears the session down;
 //! - [`synctv_wt_last_error`] retrieves the last error message.
 //!
@@ -21,11 +24,24 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use tokio::io::AsyncWriteExt;
 use tokio::runtime::Runtime;
+use tokio::sync::mpsc;
 use wtransport::ClientConfig;
 use wtransport::Endpoint;
 
 /// Maximum frame payload (matches the server's cap and the web adapter).
 pub const MAX_FRAME_BYTES: usize = 64 * 1024;
+
+/// Writer channel capacity: bounds how far the app can outrun the QUIC
+/// stream before sends begin to block.
+const WRITER_QUEUE: usize = 64;
+
+/// Downlink frame queue shared by the control stream and every push stream.
+const FRAME_QUEUE: usize = 128;
+
+/// Upper bound on the connect + control-stream setup. The Dart side times
+/// out too, but its timeout cannot cancel this native call, so without this
+/// bound a stalled endpoint would pin the connecting isolate.
+const CONNECT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
 fn runtime() -> &'static Runtime {
     static RUNTIME: OnceLock<Runtime> = OnceLock::new();
@@ -43,11 +59,14 @@ fn next_handle() -> i64 {
 }
 
 struct Session {
-    /// Held to keep the QUIC connection alive; dropped on close.
+    /// Held to keep the QUIC connection alive; dropped on close, which ends
+    /// the stream tasks.
     #[allow(dead_code)]
     connection: wtransport::Connection,
-    send: Mutex<wtransport::SendStream>,
-    recv: Mutex<wtransport::RecvStream>,
+    /// Feeds the control stream writer task; dropping signals finish.
+    writer: mpsc::Sender<Vec<u8>>,
+    /// Frames from the control stream and every push stream.
+    frames: tokio::sync::Mutex<mpsc::Receiver<Vec<u8>>>,
 }
 
 thread_local! {
@@ -93,6 +112,52 @@ async fn read_frame(stream: &mut wtransport::RecvStream) -> io::Result<Option<Ve
     Ok(Some(payload))
 }
 
+/// Pumps frames from one receive stream into the shared downlink queue. The
+/// task ends when the stream closes or the queue's receiver is gone.
+async fn pump_stream(
+    mut stream: wtransport::RecvStream,
+    frames: mpsc::Sender<Vec<u8>>,
+) {
+    loop {
+        match read_frame(&mut stream).await {
+            Ok(Some(payload)) => {
+                if frames.send(payload).await.is_err() {
+                    return;
+                }
+            }
+            Ok(None) | Err(_) => return,
+        }
+    }
+}
+
+/// Accepts server-initiated unidirectional push streams (per-observation
+/// lanes of multi-stream sessions) and pumps each into the shared queue.
+async fn pump_push_streams(connection: wtransport::Connection, frames: mpsc::Sender<Vec<u8>>) {
+    loop {
+        match connection.accept_uni().await {
+            Ok(stream) => {
+                let frames = frames.clone();
+                tokio::spawn(pump_stream(stream, frames));
+            }
+            Err(_) => return,
+        }
+    }
+}
+
+/// Writes frames from the app onto the control stream; finishing the stream
+/// when the session closes.
+async fn drive_writer(mut send: wtransport::SendStream, mut writer: mpsc::Receiver<Vec<u8>>) {
+    while let Some(payload) = writer.recv().await {
+        let mut frame = Vec::with_capacity(4 + payload.len());
+        frame.extend_from_slice(&(payload.len() as u32).to_be_bytes());
+        frame.extend_from_slice(&payload);
+        if send.write_all(&frame).await.is_err() || send.flush().await.is_err() {
+            return;
+        }
+    }
+    let _ = send.finish().await;
+}
+
 fn build_config(cert_hash: Option<[u8; 32]>) -> wtransport::ClientConfig {
     let builder = ClientConfig::builder().with_bind_default();
     match cert_hash {
@@ -106,10 +171,11 @@ fn build_config(cert_hash: Option<[u8; 32]>) -> wtransport::ClientConfig {
 }
 
 /// Connects a WebTransport session to `url` (UTF-8 `https://…`) and opens
-/// the frame stream. `cert_hash`, when 32 bytes, pins the server
+/// the control stream. `cert_hash`, when 32 bytes, pins the server
 /// certificate by SHA-256 (self-signed deployments); otherwise system trust
-/// roots apply. Returns a positive session handle or -1 on failure
-/// (see [`synctv_wt_last_error`]).
+/// roots apply. Server-initiated unidirectional push streams are served
+/// automatically and multiplexed into the same receive queue. Returns a
+/// positive session handle or -1 on failure (see [`synctv_wt_last_error`]).
 #[no_mangle]
 pub unsafe extern "C" fn synctv_wt_connect(
     url: *const u8,
@@ -133,29 +199,45 @@ pub unsafe extern "C" fn synctv_wt_connect(
     };
 
     let result = runtime().block_on(async {
-        let endpoint = Endpoint::client(build_config(cert_hash))
-            .map_err(io::Error::other)?;
-        let connection = endpoint
-            .connect(&url)
-            .await
-            .map_err(io::Error::other)?;
-        let (send, recv) = connection
-            .open_bi()
-            .await
-            .map_err(io::Error::other)?
-            .await
-            .map_err(io::Error::other)?;
-        io::Result::Ok((connection, send, recv))
+        let connect = async {
+            let endpoint = Endpoint::client(build_config(cert_hash))
+                .map_err(io::Error::other)?;
+            let connection = endpoint
+                .connect(&url)
+                .await
+                .map_err(io::Error::other)?;
+            let (send, recv) = connection
+                .open_bi()
+                .await
+                .map_err(io::Error::other)?
+                .await
+                .map_err(io::Error::other)?;
+            io::Result::Ok((connection, send, recv))
+        };
+        match tokio::time::timeout(CONNECT_TIMEOUT, connect).await {
+            Ok(result) => result,
+            Err(_) => Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "WebTransport connect timed out",
+            )),
+        }
     });
     match result {
         Ok((connection, send, recv)) => {
+            let (writer_tx, writer_rx) = mpsc::channel(WRITER_QUEUE);
+            let (frames_tx, frames_rx) = mpsc::channel(FRAME_QUEUE);
+
+            tokio::spawn(drive_writer(send, writer_rx));
+            tokio::spawn(pump_stream(recv, frames_tx.clone()));
+            tokio::spawn(pump_push_streams(connection.clone(), frames_tx));
+
             let handle = next_handle();
             sessions().lock().expect("session map").insert(
                 handle,
                 Arc::new(Session {
                     connection,
-                    send: Mutex::new(send),
-                    recv: Mutex::new(recv),
+                    writer: writer_tx,
+                    frames: tokio::sync::Mutex::new(frames_rx),
                 }),
             );
             handle
@@ -179,29 +261,22 @@ pub unsafe extern "C" fn synctv_wt_send(handle: i64, buf: *const u8, len: usize)
         set_error("frame exceeds size cap");
         return -1;
     }
-    let payload = std::slice::from_raw_parts(buf, len);
-    let mut frame = Vec::with_capacity(4 + len);
-    frame.extend_from_slice(&(len as u32).to_be_bytes());
-    frame.extend_from_slice(payload);
+    let payload = std::slice::from_raw_parts(buf, len).to_vec();
 
-    let result = runtime().block_on(async {
-        let mut send = session.send.lock().expect("send stream");
-        send.write_all(&frame).await.map_err(io::Error::other)?;
-        send.flush().await.map_err(io::Error::other)?;
-        io::Result::Ok(())
-    });
+    let result = runtime().block_on(session.writer.send(payload));
     match result {
         Ok(()) => 0,
-        Err(error) => {
-            set_error(format!("WebTransport send failed: {error}"));
+        Err(_) => {
+            set_error("WebTransport send failed: session closed");
             -1
         }
     }
 }
 
 /// Receives the next frame payload into `buf` (`cap` bytes), blocking until
-/// a complete frame is available. Returns the payload length, -1 when the
-/// session closed or failed, -2 when the buffer is too small.
+/// a complete frame is available from any stream. Returns the payload
+/// length, -1 when the session closed or failed, -2 when the buffer is too
+/// small.
 #[no_mangle]
 pub unsafe extern "C" fn synctv_wt_recv(handle: i64, buf: *mut u8, cap: usize) -> i32 {
     let Some(session) = sessions().lock().expect("session map").get(&handle).cloned() else {
@@ -209,11 +284,11 @@ pub unsafe extern "C" fn synctv_wt_recv(handle: i64, buf: *mut u8, cap: usize) -
         return -1;
     };
     let result = runtime().block_on(async {
-        let mut recv = session.recv.lock().expect("recv stream");
-        read_frame(&mut recv).await
+        let mut frames = session.frames.lock().await;
+        frames.recv().await
     });
     match result {
-        Ok(Some(payload)) => {
+        Some(payload) => {
             if payload.len() > cap {
                 set_error("recv buffer too small");
                 return -2;
@@ -221,12 +296,8 @@ pub unsafe extern "C" fn synctv_wt_recv(handle: i64, buf: *mut u8, cap: usize) -
             std::ptr::copy_nonoverlapping(payload.as_ptr(), buf, payload.len());
             payload.len() as i32
         }
-        Ok(None) => {
+        None => {
             set_error("session closed by peer");
-            -1
-        }
-        Err(error) => {
-            set_error(format!("WebTransport recv failed: {error}"));
             -1
         }
     }
@@ -236,8 +307,13 @@ pub unsafe extern "C" fn synctv_wt_recv(handle: i64, buf: *mut u8, cap: usize) -
 #[no_mangle]
 pub extern "C" fn synctv_wt_close(handle: i64) {
     if let Some(session) = sessions().lock().expect("session map").remove(&handle) {
+        // Dropping the Arc ends the connection and with it the stream tasks;
+        // finishing the control stream first gives the peer a clean close.
+        let writer = session.writer.clone();
         runtime().block_on(async {
-            let _ = session.send.lock().expect("send stream").finish().await;
+            drop(writer);
+            // The writer task owns the stream; give it a beat to finish.
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         });
     }
 }
@@ -275,5 +351,26 @@ mod tests {
             assert!(text.contains("unknown session handle"), "{text}");
         }
         synctv_wt_close(999);
+    }
+
+    #[test]
+    fn connect_failure_reports_an_error() {
+        unsafe {
+            let url = b"https://127.0.0.1:1/wt/rooms/x";
+            let handle = synctv_wt_connect(
+                url.as_ptr(),
+                url.len(),
+                std::ptr::null(),
+                0,
+            );
+            assert_eq!(handle, -1);
+            let mut buffer = [0u8; 512];
+            let length = synctv_wt_last_error(buffer.as_mut_ptr(), buffer.len());
+            let text = String::from_utf8_lossy(&buffer[..length as usize]).to_string();
+            assert!(
+                text.contains("WebTransport connect failed"),
+                "unexpected error text: {text}"
+            );
+        }
     }
 }
