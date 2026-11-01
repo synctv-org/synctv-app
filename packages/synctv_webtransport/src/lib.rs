@@ -40,8 +40,15 @@ const FRAME_QUEUE: usize = 128;
 
 /// Upper bound on the connect + control-stream setup. The Dart side times
 /// out too, but its timeout cannot cancel this native call, so without this
-/// bound a stalled endpoint would pin the connecting isolate.
-const CONNECT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+/// bound a stalled endpoint would pin the connecting isolate. Kept half a
+/// second under the Dart default (10 s) so this side gives up first and the
+/// Dart late-arrival reaper only ever reaps sessions it can identify.
+const CONNECT_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(9500);
+
+/// Upper bound on handing one frame to the writer task. The writer queue is
+/// finite, so a stalled control stream (peer not reading) would otherwise
+/// block the calling thread — the UI isolate — indefinitely.
+const SEND_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
 
 fn runtime() -> &'static Runtime {
     static RUNTIME: OnceLock<Runtime> = OnceLock::new();
@@ -59,14 +66,16 @@ fn next_handle() -> i64 {
 }
 
 struct Session {
-    /// Held to keep the QUIC connection alive; dropped on close, which ends
-    /// the stream tasks.
-    #[allow(dead_code)]
+    /// Closed explicitly on teardown so the peer sees a clean disconnect and
+    /// the stream tasks stop even if a stream read is parked.
     connection: wtransport::Connection,
     /// Feeds the control stream writer task; dropping signals finish.
     writer: mpsc::Sender<Vec<u8>>,
     /// Frames from the control stream and every push stream.
     frames: tokio::sync::Mutex<mpsc::Receiver<Vec<u8>>>,
+    /// The session's runtime tasks, aborted on close so a stalled stream
+    /// cannot outlive its handle.
+    tasks: Vec<tokio::task::JoinHandle<()>>,
 }
 
 thread_local! {
@@ -82,9 +91,7 @@ async fn read_frame(stream: &mut wtransport::RecvStream) -> io::Result<Option<Ve
     let mut header = [0u8; 4];
     match stream.read_exact(&mut header).await {
         Ok(()) => {}
-        Err(wtransport::error::StreamReadExactError::FinishedEarly(_)) => {
-            return Ok(None)
-        }
+        Err(wtransport::error::StreamReadExactError::FinishedEarly(_)) => return Ok(None),
         Err(wtransport::error::StreamReadExactError::Read(error)) => {
             return Err(io::Error::other(error))
         }
@@ -114,10 +121,7 @@ async fn read_frame(stream: &mut wtransport::RecvStream) -> io::Result<Option<Ve
 
 /// Pumps frames from one receive stream into the shared downlink queue. The
 /// task ends when the stream closes or the queue's receiver is gone.
-async fn pump_stream(
-    mut stream: wtransport::RecvStream,
-    frames: mpsc::Sender<Vec<u8>>,
-) {
+async fn pump_stream(mut stream: wtransport::RecvStream, frames: mpsc::Sender<Vec<u8>>) {
     loop {
         match read_frame(&mut stream).await {
             Ok(Some(payload)) => {
@@ -161,11 +165,9 @@ async fn drive_writer(mut send: wtransport::SendStream, mut writer: mpsc::Receiv
 fn build_config(cert_hash: Option<[u8; 32]>) -> wtransport::ClientConfig {
     let builder = ClientConfig::builder().with_bind_default();
     match cert_hash {
-        Some(hash) => {
-            builder
-                .with_server_certificate_hashes([wtransport::tls::Sha256Digest::new(hash)])
-                .build()
-        }
+        Some(hash) => builder
+            .with_server_certificate_hashes([wtransport::tls::Sha256Digest::new(hash)])
+            .build(),
         None => builder.with_native_certs().build(),
     }
 }
@@ -200,12 +202,8 @@ pub unsafe extern "C" fn synctv_wt_connect(
 
     let result = runtime().block_on(async {
         let connect = async {
-            let endpoint = Endpoint::client(build_config(cert_hash))
-                .map_err(io::Error::other)?;
-            let connection = endpoint
-                .connect(&url)
-                .await
-                .map_err(io::Error::other)?;
+            let endpoint = Endpoint::client(build_config(cert_hash)).map_err(io::Error::other)?;
+            let connection = endpoint.connect(&url).await.map_err(io::Error::other)?;
             let (send, recv) = connection
                 .open_bi()
                 .await
@@ -221,16 +219,21 @@ pub unsafe extern "C" fn synctv_wt_connect(
                 "WebTransport connect timed out",
             )),
         }
-    });
-    match result {
-        Ok((connection, send, recv)) => {
+        .map(|(connection, send, recv)| {
+            // Spawned here, inside the runtime context: spawning after
+            // `block_on` returned would be outside any runtime and abort.
             let (writer_tx, writer_rx) = mpsc::channel(WRITER_QUEUE);
             let (frames_tx, frames_rx) = mpsc::channel(FRAME_QUEUE);
-
-            tokio::spawn(drive_writer(send, writer_rx));
-            tokio::spawn(pump_stream(recv, frames_tx.clone()));
-            tokio::spawn(pump_push_streams(connection.clone(), frames_tx));
-
+            let tasks = vec![
+                tokio::spawn(drive_writer(send, writer_rx)),
+                tokio::spawn(pump_stream(recv, frames_tx.clone())),
+                tokio::spawn(pump_push_streams(connection.clone(), frames_tx)),
+            ];
+            (connection, writer_tx, frames_rx, tasks)
+        })
+    });
+    match result {
+        Ok((connection, writer_tx, frames_rx, tasks)) => {
             let handle = next_handle();
             sessions().lock().expect("session map").insert(
                 handle,
@@ -238,6 +241,7 @@ pub unsafe extern "C" fn synctv_wt_connect(
                     connection,
                     writer: writer_tx,
                     frames: tokio::sync::Mutex::new(frames_rx),
+                    tasks,
                 }),
             );
             handle
@@ -253,7 +257,12 @@ pub unsafe extern "C" fn synctv_wt_connect(
 /// failure.
 #[no_mangle]
 pub unsafe extern "C" fn synctv_wt_send(handle: i64, buf: *const u8, len: usize) -> i32 {
-    let Some(session) = sessions().lock().expect("session map").get(&handle).cloned() else {
+    let Some(session) = sessions()
+        .lock()
+        .expect("session map")
+        .get(&handle)
+        .cloned()
+    else {
         set_error("unknown session handle");
         return -1;
     };
@@ -263,11 +272,34 @@ pub unsafe extern "C" fn synctv_wt_send(handle: i64, buf: *const u8, len: usize)
     }
     let payload = std::slice::from_raw_parts(buf, len).to_vec();
 
-    let result = runtime().block_on(session.writer.send(payload));
+    let result = runtime().block_on(async {
+        match tokio::time::timeout(SEND_TIMEOUT, session.writer.send(payload)).await {
+            Ok(result) => result.map_err(|_| "closed"),
+            Err(_) => {
+                // The control stream stalled long enough that the peer is
+                // gone or wedged: tear the session down exactly like
+                // close() — failing the handle alone would leave the
+                // connection and its tasks alive — so later calls refuse
+                // immediately instead of pinning the caller again.
+                sessions().lock().expect("session map").remove(&handle);
+                session
+                    .connection
+                    .close(wtransport::VarInt::from_u32(0), b"");
+                for task in &session.tasks {
+                    task.abort();
+                }
+                Err("stalled")
+            }
+        }
+    });
     match result {
         Ok(()) => 0,
-        Err(_) => {
+        Err("closed") => {
             set_error("WebTransport send failed: session closed");
+            -1
+        }
+        Err(_) => {
+            set_error("WebTransport send timed out: control stream stalled; session closed");
             -1
         }
     }
@@ -279,7 +311,12 @@ pub unsafe extern "C" fn synctv_wt_send(handle: i64, buf: *const u8, len: usize)
 /// small.
 #[no_mangle]
 pub unsafe extern "C" fn synctv_wt_recv(handle: i64, buf: *mut u8, cap: usize) -> i32 {
-    let Some(session) = sessions().lock().expect("session map").get(&handle).cloned() else {
+    let Some(session) = sessions()
+        .lock()
+        .expect("session map")
+        .get(&handle)
+        .cloned()
+    else {
         set_error("unknown session handle");
         return -1;
     };
@@ -307,14 +344,16 @@ pub unsafe extern "C" fn synctv_wt_recv(handle: i64, buf: *mut u8, cap: usize) -
 #[no_mangle]
 pub extern "C" fn synctv_wt_close(handle: i64) {
     if let Some(session) = sessions().lock().expect("session map").remove(&handle) {
-        // Dropping the Arc ends the connection and with it the stream tasks;
-        // finishing the control stream first gives the peer a clean close.
-        let writer = session.writer.clone();
-        runtime().block_on(async {
-            drop(writer);
-            // The writer task owns the stream; give it a beat to finish.
-            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-        });
+        // Close the QUIC connection explicitly (code 0, empty reason): the
+        // peer sees a clean disconnect and every stream task's parked read
+        // ends. Dropping the handles alone cannot do that — the tasks hold
+        // their own clones of the connection and keep the session alive.
+        session
+            .connection
+            .close(wtransport::VarInt::from_u32(0), b"");
+        for task in &session.tasks {
+            task.abort();
+        }
     }
 }
 
@@ -322,7 +361,9 @@ pub extern "C" fn synctv_wt_close(handle: i64) {
 /// the copied length.
 #[no_mangle]
 pub unsafe extern "C" fn synctv_wt_last_error(buf: *mut u8, cap: usize) -> i32 {
-    let message = LAST_ERROR.with(|slot| slot.borrow().clone()).unwrap_or_default();
+    let message = LAST_ERROR
+        .with(|slot| slot.borrow().clone())
+        .unwrap_or_default();
     if cap == 0 || buf.is_null() {
         return message.len() as i32;
     }
@@ -357,12 +398,7 @@ mod tests {
     fn connect_failure_reports_an_error() {
         unsafe {
             let url = b"https://127.0.0.1:1/wt/rooms/x";
-            let handle = synctv_wt_connect(
-                url.as_ptr(),
-                url.len(),
-                std::ptr::null(),
-                0,
-            );
+            let handle = synctv_wt_connect(url.as_ptr(), url.len(), std::ptr::null(), 0);
             assert_eq!(handle, -1);
             let mut buffer = [0u8; 512];
             let length = synctv_wt_last_error(buffer.as_mut_ptr(), buffer.len());

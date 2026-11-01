@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:meta/meta.dart';
+
 import 'src/synctv_webtransport_native.dart' as native;
 
 /// A native WebTransport session carrying length-prefixed frames: the
@@ -17,6 +19,11 @@ class NativeWebTransportSession {
   /// Opens a session to [uri] (`https://…`). [certificateHash] is the
   /// SHA-256 of the server certificate's DER for self-signed deployments;
   /// null uses the platform trust store.
+  ///
+  /// [connectTimeout] must stay above the native bound (9.5 s): the native
+  /// call cannot be cancelled, so on timeout the connecting isolate keeps
+  /// running and a session that lands after the caller gave up is reclaimed
+  /// by the late-arrival handler below instead of leaking.
   static Future<NativeWebTransportSession> connect(
     Uri uri, {
     Uint8List? certificateHash,
@@ -26,12 +33,43 @@ class NativeWebTransportSession {
     final hash = certificateHash == null
         ? null
         : Uint8List.fromList(certificateHash);
-    final handle = await Isolate.run(
-      () => native.nativeWebTransportConnect(url, hash),
-    ).timeout(connectTimeout);
+    final handle = await guardConnectTimeout(
+      Isolate.run(() => native.nativeWebTransportConnect(url, hash)),
+      connectTimeout,
+      native.nativeWebTransportClose,
+    );
     final session = NativeWebTransportSession._(handle);
     await session._startReader();
     return session;
+  }
+
+  /// Times out [connecting]; a handle that lands after the deadline is
+  /// passed to [reclaim] so the underlying session cannot leak. The native
+  /// call cannot be cancelled, and its bound sits below the Dart deadline,
+  /// so the only way a handle arrives late is a genuinely slow endpoint —
+  /// and that session must still be closed.
+  @visibleForTesting
+  static Future<int> guardConnectTimeout(
+    Future<int> connecting,
+    Duration connectTimeout,
+    void Function(int handle) reclaim,
+  ) async {
+    try {
+      return await connecting.timeout(connectTimeout);
+    } on TimeoutException {
+      unawaited(
+        connecting
+            .then((lateHandle) {
+              if (lateHandle > 0) {
+                reclaim(lateHandle);
+              }
+            })
+            .catchError((Object _) {
+              // The native call failed on its own; nothing to reclaim.
+            }),
+      );
+      rethrow;
+    }
   }
 
   final int _handle;

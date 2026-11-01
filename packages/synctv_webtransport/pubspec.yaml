@@ -10,6 +10,7 @@ dependencies:
   code_assets: ^2.0.0
   ffi: ^2.2.0
   hooks: ^2.2.0
+  meta: ^1.15.0
 
 dev_dependencies:
   test: ^1.31.2

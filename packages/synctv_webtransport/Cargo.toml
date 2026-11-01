@@ -10,6 +10,9 @@ crate-type = ["cdylib", "rlib"]
 tokio = { version = "1.47.1", features = ["rt-multi-thread", "macros", "time", "io-util", "sync"] }
 wtransport = { version = "0.7.2", default-features = false, features = ["quinn", "ring"] }
 
+[dev-dependencies]
+wtransport = { version = "0.7.2", default-features = false, features = ["quinn", "ring", "self-signed"] }
+
 [profile.release]
 codegen-units = 1
 lto = "thin"
