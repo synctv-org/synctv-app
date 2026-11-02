@@ -11451,9 +11451,9 @@ const ObserveChatEvents$json = {
 /// Descriptor for `ObserveChatEvents`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List observeChatEventsDescriptor = $convert.base64Decode(
     'ChFPYnNlcnZlQ2hhdEV2ZW50cxI1ChRhZnRlcl9ldmVudF9zZXF1ZW5jZRgBIAEoA0gAUhJhZn'
-    'RlckV2ZW50U2VxdWVuY2WIAQESYQoVaW5jbHVkZV9tZXNzYWdlX3R5cGVzGAIgAygOMh4uc3lu'
-    'Y3R2LmNsaWVudC5DaGF0TWVzc2FnZVR5cGVCDbpICpIBByIFggECEAFSE2luY2x1ZGVNZXNzYW'
-    'dlVHlwZXNCFwoVX2FmdGVyX2V2ZW50X3NlcXVlbmNl');
+    'RlckV2ZW50U2VxdWVuY2WIAQESYwoVaW5jbHVkZV9tZXNzYWdlX3R5cGVzGAIgAygOMh4uc3lu'
+    'Y3R2LmNsaWVudC5DaGF0TWVzc2FnZVR5cGVCD7pIDJIBCRAQIgWCAQIQAVITaW5jbHVkZU1lc3'
+    'NhZ2VUeXBlc0IXChVfYWZ0ZXJfZXZlbnRfc2VxdWVuY2U=');
 
 @$core.Deprecated('Use observeChatPinEventsDescriptor instead')
 const ObserveChatPinEvents$json = {
@@ -17368,11 +17368,11 @@ const GetChatHistoryRequest$json = {
 /// Descriptor for `GetChatHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getChatHistoryRequestDescriptor = $convert.base64Decode(
     'ChVHZXRDaGF0SGlzdG9yeVJlcXVlc3QSFAoFbGltaXQYASABKAVSBWxpbWl0EhYKBmN1cnNvch'
-    'gCIAEoCVIGY3Vyc29yEmEKFWluY2x1ZGVfbWVzc2FnZV90eXBlcxgDIAMoDjIeLnN5bmN0di5j'
-    'bGllbnQuQ2hhdE1lc3NhZ2VUeXBlQg26SAqSAQciBYIBAhABUhNpbmNsdWRlTWVzc2FnZVR5cG'
-    'VzOo4BukiKARqHAQoWZ2V0X2NoYXRfaGlzdG9yeS5saW1pdBIybGltaXQgbXVzdCBiZSAwICh1'
-    'c2UgZGVmYXVsdCkgb3IgYmV0d2VlbiAxIGFuZCAxMDAaOXRoaXMubGltaXQgPT0gMCB8fCAodG'
-    'hpcy5saW1pdCA+PSAxICYmIHRoaXMubGltaXQgPD0gMTAwKQ==');
+    'gCIAEoCVIGY3Vyc29yEmMKFWluY2x1ZGVfbWVzc2FnZV90eXBlcxgDIAMoDjIeLnN5bmN0di5j'
+    'bGllbnQuQ2hhdE1lc3NhZ2VUeXBlQg+6SAySAQkQECIFggECEAFSE2luY2x1ZGVNZXNzYWdlVH'
+    'lwZXM6jgG6SIoBGocBChZnZXRfY2hhdF9oaXN0b3J5LmxpbWl0EjJsaW1pdCBtdXN0IGJlIDAg'
+    'KHVzZSBkZWZhdWx0KSBvciBiZXR3ZWVuIDEgYW5kIDEwMBo5dGhpcy5saW1pdCA9PSAwIHx8IC'
+    'h0aGlzLmxpbWl0ID49IDEgJiYgdGhpcy5saW1pdCA8PSAxMDAp');
 
 @$core.Deprecated('Use getChatHistoryResponseDescriptor instead')
 const GetChatHistoryResponse$json = {
@@ -17601,9 +17601,9 @@ final $typed_data.Uint8List getChatPlaybackMessagesRequestDescriptor = $convert.
     'QuUHJvdmlkZXJUYXJnZXRSDnBsYXliYWNrVGFyZ2V0EikKEHBvc2l0aW9uX3NlY29uZHMYBCAB'
     'KAFSD3Bvc2l0aW9uU2Vjb25kcxIlCg5iZWZvcmVfc2Vjb25kcxgFIAEoAVINYmVmb3JlU2Vjb2'
     '5kcxIjCg1hZnRlcl9zZWNvbmRzGAYgASgBUgxhZnRlclNlY29uZHMSFAoFbGltaXQYByABKAVS'
-    'BWxpbWl0EicKD2luY2x1ZGVfZGVsZXRlZBgIIAEoCFIOaW5jbHVkZURlbGV0ZWQSYQoVaW5jbH'
+    'BWxpbWl0EicKD2luY2x1ZGVfZGVsZXRlZBgIIAEoCFIOaW5jbHVkZURlbGV0ZWQSYwoVaW5jbH'
     'VkZV9tZXNzYWdlX3R5cGVzGAkgAygOMh4uc3luY3R2LmNsaWVudC5DaGF0TWVzc2FnZVR5cGVC'
-    'DbpICpIBByIFggECEAFSE2luY2x1ZGVNZXNzYWdlVHlwZXM=');
+    'D7pIDJIBCRAQIgWCAQIQAVITaW5jbHVkZU1lc3NhZ2VUeXBlcw==');
 
 @$core.Deprecated('Use getChatPlaybackMessagesResponseDescriptor instead')
 const GetChatPlaybackMessagesResponse$json = {

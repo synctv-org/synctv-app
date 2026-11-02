@@ -89,6 +89,7 @@ class SyncTvRuntimeService {
   Future<SyncTvServerProfile> addServer(
     String url, {
     bool allowInsecureTls = false,
+    String? webTransportCertificateHash,
   }) async {
     final endpoint = ServerEndpointIdentity.fromUserInput(url);
     _requireAllowedEndpoint(endpoint, allowInsecureTls: allowInsecureTls);
@@ -116,6 +117,7 @@ class SyncTvRuntimeService {
         name: info.serverName,
         endpoint: serverClient.baseUrl,
         allowInsecureTls: allowInsecureTls,
+        webTransportCertificateHash: webTransportCertificateHash,
       );
     } finally {
       serverClient.close();

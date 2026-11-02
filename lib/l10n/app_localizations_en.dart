@@ -7227,6 +7227,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Skip certificate validation, which permits interception attacks.';
 
   @override
+  String get webTransportCertificateHashLabel =>
+      'WebTransport certificate hash';
+
+  @override
+  String get webTransportCertificateHashDescription =>
+      'Optional base64 SHA-256 of the server certificate DER. Pins WebTransport out-of-band for self-signed deployments; leave empty to use the advertised pin only over a validated HTTPS channel.';
+
+  @override
   String get emptyKeepsCurrentValue => 'Leave empty to keep the current value';
 
   @override

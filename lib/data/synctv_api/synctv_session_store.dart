@@ -34,6 +34,25 @@ class SyncTvServerProfile {
 
   bool get isPending => declaredServerId.isEmpty;
 
+  /// Whether server info arriving over this profile's base-url channel is
+  /// PKI-validated: https with certificate validation enabled. Only then
+  /// may an advertised WebTransport pin replace platform trust - over any
+  /// other channel the advertisement is attacker-substitutable.
+  bool get advertisedPinChannelValidated {
+    final scheme = Uri.tryParse(endpoint)?.scheme.toLowerCase();
+    return scheme == 'https' && !allowInsecureTls;
+  }
+
+  /// Effective WebTransport pin for this profile: the operator-set profile
+  /// pin wins unconditionally; the server-advertised pin only when it
+  /// arrived over a PKI-validated channel; otherwise null (platform trust
+  /// roots, WebTransport fails closed).
+  String? effectiveWebTransportPin(String? advertised) {
+    final pinned = webTransportCertificateHash;
+    if (pinned != null && pinned.isNotEmpty) return pinned;
+    return advertisedPinChannelValidated ? advertised : null;
+  }
+
   SyncTvServerProfile copyWith({
     String? declaredServerId,
     String? name,
@@ -228,6 +247,7 @@ class SyncTvSessionStore {
     required String endpoint,
     bool allowInsecureTls = false,
     bool activate = true,
+    String? webTransportCertificateHash,
   }) async {
     final normalizedEndpoint = ServerEndpointIdentity.normalize(endpoint);
     final existingIndex = servers.indexWhere(
@@ -250,6 +270,11 @@ class SyncTvSessionStore {
       sessionData: carryCurrentSession
           ? _currentSessionData()
           : existing?.sessionData ?? const AnonymousServerSessionData(),
+      webTransportCertificateHash:
+          SyncTvServerProfile._normalizeCertificateHash(
+            webTransportCertificateHash,
+          ) ??
+          existing?.webTransportCertificateHash,
     );
 
     if (activate && current?.endpoint != normalizedEndpoint) {

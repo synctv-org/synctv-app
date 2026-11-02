@@ -11932,6 +11932,18 @@ abstract class AppLocalizations {
   /// **'Skip certificate validation, which permits interception attacks.'**
   String get allowInsecureTlsDescription;
 
+  /// No description provided for @webTransportCertificateHashLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'WebTransport certificate hash'**
+  String get webTransportCertificateHashLabel;
+
+  /// No description provided for @webTransportCertificateHashDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional base64 SHA-256 of the server certificate DER. Pins WebTransport out-of-band for self-signed deployments; leave empty to use the advertised pin only over a validated HTTPS channel.'**
+  String get webTransportCertificateHashDescription;
+
   /// No description provided for @emptyKeepsCurrentValue.
   ///
   /// In en, this message translates to:

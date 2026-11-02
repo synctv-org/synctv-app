@@ -128,12 +128,12 @@ void main(List<String> args) {
           ),
           webTransportFactory: () => webTransportChannelFactory(
             createUri: roomSessionGateway.createWebTransportUri,
-            // A profile-pinned hash wins; otherwise use the hash the server
-            // advertised in its (trusted) server-info response, so
-            // self-signed deployments work without manual configuration.
+            // Profile pin first; the advertised pin only when the base
+            // URL channel is PKI-validated (see
+            // effectiveWebTransportCertificateHash), so a pin fetched over
+            // an unvalidated channel is never trusted.
             certificateHashBase64:
-                SyncTvService.activeServer?.webTransportCertificateHash ??
-                SyncTvService.cachedWebTransportCertificateHash,
+                SyncTvService.effectiveWebTransportCertificateHash,
           ),
         ),
         advertisedTransports: () => SyncTvService.cachedRealtimeTransports,

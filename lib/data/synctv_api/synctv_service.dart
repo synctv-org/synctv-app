@@ -108,10 +108,12 @@ class SyncTvService {
   static Future<SyncTvServerProfile> addServer(
     String url, {
     bool allowInsecureTls = false,
+    String? webTransportCertificateHash,
   }) async {
     final profile = await _runtime.addServer(
       url,
       allowInsecureTls: allowInsecureTls,
+      webTransportCertificateHash: webTransportCertificateHash,
     );
     _domains = _createDomains();
     _resetServerCapabilityCaches();
@@ -443,6 +445,18 @@ class SyncTvService {
   /// takes precedence over this value.
   static String? get cachedWebTransportCertificateHash =>
       _cachedWebTransportCertificateHash;
+
+  /// Effective WebTransport pin. A profile-pinned hash (operator-set,
+  /// carried through addOrUpdateServer) always wins. The advertised hash is
+  /// honored only when server info arrived over a PKI-validated channel
+  /// (https base URL with certificate validation enabled); otherwise null,
+  /// so the native bridge stays on platform trust roots and WebTransport
+  /// fails closed against an attacker-substituted pin.
+  static String? get effectiveWebTransportCertificateHash {
+    final server = activeServer;
+    if (server == null) return null;
+    return server.effectiveWebTransportPin(_cachedWebTransportCertificateHash);
+  }
 
   static Future<client.GetServerTimeResponse> getServerTime({
     int clientSentAtNanos = 0,

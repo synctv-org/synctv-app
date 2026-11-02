@@ -47028,9 +47028,12 @@ class RealtimeTransportCapability extends $pb.GeneratedMessage {
   /// Present on WEB_TRANSPORT capabilities whenever the certificate hash is
   /// readable; clients pass it as a WebTransport `serverCertificateHashes`
   /// entry so self-signed deployments work without manual pinning, refreshing
-  /// it from each server-info response. It is delivered inside the
-  /// server-info response, so an on-path attacker cannot substitute a pin
-  /// without breaking the enclosing channel.
+  /// it from each server-info response. The advertised pin inherits exactly
+  /// the delivery channel's trust: clients must apply it only when the
+  /// server-info response arrived over a PKI-validated channel (validated
+  /// https), and must honor an operator-configured profile pin first; over
+  /// an unvalidated channel the pin is attacker-substitutable and must be
+  /// ignored.
   @$pb.TagNumber(3)
   $core.String get certificateHash => $_getSZ(2);
   @$pb.TagNumber(3)

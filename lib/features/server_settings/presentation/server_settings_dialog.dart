@@ -361,6 +361,7 @@ class _AddServerDialogState extends State<_AddServerDialog> {
       DependencyScope.read<ServerConnectionGateway>(context);
 
   late final TextEditingController _controller;
+  late final TextEditingController _certificateHashController;
   late final FocusNode _focusNode;
   var _busy = false;
   var _allowInsecureTls = false;
@@ -369,6 +370,7 @@ class _AddServerDialogState extends State<_AddServerDialog> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialAddress);
+    _certificateHashController = TextEditingController();
     _focusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
@@ -378,6 +380,7 @@ class _AddServerDialogState extends State<_AddServerDialog> {
   @override
   void dispose() {
     _controller.dispose();
+    _certificateHashController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -392,9 +395,13 @@ class _AddServerDialogState extends State<_AddServerDialog> {
 
     setState(() => _busy = true);
     try {
+      final certificateHash = _certificateHashController.text.trim().isEmpty
+          ? null
+          : _certificateHashController.text.trim();
       final profile = await _gateway.addServer(
         input,
         allowInsecureTls: _allowInsecureTls,
+        webTransportCertificateHash: certificateHash,
       );
       if (mounted) Navigator.pop(context, profile);
     } on ServerConnectionException catch (error) {
@@ -524,6 +531,23 @@ class _AddServerDialogState extends State<_AddServerDialog> {
                             ),
                           ),
                         ),
+                        if (_allowInsecureTls) ...[
+                          const SizedBox(height: 14),
+                          AppTextField(
+                            label: l10n.webTransportCertificateHashLabel,
+                            controller: _certificateHashController,
+                            hintText: l10n.webTransportCertificateHashLabel,
+                            prefixIcon: Icons.fingerprint_rounded,
+                            enabled: !_busy,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.webTransportCertificateHashDescription,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 20),
                         Align(
                           alignment: Alignment.centerRight,
