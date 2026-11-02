@@ -28,8 +28,13 @@ use tokio::sync::mpsc;
 use wtransport::ClientConfig;
 use wtransport::Endpoint;
 
-/// Maximum frame payload (matches the server's cap and the web adapter).
+/// Maximum client->server frame payload (matches the server's inbound cap).
 pub const MAX_FRAME_BYTES: usize = 64 * 1024;
+
+/// Maximum server->client frame payload: the server's outbound budget, which
+/// is larger than its inbound cap so legitimate snapshots (playlists, chat
+/// replay) are not rejected during reassembly.
+pub const MAX_DOWNLINK_FRAME_BYTES: usize = 1024 * 1024;
 
 /// Writer channel capacity: bounds how far the app can outrun the QUIC
 /// stream before sends begin to block.
@@ -74,8 +79,26 @@ struct Session {
     /// Frames from the control stream and every push stream.
     frames: tokio::sync::Mutex<mpsc::Receiver<Vec<u8>>>,
     /// The session's runtime tasks, aborted on close so a stalled stream
-    /// cannot outlive its handle.
-    tasks: Vec<tokio::task::JoinHandle<()>>,
+    /// cannot outlive its handle. Interior mutability because the tasks can
+    /// only be spawned once the session exists (and teardown may run from
+    /// any of them).
+    tasks: Mutex<Vec<tokio::task::JoinHandle<()>>>,
+}
+
+/// Removes the session behind `handle` and tears it down: the QUIC
+/// connection is closed explicitly (code 0, empty reason) so the peer sees a
+/// clean disconnect and every stream task's parked read ends — dropping
+/// handles alone cannot do that, the tasks hold their own clones of the
+/// connection and keep the session alive. Unknown handles are a no-op.
+fn close_session(handle: i64) {
+    if let Some(session) = sessions().lock().expect("session map").remove(&handle) {
+        session
+            .connection
+            .close(wtransport::VarInt::from_u32(0), b"");
+        for task in session.tasks.lock().expect("session tasks").iter() {
+            task.abort();
+        }
+    }
 }
 
 thread_local! {
@@ -97,7 +120,7 @@ async fn read_frame(stream: &mut wtransport::RecvStream) -> io::Result<Option<Ve
         }
     }
     let length = u32::from_be_bytes(header) as usize;
-    if length > MAX_FRAME_BYTES {
+    if length > MAX_DOWNLINK_FRAME_BYTES {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
             "frame exceeds size cap",
@@ -132,6 +155,19 @@ async fn pump_stream(mut stream: wtransport::RecvStream, frames: mpsc::Sender<Ve
             Ok(None) | Err(_) => return,
         }
     }
+}
+
+/// Pumps the control stream; its end (EOF or error) ends the whole session.
+/// The realtime protocol's only uplink rides the control stream, and
+/// without this teardown the session — and `synctv_wt_recv` — would hang on
+/// the still-open push-stream pump until the client gives up.
+async fn pump_control_stream(
+    handle: i64,
+    stream: wtransport::RecvStream,
+    frames: mpsc::Sender<Vec<u8>>,
+) {
+    pump_stream(stream, frames).await;
+    close_session(handle);
 }
 
 /// Accepts server-initiated unidirectional push streams (per-observation
@@ -192,12 +228,19 @@ pub unsafe extern "C" fn synctv_wt_connect(
             return -1;
         }
     };
-    let cert_hash = if cert_hash_len == 32 && !cert_hash.is_null() {
+    // A pin that is present but not exactly 32 bytes is a caller bug: fail
+    // closed instead of silently falling back to system trust roots.
+    let cert_hash = if cert_hash.is_null() {
+        None
+    } else if cert_hash_len == 32 {
         let mut digest = [0u8; 32];
         digest.copy_from_slice(std::slice::from_raw_parts(cert_hash, 32));
         Some(digest)
     } else {
-        None
+        set_error(format!(
+            "certificate hash must be 32 bytes, got {cert_hash_len}"
+        ));
+        return -1;
     };
 
     let result = runtime().block_on(async {
@@ -222,30 +265,32 @@ pub unsafe extern "C" fn synctv_wt_connect(
         .map(|(connection, send, recv)| {
             // Spawned here, inside the runtime context: spawning after
             // `block_on` returned would be outside any runtime and abort.
+            // The session registers before its tasks start so a control
+            // stream that ends immediately can always find (and close) it.
+            let handle = next_handle();
             let (writer_tx, writer_rx) = mpsc::channel(WRITER_QUEUE);
             let (frames_tx, frames_rx) = mpsc::channel(FRAME_QUEUE);
+            let session = Arc::new(Session {
+                connection: connection.clone(),
+                writer: writer_tx,
+                frames: tokio::sync::Mutex::new(frames_rx),
+                tasks: Mutex::new(Vec::new()),
+            });
+            sessions()
+                .lock()
+                .expect("session map")
+                .insert(handle, Arc::clone(&session));
             let tasks = vec![
                 tokio::spawn(drive_writer(send, writer_rx)),
-                tokio::spawn(pump_stream(recv, frames_tx.clone())),
-                tokio::spawn(pump_push_streams(connection.clone(), frames_tx)),
+                tokio::spawn(pump_control_stream(handle, recv, frames_tx.clone())),
+                tokio::spawn(pump_push_streams(connection, frames_tx)),
             ];
-            (connection, writer_tx, frames_rx, tasks)
+            *session.tasks.lock().expect("session tasks") = tasks;
+            handle
         })
     });
     match result {
-        Ok((connection, writer_tx, frames_rx, tasks)) => {
-            let handle = next_handle();
-            sessions().lock().expect("session map").insert(
-                handle,
-                Arc::new(Session {
-                    connection,
-                    writer: writer_tx,
-                    frames: tokio::sync::Mutex::new(frames_rx),
-                    tasks,
-                }),
-            );
-            handle
-        }
+        Ok(handle) => handle,
         Err(error) => {
             set_error(format!("WebTransport connect failed: {error}"));
             -1
@@ -281,13 +326,7 @@ pub unsafe extern "C" fn synctv_wt_send(handle: i64, buf: *const u8, len: usize)
                 // close() — failing the handle alone would leave the
                 // connection and its tasks alive — so later calls refuse
                 // immediately instead of pinning the caller again.
-                sessions().lock().expect("session map").remove(&handle);
-                session
-                    .connection
-                    .close(wtransport::VarInt::from_u32(0), b"");
-                for task in &session.tasks {
-                    task.abort();
-                }
+                close_session(handle);
                 Err("stalled")
             }
         }
@@ -343,18 +382,7 @@ pub unsafe extern "C" fn synctv_wt_recv(handle: i64, buf: *mut u8, cap: usize) -
 /// Closes a session and releases its handle. Safe on unknown handles.
 #[no_mangle]
 pub extern "C" fn synctv_wt_close(handle: i64) {
-    if let Some(session) = sessions().lock().expect("session map").remove(&handle) {
-        // Close the QUIC connection explicitly (code 0, empty reason): the
-        // peer sees a clean disconnect and every stream task's parked read
-        // ends. Dropping the handles alone cannot do that — the tasks hold
-        // their own clones of the connection and keep the session alive.
-        session
-            .connection
-            .close(wtransport::VarInt::from_u32(0), b"");
-        for task in &session.tasks {
-            task.abort();
-        }
-    }
+    close_session(handle);
 }
 
 /// Copies the last error message into `buf` (truncating to `cap`); returns
@@ -405,6 +433,31 @@ mod tests {
             let text = String::from_utf8_lossy(&buffer[..length as usize]).to_string();
             assert!(
                 text.contains("WebTransport connect failed"),
+                "unexpected error text: {text}"
+            );
+        }
+    }
+
+    #[test]
+    fn wrong_length_certificate_hash_fails_closed() {
+        // Regression (bad-pin-silently-trusted-system-roots): a pin that is
+        // present but not 32 bytes must fail the connect instead of
+        // silently downgrading to platform trust.
+        unsafe {
+            let url = b"https://127.0.0.1:1/wt/rooms/x";
+            let hash = [0u8; 16];
+            let handle = synctv_wt_connect(
+                url.as_ptr(),
+                url.len(),
+                hash.as_ptr(),
+                hash.len(),
+            );
+            assert_eq!(handle, -1);
+            let mut buffer = [0u8; 256];
+            let length = synctv_wt_last_error(buffer.as_mut_ptr(), buffer.len());
+            let text = String::from_utf8_lossy(&buffer[..length as usize]).to_string();
+            assert!(
+                text.contains("certificate hash must be 32 bytes"),
                 "unexpected error text: {text}"
             );
         }

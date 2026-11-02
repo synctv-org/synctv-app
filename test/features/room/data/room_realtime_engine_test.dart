@@ -343,4 +343,122 @@ void main() {
     await subscription.cancel();
     await engine.close();
   });
+
+  test(
+    'cursor-expired observe errors restart the observation from now',
+    () async {
+      // Regression (stale-cursor-observation-never-recovers): an expired
+      // cursor used to kill the observation for good — every reconnect
+      // replayed the same stale cursor and failed again.
+      final factory = _FakeFactory();
+      final engine = _buildEngine(factory);
+      engine.start();
+      await pumpEventQueue();
+
+      engine.send(_observe('room_settings').writeToBuffer());
+      final channel = factory.channels.single;
+      channel.incoming.add(
+        _serverFrame(
+          client.ServerMessage(
+            resourceEvent: client.ResourceEvent(
+              observeId: 'room_settings',
+              eventCursor: client.EventCursor(sequence: Int64(21)),
+            ),
+          ),
+        ),
+      );
+      await pumpEventQueue();
+      expect(
+        channel.sent,
+        hasLength(1),
+        reason: 'only the initial observe so far',
+      );
+
+      channel.incoming.add(
+        _serverFrame(
+          client.ServerMessage(
+            resourceObserveError: client.ResourceObserveError(
+              observeId: 'room_settings',
+              error: client.ErrorMessage(
+                message:
+                    'Room resource event cursor expired; fetch the resource '
+                    'snapshot again and restart observe',
+              ),
+            ),
+          ),
+        ),
+      );
+      await pumpEventQueue();
+
+      // The engine re-sent the observation with the cursor cleared.
+      final resent = channel.sent
+          .skip(1)
+          .map(client.ClientMessage.fromBuffer)
+          .single;
+      expect(resent.observeResource.observeId, 'room_settings');
+      expect(
+        resent.observeResource.roomSettings.afterEventSequence,
+        Int64.ZERO,
+        reason: 'the replay cursor must restart from now',
+      );
+
+      // A later reconnect also replays without the stale cursor.
+      factory.dropLast();
+      await pumpEventQueue();
+      final reconnect = factory.channels.last.sent
+          .map(client.ClientMessage.fromBuffer)
+          .single;
+      expect(
+        reconnect.observeResource.roomSettings.afterEventSequence,
+        Int64.ZERO,
+      );
+      await engine.close();
+    },
+  );
+
+  test('a mid-session drop reports the transport as failed', () async {
+    // Regression (sse-sticky-forever): a transport whose sessions keep
+    // dying after a successful connect was never reported to the planner,
+    // so failover never moved past it.
+    final factory = _FakeFactory();
+    final planner = _RecordingPlanner(
+      RealtimeTransportOption(
+        transport: RealtimeTransport.webSocket,
+        factory: factory,
+      ),
+    );
+    final engine = ReconnectingRoomRealtimeEngine(
+      roomId: 'room-1',
+      planner: planner,
+      reconnectPolicy: RealtimeReconnectPolicy(
+        baseDelay: const Duration(milliseconds: 1),
+        maxDelay: const Duration(milliseconds: 5),
+      ),
+      nowMillis: () => 42,
+      heartbeatInterval: const Duration(hours: 1),
+    );
+    engine.start();
+    await pumpEventQueue();
+    expect(planner.successes, [RealtimeTransport.webSocket]);
+
+    factory.dropLast();
+    await pumpEventQueue();
+
+    expect(planner.failures, contains(RealtimeTransport.webSocket));
+    await engine.close();
+  });
+}
+
+/// Fixed planner that records success/failure reports for assertions.
+class _RecordingPlanner extends FixedTransportPlanner {
+  _RecordingPlanner(super.option);
+
+  final successes = <RealtimeTransport>[];
+  final failures = <RealtimeTransport>[];
+
+  @override
+  void reportSuccess(RealtimeTransport transport) => successes.add(transport);
+
+  @override
+  void reportFailure(RealtimeTransport transport) => failures.add(transport);
 }

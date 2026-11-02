@@ -27,6 +27,13 @@ class RealtimeObservation {
     if (!hasCursor) return observe;
     return _withSequence(observe, lastSequence) ?? observe;
   }
+
+  /// Returns a copy of the requested observation with every replay cursor
+  /// cleared (including one baked into the original request): the server
+  /// reported the stored position as expired, so the observation must
+  /// restart from now.
+  client.ObserveResource toFreshObserve() =>
+      _withSequence(observe, Int64.ZERO) ?? observe;
 }
 
 client.ObserveResource? _withSequence(
@@ -134,6 +141,29 @@ class RealtimeObservationRegistry {
         ..lastSequence = cursor.sequence
         ..hasCursor = true;
     }
+  }
+
+  /// Drops the replay cursor for one observation: the server reported it as
+  /// expired (retention window passed), so the next replay must restart
+  /// from now instead of failing again.
+  void clearCursor(String observeId) {
+    final observation = _observations[observeId];
+    if (observation == null) return;
+    observation
+      ..lastSequence = Int64.ZERO
+      ..hasCursor = false;
+  }
+
+  /// Bytes of the `ClientMessage` re-subscribing one observation, or null
+  /// when the observe id is unknown. With [fresh], every replay cursor is
+  /// cleared (recovery from a server "cursor expired" error).
+  List<int>? replayMessageFor(String observeId, {bool fresh = false}) {
+    final observation = _observations[observeId];
+    if (observation == null) return null;
+    final observe = fresh
+        ? observation.toFreshObserve()
+        : observation.toReplayObserve();
+    return client.ClientMessage(observeResource: observe).writeToBuffer();
   }
 
   /// Bytes of the `ClientMessage`s that resubscribe every active

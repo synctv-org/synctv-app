@@ -14,6 +14,11 @@ class _FakeGateway implements RoomSessionGateway {
     List<client.ObserveResource> initialObservations,
   ) async {
     creations.add((roomId, initialObservations));
+    final gate = createGate;
+    if (gate != null) {
+      createGate = null;
+      await gate.future;
+    }
     if (failCreate) {
       throw StateError('session create failed');
     }
@@ -35,7 +40,14 @@ class _FakeGateway implements RoomSessionGateway {
     String sessionId,
     client.ClientMessage message,
   ) async {
-    posts.add((sessionId, message));
+    // Optional gate: the first post completes only when the test allows it,
+    // simulating a slow request that would let later posts overtake it.
+    final gate = postGate;
+    if (gate != null) {
+      postGate = null;
+      await gate.future;
+    }
+    delivered.add((sessionId, message));
     if (failPosts) {
       throw StateError('post failed');
     }
@@ -48,11 +60,13 @@ class _FakeGateway implements RoomSessionGateway {
 
   final creations = <(String, List<client.ObserveResource>)>[];
   final attaches = <(String, String)>[];
-  final posts = <(String, client.ClientMessage)>[];
+  final delivered = <(String, client.ClientMessage)>[];
   final deletes = <String>[];
   final events = StreamController<Uint8List>();
   var failCreate = false;
   var failPosts = false;
+  Completer<void>? postGate;
+  Completer<void>? createGate;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -108,8 +122,8 @@ void main() {
             .writeToBuffer(),
       );
       await pumpEventQueue();
-      expect(gateway.posts.single.$1, 'sess-1');
-      expect(gateway.posts.single.$2.chat.content, 'hi');
+      expect(gateway.delivered.single.$1, 'sess-1');
+      expect(gateway.delivered.single.$2.chat.content, 'hi');
 
       await subscription.cancel();
       await channel.close();
@@ -123,11 +137,11 @@ void main() {
       client.ClientMessage(heartbeat: client.HeartbeatMessage())
           .writeToBuffer(),
     );
-    expect(gateway.posts, isEmpty);
+    expect(gateway.delivered, isEmpty);
 
     await channel.ready;
     await pumpEventQueue();
-    expect(gateway.posts, hasLength(1));
+    expect(gateway.delivered, hasLength(1));
     await channel.close();
   });
 
@@ -167,5 +181,69 @@ void main() {
     await channel.ready;
     await Future.wait([channel.close(), channel.close()]);
     expect(gateway.deletes, ['sess-1']);
+  });
+
+  test('posts are delivered in issue order even when one is slow', () async {
+    // Regression (rest-uplink-reordering): fire-and-forget POSTs let an
+    // unobserve overtake the observe it cancels.
+    final gateway = _FakeGateway();
+    final channel = HttpSessionRoomRealtimeChannel.connect(gateway, 'room-1');
+    await channel.ready;
+    final postGate = Completer<void>();
+    gateway.postGate = postGate;
+
+    channel.send(
+      client.ClientMessage(
+        observeResource: client.ObserveResource(observeId: 'obs-1'),
+      ).writeToBuffer(),
+    );
+    channel.send(
+      client.ClientMessage(
+        unobserveResource: client.UnobserveResource(observeId: 'obs-1'),
+      ).writeToBuffer(),
+    );
+    await pumpEventQueue();
+    // The first post is gated; the second must wait behind it instead of
+    // overtaking it to the server.
+    expect(gateway.delivered, isEmpty);
+
+    postGate.complete();
+    await pumpEventQueue();
+    expect(gateway.delivered.map((post) => post.$2.whichMessage()), [
+      client.ClientMessage_Message.observeResource,
+      client.ClientMessage_Message.unobserveResource,
+    ]);
+    await channel.close();
+  });
+
+  test('closing during session create deletes the late session', () async {
+    // Regression (late-session-leak): close() before the create completes
+    // used to install the session anyway — posting buffered sends and never
+    // deleting it.
+    final gateway = _FakeGateway();
+    final createGate = Completer<void>();
+    gateway.createGate = createGate;
+    final channel = HttpSessionRoomRealtimeChannel.connect(gateway, 'room-1');
+    channel.send(
+      client.ClientMessage(heartbeat: client.HeartbeatMessage())
+          .writeToBuffer(),
+    );
+    await pumpEventQueue();
+    expect(gateway.creations, hasLength(1), reason: 'the create is in flight');
+
+    unawaited(channel.close());
+    createGate.complete();
+    await channel.ready;
+    await pumpEventQueue();
+
+    expect(gateway.deletes, [
+      'sess-1',
+    ], reason: 'the late session must be deleted');
+    expect(gateway.attaches, isEmpty, reason: 'no SSE attach after close');
+    expect(
+      gateway.delivered,
+      isEmpty,
+      reason: 'buffered sends must be discarded',
+    );
   });
 }

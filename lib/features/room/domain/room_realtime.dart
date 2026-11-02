@@ -73,6 +73,13 @@ class RoomRealtimeError {
   bool get isConflict => code == 2003;
 
   bool get isPermissionDenied => code == 4000;
+
+  /// The server invalidated this observation's replay cursor (retention
+  /// window passed or the gap is unrecoverable): restarting the observation
+  /// from now is the prescribed recovery.
+  bool get isCursorExpired =>
+      message.toLowerCase().contains('cursor expired') ||
+      detail.toLowerCase().contains('cursor expired');
 }
 
 /// Server-initiated end of the realtime stream, sent right before the

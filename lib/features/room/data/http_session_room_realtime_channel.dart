@@ -54,6 +54,11 @@ class HttpSessionRoomRealtimeChannel implements RoomRealtimeChannel {
   Future<void>? _closed;
   bool _closing = false;
 
+  /// Serializes REST posts so server-side ordering matches client intent:
+  /// concurrent fire-and-forget POSTs could deliver an `unobserve` before
+  /// the `observe` it cancels.
+  Future<void> _postChain = Future<void>.value();
+
   /// Messages buffered before the session exists are capped; beyond that
   /// the caller is producing far faster than a session can be created.
   static const _maxPendingSends = 128;
@@ -67,6 +72,16 @@ class HttpSessionRoomRealtimeChannel implements RoomRealtimeChannel {
 
   void _open(Iterable<List<int>> initialMessages) {
     _ready = _createSession(initialMessages).then((sessionId) {
+      if (_closing) {
+        // close() ran while the session was being created and skipped it
+        // (no session id yet): delete the late session here so it does not
+        // linger on its lease, and drop anything buffered for it.
+        _pendingSends.clear();
+        unawaited(
+          _gateway.endRealtimeSession(_roomId, sessionId).catchError((_) {}),
+        );
+        return;
+      }
       _sessionId = sessionId;
       final buffered = List<List<int>>.of(_pendingSends);
       _pendingSends.clear();
@@ -146,8 +161,12 @@ class HttpSessionRoomRealtimeChannel implements RoomRealtimeChannel {
     final sessionId = _sessionId;
     if (sessionId == null) return;
     _onOutgoing?.call(bytes);
-    unawaited(
-      _gateway
+    // Chained, so posts are delivered in the order they were issued.
+    _postChain = _postChain.then((_) {
+      if (_closing || _sessionId != sessionId) {
+        return Future<void>.value();
+      }
+      return _gateway
           .sendRealtimeSessionMessage(
             _roomId,
             sessionId,
@@ -155,8 +174,8 @@ class HttpSessionRoomRealtimeChannel implements RoomRealtimeChannel {
           )
           .catchError((Object error, StackTrace stackTrace) {
             _fail(error, stackTrace);
-          }),
-    );
+          });
+    });
   }
 
   void _fail(Object error, StackTrace stackTrace) {
@@ -173,6 +192,9 @@ class HttpSessionRoomRealtimeChannel implements RoomRealtimeChannel {
     final eventsSubscription = _eventsSubscription;
     _eventsSubscription = null;
     await eventsSubscription?.cancel();
+    // Let in-flight posts settle before ending the session: a post racing
+    // the DELETE would surface a spurious session-gone error.
+    await _postChain.catchError((_) {});
     final sessionId = _sessionId;
     _sessionId = null;
     if (sessionId != null) {

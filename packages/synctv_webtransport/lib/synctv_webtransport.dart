@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:isolate';
 import 'dart:typed_data';
 
@@ -10,9 +11,12 @@ import 'src/synctv_webtransport_native.dart' as native;
 /// bidirectional control stream plus any per-observation unidirectional
 /// push streams the server opens, multiplexed into one frame stream.
 ///
-/// Connecting and receiving run off the main isolate (the native receive
-/// call blocks until a whole frame arrives from any stream); sending is a
-/// short native call that hands the frame to the QUIC stack.
+/// Connecting, receiving, and sending all run off the main isolate: the
+/// native receive call blocks until a whole frame arrives from any stream,
+/// and the native send call can block on the QUIC writer when the peer
+/// stops reading. Sends are handed to a sender isolate in order through a
+/// bounded queue (oldest frames are dropped when the peer stalls — newer
+/// state supersedes, and the client resyncs from cursors).
 class NativeWebTransportSession {
   NativeWebTransportSession._(this._handle);
 
@@ -40,6 +44,7 @@ class NativeWebTransportSession {
     );
     final session = NativeWebTransportSession._(handle);
     await session._startReader();
+    await session._startSender();
     return session;
   }
 
@@ -78,6 +83,24 @@ class NativeWebTransportSession {
   ReceivePort? _readerPort;
   bool _closed = false;
 
+  // Sender isolate: keeps the (potentially blocking) native send call off
+  // the UI isolate and preserves send order.
+  Isolate? _sender;
+  ReceivePort? _senderEvents;
+  SendPort? _senderInbox;
+  final ListQueue<Uint8List> _sendQueue = ListQueue<Uint8List>();
+  int _sendsInFlight = 0;
+
+  /// Upper bound on frames waiting for the sender isolate. Beyond it the
+  /// oldest queued frame is dropped: a peer this far behind is stalling,
+  /// newer state supersedes older frames, and the client resyncs from
+  /// cursors across any gap.
+  static const _maxQueuedSends = 64;
+
+  /// How many frames may be handed to the sender isolate before a
+  /// completion credit is required; keeps the isolate's own inbox bounded.
+  static const _maxSendsInFlight = 8;
+
   /// Incoming frame payloads. Ends when the session closes; errors when the
   /// transport fails.
   Stream<Uint8List> get frames => _frames.stream;
@@ -104,17 +127,62 @@ class NativeWebTransportSession {
     );
   }
 
-  /// Sends one frame payload. Throws when the session is closed or the
-  /// native stack rejects the write.
+  Future<void> _startSender() async {
+    final events = ReceivePort();
+    _senderEvents = events;
+    events.listen((message) {
+      if (_closed) return;
+      if (message is SendPort) {
+        _senderInbox = message;
+        _pumpSendQueue();
+        return;
+      }
+      if (message is int) {
+        // Completion credit for one send.
+        if (_sendsInFlight > 0) _sendsInFlight--;
+        _pumpSendQueue();
+        return;
+      }
+      if (message is String) {
+        if (!_frames.isClosed) {
+          _frames.addError(StateError(message));
+        }
+        unawaited(close());
+      }
+    });
+    _sender = await Isolate.spawn(
+      _senderMain,
+      _SenderArgs(handle: _handle, events: events.sendPort),
+      debugName: 'synctv-webtransport-sender',
+    );
+  }
+
+  /// Sends one frame payload without blocking the caller: the frame is
+  /// queued and delivered to the sender isolate in order. Throws when the
+  /// session is closed.
   void send(Uint8List payload) {
     if (_closed) {
       throw StateError('WebTransport session is closed');
     }
-    native.nativeWebTransportSend(_handle, payload);
+    if (_sendQueue.length >= _maxQueuedSends) {
+      // Drop the oldest queued frame; see [_maxQueuedSends].
+      _sendQueue.removeFirst();
+    }
+    _sendQueue.add(payload);
+    _pumpSendQueue();
   }
 
-  /// Closes the session; the reader isolate observes the closed handle and
-  /// exits.
+  void _pumpSendQueue() {
+    final inbox = _senderInbox;
+    if (inbox == null) return;
+    while (_sendQueue.isNotEmpty && _sendsInFlight < _maxSendsInFlight) {
+      inbox.send(_sendQueue.removeFirst());
+      _sendsInFlight++;
+    }
+  }
+
+  /// Closes the session; the reader and sender isolates are torn down with
+  /// it.
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
@@ -123,6 +191,12 @@ class NativeWebTransportSession {
     _reader = null;
     _readerPort?.close();
     _readerPort = null;
+    _sender?.kill(priority: Isolate.immediate);
+    _sender = null;
+    _senderEvents?.close();
+    _senderEvents = null;
+    _senderInbox = null;
+    _sendQueue.clear();
     if (!_frames.isClosed) {
       await _frames.close();
     }
@@ -151,4 +225,25 @@ void _readerMain(_ReaderArgs args) {
     }
     args.port.send(frame);
   }
+}
+
+class _SenderArgs {
+  const _SenderArgs({required this.handle, required this.events});
+
+  final int handle;
+  final SendPort events;
+}
+
+void _senderMain(_SenderArgs args) {
+  final inbox = ReceivePort();
+  args.events.send(inbox.sendPort);
+  inbox.listen((message) {
+    if (message is! Uint8List) return;
+    try {
+      native.nativeWebTransportSend(args.handle, message);
+      args.events.send(1);
+    } catch (error) {
+      args.events.send(error.toString());
+    }
+  });
 }

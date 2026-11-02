@@ -129,6 +129,10 @@ class ReconnectingRoomRealtimeEngine implements RoomRealtimeEngine {
   Completer<void>? _channelEnded;
   RealtimeTransport? _activeTransport;
 
+  /// Upper bound on one transport candidate's connect/ready phase, matching
+  /// the native WebTransport connect timeout.
+  static const _connectTimeout = Duration(seconds: 10);
+
   Future<void> _runLoop() async {
     try {
       while (!_closed) {
@@ -146,8 +150,16 @@ class ReconnectingRoomRealtimeEngine implements RoomRealtimeEngine {
 
         await _channelEnded!.future;
         _channelEnded = null;
+        final endedTransport = _activeTransport;
         await _dropChannel();
         if (_closed || _termination != null) return;
+        // A session that ended without a server termination is a transport
+        // failure: report it so failover can move past a transport that
+        // connects but cannot hold a session (e.g. an SSE downlink that the
+        // network keeps cutting).
+        if (endedTransport != null) {
+          planner.reportFailure(endedTransport);
+        }
         _lifecycle.add(const RoomRealtimeDisconnected(retryPlanned: true));
         if (!_scheduleRetry()) return;
         await _waitRetry();
@@ -201,7 +213,14 @@ class ReconnectingRoomRealtimeEngine implements RoomRealtimeEngine {
         cancelOnError: true,
       );
       try {
-        await channel.ready;
+        // Bounded: an unbounded `ready` would pin failover on a candidate
+        // whose session setup stalls (the next transport is never tried).
+        await channel.ready.timeout(_connectTimeout);
+      } on TimeoutException {
+        await _dropChannel();
+        planner.reportFailure(option.transport);
+        if (_closed) return false;
+        continue;
       } catch (_) {
         await _dropChannel();
         planner.reportFailure(option.transport);
@@ -243,6 +262,7 @@ class ReconnectingRoomRealtimeEngine implements RoomRealtimeEngine {
     final envelope = tryDecodeServerMessage(bytes);
     if (envelope == null) return;
     _advanceCursors(envelope);
+    _recoverExpiredCursor(envelope);
     final message = _codec.decode(bytes);
     if (message.kind == RoomRealtimeMessageKind.terminated) {
       _termination = message.termination;
@@ -262,6 +282,39 @@ class ReconnectingRoomRealtimeEngine implements RoomRealtimeEngine {
       return client.ServerMessage.fromBuffer(bytes);
     } catch (_) {
       return null;
+    }
+  }
+
+  /// The server marks a replay cursor it can no longer resume from with a
+  /// "cursor expired" observe error; the client must restart that
+  /// observation from now.
+  static bool _isCursorExpiredError(client.ServerMessage envelope) {
+    if (envelope.whichMessage() !=
+        client.ServerMessage_Message.resourceObserveError) {
+      return false;
+    }
+    final error = envelope.resourceObserveError.error;
+    return error.message.toLowerCase().contains('cursor expired') ||
+        error.detail.toLowerCase().contains('cursor expired');
+  }
+
+  /// Restarts an observation whose cursor the server expired: clears the
+  /// stored cursor (so reconnects replay fresh) and re-sends the recorded
+  /// observation immediately, so this session recovers without waiting for
+  /// a reconnect.
+  void _recoverExpiredCursor(client.ServerMessage envelope) {
+    if (!_isCursorExpiredError(envelope)) return;
+    final observeId = envelope.resourceObserveError.observeId;
+    _registry.clearCursor(observeId);
+    final channel = _channel;
+    final bytes = _registry.replayMessageFor(observeId, fresh: true);
+    if (channel == null || bytes == null) return;
+    try {
+      channel.send(bytes);
+    } catch (_) {
+      // The channel is unusable; the reconnect replay carries the cleared
+      // cursor.
+      _abortChannel();
     }
   }
 

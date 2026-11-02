@@ -50,6 +50,15 @@ T _withBytes<T>(Uint8List bytes, T Function(Pointer<Uint8>) body) {
 
 /// Connects a session; returns the handle or throws with the native error.
 int nativeWebTransportConnect(String url, Uint8List? certHash) {
+  if (certHash != null && certHash.length != 32) {
+    // A wrong-length pin must fail here rather than silently downgrade to
+    // system trust roots (the native side rejects it too).
+    throw ArgumentError.value(
+      certHash.length,
+      'certificateHash',
+      'must be 32 bytes (SHA-256)',
+    );
+  }
   final urlBytes = Uint8List.fromList(utf8.encode(url));
   final hashBytes = certHash;
   final handle = _withBytes(urlBytes, (urlPointer) {
@@ -84,7 +93,10 @@ void nativeWebTransportSend(int handle, Uint8List payload) {
 
 /// Receives the next frame payload, blocking until it arrives. Returns null
 /// when the session closed.
-Uint8List? nativeWebTransportRecv(int handle, {int capacity = 64 * 1024}) {
+///
+/// The default capacity matches the native downlink cap (the server's
+/// outbound frame budget) so full-size frames arrive without regrowing.
+Uint8List? nativeWebTransportRecv(int handle, {int capacity = 1024 * 1024}) {
   var cap = capacity;
   while (true) {
     final buffer = calloc<Uint8>(cap);

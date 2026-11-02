@@ -184,13 +184,20 @@ class WebTransportRoomRealtimeChannel implements RoomRealtimeChannel {
     try {
       if (_writerLocked) {
         _writerLocked = false;
-        await _writer.close().toDart;
+        // Bounded: a peer that stopped reading parks the writer close on
+        // flow control, and the session close below must still happen.
+        await _writer.close().toDart.timeout(_writerCloseTimeout);
       }
     } catch (_) {
-      // The stream may already be gone; closing the session cleans up.
+      // The stream may already be gone or the close timed out; closing the
+      // session cleans up.
     }
     _session.close();
   }
+
+  /// Upper bound on gracefully closing the control stream's writer before
+  /// the session is torn down regardless.
+  static const _writerCloseTimeout = Duration(seconds: 5);
 }
 
 JSArray<web.WebTransportHash> _certificateHashes(String base64) {

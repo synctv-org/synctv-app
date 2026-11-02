@@ -314,6 +314,10 @@ class _RoomScreenState extends State<RoomScreen>
     with SingleTickerProviderStateMixin {
   static const _endedLiveStreamDrainTimeout = Duration(seconds: 120);
 
+  /// Upper bound on the transport-advertisement refresh before the realtime
+  /// engine proceeds with the last-known (or WebSocket) fallback.
+  static const _serverCapabilityRefreshTimeout = Duration(seconds: 10);
+
   late final RoomChatGateway _chatGateway;
   late final AccountGateway _accountGateway;
   late final ChatReadStateUpdater _chatReadStateUpdater;
@@ -1385,8 +1389,13 @@ class _RoomScreenState extends State<RoomScreen>
     // transports; refresh them (TTL-cached) so a fresh session negotiates
     // instead of falling back to WebSocket. A failed probe keeps the last
     // advertisement; an empty one makes the planner fall back to WebSocket.
+    // Bounded so a stalled probe cannot stall the realtime connection.
     try {
-      await _serverConnectionGateway.getServerInfo();
+      await _serverConnectionGateway.getServerInfo().timeout(
+        _serverCapabilityRefreshTimeout,
+      );
+    } on TimeoutException {
+      debugPrint('Server capability refresh timed out');
     } catch (error) {
       debugPrint('Server capability refresh failed: $error');
     }
@@ -1713,8 +1722,16 @@ class _RoomScreenState extends State<RoomScreen>
       }
       final error = message.error;
       if (message.resourceObserveId == 'chat_events') {
-        // A stale replay cursor (long disconnect, retention window passed)
-        // kills the observation: resubscribe from now and backfill via REST.
+        // Only a stale replay cursor warrants the reset-and-replay below;
+        // retrying persistent errors (permissions, validation) would loop
+        // forever. The engine restarts expired-cursor observations on its
+        // own; this path additionally backfills history via REST.
+        if (error?.isCursorExpired != true) {
+          debugPrint(
+            'chat_events observe failed (${error?.code}): ${error?.message}',
+          );
+          return;
+        }
         _chatEventsObserved = false;
         _lastChatEventId = '';
         if (_canViewChatHistory) {

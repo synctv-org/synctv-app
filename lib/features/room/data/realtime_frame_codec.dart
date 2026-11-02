@@ -7,10 +7,15 @@ import 'dart:typed_data';
 /// The reader is incremental: feed it stream chunks; it emits complete
 /// frames as they assemble.
 class RealtimeFrameReader {
-  RealtimeFrameReader({this.maxFrameBytes = maxRealtimeFrameBytes});
+  RealtimeFrameReader({this.maxFrameBytes = maxDownlinkFrameBytes});
 
-  /// Maximum frame payload (must match the server's cap).
-  static const maxRealtimeFrameBytes = 64 * 1024;
+  /// Maximum server→client frame payload: the server's outbound budget,
+  /// larger than its inbound cap so big snapshots (playlists, chat replay)
+  /// are accepted during reassembly.
+  static const maxDownlinkFrameBytes = 1024 * 1024;
+
+  /// Maximum client→server frame payload (the server's inbound cap).
+  static const maxUplinkFrameBytes = 64 * 1024;
 
   final int maxFrameBytes;
 
@@ -51,7 +56,7 @@ class RealtimeFrameReader {
 
 /// Encodes [payload] as one length-prefixed frame.
 Uint8List encodeRealtimeFrame(List<int> payload) {
-  if (payload.length > RealtimeFrameReader.maxRealtimeFrameBytes) {
+  if (payload.length > RealtimeFrameReader.maxUplinkFrameBytes) {
     throw const RealtimeFrameFormatException('frame exceeds size cap');
   }
   final frame = Uint8List(4 + payload.length);
