@@ -15,6 +15,66 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
 import '../../../test_app.dart';
 
 void main() {
+  testWidgets('room search keeps the keyboard through a list drag', (
+    tester,
+  ) async {
+    // Regression (Android IME auto-close): the admin room search field lives
+    // inside the rooms CustomScrollView, so that scrollable must not dismiss
+    // the keyboard on drag. With the keyboard open the viewport shrinks, the
+    // list becomes scrollable, and the IME-entrance layout shift under a
+    // still-touching finger reads as a drag, closing the keyboard right
+    // after it opened.
+    await tester.binding.setSurfaceSize(const Size(600, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final gateway = _RecordGateway();
+    await tester.pumpWidget(_app(false, gateway));
+    await tester.pump();
+    gateway.rooms[0].complete(
+      AdminRoomsPage(
+        rooms: List.generate(
+          30,
+          (index) => SyncTvRoom(
+            roomId: 'room-$index',
+            roomName: 'Room $index',
+            creatorId: 'user-1',
+          ),
+        ),
+        total: 30,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final field = find.byType(EditableText).first;
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<EditableText>(field).focusNode.hasFocus,
+      isTrue,
+      reason: 'tapping the room search field must focus it',
+    );
+
+    // The keyboard opens; the shrunken viewport makes the list scrollable.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // A small drag inside the list must scroll it without dropping focus
+    // from the search field.
+    await tester.drag(field, const Offset(0, -24));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<EditableText>(field).focusNode.hasFocus,
+      isTrue,
+      reason:
+          'dragging the room list must keep the focused search field and '
+          'the keyboard open (the onDrag behavior closed the IME immediately '
+          'after it opened on Android)',
+    );
+    expect(find.text('Room 0'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final users in [false, true]) {
     testWidgets(
       'returning to admin records refreshes without losing search: users=$users',

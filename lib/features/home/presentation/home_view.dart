@@ -434,7 +434,10 @@ class _DiscoveryBody extends StatelessWidget {
       onRefresh: callbacks.refresh,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        // The search field lives inside this scrollable, so onDrag would let
+        // the adjustResize jolt while the field is being tapped count as a
+        // drag and close the keyboard right after it opens.
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
         slivers: [
           SliverPadding(
             padding: EdgeInsets.fromLTRB(

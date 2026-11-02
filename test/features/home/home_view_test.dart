@@ -288,6 +288,48 @@ void main() {
     expect(find.text('Created by me'), findsOneWidget);
   });
 
+  testWidgets('home search keeps the keyboard through a list drag', (
+    tester,
+  ) async {
+    // Regression (Android IME auto-close): the discovery search field lives
+    // inside the home CustomScrollView, so that scrollable must not dismiss
+    // the keyboard on drag. With the keyboard open the viewport shrinks, the
+    // list becomes scrollable, and the IME-entrance layout shift under a
+    // still-touching finger reads as a drag, closing the keyboard right
+    // after it opened.
+    await setViewport(tester, const Size(390, 844));
+    await tester.pumpWidget(const HomeShowcaseApp());
+    await tester.pumpAndSettle();
+
+    final field = find.byType(EditableText).first;
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<EditableText>(field).focusNode.hasFocus,
+      isTrue,
+      reason: 'tapping the discovery search field must focus it',
+    );
+
+    // The keyboard opens; the shrunken viewport makes the list scrollable.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // A small drag inside the list must scroll it without dropping focus
+    // from the search field.
+    await tester.drag(field, const Offset(0, -24));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<EditableText>(field).focusNode.hasFocus,
+      isTrue,
+      reason:
+          'dragging the discovery list must keep the focused search field '
+          'and the keyboard open (the onDrag behavior closed the IME '
+          'immediately after it opened on Android)',
+    );
+  });
+
   testWidgets('account menu icons remain visible in the light theme', (
     tester,
   ) async {
