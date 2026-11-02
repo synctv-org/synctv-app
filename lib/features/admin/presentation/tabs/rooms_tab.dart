@@ -1207,7 +1207,10 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     final isDark = theme.brightness == Brightness.dark;
 
     return CustomScrollView(
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      // The room search field lives inside this scrollable, so onDrag would
+      // let the adjustResize jolt while the field is being tapped count as a
+      // drag and close the keyboard right after it opens.
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
