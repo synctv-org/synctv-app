@@ -34,9 +34,16 @@ void main(List<String> args) async {
     if (code.targetOS == OS.iOS) {
       env['IPHONEOS_DEPLOYMENT_TARGET'] = code.iOS.targetVersion.toString();
       env.remove('MACOSX_DEPLOYMENT_TARGET');
+      _resolveAppleSdk(
+        code.iOS.targetSdk == IOSSdk.iPhoneSimulator
+            ? 'iphonesimulator'
+            : 'iphoneos',
+        env,
+      );
     } else if (code.targetOS == OS.macOS) {
       env['MACOSX_DEPLOYMENT_TARGET'] = code.macOS.targetVersion.toString();
       env.remove('IPHONEOS_DEPLOYMENT_TARGET');
+      _resolveAppleSdk('macosx', env);
     } else if (code.targetOS == OS.android) {
       _configureAndroidToolchain(code, target, env);
     }
@@ -86,6 +93,30 @@ void main(List<String> args) async {
       ),
     );
   });
+}
+
+/// The wtransport dependency tree compiles C sources (ring) against the
+/// platform SDK. Outside xcodebuild's environment the compiler gets no
+/// sysroot and fails on SDK headers such as TargetConditionals.h, so resolve
+/// the SDK explicitly; an SDKROOT inherited from the caller always wins.
+void _resolveAppleSdk(String sdk, Map<String, String> environment) {
+  final inherited = Platform.environment['SDKROOT'];
+  if (inherited != null && inherited.isNotEmpty) {
+    environment['SDKROOT'] = inherited;
+    return;
+  }
+  final result = Process.runSync('xcrun', ['--sdk', sdk, '--show-sdk-path']);
+  if (result.exitCode != 0) {
+    throw StateError(
+      'Failed to resolve the $sdk SDK for the native build: '
+      '${result.stderr}',
+    );
+  }
+  final path = (result.stdout as String).trim();
+  if (path.isEmpty) {
+    throw StateError('xcrun returned an empty $sdk SDK path.');
+  }
+  environment['SDKROOT'] = path;
 }
 
 void _configureAndroidToolchain(
