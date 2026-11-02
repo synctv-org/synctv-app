@@ -17,6 +17,7 @@ class SyncTvServerProfile {
     this.allowInsecureTls = false,
     this.lastSeenAt,
     this.sessionData = const AnonymousServerSessionData(),
+    this.webTransportCertificateHash,
   });
 
   final String endpoint;
@@ -27,7 +28,30 @@ class SyncTvServerProfile {
   final DateTime? lastSeenAt;
   final SyncTvServerSessionData sessionData;
 
+  /// Base64 SHA-256 of the server certificate's DER for WebTransport to a
+  /// self-signed endpoint; null for publicly trusted certificates.
+  final String? webTransportCertificateHash;
+
   bool get isPending => declaredServerId.isEmpty;
+
+  /// Whether server info arriving over this profile's base-url channel is
+  /// PKI-validated: https with certificate validation enabled. Only then
+  /// may an advertised WebTransport pin replace platform trust - over any
+  /// other channel the advertisement is attacker-substitutable.
+  bool get advertisedPinChannelValidated {
+    final scheme = Uri.tryParse(endpoint)?.scheme.toLowerCase();
+    return scheme == 'https' && !allowInsecureTls;
+  }
+
+  /// Effective WebTransport pin for this profile: the operator-set profile
+  /// pin wins unconditionally; the server-advertised pin only when it
+  /// arrived over a PKI-validated channel; otherwise null (platform trust
+  /// roots, WebTransport fails closed).
+  String? effectiveWebTransportPin(String? advertised) {
+    final pinned = webTransportCertificateHash;
+    if (pinned != null && pinned.isNotEmpty) return pinned;
+    return advertisedPinChannelValidated ? advertised : null;
+  }
 
   SyncTvServerProfile copyWith({
     String? declaredServerId,
@@ -36,6 +60,7 @@ class SyncTvServerProfile {
     bool? allowInsecureTls,
     DateTime? lastSeenAt,
     SyncTvServerSessionData? sessionData,
+    String? webTransportCertificateHash,
   }) {
     return SyncTvServerProfile(
       endpoint: endpoint,
@@ -45,6 +70,8 @@ class SyncTvServerProfile {
       allowInsecureTls: allowInsecureTls ?? this.allowInsecureTls,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       sessionData: sessionData ?? this.sessionData,
+      webTransportCertificateHash:
+          webTransportCertificateHash ?? this.webTransportCertificateHash,
     );
   }
 
@@ -55,6 +82,8 @@ class SyncTvServerProfile {
     'is_built_in': isBuiltIn,
     'allow_insecure_tls': allowInsecureTls,
     'session': sessionData.toJson(),
+    if (webTransportCertificateHash != null)
+      'web_transport_certificate_hash': webTransportCertificateHash,
     if (lastSeenAt != null) 'last_seen_at': lastSeenAt!.toIso8601String(),
   };
 
@@ -74,10 +103,18 @@ class SyncTvServerProfile {
         sessionData: SyncTvServerSessionData.fromJson(
           rawSession is Map ? rawSession : const {},
         ),
+        webTransportCertificateHash: _normalizeCertificateHash(
+          json['web_transport_certificate_hash']?.toString(),
+        ),
       );
     } on FormatException {
       return null;
     }
+  }
+
+  static String? _normalizeCertificateHash(String? value) {
+    final trimmed = value?.trim();
+    return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
   }
 }
 
@@ -210,6 +247,7 @@ class SyncTvSessionStore {
     required String endpoint,
     bool allowInsecureTls = false,
     bool activate = true,
+    String? webTransportCertificateHash,
   }) async {
     final normalizedEndpoint = ServerEndpointIdentity.normalize(endpoint);
     final existingIndex = servers.indexWhere(
@@ -232,6 +270,11 @@ class SyncTvSessionStore {
       sessionData: carryCurrentSession
           ? _currentSessionData()
           : existing?.sessionData ?? const AnonymousServerSessionData(),
+      webTransportCertificateHash:
+          SyncTvServerProfile._normalizeCertificateHash(
+            webTransportCertificateHash,
+          ) ??
+          existing?.webTransportCertificateHash,
     );
 
     if (activate && current?.endpoint != normalizedEndpoint) {

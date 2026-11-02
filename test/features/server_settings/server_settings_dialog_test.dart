@@ -416,6 +416,7 @@ final class _RecordingServerConnectionGateway
   Future<ServerConnectionProfile> addServer(
     String address, {
     bool allowInsecureTls = false,
+    String? webTransportCertificateHash,
   }) async {
     this.address = address;
     this.allowInsecureTls = allowInsecureTls;
@@ -470,6 +471,7 @@ final class _EmptyServerConnectionGateway implements ServerConnectionGateway {
   Future<ServerConnectionProfile> addServer(
     String address, {
     bool allowInsecureTls = false,
+    String? webTransportCertificateHash,
   }) => throw UnimplementedError();
 
   @override
@@ -520,6 +522,7 @@ final class _SlowMetadataServerConnectionGateway
   Future<ServerConnectionProfile> addServer(
     String address, {
     bool allowInsecureTls = false,
+    String? webTransportCertificateHash,
   }) => throw UnimplementedError();
 
   @override

@@ -1991,6 +1991,8 @@
   "providerPlainConnection": "使用非 TLS 连接",
   "allowInsecureTls": "允许不安全 TLS",
   "allowInsecureTlsDescription": "跳过证书校验会增加中间人攻击风险。",
+  "webTransportCertificateHashLabel": "WebTransport 证书哈希",
+  "webTransportCertificateHashDescription": "可选：服务器证书 DER 的 base64 SHA-256。为自签部署带外固定 WebTransport；留空则仅在已校验的 HTTPS 信道上使用服务端通告的固定值。",
   "emptyKeepsCurrentValue": "留空保留当前值",
   "clearJwtSecret": "清除 JWT Secret",
   "pemEmptyKeepsCurrent": "PEM 内容，留空保留当前值",

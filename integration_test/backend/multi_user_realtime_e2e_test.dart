@@ -10,6 +10,7 @@ import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/features/room/application/room_realtime_channel.dart';
+import 'package:synctv_app/features/room/application/realtime_observation_registry.dart';
 import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
 import 'package:synctv_app/features/room/data/room_realtime_connection.dart';
 import 'package:synctv_app/features/room/data/synctv_room_session_gateway.dart';
@@ -438,7 +439,7 @@ final class _ChannelProbe {
   _ChannelProbe(this.label, this.channel) {
     _subscription = channel.stream.listen(
       (data) {
-        final message = RoomRealtimeCodec.decode(data);
+        final message = _codec.decode(data);
         messages.add(message);
         _updates.add(null);
       },
@@ -457,6 +458,9 @@ final class _ChannelProbe {
 
   final String label;
   final RoomRealtimeChannel channel;
+  final RoomRealtimeCodec _codec = RoomRealtimeCodec(
+    registry: RealtimeObservationRegistry(),
+  );
   final List<RoomRealtimeMessage> messages = [];
   final List<Object> errors = [];
   final StreamController<void> _updates = StreamController<void>.broadcast();

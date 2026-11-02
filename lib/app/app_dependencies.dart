@@ -23,7 +23,7 @@ import 'package:synctv_app/features/room/application/picture_in_picture_controll
 import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/playback_overlay_preferences_controller.dart';
 import 'package:synctv_app/features/room/application/realtime_event_log_preferences_controller.dart';
-import 'package:synctv_app/features/room/application/room_realtime_channel.dart';
+import 'package:synctv_app/features/room/application/room_realtime_engine.dart';
 import 'package:synctv_app/features/room/application/room_realtime_protocol.dart';
 import 'package:synctv_app/features/room/application/room_chat_gateway.dart';
 import 'package:synctv_app/features/room/application/room_playback_gateway.dart';
@@ -57,7 +57,7 @@ final class AppDependencies {
     required this.playerVolumePreferences,
     required this.playbackOverlayPreferences,
     required this.realtimeEventLogPreferences,
-    required this.roomRealtimeChannelFactory,
+    required this.roomRealtimeEngineFactory,
     required this.roomRealtimeProtocol,
     required this.roomChatGateway,
     required this.roomPlaybackGateway,
@@ -90,7 +90,7 @@ final class AppDependencies {
   final PlayerVolumePreferencesController playerVolumePreferences;
   final PlaybackOverlayPreferencesController playbackOverlayPreferences;
   final RealtimeEventLogPreferencesController realtimeEventLogPreferences;
-  final RoomRealtimeChannelFactory roomRealtimeChannelFactory;
+  final RoomRealtimeEngineFactory roomRealtimeEngineFactory;
   final RoomRealtimeProtocol roomRealtimeProtocol;
   final RoomChatGateway roomChatGateway;
   final RoomPlaybackGateway roomPlaybackGateway;
@@ -132,7 +132,7 @@ final class AppDependencies {
         PlayerVolumePreferencesController: playerVolumePreferences,
         PlaybackOverlayPreferencesController: playbackOverlayPreferences,
         RealtimeEventLogPreferencesController: realtimeEventLogPreferences,
-        RoomRealtimeChannelFactory: roomRealtimeChannelFactory,
+        RoomRealtimeEngineFactory: roomRealtimeEngineFactory,
         RoomRealtimeProtocol: roomRealtimeProtocol,
         RoomCreationGateway: roomCreationGateway,
         DanmakuSource: danmakuSource,

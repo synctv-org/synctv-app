@@ -39,6 +39,7 @@ abstract interface class ServerConnectionGateway {
   Future<ServerConnectionProfile> addServer(
     String address, {
     bool allowInsecureTls = false,
+    String? webTransportCertificateHash,
   });
 
   Future<void> activateServer(String endpoint);

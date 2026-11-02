@@ -6593,6 +6593,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get allowInsecureTlsDescription => '跳过证书校验会增加中间人攻击风险。';
 
   @override
+  String get webTransportCertificateHashLabel => 'WebTransport 证书哈希';
+
+  @override
+  String get webTransportCertificateHashDescription =>
+      '可选：服务器证书 DER 的 base64 SHA-256。为自签部署带外固定 WebTransport；留空则仅在已校验的 HTTPS 信道上使用服务端通告的固定值。';
+
+  @override
   String get emptyKeepsCurrentValue => '留空保留当前值';
 
   @override

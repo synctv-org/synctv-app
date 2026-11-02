@@ -29,12 +29,14 @@ final class SyncTvServerConnectionGateway implements ServerConnectionGateway {
   Future<ServerConnectionProfile> addServer(
     String address, {
     bool allowInsecureTls = false,
+    String? webTransportCertificateHash,
   }) async {
     try {
       return _toConnectionProfile(
         await SyncTvService.addServer(
           address,
           allowInsecureTls: allowInsecureTls,
+          webTransportCertificateHash: webTransportCertificateHash,
         ),
       );
     } on SyncTvApiException catch (error) {

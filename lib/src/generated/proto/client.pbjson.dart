@@ -993,6 +993,25 @@ final $typed_data.Uint8List contentReportStatusDescriptor = $convert.base64Decod
     'U1RBVFVTX1JFVklFV0lORxACEiIKHkNPTlRFTlRfUkVQT1JUX1NUQVRVU19SRVNPTFZFRBADEi'
     'MKH0NPTlRFTlRfUkVQT1JUX1NUQVRVU19ESVNNSVNTRUQQBA==');
 
+@$core.Deprecated('Use realtimeTransportKindDescriptor instead')
+const RealtimeTransportKind$json = {
+  '1': 'RealtimeTransportKind',
+  '2': [
+    {'1': 'REALTIME_TRANSPORT_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'REALTIME_TRANSPORT_KIND_WEB_SOCKET', '2': 1},
+    {'1': 'REALTIME_TRANSPORT_KIND_SSE', '2': 2},
+    {'1': 'REALTIME_TRANSPORT_KIND_WEB_TRANSPORT', '2': 3},
+    {'1': 'REALTIME_TRANSPORT_KIND_GRPC', '2': 4},
+  ],
+};
+
+/// Descriptor for `RealtimeTransportKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List realtimeTransportKindDescriptor = $convert.base64Decode(
+    'ChVSZWFsdGltZVRyYW5zcG9ydEtpbmQSJwojUkVBTFRJTUVfVFJBTlNQT1JUX0tJTkRfVU5TUE'
+    'VDSUZJRUQQABImCiJSRUFMVElNRV9UUkFOU1BPUlRfS0lORF9XRUJfU09DS0VUEAESHwobUkVB'
+    'TFRJTUVfVFJBTlNQT1JUX0tJTkRfU1NFEAISKQolUkVBTFRJTUVfVFJBTlNQT1JUX0tJTkRfV0'
+    'VCX1RSQU5TUE9SVBADEiAKHFJFQUxUSU1FX1RSQU5TUE9SVF9LSU5EX0dSUEMQBA==');
+
 @$core.Deprecated('Use notificationTypeDescriptor instead')
 const NotificationType$json = {
   '1': 'NotificationType',
@@ -11102,6 +11121,64 @@ final $typed_data.Uint8List unobserveResourceDescriptor = $convert.base64Decode(
     'ChFVbm9ic2VydmVSZXNvdXJjZRIpCgpvYnNlcnZlX2lkGAEgASgJQgq6SAdyBRABGIABUglvYn'
     'NlcnZlSWQ=');
 
+@$core.Deprecated('Use createRealtimeSessionRequestDescriptor instead')
+const CreateRealtimeSessionRequest$json = {
+  '1': 'CreateRealtimeSessionRequest',
+  '2': [
+    {
+      '1': 'initial_observations',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.ObserveResource',
+      '10': 'initialObservations'
+    },
+  ],
+};
+
+/// Descriptor for `CreateRealtimeSessionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createRealtimeSessionRequestDescriptor =
+    $convert.base64Decode(
+        'ChxDcmVhdGVSZWFsdGltZVNlc3Npb25SZXF1ZXN0ElEKFGluaXRpYWxfb2JzZXJ2YXRpb25zGA'
+        'EgAygLMh4uc3luY3R2LmNsaWVudC5PYnNlcnZlUmVzb3VyY2VSE2luaXRpYWxPYnNlcnZhdGlv'
+        'bnM=');
+
+@$core.Deprecated('Use createRealtimeSessionResponseDescriptor instead')
+const CreateRealtimeSessionResponse$json = {
+  '1': 'CreateRealtimeSessionResponse',
+  '2': [
+    {'1': 'session_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'sessionId'},
+    {'1': 'lease_ttl_ms', '3': 2, '4': 1, '5': 3, '10': 'leaseTtlMs'},
+  ],
+};
+
+/// Descriptor for `CreateRealtimeSessionResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createRealtimeSessionResponseDescriptor =
+    $convert.base64Decode(
+        'Ch1DcmVhdGVSZWFsdGltZVNlc3Npb25SZXNwb25zZRIpCgpzZXNzaW9uX2lkGAEgASgJQgq6SA'
+        'dyBRAIGIABUglzZXNzaW9uSWQSIAoMbGVhc2VfdHRsX21zGAIgASgDUgpsZWFzZVR0bE1z');
+
+@$core.Deprecated('Use sendRealtimeSessionMessageRequestDescriptor instead')
+const SendRealtimeSessionMessageRequest$json = {
+  '1': 'SendRealtimeSessionMessageRequest',
+  '2': [
+    {
+      '1': 'message',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ClientMessage',
+      '10': 'message'
+    },
+  ],
+};
+
+/// Descriptor for `SendRealtimeSessionMessageRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sendRealtimeSessionMessageRequestDescriptor =
+    $convert.base64Decode(
+        'CiFTZW5kUmVhbHRpbWVTZXNzaW9uTWVzc2FnZVJlcXVlc3QSNgoHbWVzc2FnZRgBIAEoCzIcLn'
+        'N5bmN0di5jbGllbnQuQ2xpZW50TWVzc2FnZVIHbWVzc2FnZQ==');
+
 @$core.Deprecated('Use observePlaybackStateDescriptor instead')
 const ObservePlaybackState$json = {
   '1': 'ObservePlaybackState',
@@ -11374,9 +11451,9 @@ const ObserveChatEvents$json = {
 /// Descriptor for `ObserveChatEvents`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List observeChatEventsDescriptor = $convert.base64Decode(
     'ChFPYnNlcnZlQ2hhdEV2ZW50cxI1ChRhZnRlcl9ldmVudF9zZXF1ZW5jZRgBIAEoA0gAUhJhZn'
-    'RlckV2ZW50U2VxdWVuY2WIAQESYQoVaW5jbHVkZV9tZXNzYWdlX3R5cGVzGAIgAygOMh4uc3lu'
-    'Y3R2LmNsaWVudC5DaGF0TWVzc2FnZVR5cGVCDbpICpIBByIFggECEAFSE2luY2x1ZGVNZXNzYW'
-    'dlVHlwZXNCFwoVX2FmdGVyX2V2ZW50X3NlcXVlbmNl');
+    'RlckV2ZW50U2VxdWVuY2WIAQESYwoVaW5jbHVkZV9tZXNzYWdlX3R5cGVzGAIgAygOMh4uc3lu'
+    'Y3R2LmNsaWVudC5DaGF0TWVzc2FnZVR5cGVCD7pIDJIBCRAQIgWCAQIQAVITaW5jbHVkZU1lc3'
+    'NhZ2VUeXBlc0IXChVfYWZ0ZXJfZXZlbnRfc2VxdWVuY2U=');
 
 @$core.Deprecated('Use observeChatPinEventsDescriptor instead')
 const ObserveChatPinEvents$json = {
@@ -17291,11 +17368,11 @@ const GetChatHistoryRequest$json = {
 /// Descriptor for `GetChatHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getChatHistoryRequestDescriptor = $convert.base64Decode(
     'ChVHZXRDaGF0SGlzdG9yeVJlcXVlc3QSFAoFbGltaXQYASABKAVSBWxpbWl0EhYKBmN1cnNvch'
-    'gCIAEoCVIGY3Vyc29yEmEKFWluY2x1ZGVfbWVzc2FnZV90eXBlcxgDIAMoDjIeLnN5bmN0di5j'
-    'bGllbnQuQ2hhdE1lc3NhZ2VUeXBlQg26SAqSAQciBYIBAhABUhNpbmNsdWRlTWVzc2FnZVR5cG'
-    'VzOo4BukiKARqHAQoWZ2V0X2NoYXRfaGlzdG9yeS5saW1pdBIybGltaXQgbXVzdCBiZSAwICh1'
-    'c2UgZGVmYXVsdCkgb3IgYmV0d2VlbiAxIGFuZCAxMDAaOXRoaXMubGltaXQgPT0gMCB8fCAodG'
-    'hpcy5saW1pdCA+PSAxICYmIHRoaXMubGltaXQgPD0gMTAwKQ==');
+    'gCIAEoCVIGY3Vyc29yEmMKFWluY2x1ZGVfbWVzc2FnZV90eXBlcxgDIAMoDjIeLnN5bmN0di5j'
+    'bGllbnQuQ2hhdE1lc3NhZ2VUeXBlQg+6SAySAQkQECIFggECEAFSE2luY2x1ZGVNZXNzYWdlVH'
+    'lwZXM6jgG6SIoBGocBChZnZXRfY2hhdF9oaXN0b3J5LmxpbWl0EjJsaW1pdCBtdXN0IGJlIDAg'
+    'KHVzZSBkZWZhdWx0KSBvciBiZXR3ZWVuIDEgYW5kIDEwMBo5dGhpcy5saW1pdCA9PSAwIHx8IC'
+    'h0aGlzLmxpbWl0ID49IDEgJiYgdGhpcy5saW1pdCA8PSAxMDAp');
 
 @$core.Deprecated('Use getChatHistoryResponseDescriptor instead')
 const GetChatHistoryResponse$json = {
@@ -17524,9 +17601,9 @@ final $typed_data.Uint8List getChatPlaybackMessagesRequestDescriptor = $convert.
     'QuUHJvdmlkZXJUYXJnZXRSDnBsYXliYWNrVGFyZ2V0EikKEHBvc2l0aW9uX3NlY29uZHMYBCAB'
     'KAFSD3Bvc2l0aW9uU2Vjb25kcxIlCg5iZWZvcmVfc2Vjb25kcxgFIAEoAVINYmVmb3JlU2Vjb2'
     '5kcxIjCg1hZnRlcl9zZWNvbmRzGAYgASgBUgxhZnRlclNlY29uZHMSFAoFbGltaXQYByABKAVS'
-    'BWxpbWl0EicKD2luY2x1ZGVfZGVsZXRlZBgIIAEoCFIOaW5jbHVkZURlbGV0ZWQSYQoVaW5jbH'
+    'BWxpbWl0EicKD2luY2x1ZGVfZGVsZXRlZBgIIAEoCFIOaW5jbHVkZURlbGV0ZWQSYwoVaW5jbH'
     'VkZV9tZXNzYWdlX3R5cGVzGAkgAygOMh4uc3luY3R2LmNsaWVudC5DaGF0TWVzc2FnZVR5cGVC'
-    'DbpICpIBByIFggECEAFSE2luY2x1ZGVNZXNzYWdlVHlwZXM=');
+    'D7pIDJIBCRAQIgWCAQIQAVITaW5jbHVkZU1lc3NhZ2VUeXBlcw==');
 
 @$core.Deprecated('Use getChatPlaybackMessagesResponseDescriptor instead')
 const GetChatPlaybackMessagesResponse$json = {
@@ -18339,19 +18416,53 @@ const GetServerInfoRequest$json = {
 final $typed_data.Uint8List getServerInfoRequestDescriptor =
     $convert.base64Decode('ChRHZXRTZXJ2ZXJJbmZvUmVxdWVzdA==');
 
+@$core.Deprecated('Use realtimeTransportCapabilityDescriptor instead')
+const RealtimeTransportCapability$json = {
+  '1': 'RealtimeTransportCapability',
+  '2': [
+    {
+      '1': 'kind',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.RealtimeTransportKind',
+      '8': {},
+      '10': 'kind'
+    },
+    {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
+    {'1': 'certificate_hash', '3': 3, '4': 1, '5': 9, '10': 'certificateHash'},
+  ],
+};
+
+/// Descriptor for `RealtimeTransportCapability`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List realtimeTransportCapabilityDescriptor =
+    $convert.base64Decode(
+        'ChtSZWFsdGltZVRyYW5zcG9ydENhcGFiaWxpdHkSRAoEa2luZBgBIAEoDjIkLnN5bmN0di5jbG'
+        'llbnQuUmVhbHRpbWVUcmFuc3BvcnRLaW5kQgq6SAeCAQQQASAAUgRraW5kEhIKBHBhdGgYAiAB'
+        'KAlSBHBhdGgSKQoQY2VydGlmaWNhdGVfaGFzaBgDIAEoCVIPY2VydGlmaWNhdGVIYXNo');
+
 @$core.Deprecated('Use getServerInfoResponseDescriptor instead')
 const GetServerInfoResponse$json = {
   '1': 'GetServerInfoResponse',
   '2': [
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '10': 'serverId'},
     {'1': 'server_name', '3': 2, '4': 1, '5': 9, '10': 'serverName'},
+    {
+      '1': 'transports',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.RealtimeTransportCapability',
+      '10': 'transports'
+    },
   ],
 };
 
 /// Descriptor for `GetServerInfoResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getServerInfoResponseDescriptor = $convert.base64Decode(
     'ChVHZXRTZXJ2ZXJJbmZvUmVzcG9uc2USGwoJc2VydmVyX2lkGAEgASgJUghzZXJ2ZXJJZBIfCg'
-    'tzZXJ2ZXJfbmFtZRgCIAEoCVIKc2VydmVyTmFtZQ==');
+    'tzZXJ2ZXJfbmFtZRgCIAEoCVIKc2VydmVyTmFtZRJKCgp0cmFuc3BvcnRzGAMgAygLMiouc3lu'
+    'Y3R2LmNsaWVudC5SZWFsdGltZVRyYW5zcG9ydENhcGFiaWxpdHlSCnRyYW5zcG9ydHM=');
 
 @$core.Deprecated('Use getServerTimeRequestDescriptor instead')
 const GetServerTimeRequest$json = {
@@ -21906,6 +22017,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.GetPublicSettingsResponse': GetPublicSettingsResponse$json,
   '.synctv.client.GetServerInfoRequest': GetServerInfoRequest$json,
   '.synctv.client.GetServerInfoResponse': GetServerInfoResponse$json,
+  '.synctv.client.RealtimeTransportCapability':
+      RealtimeTransportCapability$json,
   '.synctv.client.GetServerTimeRequest': GetServerTimeRequest$json,
   '.synctv.client.GetServerTimeResponse': GetServerTimeResponse$json,
 };

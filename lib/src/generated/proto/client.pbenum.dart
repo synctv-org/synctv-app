@@ -1682,6 +1682,51 @@ class ContentReportStatus extends $pb.ProtobufEnum {
   const ContentReportStatus._(super.value, super.name);
 }
 
+/// Realtime transports the server advertises. Clients intersect this list with
+/// their own platform capabilities and local preferences to pick a transport,
+/// demoting on failure (see each client's negotiation policy).
+class RealtimeTransportKind extends $pb.ProtobufEnum {
+  static const RealtimeTransportKind REALTIME_TRANSPORT_KIND_UNSPECIFIED =
+      RealtimeTransportKind._(
+          0, _omitEnumNames ? '' : 'REALTIME_TRANSPORT_KIND_UNSPECIFIED');
+
+  /// Bidirectional WebSocket stream (`/ws/rooms/{roomId}`).
+  static const RealtimeTransportKind REALTIME_TRANSPORT_KIND_WEB_SOCKET =
+      RealtimeTransportKind._(
+          1, _omitEnumNames ? '' : 'REALTIME_TRANSPORT_KIND_WEB_SOCKET');
+
+  /// HTTP realtime session: SSE downlink + REST uplink.
+  static const RealtimeTransportKind REALTIME_TRANSPORT_KIND_SSE =
+      RealtimeTransportKind._(
+          2, _omitEnumNames ? '' : 'REALTIME_TRANSPORT_KIND_SSE');
+
+  /// WebTransport session over the server's HTTP/3 (QUIC) listener.
+  static const RealtimeTransportKind REALTIME_TRANSPORT_KIND_WEB_TRANSPORT =
+      RealtimeTransportKind._(
+          3, _omitEnumNames ? '' : 'REALTIME_TRANSPORT_KIND_WEB_TRANSPORT');
+
+  /// Bidirectional gRPC `MessageStream` on the same API port.
+  static const RealtimeTransportKind REALTIME_TRANSPORT_KIND_GRPC =
+      RealtimeTransportKind._(
+          4, _omitEnumNames ? '' : 'REALTIME_TRANSPORT_KIND_GRPC');
+
+  static const $core.List<RealtimeTransportKind> values =
+      <RealtimeTransportKind>[
+    REALTIME_TRANSPORT_KIND_UNSPECIFIED,
+    REALTIME_TRANSPORT_KIND_WEB_SOCKET,
+    REALTIME_TRANSPORT_KIND_SSE,
+    REALTIME_TRANSPORT_KIND_WEB_TRANSPORT,
+    REALTIME_TRANSPORT_KIND_GRPC,
+  ];
+
+  static final $core.List<RealtimeTransportKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static RealtimeTransportKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RealtimeTransportKind._(super.value, super.name);
+}
+
 class NotificationType extends $pb.ProtobufEnum {
   static const NotificationType NOTIFICATION_TYPE_UNSPECIFIED =
       NotificationType._(

@@ -273,6 +273,7 @@ class _Gateway implements ServerConnectionGateway {
   Future<ServerConnectionProfile> addServer(
     String address, {
     bool allowInsecureTls = false,
+    String? webTransportCertificateHash,
   }) async {
     expect(address, 'https://invite.example.test/sync');
     expect(allowInsecureTls, isFalse);

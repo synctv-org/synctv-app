@@ -16,8 +16,6 @@ abstract interface class RoomRealtimeProtocol {
 
   RealtimeEventLogEntry describeOutgoing(List<int> data);
 
-  RoomRealtimeMessage decode(Uint8List data);
-
   List<int> encodeChat(
     String content, {
     String displayPosition = '',
