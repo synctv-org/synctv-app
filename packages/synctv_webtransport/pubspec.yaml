@@ -1,0 +1,18 @@
+name: synctv_webtransport
+description: Native WebTransport client bridge for SyncTV realtime.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  code_assets: ^2.0.0
+  ffi: ^2.2.0
+  hooks: ^2.2.0
+  meta: ^1.15.0
+
+dev_dependencies:
+  test: ^1.31.2
+  flutter_test:
+    sdk: flutter

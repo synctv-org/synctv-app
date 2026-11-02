@@ -17,6 +17,7 @@ class SyncTvServerProfile {
     this.allowInsecureTls = false,
     this.lastSeenAt,
     this.sessionData = const AnonymousServerSessionData(),
+    this.webTransportCertificateHash,
   });
 
   final String endpoint;
@@ -27,6 +28,10 @@ class SyncTvServerProfile {
   final DateTime? lastSeenAt;
   final SyncTvServerSessionData sessionData;
 
+  /// Base64 SHA-256 of the server certificate's DER for WebTransport to a
+  /// self-signed endpoint; null for publicly trusted certificates.
+  final String? webTransportCertificateHash;
+
   bool get isPending => declaredServerId.isEmpty;
 
   SyncTvServerProfile copyWith({
@@ -36,6 +41,7 @@ class SyncTvServerProfile {
     bool? allowInsecureTls,
     DateTime? lastSeenAt,
     SyncTvServerSessionData? sessionData,
+    String? webTransportCertificateHash,
   }) {
     return SyncTvServerProfile(
       endpoint: endpoint,
@@ -45,6 +51,8 @@ class SyncTvServerProfile {
       allowInsecureTls: allowInsecureTls ?? this.allowInsecureTls,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       sessionData: sessionData ?? this.sessionData,
+      webTransportCertificateHash:
+          webTransportCertificateHash ?? this.webTransportCertificateHash,
     );
   }
 
@@ -55,6 +63,8 @@ class SyncTvServerProfile {
     'is_built_in': isBuiltIn,
     'allow_insecure_tls': allowInsecureTls,
     'session': sessionData.toJson(),
+    if (webTransportCertificateHash != null)
+      'web_transport_certificate_hash': webTransportCertificateHash,
     if (lastSeenAt != null) 'last_seen_at': lastSeenAt!.toIso8601String(),
   };
 
@@ -74,10 +84,18 @@ class SyncTvServerProfile {
         sessionData: SyncTvServerSessionData.fromJson(
           rawSession is Map ? rawSession : const {},
         ),
+        webTransportCertificateHash: _normalizeCertificateHash(
+          json['web_transport_certificate_hash']?.toString(),
+        ),
       );
     } on FormatException {
       return null;
     }
+  }
+
+  static String? _normalizeCertificateHash(String? value) {
+    final trimmed = value?.trim();
+    return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
   }
 }
 

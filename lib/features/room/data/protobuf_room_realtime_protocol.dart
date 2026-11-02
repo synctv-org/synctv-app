@@ -17,9 +17,6 @@ final class ProtobufRoomRealtimeProtocol implements RoomRealtimeProtocol {
   const ProtobufRoomRealtimeProtocol();
 
   @override
-  RoomRealtimeMessage decode(Uint8List data) => RoomRealtimeCodec.decode(data);
-
-  @override
   RealtimeEventLogEntry describeIncoming(Uint8List data) =>
       RoomRealtimeCodec.describeIncoming(data);
 

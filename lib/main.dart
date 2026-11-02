@@ -29,7 +29,12 @@ import 'package:synctv_app/features/room/application/playback_overlay_preference
 import 'package:synctv_app/features/room/application/realtime_event_log_preferences_controller.dart';
 import 'package:synctv_app/features/room/data/shared_preferences_realtime_event_log_store.dart';
 import 'package:synctv_app/features/room/data/protobuf_room_realtime_protocol.dart';
+import 'package:synctv_app/core/time/synced_clock.dart';
+import 'package:synctv_app/features/room/application/realtime_transport_selector.dart';
+import 'package:synctv_app/features/room/data/http_session_room_realtime_channel.dart';
 import 'package:synctv_app/features/room/data/room_realtime_connection.dart';
+import 'package:synctv_app/features/room/data/room_realtime_engine.dart';
+import 'package:synctv_app/features/room/data/webtransport_room_realtime_channel.dart';
 import 'package:synctv_app/features/room/data/shared_preferences_playback_mode_store.dart';
 import 'package:synctv_app/features/room/data/shared_preferences_player_volume_store.dart';
 import 'package:synctv_app/features/room/data/shared_preferences_playback_overlay_store.dart';
@@ -112,8 +117,28 @@ void main(List<String> args) {
     playerVolumePreferences: playerVolumePreferences,
     playbackOverlayPreferences: playbackOverlayPreferences,
     realtimeEventLogPreferences: realtimeEventLogPreferences,
-    roomRealtimeChannelFactory: const IoRoomRealtimeChannelFactory(
-      sessionGateway: roomSessionGateway,
+    roomRealtimeEngineFactory: ReconnectingRoomRealtimeEngineFactory(
+      planner: SelectorRealtimeTransportPlanner(
+        selector: RealtimeTransportSelector(
+          webSocketFactory: IoRoomRealtimeChannelFactory(
+            sessionGateway: roomSessionGateway,
+          ),
+          sseFactory: () => HttpSessionRoomRealtimeChannelFactory(
+            sessionGateway: roomSessionGateway,
+          ),
+          webTransportFactory: () => webTransportChannelFactory(
+            createUri: roomSessionGateway.createWebTransportUri,
+            // A profile-pinned hash wins; otherwise use the hash the server
+            // advertised in its (trusted) server-info response, so
+            // self-signed deployments work without manual configuration.
+            certificateHashBase64:
+                SyncTvService.activeServer?.webTransportCertificateHash ??
+                SyncTvService.cachedWebTransportCertificateHash,
+          ),
+        ),
+        advertisedTransports: () => SyncTvService.cachedRealtimeTransports,
+      ),
+      nowMillis: SyncedClock.nowMillis,
     ),
     roomRealtimeProtocol: const ProtobufRoomRealtimeProtocol(),
     roomChatGateway: const SyncTvRoomChatGateway(),

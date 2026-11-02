@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:synctv_app/core/time/synced_clock.dart';
 import 'package:synctv_app/features/room/application/room_realtime_channel.dart';
 import 'package:synctv_app/features/room/application/room_session_gateway.dart';
-import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
 import 'package:synctv_app/features/room/data/room_realtime_socket.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
@@ -28,7 +26,6 @@ final class IoRoomRealtimeChannelFactory implements RoomRealtimeChannelFactory {
       createWebSocketUri: sessionGateway.createWebSocketUri,
       encodeMessage: sessionGateway.encodeMessage,
       decodeMessage: sessionGateway.decodeMessage,
-      nowMillis: SyncedClock.nowMillis,
       allowInsecureTls: sessionGateway.allowInsecureTls,
       initialMessages: initialMessages,
       onOutgoing: onOutgoing,
@@ -41,7 +38,6 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
   static const _connectTimeout = Duration(seconds: 10);
   static const _closeTimeout = Duration(seconds: 2);
 
-  Timer? _heartbeatTimer;
   var _closed = false;
   Future<void>? _closeFuture;
 
@@ -75,8 +71,6 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
 
   Future<void> _close() async {
     _closed = true;
-    _heartbeatTimer?.cancel();
-    _heartbeatTimer = null;
     // An unconnected queue has no listener to consume its done event.
     unawaited(_outgoing.close());
     try {
@@ -93,7 +87,6 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
     required Future<Uri> Function(String roomId) createWebSocketUri,
     required RealtimeMessageEncoder encodeMessage,
     required RealtimeMessageDecoder decodeMessage,
-    required int Function() nowMillis,
     bool allowInsecureTls = false,
     Future<RoomRealtimeSocket> Function(
       Uri uri, {
@@ -163,8 +156,6 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
             },
             onError: failTransport,
             onDone: () {
-              connection._heartbeatTimer?.cancel();
-              connection._heartbeatTimer = null;
               unawaited(outgoing.close());
               unawaited(incoming.close());
             },
@@ -181,16 +172,6 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
                   failTransport(error, stackTrace);
                 }
               });
-          connection._heartbeatTimer = Timer.periodic(
-            const Duration(seconds: 25),
-            (_) {
-              if (!outgoing.isClosed) {
-                outgoing.add(
-                  RoomRealtimeCodec.encodeSync(timestampMillis: nowMillis()),
-                );
-              }
-            },
-          );
           for (final message in initialMessages) {
             if (outgoing.isClosed) break;
             if (message.isNotEmpty) outgoing.add(message);
@@ -216,8 +197,6 @@ class RoomRealtimeConnection implements RoomRealtimeChannel {
       closeSocket: closeSocket,
     );
     incoming.onCancel = () async {
-      connection._heartbeatTimer?.cancel();
-      connection._heartbeatTimer = null;
       unawaited(outgoing.close());
       await outgoingSubscription?.cancel();
       if (connection._closed) return;

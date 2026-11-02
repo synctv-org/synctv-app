@@ -17,6 +17,7 @@ import 'package:synctv_app/contracts/proto_mapping.dart';
 import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
+import 'package:synctv_app/features/room/application/realtime_observation_registry.dart';
 import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/contracts/source_config_codec.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
@@ -64,6 +65,8 @@ import 'package:synctv_app/features/room/presentation/playback_danmaku.dart';
 import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
 import 'package:synctv_app/features/room/domain/chat_reactions.dart';
 import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
+
+final _testCodec = RoomRealtimeCodec(registry: RealtimeObservationRegistry());
 
 client.ProviderTarget testProviderTarget(String relativePath) {
   return client.ProviderTarget(
@@ -1007,7 +1010,7 @@ void main() {
   });
 
   test('room realtime decoder exposes typed protobuf messages', () {
-    final chat = RoomRealtimeCodec.decode(
+    final chat = _testCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'chat_events',
@@ -1033,7 +1036,7 @@ void main() {
     expect(chat.senderUsername, 'alice');
     expect(chat.timestampMillis, 123000);
 
-    final anonymousChat = RoomRealtimeCodec.decode(
+    final anonymousChat = _testCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'chat_events',
@@ -1046,7 +1049,7 @@ void main() {
     );
     expect(anonymousChat.senderUsername, isNull);
 
-    final playback = RoomRealtimeCodec.decode(
+    final playback = _testCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'playbackState',
@@ -1064,7 +1067,7 @@ void main() {
     expect(playback.status?.currentTime, 42.5);
     expect(playback.status?.playbackRate, 1.25);
 
-    final voiceOffer = RoomRealtimeCodec.decode(
+    final voiceOffer = _testCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'webrtc',
@@ -1094,7 +1097,7 @@ void main() {
       'type': 'offer',
     });
 
-    final mediaOffer = RoomRealtimeCodec.decode(
+    final mediaOffer = _testCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'webrtc',
@@ -1117,7 +1120,7 @@ void main() {
       'media_swarm_id': 'sm1_test',
     });
 
-    final swarmPeers = RoomRealtimeCodec.decode(
+    final swarmPeers = _testCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'webrtc',
@@ -1147,7 +1150,7 @@ void main() {
       'media_swarm_ticket': 'renewed-ticket',
     });
 
-    final peerLeft = RoomRealtimeCodec.decode(
+    final peerLeft = _testCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'webrtc',
@@ -1171,7 +1174,7 @@ void main() {
       'from': 'usr_peer:conn_1',
     });
 
-    final onlineEvent = RoomRealtimeCodec.decode(
+    final onlineEvent = _testCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'manage_member_online_events',
@@ -1208,7 +1211,7 @@ void main() {
         int editedAt = 0,
         int deletedAt = 0,
       }) {
-        return RoomRealtimeCodec.decode(
+        return _testCodec.decode(
           client.ServerMessage(
             resourceEvent: client.ResourceEvent(
               observeId: 'chat_events',
@@ -1294,7 +1297,7 @@ void main() {
   );
 
   test('chat pin resource event is decoded from websocket payload', () {
-    final decoded = RoomRealtimeCodec.decode(
+    final decoded = _testCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'chat_pin_events',
@@ -4183,13 +4186,19 @@ void main() {
   test('realtime dynamic playlist items keep observed playlist parent id', () {
     final target = testProviderTarget('/shows/ep1.mkv');
     final encodedTarget = testProviderTargetToken(target);
-    RoomRealtimeCodec.encodePlaylistObservation(
-      observeId: 'playlistItems',
-      playlistId: 'pl_dynamic',
-      target: testProviderTargetToken(testProviderTarget('/shows')),
+    final registry = RealtimeObservationRegistry();
+    final codec = RoomRealtimeCodec(registry: registry);
+    registry.record(
+      client.ClientMessage.fromBuffer(
+        RoomRealtimeCodec.encodePlaylistObservation(
+          observeId: 'playlistItems',
+          playlistId: 'pl_dynamic',
+          target: testProviderTargetToken(testProviderTarget('/shows')),
+        ),
+      ).observeResource,
     );
 
-    final message = RoomRealtimeCodec.decode(
+    final message = codec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'playlistItems',
@@ -9798,6 +9807,24 @@ void main() {
     expect(uri.queryParameters, {'ticket': 'ws_ticket', 'format': 'json'});
   });
 
+  test('room webtransport uri pins protobuf frames and multi-stream', () async {
+    final api = SyncTvApiClient(
+      baseUrl: 'http://example.test',
+      session: SyncTvSession(),
+      httpClient: MockClient((request) async => http.Response('{}', 200)),
+    );
+
+    final uri = api.roomWebTransportUri('room_1', ticket: 'wt_ticket');
+
+    expect(uri.scheme, 'https');
+    expect(uri.path, '/wt/rooms/room_1');
+    expect(uri.queryParameters, {
+      'ticket': 'wt_ticket',
+      'format': 'protobuf',
+      'streams': '1',
+    });
+  });
+
   test(
     'admin review endpoints use current protobuf query and body contracts',
     () async {
@@ -10446,7 +10473,19 @@ void main() {
       httpClient: MockClient((request) async {
         requestedUri = request.url;
         return http.Response(
-          jsonEncode({'serverId': 'srv_prod', 'serverName': 'SyncTV Prod'}),
+          jsonEncode({
+            'serverId': 'srv_prod',
+            'serverName': 'SyncTV Prod',
+            'transports': [
+              {'kind': 1, 'path': '/ws/rooms/{roomId}'},
+              {
+                'kind': 3,
+                'path': '/wt/rooms/',
+                'certificateHash':
+                    'Ac6xXcJxS8kOiD9CTJlPeGvMlu1Yl0ZJDVhaRZ4tXwE=',
+              },
+            ],
+          }),
           200,
           headers: {'content-type': 'application/json'},
         );
@@ -10461,6 +10500,15 @@ void main() {
     expect(requestedUri!.path, '/api/public/server-info');
     expect(response.serverId, 'srv_prod');
     expect(response.serverName, 'SyncTV Prod');
+    expect(response.transports, hasLength(2));
+    expect(
+      response.transports.first.kind,
+      client_enum.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_WEB_SOCKET,
+    );
+    expect(
+      response.transports[1].certificateHash,
+      'Ac6xXcJxS8kOiD9CTJlPeGvMlu1Yl0ZJDVhaRZ4tXwE=',
+    );
   });
 
   test(
@@ -10504,7 +10552,19 @@ void main() {
       requestedUri = request.uri;
       request.response.headers.contentType = io.ContentType.json;
       request.response.write(
-        jsonEncode({'serverId': 'srv_local', 'serverName': 'Local Dev'}),
+        jsonEncode({
+          'serverId': 'srv_local',
+          'serverName': 'Local Dev',
+          'transports': [
+            {'kind': 1, 'path': '/ws/rooms/{roomId}'},
+            {'kind': 2, 'path': '/api/rooms/{roomId}/realtime/sessions'},
+            {
+              'kind': 3,
+              'path': '/wt/rooms/',
+              'certificateHash': '67dVqAf9D57DcFNeD/Er7iba02ecaHGM+MytPx22YIY=',
+            },
+          ],
+        }),
       );
       await request.response.close();
     });
@@ -10522,6 +10582,20 @@ void main() {
       expect(requestedUri!.path, '/api/public/server-info');
       expect(info.serverId, 'srv_local');
       expect(info.serverName, 'Local Dev');
+      expect(info.realtimeTransports, [
+        client_enum.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_WEB_SOCKET,
+        client_enum.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_SSE,
+        client_enum.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_WEB_TRANSPORT,
+      ]);
+      expect(
+        info.webTransportCertificateHash,
+        '67dVqAf9D57DcFNeD/Er7iba02ecaHGM+MytPx22YIY=',
+      );
+      expect(SyncTvService.cachedRealtimeTransports, info.realtimeTransports);
+      expect(
+        SyncTvService.cachedWebTransportCertificateHash,
+        info.webTransportCertificateHash,
+      );
     } finally {
       await subscription.cancel();
       await server.close(force: true);

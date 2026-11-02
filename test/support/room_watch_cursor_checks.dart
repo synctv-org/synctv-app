@@ -7,7 +7,10 @@ import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
 import 'package:synctv_app/data/synctv_api/synctv_room_management_service.dart';
 import 'package:synctv_app/data/synctv_api/synctv_room_media_service.dart';
 import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
+import 'package:synctv_app/features/room/application/realtime_observation_registry.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+
+final _testCodec = RoomRealtimeCodec(registry: RealtimeObservationRegistry());
 
 final roomWatchCursorChecks = <String, Future<void> Function()>{
   for (final search in [false, true])
@@ -87,7 +90,7 @@ final roomWatchCursorChecks = <String, Future<void> Function()>{
               if (changed) 'roomSettings': {'settings': {}},
             },
           });
-        final decoded = RoomRealtimeCodec.decode(message.writeToBuffer());
+        final decoded = _testCodec.decode(message.writeToBuffer());
         final expected = id == '0' ? 'legacy-event' : id;
         if (decoded.resourceVersion != expected) {
           throw StateError(

@@ -187,6 +187,65 @@ class SyncTvRuntimeService {
     }
   }
 
+  Future<Uri> createRoomWebTransportUri(String roomId) async {
+    if (!hasRecoverableSession) {
+      throw SyncTvApiException('登录状态已失效', statusCode: 401);
+    }
+    try {
+      final ticket = await _api.room.createWebSocketTicket(
+        client.CreateWebSocketTicketRequest(roomId: roomId),
+      );
+      return _api.roomWebTransportUri(roomId, ticket: ticket.ticket);
+    } on SyncTvApiException catch (e) {
+      if (e.statusCode == 401) {
+        _handleCurrentAuthError();
+      }
+      rethrow;
+    }
+  }
+
+  Future<client.CreateRealtimeSessionResponse> createRealtimeSession(
+    String roomId,
+    List<client.ObserveResource> initialObservations,
+  ) async {
+    if (!hasRecoverableSession) {
+      throw SyncTvApiException('登录状态已失效', statusCode: 401);
+    }
+    try {
+      return await _api.room.createRealtimeSession(
+        roomId,
+        client.CreateRealtimeSessionRequest(
+          initialObservations: initialObservations,
+        ),
+      );
+    } on SyncTvApiException catch (e) {
+      if (e.statusCode == 401) {
+        _handleCurrentAuthError();
+      }
+      rethrow;
+    }
+  }
+
+  Stream<Uint8List> openRealtimeSessionEvents(String roomId, String sessionId) {
+    return _api.room.realtimeSessionEvents(roomId, sessionId);
+  }
+
+  Future<void> sendRealtimeSessionMessage(
+    String roomId,
+    String sessionId,
+    client.ClientMessage message,
+  ) async {
+    await _api.room.sendRealtimeSessionMessage(
+      roomId,
+      sessionId,
+      client.SendRealtimeSessionMessageRequest(message: message),
+    );
+  }
+
+  Future<void> endRealtimeSession(String roomId, String sessionId) {
+    return _api.room.deleteRealtimeSession(roomId, sessionId);
+  }
+
   Future<bool> ensureAuthenticated() async {
     return switch (session.identity) {
       GuestSessionIdentity() => true,

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:synctv_app/core/media/local_image_upload.dart';
@@ -80,8 +81,17 @@ class SyncTvService {
     await _runtime.init();
     if (_initialized) return;
     _domains = _createDomains();
+    _resetServerCapabilityCaches();
     _invalidateServerTime();
     _initialized = true;
+  }
+
+  /// Drops server-scoped capability caches; called whenever the active
+  /// server changes so transport negotiation never sees another server's
+  /// advertisement or certificate pin.
+  static void _resetServerCapabilityCaches() {
+    _cachedRealtimeTransports = const [];
+    _cachedWebTransportCertificateHash = null;
   }
 
   static SyncTvDomainServices _createDomains() {
@@ -91,6 +101,7 @@ class SyncTvService {
   static Future<void> setBaseUrl(String url) async {
     await _runtime.setBaseUrl(url);
     _domains = _createDomains();
+    _resetServerCapabilityCaches();
     _invalidateServerTime();
   }
 
@@ -103,6 +114,7 @@ class SyncTvService {
       allowInsecureTls: allowInsecureTls,
     );
     _domains = _createDomains();
+    _resetServerCapabilityCaches();
     _invalidateServerTime();
     return profile;
   }
@@ -110,6 +122,7 @@ class SyncTvService {
   static Future<void> activateServer(String endpoint) async {
     await _runtime.activateServer(endpoint);
     _domains = _createDomains();
+    _resetServerCapabilityCaches();
     _invalidateServerTime();
   }
 
@@ -117,6 +130,7 @@ class SyncTvService {
     final previousEndpoint = activeServer?.endpoint;
     await _runtime.removeServer(endpoint);
     _domains = _createDomains();
+    _resetServerCapabilityCaches();
     if (activeServer?.endpoint != previousEndpoint) {
       _invalidateServerTime();
     }
@@ -129,6 +143,36 @@ class SyncTvService {
 
   static Future<Uri> createRoomWebSocketUri(String roomId) {
     return _runtime.createRoomWebSocketUri(roomId);
+  }
+
+  static Future<Uri> createRoomWebTransportUri(String roomId) {
+    return _runtime.createRoomWebTransportUri(roomId);
+  }
+
+  static Future<client.CreateRealtimeSessionResponse> createRealtimeSession(
+    String roomId,
+    List<client.ObserveResource> initialObservations,
+  ) {
+    return _runtime.createRealtimeSession(roomId, initialObservations);
+  }
+
+  static Stream<Uint8List> openRealtimeSessionEvents(
+    String roomId,
+    String sessionId,
+  ) {
+    return _runtime.openRealtimeSessionEvents(roomId, sessionId);
+  }
+
+  static Future<void> sendRealtimeSessionMessage(
+    String roomId,
+    String sessionId,
+    client.ClientMessage message,
+  ) {
+    return _runtime.sendRealtimeSessionMessage(roomId, sessionId, message);
+  }
+
+  static Future<void> endRealtimeSession(String roomId, String sessionId) {
+    return _runtime.endRealtimeSession(roomId, sessionId);
   }
 
   static String encodeRealtimeMessageJson(client.ClientMessage message) {
@@ -377,8 +421,28 @@ class SyncTvService {
   }
 
   static Future<ServerInfo> getServerInfo({bool refresh = false}) async {
-    return _domains.publicRooms.getServerInfo(refresh: refresh);
+    final info = await _domains.publicRooms.getServerInfo(refresh: refresh);
+    _cachedRealtimeTransports = info.realtimeTransports;
+    _cachedWebTransportCertificateHash = info.webTransportCertificateHash;
+    return info;
   }
+
+  static List<client_enum.RealtimeTransportKind> _cachedRealtimeTransports =
+      const [];
+
+  /// Last-known realtime transports of the active server, refreshed
+  /// whenever server info is (re)loaded. Empty until the first successful
+  /// fetch — callers fall back to WebSocket then.
+  static List<client_enum.RealtimeTransportKind> get cachedRealtimeTransports =>
+      _cachedRealtimeTransports;
+
+  static String? _cachedWebTransportCertificateHash;
+
+  /// WebTransport certificate pin the active server advertised, refreshed
+  /// whenever server info is (re)loaded. A pin stored in the server profile
+  /// takes precedence over this value.
+  static String? get cachedWebTransportCertificateHash =>
+      _cachedWebTransportCertificateHash;
 
   static Future<client.GetServerTimeResponse> getServerTime({
     int clientSentAtNanos = 0,

@@ -61,7 +61,8 @@ import 'package:synctv_app/features/room/application/playback_overlay_preference
 import 'package:synctv_app/features/media_p2p/application/p2p_media_preferences_controller.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_runtime.dart';
 import 'package:synctv_app/features/media_p2p/application/p2p_media_engine_owner.dart';
-import 'package:synctv_app/features/room/application/room_realtime_channel.dart';
+import 'package:synctv_app/features/room/application/room_realtime_engine.dart';
+import 'package:synctv_app/features/server_settings/application/server_connection_gateway.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/image/local_image_picker.dart';
 import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
@@ -323,7 +324,8 @@ class _RoomScreenState extends State<RoomScreen>
   late final MediaLibraryGateway _mediaLibraryGateway;
   late final RealtimeEventLogPreferencesController _realtimeLogPreferences;
   late final RoomRealtimeProtocol _realtimeProtocol;
-  late final RoomRealtimeChannelFactory _realtimeChannelFactory;
+  late final RoomRealtimeEngineFactory _realtimeEngineFactory;
+  late final ServerConnectionGateway _serverConnectionGateway;
   late final P2pMediaRuntimeFactory _p2pRuntimeFactory;
   late final VoiceChatSessionFactory _voiceChatSessionFactory;
   late final PlayerVolumePreferencesController _playerVolumePreferences;
@@ -398,7 +400,8 @@ class _RoomScreenState extends State<RoomScreen>
   SyncTvPlaybackStatus? get _currentStatus => _playbackController.state.status;
   set _currentStatus(SyncTvPlaybackStatus? value) =>
       _playbackController.setStatus(value);
-  RoomRealtimeChannel? _channel;
+  RoomRealtimeEngine? _realtimeEngine;
+  StreamSubscription<RoomRealtimeLifecycle>? _realtimeLifecycleSubscription;
   List<SyncTvUser> _members = [];
   List<SyncTvUser> _mentionCandidates = [];
   List<ChatMentionInfo> _pendingChatMentions = [];
@@ -463,11 +466,9 @@ class _RoomScreenState extends State<RoomScreen>
   PlaybackDanmakuWindow? _playbackDanmakuWindow;
   final _playbackDanmakuLoader = PlaybackDanmakuLoader();
 
-  Timer? _reconnectTimer;
-  int _reconnectAttempts = 0;
   bool _isDisposing = false;
 
-  StreamSubscription<Uint8List>? _realtimeSubscription;
+  StreamSubscription<RoomRealtimeMessage>? _realtimeSubscription;
   StreamSubscription? _authErrorSubscription;
 
   VoiceChatSession? _voiceChatManager;
@@ -620,7 +621,10 @@ class _RoomScreenState extends State<RoomScreen>
     _realtimeLogPreferences =
         DependencyScope.read<RealtimeEventLogPreferencesController>(context);
     _realtimeProtocol = DependencyScope.read<RoomRealtimeProtocol>(context);
-    _realtimeChannelFactory = DependencyScope.read<RoomRealtimeChannelFactory>(
+    _realtimeEngineFactory = DependencyScope.read<RoomRealtimeEngineFactory>(
+      context,
+    );
+    _serverConnectionGateway = DependencyScope.read<ServerConnectionGateway>(
       context,
     );
     _p2pRuntimeFactory = DependencyScope.read<P2pMediaRuntimeFactory>(context);
@@ -662,7 +666,7 @@ class _RoomScreenState extends State<RoomScreen>
     _voiceChatManager = _voiceChatSessionFactory.create(
       loadIceServers: () => _loadWebRtcIceServers(),
       onSignalingMessage: (type, data) {
-        if (_channel != null) {
+        if (_realtimeEngine != null) {
           try {
             final bytes = _realtimeProtocol.encodeWebRtcVoiceSignal(type, data);
             _sendRealtimeMessage(bytes);
@@ -685,7 +689,7 @@ class _RoomScreenState extends State<RoomScreen>
               return engine.cachedPiece(swarmId, pieceKey);
             }),
         onSignalingMessage: (type, data) {
-          if (_channel == null) return;
+          if (_realtimeEngine == null) return;
           try {
             _sendRealtimeMessage(
               _realtimeProtocol.encodeWebRtcMediaSignal(type, data),
@@ -1087,8 +1091,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _syncPermissionScopedRoomData() {
-    final channel = _channel;
-    if (channel == null || _selfMember == null) return;
+    if (_realtimeEngine == null || _selfMember == null) return;
 
     _ensureSelectedRoomTabIsVisible();
 
@@ -1103,9 +1106,10 @@ class _RoomScreenState extends State<RoomScreen>
 
     if (_canBrowseLibrary) {
       if (!_playlistItemsObserved) {
-        _playlistItemsObserved = _sendRealtimeMessage(
-          _realtimeProtocol.encodePlaylistObservation(),
-        );
+        // Re-subscribe at the user's current position (playlist stack,
+        // search, pagination), not at the library root.
+        _playlistItemsObserved = true;
+        _observeCurrentPlaylist();
       }
     } else {
       _invalidateMediaLibraryRequests();
@@ -1185,12 +1189,14 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _handleRoomSessionClosed(String message) async {
     _chatDetailDialogs.dispose();
-    _reconnectTimer?.cancel();
     await _disposeVideoController();
+    await _realtimeLifecycleSubscription?.cancel();
+    _realtimeLifecycleSubscription = null;
     await _realtimeSubscription?.cancel();
     _realtimeSubscription = null;
-    await _channel?.close();
-    _channel = null;
+    final engine = _realtimeEngine;
+    _realtimeEngine = null;
+    await engine?.close();
     _voiceChatManager?.leave();
     await _deactivateP2pResources();
     if (!mounted) return;
@@ -1370,74 +1376,80 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _connectRealtime() async {
-    _reconnectTimer?.cancel();
-    RoomRealtimeChannel? connectingChannel;
-
+    final previousEngine = _realtimeEngine;
+    _realtimeEngine = null;
+    unawaited(_disposePreviousRealtimeConnection(previousEngine));
     _invalidateRealtimeMembership();
 
+    // The transport planner ranks candidates from the server's advertised
+    // transports; refresh them (TTL-cached) so a fresh session negotiates
+    // instead of falling back to WebSocket. A failed probe keeps the last
+    // advertisement; an empty one makes the planner fall back to WebSocket.
     try {
-      final previousSubscription = _realtimeSubscription;
-      final previousChannel = _channel;
-      _realtimeSubscription = null;
-      _channel = null;
-      unawaited(
-        _disposePreviousRealtimeConnection(
-          previousSubscription,
-          previousChannel,
-        ),
-      );
-      final channel = _realtimeChannelFactory.connect(
-        widget.room.roomId,
-        initialMessages: _realtimeProtocol.encodeInitialObservations(
-          includeResolvedPlayback: true,
-        ),
-        onOutgoing: _recordRealtimeOutgoing,
-        onIncoming: _recordRealtimeIncoming,
-      );
-      connectingChannel = channel;
-      _channel = channel;
-      _playlistItemsObserved = false;
-      _chatEventsObserved = false;
-      _memberEventsObserved = false;
-      unawaited(_p2pMediaManager?.resetSignalingSession());
-
-      _realtimeSubscription = channel.stream.listen(
-        (data) {
-          if (_isDisposing) return;
-          _reconnectAttempts = 0;
-          try {
-            final message = _realtimeProtocol.decode(data);
-            if (!_realtimeMessageBus.isClosed) {
-              _realtimeMessageBus.add(message);
-            }
-            _handleRealtimeMessage(message);
-          } catch (e) {
-            debugPrint('Proto decode error: $e');
-          }
-        },
-        onError: (error) {
-          if (_isDisposing) return;
-          debugPrint('Realtime stream error: $error');
-          _handleRealtimeTransportClosed(channel);
-        },
-        onDone: () {
-          if (_isDisposing) return;
-          debugPrint('Realtime stream closed');
-          _handleRealtimeTransportClosed(channel);
-        },
-      );
-      await channel.ready;
-      if (!mounted || _channel != channel) return;
-      _reconnectAttempts = 0;
-      if (!_realtimeReconnectBus.isClosed) {
-        _realtimeReconnectBus.add(null);
-      }
-      _syncMemberTabObservation();
-    } catch (e) {
-      debugPrint('Realtime stream connection error: $e');
-      if (_channel == connectingChannel) _channel = null;
-      _scheduleReconnect();
+      await _serverConnectionGateway.getServerInfo();
+    } catch (error) {
+      debugPrint('Server capability refresh failed: $error');
     }
+    if (_isDisposing || !mounted) return;
+
+    final engine = _realtimeEngineFactory.create(
+      widget.room.roomId,
+      onOutgoing: _recordRealtimeOutgoing,
+      onIncoming: _recordRealtimeIncoming,
+    );
+    _realtimeEngine = engine;
+    unawaited(_p2pMediaManager?.resetSignalingSession());
+
+    _realtimeSubscription = engine.messages.listen(
+      (message) {
+        if (_isDisposing) return;
+        if (!_realtimeMessageBus.isClosed) {
+          _realtimeMessageBus.add(message);
+        }
+        _handleRealtimeMessage(message);
+      },
+      onError: (Object error) {
+        debugPrint('Realtime stream error: $error');
+      },
+    );
+    _realtimeLifecycleSubscription = engine.lifecycle.listen(
+      _handleRealtimeLifecycle,
+    );
+    // The engine replays every recorded observation after each reconnect;
+    // the initial set seeds that record.
+    for (final message in _realtimeProtocol.encodeInitialObservations(
+      includeResolvedPlayback: true,
+    )) {
+      engine.send(message);
+    }
+    engine.start();
+    _syncMemberTabObservation();
+  }
+
+  void _handleRealtimeLifecycle(RoomRealtimeLifecycle event) {
+    if (_isDisposing) return;
+    switch (event) {
+      case RoomRealtimeConnected():
+        if (!_realtimeReconnectBus.isClosed) {
+          _realtimeReconnectBus.add(null);
+        }
+      case RoomRealtimeDisconnected():
+        _invalidateRealtimeMembership();
+        if (!_realtimeDisconnectBus.isClosed) {
+          _realtimeDisconnectBus.add(null);
+        }
+        unawaited(_p2pMediaManager?.resetSignalingSession());
+      case RoomRealtimeTerminatedEvent():
+        _handleRealtimeTermination(event.termination);
+      case RoomRealtimeConnecting():
+      case RoomRealtimeClosed():
+        break;
+    }
+  }
+
+  void _handleRealtimeTermination(RoomRealtimeTermination termination) {
+    if (!mounted) return;
+    unawaited(_handleRoomSessionClosed(termination.displayMessage));
   }
 
   void _invalidateRealtimeMembership() {
@@ -1449,33 +1461,16 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  void _handleRealtimeTransportClosed(RoomRealtimeChannel channel) {
-    if (_channel != channel) return;
-    _channel = null;
-    _realtimeSubscription = null;
-    _invalidateRealtimeMembership();
-    if (!_realtimeDisconnectBus.isClosed) {
-      _realtimeDisconnectBus.add(null);
-    }
-    _scheduleReconnect();
-  }
-
   Future<void> _disposePreviousRealtimeConnection(
-    StreamSubscription<Uint8List>? subscription,
-    RoomRealtimeChannel? channel,
+    RoomRealtimeEngine? engine,
   ) async {
-    await Future.wait<void>([
-      if (subscription != null)
-        subscription.cancel().timeout(
-          const Duration(seconds: 2),
-          onTimeout: () {},
-        ),
-      if (channel != null)
-        channel.close().timeout(const Duration(seconds: 2), onTimeout: () {}),
-    ]).catchError((Object error) {
-      debugPrint('Realtime connection cleanup error: $error');
-      return <void>[];
-    });
+    if (engine == null) return;
+    await engine
+        .close()
+        .timeout(const Duration(seconds: 2), onTimeout: () {})
+        .catchError((Object error) {
+          debugPrint('Realtime connection cleanup error: $error');
+        });
   }
 
   void _recordRealtimeIncoming(Uint8List bytes) {
@@ -1496,18 +1491,12 @@ class _RoomScreenState extends State<RoomScreen>
 
   bool _sendRealtimeMessage(List<int> bytes) {
     if (bytes.isEmpty) return false;
-    final channel = _channel;
-    if (channel == null) {
-      _scheduleReconnect();
-      return false;
-    }
+    final engine = _realtimeEngine;
+    if (engine == null) return false;
     try {
-      channel.send(bytes);
-      return true;
+      return engine.send(bytes);
     } catch (e) {
       debugPrint('Realtime send error: $e');
-      _channel = null;
-      _scheduleReconnect();
       return false;
     }
   }
@@ -1529,22 +1518,6 @@ class _RoomScreenState extends State<RoomScreen>
     if (_realtimeEvents.length > maxEntries) {
       _realtimeEvents.removeRange(0, _realtimeEvents.length - maxEntries);
     }
-  }
-
-  void _scheduleReconnect() {
-    if (_isDisposing) return;
-    if (_reconnectTimer?.isActive ?? false) return;
-    _reconnectAttempts = math.min(_reconnectAttempts + 1, 5);
-    final delay = Duration(seconds: _reconnectAttempts * 2);
-    debugPrint(
-      'Scheduling reconnect attempt $_reconnectAttempts in ${delay.inSeconds}s',
-    );
-
-    _reconnectTimer = Timer(delay, () {
-      if (mounted) {
-        _connectRealtime();
-      }
-    });
   }
 
   void _handleRealtimeMessage(RoomRealtimeMessage message) {
@@ -1739,6 +1712,19 @@ class _RoomScreenState extends State<RoomScreen>
         return;
       }
       final error = message.error;
+      if (message.resourceObserveId == 'chat_events') {
+        // A stale replay cursor (long disconnect, retention window passed)
+        // kills the observation: resubscribe from now and backfill via REST.
+        _chatEventsObserved = false;
+        _lastChatEventId = '';
+        if (_canViewChatHistory) {
+          _chatEventsObserved = _sendRealtimeMessage(
+            _realtimeProtocol.encodeChatEventsObservation(),
+          );
+          unawaited(_loadChatHistory());
+        }
+        return;
+      }
       if (message.resourceObserveId == 'playlist_items' && mounted) {
         final shouldReturnFromPlaylist =
             error?.isPermissionDenied == true && _playlistStack.isNotEmpty;
@@ -1791,6 +1777,21 @@ class _RoomScreenState extends State<RoomScreen>
     } else if (type == RoomRealtimeMessageKind.expired) {
       if (mounted) {
         _handleRoomSessionClosed(context.l10n.loginExpired);
+      }
+    } else if (type == RoomRealtimeMessageKind.terminated) {
+      // Lifecycle handles termination (session closed, reconnects stopped).
+      return;
+    } else if (type == RoomRealtimeMessageKind.notification) {
+      final notification = message.userNotification;
+      if (notification == null || !mounted) return;
+      final text = switch ((notification.title, notification.content)) {
+        ('', '') => '',
+        ('', final content) => content,
+        (final title, '') => title,
+        (final title, final content) => '$title: $content',
+      };
+      if (text.isNotEmpty) {
+        AppNotifications.showInfo(context, text);
       }
     } else if (type == RoomRealtimeMessageKind.webrtcVoiceOffer ||
         type == RoomRealtimeMessageKind.webrtcVoiceAnswer ||
@@ -3688,8 +3689,8 @@ class _RoomScreenState extends State<RoomScreen>
     _syncTimer?.cancel();
     _diagnosticsTimer?.cancel();
     _chatHighlightTimer?.cancel();
-    _reconnectTimer?.cancel();
-    unawaited(_channel?.close());
+    _realtimeLifecycleSubscription?.cancel();
+    unawaited(_realtimeEngine?.close());
     _messageController.dispose();
     _mediaSearchController.dispose();
     _chatScrollController.dispose();
@@ -3706,7 +3707,7 @@ class _RoomScreenState extends State<RoomScreen>
     _videoPresentationRevision.dispose();
     _playbackController.dispose();
     _browserAutoplay.dispose();
-    _channel = null;
+    _realtimeEngine = null;
     _realtimeMessageBus.close();
     _realtimeEventBus.close();
     _realtimeReconnectBus.close();
@@ -4468,7 +4469,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _sendDanmaku(String text) {
     if (!_canSendRoomDanmaku || text.trim().isEmpty) return;
-    if (_channel != null) {
+    if (_realtimeEngine != null) {
       try {
         final bytes = _realtimeProtocol.encodeChat(
           text,
