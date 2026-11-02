@@ -772,8 +772,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final size = media.size;
     final keyboardInset = media.viewInsets.bottom;
     final isDesktopSheet = size.width >= 720;
+    // Decide whole-panel scrolling from stable inputs only (text scale and
+    // the full viewport height), never from the live keyboard inset:
+    // flipping the structure while the IME animates in jolts the form
+    // layout mid-focus, which drag-dismissing scrollables can interpret as
+    // a drag and close the keyboard right after it opened. 820dp reserves
+    // for a typical keyboard what the old inset check (<500 usable) meant.
     final scrollWholePanel =
-        media.textScaler.scale(14) > 21 || size.height - keyboardInset < 500;
+        media.textScaler.scale(14) > 21 || size.height < 820;
     Widget panelContent(List<Widget> children) {
       final column = Column(mainAxisSize: MainAxisSize.min, children: children);
       return scrollWholePanel
