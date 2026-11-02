@@ -24,6 +24,121 @@ import 'package:synctv_app/src/generated/proto/oauth2.pbenum.dart'
     as oauth2_enum;
 
 void main() {
+  testWidgets('login sheet keeps field focus while the keyboard opens', (
+    tester,
+  ) async {
+    // Regression (Android IME auto-close): deciding the panel layout from
+    // the live keyboard inset swaps Column <-> whole-panel ScrollView while
+    // the IME animates in, remounting the form, disposing the field's
+    // FocusNode, and closing the keyboard right after it opened.
+    // Phone-class viewport: 780dp tall, a 320dp keyboard leaves 460dp -
+    // below the whole-panel-scroll threshold.
+    tester.view.physicalSize = const Size(420, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        theme: AppTheme.light,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: AuthPanel(
+            gateway: _OAuth2AuthGateway([], totp: true, recovery: true),
+            passkeyClient: _UnavailablePasskeyClient(),
+            opaqueAuthenticator: OpaqueAuthenticatorService(
+              gateway: _UnusedOpaqueGateway(),
+            ),
+            oauth2Callbacks: _OAuth2Callbacks([]),
+            nativeAppleSignIn: _UnavailableAppleSignIn(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final field = find.byType(EditableText).first;
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<EditableText>(field).focusNode.hasFocus,
+      isTrue,
+      reason: 'tapping the username field must focus it',
+    );
+
+    // The keyboard animates in and settles while the field keeps focus.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<EditableText>(field).focusNode.hasFocus,
+      isTrue,
+      reason:
+          'keyboard insets must not rebuild the form subtree and drop focus '
+          '(Android: the IME opens then closes by itself)',
+    );
+
+    await tester.enterText(field, 'user');
+    expect(tester.widget<EditableText>(field).controller.text, 'user');
+  });
+
+  testWidgets('login sheet keeps the keyboard through a panel drag', (
+    tester,
+  ) async {
+    // Regression (Android IME auto-close): form scrollables must not
+    // dismiss the keyboard on drag (ScrollViewKeyboardDismissBehavior.onDrag
+    // as the wrapper default). With the keyboard open, the resized panel is
+    // scrollable and the IME-entrance layout shift under a still-touching
+    // finger reads as a drag, closing the keyboard right after it opened.
+    tester.view.physicalSize = const Size(420, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        theme: AppTheme.light,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: AuthPanel(
+            gateway: _OAuth2AuthGateway([], totp: true, recovery: true),
+            passkeyClient: _UnavailablePasskeyClient(),
+            opaqueAuthenticator: OpaqueAuthenticatorService(
+              gateway: _UnusedOpaqueGateway(),
+            ),
+            oauth2Callbacks: _OAuth2Callbacks([]),
+            nativeAppleSignIn: _UnavailableAppleSignIn(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final field = find.byType(EditableText).first;
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // A small drag inside the form (aiming for the next field) must scroll
+    // the panel without dropping focus from the username field.
+    await tester.drag(field, const Offset(0, -24));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<EditableText>(field).focusNode.hasFocus,
+      isTrue,
+      reason:
+          'dragging inside the form must keep the focused field and the '
+          'keyboard open (the onDrag default closed the IME immediately '
+          'after it opened on Android)',
+    );
+  });
+
   for (final locale in ['en', 'zh']) {
     for (final scale in [2.0, 3.0]) {
       testWidgets('recovery form labels and back reset: $locale/$scale', (
