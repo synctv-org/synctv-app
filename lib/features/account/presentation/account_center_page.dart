@@ -1668,10 +1668,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       return;
     }
     if (!mounted) return;
+    final verificationId = await _verifySensitiveOperation();
+    if (verificationId == null || verificationId.isEmpty) return;
+    if (!mounted) return;
     setState(() => _closingAccount = true);
 
     try {
-      await _gateway.closeAccount();
+      await _gateway.closeAccount(verificationId: verificationId);
       if (!mounted) return;
       AppNotifications.showSuccess(context, context.l10n.accountClosed);
       Navigator.pop(context, true);

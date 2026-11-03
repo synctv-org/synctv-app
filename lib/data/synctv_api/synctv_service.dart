@@ -190,8 +190,8 @@ class SyncTvService {
     _domains.cache.clear();
   }
 
-  static Future<void> closeAccount() async {
-    await _runtime.closeAccount();
+  static Future<void> closeAccount({required String verificationId}) async {
+    await _runtime.closeAccount(verificationId: verificationId);
     _domains.cache.clear();
   }
 

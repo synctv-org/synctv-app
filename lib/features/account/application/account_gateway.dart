@@ -166,5 +166,5 @@ abstract interface class AccountGateway {
 
   Future<void> leaveRoom(String roomId);
 
-  Future<void> closeAccount();
+  Future<void> closeAccount({required String verificationId});
 }

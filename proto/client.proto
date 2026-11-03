@@ -1339,7 +1339,16 @@ message RefreshTokenResponse {
 
 message GetProfileRequest {}
 
-message CloseAccountRequest {}
+message CloseAccountRequest {
+  // One-time token from a completed sensitive operation verification
+  // (password, passkey, authenticator app, or verified email). Account
+  // closure deletes the user and every room they own, so it requires the
+  // same step-up verification as the other destructive operations.
+  string verification_id = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+  }];
+}
 
 message CloseAccountResponse {
   bool success = 1;
@@ -1499,7 +1508,6 @@ message JoinRoomResponse {
   Room room = 1;
   PlaybackState playback_state = 2;
   repeated synctv.common.RoomMember members = 3;
-  synctv.common.MemberStatus membership_status = 4;
   bool requires_approval = 5;
 }
 
@@ -2055,6 +2063,14 @@ message UpdatePlaylistRequest {
   // Replaces the complete source configuration of an existing dynamic
   // playlist. The provider is derived from this config.
   optional synctv.source_config.PlaylistSourceConfig source_config = 4;
+  // Optional replacement provider instance. This may be changed independently
+  // or together with source_config. When omitted, the current instance is
+  // retained only if the provider does not change.
+  optional string provider_instance_name = 5 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^[A-Za-z0-9_-]+$"
+  }];
   optional PlaylistBrowseAccessMode browse_access_mode = 6 [(buf.validate.field).enum.defined_only = true];
 }
 
@@ -2206,12 +2222,7 @@ message PlaybackHistoryEntry {
 }
 
 message ListPlaybackHistoryRequest {
-  option (buf.validate.message).cel = {
-    id: "list_playback_history.single_cursor"
-    message: "before_entry_id and cursor_entry_id cannot both be set"
-    expression: "!(has(this.before_entry_id) && has(this.cursor_entry_id))"
-  };
-  optional string before_entry_id = 1 [(buf.validate.field).string = {min_len: 4 max_len: 64 pattern: "^ph_[A-Za-z0-9]+$"}];
+  reserved 1;
   int32 limit = 2 [(buf.validate.field).int32 = {gte: 0 lte: 100}];
   optional string cursor_entry_id = 3 [(buf.validate.field).string = {min_len: 4 max_len: 64 pattern: "^ph_[A-Za-z0-9]+$"}];
   SortDirection sort_direction = 4 [(buf.validate.field).enum.defined_only = true];
@@ -2220,7 +2231,7 @@ message ListPlaybackHistoryRequest {
 message ListPlaybackHistoryResponse {
   repeated PlaybackHistoryEntry entries = 1;
   string history_cursor_id = 2;
-  string next_before_entry_id = 3;
+  reserved 3;
   string next_cursor_entry_id = 4;
 }
 
@@ -2504,6 +2515,16 @@ message EditMediaRequest {
   string description = 3 [(buf.validate.field).string.max_len = 5000];
   optional synctv.source_config.PlaybackProxyMode playback_proxy_mode = 4
       [(buf.validate.field).enum.defined_only = true];
+  // Complete replacement source config. This may be changed independently or
+  // together with provider_instance_name.
+  optional synctv.source_config.MediaSourceConfig source_config = 5;
+  // Optional replacement provider instance. When omitted, the current instance
+  // is retained only if the provider does not change.
+  optional string provider_instance_name = 6 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^[A-Za-z0-9_-]+$"
+  }];
 }
 
 // Clear Playlist

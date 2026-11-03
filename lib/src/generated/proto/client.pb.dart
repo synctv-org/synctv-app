@@ -10504,7 +10504,13 @@ class GetProfileRequest extends $pb.GeneratedMessage {
 }
 
 class CloseAccountRequest extends $pb.GeneratedMessage {
-  factory CloseAccountRequest() => create();
+  factory CloseAccountRequest({
+    $core.String? verificationId,
+  }) {
+    final result = create();
+    if (verificationId != null) result.verificationId = verificationId;
+    return result;
+  }
 
   CloseAccountRequest._();
 
@@ -10519,6 +10525,7 @@ class CloseAccountRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'CloseAccountRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'verificationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -10539,6 +10546,19 @@ class CloseAccountRequest extends $pb.GeneratedMessage {
   static CloseAccountRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<CloseAccountRequest>(create);
   static CloseAccountRequest? _defaultInstance;
+
+  /// One-time token from a completed sensitive operation verification
+  /// (password, passkey, authenticator app, or verified email). Account
+  /// closure deletes the user and every room they own, so it requires the
+  /// same step-up verification as the other destructive operations.
+  @$pb.TagNumber(1)
+  $core.String get verificationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set verificationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVerificationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVerificationId() => $_clearField(1);
 }
 
 class CloseAccountResponse extends $pb.GeneratedMessage {
@@ -11677,14 +11697,12 @@ class JoinRoomResponse extends $pb.GeneratedMessage {
     Room? room,
     PlaybackState? playbackState,
     $core.Iterable<$0.RoomMember>? members,
-    $0.MemberStatus? membershipStatus,
     $core.bool? requiresApproval,
   }) {
     final result = create();
     if (room != null) result.room = room;
     if (playbackState != null) result.playbackState = playbackState;
     if (members != null) result.members.addAll(members);
-    if (membershipStatus != null) result.membershipStatus = membershipStatus;
     if (requiresApproval != null) result.requiresApproval = requiresApproval;
     return result;
   }
@@ -11707,8 +11725,6 @@ class JoinRoomResponse extends $pb.GeneratedMessage {
         subBuilder: PlaybackState.create)
     ..pPM<$0.RoomMember>(3, _omitFieldNames ? '' : 'members',
         subBuilder: $0.RoomMember.create)
-    ..aE<$0.MemberStatus>(4, _omitFieldNames ? '' : 'membershipStatus',
-        enumValues: $0.MemberStatus.values)
     ..aOB(5, _omitFieldNames ? '' : 'requiresApproval')
     ..hasRequiredFields = false;
 
@@ -11756,21 +11772,12 @@ class JoinRoomResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $pb.PbList<$0.RoomMember> get members => $_getList(2);
 
-  @$pb.TagNumber(4)
-  $0.MemberStatus get membershipStatus => $_getN(3);
-  @$pb.TagNumber(4)
-  set membershipStatus($0.MemberStatus value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasMembershipStatus() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearMembershipStatus() => $_clearField(4);
-
   @$pb.TagNumber(5)
-  $core.bool get requiresApproval => $_getBF(4);
+  $core.bool get requiresApproval => $_getBF(3);
   @$pb.TagNumber(5)
-  set requiresApproval($core.bool value) => $_setBool(4, value);
+  set requiresApproval($core.bool value) => $_setBool(3, value);
   @$pb.TagNumber(5)
-  $core.bool hasRequiresApproval() => $_has(4);
+  $core.bool hasRequiresApproval() => $_has(3);
   @$pb.TagNumber(5)
   void clearRequiresApproval() => $_clearField(5);
 }
@@ -15637,6 +15644,7 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? description,
     $1.PlaylistSourceConfig? sourceConfig,
+    $core.String? providerInstanceName,
     PlaylistBrowseAccessMode? browseAccessMode,
   }) {
     final result = create();
@@ -15644,6 +15652,8 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
     if (name != null) result.name = name;
     if (description != null) result.description = description;
     if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (providerInstanceName != null)
+      result.providerInstanceName = providerInstanceName;
     if (browseAccessMode != null) result.browseAccessMode = browseAccessMode;
     return result;
   }
@@ -15666,6 +15676,7 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'description')
     ..aOM<$1.PlaylistSourceConfig>(4, _omitFieldNames ? '' : 'sourceConfig',
         subBuilder: $1.PlaylistSourceConfig.create)
+    ..aOS(5, _omitFieldNames ? '' : 'providerInstanceName')
     ..aE<PlaylistBrowseAccessMode>(6, _omitFieldNames ? '' : 'browseAccessMode',
         enumValues: PlaylistBrowseAccessMode.values)
     ..hasRequiredFields = false;
@@ -15730,12 +15741,24 @@ class UpdatePlaylistRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $1.PlaylistSourceConfig ensureSourceConfig() => $_ensure(3);
 
+  /// Optional replacement provider instance. This may be changed independently
+  /// or together with source_config. When omitted, the current instance is
+  /// retained only if the provider does not change.
+  @$pb.TagNumber(5)
+  $core.String get providerInstanceName => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set providerInstanceName($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasProviderInstanceName() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearProviderInstanceName() => $_clearField(5);
+
   @$pb.TagNumber(6)
-  PlaylistBrowseAccessMode get browseAccessMode => $_getN(4);
+  PlaylistBrowseAccessMode get browseAccessMode => $_getN(5);
   @$pb.TagNumber(6)
   set browseAccessMode(PlaylistBrowseAccessMode value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasBrowseAccessMode() => $_has(4);
+  $core.bool hasBrowseAccessMode() => $_has(5);
   @$pb.TagNumber(6)
   void clearBrowseAccessMode() => $_clearField(6);
 }
@@ -16831,13 +16854,11 @@ class PlaybackHistoryEntry extends $pb.GeneratedMessage {
 
 class ListPlaybackHistoryRequest extends $pb.GeneratedMessage {
   factory ListPlaybackHistoryRequest({
-    $core.String? beforeEntryId,
     $core.int? limit,
     $core.String? cursorEntryId,
     SortDirection? sortDirection,
   }) {
     final result = create();
-    if (beforeEntryId != null) result.beforeEntryId = beforeEntryId;
     if (limit != null) result.limit = limit;
     if (cursorEntryId != null) result.cursorEntryId = cursorEntryId;
     if (sortDirection != null) result.sortDirection = sortDirection;
@@ -16857,7 +16878,6 @@ class ListPlaybackHistoryRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ListPlaybackHistoryRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'beforeEntryId')
     ..aI(2, _omitFieldNames ? '' : 'limit')
     ..aOS(3, _omitFieldNames ? '' : 'cursorEntryId')
     ..aE<SortDirection>(4, _omitFieldNames ? '' : 'sortDirection',
@@ -16885,39 +16905,30 @@ class ListPlaybackHistoryRequest extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ListPlaybackHistoryRequest>(create);
   static ListPlaybackHistoryRequest? _defaultInstance;
 
-  @$pb.TagNumber(1)
-  $core.String get beforeEntryId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set beforeEntryId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasBeforeEntryId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearBeforeEntryId() => $_clearField(1);
-
   @$pb.TagNumber(2)
-  $core.int get limit => $_getIZ(1);
+  $core.int get limit => $_getIZ(0);
   @$pb.TagNumber(2)
-  set limit($core.int value) => $_setSignedInt32(1, value);
+  set limit($core.int value) => $_setSignedInt32(0, value);
   @$pb.TagNumber(2)
-  $core.bool hasLimit() => $_has(1);
+  $core.bool hasLimit() => $_has(0);
   @$pb.TagNumber(2)
   void clearLimit() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get cursorEntryId => $_getSZ(2);
+  $core.String get cursorEntryId => $_getSZ(1);
   @$pb.TagNumber(3)
-  set cursorEntryId($core.String value) => $_setString(2, value);
+  set cursorEntryId($core.String value) => $_setString(1, value);
   @$pb.TagNumber(3)
-  $core.bool hasCursorEntryId() => $_has(2);
+  $core.bool hasCursorEntryId() => $_has(1);
   @$pb.TagNumber(3)
   void clearCursorEntryId() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  SortDirection get sortDirection => $_getN(3);
+  SortDirection get sortDirection => $_getN(2);
   @$pb.TagNumber(4)
   set sortDirection(SortDirection value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSortDirection() => $_has(3);
+  $core.bool hasSortDirection() => $_has(2);
   @$pb.TagNumber(4)
   void clearSortDirection() => $_clearField(4);
 }
@@ -16926,13 +16937,11 @@ class ListPlaybackHistoryResponse extends $pb.GeneratedMessage {
   factory ListPlaybackHistoryResponse({
     $core.Iterable<PlaybackHistoryEntry>? entries,
     $core.String? historyCursorId,
-    $core.String? nextBeforeEntryId,
     $core.String? nextCursorEntryId,
   }) {
     final result = create();
     if (entries != null) result.entries.addAll(entries);
     if (historyCursorId != null) result.historyCursorId = historyCursorId;
-    if (nextBeforeEntryId != null) result.nextBeforeEntryId = nextBeforeEntryId;
     if (nextCursorEntryId != null) result.nextCursorEntryId = nextCursorEntryId;
     return result;
   }
@@ -16953,7 +16962,6 @@ class ListPlaybackHistoryResponse extends $pb.GeneratedMessage {
     ..pPM<PlaybackHistoryEntry>(1, _omitFieldNames ? '' : 'entries',
         subBuilder: PlaybackHistoryEntry.create)
     ..aOS(2, _omitFieldNames ? '' : 'historyCursorId')
-    ..aOS(3, _omitFieldNames ? '' : 'nextBeforeEntryId')
     ..aOS(4, _omitFieldNames ? '' : 'nextCursorEntryId')
     ..hasRequiredFields = false;
 
@@ -16991,21 +16999,12 @@ class ListPlaybackHistoryResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearHistoryCursorId() => $_clearField(2);
 
-  @$pb.TagNumber(3)
-  $core.String get nextBeforeEntryId => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set nextBeforeEntryId($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasNextBeforeEntryId() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearNextBeforeEntryId() => $_clearField(3);
-
   @$pb.TagNumber(4)
-  $core.String get nextCursorEntryId => $_getSZ(3);
+  $core.String get nextCursorEntryId => $_getSZ(2);
   @$pb.TagNumber(4)
-  set nextCursorEntryId($core.String value) => $_setString(3, value);
+  set nextCursorEntryId($core.String value) => $_setString(2, value);
   @$pb.TagNumber(4)
-  $core.bool hasNextCursorEntryId() => $_has(3);
+  $core.bool hasNextCursorEntryId() => $_has(2);
   @$pb.TagNumber(4)
   void clearNextCursorEntryId() => $_clearField(4);
 }
@@ -18843,12 +18842,17 @@ class EditMediaRequest extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? description,
     $1.PlaybackProxyMode? playbackProxyMode,
+    $1.MediaSourceConfig? sourceConfig,
+    $core.String? providerInstanceName,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
     if (name != null) result.name = name;
     if (description != null) result.description = description;
     if (playbackProxyMode != null) result.playbackProxyMode = playbackProxyMode;
+    if (sourceConfig != null) result.sourceConfig = sourceConfig;
+    if (providerInstanceName != null)
+      result.providerInstanceName = providerInstanceName;
     return result;
   }
 
@@ -18870,6 +18874,9 @@ class EditMediaRequest extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'description')
     ..aE<$1.PlaybackProxyMode>(4, _omitFieldNames ? '' : 'playbackProxyMode',
         enumValues: $1.PlaybackProxyMode.values)
+    ..aOM<$1.MediaSourceConfig>(5, _omitFieldNames ? '' : 'sourceConfig',
+        subBuilder: $1.MediaSourceConfig.create)
+    ..aOS(6, _omitFieldNames ? '' : 'providerInstanceName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -18926,6 +18933,30 @@ class EditMediaRequest extends $pb.GeneratedMessage {
   $core.bool hasPlaybackProxyMode() => $_has(3);
   @$pb.TagNumber(4)
   void clearPlaybackProxyMode() => $_clearField(4);
+
+  /// Complete replacement source config. This may be changed independently or
+  /// together with provider_instance_name.
+  @$pb.TagNumber(5)
+  $1.MediaSourceConfig get sourceConfig => $_getN(4);
+  @$pb.TagNumber(5)
+  set sourceConfig($1.MediaSourceConfig value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSourceConfig() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSourceConfig() => $_clearField(5);
+  @$pb.TagNumber(5)
+  $1.MediaSourceConfig ensureSourceConfig() => $_ensure(4);
+
+  /// Optional replacement provider instance. When omitted, the current instance
+  /// is retained only if the provider does not change.
+  @$pb.TagNumber(6)
+  $core.String get providerInstanceName => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set providerInstanceName($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasProviderInstanceName() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearProviderInstanceName() => $_clearField(6);
 }
 
 /// Clear Playlist

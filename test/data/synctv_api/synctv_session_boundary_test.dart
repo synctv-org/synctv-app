@@ -232,7 +232,9 @@ void main() {
       session: session,
       httpClient: MockClient((_) => response.future),
     );
-    final close = api.user.closeAccount(client.CloseAccountRequest());
+    final close = api.user.closeAccount(
+      client.CloseAccountRequest(verificationId: 'verification-1'),
+    );
     final result = expectLater(
       close,
       throwsA(isA<SyncTvStaleSessionException>()),
