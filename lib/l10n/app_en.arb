@@ -16,6 +16,34 @@
   "login": "Log in",
   "accountMenu": "Account menu",
   "accountCenter": "Account center",
+    "aboutApp": "About",
+  "aboutAppTitle": "About SyncTV",
+  "aboutAppVersion": "Version {version} (build {build})",
+  "@aboutAppVersion": {
+    "placeholders": {
+      "version": {},
+      "build": {}
+    }
+  },
+  "updateCheckAction": "Check for updates",
+  "updateChecking": "Checking…",
+  "updateCheckUpToDate": "You are on the latest version",
+  "updateCheckFailed": "Update check failed. Try again later.",
+  "updateCheckSource": "Releases: {source}",
+  "@updateCheckSource": {
+    "placeholders": {
+      "source": {}
+    }
+  },
+  "updateAvailableTitle": "Update available: {version}",
+  "@updateAvailableTitle": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "updateLater": "Later",
+  "updateDownload": "Get update",
+  "updateOpenFailed": "Could not open the release page",
   "adminSettings": "Admin settings",
   "logout": "Log out",
   "capsLockOn": "Caps Lock is on",

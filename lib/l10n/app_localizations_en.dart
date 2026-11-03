@@ -59,6 +59,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountCenter => 'Account center';
 
   @override
+  String get aboutApp => 'About';
+
+  @override
+  String get aboutAppTitle => 'About SyncTV';
+
+  @override
+  String aboutAppVersion(Object version, Object build) {
+    return 'Version $version (build $build)';
+  }
+
+  @override
+  String get updateCheckAction => 'Check for updates';
+
+  @override
+  String get updateChecking => 'Checking…';
+
+  @override
+  String get updateCheckUpToDate => 'You are on the latest version';
+
+  @override
+  String get updateCheckFailed => 'Update check failed. Try again later.';
+
+  @override
+  String updateCheckSource(Object source) {
+    return 'Releases: $source';
+  }
+
+  @override
+  String updateAvailableTitle(Object version) {
+    return 'Update available: $version';
+  }
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String get updateDownload => 'Get update';
+
+  @override
+  String get updateOpenFailed => 'Could not open the release page';
+
+  @override
   String get adminSettings => 'Admin settings';
 
   @override

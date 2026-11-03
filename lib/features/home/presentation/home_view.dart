@@ -61,6 +61,7 @@ class HomeViewCallbacks {
   const HomeViewCallbacks({
     required this.openServerSettings,
     required this.openLanguageSelector,
+    required this.openAbout,
     required this.openLogin,
     required this.openJoinRoom,
     required this.openCreateRoom,
@@ -80,6 +81,7 @@ class HomeViewCallbacks {
 
   final VoidCallback openServerSettings;
   final VoidCallback openLanguageSelector;
+  final VoidCallback openAbout;
   final VoidCallback openLogin;
   final VoidCallback openJoinRoom;
   final VoidCallback openCreateRoom;
@@ -304,6 +306,7 @@ class _AccountMenu extends StatelessWidget {
         'admin' => callbacks.openAdminSettings(),
         'server' => callbacks.openServerSettings(),
         'language' => callbacks.openLanguageSelector(),
+        'about' => callbacks.openAbout(),
         'logout' => callbacks.logout(),
         _ => null,
       },
@@ -338,6 +341,12 @@ class _AccountMenu extends StatelessWidget {
           'language',
           Icons.language_rounded,
           context.l10n.language,
+          color: theme.colorScheme.onSurface,
+        ),
+        _menuItem(
+          'about',
+          Icons.info_outline_rounded,
+          context.l10n.aboutApp,
           color: theme.colorScheme.onSurface,
         ),
         const PopupMenuDivider(),

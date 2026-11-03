@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:synctv_app/core/update/update_check_ui.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/contracts/account_models.dart';
@@ -65,6 +66,7 @@ class _AppShellState extends State<AppShell> {
   static const int _roomPageSize = 24;
   SyncTvUser? _currentUser;
   StreamSubscription? _authErrorSubscription;
+  Timer? _startupUpdateCheckTimer;
   final Map<String, Object> _joiningRoomOperations = <String, Object>{};
   final Map<String, Object> _deletingRoomOperations = <String, Object>{};
   final Set<String> _favoriteRoomIdsInFlight = <String>{};
@@ -96,12 +98,21 @@ class _AppShellState extends State<AppShell> {
         _showServerSettingsDialog(requireServer: true);
       }
     });
+    // Silent update check for direct-download builds; throttled to one
+    // attempt per day and quiet on every failure path. Deferred so it
+    // never competes with first paint or the first-run onboarding.
+    _startupUpdateCheckTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        unawaited(runStartupUpdateCheck(context));
+      }
+    });
   }
 
   @override
   void dispose() {
     _taxonomyOperations.invalidate();
     _authErrorSubscription?.cancel();
+    _startupUpdateCheckTimer?.cancel();
     _roomSearchController.dispose();
     super.dispose();
   }
@@ -1016,6 +1027,7 @@ class _AppShellState extends State<AppShell> {
       callbacks: HomeViewCallbacks(
         openServerSettings: _showServerSettingsDialog,
         openLanguageSelector: () => showLanguageSelectorDialog(context),
+        openAbout: () => showAboutAppDialog(context),
         openLogin: _showLoginDialog,
         openJoinRoom: _showJoinRoomDialog,
         openCreateRoom: _showCreateRoomDialog,

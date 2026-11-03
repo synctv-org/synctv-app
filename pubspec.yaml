@@ -50,6 +50,7 @@ dependencies:
   xml: ^7.0.1
   file_picker: ^13.1.0
   shared_preferences: ^2.5.5
+  package_info_plus: ^10.2.2
   screen_brightness: ^2.1.11
   volume_controller: ^3.6.1
   flutter_webrtc: ^1.6.2+hotfix.1

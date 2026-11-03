@@ -16,6 +16,34 @@
   "login": "登录",
   "accountMenu": "账号菜单",
   "accountCenter": "账号中心",
+    "aboutApp": "关于",
+  "aboutAppTitle": "关于 SyncTV",
+  "aboutAppVersion": "版本 {version}（构建 {build}）",
+  "@aboutAppVersion": {
+    "placeholders": {
+      "version": {},
+      "build": {}
+    }
+  },
+  "updateCheckAction": "检查更新",
+  "updateChecking": "检查中…",
+  "updateCheckUpToDate": "已是最新版本",
+  "updateCheckFailed": "检查更新失败，请稍后重试。",
+  "updateCheckSource": "发布源：{source}",
+  "@updateCheckSource": {
+    "placeholders": {
+      "source": {}
+    }
+  },
+  "updateAvailableTitle": "发现新版本：{version}",
+  "@updateAvailableTitle": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "updateLater": "稍后",
+  "updateDownload": "获取更新",
+  "updateOpenFailed": "无法打开发布页面",
   "adminSettings": "管理员设置",
   "logout": "退出登录",
   "capsLockOn": "大写锁定已开启",

@@ -178,6 +178,7 @@ HomeViewCallbacks homeShowcaseCallbacks({
 }) => HomeViewCallbacks(
   openServerSettings: onOpenServerSettings ?? () {},
   openLanguageSelector: () {},
+  openAbout: () {},
   openLogin: () {},
   openJoinRoom: () {},
   openCreateRoom: () {},
