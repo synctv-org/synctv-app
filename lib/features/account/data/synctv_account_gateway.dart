@@ -295,5 +295,6 @@ final class SyncTvAccountGateway implements AccountGateway {
   Future<void> leaveRoom(String roomId) => SyncTvService.leaveRoom(roomId);
 
   @override
-  Future<void> closeAccount() => SyncTvService.closeAccount();
+  Future<void> closeAccount({required String verificationId}) =>
+      SyncTvService.closeAccount(verificationId: verificationId);
 }

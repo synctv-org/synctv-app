@@ -412,6 +412,76 @@ void main() {
     });
   }
 
+  for (final phase in ['confirm-mismatch', 'verification-cancel', 'close']) {
+    testWidgets('account closure lifecycle $phase', (tester) async {
+      final gateway = _CloseAccountGateway();
+      await _pumpCloseableAccount(tester, gateway);
+      await tester.tap(find.text('Security').first);
+      await tester.pumpAndSettle();
+      final closeButton = find.byWidgetPredicate(
+        (widget) =>
+            widget is AppActionButton &&
+            widget.icon == Icons.person_remove_rounded,
+      );
+      await tester.scrollUntilVisible(
+        closeButton,
+        300,
+        scrollable: find.byType(Scrollable).last,
+        maxScrolls: 80,
+      );
+      tester.widget<AppActionButton>(closeButton).onPressed!();
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'This permanently closes the current account and its personal data.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(TextField), findsOneWidget);
+
+      if (phase == 'confirm-mismatch') {
+        await tester.enterText(find.byType(TextField), 'wrong');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pumpAndSettle();
+        expect(gateway.verifications, 0);
+        expect(gateway.closures, isEmpty);
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        return;
+      }
+
+      await tester.enterText(find.byType(TextField), 'Close account');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(gateway.verifications, 1);
+      expect(gateway.closures, isEmpty);
+
+      if (phase == 'verification-cancel') {
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+        expect(gateway.closures, isEmpty);
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        return;
+      }
+
+      gateway.verification.complete(
+        const SensitiveOperationVerificationComplete(
+          verificationId: 'preview-verification',
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(gateway.closures, ['preview-verification']);
+      expect(find.text('open'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final phase in ['duplicate', 'cancel', 'disposed', 'verification']) {
     testWidgets('TOTP setup callback $phase', (tester) async {
       await tester.binding.setSurfaceSize(const Size(1200, 900));
@@ -1998,6 +2068,25 @@ final _testUser = SyncTvUser(
   role: const AccountUserRole(common_enum.UserRole.USER_ROLE_USER),
 );
 
+class _CloseAccountGateway extends PopulatedAccountPreviewGateway {
+  final verification = Completer<SensitiveOperationVerificationInfo>();
+  final closures = <String>[];
+  int verifications = 0;
+
+  @override
+  Future<SensitiveOperationVerificationInfo>
+  startSensitiveOperationVerification() {
+    verifications++;
+    return verification.future;
+  }
+
+  @override
+  Future<void> closeAccount({required String verificationId}) {
+    closures.add(verificationId);
+    return Future<void>.value();
+  }
+}
+
 class _ControlledUnlinkGateway extends PopulatedAccountPreviewGateway {
   final verification = Completer<SensitiveOperationVerificationInfo>();
   var unlink = Completer<void>();
@@ -2184,6 +2273,59 @@ Future<void> _pumpAccount(
   );
   await tester.pump();
   if (settle) await tester.pumpAndSettle();
+}
+
+/// Pumps the account page on a pushable route so a successful closure can
+/// pop back to the launcher page.
+Future<void> _pumpCloseableAccount(
+  WidgetTester tester,
+  AccountGateway gateway,
+) async {
+  await tester.binding.setSurfaceSize(const Size(1200, 900));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(
+    MaterialApp(
+      locale: const Locale('en'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      builder: (context, child) => DependencyRegistryScope(
+        values: {
+          AccountGateway: gateway,
+          OpaqueAuthenticatorService: OpaqueAuthenticatorService(
+            gateway: _UnusedOpaqueGateway(),
+          ),
+          OAuth2CallbackClient: _UnavailableOAuth2Callbacks(),
+          NativeAppleSignInClient: _UnavailableAppleSignIn(),
+          PasskeyClient: _UnavailablePasskeyClient(),
+          ResourceUrlResolver: const IdentityResourceUrlResolver(),
+        },
+        child: buildThemedTestApp(context, child),
+      ),
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => Center(
+            child: AppActionButton(
+              label: 'open',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => AccountCenterPage(
+                    initialUser: _testUser,
+                    onOpenRoom: (_) async {},
+                    onCreateRoom: () async {},
+                    onManageRoom: (_) async {},
+                    onOpenProviderBinding: (_) async {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('open'));
+  await tester.pumpAndSettle();
 }
 
 Future<void> _pumpNotifications(
