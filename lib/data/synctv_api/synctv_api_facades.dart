@@ -2139,7 +2139,6 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/playback/history',
       client.ListPlaybackHistoryResponse.create,
       query: {
-        if (request.hasBeforeEntryId()) 'beforeEntryId': request.beforeEntryId,
         if (request.hasCursorEntryId()) 'cursorEntryId': request.cursorEntryId,
         if (request.limit != 0) 'limit': request.limit.toString(),
         if (request.sortDirection !=

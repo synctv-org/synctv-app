@@ -4532,11 +4532,22 @@ final $typed_data.Uint8List getProfileRequestDescriptor =
 @$core.Deprecated('Use closeAccountRequestDescriptor instead')
 const CloseAccountRequest$json = {
   '1': 'CloseAccountRequest',
+  '2': [
+    {
+      '1': 'verification_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'verificationId'
+    },
+  ],
 };
 
 /// Descriptor for `CloseAccountRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List closeAccountRequestDescriptor =
-    $convert.base64Decode('ChNDbG9zZUFjY291bnRSZXF1ZXN0');
+final $typed_data.Uint8List closeAccountRequestDescriptor = $convert.base64Decode(
+    'ChNDbG9zZUFjY291bnRSZXF1ZXN0EjMKD3ZlcmlmaWNhdGlvbl9pZBgBIAEoCUIKukgHcgUQAR'
+    'iAAVIOdmVyaWZpY2F0aW9uSWQ=');
 
 @$core.Deprecated('Use closeAccountResponseDescriptor instead')
 const CloseAccountResponse$json = {
@@ -4909,14 +4920,6 @@ const JoinRoomResponse$json = {
       '10': 'members'
     },
     {
-      '1': 'membership_status',
-      '3': 4,
-      '4': 1,
-      '5': 14,
-      '6': '.synctv.common.MemberStatus',
-      '10': 'membershipStatus'
-    },
-    {
       '1': 'requires_approval',
       '3': 5,
       '4': 1,
@@ -4931,9 +4934,8 @@ final $typed_data.Uint8List joinRoomResponseDescriptor = $convert.base64Decode(
     'ChBKb2luUm9vbVJlc3BvbnNlEicKBHJvb20YASABKAsyEy5zeW5jdHYuY2xpZW50LlJvb21SBH'
     'Jvb20SQwoOcGxheWJhY2tfc3RhdGUYAiABKAsyHC5zeW5jdHYuY2xpZW50LlBsYXliYWNrU3Rh'
     'dGVSDXBsYXliYWNrU3RhdGUSMwoHbWVtYmVycxgDIAMoCzIZLnN5bmN0di5jb21tb24uUm9vbU'
-    '1lbWJlclIHbWVtYmVycxJIChFtZW1iZXJzaGlwX3N0YXR1cxgEIAEoDjIbLnN5bmN0di5jb21t'
-    'b24uTWVtYmVyU3RhdHVzUhBtZW1iZXJzaGlwU3RhdHVzEisKEXJlcXVpcmVzX2FwcHJvdmFsGA'
-    'UgASgIUhByZXF1aXJlc0FwcHJvdmFs');
+    '1lbWJlclIHbWVtYmVycxIrChFyZXF1aXJlc19hcHByb3ZhbBgFIAEoCFIQcmVxdWlyZXNBcHBy'
+    'b3ZhbA==');
 
 @$core.Deprecated('Use leaveRoomRequestDescriptor instead')
 const LeaveRoomRequest$json = {
@@ -6296,19 +6298,30 @@ const UpdatePlaylistRequest$json = {
       '17': true
     },
     {
+      '1': 'provider_instance_name',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 1,
+      '10': 'providerInstanceName',
+      '17': true
+    },
+    {
       '1': 'browse_access_mode',
       '3': 6,
       '4': 1,
       '5': 14,
       '6': '.synctv.client.PlaylistBrowseAccessMode',
       '8': {},
-      '9': 1,
+      '9': 2,
       '10': 'browseAccessMode',
       '17': true
     },
   ],
   '8': [
     {'1': '_source_config'},
+    {'1': '_provider_instance_name'},
     {'1': '_browse_access_mode'},
   ],
 };
@@ -6319,10 +6332,12 @@ final $typed_data.Uint8List updatePlaylistRequestDescriptor = $convert.base64Dec
     'IRXnBsX1tBLVphLXowLTldKyRSCnBsYXlsaXN0SWQSHwoEbmFtZRgCIAEoCUILukgIcgMY/wHY'
     'AQFSBG5hbWUSKgoLZGVzY3JpcHRpb24YAyABKAlCCLpIBXIDGIgnUgtkZXNjcmlwdGlvbhJUCg'
     '1zb3VyY2VfY29uZmlnGAQgASgLMiouc3luY3R2LnNvdXJjZV9jb25maWcuUGxheWxpc3RTb3Vy'
-    'Y2VDb25maWdIAFIMc291cmNlQ29uZmlniAEBEmQKEmJyb3dzZV9hY2Nlc3NfbW9kZRgGIAEoDj'
-    'InLnN5bmN0di5jbGllbnQuUGxheWxpc3RCcm93c2VBY2Nlc3NNb2RlQgi6SAWCAQIQAUgBUhBi'
-    'cm93c2VBY2Nlc3NNb2RliAEBQhAKDl9zb3VyY2VfY29uZmlnQhUKE19icm93c2VfYWNjZXNzX2'
-    '1vZGU=');
+    'Y2VDb25maWdIAFIMc291cmNlQ29uZmlniAEBElYKFnByb3ZpZGVyX2luc3RhbmNlX25hbWUYBS'
+    'ABKAlCG7pIGHIWEAEYQDIQXltBLVphLXowLTlfLV0rJEgBUhRwcm92aWRlckluc3RhbmNlTmFt'
+    'ZYgBARJkChJicm93c2VfYWNjZXNzX21vZGUYBiABKA4yJy5zeW5jdHYuY2xpZW50LlBsYXlsaX'
+    'N0QnJvd3NlQWNjZXNzTW9kZUIIukgFggECEAFIAlIQYnJvd3NlQWNjZXNzTW9kZYgBAUIQCg5f'
+    'c291cmNlX2NvbmZpZ0IZChdfcHJvdmlkZXJfaW5zdGFuY2VfbmFtZUIVChNfYnJvd3NlX2FjY2'
+    'Vzc19tb2Rl');
 
 @$core.Deprecated('Use movePlaylistRequestDescriptor instead')
 const MovePlaylistRequest$json = {
@@ -6739,16 +6754,6 @@ final $typed_data.Uint8List playbackHistoryEntryDescriptor = $convert.base64Deco
 const ListPlaybackHistoryRequest$json = {
   '1': 'ListPlaybackHistoryRequest',
   '2': [
-    {
-      '1': 'before_entry_id',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '8': {},
-      '9': 0,
-      '10': 'beforeEntryId',
-      '17': true
-    },
     {'1': 'limit', '3': 2, '4': 1, '5': 5, '8': {}, '10': 'limit'},
     {
       '1': 'cursor_entry_id',
@@ -6756,7 +6761,7 @@ const ListPlaybackHistoryRequest$json = {
       '4': 1,
       '5': 9,
       '8': {},
-      '9': 1,
+      '9': 0,
       '10': 'cursorEntryId',
       '17': true
     },
@@ -6770,24 +6775,21 @@ const ListPlaybackHistoryRequest$json = {
       '10': 'sortDirection'
     },
   ],
-  '7': {},
   '8': [
-    {'1': '_before_entry_id'},
     {'1': '_cursor_entry_id'},
+  ],
+  '9': [
+    {'1': 1, '2': 2},
   ],
 };
 
 /// Descriptor for `ListPlaybackHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listPlaybackHistoryRequestDescriptor = $convert.base64Decode(
-    'ChpMaXN0UGxheWJhY2tIaXN0b3J5UmVxdWVzdBJJCg9iZWZvcmVfZW50cnlfaWQYASABKAlCHL'
-    'pIGXIXEAQYQDIRXnBoX1tBLVphLXowLTldKyRIAFINYmVmb3JlRW50cnlJZIgBARIfCgVsaW1p'
-    'dBgCIAEoBUIJukgGGgQYZCgAUgVsaW1pdBJJCg9jdXJzb3JfZW50cnlfaWQYAyABKAlCHLpIGX'
-    'IXEAQYQDIRXnBoX1tBLVphLXowLTldKyRIAVINY3Vyc29yRW50cnlJZIgBARJNCg5zb3J0X2Rp'
-    'cmVjdGlvbhgEIAEoDjIcLnN5bmN0di5jbGllbnQuU29ydERpcmVjdGlvbkIIukgFggECEAFSDX'
-    'NvcnREaXJlY3Rpb246nwG6SJsBGpgBCiNsaXN0X3BsYXliYWNrX2hpc3Rvcnkuc2luZ2xlX2N1'
-    'cnNvchI2YmVmb3JlX2VudHJ5X2lkIGFuZCBjdXJzb3JfZW50cnlfaWQgY2Fubm90IGJvdGggYm'
-    'Ugc2V0GjkhKGhhcyh0aGlzLmJlZm9yZV9lbnRyeV9pZCkgJiYgaGFzKHRoaXMuY3Vyc29yX2Vu'
-    'dHJ5X2lkKSlCEgoQX2JlZm9yZV9lbnRyeV9pZEISChBfY3Vyc29yX2VudHJ5X2lk');
+    'ChpMaXN0UGxheWJhY2tIaXN0b3J5UmVxdWVzdBIfCgVsaW1pdBgCIAEoBUIJukgGGgQYZCgAUg'
+    'VsaW1pdBJJCg9jdXJzb3JfZW50cnlfaWQYAyABKAlCHLpIGXIXEAQYQDIRXnBoX1tBLVphLXow'
+    'LTldKyRIAFINY3Vyc29yRW50cnlJZIgBARJNCg5zb3J0X2RpcmVjdGlvbhgEIAEoDjIcLnN5bm'
+    'N0di5jbGllbnQuU29ydERpcmVjdGlvbkIIukgFggECEAFSDXNvcnREaXJlY3Rpb25CEgoQX2N1'
+    'cnNvcl9lbnRyeV9pZEoECAEQAg==');
 
 @$core.Deprecated('Use listPlaybackHistoryResponseDescriptor instead')
 const ListPlaybackHistoryResponse$json = {
@@ -6803,13 +6805,6 @@ const ListPlaybackHistoryResponse$json = {
     },
     {'1': 'history_cursor_id', '3': 2, '4': 1, '5': 9, '10': 'historyCursorId'},
     {
-      '1': 'next_before_entry_id',
-      '3': 3,
-      '4': 1,
-      '5': 9,
-      '10': 'nextBeforeEntryId'
-    },
-    {
       '1': 'next_cursor_entry_id',
       '3': 4,
       '4': 1,
@@ -6817,15 +6812,17 @@ const ListPlaybackHistoryResponse$json = {
       '10': 'nextCursorEntryId'
     },
   ],
+  '9': [
+    {'1': 3, '2': 4},
+  ],
 };
 
 /// Descriptor for `ListPlaybackHistoryResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listPlaybackHistoryResponseDescriptor = $convert.base64Decode(
     'ChtMaXN0UGxheWJhY2tIaXN0b3J5UmVzcG9uc2USPQoHZW50cmllcxgBIAMoCzIjLnN5bmN0di'
     '5jbGllbnQuUGxheWJhY2tIaXN0b3J5RW50cnlSB2VudHJpZXMSKgoRaGlzdG9yeV9jdXJzb3Jf'
-    'aWQYAiABKAlSD2hpc3RvcnlDdXJzb3JJZBIvChRuZXh0X2JlZm9yZV9lbnRyeV9pZBgDIAEoCV'
-    'IRbmV4dEJlZm9yZUVudHJ5SWQSLwoUbmV4dF9jdXJzb3JfZW50cnlfaWQYBCABKAlSEW5leHRD'
-    'dXJzb3JFbnRyeUlk');
+    'aWQYAiABKAlSD2hpc3RvcnlDdXJzb3JJZBIvChRuZXh0X2N1cnNvcl9lbnRyeV9pZBgEIAEoCV'
+    'IRbmV4dEN1cnNvckVudHJ5SWRKBAgDEAQ=');
 
 @$core.Deprecated('Use playHistoryEntryRequestDescriptor instead')
 const PlayHistoryEntryRequest$json = {
@@ -7545,9 +7542,31 @@ const EditMediaRequest$json = {
       '10': 'playbackProxyMode',
       '17': true
     },
+    {
+      '1': 'source_config',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.MediaSourceConfig',
+      '9': 1,
+      '10': 'sourceConfig',
+      '17': true
+    },
+    {
+      '1': 'provider_instance_name',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 2,
+      '10': 'providerInstanceName',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_playback_proxy_mode'},
+    {'1': '_source_config'},
+    {'1': '_provider_instance_name'},
   ],
 };
 
@@ -7557,8 +7576,11 @@ final $typed_data.Uint8List editMediaRequestDescriptor = $convert.base64Decode(
     'EtWmEtejAtOV0rJFIHbWVkaWFJZBIcCgRuYW1lGAIgASgJQgi6SAVyAxj0A1IEbmFtZRIqCgtk'
     'ZXNjcmlwdGlvbhgDIAEoCUIIukgFcgMYiCdSC2Rlc2NyaXB0aW9uEmYKE3BsYXliYWNrX3Byb3'
     'h5X21vZGUYBCABKA4yJy5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5YmFja1Byb3h5TW9kZUII'
-    'ukgFggECEAFIAFIRcGxheWJhY2tQcm94eU1vZGWIAQFCFgoUX3BsYXliYWNrX3Byb3h5X21vZG'
-    'U=');
+    'ukgFggECEAFIAFIRcGxheWJhY2tQcm94eU1vZGWIAQESUQoNc291cmNlX2NvbmZpZxgFIAEoCz'
+    'InLnN5bmN0di5zb3VyY2VfY29uZmlnLk1lZGlhU291cmNlQ29uZmlnSAFSDHNvdXJjZUNvbmZp'
+    'Z4gBARJWChZwcm92aWRlcl9pbnN0YW5jZV9uYW1lGAYgASgJQhu6SBhyFhABGEAyEF5bQS1aYS'
+    '16MC05Xy1dKyRIAlIUcHJvdmlkZXJJbnN0YW5jZU5hbWWIAQFCFgoUX3BsYXliYWNrX3Byb3h5'
+    'X21vZGVCEAoOX3NvdXJjZV9jb25maWdCGQoXX3Byb3ZpZGVyX2luc3RhbmNlX25hbWU=');
 
 @$core.Deprecated('Use clearPlaylistRequestDescriptor instead')
 const ClearPlaylistRequest$json = {

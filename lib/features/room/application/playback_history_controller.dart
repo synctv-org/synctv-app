@@ -72,9 +72,7 @@ class PlaybackHistoryController extends ChangeNotifier {
   PlaybackHistoryState get state => _state;
 
   static String _nextCursor(client.ListPlaybackHistoryResponse page) =>
-      page.nextCursorEntryId.isNotEmpty
-      ? page.nextCursorEntryId
-      : page.nextBeforeEntryId;
+      page.nextCursorEntryId;
 
   void observe(String version) {
     if (version != _state.version) {

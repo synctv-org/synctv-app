@@ -290,9 +290,11 @@ class SyncTvRuntimeService {
     await sessionStore.persistSession();
   }
 
-  Future<void> closeAccount() async {
+  Future<void> closeAccount({required String verificationId}) async {
     final generation = _api.endpointGeneration;
-    await _api.user.closeAccount(client.CloseAccountRequest());
+    await _api.user.closeAccount(
+      client.CloseAccountRequest(verificationId: verificationId),
+    );
     if (!_api.isEndpointGenerationCurrent(generation)) {
       throw const SyncTvStaleEndpointException();
     }

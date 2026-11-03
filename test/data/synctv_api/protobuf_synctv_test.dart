@@ -6816,14 +6816,18 @@ void main() {
       }),
     );
 
-    final response = await api.user.closeAccount(client.CloseAccountRequest());
+    final response = await api.user.closeAccount(
+      client.CloseAccountRequest(verificationId: 'verification-1'),
+    );
 
     expect(response.success, isTrue);
     expect(requestMethod, 'POST');
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/user/account-closure');
     expect(requestedUri!.queryParameters, isEmpty);
-    expect(jsonDecode(requestBody!), <String, dynamic>{});
+    expect(jsonDecode(requestBody!), <String, dynamic>{
+      'verificationId': 'verification-1',
+    });
     expect(session.accessToken, isNull);
   });
 
