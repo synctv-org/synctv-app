@@ -225,6 +225,7 @@ jobs:
             --release \
             --no-pub \
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
+            --dart-define "SYNCTV_UPDATE_CHECK_SOURCE=${{ github.repository }}" \
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
             --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN" \
             --build-name "${{ needs.metadata.outputs.version }}" \
@@ -235,6 +236,7 @@ jobs:
             --no-pub \
             --split-per-abi \
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
+            --dart-define "SYNCTV_UPDATE_CHECK_SOURCE=${{ github.repository }}" \
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
             --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN" \
             --build-name "${{ needs.metadata.outputs.version }}" \
@@ -247,6 +249,7 @@ jobs:
           --release
           --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_UPDATE_CHECK_SOURCE=${{ github.repository }}"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
           --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
           --build-name "${{ needs.metadata.outputs.version }}"
@@ -366,6 +369,7 @@ jobs:
           --no-pub
           --target-platform "${{ matrix.flutter-target }}"
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_UPDATE_CHECK_SOURCE=${{ github.repository }}"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
@@ -417,6 +421,7 @@ jobs:
           --release
           --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$env:SYNCTV_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_UPDATE_CHECK_SOURCE=${{ github.repository }}"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$env:SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
@@ -524,6 +529,7 @@ jobs:
           --release
           --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_UPDATE_CHECK_SOURCE=${{ github.repository }}"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
           --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
           --dart-define "SYNCTV_NATIVE_APPLE_SIGN_IN=false"
@@ -708,6 +714,7 @@ jobs:
             --release
             --no-pub
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_UPDATE_CHECK_SOURCE=${{ github.repository }}"
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
             --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
             --build-name "${{ needs.metadata.outputs.version }}"

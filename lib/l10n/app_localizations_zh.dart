@@ -58,6 +58,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountCenter => '账号中心';
 
   @override
+  String get aboutApp => '关于';
+
+  @override
+  String get aboutAppTitle => '关于 SyncTV';
+
+  @override
+  String aboutAppVersion(Object version, Object build) {
+    return '版本 $version（构建 $build）';
+  }
+
+  @override
+  String get updateCheckAction => '检查更新';
+
+  @override
+  String get updateChecking => '检查中…';
+
+  @override
+  String get updateCheckUpToDate => '已是最新版本';
+
+  @override
+  String get updateCheckFailed => '检查更新失败，请稍后重试。';
+
+  @override
+  String updateCheckSource(Object source) {
+    return '发布源：$source';
+  }
+
+  @override
+  String updateAvailableTitle(Object version) {
+    return '发现新版本：$version';
+  }
+
+  @override
+  String get updateLater => '稍后';
+
+  @override
+  String get updateDownload => '获取更新';
+
+  @override
+  String get updateOpenFailed => '无法打开发布页面';
+
+  @override
   String get adminSettings => '管理员设置';
 
   @override

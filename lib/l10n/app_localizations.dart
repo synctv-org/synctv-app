@@ -194,6 +194,78 @@ abstract class AppLocalizations {
   /// **'Account center'**
   String get accountCenter;
 
+  /// No description provided for @aboutApp.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutApp;
+
+  /// No description provided for @aboutAppTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About SyncTV'**
+  String get aboutAppTitle;
+
+  /// No description provided for @aboutAppVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} (build {build})'**
+  String aboutAppVersion(Object version, Object build);
+
+  /// No description provided for @updateCheckAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get updateCheckAction;
+
+  /// No description provided for @updateChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get updateChecking;
+
+  /// No description provided for @updateCheckUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You are on the latest version'**
+  String get updateCheckUpToDate;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update check failed. Try again later.'**
+  String get updateCheckFailed;
+
+  /// No description provided for @updateCheckSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Releases: {source}'**
+  String updateCheckSource(Object source);
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available: {version}'**
+  String updateAvailableTitle(Object version);
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// No description provided for @updateDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Get update'**
+  String get updateDownload;
+
+  /// No description provided for @updateOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the release page'**
+  String get updateOpenFailed;
+
   /// No description provided for @adminSettings.
   ///
   /// In en, this message translates to:
