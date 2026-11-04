@@ -55,13 +55,29 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
         attestationPreference: String?,
         userVerificationPreference: String?,
         salt: String?,
+        isConditional: Bool,
         completion: @escaping (Result<RegisterResponse, Error>) -> Void
     ) {
         guard (try? canAuthenticate()) == true else {
             completion(.failure(CustomErrors.deviceNotSupported))
             return
         }
-        
+
+        if isConditional {
+            guard #available(iOS 18.0, macOS 15.0, *) else {
+                completion(.failure(PigeonError(code: "conditional-create-unsupported",
+                                                message: "Conditional passkey creation needs iOS 18 or macOS 15.",
+                                                details: "")))
+                return
+            }
+            guard canBePlatformAuthenticator else {
+                completion(.failure(PigeonError(code: "conditional-create-unsupported",
+                                                message: "Conditional passkey creation needs a platform authenticator.",
+                                                details: "")))
+                return
+            }
+        }
+
         guard let decodedChallenge = Data.fromBase64Url(challenge) else {
             completion(.failure(CustomErrors.decodingChallenge))
             return
@@ -100,11 +116,16 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
                 let values = ASAuthorizationPublicKeyCredentialPRFAssertionInput.InputValues(saltInput1: saltData)
                 platformRequest.prf = ASAuthorizationPublicKeyCredentialPRFRegistrationInput.inputValues(values)
             }
+
+            if #available(iOS 18.0, macOS 15.0, *), isConditional {
+                platformRequest.requestStyle = .conditional
+            }
             
             requests.append(platformRequest)
         }
         
-        if(canBeSecurityKey){
+        // A conditional create must carry only the platform request; a security key one would show UI.
+        if(canBeSecurityKey && !isConditional){
             // Create an external (security key) registration request.
             let securityKeyProvider = ASAuthorizationSecurityKeyPublicKeyCredentialProvider(relyingPartyIdentifier: rp)
             let externalRequest = securityKeyProvider.createCredentialRegistrationRequest(
@@ -160,9 +181,9 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
             completion(result)
         }
 
-        let con = RegisterController(completion: wrappedCompletion)
-        beginOperation(operationID, controller: con)
+        let con = RegisterController(isConditional: isConditional, completion: wrappedCompletion)
         con.run(requests: requests)
+        beginOperation(operationID, controller: con)
     }
     
     func authenticate(
@@ -223,10 +244,10 @@ public class PasskeysPlugin: NSObject, FlutterPlugin, PasskeysApi {
             self?.finishOperation(operationID)
             completion(result)
         }
-        beginOperation(operationID, controller: con)
         con.run(requests: requests, conditionalUI: conditionalUI, preferImmediatelyAvailableCredentials: preferImmediatelyAvailableCredentials)
+        beginOperation(operationID, controller: con)
     }
-    
+
     func cancelCurrentAuthenticatorOperation(completion: @escaping (Result<Void, Error>) -> Void) {
         operationLock.lock()
         let operation = inFlightOperation

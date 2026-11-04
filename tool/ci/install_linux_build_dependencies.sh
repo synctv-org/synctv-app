@@ -12,5 +12,7 @@ sudo apt-get install --yes --no-install-recommends \
   libmpv-dev \
   libsoup-3.0-dev \
   libwebkit2gtk-4.1-dev \
+  libx11-dev \
+  libxi-dev \
   ninja-build \
   pkg-config

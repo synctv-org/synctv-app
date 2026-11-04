@@ -55,7 +55,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FLUTTER_VERSION: "3.47.7"
+  FLUTTER_VERSION: "3.47.9"
   NODE_VERSION: "24"
   RUST_VERSION: "1.98.0"
   SYNCTV_BUILT_IN_SERVER_URL: ${{ vars.SYNCTV_BUILT_IN_SERVER_URL }}
@@ -155,7 +155,7 @@ jobs:
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
           cache: gradle
 
       - name: Set up build toolchain

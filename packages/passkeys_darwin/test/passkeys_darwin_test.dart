@@ -7,6 +7,7 @@ import 'package:passkeys_platform_interface/types/types.dart';
 class _FakePasskeysApi extends pigeon.PasskeysApi {
   String? registerSalt;
   String? registerUserVerificationPreference;
+  bool? registerIsConditional;
   String? authenticateSalt;
   String? authenticateUserVerificationPreference;
   bool? authenticateCanBeSecurityKey;
@@ -47,9 +48,11 @@ class _FakePasskeysApi extends pigeon.PasskeysApi {
     String? attestationPreference,
     String? userVerificationPreference,
     String? salt,
+    bool isConditional,
   ) async {
     registerSalt = salt;
     registerUserVerificationPreference = userVerificationPreference;
+    registerIsConditional = isConditional;
     return pigeon.RegisterResponse(
       id: 'id',
       rawId: 'rawId',

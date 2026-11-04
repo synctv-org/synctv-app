@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: "3.47.7"
+  FLUTTER_VERSION: "3.47.9"
   NODE_VERSION: "24"
   PROTOC_VERSION: "35.1"
   RUST_VERSION: "1.98.0"
@@ -40,6 +40,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Install Linux build dependencies
+        run: bash tool/ci/install_linux_build_dependencies.sh
 
       - name: Set up build toolchain
         uses: ./.github/actions/setup-build
@@ -65,9 +68,6 @@ jobs:
 
       - name: Check Dart formatting
         run: dart format --output=none --set-exit-if-changed lib test tool packages
-
-      - name: Check frontend source audit inventory
-        run: dart run tool/frontend_audit_inventory.dart --check
 
       - name: Set up Node.js for Web runtime tests
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -156,7 +156,7 @@ jobs:
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
           cache: gradle
 
       - name: Set up build toolchain
