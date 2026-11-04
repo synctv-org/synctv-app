@@ -17,7 +17,7 @@ Test-file links identify evidence to inspect; their existence does not prove a
 passing run or complete behavioral coverage.
 
 Indexed handwritten/support sources: 501 files,
-162604 lines.
+162602 lines.
 
 ## Modules
 
@@ -38,7 +38,7 @@ Indexed handwritten/support sources: 501 files,
 | features/media_library | 28 | 16699 | 11 | 17 | 0 | 0 |
 | features/media_p2p | 21 | 6886 | 16 | 3 | 0 | 2 |
 | features/providers | 19 | 5741 | 7 | 8 | 1 | 3 |
-| features/room | 100 | 36558 | 58 | 27 | 3 | 12 |
+| features/room | 100 | 36554 | 58 | 27 | 3 | 12 |
 | features/room_invite | 4 | 397 | 0 | 3 | 0 | 1 |
 | features/server_settings | 3 | 1031 | 0 | 0 | 0 | 3 |
 | features/voice | 6 | 653 | 0 | 5 | 0 | 1 |
@@ -51,7 +51,7 @@ Indexed handwritten/support sources: 501 files,
 | packages/synctv_video_player_media_kit | 9 | 2369 | 6 | 3 | 0 | 0 |
 | packages/synctv_webtransport | 4 | 1156 | 4 | 0 | 0 | 0 |
 | theme | 2 | 491 | 1 | 1 | 0 | 0 |
-| tool | 101 | 13184 | 45 | 47 | 8 | 1 |
+| tool | 101 | 13186 | 45 | 47 | 8 | 1 |
 | web | 8 | 808 | 0 | 7 | 0 | 1 |
 | windows | 8 | 637 | 8 | 0 | 0 | 0 |
 
@@ -332,7 +332,7 @@ Indexed handwritten/support sources: 501 files,
 | [lib/features/room/domain/realtime_event_log.dart](../lib/features/room/domain/realtime_event_log.dart) | 86 | unreviewed |  |  |
 | [lib/features/room/domain/room_chat_message_state.dart](../lib/features/room/domain/room_chat_message_state.dart) | 204 | partial | Canonical content, version/tombstone ordering, independent pin markers, ordered snapshots, complete reset and per-user removal with pending-response invalidation and revision-map cleanup. Live event delivery ordering and room-lifetime retention policy remain open. | [room_chat_message_state_test.dart](../test/features/room/domain/room_chat_message_state_test.dart), [chat_state_showcase.dart](../tool/chat_state_showcase.dart), [frontend-modernization.md](../docs/frontend-modernization.md) |
 | [lib/features/room/domain/room_realtime.dart](../lib/features/room/domain/room_realtime.dart) | 698 | unreviewed |  |  |
-| [lib/features/room/infrastructure/picture_in_picture_service.dart](../lib/features/room/infrastructure/picture_in_picture_service.dart) | 298 | unreviewed |  |  |
+| [lib/features/room/infrastructure/picture_in_picture_service.dart](../lib/features/room/infrastructure/picture_in_picture_service.dart) | 294 | unreviewed |  |  |
 | [lib/features/room/presentation/create_room_dialog.dart](../lib/features/room/presentation/create_room_dialog.dart) | 916 | unreviewed |  |  |
 | [lib/features/room/presentation/danmaku/acfun_danmaku_codec.dart](../lib/features/room/presentation/danmaku/acfun_danmaku_codec.dart) | 70 | partial | Pass 284 reads the complete codec and reruns its four existing document tests successfully. Pass 287 adds finite numeric conversion and a portable Duration bound, preserving valid sibling comments and defaulting invalid optional mode/size. Two regressions fail before on infinite JSON numbers and unsafe timestamps; all six codec cases pass after. Real Edge exposes an intermediate int-branch bypass that gave size 12 instead of default 25; the final shared num branch restores all three valid fixture comments with size 25 on desktop and measured 355x631. Backend positions are u64; this is hostile-document recovery, not a claim that normal backend data emits infinities. Payload limits, color/text coercion and live provider variants remain incomplete. | [acfun_danmaku_codec_test.dart](../test/features/room/presentation/danmaku/acfun_danmaku_codec_test.dart), [frontend-modernization.md](../docs/frontend-modernization.md) |
 | [lib/features/room/presentation/join_room_dialog.dart](../lib/features/room/presentation/join_room_dialog.dart) | 273 | partial | Pass 158 replaces duplicated framing with shared scrollable AppDialog, wrapping labels/actions and complete room names. Eight en/zh 3x mobile keyboard/short-window layout cases failed before the rewrite. Eleven dialog tests verify retry, exact password whitespace, trimmed IDs, duplicate and disposed submit callbacks and late completion after Escape. Join callback receives its dialog context. Edge English 3x verifies desktop password rejection, narrow error scrolling, join input/button state, short-window layout and cancellation. Native keyboards are simulated in tests; live joining, native screen readers and all nested invite lifetimes remain incomplete. | [join_room_dialog_test.dart](../test/features/room/presentation/join_room_dialog_test.dart), [server_settings_showcase.dart](../tool/server_settings_showcase.dart), [frontend-modernization.md](../docs/frontend-modernization.md) |
@@ -458,7 +458,7 @@ Indexed handwritten/support sources: 501 files,
 | [tool/ci/create_macos_architecture_apps.sh](../tool/ci/create_macos_architecture_apps.sh) | 78 | unreviewed |  |  |
 | [tool/ci/generate_android_passkey_server_config.sh](../tool/ci/generate_android_passkey_server_config.sh) | 62 | unreviewed |  |  |
 | [tool/ci/generate_release_notes.sh](../tool/ci/generate_release_notes.sh) | 175 | unreviewed |  |  |
-| [tool/ci/install_linux_build_dependencies.sh](../tool/ci/install_linux_build_dependencies.sh) | 16 | unreviewed |  |  |
+| [tool/ci/install_linux_build_dependencies.sh](../tool/ci/install_linux_build_dependencies.sh) | 18 | unreviewed |  |  |
 | [tool/ci/package_release.ps1](../tool/ci/package_release.ps1) | 61 | unreviewed |  |  |
 | [tool/ci/package_release.sh](../tool/ci/package_release.sh) | 195 | unreviewed |  |  |
 | [tool/ci/sign_windows_artifacts.ps1](../tool/ci/sign_windows_artifacts.ps1) | 75 | unreviewed |  |  |
