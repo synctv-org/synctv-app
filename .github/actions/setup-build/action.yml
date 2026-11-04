@@ -9,7 +9,7 @@ inputs:
   flutter-revision:
     description: Immutable Flutter framework revision for source installations.
     required: false
-    default: "abaf9c523780a608bd46686fd5e53740a07077f8"
+    default: "c197ca5199e9ee5661e865596c9c07294dfab51c"
   flutter-architecture:
     description: Flutter SDK host architecture.
     required: false

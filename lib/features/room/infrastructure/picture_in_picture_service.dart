@@ -239,8 +239,7 @@ class PictureInPictureService implements PictureInPictureController {
     final cursor = displayManager.getCursorPosition().toOffset();
     nativeapi.Display? display;
     for (final candidate in displayManager.getAll()) {
-      final bounds =
-          candidate.position.toOffset() & candidate.size.toSize();
+      final bounds = candidate.position.toOffset() & candidate.size.toSize();
       if (bounds.contains(cursor)) {
         display = candidate;
         break;
@@ -249,10 +248,7 @@ class PictureInPictureService implements PictureInPictureController {
     display ??= displayManager.getPrimary();
     if (display == null) return Offset.zero;
     final workArea = display.workArea.toRect();
-    return Offset(
-      workArea.right - size.width,
-      workArea.bottom - size.height,
-    );
+    return Offset(workArea.right - size.width, workArea.bottom - size.height);
   }
 
   Future<void> _exitDesktopWindow({required bool restoreBounds}) async {
