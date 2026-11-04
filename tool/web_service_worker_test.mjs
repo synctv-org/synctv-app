@@ -78,7 +78,14 @@ function worker({ failure, offline = false, cached = false } = {}) {
   };
 }
 
-for (const [path, mode] of [['/room', 'navigate'], ['/assets/probe.txt', 'cors'], ['/playback/probe.txt', 'cors'], ['/startup.js', 'cors']]) {
+for (const [path, mode] of [
+  ['/room', 'navigate'],
+  ['/assets/probe.txt', 'cors'],
+  ['/playback/probe.txt', 'cors'],
+  ['/startup.js', 'cors'],
+  ['/main.dart.mjs', 'cors'],
+  ['/main.dart.wasm', 'cors'],
+]) {
   for (const failure of ['open', 'read', 'write']) {
     test(`${path} stays online after cache ${failure} failure`, async () => {
       const app = worker({ failure });
