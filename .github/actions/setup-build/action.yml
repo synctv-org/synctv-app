@@ -5,7 +5,7 @@ inputs:
   flutter-version:
     description: Flutter SDK version.
     required: false
-    default: "3.47.7"
+    default: "3.47.9"
   flutter-revision:
     description: Immutable Flutter framework revision for source installations.
     required: false
