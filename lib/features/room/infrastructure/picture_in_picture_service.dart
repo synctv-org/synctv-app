@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nativeapi/nativeapi.dart' as nativeapi;
 import 'package:window_manager/window_manager.dart';
 import 'package:synctv_app/features/room/application/picture_in_picture_controller.dart';
 import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
@@ -28,9 +29,7 @@ PictureInPictureBackend pictureInPictureBackendForPlatform(
   };
 }
 
-class PictureInPictureService
-    with WindowListener
-    implements PictureInPictureController {
+class PictureInPictureService implements PictureInPictureController {
   PictureInPictureService._() {
     _androidChannel.setMethodCallHandler(_handleAndroidMethodCall);
   }
@@ -47,6 +46,7 @@ class PictureInPictureService
   bool _restoringDesktopWindow = false;
   StreamSubscription<bool>? _webStateSubscription;
   VideoPlayerController? _webVideoController;
+  Window? _desktopWindow;
   Rect? _desktopOriginalBounds;
   bool _desktopWasAlwaysOnTop = false;
   bool _desktopWasMaximized = false;
@@ -77,9 +77,12 @@ class PictureInPictureService
           _available =
               await _androidChannel.invokeMethod<bool>('isAvailable') ?? false;
         case PictureInPictureBackend.desktopWindow:
-          await windowManager.ensureInitialized();
-          windowManager.addListener(this);
-          _available = true;
+          final window = WindowManager.instance.getCurrent();
+          if (window != null) {
+            _desktopWindow = window;
+            window.addListener(_onDesktopWindowEvent);
+            _available = true;
+          }
         case PictureInPictureBackend.unavailable:
           _available = false;
       }
@@ -145,7 +148,7 @@ class PictureInPictureService
   @override
   void startDragging() {
     if (backend == PictureInPictureBackend.desktopWindow && active.value) {
-      unawaited(windowManager.startDragging());
+      _desktopWindow?.startDragging();
     }
   }
 
@@ -190,33 +193,36 @@ class PictureInPictureService
 
   Future<bool> _enterDesktopWindow(double aspectRatio) async {
     if (active.value) return true;
-    _desktopWasMaximized = await windowManager.isMaximized();
+    final window = _desktopWindow ?? WindowManager.instance.getCurrent();
+    if (window == null) return false;
+    _desktopWindow = window;
+    _desktopWasMaximized = window.isMaximized;
     if (_desktopWasMaximized) {
-      await windowManager.unmaximize();
+      window.unmaximize();
       if (defaultTargetPlatform == TargetPlatform.macOS) {
         await Future<void>.delayed(const Duration(milliseconds: 250));
       }
     }
-    _desktopOriginalBounds = await windowManager.getBounds();
-    _desktopWasAlwaysOnTop = await windowManager.isAlwaysOnTop();
+    _desktopOriginalBounds = window.bounds.toRect();
+    _desktopWasAlwaysOnTop = window.isAlwaysOnTop;
 
     const width = 360.0;
     final height = width / aspectRatio;
     final size = Size(width, height);
     try {
-      await windowManager.setMinimumSize(Size.zero);
-      await windowManager.setAlwaysOnTop(true);
-      await windowManager.setTitleBarStyle(
-        TitleBarStyle.hidden,
-        windowButtonVisibility: false,
-      );
-      await windowManager.setAspectRatio(aspectRatio);
-      final position = await calcWindowPosition(size, Alignment.bottomRight);
-      await windowManager.setBounds(
-        null,
-        position: position,
-        size: size,
-        animate: true,
+      window.minimumSize = Size.zero.toNative();
+      window.isAlwaysOnTop = true;
+      window.titleBarStyle = TitleBarStyle.hidden;
+      window.isWindowControlButtonsVisible = false;
+      window.aspectRatio = aspectRatio;
+      final position = _bottomRightPosition(size);
+      window.animateBounds(
+        Rect.fromLTWH(
+          position.dx,
+          position.dy,
+          size.width,
+          size.height,
+        ).toNative(),
       );
       active.value = true;
       return true;
@@ -226,23 +232,46 @@ class PictureInPictureService
     }
   }
 
+  /// Bottom-right corner of the work area of the display under the cursor,
+  /// falling back to the primary display.
+  Offset _bottomRightPosition(Size size) {
+    final displayManager = nativeapi.DisplayManager.instance;
+    final cursor = displayManager.getCursorPosition().toOffset();
+    nativeapi.Display? display;
+    for (final candidate in displayManager.getAll()) {
+      final bounds =
+          candidate.position.toOffset() & candidate.size.toSize();
+      if (bounds.contains(cursor)) {
+        display = candidate;
+        break;
+      }
+    }
+    display ??= displayManager.getPrimary();
+    if (display == null) return Offset.zero;
+    final workArea = display.workArea.toRect();
+    return Offset(
+      workArea.right - size.width,
+      workArea.bottom - size.height,
+    );
+  }
+
   Future<void> _exitDesktopWindow({required bool restoreBounds}) async {
     if (_restoringDesktopWindow) return;
     _restoringDesktopWindow = true;
     active.value = false;
     try {
-      await windowManager.setAspectRatio(0);
-      await windowManager.setTitleBarStyle(
-        TitleBarStyle.normal,
-        windowButtonVisibility: true,
-      );
-      await windowManager.setMinimumSize(desktopWindowMinimumSize);
-      await windowManager.setAlwaysOnTop(_desktopWasAlwaysOnTop);
+      final window = _desktopWindow;
+      if (window == null) return;
+      window.aspectRatio = 0;
+      window.titleBarStyle = TitleBarStyle.normal;
+      window.isWindowControlButtonsVisible = true;
+      window.minimumSize = desktopWindowMinimumSize.toNative();
+      window.isAlwaysOnTop = _desktopWasAlwaysOnTop;
       if (restoreBounds && _desktopOriginalBounds != null) {
         if (_desktopWasMaximized) {
-          await windowManager.maximize();
+          window.maximize();
         } else {
-          await windowManager.setBounds(_desktopOriginalBounds!, animate: true);
+          window.animateBounds(_desktopOriginalBounds!.toNative());
         }
       }
     } finally {
@@ -257,12 +286,13 @@ class PictureInPictureService
     }
   }
 
-  @override
-  void onWindowMaximize() {
-    if (backend == PictureInPictureBackend.desktopWindow &&
+  Future<void> _onDesktopWindowEvent(WindowEvent event) {
+    if (event is WindowMaximizedEvent &&
+        backend == PictureInPictureBackend.desktopWindow &&
         active.value &&
         !_restoringDesktopWindow) {
-      unawaited(_exitDesktopWindow(restoreBounds: false));
+      return _exitDesktopWindow(restoreBounds: false);
     }
+    return Future.value();
   }
 }

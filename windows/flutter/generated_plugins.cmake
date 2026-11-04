@@ -9,10 +9,8 @@ list(APPEND FLUTTER_PLUGIN_LIST
   media_kit_video
   passkeys_windows
   screen_brightness_windows
-  screen_retriever_windows
   url_launcher_windows
   volume_controller
-  window_manager
   window_to_front
 )
 

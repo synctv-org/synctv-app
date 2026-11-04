@@ -167,17 +167,16 @@ Future<void> _configureDesktopWindow() async {
       }.contains(defaultTargetPlatform)) {
     return;
   }
-  await windowManager.ensureInitialized();
-  await windowManager.setTitleBarStyle(
-    TitleBarStyle.normal,
-    windowButtonVisibility: true,
-  );
-  await windowManager.setMinimumSize(desktopWindowMinimumSize);
-  final windowSize = await windowManager.getSize();
+  final window = WindowManager.instance.getCurrent();
+  if (window == null) return;
+  window.titleBarStyle = TitleBarStyle.normal;
+  window.isWindowControlButtonsVisible = true;
+  window.minimumSize = desktopWindowMinimumSize.toNative();
+  final windowSize = window.size.toSize();
   if (windowSize.width < desktopWindowMinimumSize.width ||
       windowSize.height < desktopWindowMinimumSize.height) {
-    await windowManager.setSize(desktopWindowDefaultSize);
-    await windowManager.center();
+    window.setSize(desktopWindowDefaultSize.toNative(), false);
+    window.center();
   }
 }
 

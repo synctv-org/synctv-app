@@ -14,8 +14,11 @@ import FlutterMacOS
 class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding, Cancellable {
     private var completion: ((Result<RegisterResponse, Error>) -> Void)?
     private var cancelAuthorization: (() -> Void)?;
+    private let isConditional: Bool
+    private var cancelledByApp = false
 
-    init(completion: @escaping ((Result<RegisterResponse, Error>) -> Void)) {
+    init(isConditional: Bool = false, completion: @escaping ((Result<RegisterResponse, Error>) -> Void)) {
+        self.isConditional = isConditional
         self.completion = completion;
     }
     
@@ -37,13 +40,6 @@ class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthori
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         switch authorization.credential {
         case let credentialRegistration as ASAuthorizationPlatformPublicKeyCredentialRegistration:
-            guard let attestationObject = credentialRegistration.rawAttestationObject else {
-                completion?(.failure(PigeonError(
-                    code: CustomErrors.unexpectedAuthorizationResponse,
-                    message: "Passkey registration response is missing attestation data"
-                )))
-                return
-            }
             var clientExtensionResults: [String: Any]? = nil
             if #available(iOS 18.0, macOS 15.0, *), let credPrf = credentialRegistration.prf {
                 var prfResult: [String: Any] = ["enabled": credPrf.isSupported]
@@ -51,6 +47,14 @@ class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthori
                     prfResult["results"] = ["first": prfBytes.toBase64URL()]
                 }
                 clientExtensionResults = ["prf": prfResult]
+            }
+
+            guard let attestationObject = credentialRegistration.rawAttestationObject else {
+                completion?(.failure(PigeonError(
+                    code: CustomErrors.unexpectedAuthorizationResponse,
+                    message: "Passkey registration response is missing attestation data"
+                )))
+                return
             }
 
             let response = RegisterResponse(
@@ -65,13 +69,6 @@ class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthori
             completion?(.success(response))
             break
         case let securityKeyRegistration as ASAuthorizationSecurityKeyPublicKeyCredentialRegistration:
-            guard let attestationObject = securityKeyRegistration.rawAttestationObject else {
-                completion?(.failure(PigeonError(
-                    code: CustomErrors.unexpectedAuthorizationResponse,
-                    message: "Security key registration response is missing attestation data"
-                )))
-                return
-            }
             var transportStrings: [String] = []
             
             if #available(iOS 17.5, *) {
@@ -95,6 +92,14 @@ class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthori
                 }
             }
                 
+            guard let attestationObject = securityKeyRegistration.rawAttestationObject else {
+                completion?(.failure(PigeonError(
+                    code: CustomErrors.unexpectedAuthorizationResponse,
+                    message: "Security key registration response is missing attestation data"
+                )))
+                return
+            }
+
             let response = RegisterResponse(
                 id: securityKeyRegistration.credentialID.toBase64URL(),
                 rawId: securityKeyRegistration.credentialID.toBase64URL(),
@@ -113,6 +118,11 @@ class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthori
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         if let err = error as? ASAuthorizationError {
+            // A conditional create shows no UI, so .canceled means the system declined, unless the app cancelled it.
+            if isConditional && err.code == .canceled && !cancelledByApp {
+                completion?(.failure(PigeonError(code: "not-eligible", message: err.localizedDescription, details: "")))
+                return
+            }
             completion?(.failure(PigeonError(from: err)))
             return
         }
@@ -140,6 +150,7 @@ class RegisterController: NSObject, ASAuthorizationControllerDelegate, ASAuthori
     }
     
     func cancel() {
+        cancelledByApp = true
         cancelAuthorization?();
     }
 }

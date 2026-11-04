@@ -6,10 +6,8 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_webview_window
   flutter_webrtc
   media_kit_video
-  screen_retriever_linux
   url_launcher_linux
   volume_controller
-  window_manager
   window_to_front
 )
 
