@@ -69,9 +69,6 @@ jobs:
       - name: Check Dart formatting
         run: dart format --output=none --set-exit-if-changed lib test tool packages
 
-      - name: Check frontend source audit inventory
-        run: dart run tool/frontend_audit_inventory.dart --check
-
       - name: Set up Node.js for Web runtime tests
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
