@@ -51,7 +51,7 @@ jobs:
           rust-version: ${{ env.RUST_VERSION }}
 
       - name: Set up Protobuf compiler
-        uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.88.0
+        uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.90.0
         with:
           # install-action represents protoc 35.1 with its semver-compatible 3.35.1 alias.
           tool: protoc@3.${{ env.PROTOC_VERSION }}
