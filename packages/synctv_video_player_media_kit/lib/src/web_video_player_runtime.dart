@@ -265,29 +265,26 @@ class WebVideoPlayerRuntime
     _engine = player;
 
     _bindEngineEvent(player, 'error'.toJS, (event, data) {
-      // dash.js reports recoverable failures (segment download retries and
-      // similar) on the same error event it uses for fatal ones; tearing the
-      // player down on those turns one slow segment into a reload loop.
-      final severity = _readString(
+      // dash.js has no fatal/recoverable flag: DashJSError is {code, message,
+      // data} (see dash.js issue #4874), and by the time the error event fires
+      // the internal download retries and decode recovery are exhausted, so
+      // surface every event. The payload is { error: DashJSError }; the
+      // message lives on the nested error object, the event object itself
+      // carries none.
+      final engineError = _asObject(
         _asObject(data)?.getProperty<JSAny?>('error'.toJS),
-        'severity',
       );
-      if (severity != null && severity.toUpperCase() != 'FATAL') return;
-      final details = _readString(data, 'details');
-      final type = _readString(data, 'type');
-      final error = _readString(data, 'error');
+      final errorCode = _readInt(engineError, 'code');
+      final errorMessage = _readString(engineError, 'message');
       final message = <String>{
-        ?type,
-        ?details,
-        ?error,
-        ?_readScalarString(event),
-        ?_readScalarString(data),
+        if (errorCode != null) 'dash error $errorCode',
+        ?errorMessage,
       }.join(': ');
       reportOpenError(
         PlatformException(
           code: 'dash_engine_error',
           message: message.isEmpty
-              ? 'The media engine reported an error.'
+              ? 'The DASH engine reported an error.'
               : message,
         ),
         StackTrace.current,
@@ -722,17 +719,21 @@ class WebVideoPlayerRuntime
       _video.onError.listen((_) {
         _setBuffering(false);
         final error = _video.error;
+        // An element error without a MediaError is MSE pipeline noise (the
+        // engines surface real failures through their own ERROR events; dash.js
+        // itself guards the same null case), and MEDIA_ERR_ABORTED fires when
+        // the source is swapped. Neither should tear the player down.
+        if (error == null || error.code == 1) return;
         reportOpenError(
           PlatformException(
-            code: switch (error?.code) {
-              1 => 'MEDIA_ERR_ABORTED',
+            code: switch (error.code) {
               2 => 'MEDIA_ERR_NETWORK',
               3 => 'MEDIA_ERR_DECODE',
               4 => 'MEDIA_ERR_SRC_NOT_SUPPORTED',
               _ => 'MEDIA_ERR_UNKNOWN',
             },
-            message: error?.message.isNotEmpty == true
-                ? error!.message
+            message: error.message.isNotEmpty
+                ? error.message
                 : 'The browser could not play this media.',
           ),
           StackTrace.current,
@@ -962,7 +963,10 @@ class WebVideoPlayerRuntime
     if (engine != null) {
       switch (engineKind) {
         case WebPlaybackEngine.dashJs:
-          engine.callMethod<JSAny?>('reset'.toJS);
+          // destroy() (not reset()): a fresh player is created per playback,
+          // and reset() leaves FactoryMaker singletons behind while destroy()
+          // tears them down with the instance.
+          engine.callMethod<JSAny?>('destroy'.toJS);
         case WebPlaybackEngine.mpegTsJs:
           if (engine.has('unload')) {
             engine.callMethod<JSAny?>('unload'.toJS);
