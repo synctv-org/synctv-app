@@ -629,7 +629,7 @@ class SyncTvApiClient {
     );
   }
 
-Future<http.Response> _sendHttp(
+  Future<http.Response> _sendHttp(
     String method,
     Uri uri, {
     required Map<String, String> headers,

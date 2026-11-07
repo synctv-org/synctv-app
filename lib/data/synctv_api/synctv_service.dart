@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:synctv_app/core/media/local_image_upload.dart';
 import 'package:synctv_app/contracts/account_models.dart';

@@ -103,7 +103,8 @@ void main() {
     });
 
     test('sticky preference wins over default order', () {
-      final selector = buildSelector()..preferred = RealtimeTransport.webTransport;
+      final selector = buildSelector()
+        ..preferred = RealtimeTransport.webTransport;
       final ranked = selector
           .rank([
             client_enum
@@ -234,9 +235,7 @@ void main() {
 
       expect(planner.candidates(), hasLength(1));
       advertised = [
-        client_enum
-            .RealtimeTransportKind
-            .REALTIME_TRANSPORT_KIND_WEB_TRANSPORT,
+        client_enum.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_WEB_TRANSPORT,
       ];
       expect(planner.candidates().map((option) => option.transport), [
         RealtimeTransport.webTransport,
