@@ -18,10 +18,7 @@ void main() {
           ('avc1.64001F', h264),
           ('hvc1.1.6.L93.B0', hevc),
         ],
-        supportedAudio: [
-          ('mp4a.40.2', aac),
-          ('ec-3', eac3),
-        ],
+        supportedAudio: [('mp4a.40.2', aac), ('ec-3', eac3)],
         pipeline:
             client_enum.PlaybackMediaPipeline.PLAYBACK_MEDIA_PIPELINE_NATIVE,
       );
@@ -80,11 +77,17 @@ void main() {
           ...buildDashCapabilityEntries(
             supportedVideo: [
               for (final token in videoTokens)
-                (token, client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264),
+                (
+                  token,
+                  client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+                ),
             ],
             supportedAudio: [
               for (final token in audioTokens)
-                (token, client_enum.PlaybackAudioCodec.PLAYBACK_AUDIO_CODEC_AAC),
+                (
+                  token,
+                  client_enum.PlaybackAudioCodec.PLAYBACK_AUDIO_CODEC_AAC,
+                ),
             ],
             pipeline: pipeline,
           ),
@@ -129,10 +132,9 @@ void main() {
       final entries = buildDashCapabilityEntries(
         supportedVideo: const [('avc1.42E01E', h264)],
         supportedAudio: const [('mp4a.40.2', aac)],
-        pipeline:
-            client_enum
-                .PlaybackMediaPipeline
-                .PLAYBACK_MEDIA_PIPELINE_MANAGED_MEDIA_SOURCE,
+        pipeline: client_enum
+            .PlaybackMediaPipeline
+            .PLAYBACK_MEDIA_PIPELINE_MANAGED_MEDIA_SOURCE,
       );
       final client.PlaybackMediaCapability(:pipeline, :container) =
           entries.single;

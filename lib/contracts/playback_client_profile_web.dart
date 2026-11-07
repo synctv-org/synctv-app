@@ -111,24 +111,12 @@ client.PlaybackClientProfile buildPlaybackClientProfile() {
         .toList();
     capabilities.addAll(
       buildDashCapabilityEntries(
-        supportedVideo:
-            supportedVideo
-                .map(
-                  (candidate) => (
-                    candidate.codecString,
-                    candidate.videoCodec,
-                  ),
-                )
-                .toList(),
-        supportedAudio:
-            supportedAudio
-                .map(
-                  (candidate) => (
-                    candidate.codecString,
-                    candidate.audioCodec,
-                  ),
-                )
-                .toList(),
+        supportedVideo: supportedVideo
+            .map((candidate) => (candidate.codecString, candidate.videoCodec))
+            .toList(),
+        supportedAudio: supportedAudio
+            .map((candidate) => (candidate.codecString, candidate.audioCodec))
+            .toList(),
         pipeline: pipeline,
       ),
     );

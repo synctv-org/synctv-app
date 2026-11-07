@@ -25,9 +25,8 @@ List<client.PlaybackMediaCapability> buildDashCapabilityEntries({
   return [
     for (final (videoCodecString, videoCodec) in supportedVideo)
       client.PlaybackMediaCapability(
-        transport: client_enum
-            .PlaybackMediaTransport
-            .PLAYBACK_MEDIA_TRANSPORT_DASH,
+        transport:
+            client_enum.PlaybackMediaTransport.PLAYBACK_MEDIA_TRANSPORT_DASH,
         container: client_enum.PlaybackContainer.PLAYBACK_CONTAINER_MP4,
         videoCodec: videoCodec,
         audioCodec: primaryAudio.$2,
@@ -36,9 +35,8 @@ List<client.PlaybackMediaCapability> buildDashCapabilityEntries({
       ),
     for (final (audioCodecString, audioCodec) in supportedAudio.skip(1))
       client.PlaybackMediaCapability(
-        transport: client_enum
-            .PlaybackMediaTransport
-            .PLAYBACK_MEDIA_TRANSPORT_DASH,
+        transport:
+            client_enum.PlaybackMediaTransport.PLAYBACK_MEDIA_TRANSPORT_DASH,
         container: client_enum.PlaybackContainer.PLAYBACK_CONTAINER_MP4,
         videoCodec: primaryVideo.$2,
         audioCodec: audioCodec,
