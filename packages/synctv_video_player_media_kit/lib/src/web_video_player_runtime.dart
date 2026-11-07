@@ -264,12 +264,35 @@ class WebVideoPlayerRuntime
     final player = mediaPlayer.callMethod<JSObject>('create'.toJS);
     _engine = player;
 
-    _bindEngineError(
-      player,
-      'error'.toJS,
-      code: 'dash_engine_error',
-      singleArgument: true,
-    );
+    _bindEngineEvent(player, 'error'.toJS, (event, data) {
+      // dash.js reports recoverable failures (segment download retries and
+      // similar) on the same error event it uses for fatal ones; tearing the
+      // player down on those turns one slow segment into a reload loop.
+      final severity = _readString(
+        _asObject(data)?.getProperty<JSAny?>('error'.toJS),
+        'severity',
+      );
+      if (severity != null && severity.toUpperCase() != 'FATAL') return;
+      final details = _readString(data, 'details');
+      final type = _readString(data, 'type');
+      final error = _readString(data, 'error');
+      final message = <String>{
+        ?type,
+        ?details,
+        ?error,
+        ?_readScalarString(event),
+        ?_readScalarString(data),
+      }.join(': ');
+      reportOpenError(
+        PlatformException(
+          code: 'dash_engine_error',
+          message: message.isEmpty
+              ? 'The media engine reported an error.'
+              : message,
+        ),
+        StackTrace.current,
+      );
+    }, singleArgument: true);
     _bindEngineEvent(
       player,
       'streamInitialized'.toJS,
