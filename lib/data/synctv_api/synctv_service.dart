@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:synctv_app/core/media/local_image_upload.dart';
@@ -149,32 +148,6 @@ class SyncTvService {
 
   static Future<Uri> createRoomWebTransportUri(String roomId) {
     return _runtime.createRoomWebTransportUri(roomId);
-  }
-
-  static Future<client.CreateRealtimeSessionResponse> createRealtimeSession(
-    String roomId,
-    List<client.ObserveResource> initialObservations,
-  ) {
-    return _runtime.createRealtimeSession(roomId, initialObservations);
-  }
-
-  static Stream<Uint8List> openRealtimeSessionEvents(
-    String roomId,
-    String sessionId,
-  ) {
-    return _runtime.openRealtimeSessionEvents(roomId, sessionId);
-  }
-
-  static Future<void> sendRealtimeSessionMessage(
-    String roomId,
-    String sessionId,
-    client.ClientMessage message,
-  ) {
-    return _runtime.sendRealtimeSessionMessage(roomId, sessionId, message);
-  }
-
-  static Future<void> endRealtimeSession(String roomId, String sessionId) {
-    return _runtime.endRealtimeSession(roomId, sessionId);
   }
 
   static String encodeRealtimeMessageJson(client.ClientMessage message) {

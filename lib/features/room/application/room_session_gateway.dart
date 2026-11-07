@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/contracts/account_models.dart';
 
@@ -25,24 +23,4 @@ abstract interface class RoomSessionGateway {
   String encodeMessage(client.ClientMessage message);
 
   client.ServerMessage decodeMessage(String json);
-
-  /// Creates an HTTP realtime session and returns its id + lease ttl.
-  Future<client.CreateRealtimeSessionResponse> createRealtimeSession(
-    String roomId,
-    List<client.ObserveResource> initialObservations,
-  );
-
-  /// Attaches to the session's SSE downlink, yielding `ServerMessage` bytes.
-  Stream<Uint8List> openRealtimeSessionEvents(String roomId, String sessionId);
-
-  /// Posts one message into the session (chat, playback, observe, WebRTC,
-  /// heartbeat).
-  Future<void> sendRealtimeSessionMessage(
-    String roomId,
-    String sessionId,
-    client.ClientMessage message,
-  );
-
-  /// Gracefully ends the session.
-  Future<void> endRealtimeSession(String roomId, String sessionId);
 }

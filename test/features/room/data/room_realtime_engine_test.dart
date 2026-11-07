@@ -233,13 +233,13 @@ void main() {
       final failing = _FakeFactory()..failNextReady = true;
       final working = _FakeFactory();
       final selector = RealtimeTransportSelector(
+        webTransportFactory: () => failing,
         webSocketFactory: working,
-        sseFactory: () => failing,
         failureThreshold: 1,
         demotionCooldown: const Duration(minutes: 1),
       );
-      // Prefer the (failing) SSE candidate.
-      selector.preferred = RealtimeTransport.sse;
+      // Prefer the (failing) WebTransport candidate.
+      selector.preferred = RealtimeTransport.webTransport;
 
       final engine = ReconnectingRoomRealtimeEngine(
         roomId: 'room-1',
@@ -247,7 +247,7 @@ void main() {
           selector: selector,
           advertisedTransports: () => const [
             client.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_WEB_SOCKET,
-            client.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_SSE,
+            client.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_WEB_TRANSPORT,
           ],
         ),
         reconnectPolicy: RealtimeReconnectPolicy(
@@ -261,8 +261,8 @@ void main() {
       engine.start();
       await pumpEventQueue();
 
-      // SSE failed once (threshold 1) and got demoted; WebSocket connected in
-      // the same cycle.
+      // WebTransport failed once (threshold 1) and got demoted; WebSocket
+      // connected in the same cycle.
       expect(failing.channels, hasLength(1));
       expect(working.channels, hasLength(1));
       expect(selector.preferred, RealtimeTransport.webSocket);

@@ -11143,64 +11143,6 @@ final $typed_data.Uint8List unobserveResourceDescriptor = $convert.base64Decode(
     'ChFVbm9ic2VydmVSZXNvdXJjZRIpCgpvYnNlcnZlX2lkGAEgASgJQgq6SAdyBRABGIABUglvYn'
     'NlcnZlSWQ=');
 
-@$core.Deprecated('Use createRealtimeSessionRequestDescriptor instead')
-const CreateRealtimeSessionRequest$json = {
-  '1': 'CreateRealtimeSessionRequest',
-  '2': [
-    {
-      '1': 'initial_observations',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.synctv.client.ObserveResource',
-      '10': 'initialObservations'
-    },
-  ],
-};
-
-/// Descriptor for `CreateRealtimeSessionRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List createRealtimeSessionRequestDescriptor =
-    $convert.base64Decode(
-        'ChxDcmVhdGVSZWFsdGltZVNlc3Npb25SZXF1ZXN0ElEKFGluaXRpYWxfb2JzZXJ2YXRpb25zGA'
-        'EgAygLMh4uc3luY3R2LmNsaWVudC5PYnNlcnZlUmVzb3VyY2VSE2luaXRpYWxPYnNlcnZhdGlv'
-        'bnM=');
-
-@$core.Deprecated('Use createRealtimeSessionResponseDescriptor instead')
-const CreateRealtimeSessionResponse$json = {
-  '1': 'CreateRealtimeSessionResponse',
-  '2': [
-    {'1': 'session_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'sessionId'},
-    {'1': 'lease_ttl_ms', '3': 2, '4': 1, '5': 3, '10': 'leaseTtlMs'},
-  ],
-};
-
-/// Descriptor for `CreateRealtimeSessionResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List createRealtimeSessionResponseDescriptor =
-    $convert.base64Decode(
-        'Ch1DcmVhdGVSZWFsdGltZVNlc3Npb25SZXNwb25zZRIpCgpzZXNzaW9uX2lkGAEgASgJQgq6SA'
-        'dyBRAIGIABUglzZXNzaW9uSWQSIAoMbGVhc2VfdHRsX21zGAIgASgDUgpsZWFzZVR0bE1z');
-
-@$core.Deprecated('Use sendRealtimeSessionMessageRequestDescriptor instead')
-const SendRealtimeSessionMessageRequest$json = {
-  '1': 'SendRealtimeSessionMessageRequest',
-  '2': [
-    {
-      '1': 'message',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.client.ClientMessage',
-      '10': 'message'
-    },
-  ],
-};
-
-/// Descriptor for `SendRealtimeSessionMessageRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List sendRealtimeSessionMessageRequestDescriptor =
-    $convert.base64Decode(
-        'CiFTZW5kUmVhbHRpbWVTZXNzaW9uTWVzc2FnZVJlcXVlc3QSNgoHbWVzc2FnZRgBIAEoCzIcLn'
-        'N5bmN0di5jbGllbnQuQ2xpZW50TWVzc2FnZVIHbWVzc2FnZQ==');
-
 @$core.Deprecated('Use observePlaybackStateDescriptor instead')
 const ObservePlaybackState$json = {
   '1': 'ObservePlaybackState',
