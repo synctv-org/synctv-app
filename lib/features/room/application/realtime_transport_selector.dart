@@ -99,13 +99,14 @@ class FixedTransportPlanner implements RealtimeTransportPlanner {
 ///    a cooldown window, then re-promoted;
 /// 4. the last transport that worked (sticky preference) is tried first.
 ///
-/// Client preference among advertised transports: WebTransport → SSE →
-/// WebSocket (single bidirectional QUIC stream beats the SSE+REST pair,
-/// which beats the browser-constrained WebSocket).
+/// Client preference among advertised transports: WebTransport → WebSocket
+/// (a single bidirectional QUIC stream beats the browser-constrained
+/// WebSocket). SSE capability advertisements parse for compatibility with
+/// older servers but never rank: the SSE session transport was removed, and
+/// stateless watch endpoints are not a realtime channel.
 class RealtimeTransportSelector {
   RealtimeTransportSelector({
     required this.webSocketFactory,
-    this.sseFactory,
     this.webTransportFactory,
     this.failureThreshold = 2,
     this.demotionCooldown = const Duration(minutes: 5),
@@ -113,7 +114,6 @@ class RealtimeTransportSelector {
   }) : _now = now ?? DateTime.now;
 
   final RoomRealtimeChannelFactory webSocketFactory;
-  final RealtimeChannelFactoryGetter? sseFactory;
   final RealtimeChannelFactoryGetter? webTransportFactory;
 
   /// Consecutive failures on one transport before it is demoted.
@@ -163,7 +163,8 @@ class RealtimeTransportSelector {
     for (final transport in _clientPreferenceOrder) {
       final factory = switch (transport) {
         RealtimeTransport.webSocket => webSocketFactory,
-        RealtimeTransport.sse => sseFactory?.call(),
+        // No SSE session transport exists; advertisements are ignored.
+        RealtimeTransport.sse => null,
         RealtimeTransport.webTransport => webTransportFactory?.call(),
       };
       add(transport, factory);
@@ -195,7 +196,6 @@ class RealtimeTransportSelector {
 
   static const _clientPreferenceOrder = [
     RealtimeTransport.webTransport,
-    RealtimeTransport.sse,
     RealtimeTransport.webSocket,
   ];
 

@@ -22,23 +22,17 @@ const _ws = RealtimeTransportOption(
   transport: RealtimeTransport.webSocket,
   factory: _StubFactory(),
 );
-const _sse = RealtimeTransportOption(
-  transport: RealtimeTransport.sse,
-  factory: _StubFactory(),
-);
 const _wt = RealtimeTransportOption(
   transport: RealtimeTransport.webTransport,
   factory: _StubFactory(),
 );
 
 RealtimeTransportSelector buildSelector({
-  bool sse = true,
   bool webTransport = true,
   DateTime Function()? now,
 }) {
   return RealtimeTransportSelector(
     webSocketFactory: _ws.factory,
-    sseFactory: sse ? () => _sse.factory : null,
     webTransportFactory: webTransport ? () => _wt.factory : null,
     failureThreshold: 2,
     demotionCooldown: const Duration(minutes: 5),
@@ -48,13 +42,14 @@ RealtimeTransportSelector buildSelector({
 
 void main() {
   group('RealtimeTransportSelector', () {
-    test('prefers WebTransport, then SSE, then WebSocket', () {
+    test('prefers WebTransport, then WebSocket; skips advertised SSE', () {
       final selector = buildSelector();
       final ranked = selector
           .rank([
             client_enum
                 .RealtimeTransportKind
                 .REALTIME_TRANSPORT_KIND_WEB_SOCKET,
+            // Older servers still advertise SSE; it must never rank.
             client_enum.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_SSE,
             client_enum
                 .RealtimeTransportKind
@@ -65,7 +60,6 @@ void main() {
 
       expect(ranked, [
         RealtimeTransport.webTransport,
-        RealtimeTransport.sse,
         RealtimeTransport.webSocket,
       ]);
     });
@@ -105,11 +99,11 @@ void main() {
           .map((option) => option.transport)
           .toList();
 
-      expect(ranked, [RealtimeTransport.sse, RealtimeTransport.webSocket]);
+      expect(ranked, [RealtimeTransport.webSocket]);
     });
 
     test('sticky preference wins over default order', () {
-      final selector = buildSelector()..preferred = RealtimeTransport.sse;
+      final selector = buildSelector()..preferred = RealtimeTransport.webTransport;
       final ranked = selector
           .rank([
             client_enum
@@ -123,7 +117,7 @@ void main() {
           .map((option) => option.transport)
           .toList();
 
-      expect(ranked.first, RealtimeTransport.sse);
+      expect(ranked.first, RealtimeTransport.webTransport);
     });
 
     test('demotes after consecutive failures, re-promotes after cooldown', () {
@@ -190,15 +184,17 @@ void main() {
 
     test('success clears failures and sets the sticky preference', () {
       final selector = buildSelector();
-      selector.reportFailure(RealtimeTransport.sse);
-      selector.reportSuccess(RealtimeTransport.sse);
-      expect(selector.preferred, RealtimeTransport.sse);
+      selector.reportFailure(RealtimeTransport.webTransport);
+      selector.reportSuccess(RealtimeTransport.webTransport);
+      expect(selector.preferred, RealtimeTransport.webTransport);
 
       // A single failure after success does not demote.
-      selector.reportFailure(RealtimeTransport.sse);
+      selector.reportFailure(RealtimeTransport.webTransport);
       expect(
         selector.rank([
-          client_enum.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_SSE,
+          client_enum
+              .RealtimeTransportKind
+              .REALTIME_TRANSPORT_KIND_WEB_TRANSPORT,
         ]),
         hasLength(1),
       );
@@ -238,10 +234,12 @@ void main() {
 
       expect(planner.candidates(), hasLength(1));
       advertised = [
-        client_enum.RealtimeTransportKind.REALTIME_TRANSPORT_KIND_SSE,
+        client_enum
+            .RealtimeTransportKind
+            .REALTIME_TRANSPORT_KIND_WEB_TRANSPORT,
       ];
       expect(planner.candidates().map((option) => option.transport), [
-        RealtimeTransport.sse,
+        RealtimeTransport.webTransport,
       ]);
     });
 

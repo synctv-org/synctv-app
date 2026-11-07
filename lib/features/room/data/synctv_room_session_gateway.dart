@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:synctv_app/features/room/application/room_session_gateway.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -43,27 +41,4 @@ final class SyncTvRoomSessionGateway implements RoomSessionGateway {
   @override
   Future<Uri> createWebTransportUri(String roomId) =>
       SyncTvService.createRoomWebTransportUri(roomId);
-
-  @override
-  Future<client.CreateRealtimeSessionResponse> createRealtimeSession(
-    String roomId,
-    List<client.ObserveResource> initialObservations,
-  ) => SyncTvService.createRealtimeSession(roomId, initialObservations);
-
-  @override
-  Stream<Uint8List> openRealtimeSessionEvents(
-    String roomId,
-    String sessionId,
-  ) => SyncTvService.openRealtimeSessionEvents(roomId, sessionId);
-
-  @override
-  Future<void> sendRealtimeSessionMessage(
-    String roomId,
-    String sessionId,
-    client.ClientMessage message,
-  ) => SyncTvService.sendRealtimeSessionMessage(roomId, sessionId, message);
-
-  @override
-  Future<void> endRealtimeSession(String roomId, String sessionId) =>
-      SyncTvService.endRealtimeSession(roomId, sessionId);
 }

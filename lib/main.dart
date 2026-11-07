@@ -31,7 +31,6 @@ import 'package:synctv_app/features/room/data/shared_preferences_realtime_event_
 import 'package:synctv_app/features/room/data/protobuf_room_realtime_protocol.dart';
 import 'package:synctv_app/core/time/synced_clock.dart';
 import 'package:synctv_app/features/room/application/realtime_transport_selector.dart';
-import 'package:synctv_app/features/room/data/http_session_room_realtime_channel.dart';
 import 'package:synctv_app/features/room/data/room_realtime_connection.dart';
 import 'package:synctv_app/features/room/data/room_realtime_engine.dart';
 import 'package:synctv_app/features/room/data/webtransport_room_realtime_channel.dart';
@@ -121,9 +120,6 @@ void main(List<String> args) {
       planner: SelectorRealtimeTransportPlanner(
         selector: RealtimeTransportSelector(
           webSocketFactory: IoRoomRealtimeChannelFactory(
-            sessionGateway: roomSessionGateway,
-          ),
-          sseFactory: () => HttpSessionRoomRealtimeChannelFactory(
             sessionGateway: roomSessionGateway,
           ),
           webTransportFactory: () => webTransportChannelFactory(
