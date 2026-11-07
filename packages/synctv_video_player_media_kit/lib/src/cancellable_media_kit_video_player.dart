@@ -22,6 +22,7 @@ import 'video_player_runtime.dart';
 export 'video_player_runtime.dart';
 
 const syncTvVideoFormatHeader = 'x-synctv-internal-media-format';
+const syncTvVideoLiveHeader = 'x-synctv-internal-media-live';
 
 extension AdaptiveVideoTrackController on VideoPlayerController {
   Stream<AdaptiveVideoTrackSnapshot> get adaptiveVideoTracks {
@@ -261,15 +262,21 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
     };
     final headers = Map<String, String>.of(dataSource.httpHeaders);
     String? syncTvFormatHint;
+    bool syncTvIsLive = false;
     for (final key in headers.keys.toList(growable: false)) {
       if (key.toLowerCase() == syncTvVideoFormatHeader) {
         syncTvFormatHint = headers.remove(key);
+      } else if (key.toLowerCase() == syncTvVideoLiveHeader) {
+        syncTvIsLive = headers.remove(key) == 'true';
       }
     }
     return Media(
       resource,
       httpHeaders: headers,
-      extras: {'formatHint': syncTvFormatHint ?? dataSource.formatHint?.name},
+      extras: {
+        'formatHint': syncTvFormatHint ?? dataSource.formatHint?.name,
+        if (syncTvIsLive) 'isLive': 'true',
+      },
     );
   }
 }

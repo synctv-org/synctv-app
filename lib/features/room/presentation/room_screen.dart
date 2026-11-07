@@ -314,6 +314,10 @@ class _RoomScreenState extends State<RoomScreen>
     with SingleTickerProviderStateMixin {
   static const _endedLiveStreamDrainTimeout = Duration(seconds: 120);
 
+  /// Minimum spacing between player rebuilds triggered by an errored
+  /// controller, matching the Jellyfin Web recovery cooldown.
+  static const _erroredVideoControllerReloadCooldown = Duration(seconds: 3);
+
   /// Upper bound on the transport-advertisement refresh before the realtime
   /// engine proceeds with the last-known (or WebSocket) fallback.
   static const _serverCapabilityRefreshTimeout = Duration(seconds: 10);
@@ -352,6 +356,7 @@ class _RoomScreenState extends State<RoomScreen>
       const AdaptiveAudioTrackSnapshot();
   String? _videoPlayerSourceKey;
   int? _videoPlayerSourceExpireAt;
+  DateTime? _erroredVideoControllerReloadAt;
   String? _initializingVideoSourceKey;
   bool _videoPlaybackHasProgress = false;
   VideoPlayerController? _recoveringErroredVideoController;
@@ -2711,6 +2716,15 @@ class _RoomScreenState extends State<RoomScreen>
         identical(_recoveringErroredVideoController, controller)) {
       return;
     }
+    // Shares the cooldown with the status-push rebuild path: without it a
+    // source that fails right after every rebuild restarts playback about
+    // once per second. Status pushes keep retrying once the window expires.
+    if (_erroredVideoControllerReloadAt != null &&
+        SyncedClock.now().difference(_erroredVideoControllerReloadAt!) <
+            _erroredVideoControllerReloadCooldown) {
+      return;
+    }
+    _erroredVideoControllerReloadAt = SyncedClock.now();
     _recoveringErroredVideoController = controller;
     try {
       final status = _currentStatus;
@@ -2932,8 +2946,20 @@ class _RoomScreenState extends State<RoomScreen>
     final sourceChanged =
         previousStatus != null &&
         (!previousStatus.hasSamePlaybackSource(status) || generationChanged);
+    // An errored controller is rebuilt on the next status push. Status pushes
+    // arrive about once per second, so without a cooldown a source that keeps
+    // failing (or an error surfaced on every push) turns into a rebuild
+    // roughly every second, restarting playback each time. Allow at most one
+    // error-driven rebuild per cooldown window; pushes inside the window keep
+    // the current (errored) controller until it expires.
     final reloadErroredController =
-        _videoPlayerController?.value.hasError == true;
+        _videoPlayerController?.value.hasError == true &&
+        (_erroredVideoControllerReloadAt == null ||
+            SyncedClock.now().difference(_erroredVideoControllerReloadAt!) >=
+                _erroredVideoControllerReloadCooldown);
+    if (reloadErroredController) {
+      _erroredVideoControllerReloadAt = SyncedClock.now();
+    }
     final effectiveForceReloadVideo =
         forceReloadVideo || reloadErroredController;
     if (oldMovieId != nextMovieId || sourceChanged) {
@@ -3260,11 +3286,13 @@ class _RoomScreenState extends State<RoomScreen>
         status?.entry?.selectedPlaybackUrlOption?.format ??
         status?.entry?.type ??
         '';
+    final mediaIsLive = status?.entry?.live == true;
     Map<String, String> controllerHeaders(Map<String, String> sourceHeaders) =>
         {
           ...sourceHeaders,
           if (kIsWeb && mediaFormat.isNotEmpty)
             syncTvVideoFormatHeader: mediaFormat,
+          if (kIsWeb && mediaIsLive) syncTvVideoLiveHeader: 'true',
         };
     VideoPlayerController createController(
       String sourceUrl,
