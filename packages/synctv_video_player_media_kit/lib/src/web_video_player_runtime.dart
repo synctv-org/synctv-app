@@ -232,10 +232,14 @@ class WebVideoPlayerRuntime
       // hls.js emits ERROR as fatal only after its internal retries are
       // exhausted, so a fatal error still admits in-place recovery; rebuilding
       // the player (which also restarts the media from scratch) is the last
-      // resort. WebHlsFatalErrorPolicy implements the engine's documented
-      // recipe with recovery budgets, so a persistently broken stream still
-      // reports and tears down.
+      // resort. WebHlsFatalErrorPolicy implements the recovery recipe with
+      // budgets, so a persistently broken stream still reports and tears
+      // down. Only the manifest details need special handling: startLoad()
+      // never re-triggers the manifest load (PlaylistLoader.startLoad is
+      // empty and the level/stream controllers no-op without a parsed
+      // manifest), so manifest failures recover via loadSource().
       if (_readBool(data, 'fatal') != true) return;
+      final details = _readString(data, 'details');
       final statusCode = _readInt(
         _asObject(data)?.getProperty<JSAny?>('response'.toJS),
         'code',
@@ -245,7 +249,12 @@ class WebVideoPlayerRuntime
         statusCode: statusCode,
       )) {
         case WebHlsFatalErrorAction.startLoad:
-          hls.callMethod<JSAny?>('startLoad'.toJS);
+          if (details == 'manifestLoadError' ||
+              details == 'manifestLoadTimeOut') {
+            hls.callMethod<JSAny?>('loadSource'.toJS, uri.toJS);
+          } else {
+            hls.callMethod<JSAny?>('startLoad'.toJS);
+          }
         case WebHlsFatalErrorAction.recoverMediaError:
           hls.callMethod<JSAny?>('recoverMediaError'.toJS);
         case WebHlsFatalErrorAction.swapAudioCodecAndRecoverMediaError:
@@ -361,9 +370,12 @@ class WebVideoPlayerRuntime
       );
     }
     // isLive has no manifest to autodetect from (unlike HLS/DASH): without it
-    // mpegts.js treats the stream as VOD, keeping every SourceBuffer segment
-    // until memory grows unbounded on long streams, keeping the loader's
-    // lazy-load window, and mis-handling live EARLY_EOF. Live and VOD FLV URLs
+    // mpegts.js treats the stream as VOD — the loader's lazy-load suspend
+    // window stays active (which stalls a live stream once the tail is
+    // reached), EARLY_EOF takes the VOD byte-range reconnect path instead of
+    // the live one, and the remuxer never accumulates live bookkeeping.
+    // SourceBuffer cleanup needs no isLive here because
+    // autoCleanupSourceBuffer is set explicitly below. Live and VOD FLV URLs
     // are indistinguishable, so the room passes the entry's live flag along.
     final mediaDataSource = <String, Object?>{
       'type': transport == WebPlaybackTransport.flv ? 'flv' : 'mpegts',

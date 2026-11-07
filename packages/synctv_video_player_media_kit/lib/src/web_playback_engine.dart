@@ -56,12 +56,13 @@ enum WebHlsFatalErrorAction {
   report,
 }
 
-/// Recovery decisions for fatal hls.js errors, following the engine's
-/// documented recipe: fatal network errors resume via startLoad(), fatal
-/// media errors recover via recoverMediaError() and, on a quick recurrence,
-/// swapAudioCodec() plus another recovery. Errors outside these families,
-/// rejected requests, and exhausted recovery budgets report so the player
-/// can be torn down.
+/// Recovery decisions for fatal hls.js errors, following the recovery
+/// recipe used by Jellyfin's web client: fatal network errors resume
+/// loading (startLoad(), or loadSource() for the manifest details, which
+/// startLoad() cannot re-trigger), fatal media errors recover via
+/// recoverMediaError() and, on a quick recurrence, swapAudioCodec() plus
+/// another recovery. Errors outside these families, rejected requests, and
+/// exhausted recovery budgets report so the player can be torn down.
 class WebHlsFatalErrorPolicy {
   WebHlsFatalErrorPolicy({
     this.maxNetworkRecoveries = 5,
