@@ -71,13 +71,13 @@ class WebVideoPlayerRuntime
 
   static final _engineLoader = WebEngineLoader();
   static const _hlsBundle = WebEngineBundle(
-    path: 'playback/hls-1.7.2.min.js',
-    integrity: 'sha256-r83gdDfshLBy/oeC53LOtQRurHUbJxn3OuDYPXY7w/U=',
+    path: 'playback/hls-1.7.4.min.js',
+    integrity: 'sha256-z8cMyen8Y9BxkZ4IdnCrx2DI/RvIibiFiAJuTSIZO74=',
     globalName: 'Hls',
   );
   static const _dashBundle = WebEngineBundle(
-    path: 'playback/dash-5.2.1.min.js',
-    integrity: 'sha256-OiKx9FdqspT0HlbxVs7Hlypfg+3aN5QWd4KT/yLS60k=',
+    path: 'playback/dash-5.3.0.min.js',
+    integrity: 'sha256-39n1yw49U3LT5e7HCb3aZE8hw4GvSgG+L3piQ50B49s=',
     globalName: 'dashjs',
   );
   static const _mpegTsBundle = WebEngineBundle(
@@ -175,6 +175,7 @@ class WebVideoPlayerRuntime
       formatHint: media.extras?['formatHint'] as String?,
       uri: uri,
     );
+    final isLive = media.extras?['isLive'] == 'true';
     final engine = selectWebPlaybackEngine(
       transport: transport,
       nativeHls: _video.canPlayType('application/vnd.apple.mpegurl').isNotEmpty,
@@ -193,7 +194,7 @@ class WebVideoPlayerRuntime
           _scheduleInitializationTimeout();
         }
       case WebPlaybackEngine.mpegTsJs:
-        if (await _openMpegTs(resolvedUri, transport, generation)) {
+        if (await _openMpegTs(resolvedUri, transport, generation, isLive)) {
           _scheduleInitializationTimeout();
         }
     }
@@ -226,12 +227,34 @@ class WebVideoPlayerRuntime
     _engine = hls;
 
     final events = constructor.getProperty<JSObject>('Events'.toJS);
-    _bindEngineError(
-      hls,
-      events.getProperty<JSAny>('ERROR'.toJS),
-      code: 'hls_engine_error',
-      fatalOnly: true,
-    );
+    final fatalErrorPolicy = WebHlsFatalErrorPolicy();
+    _bindEngineEvent(hls, events.getProperty<JSAny>('ERROR'.toJS), (_, data) {
+      // hls.js emits ERROR as fatal only after its internal retries are
+      // exhausted, so a fatal error still admits in-place recovery; rebuilding
+      // the player (which also restarts the media from scratch) is the last
+      // resort. WebHlsFatalErrorPolicy implements the engine's documented
+      // recipe with recovery budgets, so a persistently broken stream still
+      // reports and tears down.
+      if (_readBool(data, 'fatal') != true) return;
+      final statusCode = _readInt(
+        _asObject(data)?.getProperty<JSAny?>('response'.toJS),
+        'code',
+      );
+      switch (fatalErrorPolicy.handle(
+        type: _readString(data, 'type'),
+        statusCode: statusCode,
+      )) {
+        case WebHlsFatalErrorAction.startLoad:
+          hls.callMethod<JSAny?>('startLoad'.toJS);
+        case WebHlsFatalErrorAction.recoverMediaError:
+          hls.callMethod<JSAny?>('recoverMediaError'.toJS);
+        case WebHlsFatalErrorAction.swapAudioCodecAndRecoverMediaError:
+          hls.callMethod<JSAny?>('swapAudioCodec'.toJS);
+          hls.callMethod<JSAny?>('recoverMediaError'.toJS);
+        case WebHlsFatalErrorAction.report:
+          _reportHlsFatal(data, statusCode: statusCode);
+      }
+    });
     _bindEngineEvent(
       hls,
       events.getProperty<JSAny>('MANIFEST_PARSED'.toJS),
@@ -306,6 +329,18 @@ class WebVideoPlayerRuntime
       _applyPendingDashVideoRepresentation();
       _refreshDashTracks();
     }, singleArgument: true);
+    // Keep live streams on the local clock. The default UTC synchronization
+    // periodically requests an external time service (time.akamai.com), which
+    // is slow or blocked in some regions and delays live startup behind
+    // synchronization timeouts; device clocks are NTP-aligned in practice.
+    player.callMethod<JSAny?>(
+      'updateSettings'.toJS,
+      <String, Object?>{
+        'streaming': {
+          'utcSynchronization': {'enabled': false},
+        },
+      }.jsify(),
+    );
     player.callMethod<JSAny?>('initialize'.toJS, _video, uri.toJS, false.toJS);
     return true;
   }
@@ -314,6 +349,7 @@ class WebVideoPlayerRuntime
     String uri,
     WebPlaybackTransport transport,
     int generation,
+    bool isLive,
   ) async {
     final mpegts = await _engineLoader.load(_mpegTsBundle);
     if (!_isCurrentMediaGeneration(generation)) return false;
@@ -324,9 +360,15 @@ class WebVideoPlayerRuntime
         message: 'mpegts.js cannot initialize in this browser.',
       );
     }
+    // isLive has no manifest to autodetect from (unlike HLS/DASH): without it
+    // mpegts.js treats the stream as VOD, keeping every SourceBuffer segment
+    // until memory grows unbounded on long streams, keeping the loader's
+    // lazy-load window, and mis-handling live EARLY_EOF. Live and VOD FLV URLs
+    // are indistinguishable, so the room passes the entry's live flag along.
     final mediaDataSource = <String, Object?>{
       'type': transport == WebPlaybackTransport.flv ? 'flv' : 'mpegts',
       'url': uri,
+      if (isLive) 'isLive': true,
     }.jsify();
     final config = <String, Object?>{
       'enableWorker': true,
@@ -351,6 +393,25 @@ class WebVideoPlayerRuntime
     player.callMethod<JSAny?>('attachMediaElement'.toJS, _video);
     player.callMethod<JSAny?>('load'.toJS);
     return true;
+  }
+
+  void _reportHlsFatal(JSAny? data, {int? statusCode}) {
+    final details = _readString(data, 'details');
+    final type = _readString(data, 'type');
+    final message = <String>{
+      ?type,
+      ?details,
+      if (statusCode != null) 'http $statusCode',
+    }.join(': ');
+    reportOpenError(
+      PlatformException(
+        code: 'hls_engine_error',
+        message: message.isEmpty
+            ? 'The HLS engine reported a fatal error.'
+            : message,
+      ),
+      StackTrace.current,
+    );
   }
 
   void _bindEngineError(

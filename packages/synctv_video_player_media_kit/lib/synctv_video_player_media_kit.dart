@@ -9,7 +9,8 @@ export 'src/cancellable_media_kit_video_player.dart'
         AdaptiveVideoTrackController,
         BrowserPictureInPictureController,
         CancellableMediaKitVideoPlayer,
-        syncTvVideoFormatHeader;
+        syncTvVideoFormatHeader,
+        syncTvVideoLiveHeader;
 export 'src/video_player_runtime.dart'
     show
         AdaptiveAudioTrackInfo,
