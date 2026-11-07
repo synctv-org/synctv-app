@@ -1730,6 +1730,59 @@ segment.ts?token=secret
     expect(engine.stats.value.cacheBytes, lessThanOrEqualTo(2 * 1024 * 1024));
   });
 
+  test(
+    'disposal during an ignored-Range consume does not leak errors',
+    () async {
+      // Regression: dispose() force-closes the shared HttpClient while the
+      // background consume of an ignored-Range origin response is still
+      // streaming; the resulting HttpException used to escape as an unhandled
+      // async error on CI.
+      const mediaLength = 20 * 1024 * 1024;
+      final media = Uint8List.fromList(
+        List<int>.generate(mediaLength, (index) => index % 251),
+      );
+      final origin = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      origin.listen((request) async {
+        try {
+          request.response.headers.contentLength = media.length;
+          const chunkSize = 64 * 1024;
+          for (var offset = 0; offset < mediaLength; offset += chunkSize) {
+            request.response.add(
+              media.sublist(offset, min(offset + chunkSize, mediaLength)),
+            );
+            await request.response.flush();
+            await Future<void>.delayed(const Duration(milliseconds: 20));
+          }
+          await request.response.close();
+        } on Object {
+          // The engine disposes mid-stream; writes to the destroyed socket
+          // are expected to fail.
+        }
+      });
+      final engine = P2pMediaEngine(
+        securityMode: P2pMediaSecurityMode.standard,
+        requestPeerPiece: (swarm, key, cancellation) async => null,
+      );
+      final local = await engine.localize(
+        upstream: Uri.parse(
+          'http://${origin.address.address}:${origin.port}/large.mp4',
+        ),
+        headers: const {},
+        swarmId: 'sm2_dispose_mid_consume',
+        format: 'mp4',
+      );
+
+      final response = await _getResponse(local, range: 'bytes=0-1023');
+
+      expect(response.statusCode, HttpStatus.partialContent);
+      expect(response.bytes, media.sublist(0, 1024));
+      // The slow origin keeps the background consume streaming several more
+      // pieces; disposal lands mid-stream.
+      await engine.dispose();
+      await origin.close(force: true);
+    },
+  );
+
   test('DASH gateway rewrites BaseURL and shares expanded segments', () async {
     var segmentRequests = 0;
     final requestedPieces = <String>[];
