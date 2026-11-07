@@ -66,5 +66,10 @@ void main() {
         isTrue,
       );
     }
+
+    // The server rejects the whole observe message when the profile exceeds
+    // the 64-item media_capabilities ceiling (synctv#530); whatever this
+    // browser reports must stay under it.
+    expect(profile.mediaCapabilities.length, lessThan(64));
   });
 }

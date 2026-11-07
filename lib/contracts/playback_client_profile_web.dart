@@ -1,12 +1,19 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
+import 'package:synctv_app/contracts/playback_client_profile_dash.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:web/web.dart' as web;
 
 const _version = 2;
+
+/// Protocol ceiling for `PlaybackClientProfile.media_capabilities`; the
+/// server rejects the whole observe message when the profile exceeds it, so
+/// the advertised set must always be trimmed below this bound no matter how
+/// many codec/pipeline combinations the browser reports.
+const _maxMediaCapabilities = 64;
 
 bool supportsP2pMediaLoader() {
   return globalContext.has('RTCPeerConnection') &&
@@ -94,31 +101,25 @@ client.PlaybackClientProfile buildPlaybackClientProfile() {
           ),
         )
         .toList();
-    if (supportedAudio.isEmpty) return;
-
-    for (final videoCandidate in _dashVideoCandidates) {
-      if (!_isTypeSupported(
-        constructorName,
-        'video/mp4; codecs="${videoCandidate.codecString}"',
-      )) {
-        continue;
-      }
-      for (final audioCandidate in supportedAudio) {
-        capabilities.add(
-          client.PlaybackMediaCapability(
-            transport: client_enum
-                .PlaybackMediaTransport
-                .PLAYBACK_MEDIA_TRANSPORT_DASH,
-            container: client_enum.PlaybackContainer.PLAYBACK_CONTAINER_MP4,
-            videoCodec: videoCandidate.videoCodec,
-            audioCodec: audioCandidate.audioCodec,
-            pipeline: pipeline,
-            codecString:
-                '${videoCandidate.codecString},${audioCandidate.codecString}',
+    final supportedVideo = _dashVideoCandidates
+        .where(
+          (candidate) => _isTypeSupported(
+            constructorName,
+            'video/mp4; codecs="${candidate.codecString}"',
           ),
-        );
-      }
-    }
+        )
+        .toList();
+    capabilities.addAll(
+      buildDashCapabilityEntries(
+        supportedVideo: supportedVideo
+            .map((candidate) => (candidate.codecString, candidate.videoCodec))
+            .toList(),
+        supportedAudio: supportedAudio
+            .map((candidate) => (candidate.codecString, candidate.audioCodec))
+            .toList(),
+        pipeline: pipeline,
+      ),
+    );
   }
 
   const candidates = [
@@ -240,6 +241,13 @@ client.PlaybackClientProfile buildPlaybackClientProfile() {
         capability.transport ==
         client_enum.PlaybackMediaTransport.PLAYBACK_MEDIA_TRANSPORT_FLV,
   );
+  // Belt-and-braces: never exceed the protocol ceiling even if a future
+  // browser or candidate-list change widens the matrix again. Entries are
+  // appended in descending practical importance (baseline codecs per
+  // transport first), so a tail trim is the least harmful cut.
+  if (capabilities.length > _maxMediaCapabilities) {
+    capabilities.removeRange(_maxMediaCapabilities, capabilities.length);
+  }
 
   return client.PlaybackClientProfile(
     profileVersion: _version,
