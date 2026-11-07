@@ -634,12 +634,26 @@ class P2pMediaEngine implements P2pMediaPlaybackEngine {
     _completeOriginLoads[loadKey] = load;
     final target = load.waitForPiece(targetPieceIndex);
     unawaited(
-      _consumeCompleteOrigin(resource, origin, load).whenComplete(() {
-        load.finish();
-        if (identical(_completeOriginLoads[loadKey], load)) {
-          _completeOriginLoads.remove(loadKey);
-        }
-      }),
+      _consumeCompleteOrigin(resource, origin, load)
+          .then(
+            (_) {},
+            onError: (Object error, StackTrace stackTrace) {
+              // dispose() force-closes the shared HttpClient while this
+              // orphaned consume may still be streaming the origin body;
+              // that surfaces as an HttpException with no observer left.
+              // Waiters were already released by finish(), so suppress the
+              // expected shutdown error; live errors still reach the zone.
+              if (!_disposed) {
+                Zone.current.handleUncaughtError(error, stackTrace);
+              }
+            },
+          )
+          .whenComplete(() {
+            load.finish();
+            if (identical(_completeOriginLoads[loadKey], load)) {
+              _completeOriginLoads.remove(loadKey);
+            }
+          }),
     );
     return target;
   }
