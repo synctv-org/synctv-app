@@ -4090,13 +4090,20 @@ class _RoomScreenState extends State<RoomScreen>
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    context.l10n.roomCollaboration,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
+                  flex: 2,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      context.l10n.roomCollaboration,
+                      maxLines: 1,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 Flexible(
                   child: AppTooltip(
                     message: context.l10n.roomPresenceSummary(
@@ -4743,9 +4750,7 @@ class _RoomScreenState extends State<RoomScreen>
           const SizedBox(width: 6),
           AppIconButton(
             tooltip: context.l10n.refreshPinnedMessages,
-            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-            padding: EdgeInsets.zero,
-            iconSize: 17,
+            iconSize: 18,
             size: AppIconButtonSize.sm,
             onPressed: _pinnedMessagesLoading ? null : _loadPinnedChatMessages,
             icon: Icons.refresh_rounded,
@@ -4808,12 +4813,7 @@ class _RoomScreenState extends State<RoomScreen>
               const SizedBox(width: 6),
               AppIconButton(
                 tooltip: context.l10n.unpin,
-                constraints: const BoxConstraints.tightFor(
-                  width: 28,
-                  height: 28,
-                ),
-                padding: EdgeInsets.zero,
-                iconSize: 15,
+                iconSize: 17,
                 size: AppIconButtonSize.sm,
                 style: AppIconButtonStyle.ghost,
                 onPressed: () => _toggleChatPin(message),
@@ -4924,9 +4924,7 @@ class _RoomScreenState extends State<RoomScreen>
           ),
           AppIconButton(
             tooltip: context.l10n.cancelReply,
-            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-            padding: EdgeInsets.zero,
-            iconSize: 17,
+            iconSize: 18,
             size: AppIconButtonSize.sm,
             onPressed: () => setState(() => _replyingToMessage = null),
             icon: Icons.close_rounded,
@@ -5699,9 +5697,9 @@ class _RoomScreenState extends State<RoomScreen>
           _setChatReaction(message, key, enabled: !reactedByMe);
         },
         child: SizedBox(
-          width: 28,
-          height: 28,
-          child: Center(child: Text(key, style: const TextStyle(fontSize: 16))),
+          width: 36,
+          height: 36,
+          child: Center(child: Text(key, style: const TextStyle(fontSize: 17))),
         ),
       ),
     );
@@ -5724,8 +5722,8 @@ class _RoomScreenState extends State<RoomScreen>
           _setChatReaction(message, key, enabled: !reactedByMe);
         },
         child: SizedBox(
-          width: 28,
-          height: 28,
+          width: 36,
+          height: 36,
           child: Center(child: Text(key, style: const TextStyle(fontSize: 17))),
         ),
       ),
@@ -5748,9 +5746,7 @@ class _RoomScreenState extends State<RoomScreen>
   }) {
     final button = AppIconButton(
       tooltip: tooltip,
-      constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-      padding: EdgeInsets.zero,
-      iconSize: 15,
+      iconSize: 16,
       size: AppIconButtonSize.sm,
       style: AppIconButtonStyle.ghost,
       onPressed: () {
@@ -5778,9 +5774,7 @@ class _RoomScreenState extends State<RoomScreen>
   }) {
     final button = AppIconButton(
       tooltip: tooltip,
-      constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-      padding: EdgeInsets.zero,
-      iconSize: 15,
+      iconSize: 16,
       size: AppIconButtonSize.sm,
       style: AppIconButtonStyle.ghost,
       onPressed: () {
