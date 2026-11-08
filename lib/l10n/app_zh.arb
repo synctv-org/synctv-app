@@ -414,6 +414,8 @@
   "sync": "同步",
   "sendDanmaku": "发送弹幕",
   "exitFullscreen": "退出全屏",
+  "webFullscreen": "网页全屏",
+  "windowFullscreen": "窗口全屏",
   "fullscreen": "全屏",
   "pictureInPicture": "画中画",
   "exitPictureInPicture": "返回房间",

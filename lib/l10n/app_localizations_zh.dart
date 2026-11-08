@@ -1289,6 +1289,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exitFullscreen => '退出全屏';
 
   @override
+  String get webFullscreen => '网页全屏';
+
+  @override
+  String get windowFullscreen => '窗口全屏';
+
+  @override
   String get fullscreen => '全屏';
 
   @override

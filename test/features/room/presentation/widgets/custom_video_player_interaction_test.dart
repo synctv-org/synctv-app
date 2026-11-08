@@ -194,6 +194,15 @@ class _RecordingVideoPlayerController extends VideoPlayerController {
 Future<R> parseInline<Q, R>(R Function(Q) callback, Q message) async =>
     callback(message);
 
+/// Reads the controls layer's ignoring flag through a dynamic access; the
+/// widget type is private to the player library.
+bool _bottomBarVisible(WidgetTester tester) {
+  final dynamic layer = tester.widget(
+    find.byKey(const Key('playback_controls_layer')),
+  );
+  return !layer.ignoring;
+}
+
 void main() {
   setUp(() {
     documentParseRunner = parseInline;
@@ -2746,6 +2755,211 @@ void main() {
     expect(
       tester.getSize(find.byKey(const Key('playback_next_button'))),
       const Size(40, 40),
+    );
+  });
+
+  testWidgets('web build shows separate web and true fullscreen buttons', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+      ),
+    );
+    addTearDown(controller.dispose);
+    var surfaceFullScreenCalls = 0;
+    var trueFullScreenCalls = 0;
+    var toggleCalls = 0;
+
+    Widget player({
+      VoidCallback? onSurfaceFullScreen,
+      VoidCallback? onTrueFullScreen,
+    }) => MaterialApp(
+      builder: buildThemedTestApp,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: CustomVideoPlayer(
+          volumePreferences: _volumePreferences(),
+          subtitleSource: const _EmptySubtitleSource(),
+          controller: controller,
+          title: 'Video',
+          interactionMode: VideoPlayerInteractionMode.desktop,
+          onToggleFullScreen: () => toggleCalls++,
+          onSurfaceFullScreen: onSurfaceFullScreen,
+          onTrueFullScreen: onTrueFullScreen,
+        ),
+      ),
+    );
+
+    // Surface fullscreen provided (web or desktop): both buttons render and
+    // invoke their own callbacks.
+    await tester.pumpWidget(
+      player(
+        onSurfaceFullScreen: () => surfaceFullScreenCalls++,
+        onTrueFullScreen: () => trueFullScreenCalls++,
+      ),
+    );
+    await tester.pump();
+    await tester.tap(
+      find.byKey(const Key('playback_surface_fullscreen_button')),
+    );
+    await tester.pump();
+    expect(surfaceFullScreenCalls, 1);
+    expect(trueFullScreenCalls, 0);
+    await tester.tap(find.byKey(const Key('playback_fullscreen_button')));
+    await tester.pump();
+    expect(trueFullScreenCalls, 1);
+    expect(toggleCalls, 0);
+
+    // Without a true fullscreen callback the second button drives the toggle.
+    toggleCalls = 0;
+    trueFullScreenCalls = 0;
+    await tester.pumpWidget(
+      player(
+        onSurfaceFullScreen: () => surfaceFullScreenCalls++,
+        onTrueFullScreen: null,
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('playback_fullscreen_button')));
+    await tester.pump();
+    expect(toggleCalls, 1);
+    expect(trueFullScreenCalls, 0);
+
+    // No surface fullscreen (mobile): only the single fullscreen button,
+    // falling back to the toggle callback.
+    toggleCalls = 0;
+    trueFullScreenCalls = 0;
+    await tester.pumpWidget(player());
+    await tester.pump();
+    expect(
+      find.byKey(const Key('playback_surface_fullscreen_button')),
+      findsNothing,
+    );
+    expect(find.byKey(const Key('playback_fullscreen_button')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('playback_fullscreen_button')));
+    await tester.pump();
+    expect(
+      toggleCalls,
+      1,
+      reason: 'native fallback drives the toggle callback',
+    );
+  });
+
+  testWidgets('surface fullscreen button is absent while already fullscreen', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CustomVideoPlayer(
+            volumePreferences: _volumePreferences(),
+            subtitleSource: const _EmptySubtitleSource(),
+            controller: controller,
+            title: 'Video',
+            isFullScreen: true,
+            onToggleFullScreen: () {},
+            onSurfaceFullScreen: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('playback_surface_fullscreen_button')),
+      findsNothing,
+    );
+    expect(find.byKey(const Key('playback_fullscreen_button')), findsOneWidget);
+  });
+
+  testWidgets('desktop controls hide after mouse idles while playing', (
+    tester,
+  ) async {
+    final controller = _RecordingVideoPlayerController(
+      const VideoPlayerValue(
+        duration: Duration(minutes: 1),
+        isInitialized: true,
+        isPlaying: true,
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.binding.setSurfaceSize(const Size(1200, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CustomVideoPlayer(
+            volumePreferences: _volumePreferences(),
+            subtitleSource: const _EmptySubtitleSource(),
+            controller: controller,
+            title: 'Video',
+            interactionMode: VideoPlayerInteractionMode.desktop,
+            onToggleFullScreen: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final center = tester.getCenter(
+      find.byKey(const Key('playback_controls_layer')),
+    );
+    final gesture = await tester.createGesture(
+      kind: PointerDeviceKind.mouse,
+      pointer: 8,
+    );
+    await gesture.addPointer(location: center);
+    addTearDown(gesture.removePointer);
+    await tester.pump();
+    await gesture.moveTo(center + const Offset(1, 0));
+    await tester.pump();
+    expect(_bottomBarVisible(tester), isTrue, reason: 'hover shows controls');
+
+    // Idle inside the player: the idle hide must still fire.
+    await tester.pump(const Duration(seconds: 4));
+    expect(
+      _bottomBarVisible(tester),
+      isFalse,
+      reason: 'controls must hide after the mouse goes quiet',
+    );
+
+    // Moving again reveals them.
+    await gesture.moveTo(center + const Offset(20, 0));
+    await tester.pump();
+    expect(
+      _bottomBarVisible(tester),
+      isTrue,
+      reason: 'movement shows controls',
+    );
+
+    // Pausing stops the idle hide.
+    await tester.pump(const Duration(seconds: 4));
+    await gesture.moveTo(center - const Offset(20, 0));
+    await tester.pump();
+    controller.value = controller.value.copyWith(isPlaying: false);
+    await tester.pump(const Duration(seconds: 4));
+    expect(
+      _bottomBarVisible(tester),
+      isTrue,
+      reason: 'paused playback keeps the controls visible',
     );
   });
 }

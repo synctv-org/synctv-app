@@ -1444,6 +1444,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exitFullscreen => 'Exit fullscreen';
 
   @override
+  String get webFullscreen => 'Web fullscreen';
+
+  @override
+  String get windowFullscreen => 'Window fullscreen';
+
+  @override
   String get fullscreen => 'Fullscreen';
 
   @override

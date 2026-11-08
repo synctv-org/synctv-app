@@ -1,5 +1,6 @@
 import 'package:synctv_app/features/room/presentation/widgets/chat_scroll_controller.dart';
 import 'package:synctv_app/core/presentation/image/app_image_preview.dart';
+import 'package:synctv_app/core/platform/true_fullscreen.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_message_edit_form.dart';
 
 import 'dart:async';
@@ -973,19 +974,23 @@ class _RoomScreenState extends State<RoomScreen>
     final controller = _videoPlayerController;
     if (controller == null || !controller.value.isInitialized) return;
     if (kIsWeb && _fullScreenRouteOpen && mounted) {
+      await exitTrueFullscreen();
       final entered = await _pictureInPicture.enter(
         aspectRatio: controller.value.aspectRatio,
         videoController: controller,
       );
       if (entered && mounted && _fullScreenRouteOpen) {
-        Navigator.of(context).pop();
+        _closeFullScreenRoute();
       }
       return;
     }
     if (_fullScreenRouteOpen && mounted) {
-      Navigator.of(context).pop();
+      _closeFullScreenRoute();
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
+      // Release OS window fullscreen before reshaping the window into the
+      // mini player; a no-op where the route never touched the OS window.
+      await exitTrueFullscreen();
     }
     await _pictureInPicture.enter(
       aspectRatio: controller.value.aspectRatio,
@@ -3908,7 +3913,15 @@ class _RoomScreenState extends State<RoomScreen>
               Center(
                 child:
                     _videoPlayerController != null &&
-                        _videoPlayerController!.value.isInitialized
+                        _videoPlayerController!.value.isInitialized &&
+                        // While the fullscreen route owns the video, keep the
+                        // inline surface as a plain black placeholder: the web
+                        // video player backs every platform view of a texture
+                        // with the same <video> element, so a second mounted
+                        // VideoPlayer would rip the element out of the route
+                        // (black player), and the element would never return
+                        // here after the route closes (black surface).
+                        !_fullScreenRouteOpen
                     ? CustomVideoPlayer(
                         subtitleSelection: _subtitleSelection,
                         volumePreferences: _playerVolumePreferences,
@@ -3936,6 +3949,12 @@ class _RoomScreenState extends State<RoomScreen>
                         isLive: _currentStatus?.entry?.live == true,
                         liveStartedAt: _currentStatus?.entry?.liveStartedAt,
                         onToggleFullScreen: _toggleFullScreen,
+                        onSurfaceFullScreen: supportsSurfaceFullScreen
+                            ? _toggleFullScreen
+                            : null,
+                        onTrueFullScreen: supportsTrueFullscreen
+                            ? _toggleTrueFullScreen
+                            : null,
                         onSync: _handleSync,
                         onPrevious: _canNavigatePlayback
                             ? () => unawaited(_navigatePlayback(previous: true))
@@ -4406,13 +4425,38 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
+  /// Enters true fullscreen — the browser document on web, the OS window on
+  /// desktop — then opens the fullscreen player route. The request must
+  /// happen inside the tap gesture; if the platform refuses it, the route
+  /// still opens as plain surface fullscreen.
+  Future<void> _toggleTrueFullScreen() async {
+    final controller = _videoPlayerController;
+    if (controller == null || !controller.value.isInitialized) return;
+    await requestTrueFullscreen();
+    await _toggleFullScreen();
+  }
+
+  /// Leaves the fullscreen player route: exits true fullscreen first so the
+  /// document or OS window is not left presented fullscreen, and releases
+  /// the inline placeholder before popping so the video element returns to
+  /// the surface while the route fades out.
+  Future<void> _exitFullScreenRoute(BuildContext routeContext) async {
+    _closeFullScreenRoute();
+    await exitTrueFullscreen();
+    if (routeContext.mounted) Navigator.of(routeContext).pop();
+  }
+
   Future<void> _toggleFullScreen() async {
     if (_videoPlayerController == null ||
         !_videoPlayerController!.value.isInitialized) {
       return;
     }
 
-    _fullScreenRouteOpen = true;
+    // Swap the inline surface to a placeholder while the route owns the
+    // video element (see _buildVideoSurface), then open the route.
+    setState(() {
+      _fullScreenRouteOpen = true;
+    });
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ValueListenableBuilder<int>(
@@ -4446,7 +4490,8 @@ class _RoomScreenState extends State<RoomScreen>
               onSubtitleP2pDeactivated: _deactivateP2pSubtitle,
               isLive: _currentStatus?.entry?.live == true,
               liveStartedAt: _currentStatus?.entry?.liveStartedAt,
-              onToggleFullScreen: () => Navigator.of(context).pop(),
+              onToggleFullScreen: () =>
+                  unawaited(_exitFullScreenRoute(context)),
               onSync: _handleSync,
               onPrevious: _canNavigatePlayback
                   ? () => unawaited(_navigatePlayback(previous: true))
@@ -4509,7 +4554,15 @@ class _RoomScreenState extends State<RoomScreen>
         ),
       ),
     );
+    _closeFullScreenRoute();
+  }
+
+  /// Closes the fullscreen route state: remounts the inline player so the
+  /// web video element returns to the inline surface.
+  void _closeFullScreenRoute() {
+    if (!_fullScreenRouteOpen) return;
     _fullScreenRouteOpen = false;
+    if (mounted) setState(() {});
   }
 
   void _sendDanmaku(String text) {
