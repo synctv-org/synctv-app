@@ -364,6 +364,10 @@ class CustomVideoPlayer extends StatefulWidget {
   final PlaybackResourceLocalizer? resolveSubtitleResource;
   final VoidCallback? onSubtitleP2pDeactivated;
   final VoidCallback? onToggleFullScreen;
+  /// Opens web fullscreen from the inline player. The room screen only
+  /// provides it on the web build, so the player renders the second
+  /// fullscreen button when it is non-null.
+  final VoidCallback? onWebFullScreen;
   final VoidCallback? onSync;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
@@ -416,6 +420,7 @@ class CustomVideoPlayer extends StatefulWidget {
     this.resolveSubtitleResource,
     this.onSubtitleP2pDeactivated,
     this.onToggleFullScreen,
+    this.onWebFullScreen,
     this.onSync,
     this.onPrevious,
     this.onNext,
@@ -1626,6 +1631,7 @@ enum VideoPlayerInteractionMode { mobile, desktop }
 
 class _PlayerVisualIgnorePointer extends SingleChildRenderObjectWidget {
   const _PlayerVisualIgnorePointer({
+    super.key,
     required this.ignoring,
     required super.child,
   });
@@ -1864,6 +1870,16 @@ enum _OverlaySettingsSection { subtitle, videoDanmaku, chatDanmaku }
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     with SingleTickerProviderStateMixin {
+  /// Idle delay before the desktop controls hide while the cursor stays
+  /// inside the player.
+  static const _desktopIdleControlsHideDuration = Duration(seconds: 3);
+
+  /// Delay before the desktop controls hide once the cursor leaves the
+  /// player, or right after a menu closes.
+  static const _desktopExitedControlsHideDuration = Duration(
+    milliseconds: 900,
+  );
+
   bool get _pictureInPictureActive =>
       widget.pictureInPictureActive?.value ?? false;
 
@@ -1887,7 +1903,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   bool _isVolumeMenuHovered = false;
   bool _isVolumeSliderDragging = false;
   bool _isPlaybackSpeedMenuOpen = false;
-  bool _isDesktopPointerInside = false;
   Future<bool?>? _overflowMenuFuture;
 
   bool get _isVolumeControlHovered =>
@@ -2281,7 +2296,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _showDesktopControls() {
     if (!_isDesktopMode) return;
-    _isDesktopPointerInside = true;
     _hideTimer?.cancel();
     if (mounted && !_showControls) {
       setState(() => _showControls = true);
@@ -2290,6 +2304,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _handleDesktopPointerHover(PointerHoverEvent event) {
     _showDesktopControls();
+    // Each movement restarts the idle hide: controls stay while the mouse is
+    // in use and dismiss after it goes quiet, wherever the cursor parks.
+    _scheduleDesktopControlsHide(_desktopIdleControlsHideDuration);
   }
 
   void _hideDesktopControlsIfIdle() {
@@ -2300,7 +2317,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         _isVolumeControlHovered ||
         _isVolumeSliderDragging ||
         _isPlaybackSpeedMenuOpen ||
-        _isDesktopPointerInside) {
+        _overflowMenuFuture != null) {
       return;
     }
     setState(() {
@@ -2309,26 +2326,24 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _closeVolumeMenu();
   }
 
-  void _scheduleDesktopControlsHide() {
+  void _scheduleDesktopControlsHide([
+    Duration delay = _desktopExitedControlsHideDuration,
+  ]) {
     _hideTimer?.cancel();
-    _hideTimer = Timer(
-      const Duration(milliseconds: 900),
-      _hideDesktopControlsIfIdle,
-    );
+    _hideTimer = Timer(delay, _hideDesktopControlsIfIdle);
   }
 
   void _handlePlaybackSpeedMenuVisibilityChanged(bool isVisible) {
     _isPlaybackSpeedMenuOpen = isVisible;
     if (isVisible) {
       _hideTimer?.cancel();
-    } else if (_isDesktopMode && !_isDesktopPointerInside) {
+    } else if (_isDesktopMode) {
       _scheduleDesktopControlsHide();
     }
   }
 
   void _handleDesktopPointerExit(PointerExitEvent event) {
     if (!_isDesktopMode) return;
-    _isDesktopPointerInside = false;
     if (!widget.controller.value.isPlaying) return;
     _scheduleDesktopControlsHide();
   }
@@ -2759,6 +2774,34 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Widget _buildFullscreenControl(double iconSize) {
+    final webFullScreen = widget.onWebFullScreen;
+    // Inline web build: separate buttons for web fullscreen (fills the page,
+    // like bilibili's web fullscreen) and true browser fullscreen.
+    if (!widget.isFullScreen && webFullScreen != null) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _PlayerIconButton(
+            key: const Key('playback_web_fullscreen_button'),
+            icon: Icons.smart_display_rounded,
+            tooltip: context.l10n.webFullscreen,
+            onPressed: webFullScreen,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            iconSize: iconSize,
+          ),
+          _PlayerIconButton(
+            key: const Key('playback_fullscreen_button'),
+            icon: widget.fullScreenIcon ?? Icons.fullscreen,
+            tooltip: context.l10n.fullscreen,
+            onPressed: widget.onToggleFullScreen,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            iconSize: iconSize,
+          ),
+        ],
+      );
+    }
     return _PlayerIconButton(
       key: const Key('playback_fullscreen_button'),
       icon: widget.isFullScreen
@@ -3208,7 +3251,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _volumeOverlayHideTimer = Timer(playerControlHoverDismissDelay, () {
       if (_isVolumeControlHovered || _isVolumeSliderDragging) return;
       _closeVolumeMenu();
-      if (_isDesktopMode && !_isDesktopPointerInside) {
+      if (_isDesktopMode) {
         _scheduleDesktopControlsHide();
       } else {
         _startHideTimer();
@@ -4050,6 +4093,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         includeSemantics: false,
         onKeyEvent: _handleDesktopKeyEvent,
         child: MouseRegion(
+          // Hide the cursor together with the controls while playing, like
+          // bilibili and YouTube; any movement reveals both again.
+          cursor:
+              _isDesktopMode &&
+                  !_showControls &&
+                  widget.controller.value.isPlaying
+              ? SystemMouseCursors.none
+              : MouseCursor.defer,
           onHover: _handleDesktopPointerHover,
           onExit: _handleDesktopPointerExit,
           child: GestureDetector(
@@ -4127,6 +4178,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                     ),
                   ),
                 _PlayerVisualIgnorePointer(
+                  key: const Key('playback_controls_layer'),
                   ignoring: !_showControls,
                   child: Stack(
                     children: [
@@ -4187,7 +4239,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
                       // Bottom Bar
                       Positioned(
-                        bottom: widget.isFullScreen ? 24 : 0, // 全屏模式下抬高 24 像素
+                        // Fullscreen lifts the bar above the system gesture
+                        // inset; on web the inset is zero, so the bar sits
+                        // flush with the bottom edge like bilibili.
+                        bottom: widget.isFullScreen
+                            ? MediaQuery.paddingOf(context).bottom
+                            : 0,
                         left: 0,
                         right: 0,
                         child: AppSafeArea(

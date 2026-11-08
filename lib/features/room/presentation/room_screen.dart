@@ -1,5 +1,6 @@
 import 'package:synctv_app/features/room/presentation/widgets/chat_scroll_controller.dart';
 import 'package:synctv_app/core/presentation/image/app_image_preview.dart';
+import 'package:synctv_app/core/platform/browser_fullscreen.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_message_edit_form.dart';
 
 import 'dart:async';
@@ -973,6 +974,7 @@ class _RoomScreenState extends State<RoomScreen>
     final controller = _videoPlayerController;
     if (controller == null || !controller.value.isInitialized) return;
     if (kIsWeb && _fullScreenRouteOpen && mounted) {
+      await exitBrowserFullscreen();
       final entered = await _pictureInPicture.enter(
         aspectRatio: controller.value.aspectRatio,
         videoController: controller,
@@ -3936,6 +3938,9 @@ class _RoomScreenState extends State<RoomScreen>
                         isLive: _currentStatus?.entry?.live == true,
                         liveStartedAt: _currentStatus?.entry?.liveStartedAt,
                         onToggleFullScreen: _toggleFullScreen,
+                        onWebFullScreen: kIsWeb
+                            ? _toggleTrueFullScreen
+                            : null,
                         onSync: _handleSync,
                         onPrevious: _canNavigatePlayback
                             ? () => unawaited(_navigatePlayback(previous: true))
@@ -4406,6 +4411,23 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
+  /// Enters true browser fullscreen, then opens the fullscreen player
+  /// route. The browser request must happen inside the tap gesture; if the
+  /// browser refuses it, the route still opens as plain web fullscreen.
+  Future<void> _toggleTrueFullScreen() async {
+    final controller = _videoPlayerController;
+    if (controller == null || !controller.value.isInitialized) return;
+    await requestBrowserFullscreen();
+    await _toggleFullScreen();
+  }
+
+  /// Leaves the fullscreen player route, exiting browser fullscreen first so
+  /// the document is not left presented fullscreen behind the inline player.
+  Future<void> _exitFullScreenRoute(BuildContext routeContext) async {
+    await exitBrowserFullscreen();
+    if (routeContext.mounted) Navigator.of(routeContext).pop();
+  }
+
   Future<void> _toggleFullScreen() async {
     if (_videoPlayerController == null ||
         !_videoPlayerController!.value.isInitialized) {
@@ -4446,7 +4468,8 @@ class _RoomScreenState extends State<RoomScreen>
               onSubtitleP2pDeactivated: _deactivateP2pSubtitle,
               isLive: _currentStatus?.entry?.live == true,
               liveStartedAt: _currentStatus?.entry?.liveStartedAt,
-              onToggleFullScreen: () => Navigator.of(context).pop(),
+              onToggleFullScreen: () =>
+                  unawaited(_exitFullScreenRoute(context)),
               onSync: _handleSync,
               onPrevious: _canNavigatePlayback
                   ? () => unawaited(_navigatePlayback(previous: true))
