@@ -365,13 +365,16 @@ class CustomVideoPlayer extends StatefulWidget {
   final VoidCallback? onSubtitleP2pDeactivated;
   final VoidCallback? onToggleFullScreen;
 
-  /// Opens web fullscreen from the inline player. The room screen only
-  /// provides it on the web build, so the player renders the second
-  /// fullscreen button when it is non-null.
-  final VoidCallback? onWebFullScreen;
+  /// Opens the fullscreen player route without touching the OS: the player
+  /// fills the app's own surface — the browser viewport on web (theater
+  /// mode, like bilibili's web fullscreen) or the app window on desktop.
+  /// The room screen only provides it on web and desktop builds, so the
+  /// player renders the second fullscreen button when it is non-null.
+  final VoidCallback? onSurfaceFullScreen;
 
-  /// Enters true browser fullscreen from the inline player. Web only; when
-  /// null the main fullscreen button falls back to [onToggleFullScreen].
+  /// Enters true fullscreen — the browser document on web, the OS window on
+  /// desktop; when null the second fullscreen button falls back to
+  /// [onToggleFullScreen].
   final VoidCallback? onTrueFullScreen;
   final VoidCallback? onSync;
   final VoidCallback? onPrevious;
@@ -425,7 +428,7 @@ class CustomVideoPlayer extends StatefulWidget {
     this.resolveSubtitleResource,
     this.onSubtitleP2pDeactivated,
     this.onToggleFullScreen,
-    this.onWebFullScreen,
+    this.onSurfaceFullScreen,
     this.onTrueFullScreen,
     this.onSync,
     this.onPrevious,
@@ -2778,18 +2781,23 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Widget _buildFullscreenControl(double iconSize) {
-    final webFullScreen = widget.onWebFullScreen;
-    // Inline web build: separate buttons for web fullscreen (fills the page,
-    // like bilibili's web fullscreen) and true browser fullscreen.
-    if (!widget.isFullScreen && webFullScreen != null) {
+    final surfaceFullScreen = widget.onSurfaceFullScreen;
+    // Inline surface fullscreen: separate buttons for surface fullscreen
+    // (the browser viewport on web, the app window on desktop) and true
+    // fullscreen (browser Fullscreen API / OS window fullscreen).
+    if (!widget.isFullScreen && surfaceFullScreen != null) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _PlayerIconButton(
-            key: const Key('playback_web_fullscreen_button'),
-            icon: Icons.smart_display_rounded,
-            tooltip: context.l10n.webFullscreen,
-            onPressed: webFullScreen,
+            key: const Key('playback_surface_fullscreen_button'),
+            icon: kIsWeb
+                ? Icons.smart_display_rounded
+                : Icons.fit_screen_rounded,
+            tooltip: kIsWeb
+                ? context.l10n.webFullscreen
+                : context.l10n.windowFullscreen,
+            onPressed: surfaceFullScreen,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             iconSize: iconSize,

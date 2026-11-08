@@ -2448,6 +2448,12 @@ abstract class AppLocalizations {
   /// **'Web fullscreen'**
   String get webFullscreen;
 
+  /// No description provided for @windowFullscreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Window fullscreen'**
+  String get windowFullscreen;
+
   /// No description provided for @fullscreen.
   ///
   /// In en, this message translates to:

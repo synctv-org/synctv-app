@@ -1,4 +1,4 @@
-/// Fullscreen API helpers for the web build.
+/// True fullscreen via the browser Fullscreen API for the web build.
 ///
 /// Flutter web renders to a single canvas, so fullscreen is requested on the
 /// document element: the browser expands the whole app, and the fullscreen
@@ -9,11 +9,18 @@ import 'dart:js_interop';
 
 import 'package:web/web.dart' as web;
 
+/// Web targets always support browser fullscreen.
+const bool supportsTrueFullscreen = true;
+
+/// The app surface (the browser viewport) always fills as the player's
+/// fullscreen container on web.
+const bool supportsSurfaceFullScreen = true;
+
 /// Requests fullscreen for the whole document.
 ///
 /// Must be called from a user-gesture handler; browsers reject the request
 /// otherwise. Returns whether the browser accepted it.
-Future<bool> requestBrowserFullscreen() async {
+Future<bool> requestTrueFullscreen() async {
   try {
     final element = web.document.documentElement;
     if (element == null) return false;
@@ -24,8 +31,8 @@ Future<bool> requestBrowserFullscreen() async {
   }
 }
 
-/// Exits browser fullscreen; a no-op when it is not active.
-Future<void> exitBrowserFullscreen() async {
+/// Exits fullscreen; a no-op when it is not active.
+Future<void> exitTrueFullscreen() async {
   try {
     if (web.document.fullscreenElement == null) return;
     await web.document.exitFullscreen().toDart;
@@ -34,5 +41,5 @@ Future<void> exitBrowserFullscreen() async {
   }
 }
 
-/// Whether the document is currently presented in browser fullscreen.
-bool isBrowserFullscreenActive() => web.document.fullscreenElement != null;
+/// Whether the document is currently presented in fullscreen.
+bool isTrueFullscreenActive() => web.document.fullscreenElement != null;

@@ -2768,11 +2768,14 @@ void main() {
       ),
     );
     addTearDown(controller.dispose);
-    var webFullScreenCalls = 0;
+    var surfaceFullScreenCalls = 0;
     var trueFullScreenCalls = 0;
     var toggleCalls = 0;
 
-    Widget player({VoidCallback? onWebFullScreen}) => MaterialApp(
+    Widget player({
+      VoidCallback? onSurfaceFullScreen,
+      VoidCallback? onTrueFullScreen,
+    }) => MaterialApp(
       builder: buildThemedTestApp,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -2784,32 +2787,55 @@ void main() {
           title: 'Video',
           interactionMode: VideoPlayerInteractionMode.desktop,
           onToggleFullScreen: () => toggleCalls++,
-          onWebFullScreen: onWebFullScreen,
-          onTrueFullScreen: () => trueFullScreenCalls++,
+          onSurfaceFullScreen: onSurfaceFullScreen,
+          onTrueFullScreen: onTrueFullScreen,
         ),
       ),
     );
 
-    // Web build: both buttons render and invoke their own callbacks.
+    // Surface fullscreen provided (web or desktop): both buttons render and
+    // invoke their own callbacks.
     await tester.pumpWidget(
-      player(onWebFullScreen: () => webFullScreenCalls++),
+      player(
+        onSurfaceFullScreen: () => surfaceFullScreenCalls++,
+        onTrueFullScreen: () => trueFullScreenCalls++,
+      ),
     );
     await tester.pump();
-    await tester.tap(find.byKey(const Key('playback_web_fullscreen_button')));
+    await tester.tap(
+      find.byKey(const Key('playback_surface_fullscreen_button')),
+    );
     await tester.pump();
-    expect(webFullScreenCalls, 1);
+    expect(surfaceFullScreenCalls, 1);
     expect(trueFullScreenCalls, 0);
     await tester.tap(find.byKey(const Key('playback_fullscreen_button')));
     await tester.pump();
     expect(trueFullScreenCalls, 1);
     expect(toggleCalls, 0);
 
-    // Native build: only the single fullscreen button, falling back to the
-    // toggle callback.
+    // Without a true fullscreen callback the second button drives the toggle.
+    toggleCalls = 0;
+    trueFullScreenCalls = 0;
+    await tester.pumpWidget(
+      player(
+        onSurfaceFullScreen: () => surfaceFullScreenCalls++,
+        onTrueFullScreen: null,
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('playback_fullscreen_button')));
+    await tester.pump();
+    expect(toggleCalls, 1);
+    expect(trueFullScreenCalls, 0);
+
+    // No surface fullscreen (mobile): only the single fullscreen button,
+    // falling back to the toggle callback.
+    toggleCalls = 0;
+    trueFullScreenCalls = 0;
     await tester.pumpWidget(player());
     await tester.pump();
     expect(
-      find.byKey(const Key('playback_web_fullscreen_button')),
+      find.byKey(const Key('playback_surface_fullscreen_button')),
       findsNothing,
     );
     expect(find.byKey(const Key('playback_fullscreen_button')), findsOneWidget);
@@ -2822,7 +2848,7 @@ void main() {
     );
   });
 
-  testWidgets('web fullscreen button is absent while already fullscreen', (
+  testWidgets('surface fullscreen button is absent while already fullscreen', (
     tester,
   ) async {
     final controller = _RecordingVideoPlayerController(
@@ -2846,7 +2872,7 @@ void main() {
             title: 'Video',
             isFullScreen: true,
             onToggleFullScreen: () {},
-            onWebFullScreen: () {},
+            onSurfaceFullScreen: () {},
           ),
         ),
       ),
@@ -2854,7 +2880,7 @@ void main() {
     await tester.pump();
 
     expect(
-      find.byKey(const Key('playback_web_fullscreen_button')),
+      find.byKey(const Key('playback_surface_fullscreen_button')),
       findsNothing,
     );
     expect(find.byKey(const Key('playback_fullscreen_button')), findsOneWidget);

@@ -478,6 +478,7 @@
   "sendDanmaku": "Send danmaku",
   "exitFullscreen": "Exit fullscreen",
   "webFullscreen": "Web fullscreen",
+  "windowFullscreen": "Window fullscreen",
   "fullscreen": "Fullscreen",
   "pictureInPicture": "Picture in picture",
   "exitPictureInPicture": "Return to room",

@@ -1,6 +1,6 @@
 import 'package:synctv_app/features/room/presentation/widgets/chat_scroll_controller.dart';
 import 'package:synctv_app/core/presentation/image/app_image_preview.dart';
-import 'package:synctv_app/core/platform/browser_fullscreen.dart';
+import 'package:synctv_app/core/platform/true_fullscreen.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_message_edit_form.dart';
 
 import 'dart:async';
@@ -974,7 +974,7 @@ class _RoomScreenState extends State<RoomScreen>
     final controller = _videoPlayerController;
     if (controller == null || !controller.value.isInitialized) return;
     if (kIsWeb && _fullScreenRouteOpen && mounted) {
-      await exitBrowserFullscreen();
+      await exitTrueFullscreen();
       final entered = await _pictureInPicture.enter(
         aspectRatio: controller.value.aspectRatio,
         videoController: controller,
@@ -988,6 +988,9 @@ class _RoomScreenState extends State<RoomScreen>
       _closeFullScreenRoute();
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
+      // Release OS window fullscreen before reshaping the window into the
+      // mini player; a no-op where the route never touched the OS window.
+      await exitTrueFullscreen();
     }
     await _pictureInPicture.enter(
       aspectRatio: controller.value.aspectRatio,
@@ -3946,8 +3949,12 @@ class _RoomScreenState extends State<RoomScreen>
                         isLive: _currentStatus?.entry?.live == true,
                         liveStartedAt: _currentStatus?.entry?.liveStartedAt,
                         onToggleFullScreen: _toggleFullScreen,
-                        onWebFullScreen: kIsWeb ? _toggleFullScreen : null,
-                        onTrueFullScreen: kIsWeb ? _toggleTrueFullScreen : null,
+                        onSurfaceFullScreen: supportsSurfaceFullScreen
+                            ? _toggleFullScreen
+                            : null,
+                        onTrueFullScreen: supportsTrueFullscreen
+                            ? _toggleTrueFullScreen
+                            : null,
                         onSync: _handleSync,
                         onPrevious: _canNavigatePlayback
                             ? () => unawaited(_navigatePlayback(previous: true))
@@ -4418,23 +4425,24 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  /// Enters true browser fullscreen, then opens the fullscreen player
-  /// route. The browser request must happen inside the tap gesture; if the
-  /// browser refuses it, the route still opens as plain web fullscreen.
+  /// Enters true fullscreen — the browser document on web, the OS window on
+  /// desktop — then opens the fullscreen player route. The request must
+  /// happen inside the tap gesture; if the platform refuses it, the route
+  /// still opens as plain surface fullscreen.
   Future<void> _toggleTrueFullScreen() async {
     final controller = _videoPlayerController;
     if (controller == null || !controller.value.isInitialized) return;
-    await requestBrowserFullscreen();
+    await requestTrueFullscreen();
     await _toggleFullScreen();
   }
 
-  /// Leaves the fullscreen player route: exits browser fullscreen first so
-  /// the document is not left presented fullscreen, and releases the inline
-  /// placeholder before popping so the video element returns to the surface
-  /// while the route fades out.
+  /// Leaves the fullscreen player route: exits true fullscreen first so the
+  /// document or OS window is not left presented fullscreen, and releases
+  /// the inline placeholder before popping so the video element returns to
+  /// the surface while the route fades out.
   Future<void> _exitFullScreenRoute(BuildContext routeContext) async {
     _closeFullScreenRoute();
-    await exitBrowserFullscreen();
+    await exitTrueFullscreen();
     if (routeContext.mounted) Navigator.of(routeContext).pop();
   }
 
