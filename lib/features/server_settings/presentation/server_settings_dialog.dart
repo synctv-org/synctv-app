@@ -831,7 +831,7 @@ class _ServerProfileTile extends StatelessWidget {
                   tooltip: canRemove ? l10n.remove : l10n.processing,
                   onPressed: canRemove ? onRemove : null,
                   icon: Icons.delete_outline_rounded,
-                  style: AppIconButtonStyle.destructive,
+                  style: AppIconButtonStyle.destructiveSubtle,
                 ),
             ],
           ),

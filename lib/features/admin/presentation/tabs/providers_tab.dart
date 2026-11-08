@@ -466,6 +466,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
       loading: _isLoading,
       itemCount: _instances.length,
       emptyMessage: context.l10n.noProviderInstances,
+      emptyIcon: Icons.extension_outlined,
       itemBuilder: (context, index) {
         final instance = _instances[index];
         return _AdminPanelCard(
@@ -664,7 +665,7 @@ class _ProviderInstanceTile extends StatelessWidget {
         AppIconButton(
           tooltip: context.l10n.delete,
           icon: Icons.delete_outline,
-          style: AppIconButtonStyle.destructive,
+          style: AppIconButtonStyle.destructiveSubtle,
           onPressed: onDelete,
         ),
       ],

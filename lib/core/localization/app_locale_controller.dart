@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'package:intl/date_symbol_data_local.dart' as date_symbols;
+import 'package:intl/intl.dart' as intl;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/core/async/persisted_value_controller.dart';
 
@@ -13,7 +15,9 @@ class AppLocaleController
          initialValue: AppLocalePreference.system,
          read: read ?? _readPreference,
          write: write ?? _writePreference,
-       );
+       ) {
+    addListener(_syncIntlLocale);
+  }
 
   static const preferenceKey = 'synctv.locale';
 
@@ -47,6 +51,23 @@ class AppLocaleController
       orElse: () => AppLocalePreference.system,
     );
   }
+
+  /// Loads the intl date symbols the app can render and points
+  /// `Intl.defaultLocale` at the effective app locale, so `DateFormat`
+  /// calls render in the user's language everywhere.
+  Future<void> ensureDateFormattingInitialized() async {
+    await date_symbols.initializeDateFormatting('en');
+    await date_symbols.initializeDateFormatting('zh');
+    _syncIntlLocale();
+  }
+
+  void _syncIntlLocale() {
+    final resolved = locale?.languageCode ?? _platformLanguageCode();
+    intl.Intl.defaultLocale = resolved.startsWith('zh') ? 'zh' : 'en';
+  }
+
+  static String _platformLanguageCode() =>
+      WidgetsBinding.instance.platformDispatcher.locale.languageCode;
 }
 
 final appLocaleController = AppLocaleController();

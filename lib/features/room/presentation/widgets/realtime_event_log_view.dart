@@ -551,7 +551,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                             tooltip: context.l10n.clear,
                             onPressed: events.isEmpty ? null : onClear,
                             icon: Icons.delete_sweep_rounded,
-                            style: AppIconButtonStyle.destructive,
+                            style: AppIconButtonStyle.destructiveSubtle,
                           ),
                         ],
                       );

@@ -531,7 +531,6 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                   onPressed: () => _editLabel(),
                   icon: Icons.add_rounded,
                   label: context.l10n.addLabel,
-                  style: AppActionButtonStyle.tonal,
                 ),
               ),
               _AdminToolbarItem(

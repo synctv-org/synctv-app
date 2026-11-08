@@ -35,6 +35,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageEnglish => 'English';
 
   @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get appearanceSettingsTitle => 'Appearance settings';
+
+  @override
+  String get appearanceSettingsDescription =>
+      'Choose the app theme. System follows your device setting.';
+
+  @override
+  String get themeModeSystem => 'System';
+
+  @override
+  String get themeModeLight => 'Light';
+
+  @override
+  String get themeModeDark => 'Dark';
+
+  @override
   String get server => 'Server';
 
   @override
@@ -316,6 +335,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noRooms => 'No rooms';
+
+  @override
+  String get noUsers => 'No users found';
 
   @override
   String get addServerDescription =>
@@ -2671,6 +2693,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scrollToBottom => 'Scroll to bottom';
 
   @override
+  String get chatDateToday => 'Today';
+
+  @override
+  String get chatDateYesterday => 'Yesterday';
+
+  @override
   String get pinned => 'Pinned';
 
   @override
@@ -4198,11 +4226,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refreshRooms => 'Refresh rooms';
 
   @override
-  String pageRangeSummary(int page, int pages, int start, int end, int total) {
-    return 'Page $page of $pages · $start-$end / $total';
-  }
-
-  @override
   String get myRoomsTemporarilyUnavailable =>
       'My rooms are temporarily unavailable';
 
@@ -4342,11 +4365,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ascending => 'Ascending';
-
-  @override
-  String notificationPageRange(int page, int pages, int start, int end) {
-    return 'Page $page of $pages · $start-$end';
-  }
 
   @override
   String get notificationsTemporarilyUnavailable =>
@@ -5308,11 +5326,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaIdDescending => 'Media ID descending';
 
   @override
-  String pagedItemSummary(int page, int pageSize, int total) {
-    return 'Page $page · $pageSize per page · $total total';
-  }
-
-  @override
   String get noActiveStreams => 'No active streams';
 
   @override
@@ -5789,11 +5802,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noAdministrators => 'No administrators';
-
-  @override
-  String pageOf(int page, int pageCount) {
-    return 'Page $page of $pageCount';
-  }
 
   @override
   String get cannotRemoveCurrentAdministrator =>
@@ -6469,7 +6477,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinRequest => 'Join request';
 
   @override
-  String get searchReviewHint => 'Search or enter a room_/usr_ ID';
+  String get searchReviewHint => 'Search room_/usr_ ID';
 
   @override
   String get noReviewRecords => 'No review records';
@@ -7317,7 +7325,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'After creation, the instance can be enabled, reconnected, or edited from the list';
 
   @override
-  String get searchStreamsHint => 'Search or enter a room_/usr_/node_ ID';
+  String get searchStreamsHint => 'Search room_/usr_/node_ ID';
 
   @override
   String get startedAt => 'Start time';

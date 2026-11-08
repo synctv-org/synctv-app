@@ -191,74 +191,77 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
       header: [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              AppSegmentedControl<AdminReviewKind>(
-                segments: [
-                  ButtonSegment(
-                    value: AdminReviewKind.userRegistration,
-                    label: Text(context.l10n.registration),
-                  ),
-                  ButtonSegment(
-                    value: AdminReviewKind.roomCreation,
-                    label: Text(context.l10n.roomCreation),
-                  ),
-                  ButtonSegment(
-                    value: AdminReviewKind.roomJoin,
-                    label: Text(context.l10n.joinRequest),
-                  ),
-                ],
-                value: _kind,
-                onChanged: (value) {
-                  setState(() {
-                    _kind = value;
-                    _page = 1;
-                    _requestedBy = '';
-                    _roomId = '';
-                    _userId = '';
-                  });
-                  _loadReviews();
-                },
+          child: _AdminToolbarWrap(
+            items: [
+              _AdminToolbarItem(
+                child: AppSegmentedControl<AdminReviewKind>(
+                  segments: [
+                    ButtonSegment(
+                      value: AdminReviewKind.userRegistration,
+                      label: Text(context.l10n.registration),
+                    ),
+                    ButtonSegment(
+                      value: AdminReviewKind.roomCreation,
+                      label: Text(context.l10n.roomCreation),
+                    ),
+                    ButtonSegment(
+                      value: AdminReviewKind.roomJoin,
+                      label: Text(context.l10n.joinRequest),
+                    ),
+                  ],
+                  value: _kind,
+                  onChanged: (value) {
+                    setState(() {
+                      _kind = value;
+                      _page = 1;
+                      _requestedBy = '';
+                      _roomId = '';
+                      _userId = '';
+                    });
+                    _loadReviews();
+                  },
+                ),
               ),
-              AppSelect<common_enum.ReviewStatus>(
-                value: _status,
-                options: {
-                  context.l10n.pendingReview:
-                      common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
-                  context.l10n.approved:
-                      common_enum.ReviewStatus.REVIEW_STATUS_APPROVED,
-                  context.l10n.rejected:
-                      common_enum.ReviewStatus.REVIEW_STATUS_REJECTED,
-                },
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _status = value;
-                    _page = 1;
-                  });
-                  _loadReviews();
-                },
+              _AdminToolbarItem(
+                child: AppSelect<common_enum.ReviewStatus>(
+                  value: _status,
+                  options: {
+                    context.l10n.pendingReview:
+                        common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
+                    context.l10n.approved:
+                        common_enum.ReviewStatus.REVIEW_STATUS_APPROVED,
+                    context.l10n.rejected:
+                        common_enum.ReviewStatus.REVIEW_STATUS_REJECTED,
+                  },
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _status = value;
+                      _page = 1;
+                    });
+                    _loadReviews();
+                  },
+                ),
               ),
-              AppSelect<int>(
-                value: _pageSize,
-                options: {
-                  context.l10n.itemsPerPage(20): 20,
-                  context.l10n.itemsPerPage(50): 50,
-                  context.l10n.itemsPerPage(100): 100,
-                },
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _pageSize = value;
-                    _page = 1;
-                  });
-                  _loadReviews();
-                },
+              _AdminToolbarItem(
+                child: AppSelect<int>(
+                  value: _pageSize,
+                  options: {
+                    context.l10n.itemsPerPage(20): 20,
+                    context.l10n.itemsPerPage(50): 50,
+                    context.l10n.itemsPerPage(100): 100,
+                  },
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _pageSize = value;
+                      _page = 1;
+                    });
+                    _loadReviews();
+                  },
+                ),
               ),
-              SizedBox(
+              _AdminToolbarItem(
                 width: 260,
                 child: AppSearchField(
                   controller: _searchController,
@@ -269,10 +272,12 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
                   onSubmitted: _applySearch,
                 ),
               ),
-              AppIconButton(
-                tooltip: context.l10n.refresh,
-                icon: Icons.refresh_rounded,
-                onPressed: () => _loadReviews(silent: true),
+              _AdminToolbarItem(
+                child: AppIconButton(
+                  tooltip: context.l10n.refresh,
+                  icon: Icons.refresh_rounded,
+                  onPressed: () => _loadReviews(silent: true),
+                ),
               ),
             ],
           ),
@@ -298,6 +303,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
       loading: _isLoading,
       itemCount: _reviews.length,
       emptyMessage: context.l10n.noReviewRecords,
+      emptyIcon: Icons.fact_check_outlined,
       itemBuilder: (context, index) {
         final review = _reviews[index];
         final pending =

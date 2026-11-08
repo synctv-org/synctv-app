@@ -214,7 +214,7 @@ class _ProviderBindingCard extends StatelessWidget {
           icon: Icons.link_off_rounded,
           onPressed: onUnbind,
           tooltip: context.l10n.unbind,
-          style: AppIconButtonStyle.destructive,
+          style: AppIconButtonStyle.destructiveSubtle,
         ),
       ],
     );

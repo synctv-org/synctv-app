@@ -128,13 +128,10 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
       header: [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              SizedBox(
-                width: 240,
+          child: _AdminToolbarWrap(
+            items: [
+              _AdminToolbarItem(
+                width: 260,
                 child: AppSearchField(
                   controller: _searchController,
                   hintText: context.l10n.searchStreamsHint,
@@ -146,77 +143,85 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
                   onSubmitted: _applyStreamSearch,
                 ),
               ),
-              AppSelect<int>(
-                value: _pageSize,
-                options: {
-                  context.l10n.itemsPerPage(20): 20,
-                  context.l10n.itemsPerPage(50): 50,
-                  context.l10n.itemsPerPage(100): 100,
-                },
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _pageSize = value;
-                    _page = 1;
-                  });
-                  _loadStreams();
-                },
+              _AdminToolbarItem(
+                child: AppSelect<int>(
+                  value: _pageSize,
+                  options: {
+                    context.l10n.itemsPerPage(20): 20,
+                    context.l10n.itemsPerPage(50): 50,
+                    context.l10n.itemsPerPage(100): 100,
+                  },
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _pageSize = value;
+                      _page = 1;
+                    });
+                    _loadStreams();
+                  },
+                ),
               ),
-              AppSelect<admin_enum.ActiveStreamListSortBy>(
-                value: _sortBy,
-                options: {
-                  context.l10n.startedAt: admin_enum
-                      .ActiveStreamListSortBy
-                      .ACTIVE_STREAM_LIST_SORT_BY_STARTED_AT,
-                  context.l10n.rooms: admin_enum
-                      .ActiveStreamListSortBy
-                      .ACTIVE_STREAM_LIST_SORT_BY_ROOM_ID,
-                  context.l10n.media: admin_enum
-                      .ActiveStreamListSortBy
-                      .ACTIVE_STREAM_LIST_SORT_BY_MEDIA_ID,
-                  context.l10n.users: admin_enum
-                      .ActiveStreamListSortBy
-                      .ACTIVE_STREAM_LIST_SORT_BY_USER_ID,
-                  context.l10n.node: admin_enum
-                      .ActiveStreamListSortBy
-                      .ACTIVE_STREAM_LIST_SORT_BY_NODE_ID,
-                },
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _sortBy = value;
-                    _page = 1;
-                  });
-                  _loadStreams();
-                },
+              _AdminToolbarItem(
+                child: AppSelect<admin_enum.ActiveStreamListSortBy>(
+                  value: _sortBy,
+                  options: {
+                    context.l10n.startedAt: admin_enum
+                        .ActiveStreamListSortBy
+                        .ACTIVE_STREAM_LIST_SORT_BY_STARTED_AT,
+                    context.l10n.rooms: admin_enum
+                        .ActiveStreamListSortBy
+                        .ACTIVE_STREAM_LIST_SORT_BY_ROOM_ID,
+                    context.l10n.media: admin_enum
+                        .ActiveStreamListSortBy
+                        .ACTIVE_STREAM_LIST_SORT_BY_MEDIA_ID,
+                    context.l10n.users: admin_enum
+                        .ActiveStreamListSortBy
+                        .ACTIVE_STREAM_LIST_SORT_BY_USER_ID,
+                    context.l10n.node: admin_enum
+                        .ActiveStreamListSortBy
+                        .ACTIVE_STREAM_LIST_SORT_BY_NODE_ID,
+                  },
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _sortBy = value;
+                      _page = 1;
+                    });
+                    _loadStreams();
+                  },
+                ),
               ),
-              AppIconButton(
-                tooltip:
-                    _sortDirection ==
-                        admin_enum.SortDirection.SORT_DIRECTION_DESC
-                    ? context.l10n.descending
-                    : context.l10n.ascending,
-                icon:
-                    _sortDirection ==
-                        admin_enum.SortDirection.SORT_DIRECTION_DESC
-                    ? Icons.south_rounded
-                    : Icons.north_rounded,
-                onPressed: () {
-                  setState(() {
-                    _sortDirection =
-                        _sortDirection ==
-                            admin_enum.SortDirection.SORT_DIRECTION_DESC
-                        ? admin_enum.SortDirection.SORT_DIRECTION_ASC
-                        : admin_enum.SortDirection.SORT_DIRECTION_DESC;
-                    _page = 1;
-                  });
-                  _loadStreams();
-                },
+              _AdminToolbarItem(
+                child: AppIconButton(
+                  tooltip:
+                      _sortDirection ==
+                          admin_enum.SortDirection.SORT_DIRECTION_DESC
+                      ? context.l10n.descending
+                      : context.l10n.ascending,
+                  icon:
+                      _sortDirection ==
+                          admin_enum.SortDirection.SORT_DIRECTION_DESC
+                      ? Icons.south_rounded
+                      : Icons.north_rounded,
+                  onPressed: () {
+                    setState(() {
+                      _sortDirection =
+                          _sortDirection ==
+                              admin_enum.SortDirection.SORT_DIRECTION_DESC
+                          ? admin_enum.SortDirection.SORT_DIRECTION_ASC
+                          : admin_enum.SortDirection.SORT_DIRECTION_DESC;
+                      _page = 1;
+                    });
+                    _loadStreams();
+                  },
+                ),
               ),
-              AppIconButton(
-                tooltip: context.l10n.refresh,
-                icon: Icons.refresh_rounded,
-                onPressed: () => _loadStreams(silent: true),
+              _AdminToolbarItem(
+                child: AppIconButton(
+                  tooltip: context.l10n.refresh,
+                  icon: Icons.refresh_rounded,
+                  onPressed: () => _loadStreams(silent: true),
+                ),
               ),
             ],
           ),
@@ -242,6 +247,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
       loading: _isLoading,
       itemCount: _streams.length,
       emptyMessage: context.l10n.noActiveStreams,
+      emptyIcon: Icons.podcasts_rounded,
       itemBuilder: (context, index) {
         final stream = _streams[index];
         return _AdminPanelCard(
@@ -255,7 +261,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
             suffix: AppIconButton(
               tooltip: context.l10n.disconnectStream,
               icon: Icons.power_settings_new_rounded,
-              style: AppIconButtonStyle.destructive,
+              style: AppIconButtonStyle.destructiveSubtle,
               onPressed:
                   _disconnecting.contains((stream.roomId, stream.mediaId))
                   ? null

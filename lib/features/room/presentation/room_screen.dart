@@ -5,6 +5,9 @@ import 'package:synctv_app/features/room/presentation/widgets/chat_message_edit_
 
 import 'dart:async';
 import 'dart:math' as math;
+
+import 'package:intl/intl.dart';
+
 import 'dart:ui' show SemanticsRole;
 
 import 'package:flutter/foundation.dart';
@@ -4647,7 +4650,13 @@ class _RoomScreenState extends State<RoomScreen>
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
                   final msg = _messages[index];
-                  return _buildChatMessageItem(msg);
+                  return Column(
+                    children: [
+                      if (_startsDay(index, msg))
+                        _buildChatDateDivider(msg.timestampMillis),
+                      _buildChatMessageItem(msg),
+                    ],
+                  );
                 },
               ),
               if (_showChatScrollToBottom)
@@ -4932,6 +4941,59 @@ class _RoomScreenState extends State<RoomScreen>
       spacing: 8,
       runSpacing: 8,
       children: images.map((image) => _buildChatImageThumb(image)).toList(),
+    );
+  }
+
+  /// Whether the message at [index] opens a new calendar day in the chat
+  /// timeline, so a date divider renders above it.
+  bool _startsDay(int index, RoomRealtimeChatEntry message) {
+    if (index <= 0) return true;
+    final previous = _messages[index - 1];
+    if (previous.timestampMillis == message.timestampMillis) return false;
+    return !_sameCalendarDay(previous.timestampMillis, message.timestampMillis);
+  }
+
+  bool _sameCalendarDay(int millisA, int millisB) {
+    final a = DateTime.fromMillisecondsSinceEpoch(millisA);
+    final b = DateTime.fromMillisecondsSinceEpoch(millisB);
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  Widget _buildChatDateDivider(int timestampMillis) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final date = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final thatDay = DateTime(date.year, date.month, date.day);
+    final differenceInDays = today.difference(thatDay).inDays;
+    final String label;
+    if (thatDay == today) {
+      label = l10n.chatDateToday;
+    } else if (differenceInDays == 1) {
+      label = l10n.chatDateYesterday;
+    } else {
+      label = DateFormat('yMMMd').format(date);
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 6),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.8,
+            ),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -5684,25 +5746,26 @@ class _RoomScreenState extends State<RoomScreen>
     Color? color,
     bool keepExpanded = false,
   }) {
-    return AppTooltip(
-      message: tooltip,
-      child: AppIconButton(
-        tooltip: tooltip,
-        constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-        padding: EdgeInsets.zero,
-        iconSize: 15,
-        size: AppIconButtonSize.sm,
-        style: color == null
-            ? AppIconButtonStyle.ghost
-            : AppIconButtonStyle.destructive,
-        onPressed: () {
-          if (!keepExpanded) {
-            setState(() => _expandedChatActionMessageId = null);
-          }
-          onPressed();
-        },
-        icon: icon,
-      ),
+    final button = AppIconButton(
+      tooltip: tooltip,
+      constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+      padding: EdgeInsets.zero,
+      iconSize: 15,
+      size: AppIconButtonSize.sm,
+      style: AppIconButtonStyle.ghost,
+      onPressed: () {
+        if (!keepExpanded) {
+          setState(() => _expandedChatActionMessageId = null);
+        }
+        onPressed();
+      },
+      icon: icon,
+    );
+    if (color == null) return button;
+    // Tint only the icon: filled error buttons are too heavy for chat rows.
+    return IconTheme.merge(
+      data: IconThemeData(color: color),
+      child: button,
     );
   }
 
@@ -5713,23 +5776,23 @@ class _RoomScreenState extends State<RoomScreen>
     required VoidCallback onPressed,
     Color? color,
   }) {
-    return AppTooltip(
-      message: tooltip,
-      child: AppIconButton(
-        tooltip: tooltip,
-        constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-        padding: EdgeInsets.zero,
-        iconSize: 15,
-        size: AppIconButtonSize.sm,
-        style: color == null
-            ? AppIconButtonStyle.ghost
-            : AppIconButtonStyle.destructive,
-        onPressed: () {
-          onClose();
-          onPressed();
-        },
-        icon: icon,
-      ),
+    final button = AppIconButton(
+      tooltip: tooltip,
+      constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+      padding: EdgeInsets.zero,
+      iconSize: 15,
+      size: AppIconButtonSize.sm,
+      style: AppIconButtonStyle.ghost,
+      onPressed: () {
+        onClose();
+        onPressed();
+      },
+      icon: icon,
+    );
+    if (color == null) return button;
+    return IconTheme.merge(
+      data: IconThemeData(color: color),
+      child: button,
     );
   }
 
@@ -6467,7 +6530,7 @@ class _RoomScreenState extends State<RoomScreen>
                       tooltip: _playlistStack.isEmpty
                           ? context.l10n.clearMediaLibrary
                           : context.l10n.clearPlaylist,
-                      style: AppIconButtonStyle.destructive,
+                      style: AppIconButtonStyle.destructiveSubtle,
                     ),
                   if (canSelectEntries)
                     AppIconButton(
@@ -6490,8 +6553,10 @@ class _RoomScreenState extends State<RoomScreen>
                     ),
                 ],
               ),
-              const SizedBox(height: 6),
-              _buildPlaylistBreadcrumbs(),
+              if (_playlistStack.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                _buildPlaylistBreadcrumbs(),
+              ],
               if (_mediaSupportsSearch || !_isInsideProviderTargetScope) ...[
                 const SizedBox(height: 8),
                 PlaylistSearchField(
@@ -7465,7 +7530,7 @@ class _RoomScreenState extends State<RoomScreen>
                         onPressed: () => _kickMember(member),
                         size: AppIconButtonSize.sm,
                         iconSize: 18,
-                        style: AppIconButtonStyle.destructive,
+                        style: AppIconButtonStyle.destructiveSubtle,
                       ),
                     AppIconButton(
                       icon: Icons.flag_outlined,
@@ -7498,7 +7563,7 @@ class _RoomScreenState extends State<RoomScreen>
                       iconSize: 18,
                       style: isBlocked
                           ? AppIconButtonStyle.tonal
-                          : AppIconButtonStyle.destructive,
+                          : AppIconButtonStyle.destructiveSubtle,
                     ),
                   ],
                 ];

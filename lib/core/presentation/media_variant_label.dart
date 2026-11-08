@@ -44,7 +44,9 @@ String localizedMediaVariant(BuildContext context, String raw) {
     return context.l10n.series;
   }
   if (key.endsWith('channels') || key == 'channel') return context.l10n.channel;
-  if (key.endsWith('bangumi')) return context.l10n.bangumi;
+  if (key.endsWith('bangumi') || key == 'pgc') {
+    return context.l10n.bangumi;
+  }
   if (key == 'clip') return context.l10n.clip;
   if (key.endsWith('clips')) return context.l10n.clips;
   if (key.endsWith('posts') || key == 'post') return context.l10n.posts;

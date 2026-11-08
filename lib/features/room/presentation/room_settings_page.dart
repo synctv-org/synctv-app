@@ -2000,29 +2000,27 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Row(
                 children: [
-                  Expanded(
-                    child: AppSegmentedControl<client_enum.SortDirection>(
-                      segments: [
-                        ButtonSegment(
-                          value: client_enum.SortDirection.SORT_DIRECTION_DESC,
-                          icon: const Icon(Icons.arrow_downward_rounded),
-                          label: Text(context.l10n.newestFirst),
-                        ),
-                        ButtonSegment(
-                          value: client_enum.SortDirection.SORT_DIRECTION_ASC,
-                          icon: const Icon(Icons.arrow_upward_rounded),
-                          label: Text(context.l10n.oldestFirst),
-                        ),
-                      ],
-                      value: state.sortDirection,
-                      onChanged: (sortDirection) {
-                        if (!state.clearing) {
-                          unawaited(
-                            _setPlaybackHistorySortDirection(sortDirection),
-                          );
-                        }
-                      },
-                    ),
+                  AppSegmentedControl<client_enum.SortDirection>(
+                    segments: [
+                      ButtonSegment(
+                        value: client_enum.SortDirection.SORT_DIRECTION_DESC,
+                        icon: const Icon(Icons.arrow_downward_rounded),
+                        label: Text(context.l10n.newestFirst),
+                      ),
+                      ButtonSegment(
+                        value: client_enum.SortDirection.SORT_DIRECTION_ASC,
+                        icon: const Icon(Icons.arrow_upward_rounded),
+                        label: Text(context.l10n.oldestFirst),
+                      ),
+                    ],
+                    value: state.sortDirection,
+                    onChanged: (sortDirection) {
+                      if (!state.clearing) {
+                        unawaited(
+                          _setPlaybackHistorySortDirection(sortDirection),
+                        );
+                      }
+                    },
                   ),
                   if (widget.canManagePlaybackHistory) ...[
                     const SizedBox(width: 8),
@@ -4637,7 +4635,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           AppPaginationBar(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            label: context.l10n.pagedItemSummary(
+            label: context.l10n.pageSizeTotalSummary(
               _streamsPage,
               _streamsPageSize,
               _streamsTotal,
@@ -4699,7 +4697,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
-                  width: 150,
+                  width: 176,
                   child: AppSelect<common_enum.ReviewStatus>(
                     value: _reviewStatusFilter,
                     label: context.l10n.status,
@@ -4726,7 +4724,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           AppPaginationBar(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            label: context.l10n.pagedItemSummary(
+            label: context.l10n.pageSizeTotalSummary(
               _reviewsPage,
               _reviewsPageSize,
               _reviewsTotal,
@@ -4809,7 +4807,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 AppIconButton(
                   tooltip: context.l10n.refreshDynamicList,
                   onPressed: () => _reloadMediaLibrary(refresh: true),
-                  icon: Icons.sync,
+                  icon: Icons.published_with_changes_rounded,
                 ),
               ],
             ),
@@ -5885,7 +5883,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           AppPaginationBar(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            label: context.l10n.pagedItemSummary(
+            label: context.l10n.pageSizeTotalSummary(
               _membersPage,
               _membersPageSize,
               _membersTotal,
@@ -6842,15 +6840,20 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     required VoidCallback? onPressed,
     Color? color,
   }) {
-    return AppIconButton(
+    final button = AppIconButton(
       iconSize: 18,
       size: AppIconButtonSize.sm,
       onPressed: onPressed,
       icon: icon,
       tooltip: tooltip,
-      style: color == null
-          ? AppIconButtonStyle.ghost
-          : AppIconButtonStyle.destructive,
+      style: AppIconButtonStyle.ghost,
+    );
+    if (color == null) return button;
+    // Tint only the icon: a filled error button per row is too heavy for
+    // always-visible history actions.
+    return IconTheme.merge(
+      data: IconThemeData(color: color),
+      child: button,
     );
   }
 
@@ -7325,7 +7328,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               children: [
                 _buildCoverPreview(
                   url: _roomCoverUrl,
-                  fallbackIcon: Icons.meeting_room_outlined,
+                  fallbackIcon: Icons.image_outlined,
                   height: 148,
                   borderRadius: 0,
                 ),

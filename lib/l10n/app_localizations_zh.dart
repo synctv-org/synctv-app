@@ -34,6 +34,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageEnglish => 'English';
 
   @override
+  String get appearance => '外观';
+
+  @override
+  String get appearanceSettingsTitle => '外观设置';
+
+  @override
+  String get appearanceSettingsDescription => '选择应用主题；跟随系统时随设备设置变化。';
+
+  @override
+  String get themeModeSystem => '跟随系统';
+
+  @override
+  String get themeModeLight => '浅色';
+
+  @override
+  String get themeModeDark => '深色';
+
+  @override
   String get server => '服务器';
 
   @override
@@ -306,6 +324,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noRooms => '暂无房间';
+
+  @override
+  String get noUsers => '未找到用户';
 
   @override
   String get addServerDescription => '输入服务器地址即可浏览公开房间、登录账号和加入观影房间。';
@@ -2427,6 +2448,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scrollToBottom => '滚动到底部';
 
   @override
+  String get chatDateToday => '今天';
+
+  @override
+  String get chatDateYesterday => '昨天';
+
+  @override
   String get pinned => '置顶';
 
   @override
@@ -3829,11 +3856,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get refreshRooms => '刷新房间';
 
   @override
-  String pageRangeSummary(int page, int pages, int start, int end, int total) {
-    return '第 $page / $pages 页 · $start-$end / $total';
-  }
-
-  @override
   String get myRoomsTemporarilyUnavailable => '我的房间暂时不可用';
 
   @override
@@ -3962,11 +3984,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ascending => '升序';
-
-  @override
-  String notificationPageRange(int page, int pages, int start, int end) {
-    return '第 $page / $pages 页 · $start-$end';
-  }
 
   @override
   String get notificationsTemporarilyUnavailable => '通知暂时不可用';
@@ -4880,11 +4897,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mediaIdDescending => '媒体 ID 降序';
 
   @override
-  String pagedItemSummary(int page, int pageSize, int total) {
-    return '第 $page 页 · 每页 $pageSize · 共 $total 条';
-  }
-
-  @override
   String get noActiveStreams => '当前没有活跃推流';
 
   @override
@@ -5324,11 +5336,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noAdministrators => '暂无管理员';
-
-  @override
-  String pageOf(int page, int pageCount) {
-    return '第 $page 页，共 $pageCount 页';
-  }
 
   @override
   String get cannotRemoveCurrentAdministrator => '当前账号的管理员权限无法在这里移除';
@@ -5914,7 +5921,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get joinRequest => '加入';
 
   @override
-  String get searchReviewHint => '搜索或输入 room_/usr_ ID';
+  String get searchReviewHint => '搜索 room_/usr_ ID';
 
   @override
   String get noReviewRecords => '暂无审核记录';
@@ -6678,7 +6685,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providerCreateFooterHint => '创建后可在列表中启停、重连或编辑';
 
   @override
-  String get searchStreamsHint => '搜索或输入 room_/usr_/node_ ID';
+  String get searchStreamsHint => '搜索 room_/usr_/node_ ID';
 
   @override
   String get startedAt => '开始时间';
