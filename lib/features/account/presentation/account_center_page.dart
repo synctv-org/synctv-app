@@ -2692,6 +2692,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   onChanged: _savingPreferences
                       ? null
                       : (value) => _toggleTwoFactor(value),
+                  prefix: const Icon(Icons.enhanced_encryption_rounded),
                   title: Text(context.l10n.multiFactorAuthentication),
                   subtitle: Text(
                     context.l10n.availableFactors(
