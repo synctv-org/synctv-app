@@ -197,8 +197,10 @@ Future<R> parseInline<Q, R>(R Function(Q) callback, Q message) async =>
 /// Reads the controls layer's ignoring flag through a dynamic access; the
 /// widget type is private to the player library.
 bool _bottomBarVisible(WidgetTester tester) {
-  final layer = tester.widget(find.byKey(const Key('playback_controls_layer')));
-  return !(layer as dynamic).ignoring as bool;
+  final dynamic layer = tester.widget(
+    find.byKey(const Key('playback_controls_layer')),
+  );
+  return !layer.ignoring;
 }
 
 void main() {
