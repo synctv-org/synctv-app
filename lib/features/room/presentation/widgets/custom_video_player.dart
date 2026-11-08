@@ -563,25 +563,31 @@ class _PlayerIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget button = IconButton(
-      onPressed: onPressed,
-      padding: padding,
-      constraints: const BoxConstraints(),
-      icon: Semantics(
-        label: tooltip,
-        child: ExcludeSemantics(child: Icon(icon)),
+    // Expose the tooltip as the button's own semantics: IconButton swallows
+    // labels declared on descendant nodes, so wrap instead of nest.
+    Widget button = Semantics(
+      container: true,
+      button: true,
+      label: tooltip,
+      child: ExcludeSemantics(
+        child: IconButton(
+          onPressed: onPressed,
+          padding: padding,
+          constraints: const BoxConstraints(),
+          icon: Icon(icon),
+          style: IconButton.styleFrom(
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            foregroundColor: Colors.white,
+            disabledForegroundColor: Colors.white60,
+            backgroundColor: selected ? Colors.white24 : Colors.transparent,
+            hoverColor: Colors.white12,
+            focusColor: Colors.white12,
+            highlightColor: Colors.white24,
+          ),
+          iconSize: iconSize,
+        ),
       ),
-      style: IconButton.styleFrom(
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        foregroundColor: Colors.white,
-        disabledForegroundColor: Colors.white60,
-        backgroundColor: selected ? Colors.white24 : Colors.transparent,
-        hoverColor: Colors.white12,
-        focusColor: Colors.white12,
-        highlightColor: Colors.white24,
-      ),
-      iconSize: iconSize,
     );
     if (constraints != null) {
       button = ConstrainedBox(constraints: constraints!, child: button);

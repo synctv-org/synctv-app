@@ -1043,7 +1043,7 @@ class _AdminChatMessageCard extends StatelessWidget {
                   icon: Icons.delete_outline_rounded,
                   label: context.l10n.delete,
                   size: AppActionButtonSize.sm,
-                  style: AppActionButtonStyle.destructive,
+                  style: AppActionButtonStyle.destructiveSubtle,
                 ),
               ],
             ),
