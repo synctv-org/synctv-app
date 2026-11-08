@@ -980,12 +980,12 @@ class _RoomScreenState extends State<RoomScreen>
         videoController: controller,
       );
       if (entered && mounted && _fullScreenRouteOpen) {
-        Navigator.of(context).pop();
+        _closeFullScreenRoute();
       }
       return;
     }
     if (_fullScreenRouteOpen && mounted) {
-      Navigator.of(context).pop();
+      _closeFullScreenRoute();
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
     }
@@ -3910,7 +3910,15 @@ class _RoomScreenState extends State<RoomScreen>
               Center(
                 child:
                     _videoPlayerController != null &&
-                        _videoPlayerController!.value.isInitialized
+                        _videoPlayerController!.value.isInitialized &&
+                        // While the fullscreen route owns the video, keep the
+                        // inline surface as a plain black placeholder: the web
+                        // video player backs every platform view of a texture
+                        // with the same <video> element, so a second mounted
+                        // VideoPlayer would rip the element out of the route
+                        // (black player), and the element would never return
+                        // here after the route closes (black surface).
+                        !_fullScreenRouteOpen
                     ? CustomVideoPlayer(
                         subtitleSelection: _subtitleSelection,
                         volumePreferences: _playerVolumePreferences,
@@ -3939,9 +3947,7 @@ class _RoomScreenState extends State<RoomScreen>
                         liveStartedAt: _currentStatus?.entry?.liveStartedAt,
                         onToggleFullScreen: _toggleFullScreen,
                         onWebFullScreen: kIsWeb ? _toggleFullScreen : null,
-                        onTrueFullScreen: kIsWeb
-                            ? _toggleTrueFullScreen
-                            : null,
+                        onTrueFullScreen: kIsWeb ? _toggleTrueFullScreen : null,
                         onSync: _handleSync,
                         onPrevious: _canNavigatePlayback
                             ? () => unawaited(_navigatePlayback(previous: true))
@@ -4422,9 +4428,12 @@ class _RoomScreenState extends State<RoomScreen>
     await _toggleFullScreen();
   }
 
-  /// Leaves the fullscreen player route, exiting browser fullscreen first so
-  /// the document is not left presented fullscreen behind the inline player.
+  /// Leaves the fullscreen player route: exits browser fullscreen first so
+  /// the document is not left presented fullscreen, and releases the inline
+  /// placeholder before popping so the video element returns to the surface
+  /// while the route fades out.
   Future<void> _exitFullScreenRoute(BuildContext routeContext) async {
+    _closeFullScreenRoute();
     await exitBrowserFullscreen();
     if (routeContext.mounted) Navigator.of(routeContext).pop();
   }
@@ -4435,7 +4444,11 @@ class _RoomScreenState extends State<RoomScreen>
       return;
     }
 
-    _fullScreenRouteOpen = true;
+    // Swap the inline surface to a placeholder while the route owns the
+    // video element (see _buildVideoSurface), then open the route.
+    setState(() {
+      _fullScreenRouteOpen = true;
+    });
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ValueListenableBuilder<int>(
@@ -4533,7 +4546,15 @@ class _RoomScreenState extends State<RoomScreen>
         ),
       ),
     );
+    _closeFullScreenRoute();
+  }
+
+  /// Closes the fullscreen route state: remounts the inline player so the
+  /// web video element returns to the inline surface.
+  void _closeFullScreenRoute() {
+    if (!_fullScreenRouteOpen) return;
     _fullScreenRouteOpen = false;
+    if (mounted) setState(() {});
   }
 
   void _sendDanmaku(String text) {

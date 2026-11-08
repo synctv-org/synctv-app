@@ -364,10 +364,12 @@ class CustomVideoPlayer extends StatefulWidget {
   final PlaybackResourceLocalizer? resolveSubtitleResource;
   final VoidCallback? onSubtitleP2pDeactivated;
   final VoidCallback? onToggleFullScreen;
+
   /// Opens web fullscreen from the inline player. The room screen only
   /// provides it on the web build, so the player renders the second
   /// fullscreen button when it is non-null.
   final VoidCallback? onWebFullScreen;
+
   /// Enters true browser fullscreen from the inline player. Web only; when
   /// null the main fullscreen button falls back to [onToggleFullScreen].
   final VoidCallback? onTrueFullScreen;
@@ -1880,9 +1882,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   /// Delay before the desktop controls hide once the cursor leaves the
   /// player, or right after a menu closes.
-  static const _desktopExitedControlsHideDuration = Duration(
-    milliseconds: 900,
-  );
+  static const _desktopExitedControlsHideDuration = Duration(milliseconds: 900);
 
   bool get _pictureInPictureActive =>
       widget.pictureInPictureActive?.value ?? false;
