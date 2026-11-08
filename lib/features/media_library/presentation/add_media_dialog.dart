@@ -1446,7 +1446,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                 children: [
                   Expanded(child: nameField),
                   const SizedBox(width: 12),
-                  SizedBox(width: 220, child: playbackKindControl),
+                  SizedBox(width: 250, child: playbackKindControl),
                 ],
               );
             }

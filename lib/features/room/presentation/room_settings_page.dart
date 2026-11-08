@@ -4795,13 +4795,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   AppIconButton(
                     tooltip: context.l10n.newPlaylist,
                     onPressed: _createPlaylist,
-                    icon: Icons.create_new_folder,
+                    icon: Icons.create_new_folder_outlined,
                   ),
                   AppIconButton(
                     tooltip: context.l10n.clearCurrentLevel,
                     onPressed: _mediaLoading ? null : _clearCurrentMediaScope,
                     icon: Icons.delete_sweep_rounded,
-                    style: AppIconButtonStyle.destructive,
+                    style: AppIconButtonStyle.destructiveSubtle,
                   ),
                 ],
                 AppIconButton(
