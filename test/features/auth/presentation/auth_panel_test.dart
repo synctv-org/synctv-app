@@ -84,6 +84,66 @@ void main() {
     expect(tester.widget<EditableText>(field).controller.text, 'user');
   });
 
+  testWidgets('login sheet keeps field focus when the viewport shrinks', (
+    tester,
+  ) async {
+    // Regression (iPad portrait, mobile WebKit): the browser resizes the
+    // layout viewport itself when the soft keyboard opens (view insets stay
+    // zero). The shrunken height crosses the whole-panel-scroll threshold,
+    // swapping Column <-> whole-panel ScrollView, remounting the form,
+    // detaching the focused field, and closing the keyboard right after it
+    // opened. The structure decision must stay frozen while editing.
+    // iPad-class portrait viewport: 1024dp tall, a 336dp keyboard leaves
+    // 688dp -- below the 820dp whole-panel-scroll threshold.
+    tester.view.physicalSize = const Size(768, 1024);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        theme: AppTheme.light,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: AuthPanel(
+            gateway: _OAuth2AuthGateway([], totp: true, recovery: true),
+            passkeyClient: _UnavailablePasskeyClient(),
+            opaqueAuthenticator: OpaqueAuthenticatorService(
+              gateway: _UnusedOpaqueGateway(),
+            ),
+            oauth2Callbacks: _OAuth2Callbacks([]),
+            nativeAppleSignIn: _UnavailableAppleSignIn(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final field = find.byType(EditableText).first;
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    final focusNode = tester.widget<EditableText>(field).focusNode;
+    expect(focusNode.hasFocus, isTrue, reason: 'the username field focused');
+
+    // WebKit shrinks the layout viewport when the keyboard opens; view
+    // insets remain zero. Crossing 820dp must not restructure the panel.
+    tester.view.physicalSize = const Size(768, 688);
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(
+      focusNode.hasFocus,
+      isTrue,
+      reason:
+          'the viewport-shrinking keyboard must not remount the form and '
+          'drop focus (iPad portrait: the IME opens then closes by itself)',
+    );
+
+    await tester.enterText(field, 'user');
+    expect(tester.widget<EditableText>(field).controller.text, 'user');
+  });
+
   testWidgets('login sheet keeps the keyboard through a panel drag', (
     tester,
   ) async {

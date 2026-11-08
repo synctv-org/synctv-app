@@ -763,6 +763,26 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     );
   }
 
+  /// Last whole-panel scrolling decision captured while no text field was
+  /// focused. `null` until the first idle build.
+  bool? _scrollWholePanelWhileIdle;
+
+  /// Resolve the whole-panel scrolling decision, frozen while editing.
+  ///
+  /// See the build method comment: the viewport height shrinks with the soft
+  /// keyboard on mobile browsers, so the threshold must not be re-evaluated
+  /// while a field holds focus or the form remounts and dismisses the IME.
+  bool _resolveScrollWholePanel(MediaQueryData media) {
+    final next = media.textScaler.scale(14) > 21 || media.size.height < 820;
+    final focus = FocusManager.instance.primaryFocus;
+    final editing =
+        focus?.context?.findAncestorStateOfType<EditableTextState>() != null;
+    if (editing) {
+      return _scrollWholePanelWhileIdle ?? next;
+    }
+    return _scrollWholePanelWhileIdle = next;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -778,8 +798,15 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     // layout mid-focus, which drag-dismissing scrollables can interpret as
     // a drag and close the keyboard right after it opened. 820dp reserves
     // for a typical keyboard what the old inset check (<500 usable) meant.
-    final scrollWholePanel =
-        media.textScaler.scale(14) > 21 || size.height < 820;
+    //
+    // Mobile browsers do not just report a keyboard inset -- WebKit also
+    // shrinks the layout viewport itself, so `size.height` crosses the 820
+    // threshold the moment the keyboard opens (tall phones and iPads in
+    // portrait). The structure swap remounts the form, the focused field is
+    // detached, and the keyboard closes right after it opened. Freeze the
+    // decision while any text field is focused and recompute once editing
+    // ends, so no viewport churn can flip the structure mid-focus.
+    final scrollWholePanel = _resolveScrollWholePanel(media);
     Widget panelContent(List<Widget> children) {
       final column = Column(mainAxisSize: MainAxisSize.min, children: children);
       return scrollWholePanel
