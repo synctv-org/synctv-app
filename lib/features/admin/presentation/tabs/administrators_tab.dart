@@ -198,6 +198,7 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
           _AdminPanelCard(
             isDark: isDark,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 AppTile(
                   title: Text(context.l10n.administrators),
@@ -314,7 +315,10 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
                   ),
                 ),
                 if (_admins.isEmpty)
-                  AppEmptyMessage(message: context.l10n.noAdministrators)
+                  AppEmptyMessage(
+                    message: context.l10n.noAdministrators,
+                    icon: Icons.admin_panel_settings_outlined,
+                  )
                 else
                   for (final admin in _admins)
                     Builder(
@@ -332,7 +336,7 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
                                 context.l10n.removeAdministrator,
                             icon: Icons.remove_circle_outline,
                             style: removeDisabledReason == null
-                                ? AppIconButtonStyle.destructive
+                                ? AppIconButtonStyle.destructiveSubtle
                                 : AppIconButtonStyle.ghost,
                             onPressed: removeDisabledReason == null
                                 ? () => _removeAdmin(admin)
@@ -342,7 +346,11 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
                       },
                     ),
                 AppPaginationBar(
-                  label: context.l10n.pageOf(_adminPage, _adminPageCount),
+                  label: context.l10n.pageSizeTotalSummary(
+                    _adminPage,
+                    _adminPageSize,
+                    _adminTotal,
+                  ),
                   onPrevious: _adminPage <= 1
                       ? null
                       : () {

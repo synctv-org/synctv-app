@@ -1444,7 +1444,10 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
             hasScrollBody: false,
             child: _isLoading
                 ? const AppLoadingIndicator()
-                : AppEmptyMessage(message: context.l10n.noRooms),
+                : AppEmptyMessage(
+                    message: context.l10n.noRooms,
+                    icon: Icons.meeting_room_outlined,
+                  ),
           )
         else
           SliverPadding(
@@ -1516,7 +1519,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                           icon: Icons.block,
                           iconSize: 22,
                           tooltip: context.l10n.ban,
-                          style: AppIconButtonStyle.destructive,
+                          style: AppIconButtonStyle.destructiveSubtle,
                           onPressed: () => _banRoom(room, true),
                         )
                       else

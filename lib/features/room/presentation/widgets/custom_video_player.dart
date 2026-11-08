@@ -563,25 +563,31 @@ class _PlayerIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget button = IconButton(
-      onPressed: onPressed,
-      padding: padding,
-      constraints: const BoxConstraints(),
-      icon: Semantics(
-        label: tooltip,
-        child: ExcludeSemantics(child: Icon(icon)),
+    // Expose the tooltip as the button's own semantics: IconButton swallows
+    // labels declared on descendant nodes, so wrap instead of nest.
+    Widget button = Semantics(
+      container: true,
+      button: true,
+      label: tooltip,
+      child: ExcludeSemantics(
+        child: IconButton(
+          onPressed: onPressed,
+          padding: padding,
+          constraints: const BoxConstraints(),
+          icon: Icon(icon),
+          style: IconButton.styleFrom(
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            foregroundColor: Colors.white,
+            disabledForegroundColor: Colors.white60,
+            backgroundColor: selected ? Colors.white24 : Colors.transparent,
+            hoverColor: Colors.white12,
+            focusColor: Colors.white12,
+            highlightColor: Colors.white24,
+          ),
+          iconSize: iconSize,
+        ),
       ),
-      style: IconButton.styleFrom(
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        foregroundColor: Colors.white,
-        disabledForegroundColor: Colors.white60,
-        backgroundColor: selected ? Colors.white24 : Colors.transparent,
-        hoverColor: Colors.white12,
-        focusColor: Colors.white12,
-        highlightColor: Colors.white24,
-      ),
-      iconSize: iconSize,
     );
     if (constraints != null) {
       button = ConstrainedBox(constraints: constraints!, child: button);
@@ -2454,8 +2460,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       icon: Icons.closed_caption_rounded,
       tooltip: context.l10n.subtitles,
       onPressed: _showSubtitleMenu,
-      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
-      constraints: widget.isFullScreen ? null : const BoxConstraints(),
       iconSize: widget.isFullScreen ? 24 : iconSize,
     );
   }
@@ -2470,7 +2474,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       key: key,
       currentSpeed: value.playbackSpeed,
       options: _playbackSpeedOptions(),
-      dimension: widget.isFullScreen ? 40 : max(32.0, iconSize + 12),
+      dimension: 40,
       iconSize: widget.isFullScreen ? 24 : iconSize,
       onMenuVisibilityChanged: _handlePlaybackSpeedMenuVisibilityChanged,
       onSelected: (speed) async {
@@ -2530,8 +2534,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         _toggleDanmaku(source);
         onChanged?.call();
       },
-      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
-      constraints: widget.isFullScreen ? null : const BoxConstraints(),
       iconSize: widget.isFullScreen ? 24 : iconSize,
     );
   }
@@ -2543,8 +2545,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       tooltip: context.l10n.p2pMedia,
       selected: _p2pMediaEnabled,
       onPressed: () => _setP2pMediaEnabled(!_p2pMediaEnabled),
-      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
-      constraints: widget.isFullScreen ? null : const BoxConstraints(),
       iconSize: widget.isFullScreen ? 24 : iconSize,
     );
   }
@@ -2578,8 +2578,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       icon: widget.isLive ? Icons.refresh_rounded : Icons.sync_rounded,
       tooltip: widget.isLive ? context.l10n.reload : context.l10n.sync,
       onPressed: widget.onSync,
-      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
-      constraints: widget.isFullScreen ? null : const BoxConstraints(),
       iconSize: widget.isFullScreen ? 24 : iconSize,
     );
   }
@@ -2798,8 +2796,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 ? context.l10n.webFullscreen
                 : context.l10n.windowFullscreen,
             onPressed: surfaceFullScreen,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
             iconSize: iconSize,
           ),
           _PlayerIconButton(
@@ -2807,8 +2803,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             icon: widget.fullScreenIcon ?? Icons.fullscreen,
             tooltip: context.l10n.fullscreen,
             onPressed: widget.onTrueFullScreen ?? widget.onToggleFullScreen,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
             iconSize: iconSize,
           ),
         ],
@@ -2823,8 +2817,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           ? context.l10n.exitFullscreen
           : context.l10n.fullscreen,
       onPressed: widget.onToggleFullScreen,
-      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
-      constraints: widget.isFullScreen ? null : const BoxConstraints(),
       iconSize: widget.isFullScreen ? 24 : iconSize,
     );
   }
@@ -3276,7 +3268,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     required double iconSize,
     VoidCallback? onChanged,
   }) {
-    final buttonSize = max(32.0, iconSize + 12);
+    // Keep every bottom-bar control on the same 40px grid so the icon
+    // rhythm and tap targets stay uniform.
+    const buttonSize = 40.0;
     return MouseRegion(
       key: _volumeAnchorKey,
       onEnter: (_) {

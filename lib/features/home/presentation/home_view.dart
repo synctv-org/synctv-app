@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/account_models.dart';
@@ -61,6 +60,7 @@ class HomeViewCallbacks {
   const HomeViewCallbacks({
     required this.openServerSettings,
     required this.openLanguageSelector,
+    required this.openThemeModeSelector,
     required this.openAbout,
     required this.openLogin,
     required this.openJoinRoom,
@@ -81,6 +81,7 @@ class HomeViewCallbacks {
 
   final VoidCallback openServerSettings;
   final VoidCallback openLanguageSelector;
+  final VoidCallback openThemeModeSelector;
   final VoidCallback openAbout;
   final VoidCallback openLogin;
   final VoidCallback openJoinRoom;
@@ -175,6 +176,7 @@ class _HomeHeader extends StatelessWidget {
                     child: AppInkSurface(
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
+                      onTap: callbacks.openServerSettings,
                       onLongPress: callbacks.openServerSettings,
                       semanticLabel: l10n.openServerSettings,
                       child: Row(
@@ -206,7 +208,7 @@ class _HomeHeader extends StatelessWidget {
                 AppIconButton(
                   tooltip: l10n.serverSettings,
                   onPressed: callbacks.openServerSettings,
-                  icon: kIsWeb ? Icons.info_outline_rounded : Icons.dns_rounded,
+                  icon: Icons.dns_rounded,
                   style: AppIconButtonStyle.tonal,
                 ),
                 SizedBox(width: compact ? 4 : 12),
@@ -306,6 +308,7 @@ class _AccountMenu extends StatelessWidget {
         'admin' => callbacks.openAdminSettings(),
         'server' => callbacks.openServerSettings(),
         'language' => callbacks.openLanguageSelector(),
+        'appearance' => callbacks.openThemeModeSelector(),
         'about' => callbacks.openAbout(),
         'logout' => callbacks.logout(),
         _ => null,
@@ -341,6 +344,12 @@ class _AccountMenu extends StatelessWidget {
           'language',
           Icons.language_rounded,
           context.l10n.language,
+          color: theme.colorScheme.onSurface,
+        ),
+        _menuItem(
+          'appearance',
+          Icons.brightness_6_rounded,
+          context.l10n.appearance,
           color: theme.colorScheme.onSurface,
         ),
         _menuItem(

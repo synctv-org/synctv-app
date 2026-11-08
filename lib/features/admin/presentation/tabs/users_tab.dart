@@ -739,7 +739,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
               child: loading
                   ? const AppLoadingIndicator()
                   : rooms.isEmpty
-                  ? AppEmptyMessage(message: context.l10n.noRooms)
+                  ? AppEmptyMessage(
+                      message: context.l10n.noRooms,
+                      icon: Icons.meeting_room_outlined,
+                    )
                   : AppListView.builder(
                       padding: const EdgeInsets.only(top: 8),
                       itemCount: rooms.length,
@@ -1138,6 +1141,14 @@ class _UserManagementTabState extends State<UserManagementTab> {
             hasScrollBody: false,
             child: AppLoadingIndicator(),
           )
+        else if (_users.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: AppEmptyMessage(
+              message: context.l10n.noUsers,
+              icon: Icons.person_search_rounded,
+            ),
+          )
         else
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1247,7 +1258,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                         AppIconButton(
                           icon: Icons.block,
                           iconSize: 22,
-                          style: AppIconButtonStyle.destructive,
+                          style: AppIconButtonStyle.destructiveSubtle,
                           tooltip: context.l10n.ban,
                           onPressed: () => _banUser(user, true),
                         ),
@@ -1265,7 +1276,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                       AppIconButton(
                         icon: Icons.delete_outline,
                         iconSize: 22,
-                        style: AppIconButtonStyle.destructive,
+                        style: AppIconButtonStyle.destructiveSubtle,
                         tooltip: context.l10n.deleteUser,
                         onPressed: () => _deleteUser(user),
                       ),

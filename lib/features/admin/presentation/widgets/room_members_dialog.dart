@@ -405,7 +405,7 @@ class _RoomMembersDialogState extends State<_RoomMembersDialog> {
                         AppIconButton(
                           tooltip: context.l10n.kick,
                           icon: Icons.logout_rounded,
-                          style: AppIconButtonStyle.destructive,
+                          style: AppIconButtonStyle.destructiveSubtle,
                           onPressed: busy
                               ? null
                               : () => runMemberAction(member, () async {

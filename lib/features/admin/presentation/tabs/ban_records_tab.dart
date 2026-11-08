@@ -274,6 +274,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
       loading: _isLoading,
       itemCount: _records.length,
       emptyMessage: context.l10n.noBanRecords,
+      emptyIcon: Icons.gavel_rounded,
       itemBuilder: (context, index) {
         final record = _records[index];
         final target =

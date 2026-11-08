@@ -21,6 +21,7 @@ import 'package:synctv_app/features/home/presentation/room_delete_confirmation_d
 import 'package:synctv_app/features/room/presentation/create_room_dialog.dart';
 import 'package:synctv_app/features/room/presentation/join_room_dialog.dart';
 import 'package:synctv_app/core/localization/presentation/language_selector_dialog.dart';
+import 'package:synctv_app/core/theme/presentation/theme_mode_selector_dialog.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/room_invite/presentation/room_invite_flow.dart';
 import 'package:synctv_app/features/room_invite/domain/room_invite.dart';
@@ -1027,6 +1028,7 @@ class _AppShellState extends State<AppShell> {
       callbacks: HomeViewCallbacks(
         openServerSettings: _showServerSettingsDialog,
         openLanguageSelector: () => showLanguageSelectorDialog(context),
+        openThemeModeSelector: () => showThemeModeSelectorDialog(context),
         openAbout: () => showAboutAppDialog(context),
         openLogin: _showLoginDialog,
         openJoinRoom: _showJoinRoomDialog,

@@ -48,6 +48,7 @@ import 'package:synctv_app/features/media_library/data/synctv_media_library_gate
 import 'package:synctv_app/features/providers/data/synctv_provider_gateway.dart';
 import 'package:synctv_app/features/providers/infrastructure/desktop_web_verification_client.dart';
 import 'package:synctv_app/core/localization/app_locale_controller.dart';
+import 'package:synctv_app/core/theme/app_theme_mode_controller.dart';
 import 'package:synctv_app/features/auth/infrastructure/oauth2_callback_service.dart';
 import 'package:synctv_app/features/auth/infrastructure/oauth2_callback_dispatcher.dart';
 import 'package:synctv_app/features/auth/presentation/oauth2_callback_page.dart';
@@ -78,6 +79,8 @@ void main(List<String> args) {
   );
   Future<void> initialize() => Future.wait([
     appLocaleController.load(),
+    appLocaleController.ensureDateFormattingInitialized(),
+    appThemeModeController.load(),
     SyncTvService.init(),
     p2pMediaPreferences.load(),
     playbackModePreferences.load(),
@@ -220,12 +223,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: appLocaleController,
+      listenable: Listenable.merge([
+        appLocaleController,
+        appThemeModeController,
+      ]),
       builder: (context, _) => MaterialApp(
         onGenerateTitle: (context) => context.l10n.appTitle,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
+        themeMode: appThemeModeController.themeMode,
         locale: appLocaleController.locale,
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [

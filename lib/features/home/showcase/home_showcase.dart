@@ -177,6 +177,7 @@ HomeViewCallbacks homeShowcaseCallbacks({
   ValueChanged<String>? onSelectCategory,
 }) => HomeViewCallbacks(
   openServerSettings: onOpenServerSettings ?? () {},
+  openThemeModeSelector: () {},
   openLanguageSelector: () {},
   openAbout: () {},
   openLogin: () {},

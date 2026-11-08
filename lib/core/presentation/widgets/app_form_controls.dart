@@ -11,11 +11,30 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/core/presentation/widgets/app_tab_activity.dart';
 
-enum AppActionButtonStyle { filled, tonal, outlined, text, destructive }
+enum AppActionButtonStyle {
+  filled,
+  tonal,
+  outlined,
+  text,
+  destructive,
+  destructiveSubtle,
+}
 
 enum AppActionButtonSize { sm, md }
 
-enum AppIconButtonStyle { ghost, tonal, outlined, filled, destructive }
+/// Icon button visual treatments.
+///
+/// [destructiveSubtle] tints row-embedded destructive actions without the
+/// filled weight of [destructive], which is reserved for standalone
+/// destructive calls to action.
+enum AppIconButtonStyle {
+  ghost,
+  tonal,
+  outlined,
+  filled,
+  destructive,
+  destructiveSubtle,
+}
 
 enum AppIconButtonSize { sm, md }
 
@@ -1524,6 +1543,8 @@ class AppActionButton extends StatelessWidget {
         ? const Size(28, 36)
         : const Size(44, 44);
     final destructiveStyle = style == AppActionButtonStyle.destructive;
+    final destructiveSubtleStyle =
+        style == AppActionButtonStyle.destructiveSubtle;
     final buttonStyle = ButtonStyle(
       minimumSize: WidgetStatePropertyAll(minimumSize),
       padding: WidgetStatePropertyAll(
@@ -1533,17 +1554,24 @@ class AppActionButton extends StatelessWidget {
       ),
       foregroundColor: destructiveStyle
           ? WidgetStatePropertyAll(Theme.of(context).colorScheme.onError)
+          : destructiveSubtleStyle
+          ? WidgetStatePropertyAll(Theme.of(context).colorScheme.error)
           : foregroundColor == null
           ? null
           : WidgetStatePropertyAll(foregroundColor),
       backgroundColor: destructiveStyle
           ? WidgetStatePropertyAll(Theme.of(context).colorScheme.error)
+          : destructiveSubtleStyle
+          ? WidgetStatePropertyAll(
+              Theme.of(context).colorScheme.error.withValues(alpha: 0.12),
+            )
           : null,
     );
     Widget button;
     switch (style) {
       case AppActionButtonStyle.filled:
       case AppActionButtonStyle.destructive:
+      case AppActionButtonStyle.destructiveSubtle:
         button = FilledButton(
           onPressed: effectiveOnPressed,
           focusNode: focusNode,
@@ -1645,13 +1673,20 @@ class AppIconButton extends StatelessWidget {
       ),
     );
     final destructive = style == AppIconButtonStyle.destructive;
+    final destructiveSubtle = style == AppIconButtonStyle.destructiveSubtle;
     final baseStyle = IconButton.styleFrom(
       minimumSize: Size(buttonSize, buttonSize),
       maximumSize: Size(buttonSize, buttonSize),
       padding: EdgeInsets.zero,
-      backgroundColor: destructive ? Theme.of(context).colorScheme.error : null,
+      backgroundColor: destructive
+          ? Theme.of(context).colorScheme.error
+          : destructiveSubtle
+          ? Theme.of(context).colorScheme.error.withValues(alpha: 0.12)
+          : null,
       foregroundColor: destructive
           ? Theme.of(context).colorScheme.onError
+          : destructiveSubtle
+          ? Theme.of(context).colorScheme.error
           : null,
       side: style == AppIconButtonStyle.outlined
           ? BorderSide(color: Theme.of(context).colorScheme.outline)
@@ -1660,6 +1695,7 @@ class AppIconButton extends StatelessWidget {
     Widget button;
     switch (style) {
       case AppIconButtonStyle.ghost:
+      case AppIconButtonStyle.destructiveSubtle:
         button = IconButton(
           onPressed: effectiveOnPressed,
           icon: child,

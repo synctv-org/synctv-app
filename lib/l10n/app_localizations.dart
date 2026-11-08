@@ -146,6 +146,42 @@ abstract class AppLocalizations {
   /// **'English'**
   String get languageEnglish;
 
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @appearanceSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance settings'**
+  String get appearanceSettingsTitle;
+
+  /// No description provided for @appearanceSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the app theme. System follows your device setting.'**
+  String get appearanceSettingsDescription;
+
+  /// No description provided for @themeModeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeModeSystem;
+
+  /// No description provided for @themeModeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeModeLight;
+
+  /// No description provided for @themeModeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeModeDark;
+
   /// No description provided for @server.
   ///
   /// In en, this message translates to:
@@ -613,6 +649,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No rooms'**
   String get noRooms;
+
+  /// No description provided for @noUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found'**
+  String get noUsers;
 
   /// No description provided for @addServerDescription.
   ///
@@ -4500,6 +4542,18 @@ abstract class AppLocalizations {
   /// **'Scroll to bottom'**
   String get scrollToBottom;
 
+  /// No description provided for @chatDateToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get chatDateToday;
+
+  /// No description provided for @chatDateYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get chatDateYesterday;
+
   /// No description provided for @pinned.
   ///
   /// In en, this message translates to:
@@ -7002,12 +7056,6 @@ abstract class AppLocalizations {
   /// **'Refresh rooms'**
   String get refreshRooms;
 
-  /// No description provided for @pageRangeSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Page {page} of {pages} · {start}-{end} / {total}'**
-  String pageRangeSummary(int page, int pages, int start, int end, int total);
-
   /// No description provided for @myRoomsTemporarilyUnavailable.
   ///
   /// In en, this message translates to:
@@ -7247,12 +7295,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ascending'**
   String get ascending;
-
-  /// No description provided for @notificationPageRange.
-  ///
-  /// In en, this message translates to:
-  /// **'Page {page} of {pages} · {start}-{end}'**
-  String notificationPageRange(int page, int pages, int start, int end);
 
   /// No description provided for @notificationsTemporarilyUnavailable.
   ///
@@ -8856,12 +8898,6 @@ abstract class AppLocalizations {
   /// **'Media ID descending'**
   String get mediaIdDescending;
 
-  /// No description provided for @pagedItemSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Page {page} · {pageSize} per page · {total} total'**
-  String pagedItemSummary(int page, int pageSize, int total);
-
   /// No description provided for @noActiveStreams.
   ///
   /// In en, this message translates to:
@@ -9671,12 +9707,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No administrators'**
   String get noAdministrators;
-
-  /// No description provided for @pageOf.
-  ///
-  /// In en, this message translates to:
-  /// **'Page {page} of {pageCount}'**
-  String pageOf(int page, int pageCount);
 
   /// No description provided for @cannotRemoveCurrentAdministrator.
   ///
@@ -10663,7 +10693,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchReviewHint.
   ///
   /// In en, this message translates to:
-  /// **'Search or enter a room_/usr_ ID'**
+  /// **'Search room_/usr_ ID'**
   String get searchReviewHint;
 
   /// No description provided for @noReviewRecords.
@@ -12091,7 +12121,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchStreamsHint.
   ///
   /// In en, this message translates to:
-  /// **'Search or enter a room_/usr_/node_ ID'**
+  /// **'Search room_/usr_/node_ ID'**
   String get searchStreamsHint;
 
   /// No description provided for @startedAt.

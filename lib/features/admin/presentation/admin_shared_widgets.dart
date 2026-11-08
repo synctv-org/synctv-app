@@ -128,6 +128,7 @@ class _AdminPagedList extends StatelessWidget {
     required this.itemCount,
     required this.itemBuilder,
     required this.emptyMessage,
+    this.emptyIcon,
   });
 
   final List<Widget> header;
@@ -135,6 +136,7 @@ class _AdminPagedList extends StatelessWidget {
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
   final String emptyMessage;
+  final IconData? emptyIcon;
 
   @override
   Widget build(BuildContext context) => CustomScrollView(
@@ -145,7 +147,7 @@ class _AdminPagedList extends StatelessWidget {
           hasScrollBody: false,
           child: loading
               ? const AppLoadingIndicator()
-              : AppEmptyMessage(message: emptyMessage),
+              : AppEmptyMessage(message: emptyMessage, icon: emptyIcon),
         )
       else
         SliverPadding(
@@ -1041,7 +1043,7 @@ class _AdminChatMessageCard extends StatelessWidget {
                   icon: Icons.delete_outline_rounded,
                   label: context.l10n.delete,
                   size: AppActionButtonSize.sm,
-                  style: AppActionButtonStyle.destructive,
+                  style: AppActionButtonStyle.destructiveSubtle,
                 ),
               ],
             ),
@@ -1178,6 +1180,17 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.hintColor,
+    );
+    // Reserve two label lines so every tile in a row keeps the same height
+    // even when a single label wraps.
+    final labelStyle2Height =
+        MediaQuery.textScalerOf(context)
+            .scale((labelStyle?.fontSize ?? 14).toDouble()) *
+        (labelStyle?.height ?? 1.43) *
+        2;
     return _AdminPanelCard(
       isDark: isDark,
       child: Padding(
@@ -1192,7 +1205,15 @@ class _StatTile extends StatelessWidget {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: Theme.of(context).hintColor)),
+            SizedBox(
+              height: labelStyle2Height,
+              child: Text(
+                label,
+                style: labelStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),

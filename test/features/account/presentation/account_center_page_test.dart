@@ -1922,7 +1922,7 @@ void main() {
           total > 24,
           reason: '$section total $total',
         );
-        expect(pagination.label, contains('Page 1 of ${total <= 24 ? 1 : 2}'));
+        expect(pagination.label, contains('$total total'));
       }
       expect(tester.takeException(), isNull);
     }

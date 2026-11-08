@@ -2285,10 +2285,6 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final rooms = page?.rooms ?? const <SyncTvRoom>[];
     final total = page?.total ?? 0;
     final maxPage = _roomsMaxPage(total);
-    final pageStart = total == 0 ? 0 : ((_roomsPage - 1) * _roomsPageSize) + 1;
-    final pageEnd = total == 0
-        ? 0
-        : (_roomsPage * _roomsPageSize).clamp(0, total);
 
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -2438,11 +2434,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     const SizedBox(height: 8),
                     AppPaginationBar(
                       padding: EdgeInsets.zero,
-                      label: context.l10n.pageRangeSummary(
+                      label: context.l10n.pageSizeTotalSummary(
                         _roomsPage,
-                        maxPage,
-                        pageStart,
-                        pageEnd,
+                        _roomsPageSize,
                         total,
                       ),
                       onPrevious: _loadingRooms || _roomsPage <= 1
@@ -2524,12 +2518,6 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final users = page?.users ?? const <BlockedUserInfo>[];
     final total = page?.total ?? 0;
     final maxPage = _blockedUsersMaxPage(total);
-    final pageStart = total == 0
-        ? 0
-        : ((_blockedUsersPage - 1) * _blockedUsersPageSize) + 1;
-    final pageEnd = total == 0
-        ? 0
-        : (_blockedUsersPage * _blockedUsersPageSize).clamp(0, total);
 
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -2574,11 +2562,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     const SizedBox(height: 8),
                     AppPaginationBar(
                       padding: EdgeInsets.zero,
-                      label: context.l10n.pageRangeSummary(
+                      label: context.l10n.pageSizeTotalSummary(
                         _blockedUsersPage,
-                        maxPage,
-                        pageStart,
-                        pageEnd,
+                        _blockedUsersPageSize,
                         total,
                       ),
                       onPrevious: _loadingBlockedUsers || _blockedUsersPage <= 1
@@ -2961,12 +2947,6 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         .length;
     final total = page?.total ?? 0;
     final maxPage = _notificationMaxPage(total);
-    final pageStart = total == 0
-        ? 0
-        : ((_notificationPage - 1) * _notificationPageSize) + 1;
-    final pageEnd = total == 0
-        ? 0
-        : (_notificationPage * _notificationPageSize).clamp(0, total);
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
         SliverToBoxAdapter(
@@ -3159,11 +3139,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 const SizedBox(height: 8),
                 AppPaginationBar(
                   padding: EdgeInsets.zero,
-                  label: context.l10n.notificationPageRange(
+                  label: context.l10n.pageSizeTotalSummary(
                     _notificationPage,
-                    maxPage,
-                    pageStart,
-                    pageEnd,
+                    _notificationPageSize,
+                    total,
                   ),
                   onPrevious: _loadingNotifications || _notificationPage <= 1
                       ? null
