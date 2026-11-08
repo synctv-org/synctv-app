@@ -368,6 +368,9 @@ class CustomVideoPlayer extends StatefulWidget {
   /// provides it on the web build, so the player renders the second
   /// fullscreen button when it is non-null.
   final VoidCallback? onWebFullScreen;
+  /// Enters true browser fullscreen from the inline player. Web only; when
+  /// null the main fullscreen button falls back to [onToggleFullScreen].
+  final VoidCallback? onTrueFullScreen;
   final VoidCallback? onSync;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
@@ -421,6 +424,7 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onSubtitleP2pDeactivated,
     this.onToggleFullScreen,
     this.onWebFullScreen,
+    this.onTrueFullScreen,
     this.onSync,
     this.onPrevious,
     this.onNext,
@@ -2794,7 +2798,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             key: const Key('playback_fullscreen_button'),
             icon: widget.fullScreenIcon ?? Icons.fullscreen,
             tooltip: context.l10n.fullscreen,
-            onPressed: widget.onToggleFullScreen,
+            onPressed: widget.onTrueFullScreen ?? widget.onToggleFullScreen,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             iconSize: iconSize,

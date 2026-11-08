@@ -3938,7 +3938,8 @@ class _RoomScreenState extends State<RoomScreen>
                         isLive: _currentStatus?.entry?.live == true,
                         liveStartedAt: _currentStatus?.entry?.liveStartedAt,
                         onToggleFullScreen: _toggleFullScreen,
-                        onWebFullScreen: kIsWeb
+                        onWebFullScreen: kIsWeb ? _toggleFullScreen : null,
+                        onTrueFullScreen: kIsWeb
                             ? _toggleTrueFullScreen
                             : null,
                         onSync: _handleSync,

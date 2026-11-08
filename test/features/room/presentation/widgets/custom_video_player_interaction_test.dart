@@ -2766,6 +2766,7 @@ testWidgets('web build shows separate web and true fullscreen buttons', (
   );
   addTearDown(controller.dispose);
   var webFullScreenCalls = 0;
+  var trueFullScreenCalls = 0;
   var toggleCalls = 0;
 
   Widget player({VoidCallback? onWebFullScreen}) => MaterialApp(
@@ -2781,6 +2782,7 @@ testWidgets('web build shows separate web and true fullscreen buttons', (
         interactionMode: VideoPlayerInteractionMode.desktop,
         onToggleFullScreen: () => toggleCalls++,
         onWebFullScreen: onWebFullScreen,
+        onTrueFullScreen: () => trueFullScreenCalls++,
       ),
     ),
   );
@@ -2791,12 +2793,14 @@ testWidgets('web build shows separate web and true fullscreen buttons', (
   await tester.tap(find.byKey(const Key('playback_web_fullscreen_button')));
   await tester.pump();
   expect(webFullScreenCalls, 1);
-  expect(toggleCalls, 0);
+  expect(trueFullScreenCalls, 0);
   await tester.tap(find.byKey(const Key('playback_fullscreen_button')));
   await tester.pump();
-  expect(toggleCalls, 1);
+  expect(trueFullScreenCalls, 1);
+  expect(toggleCalls, 0);
 
-  // Native build: only the single fullscreen button.
+  // Native build: only the single fullscreen button, falling back to the
+  // toggle callback.
   await tester.pumpWidget(player());
   await tester.pump();
   expect(
@@ -2804,6 +2808,9 @@ testWidgets('web build shows separate web and true fullscreen buttons', (
     findsNothing,
   );
   expect(find.byKey(const Key('playback_fullscreen_button')), findsOneWidget);
+  await tester.tap(find.byKey(const Key('playback_fullscreen_button')));
+  await tester.pump();
+  expect(toggleCalls, 1, reason: 'native fallback drives the toggle callback');
 });
 
 testWidgets('web fullscreen button is absent while already fullscreen', (
