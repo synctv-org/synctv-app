@@ -4860,6 +4860,18 @@ abstract class AppLocalizations {
   /// **'Waiting to join... ({count, plural, =1{1 person} other{{count} people}}) (muted)'**
   String waitingToJoinVoiceMuted(int count);
 
+  /// No description provided for @voiceVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice volume'**
+  String get voiceVolume;
+
+  /// No description provided for @voiceVolumeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjusts how loud other people sound. Above 100% boosts quiet calls.'**
+  String get voiceVolumeHint;
+
   /// No description provided for @voiceChat.
   ///
   /// In en, this message translates to:

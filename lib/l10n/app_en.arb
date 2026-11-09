@@ -945,6 +945,8 @@
   "@waitingToJoinVoice": {"placeholders": {"count": {"type": "int"}}},
   "waitingToJoinVoiceMuted": "Waiting to join... ({count, plural, =1{1 person} other{{count} people}}) (muted)",
   "@waitingToJoinVoiceMuted": {"placeholders": {"count": {"type": "int"}}},
+  "voiceVolume": "Voice volume",
+  "voiceVolumeHint": "Adjusts how loud other people sound. Above 100% boosts quiet calls.",
   "voiceChat": "Voice chat",
   "roomRealtimeFeatures": "Realtime communication",
   "voiceChatRoomEnabledDescription": "Allow members to join voice calls in this room",
