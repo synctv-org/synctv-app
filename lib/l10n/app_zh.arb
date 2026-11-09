@@ -831,6 +831,8 @@
   "voiceConnectedMuted": "语音已连接（{count} 人）（静音）",
   "waitingToJoinVoice": "等待加入...（{count} 人）",
   "waitingToJoinVoiceMuted": "等待加入...（{count} 人）（静音）",
+  "voiceVolume": "通话音量",
+  "voiceVolumeHint": "调整他人说话的音量，100% 以上可放大较小的声音。",
   "voiceChat": "语音聊天",
   "roomRealtimeFeatures": "实时通信",
   "voiceChatRoomEnabledDescription": "允许成员在此房间加入语音通话",

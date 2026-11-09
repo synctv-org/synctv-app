@@ -7,6 +7,85 @@ import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_chat_manager.dart';
 
 void main() {
+  test('remote voice volume applies to tracks arriving later', () async {
+    final volumeCalls = <(double, String?)>[];
+    final peer = _Peer();
+    final manager = _volumeManager(peer, volumeCalls);
+    await manager.join(clientOperationId: 'joined');
+    manager.setRemoteVolume(1.5);
+    expect(volumeCalls, isEmpty);
+    await manager.handleJoin('peer1');
+    await Future<void>.delayed(Duration.zero);
+    expect(volumeCalls, isEmpty);
+    peer.fireTrack(_RemoteTrack(id: 'track-1'));
+    await Future<void>.delayed(Duration.zero);
+    expect(volumeCalls, [(1.5, 'track-1')]);
+    await manager.dispose();
+  });
+
+  test('remote voice volume applies to already connected tracks', () async {
+    final volumeCalls = <(double, String?)>[];
+    final peer = _Peer();
+    final manager = _volumeManager(peer, volumeCalls);
+    await manager.join(clientOperationId: 'joined');
+    await manager.handleJoin('peer1');
+    await Future<void>.delayed(Duration.zero);
+    peer.fireTrack(_RemoteTrack(id: 'track-1'));
+    await Future<void>.delayed(Duration.zero);
+    expect(volumeCalls, [(1.0, 'track-1')]);
+    manager.setRemoteVolume(0.5);
+    await Future<void>.delayed(Duration.zero);
+    expect(volumeCalls.last, (0.5, 'track-1'));
+    manager.setRemoteVolume(5);
+    await Future<void>.delayed(Duration.zero);
+    expect(volumeCalls.last, (2.0, 'track-1'));
+    expect(manager.remoteVolume, 2.0);
+    await manager.dispose();
+  });
+
+  test('volume stops applying after the peer closes', () async {
+    final volumeCalls = <(double, String?)>[];
+    final peer = _Peer();
+    final manager = _volumeManager(peer, volumeCalls);
+    await manager.join(clientOperationId: 'joined');
+    await manager.handleJoin('peer1');
+    await Future<void>.delayed(Duration.zero);
+    peer.fireTrack(_RemoteTrack(id: 'track-1'));
+    await Future<void>.delayed(Duration.zero);
+    expect(volumeCalls, [(1.0, 'track-1')]);
+    await manager.handleLeave('peer1');
+    manager.setRemoteVolume(1.5);
+    await Future<void>.delayed(Duration.zero);
+    expect(volumeCalls, [(1.0, 'track-1')]);
+    await manager.dispose();
+  });
+
+  test('failed volume application leaves the session usable', () async {
+    final peer = _Peer();
+    var applyCalls = 0;
+    final manager = VoiceChatManager(
+      onSignalingMessage: (_, _) {},
+      onStateChange: () {},
+      loadIceServers: () async => _iceServers,
+      acquireMicrophone: () async => _Stream(),
+      configureVoiceCallMode: (_) async {},
+      configureSpeakerphone: (_) async {},
+      createConnection: (_) async => peer,
+      applyRemoteTrackVolume: (volume, track) async {
+        applyCalls++;
+        throw StateError('volume channel failed');
+      },
+    );
+    await manager.join(clientOperationId: 'joined');
+    await manager.handleJoin('peer1');
+    await Future<void>.delayed(Duration.zero);
+    peer.fireTrack(_RemoteTrack(id: 'track-1'));
+    await Future<void>.delayed(Duration.zero);
+    expect(applyCalls, 1);
+    expect(manager.isConnected, isTrue);
+    await manager.dispose();
+  });
+
   test('failed audio routing still allows cleanup and a later join', () async {
     final failure = StateError('audio mode failed');
     var failNext = true;
@@ -907,6 +986,10 @@ class _SignalingSpy extends VoiceChatManager {
 
 class _Peer extends RTCPeerConnection {
   final candidates = <String?>[];
+  void fireTrack(MediaStreamTrack track) {
+    onTrack?.call(RTCTrackEvent(track: track, streams: []));
+  }
+
   @override
   Future<void> addCandidate(RTCIceCandidate candidate) async {
     candidates.add(candidate.candidate);
@@ -970,6 +1053,38 @@ class _Peer extends RTCPeerConnection {
 }
 
 class _Sender implements RTCRtpSender {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+VoiceChatManager _volumeManager(
+  _Peer peer,
+  List<(double, String?)> volumeCalls,
+) => VoiceChatManager(
+  onSignalingMessage: (_, _) {},
+  onStateChange: () {},
+  loadIceServers: () async => _iceServers,
+  acquireMicrophone: () async => _Stream(),
+  configureVoiceCallMode: (_) async {},
+  configureSpeakerphone: (_) async {},
+  createConnection: (_) async => peer,
+  applyRemoteTrackVolume: (volume, track) async {
+    volumeCalls.add((volume, track.id));
+  },
+);
+
+class _RemoteTrack implements MediaStreamTrack {
+  _RemoteTrack({required this.id});
+
+  @override
+  final String id;
+
+  @override
+  String get kind => 'audio';
+
+  @override
+  bool enabled = true;
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

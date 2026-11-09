@@ -28,6 +28,7 @@ final class NativeVoiceChatSessionFactory implements VoiceChatSessionFactory {
 class VoiceChatManager implements VoiceChatSession {
   final Map<String, RTCPeerConnection> _peerConnections = {};
   final Map<String, Object> _peerOperations = {};
+  final Map<String, List<MediaStreamTrack>> _remoteAudioTracks = {};
   final Future<RTCPeerConnection> Function(Map<String, dynamic>)
   _createConnection;
   final WebRtcNegotiationState<String, RTCIceCandidate> _negotiation =
@@ -48,6 +49,8 @@ class VoiceChatManager implements VoiceChatSession {
   final Future<MediaStream> Function() _acquireMicrophone;
   final Future<void> Function(bool) _configureVoiceCallMode;
   final Future<void> Function(bool) _configureSpeakerphone;
+  final Future<void> Function(double, MediaStreamTrack) _applyRemoteTrackVolume;
+  double _remoteVolume = VoiceChatVolumeRange.initial;
   Future<void> _audioRouting = Future<void>.value();
   @override
   bool get isConnected => _isConnected;
@@ -55,6 +58,8 @@ class VoiceChatManager implements VoiceChatSession {
   bool get hasPeersConnected => _connectedPeers.isNotEmpty;
   @override
   int get participantCount => _connectedPeers.length + (_isConnected ? 1 : 0);
+  @override
+  double get remoteVolume => _remoteVolume;
 
   VoiceChatManager({
     required this.onSignalingMessage,
@@ -64,11 +69,14 @@ class VoiceChatManager implements VoiceChatSession {
     Future<RTCPeerConnection> Function(Map<String, dynamic>)? createConnection,
     Future<void> Function(bool)? configureVoiceCallMode,
     Future<void> Function(bool)? configureSpeakerphone,
+    Future<void> Function(double volume, MediaStreamTrack track)?
+    applyRemoteTrackVolume,
   }) : _acquireMicrophone = acquireMicrophone ?? acquireVoiceMicrophone,
        _configureVoiceCallMode =
            configureVoiceCallMode ?? VoiceAudioSession.setVoiceCallMode,
        _configureSpeakerphone =
            configureSpeakerphone ?? _configurePlatformSpeakerphone,
+       _applyRemoteTrackVolume = applyRemoteTrackVolume ?? Helper.setVolume,
        _createConnection = createConnection ?? createPeerConnection;
 
   static Future<void> _configurePlatformSpeakerphone(bool enabled) async {
@@ -228,6 +236,11 @@ class VoiceChatManager implements VoiceChatSession {
       if (!_ownsPeer(remoteId, pc)) return;
       if (event.track.kind == 'audio') {
         event.track.enabled = true;
+        final tracks = _remoteAudioTracks.putIfAbsent(remoteId, () => []);
+        if (!tracks.any((track) => identical(track, event.track))) {
+          tracks.add(event.track);
+        }
+        unawaited(_applyTrackVolume(event.track, _remoteVolume));
         unawaited(_setSpeakerphoneOn(true));
       }
     };
@@ -390,6 +403,7 @@ class VoiceChatManager implements VoiceChatSession {
   Future<void> _closePeer(String remoteId) async {
     _peerOperations.remove(remoteId);
     final pc = _peerConnections.remove(remoteId);
+    _remoteAudioTracks.remove(remoteId);
     final changed = _connectedPeers.remove(remoteId);
     _negotiation.clearPeer(remoteId);
     Object? notificationError;
@@ -429,6 +443,7 @@ class VoiceChatManager implements VoiceChatSession {
     final peers = _peerConnections.values.toList();
     _peerConnections.clear();
     _peerOperations.clear();
+    _remoteAudioTracks.clear();
     _connectedPeers.clear();
     _negotiation.clear();
     late final Future<void> operation;
@@ -477,6 +492,24 @@ class VoiceChatManager implements VoiceChatSession {
   Future<void> dispose() {
     _disposed = true;
     return _leave(notifyServer: false);
+  }
+
+  @override
+  void setRemoteVolume(double value) {
+    final volume = VoiceChatVolumeRange.clamp(value);
+    _remoteVolume = volume;
+    for (final track in _remoteAudioTracks.values.expand((t) => t)) {
+      unawaited(_applyTrackVolume(track, volume));
+    }
+  }
+
+  Future<void> _applyTrackVolume(MediaStreamTrack track, double volume) async {
+    try {
+      await _applyRemoteTrackVolume(volume, track);
+    } catch (error) {
+      // Volume control is best-effort: the call continues at platform gain.
+      debugPrint('WebRTC remote voice volume failed: $error');
+    }
   }
 
   @override

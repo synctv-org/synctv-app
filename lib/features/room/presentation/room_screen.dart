@@ -6393,6 +6393,17 @@ class _RoomScreenState extends State<RoomScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppIconButton(
+                  icon: _voiceChatManager!.remoteVolume <= 0
+                      ? Icons.volume_off_rounded
+                      : _voiceChatManager!.remoteVolume > 1
+                      ? Icons.volume_up_rounded
+                      : Icons.volume_down_rounded,
+                  onPressed: () => _showVoiceVolumeDialog(),
+                  tooltip: context.l10n.voiceVolume,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.tonal,
+                ),
+                AppIconButton(
                   icon: _voiceChatManager!.isMuted
                       ? Icons.mic_off_rounded
                       : Icons.mic_rounded,
@@ -6451,6 +6462,55 @@ class _RoomScreenState extends State<RoomScreen>
         });
       }
     }
+  }
+
+  void _showVoiceVolumeDialog() {
+    final manager = _voiceChatManager;
+    if (manager == null) return;
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    var volume = manager.remoteVolume;
+    unawaited(
+      AppDialogs.showStyledDialog<void>(
+        context: context,
+        title: l10n.voiceVolume,
+        icon: const Icon(Icons.volume_up_rounded),
+        content: StatefulBuilder(
+          builder: (dialogContext, setDialogState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppSlider(
+                value: volume,
+                min: VoiceChatVolumeRange.min,
+                max: VoiceChatVolumeRange.max,
+                divisions: 40,
+                label: '${(volume * 100).round()}%',
+                onChanged: (value) {
+                  setDialogState(() => volume = value);
+                  manager.setRemoteVolume(value);
+                },
+              ),
+              Center(
+                child: Text(
+                  '${(volume * 100).round()}%',
+                  style: theme.textTheme.labelLarge,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.voiceVolumeHint,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: const [],
+      ),
+    );
   }
 
   Widget _buildPlaylistTab() {

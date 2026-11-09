@@ -2637,6 +2637,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get voiceVolume => '通话音量';
+
+  @override
+  String get voiceVolumeHint => '调整他人说话的音量，100% 以上可放大较小的声音。';
+
+  @override
   String get voiceChat => '语音聊天';
 
   @override

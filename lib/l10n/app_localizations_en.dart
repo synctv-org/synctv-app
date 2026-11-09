@@ -2908,6 +2908,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get voiceVolume => 'Voice volume';
+
+  @override
+  String get voiceVolumeHint =>
+      'Adjusts how loud other people sound. Above 100% boosts quiet calls.';
+
+  @override
   String get voiceChat => 'Voice chat';
 
   @override
