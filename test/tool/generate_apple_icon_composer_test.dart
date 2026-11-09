@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:xml/xml.dart';
 
+import 'tool_process.dart';
+
 void main() {
   test(
     'Icon Composer layers are generated without changing the source',
@@ -16,8 +18,7 @@ void main() {
       addTearDown(() => outputDirectory.delete(recursive: true));
       final output = Directory('${outputDirectory.path}/AppIcon.icon');
 
-      final result = await Process.run('dart', [
-        'run',
+      final result = await runToolDart([
         'tool/generate_apple_icon_composer.dart',
         source.path,
         output.path,
