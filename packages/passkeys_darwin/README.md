@@ -5,11 +5,10 @@ pending upstream in [corbado/flutter-passkeys][upstream].
 
 ## Fork rationale
 
-The fork is based on the published `passkeys_darwin 0.4.7` package. The
-upstream `main` branch was last checked on 2026-11-04 at
-[`e0fa3b5061d40e9268b35f8e2952e6ce2970bf60`][checked-commit]. That baseline
-carries upstream's conditional passkey creation and the Apple privacy
-manifest on top of 0.4.5, but still has the following defects:
+The fork is based on the published `passkeys_darwin 0.4.8` package (the
+upstream baseline of 0.4.7 plus its SwiftPM `FlutterFramework` packaging
+fix, ported here). Upstream `0.4.8`, released 2026-11-07, still has the
+following defects:
 
 1. Overlapping operations share an unsafe controller lifecycle. The published
    implementation contains an unmatched `NSLock.unlock()` in the registration
@@ -34,4 +33,4 @@ of these checks:
   is removed.
 
 [upstream]: https://github.com/corbado/flutter-passkeys
-[checked-commit]: https://github.com/corbado/flutter-passkeys/commit/e0fa3b5061d40e9268b35f8e2952e6ce2970bf60
+[upstream 0.4.8]: https://github.com/corbado/flutter-passkeys/compare/passkeys-v2.24.0...passkeys-v2.24.1
