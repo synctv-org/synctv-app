@@ -126,7 +126,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
       final confirmed = await AppDialogs.showStyledDialog<bool>(
         context: context,
         title: isUserBan ? context.l10n.unbanUser : context.l10n.unbanRoom,
-        icon: const Icon(Icons.lock_open_rounded, color: Colors.green),
+        icon: const Icon(Icons.lock_open_rounded, color: AppColors.success),
         content: Text(context.l10n.confirmUnban(targetName)),
         actions: [
           AppDialogs.createCancelButton(context),
@@ -288,7 +288,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
               record.isActive
                   ? Icons.block_rounded
                   : Icons.check_circle_outline,
-              color: record.isActive ? Colors.red : Colors.green,
+              color: record.isActive ? AppColors.danger : AppColors.success,
             ),
             title: Text(target),
             subtitle: Text(

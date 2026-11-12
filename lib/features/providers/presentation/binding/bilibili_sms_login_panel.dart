@@ -230,10 +230,10 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
           AppInfoBanner(
             padding: const EdgeInsets.all(10),
             icon: Icons.sms_rounded,
-            color: const Color(0xFFFB7299),
-            backgroundColor: const Color(0xFFFB7299).withValues(alpha: 0.1),
+            color: AppColors.providerBilibili,
+            backgroundColor: AppColors.providerBilibili.withValues(alpha: 0.1),
             border: Border.all(
-              color: const Color(0xFFFB7299).withValues(alpha: 0.2),
+              color: AppColors.providerBilibili.withValues(alpha: 0.2),
             ),
             iconSize: 22,
             title: Text(

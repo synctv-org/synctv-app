@@ -282,7 +282,7 @@ class _RuntimeSettingsSectionsTabState
     final l10n = context.l10n;
     final confirmed = await _confirmRuntimeChange(
       title: l10n.deleteLoginProvider,
-      icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFE5484D)),
+      icon: const Icon(Icons.delete_outline_rounded, color: AppColors.danger),
       content: Text(l10n.confirmDeleteLoginProvider(name)),
       confirmLabel: l10n.delete,
       destructive: true,
@@ -305,7 +305,7 @@ class _RuntimeSettingsSectionsTabState
     return _confirmRuntimeChange(
       sourceContext: sourceContext,
       title: context.l10n.confirmChanges,
-      icon: const Icon(Icons.warning_amber_rounded, color: Color(0xFFE09F3E)),
+      icon: const Icon(Icons.warning_amber_rounded, color: AppColors.warning),
       content: Text(warning),
       confirmLabel: context.l10n.confirmChanges,
     );
@@ -1588,7 +1588,7 @@ class _InlineWarning extends StatelessWidget {
     final theme = Theme.of(context);
     return AppInfoBanner(
       icon: Icons.warning_amber_rounded,
-      color: Colors.amber.shade900,
+      color: AppColors.warningDeep,
       backgroundColor: const Color(0xFFFFF3CD),
       padding: const EdgeInsets.all(10),
       borderRadius: BorderRadius.circular(10),

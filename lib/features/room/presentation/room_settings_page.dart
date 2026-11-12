@@ -56,6 +56,7 @@ import 'package:synctv_app/features/room/presentation/models/playlist_selection_
 import 'package:synctv_app/features/media_p2p/presentation/p2p_media_settings_fields.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_history_list.dart';
 import 'package:synctv_app/features/room/presentation/widgets/realtime_event_log_view.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 const String _settingsObserveId = 'manage_room_settings';
 const String _membersObserveId = 'manage_room_member_events';
@@ -2233,7 +2234,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       Icon(
                         detail.active ? Icons.sensors : Icons.sensors_off,
                         color: detail.active
-                            ? Colors.green
+                            ? AppColors.success
                             : theme.disabledColor,
                       ),
                       const SizedBox(width: 10),
@@ -3084,7 +3085,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                               ? Icons.live_tv
                               : Icons.movie,
                           color: isPlaylist
-                              ? Colors.amber.shade700
+                              ? AppColors.warningDeep
                               : theme.colorScheme.primary,
                         ),
                         const SizedBox(width: 10),
@@ -3440,7 +3441,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     return AppDialogs.showStyledDialog<void>(
       context: context,
       title: title,
-      icon: const Icon(Icons.report_gmailerrorred_rounded, color: Colors.red),
+      icon: const Icon(
+        Icons.report_gmailerrorred_rounded,
+        color: AppColors.danger,
+      ),
       content: SizedBox(
         width: 900,
         height: 620,
@@ -5319,7 +5323,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               icon: Icons.sensors_rounded,
               label: context.l10n.watchedResources,
               value: '$watched/${resources.length}',
-              tone: watched == resources.length ? Colors.green : Colors.orange,
+              tone: watched == resources.length
+                  ? AppColors.success
+                  : AppColors.warning,
             ),
             _buildRealtimeMetricCard(
               theme,
@@ -5343,7 +5349,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               icon: Icons.error_outline_rounded,
               label: context.l10n.errors,
               value: errorCount.toString(),
-              tone: errorCount == 0 ? Colors.green : Colors.redAccent,
+              tone: errorCount == 0 ? AppColors.success : AppColors.danger,
             ),
           ];
           if (compact) {
@@ -5491,10 +5497,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     final ready = _isRealtimeResourceReady(resource);
     final tone = resource.stats.errors > 0
-        ? Colors.redAccent
+        ? AppColors.danger
         : ready
-        ? Colors.green
-        : Colors.orange;
+        ? AppColors.success
+        : AppColors.warning;
     return AppPanelSurface(
       padding: const EdgeInsets.all(14),
       color: _settingsSurfaceColor(isDark),
@@ -5957,7 +5963,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               Icons.circle,
               size: 10,
               color: _membersOnlineCount > 0
-                  ? const Color(0xFF16A34A)
+                  ? AppColors.success
                   : theme.hintColor,
             ),
             const SizedBox(width: 10),
@@ -6046,7 +6052,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         children: [
           Icon(
             stream.active ? Icons.sensors : Icons.sensors_off,
-            color: stream.active ? Colors.green : theme.disabledColor,
+            color: stream.active ? AppColors.success : theme.disabledColor,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -7002,9 +7008,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final connectionText = member.connectionCount > 0
         ? context.l10n.roomConnections(member.connectionCount)
         : context.l10n.roomConnections(0);
-    final presenceColor = member.isOnline
-        ? const Color(0xFF16A34A)
-        : theme.hintColor;
+    final presenceColor = member.isOnline ? AppColors.success : theme.hintColor;
     final baseName = member.username.isEmpty ? member.userId : member.username;
     final remarkName = member.remarkName.trim();
     final displayTag = member.displayTag.trim();
@@ -7048,7 +7052,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           _buildMemberBadge(
                             label: context.l10n.roomOwner,
                             icon: Icons.star_rounded,
-                            color: const Color(0xFFF59E0B),
+                            color: AppColors.warning,
                           )
                         else
                           _buildMemberBadge(

@@ -1297,7 +1297,7 @@ String _resourceAvailabilityText(
 
 Color _roomStatusColor(common_enum.RoomStatus status) {
   return switch (status) {
-    common_enum.RoomStatus.ROOM_STATUS_ACTIVE => Colors.green,
+    common_enum.RoomStatus.ROOM_STATUS_ACTIVE => AppColors.success,
     common_enum.RoomStatus.ROOM_STATUS_CLOSED => Colors.grey,
     _ => Colors.grey,
   };

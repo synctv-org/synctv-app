@@ -173,7 +173,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
       final confirmed = await AppDialogs.showStyledDialog<bool>(
         context: context,
         title: l10n.deleteProvider,
-        icon: const Icon(Icons.delete_forever, color: Colors.red),
+        icon: const Icon(Icons.delete_forever, color: AppColors.danger),
         content: Text(l10n.confirmDeleteProvider(instance.name)),
         actions: [
           AppDialogs.createCancelButton(context),
@@ -627,8 +627,8 @@ class _ProviderInstanceTile extends StatelessWidget {
                     ? Icons.verified_user_outlined
                     : Icons.no_encryption_outlined,
                 color: instance.tls && !instance.insecureTls
-                    ? Colors.green
-                    : Colors.orange,
+                    ? AppColors.success
+                    : AppColors.warning,
               ),
               for (final provider in instance.providers)
                 Builder(
@@ -1361,7 +1361,7 @@ Color _providerStatusColor(
     case provider_common_enum
         .ProviderInstanceStatus
         .PROVIDER_INSTANCE_STATUS_CONNECTED:
-      return Colors.green;
+      return AppColors.success;
     case provider_common_enum
         .ProviderInstanceStatus
         .PROVIDER_INSTANCE_STATUS_DISCONNECTED:
@@ -1369,7 +1369,7 @@ Color _providerStatusColor(
     case provider_common_enum
         .ProviderInstanceStatus
         .PROVIDER_INSTANCE_STATUS_ERROR:
-      return Colors.redAccent;
+      return AppColors.danger;
     default:
       return theme.colorScheme.primary;
   }

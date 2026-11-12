@@ -111,7 +111,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
       final confirmed = await AppDialogs.showStyledDialog<bool>(
         context: context,
         title: l10n.rejectReview,
-        icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+        icon: const Icon(Icons.cancel_outlined, color: AppColors.danger),
         content: Builder(
           builder: (dialogContext) {
             if (!disposeScheduled) {

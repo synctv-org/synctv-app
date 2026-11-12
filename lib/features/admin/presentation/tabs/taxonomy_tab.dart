@@ -118,7 +118,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
       title: category == null
           ? context.l10n.addCategory
           : context.l10n.editCategory,
-      icon: const Icon(Icons.category_rounded, color: Color(0xFF5D5FEF)),
+      icon: const Icon(Icons.category_rounded),
       content: StatefulBuilder(
         builder: (dialogContext, setDialogState) {
           if (!disposeScheduled) {
@@ -235,7 +235,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.deleteCategory,
-      icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
+      icon: const Icon(Icons.delete_forever_rounded, color: AppColors.danger),
       content: _destructiveDialogContent(
         context.l10n.permanentlyDeleteCategory(_categoryDisplay(category)),
         [context.l10n.roomsLoseCategory, context.l10n.categoryChangesImmediate],
@@ -283,7 +283,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: label == null ? context.l10n.addLabel : context.l10n.editLabel,
-      icon: const Icon(Icons.sell_rounded, color: Color(0xFF5D5FEF)),
+      icon: const Icon(Icons.sell_rounded),
       content: StatefulBuilder(
         builder: (dialogContext, setDialogState) {
           if (!disposeScheduled) {
@@ -445,7 +445,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.deleteLabel,
-      icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
+      icon: const Icon(Icons.delete_forever_rounded, color: AppColors.danger),
       content: _destructiveDialogContent(
         context.l10n.permanentlyDeleteLabel(_labelDisplay(label)),
         [context.l10n.roomsLoseLabel, context.l10n.labelChangesImmediate],

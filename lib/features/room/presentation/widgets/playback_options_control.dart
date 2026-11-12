@@ -5,6 +5,7 @@ import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/room/presentation/widgets/player_control_popup_style.dart';
 import 'package:synctv_app/l10n/l10n.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 
 typedef PlaybackMediaSelection = Future<void> Function(
@@ -528,7 +529,7 @@ Icon _selectionIcon(bool selected) => Icon(
   selected
       ? Icons.radio_button_checked_rounded
       : Icons.radio_button_unchecked_rounded,
-  color: selected ? const Color(0xFF7CFFB2) : Colors.white54,
+  color: selected ? AppColors.successOverlay : Colors.white54,
 );
 
 class _RouteSelection {

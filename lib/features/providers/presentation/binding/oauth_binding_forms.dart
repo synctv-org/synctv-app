@@ -566,7 +566,7 @@ class _TwitchAccountBindingFormState extends State<TwitchAccountBindingForm> {
 
   @override
   Widget build(BuildContext context) {
-    const color = Color(0xFF9146FF);
+    const color = AppColors.providerTwitch;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -9,6 +9,7 @@ import 'package:synctv_app/features/media_library/presentation/add_media/discove
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_account_action.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/playback_proxy_mode_control.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media/provider_workspace.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -305,7 +306,7 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
     if (item.isDir || item.previewUrl.isEmpty) {
       return Icon(
         item.isDir ? Icons.folder_rounded : Icons.movie_outlined,
-        color: item.favorite ? Colors.amber.shade700 : null,
+        color: item.favorite ? AppColors.warningDeep : null,
       );
     }
     return AppImageThumbnail(

@@ -156,7 +156,7 @@ class _NextcloudAccountDialogState extends State<_NextcloudAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const color = Color(0xFF0082C9);
+    const color = AppColors.providerNextcloud;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 560),
       child: Column(

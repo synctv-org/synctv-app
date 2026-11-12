@@ -12,6 +12,7 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 class ContentReportsView extends StatefulWidget {
   final ContentReportsGateway? gateway;
@@ -378,7 +379,10 @@ class _ContentReportsViewState extends State<ContentReportsView>
     final resolve = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.reportDetails,
-      icon: const Icon(Icons.report_gmailerrorred_rounded, color: Colors.red),
+      icon: const Icon(
+        Icons.report_gmailerrorred_rounded,
+        color: AppColors.danger,
+      ),
       content: Builder(
         builder: (dialogContext) {
           _trackReportDialog(dialogContext, revision);
@@ -1099,11 +1103,11 @@ IconData _reportStatusIcon(admin_enum.ContentReportStatus status) {
 Color _reportStatusColor(admin_enum.ContentReportStatus status) {
   switch (status) {
     case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN:
-      return Colors.red;
+      return AppColors.danger;
     case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_REVIEWING:
-      return Colors.orange;
+      return AppColors.warning;
     case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_RESOLVED:
-      return Colors.green;
+      return AppColors.success;
     case admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_DISMISSED:
       return Colors.grey;
     default:

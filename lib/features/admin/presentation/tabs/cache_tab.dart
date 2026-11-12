@@ -149,8 +149,8 @@ class _AdminSliceCacheTabState extends State<AdminSliceCacheTab> {
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.purgeSliceCache,
-      icon: const Icon(Icons.delete_sweep_rounded, color: Colors.red),
-      iconColor: Colors.red,
+      icon: const Icon(Icons.delete_sweep_rounded, color: AppColors.danger),
+      iconColor: AppColors.danger,
       content: Text(context.l10n.confirmPurgeSliceCache),
       actions: [
         AppDialogs.createCancelButton(context),
@@ -364,7 +364,7 @@ class _AdminSliceCacheTabState extends State<AdminSliceCacheTab> {
           icon: node.success
               ? Icons.check_circle_outline_rounded
               : Icons.error_outline_rounded,
-          color: node.success ? Colors.green.shade600 : theme.colorScheme.error,
+          color: node.success ? AppColors.success : theme.colorScheme.error,
           title: Text(
             node.nodeId.isEmpty ? context.l10n.nodeUnavailable : node.nodeId,
           ),
@@ -403,7 +403,7 @@ class _SliceCacheNodeCard extends StatelessWidget {
     final usage = node.usageRatio.clamp(0.0, 1.0).toDouble();
     final usagePercent = (node.usageRatio * 100).toStringAsFixed(1);
     final statusColor = config.engineEnabled
-        ? Colors.green.shade600
+        ? AppColors.success
         : theme.colorScheme.outline;
 
     return AppPanelSurface(

@@ -9,6 +9,7 @@ import 'package:synctv_app/features/room/application/realtime_event_log_preferen
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 enum _RealtimeEventLogMenuAction { toggleGrouping, copy, clear }
 
@@ -747,7 +748,7 @@ class _DirectionPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final outgoing = direction == 'out';
-    final tone = outgoing ? Colors.blueAccent : Colors.green;
+    final tone = outgoing ? Colors.blueAccent : AppColors.success;
     return AppBadge(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       borderRadius: BorderRadius.circular(999),

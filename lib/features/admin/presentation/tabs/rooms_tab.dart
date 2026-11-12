@@ -154,7 +154,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.filterLabels,
-      icon: const Icon(Icons.sell_outlined, color: Color(0xFF5D5FEF)),
+      icon: const Icon(Icons.sell_outlined),
       content: StatefulBuilder(
         builder: (dialogContext, setDialogState) {
           final theme = Theme.of(dialogContext);
@@ -258,7 +258,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       title: context.l10n.roomAction(action),
       icon: Icon(
         ban ? Icons.block : Icons.check_circle,
-        color: ban ? Colors.red : Colors.green,
+        color: ban ? AppColors.danger : AppColors.success,
       ),
       content: ban
           ? Column(
@@ -308,7 +308,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     final confirm = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.deleteRoom,
-      icon: const Icon(Icons.delete_forever, color: Colors.red),
+      icon: const Icon(Icons.delete_forever, color: AppColors.danger),
       content: _destructiveDialogContent(
         context.l10n.permanentlyDeleteRoom(room.roomName),
         [
@@ -407,7 +407,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.batchDeleteRooms,
-      icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
+      icon: const Icon(Icons.delete_forever_rounded, color: AppColors.danger),
       content: _destructiveDialogContent(
         context.l10n.roomsWillBeDeleted(_selectedRoomIds.length),
         [
@@ -500,7 +500,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       await AppDialogs.showStyledDialog(
         context: context,
         title: context.l10n.roomInformation,
-        icon: const Icon(Icons.meeting_room_rounded, color: Color(0xFF5D5FEF)),
+        icon: const Icon(Icons.meeting_room_rounded),
         content: StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return SizedBox(
@@ -806,7 +806,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       final confirmed = await AppDialogs.showStyledDialog<bool>(
         context: context,
         title: context.l10n.categoriesAndLabels,
-        icon: const Icon(Icons.category_outlined, color: Color(0xFF5D5FEF)),
+        icon: const Icon(Icons.category_outlined),
         content: StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             final theme = Theme.of(dialogContext);
@@ -1054,7 +1054,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       final confirmed = await AppDialogs.showStyledDialog<bool>(
         context: context,
         title: context.l10n.roomSettings,
-        icon: const Icon(Icons.tune_rounded, color: Color(0xFF5D5FEF)),
+        icon: const Icon(Icons.tune_rounded),
         content: StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             return AppSingleChildScrollView(
@@ -1185,7 +1185,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   Color _getStatusColor(common_enum.RoomStatus status) {
     switch (status) {
       case common_enum.RoomStatus.ROOM_STATUS_ACTIVE:
-        return Colors.green;
+        return AppColors.success;
       case common_enum.RoomStatus.ROOM_STATUS_CLOSED:
         return Colors.grey;
       default:
@@ -1198,7 +1198,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   }
 
   Color _roomStatusColorForRoom(SyncTvRoom room) {
-    return room.isBanned ? Colors.red : _getStatusColor(room.status);
+    return room.isBanned ? AppColors.danger : _getStatusColor(room.status);
   }
 
   @override

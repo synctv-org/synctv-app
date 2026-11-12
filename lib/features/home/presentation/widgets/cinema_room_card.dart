@@ -3,6 +3,7 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 class CinemaRoomCard extends StatelessWidget {
   final String roomName;
@@ -555,13 +556,13 @@ class _RoomCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accents = <Color>[
-      const Color(0xFF2563EB),
-      const Color(0xFF0F766E),
-      const Color(0xFFB45309),
-      const Color(0xFFBE185D),
-      const Color(0xFF6D28D9),
-      const Color(0xFF047857),
+    const accents = <Color>[
+      AppColors.primary,
+      AppColors.secondary,
+      AppColors.warningDeep,
+      AppColors.roomAccentRose,
+      AppColors.roomAccentViolet,
+      AppColors.roomAccentForest,
     ];
     final hash = roomName.runes.fold<int>(0, (value, rune) => value + rune);
     final accent = isUnavailable
