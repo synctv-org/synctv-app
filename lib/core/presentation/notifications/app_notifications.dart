@@ -473,9 +473,7 @@ class AppNotifications {
     showCustom(
       context,
       message,
-      backgroundColor: isEnabled
-          ? AppColors.successDeep
-          : AppColors.warning,
+      backgroundColor: isEnabled ? AppColors.successDeep : AppColors.warning,
       textColor: isEnabled ? Colors.white : Colors.black,
       duration: duration,
     );

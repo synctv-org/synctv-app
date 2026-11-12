@@ -611,7 +611,10 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('Twitch'),
-        icon: const Icon(Icons.live_tv_rounded, color: AppColors.providerTwitch),
+        icon: const Icon(
+          Icons.live_tv_rounded,
+          color: AppColors.providerTwitch,
+        ),
         iconColor: AppColors.providerTwitch,
         content: TwitchAccountBindingForm(
           instanceNamesLoader: () =>
@@ -643,7 +646,10 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('YouTube'),
-        icon: const Icon(Icons.smart_display_rounded, color: AppColors.providerYoutube),
+        icon: const Icon(
+          Icons.smart_display_rounded,
+          color: AppColors.providerYoutube,
+        ),
         iconColor: AppColors.providerYoutube,
         content: YoutubeAccountBindingForm(
           instanceNamesLoader: () =>
@@ -675,7 +681,10 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('TikTok'),
-        icon: const Icon(Icons.music_video_rounded, color: AppColors.providerTiktok),
+        icon: const Icon(
+          Icons.music_video_rounded,
+          color: AppColors.providerTiktok,
+        ),
         iconColor: AppColors.providerTiktok,
         content: TikTokAccountBindingForm(
           instanceNamesLoader: () =>
@@ -723,7 +732,10 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('Synology DSM'),
-        icon: const Icon(Icons.video_library_rounded, color: AppColors.providerSynology),
+        icon: const Icon(
+          Icons.video_library_rounded,
+          color: AppColors.providerSynology,
+        ),
         iconColor: AppColors.providerSynology,
         content: _SynologyAccountDialog(
           instanceNamesLoader: () =>
@@ -739,7 +751,10 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('Nextcloud'),
-        icon: const Icon(Icons.cloud_outlined, color: AppColors.providerNextcloud),
+        icon: const Icon(
+          Icons.cloud_outlined,
+          color: AppColors.providerNextcloud,
+        ),
         iconColor: AppColors.providerNextcloud,
         content: _NextcloudAccountDialog(
           instanceNamesLoader: () =>

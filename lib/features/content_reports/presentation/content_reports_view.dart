@@ -379,7 +379,10 @@ class _ContentReportsViewState extends State<ContentReportsView>
     final resolve = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.reportDetails,
-      icon: const Icon(Icons.report_gmailerrorred_rounded, color: AppColors.danger),
+      icon: const Icon(
+        Icons.report_gmailerrorred_rounded,
+        color: AppColors.danger,
+      ),
       content: Builder(
         builder: (dialogContext) {
           _trackReportDialog(dialogContext, revision);

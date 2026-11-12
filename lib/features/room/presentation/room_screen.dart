@@ -8246,7 +8246,10 @@ class _RoomScreenState extends State<RoomScreen>
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.removeAdmin,
-      icon: const Icon(Icons.remove_moderator_rounded, color: AppColors.warning),
+      icon: const Icon(
+        Icons.remove_moderator_rounded,
+        color: AppColors.warning,
+      ),
       content: Text(context.l10n.confirmRemoveAdmin(member.username)),
       actions: [
         AppDialogs.createCancelButton(context),

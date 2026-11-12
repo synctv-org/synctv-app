@@ -160,7 +160,10 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.removeAdministrator,
-      icon: const Icon(Icons.remove_moderator_outlined, color: AppColors.danger),
+      icon: const Icon(
+        Icons.remove_moderator_outlined,
+        color: AppColors.danger,
+      ),
       content: Text(context.l10n.confirmRemoveAdmin(user.username)),
       actions: [
         AppDialogs.createCancelButton(context),

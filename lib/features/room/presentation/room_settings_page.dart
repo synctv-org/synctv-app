@@ -3441,7 +3441,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     return AppDialogs.showStyledDialog<void>(
       context: context,
       title: title,
-      icon: const Icon(Icons.report_gmailerrorred_rounded, color: AppColors.danger),
+      icon: const Icon(
+        Icons.report_gmailerrorred_rounded,
+        color: AppColors.danger,
+      ),
       content: SizedBox(
         width: 900,
         height: 620,
@@ -5320,7 +5323,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               icon: Icons.sensors_rounded,
               label: context.l10n.watchedResources,
               value: '$watched/${resources.length}',
-              tone: watched == resources.length ? AppColors.success : AppColors.warning,
+              tone: watched == resources.length
+                  ? AppColors.success
+                  : AppColors.warning,
             ),
             _buildRealtimeMetricCard(
               theme,
@@ -7003,9 +7008,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final connectionText = member.connectionCount > 0
         ? context.l10n.roomConnections(member.connectionCount)
         : context.l10n.roomConnections(0);
-    final presenceColor = member.isOnline
-        ? AppColors.success
-        : theme.hintColor;
+    final presenceColor = member.isOnline ? AppColors.success : theme.hintColor;
     final baseName = member.username.isEmpty ? member.userId : member.username;
     final remarkName = member.remarkName.trim();
     final displayTag = member.displayTag.trim();

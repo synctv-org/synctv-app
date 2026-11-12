@@ -143,7 +143,11 @@ PopupMenuItem<PlaybackContextMenuAction> _menuItem({
           ),
           const SizedBox(width: 12),
           if (selected)
-            const Icon(Icons.check_rounded, size: 19, color: AppColors.successOverlay)
+            const Icon(
+              Icons.check_rounded,
+              size: 19,
+              color: AppColors.successOverlay,
+            )
           else
             const SizedBox(width: 19),
         ],

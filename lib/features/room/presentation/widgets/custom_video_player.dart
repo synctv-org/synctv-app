@@ -4718,7 +4718,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                               overlayRadius: 24,
                                                             ),
                                                         activeTrackColor:
-                                                            AppColors.playerAccent,
+                                                            AppColors
+                                                                .playerAccent,
                                                         inactiveTrackColor:
                                                             Colors.white24,
                                                         thumbColor:

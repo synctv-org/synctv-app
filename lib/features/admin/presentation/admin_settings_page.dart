@@ -145,7 +145,10 @@ Future<void> _openContentReportsViewer(
   return AppDialogs.showStyledDialog<void>(
     context: context,
     title: title,
-    icon: const Icon(Icons.report_gmailerrorred_rounded, color: AppColors.danger),
+    icon: const Icon(
+      Icons.report_gmailerrorred_rounded,
+      color: AppColors.danger,
+    ),
     content: SizedBox(
       width: 900,
       height: 620,

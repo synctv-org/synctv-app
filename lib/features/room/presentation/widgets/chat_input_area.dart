@@ -959,7 +959,9 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
                             style: TextStyle(
                               color: _isRecording
                                   ? _isCancelling
-                                        ? AppColors.danger.withValues(alpha: 0.75)
+                                        ? AppColors.danger.withValues(
+                                            alpha: 0.75,
+                                          )
                                         : (isDark
                                               ? Colors.blue.shade300
                                               : Colors.blue.shade700)

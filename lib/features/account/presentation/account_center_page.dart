@@ -2915,7 +2915,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             children: [
               AppTile(
                 contentPadding: EdgeInsets.zero,
-                prefix: const Icon(Icons.person_off_rounded, color: AppColors.danger),
+                prefix: const Icon(
+                  Icons.person_off_rounded,
+                  color: AppColors.danger,
+                ),
                 title: Text(context.l10n.closeAccount),
                 subtitle: Text(context.l10n.closeAccountTileDescription),
               ),
