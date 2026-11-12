@@ -97,6 +97,7 @@ import 'package:synctv_app/features/room/presentation/widgets/chat_read_receipts
 import 'package:synctv_app/features/room/presentation/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/features/voice/application/voice_chat_session.dart';
 import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
@@ -2340,10 +2341,10 @@ class _RoomScreenState extends State<RoomScreen>
     }
     final millis = latency.inMicroseconds / 1000.0;
     if (millis <= 120) {
-      return videoStyle ? const Color(0xFF7CFFB2) : Colors.green;
+      return videoStyle ? AppColors.successOverlay : AppColors.success;
     }
     if (millis <= 350) {
-      return videoStyle ? Colors.amberAccent : Colors.orange;
+      return videoStyle ? Colors.amberAccent : AppColors.warning;
     }
     return videoStyle
         ? const Color(0xFFFF8A80)
@@ -2357,10 +2358,10 @@ class _RoomScreenState extends State<RoomScreen>
       _playbackModeConfig.autoSeekDriftThresholdSeconds,
     );
     if (absolute <= 0.5) {
-      return videoStyle ? const Color(0xFF7CFFB2) : Colors.green;
+      return videoStyle ? AppColors.successOverlay : AppColors.success;
     }
     if (absolute <= warningThreshold) {
-      return videoStyle ? Colors.amberAccent : Colors.orange;
+      return videoStyle ? Colors.amberAccent : AppColors.warning;
     }
     return videoStyle
         ? const Color(0xFFFF8A80)
@@ -2434,7 +2435,7 @@ class _RoomScreenState extends State<RoomScreen>
     }
     final peers = _p2pMediaManager?.connectedPeerCount ?? 0;
     final color = peers > 0
-        ? (videoStyle ? const Color(0xFF7CFFB2) : Colors.green)
+        ? (videoStyle ? AppColors.successOverlay : AppColors.success)
         : (videoStyle
               ? Colors.white70
               : Theme.of(context).colorScheme.onSurfaceVariant);
@@ -6358,7 +6359,7 @@ class _RoomScreenState extends State<RoomScreen>
     return AppInfoBanner(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: _voiceChatManager!.isConnected
-          ? (_voiceChatManager!.isMuted ? Colors.red : Colors.green)
+          ? (_voiceChatManager!.isMuted ? AppColors.danger : AppColors.success)
           : theme.disabledColor,
       backgroundColor: theme.cardColor,
       borderRadius: BorderRadius.zero,
@@ -6514,7 +6515,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Widget _buildPlaylistTab() {
-    const primaryColor = Color(0xFF5D5FEF);
+    const primaryColor = AppColors.playerAccent;
     final canAddMedia = _canAddMediaToCurrentPlaylist;
     final canSelectEntries = _canSelectCurrentPlaylistEntries;
     final selectionMode = _isSelectionMode && canSelectEntries;
@@ -7362,7 +7363,7 @@ class _RoomScreenState extends State<RoomScreen>
       final brand = mediaProviderBrand(provider);
       if (brand.known) return brand.color;
     }
-    if (entry.isPlaylist) return Colors.amber;
+    if (entry.isPlaylist) return AppColors.warning;
     if (entry.live) return Colors.redAccent;
     return Theme.of(context).colorScheme.onSurfaceVariant;
   }
@@ -7506,10 +7507,10 @@ class _RoomScreenState extends State<RoomScreen>
                 borderRadius: BorderRadius.circular(20),
                 icon: Icons.circle,
                 iconSize: 8,
-                color: Colors.green,
-                backgroundColor: Colors.green.withValues(alpha: 0.1),
+                color: AppColors.success,
+                backgroundColor: AppColors.success.withValues(alpha: 0.1),
                 textStyle: const TextStyle(
-                  color: Colors.green,
+                  color: AppColors.success,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -7657,7 +7658,7 @@ class _RoomScreenState extends State<RoomScreen>
                                 child: Icon(
                                   Icons.star,
                                   size: 14,
-                                  color: Colors.amber,
+                                  color: AppColors.warning,
                                 ),
                               ),
                           ],
@@ -7724,7 +7725,7 @@ class _RoomScreenState extends State<RoomScreen>
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: member.onlineCount > 0
-                                      ? Colors.green
+                                      ? AppColors.success
                                       : theme.disabledColor,
                                   fontSize: 12,
                                 ),
@@ -8009,7 +8010,7 @@ class _RoomScreenState extends State<RoomScreen>
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.deleteEntries,
-      icon: const Icon(Icons.delete_outline, color: Colors.red),
+      icon: const Icon(Icons.delete_outline, color: AppColors.danger),
       content: Text(
         context.l10n.confirmDeleteMediaEntries(selectedEntries.length),
       ),
@@ -8075,7 +8076,7 @@ class _RoomScreenState extends State<RoomScreen>
       title: playlistId.isEmpty
           ? context.l10n.clearMediaLibrary
           : context.l10n.clearPlaylist,
-      icon: const Icon(Icons.delete_sweep_outlined, color: Colors.red),
+      icon: const Icon(Icons.delete_sweep_outlined, color: AppColors.danger),
       content: Text(
         playlistId.isEmpty
             ? context.l10n.confirmClearMediaLibrary
@@ -8245,7 +8246,7 @@ class _RoomScreenState extends State<RoomScreen>
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.removeAdmin,
-      icon: const Icon(Icons.remove_moderator_rounded, color: Colors.orange),
+      icon: const Icon(Icons.remove_moderator_rounded, color: AppColors.warning),
       content: Text(context.l10n.confirmRemoveAdmin(member.username)),
       actions: [
         AppDialogs.createCancelButton(context),

@@ -40,6 +40,7 @@ import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
 import 'package:synctv_app/core/presentation/media_provider_brand.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/core/presentation/widgets/app_responsive_layout.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 part 'admin_shared_widgets.dart';
 part 'widgets/room_members_dialog.dart';
@@ -144,7 +145,7 @@ Future<void> _openContentReportsViewer(
   return AppDialogs.showStyledDialog<void>(
     context: context,
     title: title,
-    icon: const Icon(Icons.report_gmailerrorred_rounded, color: Colors.red),
+    icon: const Icon(Icons.report_gmailerrorred_rounded, color: AppColors.danger),
     content: SizedBox(
       width: 900,
       height: 620,
@@ -663,7 +664,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                   context.l10n.activeUsers,
                   stats.activeUsers,
                   Icons.person_pin_circle_rounded,
-                  Colors.green,
+                  AppColors.success,
                   isDark,
                 ),
                 _StatTile(
@@ -691,7 +692,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                   context.l10n.bannedUsers,
                   stats.bannedUsers,
                   Icons.block_rounded,
-                  Colors.red,
+                  AppColors.danger,
                   isDark,
                 ),
                 _StatTile(
@@ -726,7 +727,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                   'Provider',
                   stats.providerInstances,
                   Icons.hub_rounded,
-                  Colors.orange,
+                  AppColors.warning,
                   isDark,
                 ),
               ],

@@ -11,6 +11,7 @@ import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/home/presentation/widgets/cinema_room_card.dart';
 import 'package:synctv_app/core/presentation/widgets/synctv_brand_mark.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 @immutable
 class HomeViewState {
@@ -363,7 +364,7 @@ class _AccountMenu extends StatelessWidget {
           'logout',
           Icons.logout_rounded,
           context.l10n.logout,
-          color: Colors.red,
+          color: AppColors.danger,
         ),
       ],
       child: compact

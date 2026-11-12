@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 import 'package:synctv_app/features/room/presentation/widgets/player_control_popup_style.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 
@@ -142,7 +143,7 @@ PopupMenuItem<PlaybackContextMenuAction> _menuItem({
           ),
           const SizedBox(width: 12),
           if (selected)
-            const Icon(Icons.check_rounded, size: 19, color: Color(0xFF7CFFB2))
+            const Icon(Icons.check_rounded, size: 19, color: AppColors.successOverlay)
           else
             const SizedBox(width: 19),
         ],

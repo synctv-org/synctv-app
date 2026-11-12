@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/features/providers/application/desktop_web_verification_client.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'bilibili_geetest_html.dart';
@@ -286,12 +287,12 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFB7299).withValues(alpha: 0.1),
+                      color: AppColors.providerBilibili.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
                       Icons.verified_user_rounded,
-                      color: Color(0xFFFB7299),
+                      color: AppColors.providerBilibili,
                       size: 20,
                     ),
                   ),
@@ -336,7 +337,7 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
                   children: [
                     const Icon(
                       Icons.error_outline_rounded,
-                      color: Colors.red,
+                      color: AppColors.danger,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
@@ -344,7 +345,7 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
                       child: Text(
                         _errorText!,
                         style: const TextStyle(
-                          color: Colors.red,
+                          color: AppColors.danger,
                           fontSize: 13,
                           height: 1.4,
                         ),

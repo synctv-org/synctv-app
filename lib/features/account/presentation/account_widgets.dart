@@ -86,7 +86,7 @@ class _Section extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       borderSide: BorderSide(
         color: danger
-            ? Colors.red.withValues(alpha: 0.38)
+            ? AppColors.danger.withValues(alpha: 0.38)
             : theme.dividerColor.withValues(alpha: 0.55),
       ),
       clipBehavior: Clip.antiAlias,
@@ -101,7 +101,7 @@ class _Section extends StatelessWidget {
                       title!,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: danger ? Colors.red.shade700 : null,
+                        color: danger ? AppColors.danger : null,
                       ),
                     ),
                   if (subtitle != null) ...[
@@ -146,7 +146,7 @@ class _LoadErrorSummary extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.red),
+              const Icon(Icons.warning_amber_rounded, color: AppColors.danger),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -208,7 +208,7 @@ class _LoadErrorBanner extends StatelessWidget {
             children: [
               Icon(
                 moduleInfo?.icon ?? Icons.warning_amber_rounded,
-                color: Colors.red,
+                color: AppColors.danger,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -273,7 +273,7 @@ class _ModuleErrorRow extends StatelessWidget {
       children: [
         Icon(
           module?.icon ?? Icons.error_outline_rounded,
-          color: Colors.red,
+          color: AppColors.danger,
           size: 20,
         ),
         const SizedBox(width: 10),
@@ -469,9 +469,9 @@ class _InlineModuleError extends StatelessWidget {
     return AppInfoBanner(
       padding: const EdgeInsets.all(12),
       icon: moduleInfo?.icon ?? Icons.error_outline_rounded,
-      color: Colors.red,
-      backgroundColor: Colors.red.withValues(alpha: 0.06),
-      border: Border.all(color: Colors.red.withValues(alpha: 0.26)),
+      color: AppColors.danger,
+      backgroundColor: AppColors.danger.withValues(alpha: 0.06),
+      border: Border.all(color: AppColors.danger.withValues(alpha: 0.26)),
       crossAxisAlignment: CrossAxisAlignment.start,
       title: Text(
         moduleInfo?.label ?? context.l10n.moduleUnavailable,
@@ -634,7 +634,7 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color =
-        this.color ?? (danger ? Colors.red : theme.colorScheme.primary);
+        this.color ?? (danger ? AppColors.danger : theme.colorScheme.primary);
     return AppBadge(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       borderRadius: BorderRadius.circular(999),

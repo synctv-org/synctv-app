@@ -31,6 +31,7 @@ import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_context_menu.dart';
 import 'package:synctv_app/features/room/presentation/widgets/playback_diagnostics.dart';
 import 'package:synctv_app/features/room/presentation/widgets/player_control_popup_style.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 class DanmakuController extends ChangeNotifier {
   DanmakuController(
@@ -650,7 +651,7 @@ class _PlayerOverflowSwitchRow extends StatelessWidget {
         value ? const Color(0xFF11131B) : Colors.white70,
       ),
       trackColor: WidgetStatePropertyAll(
-        value ? const Color(0xFF9BA8FF) : Colors.white24,
+        value ? AppColors.playerAccentSoft : Colors.white24,
       ),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     );
@@ -771,7 +772,7 @@ class _PlayerSubtitleSelectionRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               side: BorderSide(
                 color: selected
-                    ? const Color(0xFF9BA8FF)
+                    ? AppColors.playerAccentSoft
                     : Colors.white.withValues(alpha: 0.08),
                 width: selected ? 1.2 : 1,
               ),
@@ -810,7 +811,7 @@ class _PlayerSubtitleSelectionRow extends StatelessWidget {
                           ? const Icon(
                               Icons.check_circle_rounded,
                               key: ValueKey('selected'),
-                              color: Color(0xFF9BA8FF),
+                              color: AppColors.playerAccentSoft,
                               size: 20,
                             )
                           : const SizedBox(
@@ -912,7 +913,7 @@ class PictureInPicturePlaybackOptionsControl extends StatelessWidget {
       context: anchorContext,
       useRootNavigator: true,
       popUpAnimationStyle: playerControlPopupAnimationStyle,
-      color: const Color(0xF21A1A24),
+      color: AppColors.playerScrim,
       position: RelativeRect.fromLTRB(
         topLeft.dx,
         menuTop,
@@ -960,7 +961,7 @@ class PictureInPicturePlaybackOptionsControl extends StatelessWidget {
                     : Icons.radio_button_unchecked_rounded,
                 size: 16,
                 color: choice.selected
-                    ? const Color(0xFF7CFFB2)
+                    ? AppColors.successOverlay
                     : Colors.white70,
               ),
               const SizedBox(width: 7),
@@ -1215,7 +1216,7 @@ class _PictureInPicturePlaybackSurfaceState
       context: context,
       useRootNavigator: true,
       popUpAnimationStyle: playerControlPopupAnimationStyle,
-      color: const Color(0xF21A1A24),
+      color: AppColors.playerScrim,
       constraints: const BoxConstraints.tightFor(width: menuWidth),
       position: position,
       items: [
@@ -1257,7 +1258,7 @@ class _PictureInPicturePlaybackSurfaceState
       context: context,
       useRootNavigator: true,
       popUpAnimationStyle: playerControlPopupAnimationStyle,
-      color: const Color(0xF21A1A24),
+      color: AppColors.playerScrim,
       constraints: const BoxConstraints.tightFor(width: menuWidth),
       position: position,
       items: [
@@ -1293,7 +1294,7 @@ class _PictureInPicturePlaybackSurfaceState
                                 : Icons.radio_button_unchecked_rounded,
                             size: 16,
                             color: selected
-                                ? const Color(0xFF7CFFB2)
+                                ? AppColors.successOverlay
                                 : Colors.white70,
                           ),
                           const SizedBox(width: 8),
@@ -2636,7 +2637,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       context: context,
       useRootNavigator: true,
       popUpAnimationStyle: playerControlPopupAnimationStyle,
-      color: const Color(0xF21A1A24),
+      color: AppColors.playerScrim,
       constraints: BoxConstraints.tightFor(width: menuWidth),
       position: RelativeRect.fromLTRB(
         menuLeft,
@@ -3189,7 +3190,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             _scheduleVolumeMenuHide();
           },
           child: Material(
-            color: const Color(0xF21A1A24),
+            color: AppColors.playerScrim,
             elevation: 8,
             borderRadius: BorderRadius.circular(6),
             child: SizedBox(
@@ -3212,7 +3213,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       child: SliderTheme(
         data: SliderTheme.of(context).copyWith(
           trackHeight: 3,
-          activeTrackColor: const Color(0xFF5D5FEF),
+          activeTrackColor: AppColors.playerAccent,
           inactiveTrackColor: Colors.white24,
           thumbColor: Colors.white,
           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
@@ -3309,7 +3310,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
     showAppBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF1E1E2C),
+      backgroundColor: AppColors.playerSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -3382,7 +3383,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (widget.overlayPreferences == null) return;
     showAppBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF1E1E2C),
+      backgroundColor: AppColors.playerSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -3722,8 +3723,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       Colors.yellow,
       Colors.cyan,
       Colors.lightGreen,
-      Colors.orange,
-      Colors.red,
+      AppColors.warning,
+      AppColors.danger,
     ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -4034,7 +4035,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         child: AppPanelSurface(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           clipBehavior: Clip.antiAlias,
-          color: const Color(0xFF1E1E2C),
+          color: AppColors.playerSurface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           child: AppSafeArea(
             child: Row(
@@ -4052,7 +4053,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       color: Colors.white.withValues(alpha: 0.14),
                     ),
                     focusedBorderSide: const BorderSide(
-                      color: Color(0xFF5D5FEF),
+                      color: AppColors.playerAccent,
                       width: 1.4,
                     ),
                     showClearButton: true,
@@ -4717,9 +4718,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                               overlayRadius: 24,
                                                             ),
                                                         activeTrackColor:
-                                                            const Color(
-                                                              0xFF5D5FEF,
-                                                            ),
+                                                            AppColors.playerAccent,
                                                         inactiveTrackColor:
                                                             Colors.white24,
                                                         thumbColor:
@@ -4964,7 +4963,7 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
               _scheduleMenuHide();
             },
             child: Material(
-              color: const Color(0xF21A1A24),
+              color: AppColors.playerScrim,
               elevation: 8,
               borderRadius: BorderRadius.circular(6),
               clipBehavior: Clip.antiAlias,
@@ -5002,7 +5001,7 @@ class _PlaybackSpeedMenuButtonState extends State<_PlaybackSpeedMenuButton> {
                                         (widget.currentSpeed - option.speed)
                                                 .abs() <
                                             0.001
-                                        ? const Color(0xFF7CFFB2)
+                                        ? AppColors.successOverlay
                                         : Colors.white70,
                                   ),
                                   const SizedBox(width: 8),

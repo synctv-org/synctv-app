@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 import 'package:synctv_app/core/network/resource_url_resolver.dart';
 import 'package:synctv_app/features/account/application/account_gateway.dart';
 import 'package:synctv_app/contracts/account_models.dart';
@@ -267,7 +268,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     return _EmailStatusView(
       icon: Icons.mark_email_read_rounded,
       label: context.l10n.bound,
-      tone: const Color(0xFF15803D),
+      tone: AppColors.successDeep,
     );
   }
 
@@ -1997,13 +1998,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               icon: Icons.notifications_none_rounded,
               label: context.l10n.unreadNotifications,
               value: _notifications == null ? '-' : '$unread',
-              tone: const Color(0xFF0F766E),
+              tone: AppColors.secondary,
             ),
             _MetricTile(
               icon: Icons.security_rounded,
               label: context.l10n.loginFactors,
               value: preferences == null ? '-' : '$activeFactors',
-              tone: const Color(0xFFB45309),
+              tone: AppColors.warningDeep,
             ),
             if (_showEmailBindingControls)
               _MetricTile(
@@ -2777,7 +2778,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     ? Icons.verified_user_rounded
                     : Icons.shield_outlined,
                 color: preferences.canUseTotp
-                    ? const Color(0xFF0F766E)
+                    ? AppColors.secondary
                     : theme.colorScheme.onSurfaceVariant,
               ),
               title: Text(
@@ -2914,7 +2915,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             children: [
               AppTile(
                 contentPadding: EdgeInsets.zero,
-                prefix: const Icon(Icons.person_off_rounded, color: Colors.red),
+                prefix: const Icon(Icons.person_off_rounded, color: AppColors.danger),
                 title: Text(context.l10n.closeAccount),
                 subtitle: Text(context.l10n.closeAccountTileDescription),
               ),
@@ -3336,7 +3337,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     label: 'AList',
                     description: context.l10n.alistAccountDescription,
                     icon: Icons.cloud_circle_rounded,
-                    color: Colors.amber,
+                    color: AppColors.warning,
                     onTap: () => widget.onOpenProviderBinding('alist'),
                   ),
                   _MediaProviderBindCard(
@@ -3350,7 +3351,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     label: 'Emby',
                     description: context.l10n.embyAccountDescription,
                     icon: Icons.video_library_rounded,
-                    color: Colors.green,
+                    color: AppColors.success,
                     onTap: () => widget.onOpenProviderBinding('emby'),
                   ),
                   if (ProviderDistributionPolicy.current.allowsProvider(
@@ -3360,7 +3361,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       label: 'Bilibili',
                       description: context.l10n.bilibiliAccountDescription,
                       icon: Icons.tv_rounded,
-                      color: const Color(0xFFFB7299),
+                      color: AppColors.providerBilibili,
                       onTap: () => widget.onOpenProviderBinding('bilibili'),
                     ),
                   if (ProviderDistributionPolicy.current.allowsProvider(
@@ -3370,49 +3371,49 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       label: 'Twitch',
                       description: context.l10n.twitchAccountDescription,
                       icon: Icons.live_tv_rounded,
-                      color: const Color(0xFF9146FF),
+                      color: AppColors.providerTwitch,
                       onTap: () => widget.onOpenProviderBinding('twitch'),
                     ),
                   _MediaProviderBindCard(
                     label: 'FNOS',
                     description: context.l10n.fnosAccountDescription,
                     icon: Icons.storage_rounded,
-                    color: const Color(0xFF087F5B),
+                    color: AppColors.providerFnos,
                     onTap: () => widget.onOpenProviderBinding('fnos'),
                   ),
                   _MediaProviderBindCard(
                     label: 'QNAP',
                     description: context.l10n.qnapAccountDescription,
                     icon: Icons.storage_rounded,
-                    color: const Color(0xFF0076A8),
+                    color: AppColors.providerQnap,
                     onTap: () => widget.onOpenProviderBinding('qnap'),
                   ),
                   _MediaProviderBindCard(
                     label: 'Synology DSM',
                     description: context.l10n.synologyAccountDescription,
                     icon: Icons.video_library_rounded,
-                    color: const Color(0xFF1578D3),
+                    color: AppColors.providerSynology,
                     onTap: () => widget.onOpenProviderBinding('synology'),
                   ),
                   _MediaProviderBindCard(
                     label: 'Nextcloud',
                     description: context.l10n.nextcloudAccountDescription,
                     icon: Icons.cloud_outlined,
-                    color: const Color(0xFF0082C9),
+                    color: AppColors.providerNextcloud,
                     onTap: () => widget.onOpenProviderBinding('nextcloud'),
                   ),
                   _MediaProviderBindCard(
                     label: 'Seafile',
                     description: context.l10n.seafileAccountDescription,
                     icon: Icons.cloud_queue_rounded,
-                    color: const Color(0xFFED7109),
+                    color: AppColors.providerSeafile,
                     onTap: () => widget.onOpenProviderBinding('seafile'),
                   ),
                   _MediaProviderBindCard(
                     label: 'TrueNAS',
                     description: context.l10n.truenasAccountDescription,
                     icon: Icons.dns_rounded,
-                    color: const Color(0xFF0095D5),
+                    color: AppColors.providerTruenas,
                     onTap: () => widget.onOpenProviderBinding('truenas'),
                   ),
                   if (ProviderDistributionPolicy.current.allowsProvider(
@@ -3422,7 +3423,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       label: 'YouTube',
                       description: context.l10n.youtubeAccountDescription,
                       icon: Icons.smart_display_rounded,
-                      color: const Color(0xFFFF0033),
+                      color: AppColors.providerYoutube,
                       onTap: () => widget.onOpenProviderBinding('youtube'),
                     ),
                   if (ProviderDistributionPolicy.current.allowsProvider(
@@ -3432,7 +3433,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       label: 'Douyin',
                       description: context.l10n.douyinAccountDescription,
                       icon: Icons.music_video_rounded,
-                      color: const Color(0xFF00AFA7),
+                      color: AppColors.providerDouyin,
                       onTap: () => widget.onOpenProviderBinding('douyin'),
                     ),
                   if (ProviderDistributionPolicy.current.allowsProvider(
@@ -3442,7 +3443,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       label: 'TikTok',
                       description: context.l10n.tiktokAccountDescription,
                       icon: Icons.music_video_rounded,
-                      color: const Color(0xFFFE2C55),
+                      color: AppColors.providerTiktok,
                       onTap: () => widget.onOpenProviderBinding('tiktok'),
                     ),
                 ];

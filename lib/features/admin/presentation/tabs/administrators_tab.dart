@@ -100,9 +100,9 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
     final mode = await AppDialogs.showStyledDialog<String>(
       context: context,
       title: context.l10n.addAdministrator,
-      icon: const Icon(
+      icon: Icon(
         Icons.admin_panel_settings_rounded,
-        color: Color(0xFF5D5FEF),
+        color: Theme.of(context).colorScheme.primary,
       ),
       content: SizedBox(
         width: 420,
@@ -160,7 +160,7 @@ class _AdministratorsTabState extends State<AdministratorsTab> {
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: context.l10n.removeAdministrator,
-      icon: const Icon(Icons.remove_moderator_outlined, color: Colors.red),
+      icon: const Icon(Icons.remove_moderator_outlined, color: AppColors.danger),
       content: Text(context.l10n.confirmRemoveAdmin(user.username)),
       actions: [
         AppDialogs.createCancelButton(context),

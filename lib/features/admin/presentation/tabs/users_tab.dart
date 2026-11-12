@@ -110,7 +110,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     final confirm = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: l10n.deleteUser,
-      icon: const Icon(Icons.warning, color: Colors.red),
+      icon: const Icon(Icons.warning, color: AppColors.danger),
       content: _destructiveDialogContent(
         l10n.permanentlyDeleteUser(user.username),
         [
@@ -157,7 +157,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     final confirm = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: l10n.changePermissions,
-      icon: const Icon(Icons.admin_panel_settings, color: Color(0xFF5D5FEF)),
+      icon: const Icon(Icons.admin_panel_settings),
       content: Text(l10n.confirmUserRoleAction(user.username, action)),
       actions: [
         AppDialogs.createCancelButton(context),
@@ -196,7 +196,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
       title: l10n.userAction(action),
       icon: Icon(
         ban ? Icons.block : Icons.check_circle,
-        color: ban ? Colors.red : Colors.green,
+        color: ban ? AppColors.danger : AppColors.success,
       ),
       content: ban
           ? Column(
@@ -334,7 +334,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     final confirmed = await AppDialogs.showStyledDialog<bool>(
       context: context,
       title: l10n.batchDeleteUsers,
-      icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
+      icon: const Icon(Icons.delete_forever_rounded, color: AppColors.danger),
       content: _destructiveDialogContent(
         l10n.usersWillBeDeleted(targetIds.length),
         [
@@ -441,7 +441,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
       await AppDialogs.showStyledDialog(
         context: context,
         title: detail.username,
-        icon: const Icon(Icons.person_rounded, color: Color(0xFF5D5FEF)),
+        icon: const Icon(Icons.person_rounded),
         content: SizedBox(
           width: 620,
           height: 520,
@@ -752,7 +752,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                           prefix: Icon(
                             Icons.meeting_room_outlined,
                             color: room.isBanned
-                                ? Colors.red
+                                ? AppColors.danger
                                 : _roomStatusColor(room.status),
                           ),
                           title: Text(
@@ -1180,10 +1180,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
                           name: user.username,
                           radius: 24,
                           backgroundColor: isAdmin
-                              ? Colors.amber.withValues(alpha: 0.2)
+                              ? AppColors.warning.withValues(alpha: 0.2)
                               : theme.primaryColor.withValues(alpha: 0.1),
                           foregroundColor: isAdmin
-                              ? Colors.amber.shade800
+                              ? AppColors.warningDeep
                               : theme.primaryColor,
                           textStyle: const TextStyle(fontSize: 18),
                         ),

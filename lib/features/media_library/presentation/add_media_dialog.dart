@@ -40,6 +40,7 @@ import 'package:synctv_app/features/media_library/presentation/add_media/youtube
 import 'package:synctv_app/features/media_library/presentation/add_media/synology_add_media_form.dart';
 import 'package:synctv_app/features/media_library/presentation/rtmp_publish_key_dialog.dart';
 import 'package:synctv_app/features/providers/presentation/binding/platform_binding_dialog.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 
@@ -725,7 +726,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               title: context.l10n.directLink,
               subtitle: 'HTTP / HTTPS / HLS',
               icon: Icons.link_rounded,
-              color: const Color(0xFF5D5FEF),
+              color: AppColors.playerAccent,
             ),
             _MediaSourceSpec(
               index: 1,
@@ -746,21 +747,21 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               title: 'Bilibili',
               subtitle: context.l10n.bilibiliLinkParsing,
               icon: Icons.tv_rounded,
-              color: const Color(0xFFFB7299),
+              color: AppColors.providerBilibili,
             ),
             _MediaSourceSpec(
               index: 4,
               title: context.l10n.alistStorage,
               subtitle: context.l10n.mountedDirectoryResources,
               icon: Icons.cloud_circle_rounded,
-              color: Colors.amber.shade700,
+              color: AppColors.warningDeep,
             ),
             _MediaSourceSpec(
               index: 5,
               title: context.l10n.embyLibrary,
               subtitle: context.l10n.personalMediaServer,
               icon: Icons.video_library_rounded,
-              color: Colors.green.shade600,
+              color: AppColors.success,
             ),
             _MediaSourceSpec(
               index: 6,
@@ -774,98 +775,98 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               title: 'Twitch',
               subtitle: 'Live / VOD / Clip',
               icon: Icons.live_tv_rounded,
-              color: Color(0xFF9146FF),
+              color: AppColors.providerTwitch,
             ),
             const _MediaSourceSpec(
               index: 8,
               title: 'Huya',
               subtitle: 'Live / Video',
               icon: Icons.sports_esports_rounded,
-              color: Color(0xFFFF7A00),
+              color: AppColors.providerHuya,
             ),
             const _MediaSourceSpec(
               index: 9,
               title: 'Douyu',
               subtitle: 'Live / HEVC / Audio',
               icon: Icons.live_tv_rounded,
-              color: Color(0xFFFF5D23),
+              color: AppColors.providerDouyu,
             ),
             const _MediaSourceSpec(
               index: 10,
               title: 'AcFun',
               subtitle: 'acfun.cn',
               icon: Icons.ondemand_video_rounded,
-              color: Color(0xFFFD4C5B),
+              color: AppColors.providerAcfun,
             ),
             const _MediaSourceSpec(
               index: 11,
               title: 'CCTV',
               subtitle: 'cctv.com / cntv.cn',
               icon: Icons.tv_rounded,
-              color: Color(0xFFC62828),
+              color: AppColors.providerCctv,
             ),
             const _MediaSourceSpec(
               index: 12,
               title: 'FNOS',
               subtitle: 'Files / Media Library',
               icon: Icons.storage_rounded,
-              color: Color(0xFF087F5B),
+              color: AppColors.providerFnos,
             ),
             const _MediaSourceSpec(
               index: 13,
               title: 'QNAP',
               subtitle: 'QTS / QuTS hero',
               icon: Icons.storage_rounded,
-              color: Color(0xFF0076A8),
+              color: AppColors.providerQnap,
             ),
             const _MediaSourceSpec(
               index: 14,
               title: 'Synology DSM',
               subtitle: 'File Station / Video Station',
               icon: Icons.video_library_rounded,
-              color: Color(0xFF1578D3),
+              color: AppColors.providerSynology,
             ),
             const _MediaSourceSpec(
               index: 15,
               title: 'Nextcloud',
               subtitle: 'Files / Favorites / Search',
               icon: Icons.cloud_outlined,
-              color: Color(0xFF0082C9),
+              color: AppColors.providerNextcloud,
             ),
             const _MediaSourceSpec(
               index: 16,
               title: 'Seafile',
               subtitle: 'Libraries / Starred / Search',
               icon: Icons.cloud_queue_rounded,
-              color: Color(0xFFED7109),
+              color: AppColors.providerSeafile,
             ),
             const _MediaSourceSpec(
               index: 17,
               title: 'TrueNAS',
               subtitle: 'ZFS / Filesystem',
               icon: Icons.dns_rounded,
-              color: Color(0xFF0095D5),
+              color: AppColors.providerTruenas,
             ),
             const _MediaSourceSpec(
               index: 18,
               title: 'YouTube',
               subtitle: 'Video / Playlist / Channel / Search',
               icon: Icons.smart_display_rounded,
-              color: Color(0xFFFF0033),
+              color: AppColors.providerYoutube,
             ),
             const _MediaSourceSpec(
               index: 19,
               title: 'Douyin',
               subtitle: 'Video / Live / User Posts',
               icon: Icons.music_video_rounded,
-              color: Color(0xFF00AFA7),
+              color: AppColors.providerDouyin,
             ),
             const _MediaSourceSpec(
               index: 20,
               title: 'TikTok',
               subtitle: 'Video / Live / User Posts',
               icon: Icons.music_video_rounded,
-              color: Color(0xFFFE2C55),
+              color: AppColors.providerTiktok,
             ),
           ]
           .map((spec) {
@@ -1801,7 +1802,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             icon: Icons.warning_amber_rounded,
             title: context.l10n.permanentPublishKey,
             subtitle: context.l10n.permanentPublishKeyDescription,
-            color: Colors.orange.shade700,
+            color: AppColors.warningDeep,
           )
         else
           OutlinedButton.icon(
@@ -2236,7 +2237,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           _buildActionButton(
             context.l10n.addToPlaylist,
             _addBilibiliCandidate,
-            color: const Color(0xFFFB7299),
+            color: AppColors.providerBilibili,
             icon: Icons.playlist_add_rounded,
           ),
         ],
@@ -2435,7 +2436,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               return Center(
                 child: AppEmptyState(
                   icon: Icons.tv_rounded,
-                  iconColor: const Color(0xFFFB7299),
+                  iconColor: AppColors.providerBilibili,
                   iconSize: compact ? 32 : 58,
                   padding: EdgeInsets.symmetric(
                     horizontal: 12,
@@ -2509,7 +2510,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   _buildActionButton(
                     context.l10n.addToPlaylist,
                     _addBilibiliCandidate,
-                    color: const Color(0xFFFB7299),
+                    color: AppColors.providerBilibili,
                     icon: Icons.playlist_add_rounded,
                   )
                 else if (selected?.isPlaylist == true)
@@ -2764,7 +2765,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             leading: file.thumbnail.isEmpty
                 ? Icon(
                     file.isDir ? Icons.folder_rounded : Icons.movie_outlined,
-                    color: Colors.green,
+                    color: AppColors.success,
                   )
                 : AppImageThumbnail(
                     url: file.thumbnail,
@@ -3192,7 +3193,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   : selected
                   ? Icons.radio_button_checked_rounded
                   : Icons.radio_button_unchecked_rounded,
-              color: selected ? const Color(0xFFFB7299) : theme.hintColor,
+              color: selected ? AppColors.providerBilibili : theme.hintColor,
             ),
             title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle: Text(

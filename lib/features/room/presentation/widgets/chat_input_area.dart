@@ -8,6 +8,7 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 /// 聊天输入区域组件
 class ChatInputArea extends StatefulWidget {
@@ -535,7 +536,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                         AppGlassIconButton(
                           icon: Icon(
                             Icons.cancel,
-                            color: Colors.red.shade400,
+                            color: AppColors.danger.withValues(alpha: 0.9),
                             size: 18,
                           ),
                           tooltip: context.l10n.cancelImage,
@@ -958,7 +959,7 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
                             style: TextStyle(
                               color: _isRecording
                                   ? _isCancelling
-                                        ? Colors.red.shade300
+                                        ? AppColors.danger.withValues(alpha: 0.75)
                                         : (isDark
                                               ? Colors.blue.shade300
                                               : Colors.blue.shade700)

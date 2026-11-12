@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/l10n/l10n.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 @immutable
 class PlaybackDiagnosticsContext {
@@ -285,7 +286,7 @@ class _PlaybackStatisticsPanelState extends State<PlaybackStatisticsPanel> {
             children: [
               const Icon(
                 Icons.monitor_heart_outlined,
-                color: Color(0xFF7CFFB2),
+                color: AppColors.successOverlay,
                 size: 18,
               ),
               const SizedBox(width: 9),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 class _ToastAction {
   final String label;
@@ -45,7 +46,7 @@ class AppNotifications {
     _showToast(
       context,
       message,
-      backgroundColor: Colors.green.shade800,
+      backgroundColor: AppColors.successDeep,
       icon: Icons.check_circle_outline,
       duration: duration,
       action: _actionFromSnackBarAction(action),
@@ -61,7 +62,7 @@ class AppNotifications {
     _showToast(
       context,
       message,
-      backgroundColor: Colors.red.shade700,
+      backgroundColor: AppColors.danger,
       icon: Icons.error_outline,
       duration: duration,
       action: _actionFromSnackBarAction(action),
@@ -77,7 +78,7 @@ class AppNotifications {
     _showToast(
       context,
       message,
-      backgroundColor: Colors.orange.shade600,
+      backgroundColor: AppColors.warning,
       textColor: Colors.black,
       icon: Icons.warning_amber_rounded,
       duration: duration,
@@ -473,8 +474,8 @@ class AppNotifications {
       context,
       message,
       backgroundColor: isEnabled
-          ? Colors.green.shade800
-          : Colors.orange.shade600,
+          ? AppColors.successDeep
+          : AppColors.warning,
       textColor: isEnabled ? Colors.white : Colors.black,
       duration: duration,
     );
@@ -490,7 +491,7 @@ class AppNotifications {
     _showToast(
       context,
       message,
-      backgroundColor: Colors.blue.shade700,
+      backgroundColor: const Color(0xFF1D4ED8),
       duration: duration ?? const Duration(seconds: 5),
       loading: true,
       indicatorColor: indicatorColor,

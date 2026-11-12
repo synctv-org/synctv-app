@@ -94,7 +94,7 @@ class _SynologyAccountDialogState extends State<_SynologyAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const color = Color(0xFF1578D3);
+    const color = AppColors.providerSynology;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 560),
       child: Column(
@@ -281,7 +281,7 @@ class _QnapAccountDialogState extends State<_QnapAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const color = Color(0xFF0076A8);
+    const color = AppColors.providerQnap;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 520),
       child: Column(
@@ -515,7 +515,7 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const color = Color(0xFF087F5B);
+    const color = AppColors.providerFnos;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 620),
       child: Column(
@@ -911,12 +911,12 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final providerColor = _isTrueNas
-        ? const Color(0xFF0095D5)
+        ? AppColors.providerTruenas
         : _isAlist
-        ? Colors.amber
+        ? AppColors.warning
         : _isCloudreve
         ? Colors.teal
-        : Colors.green;
+        : AppColors.success;
     final availableHeight = AppMetrics.dialogMaxHeight(context, null);
     final maxHeight = (availableHeight * 0.70).clamp(
       420.0,
@@ -939,7 +939,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                     _ProviderNotice(
                       icon: Icons.warning_amber_rounded,
                       text: context.l10n.alistVersionRequirement,
-                      color: Colors.amber,
+                      color: AppColors.warning,
                     ),
                   _ProviderFormSection(
                     icon: Icons.hub_outlined,

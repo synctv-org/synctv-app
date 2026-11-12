@@ -20,6 +20,7 @@ import 'package:synctv_app/core/presentation/media_provider_brand.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/core/presentation/widgets/app_responsive_layout.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -594,8 +595,8 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('Bilibili'),
-        icon: const Icon(Icons.tv_rounded, color: Color(0xFFFB7299)),
-        iconColor: const Color(0xFFFB7299),
+        icon: const Icon(Icons.tv_rounded, color: AppColors.providerBilibili),
+        iconColor: AppColors.providerBilibili,
         content: _BilibiliLoginDialog(
           instanceNamesLoader: () =>
               providerGateway.listAvailableProviderInstances(
@@ -610,8 +611,8 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('Twitch'),
-        icon: const Icon(Icons.live_tv_rounded, color: Color(0xFF9146FF)),
-        iconColor: const Color(0xFF9146FF),
+        icon: const Icon(Icons.live_tv_rounded, color: AppColors.providerTwitch),
+        iconColor: AppColors.providerTwitch,
         content: TwitchAccountBindingForm(
           instanceNamesLoader: () =>
               providerGateway.listAvailableProviderInstances(
@@ -642,8 +643,8 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('YouTube'),
-        icon: const Icon(Icons.smart_display_rounded, color: Color(0xFFFF0033)),
-        iconColor: const Color(0xFFFF0033),
+        icon: const Icon(Icons.smart_display_rounded, color: AppColors.providerYoutube),
+        iconColor: AppColors.providerYoutube,
         content: YoutubeAccountBindingForm(
           instanceNamesLoader: () =>
               providerGateway.listAvailableProviderInstances(
@@ -674,8 +675,8 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('TikTok'),
-        icon: const Icon(Icons.music_video_rounded, color: Color(0xFFFE2C55)),
-        iconColor: const Color(0xFFFE2C55),
+        icon: const Icon(Icons.music_video_rounded, color: AppColors.providerTiktok),
+        iconColor: AppColors.providerTiktok,
         content: TikTokAccountBindingForm(
           instanceNamesLoader: () =>
               providerGateway.listAvailableProviderInstances(
@@ -690,8 +691,8 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('FNOS'),
-        icon: const Icon(Icons.storage_rounded, color: Color(0xFF087F5B)),
-        iconColor: const Color(0xFF087F5B),
+        icon: const Icon(Icons.storage_rounded, color: AppColors.providerFnos),
+        iconColor: AppColors.providerFnos,
         content: _FnosAccountDialog(
           instanceNamesLoader: () =>
               providerGateway.listAvailableProviderInstances(
@@ -706,8 +707,8 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('QNAP'),
-        icon: const Icon(Icons.storage_rounded, color: Color(0xFF0076A8)),
-        iconColor: const Color(0xFF0076A8),
+        icon: const Icon(Icons.storage_rounded, color: AppColors.providerQnap),
+        iconColor: AppColors.providerQnap,
         content: _QnapAccountDialog(
           instanceNamesLoader: () =>
               providerGateway.listAvailableProviderInstances(
@@ -722,8 +723,8 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('Synology DSM'),
-        icon: const Icon(Icons.video_library_rounded, color: Color(0xFF1578D3)),
-        iconColor: const Color(0xFF1578D3),
+        icon: const Icon(Icons.video_library_rounded, color: AppColors.providerSynology),
+        iconColor: AppColors.providerSynology,
         content: _SynologyAccountDialog(
           instanceNamesLoader: () =>
               providerGateway.listAvailableProviderInstances(
@@ -738,8 +739,8 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _showProviderFormDialog(
         context: context,
         title: context.l10n.bindProvider('Nextcloud'),
-        icon: const Icon(Icons.cloud_outlined, color: Color(0xFF0082C9)),
-        iconColor: const Color(0xFF0082C9),
+        icon: const Icon(Icons.cloud_outlined, color: AppColors.providerNextcloud),
+        iconColor: AppColors.providerNextcloud,
         content: _NextcloudAccountDialog(
           instanceNamesLoader: () =>
               providerGateway.listAvailableProviderInstances(

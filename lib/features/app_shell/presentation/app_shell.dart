@@ -34,6 +34,7 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/features/auth/presentation/auth_panel.dart';
 import 'package:synctv_app/features/app_shell/presentation/app_shell_dependencies.dart';
 import 'package:synctv_app/features/home/presentation/home_view.dart';
+import 'package:synctv_app/theme/app_colors.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.dependencies, this.initialInvite});
@@ -744,7 +745,7 @@ class _AppShellState extends State<AppShell> {
       final confirm = await AppDialogs.showStyledDialog<bool>(
         context: context,
         title: context.l10n.logout,
-        icon: const Icon(Icons.logout, color: Colors.red),
+        icon: const Icon(Icons.logout, color: AppColors.danger),
         content: Text(context.l10n.logoutConfirmMessage),
         actions: [
           AppActionButton(

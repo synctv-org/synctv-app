@@ -343,7 +343,7 @@ class _RoomMembersDialogState extends State<_RoomMembersDialog> {
                         member.isOnline
                             ? Icons.radio_button_checked
                             : Icons.radio_button_unchecked,
-                        color: member.isOnline ? Colors.green : null,
+                        color: member.isOnline ? AppColors.success : null,
                       ),
                       title: Text(title),
                       subtitle: Text(subtitleParts.join(' · ')),
