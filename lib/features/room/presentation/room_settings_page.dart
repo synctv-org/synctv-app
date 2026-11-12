@@ -7238,14 +7238,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    isCurrentUser
-                        ? context.l10n.currentAccount
-                        : context.l10n.ownerAccount,
-                    style: TextStyle(color: theme.hintColor, fontSize: 12),
-                  ),
-                ),
+                // The member card already carries a "me" badge for the
+                // current user; only owner accounts need the footnote.
+                if (!isCurrentUser)
+                  Expanded(
+                    child: Text(
+                      context.l10n.ownerAccount,
+                      style: TextStyle(color: theme.hintColor, fontSize: 12),
+                    ),
+                  )
+                else
+                  const Spacer(),
                 AppIconButton(
                   tooltip: context.l10n.viewMemberReports,
                   icon: Icons.report_gmailerrorred_outlined,

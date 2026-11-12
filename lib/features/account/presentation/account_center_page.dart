@@ -2958,6 +2958,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Column(
+              // Left-align the toolbar rows like every other tab; the default
+              // centered the unread summary under the tab strip.
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Wrap(
                   spacing: 8,

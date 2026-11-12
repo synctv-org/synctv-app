@@ -269,11 +269,13 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                     ),
                   ),
                   _AdminToolbarItem(
-                    width: 44,
-                    child: AppIconButton(
-                      tooltip: context.l10n.add,
-                      icon: Icons.add_circle_outline_rounded,
+                    // Labeled like the other toolbar add actions (users,
+                    // taxonomy); the icon-only ⊕ was the lone exception.
+                    width: 104,
+                    child: AppActionButton(
                       onPressed: () => _editInstance(),
+                      icon: Icons.add_circle_outline_rounded,
+                      label: context.l10n.add,
                     ),
                   ),
                 ],

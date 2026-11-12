@@ -2440,6 +2440,10 @@ class _RoomScreenState extends State<RoomScreen>
               ? Colors.white70
               : Theme.of(context).colorScheme.onSurfaceVariant);
     final rate = _formatByteRate(_p2pMetrics.totalDownloadRate);
+    // While no peer has joined and nothing is flowing, the badge stays to
+    // signal that P2P delivery is active but drops the zero counters.
+    final hasTraffic = peers > 0 || _p2pMetrics.totalDownloadRate > 0;
+    final label = hasTraffic ? 'P2P · $peers · $rate' : 'P2P';
     return AppTooltip(
       message:
           '${context.l10n.p2pMediaDescription}\n'
@@ -2460,7 +2464,7 @@ class _RoomScreenState extends State<RoomScreen>
               ? Colors.white.withValues(alpha: 0.12)
               : color.withValues(alpha: 0.10),
           textStyle: TextStyle(color: color, fontSize: 12),
-          label: Text('P2P · $peers · $rate'),
+          label: Text(label),
         ),
       ),
     );

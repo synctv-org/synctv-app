@@ -31,7 +31,10 @@ class AppTheme {
       primary: Color(0xFF93B4FF),
       primaryContainer: Color(0xFF173C8F),
       secondary: Color(0xFF5ED0C5),
-      secondaryContainer: Color(0xFF0B514B),
+      // Low-saturation teal so tonal (secondary-container) buttons stay
+      // quiet on dark surfaces; the vivid 0xFF0B514B made every tonal
+      // control compete with filled primary actions.
+      secondaryContainer: Color(0xFF1E3B37),
       tertiary: Color(0xFFC4B5FD),
       tertiaryContainer: Color(0xFF4C1D95),
       appBarColor: _darkScaffold,
@@ -180,6 +183,10 @@ class AppTheme {
       dialogTheme: const DialogThemeData(
         backgroundColor: _lightSurface,
         surfaceTintColor: Colors.transparent,
+        // M3's default dialog icon color is `colorScheme.secondary`, which
+        // made the raw-AlertDialog icons mint while AppDialogs.showStyledDialog
+        // headers used the primary. Bind both dialog systems to one accent.
+        iconColor: _primary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
@@ -243,6 +250,8 @@ class AppTheme {
       dialogTheme: const DialogThemeData(
         backgroundColor: _darkSurface,
         surfaceTintColor: Colors.transparent,
+        // See the light dialogTheme: one accent for every dialog icon.
+        iconColor: Color(0xFF93B4FF),
         shape: RoundedRectangleBorder(
           side: BorderSide(color: Color(0xFF2B303B), width: 1),
           borderRadius: BorderRadius.all(Radius.circular(12)),
