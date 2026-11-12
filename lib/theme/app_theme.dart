@@ -31,7 +31,10 @@ class AppTheme {
       primary: Color(0xFF93B4FF),
       primaryContainer: Color(0xFF173C8F),
       secondary: Color(0xFF5ED0C5),
-      secondaryContainer: Color(0xFF0B514B),
+      // Low-saturation teal so tonal (secondary-container) buttons stay
+      // quiet on dark surfaces; the vivid 0xFF0B514B made every tonal
+      // control compete with filled primary actions.
+      secondaryContainer: Color(0xFF1E3B37),
       tertiary: Color(0xFFC4B5FD),
       tertiaryContainer: Color(0xFF4C1D95),
       appBarColor: _darkScaffold,

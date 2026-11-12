@@ -543,13 +543,6 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.roomCategory,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 12),
         if (_loadingTaxonomy)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
@@ -714,13 +707,6 @@ class _CreateRoomHeader extends StatelessWidget {
                       context.l10n.createRoom,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      context.l10n.createRoomSubtitle,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

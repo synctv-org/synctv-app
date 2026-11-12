@@ -80,7 +80,10 @@ class RoomShellView extends StatelessWidget {
                 onPressed: callbacks.stopPlayback,
                 icon: Icons.stop_circle_outlined,
                 label: context.l10n.stop,
-                style: AppActionButtonStyle.destructive,
+                // Header chrome: keep the destructive color but drop the
+                // filled emphasis so it does not compete with the primary
+                // actions inside the player.
+                style: AppActionButtonStyle.destructiveSubtle,
               ),
             ),
           if (state.hasCurrentUser)
