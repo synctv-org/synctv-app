@@ -183,6 +183,10 @@ class AppTheme {
       dialogTheme: const DialogThemeData(
         backgroundColor: _lightSurface,
         surfaceTintColor: Colors.transparent,
+        // M3's default dialog icon color is `colorScheme.secondary`, which
+        // made the raw-AlertDialog icons mint while AppDialogs.showStyledDialog
+        // headers used the primary. Bind both dialog systems to one accent.
+        iconColor: _primary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
@@ -246,6 +250,8 @@ class AppTheme {
       dialogTheme: const DialogThemeData(
         backgroundColor: _darkSurface,
         surfaceTintColor: Colors.transparent,
+        // See the light dialogTheme: one accent for every dialog icon.
+        iconColor: Color(0xFF93B4FF),
         shape: RoundedRectangleBorder(
           side: BorderSide(color: Color(0xFF2B303B), width: 1),
           borderRadius: BorderRadius.all(Radius.circular(12)),
