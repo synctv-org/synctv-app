@@ -2359,6 +2359,96 @@ Decoration appTabPillIndicator({
   );
 }
 
+/// One entry of [AppSectionTabBar].
+class AppSectionTab {
+  const AppSectionTab({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+}
+
+/// The single top-level tab strip used by management pages (admin settings,
+/// room settings, account center). 44px rows with icon + label, a soft pill
+/// indicator, and the full-width surface with bottom divider — one geometry
+/// everywhere instead of per-page variants.
+class AppSectionTabBar extends StatelessWidget {
+  const AppSectionTabBar({
+    super.key,
+    required this.controller,
+    required this.tabs,
+    this.onTap,
+  });
+
+  final TabController controller;
+  final List<AppSectionTab> tabs;
+  final ValueChanged<int>? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.labelMedium!;
+    final tabHeight = math.max(
+      44.0,
+      MediaQuery.textScalerOf(context).scale(labelStyle.fontSize!) *
+              (labelStyle.height ?? 1.4) +
+          16,
+    );
+    return AppInkSurface(
+      color: theme.colorScheme.surface,
+      elevation: 0,
+      clipBehavior: Clip.none,
+      child: AppSafeArea(
+        bottom: false,
+        child: AppPanelSurface(
+          borderRadius: BorderRadius.zero,
+          clipBehavior: Clip.none,
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withValues(alpha: 0.65),
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+          child: AppTabBar(
+            controller: controller,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            onTap: onTap,
+            dividerColor: Colors.transparent,
+            indicator: appTabPillIndicator(
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
+            ),
+            labelColor: theme.colorScheme.primary,
+            unselectedLabelColor: theme.colorScheme.onSurface.withValues(
+              alpha: 0.62,
+            ),
+            labelStyle: labelStyle.copyWith(fontWeight: FontWeight.w700),
+            unselectedLabelStyle: labelStyle.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+            tabs: [
+              for (final tab in tabs)
+                Tab(
+                  height: tabHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(tab.icon, size: 18),
+                        const SizedBox(width: 6),
+                        Text(tab.label),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class AppTabBarView extends StatelessWidget {
   final TabController? controller;
   final List<Widget> children;
@@ -2508,6 +2598,32 @@ class AppLinearProgress extends StatelessWidget {
       color: color ?? theme.colorScheme.primary,
       backgroundColor:
           backgroundColor ?? theme.colorScheme.primary.withValues(alpha: 0.12),
+    );
+  }
+}
+
+/// Caps a management page's content column to [AppMetrics.contentWidth] and
+/// centers it, so wide desktop windows don't stretch list rows, toolbars and
+/// forms edge to edge. Below the desktop breakpoint the cap is inactive and
+/// the box passes its child through unchanged.
+class AppContentWidthBox extends StatelessWidget {
+  const AppContentWidthBox({super.key, required this.child, this.maxWidth});
+
+  final Widget child;
+
+  /// Overrides the breakpoint-derived cap, e.g. for panels that sit beside a
+  /// navigation rail and need the rail subtracted.
+  final double? maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final cap = maxWidth ?? AppMetrics.contentWidth(context);
+    if (!cap.isFinite) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: cap),
+        child: child,
+      ),
     );
   }
 }

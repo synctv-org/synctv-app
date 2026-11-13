@@ -1430,7 +1430,6 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return AppEmptyState(
         icon: Icons.person_off_outlined,
         title: l10n.registrationDisabled,
-        subtitle: l10n.registrationDisabled,
         iconSize: 42,
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       );

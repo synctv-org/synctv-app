@@ -1863,59 +1863,22 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Widget _buildTopTabs(ThemeData theme) {
-    return AppInkSurface(
-      color: theme.colorScheme.surface,
-      clipBehavior: Clip.none,
-      child: AppSafeArea(
-        bottom: false,
-        child: AppPanelSurface(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.zero,
-          border: Border(
-            bottom: BorderSide(
-              color: theme.dividerColor.withValues(alpha: 0.65),
-            ),
-          ),
-          padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-          child: AppTabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            dividerColor: Colors.transparent,
-            indicator: appTabPillIndicator(
-              color: theme.colorScheme.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            labelColor: theme.colorScheme.primary,
-            unselectedLabelColor: theme.colorScheme.onSurface.withValues(
-              alpha: 0.62,
-            ),
-            labelStyle: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-            tabs: _sections
-                .map(
-                  (section) => Tab(
-                    height: 42,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(section.icon, size: 18),
-                          const SizedBox(width: 6),
-                          Text(section.label),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-      ),
+    return AppSectionTabBar(
+      controller: _tabController,
+      tabs: [
+        for (final section in _sections)
+          AppSectionTab(icon: section.icon, label: section.label),
+      ],
     );
   }
+
+  // One width scale for every account tab: capped columns above 1180px, a
+  // gentler mid tier on small desktop windows, full width below.
+  double _contentCap(double available) => available >= 1180
+      ? 1040.0
+      : available >= 760
+      ? 900.0
+      : double.infinity;
 
   Widget _responsiveList({
     required List<Widget> children,
@@ -1923,11 +1886,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxWidth = constraints.maxWidth >= 1180
-            ? 1040.0
-            : constraints.maxWidth >= 760
-            ? 860.0
-            : double.infinity;
+        final maxWidth = _contentCap(constraints.maxWidth);
         return AppListView(
           padding: padding,
           children: [
@@ -2477,11 +2436,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               onRefresh: _reloadRooms,
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final maxWidth = constraints.maxWidth >= 1180
-                      ? 1040.0
-                      : constraints.maxWidth >= 760
-                      ? 900.0
-                      : double.infinity;
+                  final maxWidth = _contentCap(constraints.maxWidth);
                   return AppListView.separated(
                     primary: true,
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
@@ -2608,57 +2563,62 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           ? AppEmptyMessage(message: context.l10n.noBlockedUsers)
           : AppRefreshIndicator(
               onRefresh: _reloadBlockedUsers,
-              child: AppListView.separated(
-                primary: true,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-                itemCount: users.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final blockedUser = users[index];
-                  final user = blockedUser.user;
-                  final name = user.username.trim().isEmpty
-                      ? user.id
-                      : user.username.trim();
-                  return Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 900),
-                      child: AppPanelSurface(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: theme.dividerColor.withValues(alpha: 0.6),
-                        ),
-                        child: AppTile(
-                          prefix: AppAvatar(
-                            name: name,
-                            imageUrl: user.avatarUrl,
-                            size: 42,
-                          ),
-                          title: Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            context.l10n.blockedAt(
-                              _formatTimestamp(blockedUser.blockedAt),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final cap = _contentCap(constraints.maxWidth);
+                  return AppListView.separated(
+                    primary: true,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+                    itemCount: users.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final blockedUser = users[index];
+                      final user = blockedUser.user;
+                      final name = user.username.trim().isEmpty
+                          ? user.id
+                          : user.username.trim();
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: cap),
+                          child: AppPanelSurface(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: theme.dividerColor.withValues(alpha: 0.6),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          stackedSuffix: true,
-                          suffix: AppActionButton(
-                            onPressed: _loadingBlockedUsers
-                                ? null
-                                : () => _unblockUser(blockedUser),
-                            icon: Icons.person_add_alt_1_outlined,
-                            label: context.l10n.unblockUser,
-                            wrapLabel: true,
-                            style: AppActionButtonStyle.outlined,
+                            child: AppTile(
+                              prefix: AppAvatar(
+                                name: name,
+                                imageUrl: user.avatarUrl,
+                                size: 42,
+                              ),
+                              title: Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                context.l10n.blockedAt(
+                                  _formatTimestamp(blockedUser.blockedAt),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              stackedSuffix: true,
+                              suffix: AppActionButton(
+                                onPressed: _loadingBlockedUsers
+                                    ? null
+                                    : () => _unblockUser(blockedUser),
+                                icon: Icons.person_add_alt_1_outlined,
+                                label: context.l10n.unblockUser,
+                                wrapLabel: true,
+                                style: AppActionButtonStyle.outlined,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -2957,209 +2917,229 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Column(
-              // Left-align the toolbar rows like every other tab; the default
-              // centered the unread summary under the tab strip.
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1040),
+                child: Column(
+                  // Left-align the toolbar rows like every other tab; the default
+                  // centered the unread summary under the tab strip.
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      context.l10n.unreadTotalSummary(
-                        page?.unreadCount ?? 0,
-                        total,
-                      ),
-                    ),
-                    if (_loadingNotifications)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 8),
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: AppLoadingIndicator(
-                            size: AppLoadingSize.sm,
-                            centered: false,
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          context.l10n.unreadTotalSummary(
+                            page?.unreadCount ?? 0,
+                            total,
                           ),
                         ),
-                      ),
-                    if (_selectedNotificationIds.isNotEmpty) ...[
-                      AppActionButton(
-                        onPressed: () =>
-                            setState(() => _selectedNotificationIds.clear()),
-                        icon: Icons.close_rounded,
-                        label: context.l10n.selectedCount(
-                          _selectedNotificationIds.length,
+                        if (_loadingNotifications)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 8),
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: AppLoadingIndicator(
+                                size: AppLoadingSize.sm,
+                                centered: false,
+                              ),
+                            ),
+                          ),
+                        if (_selectedNotificationIds.isNotEmpty) ...[
+                          AppActionButton(
+                            onPressed: () => setState(
+                              () => _selectedNotificationIds.clear(),
+                            ),
+                            icon: Icons.close_rounded,
+                            label: context.l10n.selectedCount(
+                              _selectedNotificationIds.length,
+                            ),
+                            wrapLabel: true,
+                            style: AppActionButtonStyle.text,
+                          ),
+                          AppIconButton(
+                            onPressed:
+                                _notificationMutationInFlight ||
+                                    selectedUnreadCount == 0
+                                ? null
+                                : _markSelectedRead,
+                            icon: Icons.mark_email_read_rounded,
+                            tooltip:
+                                context.l10n.markSelectedUnreadNotifications,
+                          ),
+                        ] else
+                          AppIconButton(
+                            onPressed: unreadSelectableIds.isEmpty
+                                ? null
+                                : () => setState(() {
+                                    _selectedNotificationIds
+                                      ..clear()
+                                      ..addAll(unreadSelectableIds);
+                                  }),
+                            icon: Icons.select_all_rounded,
+                            tooltip:
+                                context.l10n.selectCurrentUnreadNotifications,
+                          ),
+                        AppIconButton(
+                          onPressed:
+                              _notificationMutationInFlight || items.isEmpty
+                              ? null
+                              : _markAllRead,
+                          icon: Icons.done_all_rounded,
+                          tooltip: context.l10n.markAllRead,
                         ),
-                        wrapLabel: true,
-                        style: AppActionButtonStyle.text,
-                      ),
-                      AppIconButton(
-                        onPressed:
-                            _notificationMutationInFlight ||
-                                selectedUnreadCount == 0
-                            ? null
-                            : _markSelectedRead,
-                        icon: Icons.mark_email_read_rounded,
-                        tooltip: context.l10n.markSelectedUnreadNotifications,
-                      ),
-                    ] else
-                      AppIconButton(
-                        onPressed: unreadSelectableIds.isEmpty
-                            ? null
-                            : () => setState(() {
-                                _selectedNotificationIds
-                                  ..clear()
-                                  ..addAll(unreadSelectableIds);
-                              }),
-                        icon: Icons.select_all_rounded,
-                        tooltip: context.l10n.selectCurrentUnreadNotifications,
-                      ),
-                    AppIconButton(
-                      onPressed: _notificationMutationInFlight || items.isEmpty
-                          ? null
-                          : _markAllRead,
-                      icon: Icons.done_all_rounded,
-                      tooltip: context.l10n.markAllRead,
+                        AppIconButton(
+                          onPressed:
+                              _notificationMutationInFlight || items.isEmpty
+                              ? null
+                              : _deleteAllRead,
+                          icon: Icons.delete_sweep_rounded,
+                          tooltip: context.l10n.deleteReadNotifications,
+                          style: AppIconButtonStyle.destructive,
+                        ),
+                      ],
                     ),
-                    AppIconButton(
-                      onPressed: _notificationMutationInFlight || items.isEmpty
-                          ? null
-                          : _deleteAllRead,
-                      icon: Icons.delete_sweep_rounded,
-                      tooltip: context.l10n.deleteReadNotifications,
-                      style: AppIconButtonStyle.destructive,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                AppSearchField(
-                  controller: _notificationSearchController,
-                  hintText: context.l10n.searchTitleOrContent,
-                  onChanged: (value) {
-                    if (value.isEmpty) _reloadNotificationsFromFirstPage();
-                  },
-                  onSubmitted: (_) => _reloadNotificationsFromFirstPage(),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    _NotificationFilterChip(
-                      label: context.l10n.all,
-                      selected: _notificationReadFilter == null,
-                      onSelected: () {
-                        setState(() => _notificationReadFilter = null);
-                        _reloadNotificationsFromFirstPage();
-                      },
-                    ),
-                    _NotificationFilterChip(
-                      label: context.l10n.unread,
-                      selected: _notificationReadFilter == false,
-                      onSelected: () {
-                        setState(() => _notificationReadFilter = false);
-                        _reloadNotificationsFromFirstPage();
-                      },
-                    ),
-                    _NotificationFilterChip(
-                      label: context.l10n.read,
-                      selected: _notificationReadFilter == true,
-                      onSelected: () {
-                        setState(() => _notificationReadFilter = true);
-                        _reloadNotificationsFromFirstPage();
-                      },
-                    ),
-                    AppSelect<client_enum.NotificationType?>(
-                      value: _notificationTypeFilter,
-                      hintText: context.l10n.notificationType,
-                      options: {
-                        context.l10n.allTypes: null,
-                        context.l10n.roomInvitation: client_enum
-                            .NotificationType
-                            .NOTIFICATION_TYPE_ROOM_INVITATION,
-                        context.l10n.systemAnnouncement: client_enum
-                            .NotificationType
-                            .NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
-                        context.l10n.roomEvent: client_enum
-                            .NotificationType
-                            .NOTIFICATION_TYPE_ROOM_EVENT,
-                        context.l10n.passwordResetNotification: client_enum
-                            .NotificationType
-                            .NOTIFICATION_TYPE_PASSWORD_RESET,
-                        if (_showEmailBindingControls)
-                          context.l10n.emailBinding: client_enum
-                              .NotificationType
-                              .NOTIFICATION_TYPE_EMAIL_BIND,
-                      },
+                    const SizedBox(height: 8),
+                    AppSearchField(
+                      controller: _notificationSearchController,
+                      hintText: context.l10n.searchTitleOrContent,
                       onChanged: (value) {
-                        setState(() => _notificationTypeFilter = value);
-                        _reloadNotificationsFromFirstPage();
+                        if (value.isEmpty) _reloadNotificationsFromFirstPage();
                       },
+                      onSubmitted: (_) => _reloadNotificationsFromFirstPage(),
                     ),
-                    AppSelect<client_enum.NotificationListSortBy>(
-                      value: _notificationSortBy,
-                      options: {
-                        context.l10n.createdAt: client_enum
-                            .NotificationListSortBy
-                            .NOTIFICATION_LIST_SORT_BY_CREATED_AT,
-                        context.l10n.updatedAt: client_enum
-                            .NotificationListSortBy
-                            .NOTIFICATION_LIST_SORT_BY_UPDATED_AT,
-                        context.l10n.title: client_enum
-                            .NotificationListSortBy
-                            .NOTIFICATION_LIST_SORT_BY_TITLE,
-                      },
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setState(() => _notificationSortBy = value);
-                        _reloadNotificationsFromFirstPage();
-                      },
-                    ),
-                    AppIconButton(
-                      onPressed: () {
-                        setState(() {
-                          _notificationSortDirection =
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _NotificationFilterChip(
+                          label: context.l10n.all,
+                          selected: _notificationReadFilter == null,
+                          onSelected: () {
+                            setState(() => _notificationReadFilter = null);
+                            _reloadNotificationsFromFirstPage();
+                          },
+                        ),
+                        _NotificationFilterChip(
+                          label: context.l10n.unread,
+                          selected: _notificationReadFilter == false,
+                          onSelected: () {
+                            setState(() => _notificationReadFilter = false);
+                            _reloadNotificationsFromFirstPage();
+                          },
+                        ),
+                        _NotificationFilterChip(
+                          label: context.l10n.read,
+                          selected: _notificationReadFilter == true,
+                          onSelected: () {
+                            setState(() => _notificationReadFilter = true);
+                            _reloadNotificationsFromFirstPage();
+                          },
+                        ),
+                        AppSelect<client_enum.NotificationType?>(
+                          value: _notificationTypeFilter,
+                          hintText: context.l10n.notificationType,
+                          options: {
+                            context.l10n.allTypes: null,
+                            context.l10n.roomInvitation: client_enum
+                                .NotificationType
+                                .NOTIFICATION_TYPE_ROOM_INVITATION,
+                            context.l10n.systemAnnouncement: client_enum
+                                .NotificationType
+                                .NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
+                            context.l10n.roomEvent: client_enum
+                                .NotificationType
+                                .NOTIFICATION_TYPE_ROOM_EVENT,
+                            context.l10n.passwordResetNotification: client_enum
+                                .NotificationType
+                                .NOTIFICATION_TYPE_PASSWORD_RESET,
+                            if (_showEmailBindingControls)
+                              context.l10n.emailBinding: client_enum
+                                  .NotificationType
+                                  .NOTIFICATION_TYPE_EMAIL_BIND,
+                          },
+                          onChanged: (value) {
+                            setState(() => _notificationTypeFilter = value);
+                            _reloadNotificationsFromFirstPage();
+                          },
+                        ),
+                        AppSelect<client_enum.NotificationListSortBy>(
+                          value: _notificationSortBy,
+                          options: {
+                            context.l10n.createdAt: client_enum
+                                .NotificationListSortBy
+                                .NOTIFICATION_LIST_SORT_BY_CREATED_AT,
+                            context.l10n.updatedAt: client_enum
+                                .NotificationListSortBy
+                                .NOTIFICATION_LIST_SORT_BY_UPDATED_AT,
+                            context.l10n.title: client_enum
+                                .NotificationListSortBy
+                                .NOTIFICATION_LIST_SORT_BY_TITLE,
+                          },
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() => _notificationSortBy = value);
+                            _reloadNotificationsFromFirstPage();
+                          },
+                        ),
+                        AppIconButton(
+                          onPressed: () {
+                            setState(() {
+                              _notificationSortDirection =
+                                  _notificationSortDirection ==
+                                      client_enum
+                                          .SortDirection
+                                          .SORT_DIRECTION_DESC
+                                  ? client_enum.SortDirection.SORT_DIRECTION_ASC
+                                  : client_enum
+                                        .SortDirection
+                                        .SORT_DIRECTION_DESC;
+                            });
+                            _reloadNotificationsFromFirstPage();
+                          },
+                          icon:
                               _notificationSortDirection ==
                                   client_enum.SortDirection.SORT_DIRECTION_DESC
-                              ? client_enum.SortDirection.SORT_DIRECTION_ASC
-                              : client_enum.SortDirection.SORT_DIRECTION_DESC;
-                        });
-                        _reloadNotificationsFromFirstPage();
-                      },
-                      icon:
-                          _notificationSortDirection ==
-                              client_enum.SortDirection.SORT_DIRECTION_DESC
-                          ? Icons.south_rounded
-                          : Icons.north_rounded,
-                      tooltip:
-                          _notificationSortDirection ==
-                              client_enum.SortDirection.SORT_DIRECTION_DESC
-                          ? context.l10n.descending
-                          : context.l10n.ascending,
-                      style: AppIconButtonStyle.outlined,
+                              ? Icons.south_rounded
+                              : Icons.north_rounded,
+                          tooltip:
+                              _notificationSortDirection ==
+                                  client_enum.SortDirection.SORT_DIRECTION_DESC
+                              ? context.l10n.descending
+                              : context.l10n.ascending,
+                          style: AppIconButtonStyle.outlined,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    AppPaginationBar(
+                      padding: EdgeInsets.zero,
+                      label: context.l10n.pageSizeTotalSummary(
+                        _notificationPage,
+                        _notificationPageSize,
+                        total,
+                      ),
+                      onPrevious:
+                          _loadingNotifications || _notificationPage <= 1
+                          ? null
+                          : () => _reloadNotifications(
+                              page: _notificationPage - 1,
+                            ),
+                      onNext:
+                          _loadingNotifications || _notificationPage >= maxPage
+                          ? null
+                          : () => _reloadNotifications(
+                              page: _notificationPage + 1,
+                            ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                AppPaginationBar(
-                  padding: EdgeInsets.zero,
-                  label: context.l10n.pageSizeTotalSummary(
-                    _notificationPage,
-                    _notificationPageSize,
-                    total,
-                  ),
-                  onPrevious: _loadingNotifications || _notificationPage <= 1
-                      ? null
-                      : () => _reloadNotifications(page: _notificationPage - 1),
-                  onNext: _loadingNotifications || _notificationPage >= maxPage
-                      ? null
-                      : () => _reloadNotifications(page: _notificationPage + 1),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -3185,107 +3165,129 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           ? AppEmptyMessage(message: context.l10n.noNotifications)
           : AppRefreshIndicator(
               onRefresh: _reloadNotifications,
-              child: AppListView.separated(
-                primary: true,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                itemCount: items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  final selected = _selectedNotificationIds.contains(item.id);
-                  final selectable = item.hasValidId;
-                  return _Section(
-                    child: AppTile(
-                      contentPadding: EdgeInsets.zero,
-                      selected: selected,
-                      onPressed: selected
-                          ? () {
-                              if (!selectable) return;
-                              setState(() {
-                                _selectedNotificationIds.remove(item.id);
-                              });
-                            }
-                          : () => _openNotification(item),
-                      onLongPress: selectable
-                          ? () => setState(() {
-                              if (selected) {
-                                _selectedNotificationIds.remove(item.id);
-                              } else {
-                                _selectedNotificationIds.add(item.id);
-                              }
-                            })
-                          : null,
-                      prefix: AppCheckbox(
-                        value: selected,
-                        semanticsLabel: context.l10n.selectNotification,
-                        onChanged: selectable
-                            ? (value) => setState(() {
-                                if (value) {
-                                  _selectedNotificationIds.add(item.id);
-                                } else {
-                                  _selectedNotificationIds.remove(item.id);
-                                }
-                              })
-                            : null,
-                      ),
-                      title: Text(
-                        item.title.isEmpty
-                            ? _notificationType(item.type)
-                            : item.title,
-                        style: TextStyle(
-                          fontWeight: item.isRead
-                              ? FontWeight.w500
-                              : FontWeight.w700,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final cap = _contentCap(constraints.maxWidth);
+                  return AppListView.separated(
+                    primary: true,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final selected = _selectedNotificationIds.contains(
+                        item.id,
+                      );
+                      final selectable = item.hasValidId;
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: cap),
+                          child: _Section(
+                            child: AppTile(
+                              contentPadding: EdgeInsets.zero,
+                              selected: selected,
+                              onPressed: selected
+                                  ? () {
+                                      if (!selectable) return;
+                                      setState(() {
+                                        _selectedNotificationIds.remove(
+                                          item.id,
+                                        );
+                                      });
+                                    }
+                                  : () => _openNotification(item),
+                              onLongPress: selectable
+                                  ? () => setState(() {
+                                      if (selected) {
+                                        _selectedNotificationIds.remove(
+                                          item.id,
+                                        );
+                                      } else {
+                                        _selectedNotificationIds.add(item.id);
+                                      }
+                                    })
+                                  : null,
+                              prefix: AppCheckbox(
+                                value: selected,
+                                semanticsLabel: context.l10n.selectNotification,
+                                onChanged: selectable
+                                    ? (value) => setState(() {
+                                        if (value) {
+                                          _selectedNotificationIds.add(item.id);
+                                        } else {
+                                          _selectedNotificationIds.remove(
+                                            item.id,
+                                          );
+                                        }
+                                      })
+                                    : null,
+                              ),
+                              title: Text(
+                                item.title.isEmpty
+                                    ? _notificationType(item.type)
+                                    : item.title,
+                                style: TextStyle(
+                                  fontWeight: item.isRead
+                                      ? FontWeight.w500
+                                      : FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (item.content.isNotEmpty)
+                                    Text(item.content),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _formatTimestamp(item.createdAt),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.hintColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              stackedSuffix: true,
+                              suffix: Wrap(
+                                spacing: 2,
+                                children: [
+                                  AppIconButton(
+                                    onPressed: selected
+                                        ? null
+                                        : () => _openNotification(item),
+                                    icon: Icons.open_in_new_rounded,
+                                    tooltip: context.l10n.viewDetails,
+                                    size: AppIconButtonSize.sm,
+                                  ),
+                                  if (!item.isRead)
+                                    AppIconButton(
+                                      onPressed:
+                                          selected ||
+                                              _notificationMutationInFlight
+                                          ? null
+                                          : () => _markRead(item),
+                                      icon: Icons.mark_email_read_rounded,
+                                      tooltip: context.l10n.markRead,
+                                      size: AppIconButtonSize.sm,
+                                    ),
+                                  AppIconButton(
+                                    onPressed:
+                                        selected ||
+                                            _notificationMutationInFlight
+                                        ? null
+                                        : () => _deleteNotification(item),
+                                    icon: Icons.delete_outline_rounded,
+                                    tooltip: context.l10n.delete,
+                                    size: AppIconButtonSize.sm,
+                                    style: AppIconButtonStyle.destructive,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (item.content.isNotEmpty) Text(item.content),
-                          const SizedBox(height: 4),
-                          Text(
-                            _formatTimestamp(item.createdAt),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: theme.hintColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      stackedSuffix: true,
-                      suffix: Wrap(
-                        spacing: 2,
-                        children: [
-                          AppIconButton(
-                            onPressed: selected
-                                ? null
-                                : () => _openNotification(item),
-                            icon: Icons.open_in_new_rounded,
-                            tooltip: context.l10n.viewDetails,
-                            size: AppIconButtonSize.sm,
-                          ),
-                          if (!item.isRead)
-                            AppIconButton(
-                              onPressed:
-                                  selected || _notificationMutationInFlight
-                                  ? null
-                                  : () => _markRead(item),
-                              icon: Icons.mark_email_read_rounded,
-                              tooltip: context.l10n.markRead,
-                              size: AppIconButtonSize.sm,
-                            ),
-                          AppIconButton(
-                            onPressed: selected || _notificationMutationInFlight
-                                ? null
-                                : () => _deleteNotification(item),
-                            icon: Icons.delete_outline_rounded,
-                            tooltip: context.l10n.delete,
-                            size: AppIconButtonSize.sm,
-                            style: AppIconButtonStyle.destructive,
-                          ),
-                        ],
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -3312,7 +3314,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final showBindableOAuth2 =
         providersError != null || bindableProviders.isNotEmpty;
     final showOAuth2Bindings = showLinkedOAuth2 || showBindableOAuth2;
-    return AppListView(
+    // _responsiveList caps the column on wide windows like every other tab.
+    return _responsiveList(
       padding: const EdgeInsets.all(16),
       children: [
         Column(

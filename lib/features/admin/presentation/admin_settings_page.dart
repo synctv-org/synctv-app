@@ -395,7 +395,10 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                         : const Color(0xFFF3F5F8),
                     borderRadius: BorderRadius.zero,
                     clipBehavior: Clip.none,
-                    child: _buildTabView(),
+                    // Rail stays at the window edge; the section content is
+                    // capped and centered so rows and toolbars don't stretch
+                    // across wide desktop windows.
+                    child: AppContentWidthBox(child: _buildTabView()),
                   ),
                 ),
               ],
@@ -479,65 +482,13 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
   }
 
   Widget _buildTopTabs(ThemeData theme) {
-    final labelStyle = theme.textTheme.labelMedium!;
-    final tabHeight = math.max(
-      44.0,
-      MediaQuery.textScalerOf(context).scale(labelStyle.fontSize!) *
-              (labelStyle.height ?? 1.4) +
-          16,
-    );
-    return AppInkSurface(
-      color: theme.colorScheme.surface,
-      elevation: 0,
-      clipBehavior: Clip.none,
-      child: AppSafeArea(
-        bottom: false,
-        child: AppPanelSurface(
-          borderRadius: BorderRadius.zero,
-          clipBehavior: Clip.none,
-          border: Border(
-            bottom: BorderSide(
-              color: theme.dividerColor.withValues(alpha: 0.65),
-            ),
-          ),
-          padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-          child: AppTabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            onTap: (index) => _selectSection(index, syncController: false),
-            dividerColor: Colors.transparent,
-            indicator: appTabPillIndicator(
-              color: theme.colorScheme.primary.withValues(alpha: 0.10),
-            ),
-            labelColor: theme.colorScheme.primary,
-            unselectedLabelColor: theme.colorScheme.onSurface.withValues(
-              alpha: 0.62,
-            ),
-            labelStyle: labelStyle.copyWith(fontWeight: FontWeight.w700),
-            unselectedLabelStyle: labelStyle.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-            tabs: [
-              for (final section in _sections)
-                Tab(
-                  height: tabHeight,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(section.icon, size: 18),
-                        const SizedBox(width: 6),
-                        Text(section.label),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
+    return AppSectionTabBar(
+      controller: _tabController,
+      onTap: (index) => _selectSection(index, syncController: false),
+      tabs: [
+        for (final section in _sections)
+          AppSectionTab(icon: section.icon, label: section.label),
+      ],
     );
   }
 }
