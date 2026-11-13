@@ -35,7 +35,6 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
-import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/core/presentation/dialogs/app_dialogs.dart';
 import 'package:synctv_app/core/presentation/image/local_image_picker.dart';
 import 'package:synctv_app/core/presentation/notifications/app_notifications.dart';
@@ -7685,7 +7684,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         : const Color(0xFFF3F5F8),
                     borderRadius: BorderRadius.zero,
                     clipBehavior: Clip.none,
-                    child: _buildTabView(theme, isDark),
+                    // Rail stays at the window edge; the tab content is
+                    // capped and centered so forms don't stretch across
+                    // wide desktop windows.
+                    child: AppContentWidthBox(
+                      child: _buildTabView(theme, isDark),
+                    ),
                   ),
                 ),
               ],
@@ -7706,36 +7710,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildTopTabs(ThemeData theme) {
-    final compact = AppBreakpoints.widthOf(context) < 430;
-    return AppInkSurface(
-      color: theme.colorScheme.surface.withValues(alpha: 0.92),
-      clipBehavior: Clip.none,
-      child: AppTabBar(
-        controller: _tabController,
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
-        padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 12),
-        labelPadding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16),
-        indicatorSize: TabBarIndicatorSize.label,
-        tabs: _sections
-            .map(
-              (section) => Tab(
-                height: compact ? 44 : 64,
-                icon: compact ? null : Icon(section.icon),
-                child: compact
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(section.icon, size: 18),
-                          const SizedBox(width: 6),
-                          Text(section.label),
-                        ],
-                      )
-                    : Text(section.label),
-              ),
-            )
-            .toList(growable: false),
-      ),
+    return AppSectionTabBar(
+      controller: _tabController,
+      tabs: [
+        for (final section in _sections)
+          AppSectionTab(icon: section.icon, label: section.label),
+      ],
     );
   }
 
