@@ -279,7 +279,7 @@ class _HomeHeader extends StatelessWidget {
   }
 }
 
-class _AccountMenu extends StatelessWidget {
+class _AccountMenu extends StatefulWidget {
   const _AccountMenu({
     required this.state,
     required this.callbacks,
@@ -291,6 +291,40 @@ class _AccountMenu extends StatelessWidget {
   final bool compact;
 
   @override
+  State<_AccountMenu> createState() => _AccountMenuState();
+}
+
+class _AccountMenuState extends State<_AccountMenu> {
+  final MenuController _controller = MenuController();
+
+  _AccountMenu get _menu => widget;
+  HomeViewState get state => _menu.state;
+  HomeViewCallbacks get callbacks => _menu.callbacks;
+  bool get compact => _menu.compact;
+
+  void _select(String value) {
+    _controller.close();
+    switch (value) {
+      case 'account':
+        callbacks.openAccountCenter();
+      case 'join':
+        callbacks.openJoinRoom();
+      case 'admin':
+        callbacks.openAdminSettings();
+      case 'server':
+        callbacks.openServerSettings();
+      case 'language':
+        callbacks.openLanguageSelector();
+      case 'appearance':
+        callbacks.openThemeModeSelector();
+      case 'about':
+        callbacks.openAbout();
+      case 'logout':
+        callbacks.logout();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final child = AppAvatar(
@@ -300,21 +334,23 @@ class _AccountMenu extends StatelessWidget {
       foregroundColor: theme.colorScheme.onPrimary,
       textStyle: const TextStyle(fontSize: 13),
     );
-    return AppPopupMenuButton<String>(
-      offset: const Offset(0, 46),
-      tooltip: context.l10n.accountMenu,
-      onSelected: (value) => switch (value) {
-        'account' => callbacks.openAccountCenter(),
-        'join' => callbacks.openJoinRoom(),
-        'admin' => callbacks.openAdminSettings(),
-        'server' => callbacks.openServerSettings(),
-        'language' => callbacks.openLanguageSelector(),
-        'appearance' => callbacks.openThemeModeSelector(),
-        'about' => callbacks.openAbout(),
-        'logout' => callbacks.logout(),
-        _ => null,
-      },
-      itemBuilder: (context) => [
+    // A MenuAnchor keeps the open menu attached to the widget tree, so
+    // entries built from late-arriving state (for example the admin flag
+    // that loads with the user profile) appear in the open menu without
+    // closing and reopening it. PopupMenuButton would snapshot the items
+    // once at open time.
+    return MenuAnchor(
+      controller: _controller,
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(theme.colorScheme.surface),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        elevation: const WidgetStatePropertyAll(4),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(vertical: 6),
+        ),
+        minimumSize: const WidgetStatePropertyAll(Size(180, 0)),
+      ),
+      menuChildren: [
         if (compact)
           _menuItem(
             'join',
@@ -359,7 +395,7 @@ class _AccountMenu extends StatelessWidget {
           context.l10n.aboutApp,
           color: theme.colorScheme.onSurface,
         ),
-        const PopupMenuDivider(),
+        const AppDivider(height: 9),
         _menuItem(
           'logout',
           Icons.logout_rounded,
@@ -367,15 +403,12 @@ class _AccountMenu extends StatelessWidget {
           color: AppColors.danger,
         ),
       ],
-      child: compact
-          ? SizedBox(width: 44, height: 44, child: Center(child: child))
-          : AppInkSurface(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: theme.dividerColor.withValues(alpha: 0.7),
-              ),
-              child: Padding(
+      builder: (context, controller, _) {
+        void toggle() =>
+            controller.isOpen ? controller.close() : controller.open();
+        final trigger = compact
+            ? SizedBox(width: 44, height: 44, child: Center(child: child))
+            : Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
                   vertical: 7,
@@ -397,18 +430,41 @@ class _AccountMenu extends StatelessWidget {
                     const Icon(Icons.expand_more_rounded, size: 18),
                   ],
                 ),
-              ),
-            ),
+              );
+        return Tooltip(
+          message: context.l10n.accountMenu,
+          child: compact
+              ? InkWell(
+                  onTap: toggle,
+                  customBorder: const CircleBorder(),
+                  child: trigger,
+                )
+              : AppInkSurface(
+                  onTap: toggle,
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.7),
+                  ),
+                  child: trigger,
+                ),
+        );
+      },
     );
   }
 
-  PopupMenuItem<String> _menuItem(
+  MenuItemButton _menuItem(
     String value,
     IconData icon,
     String label, {
     Color? color,
-  }) => PopupMenuItem(
-    value: value,
+  }) => MenuItemButton(
+    onPressed: () => _select(value),
+    style: const ButtonStyle(
+      minimumSize: WidgetStatePropertyAll(Size(148, 48)),
+      padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 16)),
+      alignment: AlignmentDirectional.centerStart,
+    ),
     child: Row(
       children: [
         Icon(icon, size: 18, color: color),

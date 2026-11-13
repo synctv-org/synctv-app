@@ -962,6 +962,84 @@ void main() {
       },
     );
   }
+
+  testWidgets(
+    'open account menu picks up the admin entry once the profile arrives',
+    (tester) async {
+      final pendingUser = Completer<SyncTvUser>();
+      await _pumpShell(tester, authenticated: true, pendingUser: pendingUser);
+
+      // The boot profile fetch is still pending; the menu opens without the
+      // admin entry.
+      await tester.tap(find.byTooltip('Account menu'));
+      await tester.pumpAndSettle();
+      expect(find.text('Admin settings'), findsNothing);
+
+      pendingUser.complete(
+        SyncTvUser(
+          id: 'user-1',
+          username: 'Old user',
+          role: const AccountUserRole(common.UserRole.USER_ROLE_ADMIN),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The still-open menu must reflect the late-arriving profile without
+      // being closed and reopened.
+      expect(find.text('Admin settings'), findsOneWidget);
+      expect(
+        tester
+            .widget<HomeView>(find.byType(HomeView))
+            .state
+            .currentUser
+            ?.username,
+        'Old user',
+      );
+
+      await tester.tap(find.byTooltip('Account menu'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('profile fetch retries transient failures', (tester) async {
+    await _pumpShell(tester, authenticated: true, userFetchFailures: 2);
+    HomeView home() => tester.widget<HomeView>(find.byType(HomeView));
+    expect(home().state.currentUser, isNull);
+
+    // Backoff is 1s then 2s; the third attempt succeeds.
+    await tester.pump(const Duration(milliseconds: 1100));
+    await tester.pump(const Duration(milliseconds: 2100));
+    await tester.pump();
+    expect(home().state.currentUser?.username, 'Old user');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'opening the account center fetches a missing profile on demand',
+    (tester) async {
+      final harness = await _pumpShell(
+        tester,
+        authenticated: true,
+        userFetchFailures: 1,
+      );
+      HomeView home() => tester.widget<HomeView>(find.byType(HomeView));
+      expect(home().state.currentUser, isNull);
+
+      // The boot fetch failed and its retry is waiting on backoff; opening
+      // the account center must not drop the tap silently.
+      home().callbacks.openAccountCenter();
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byType(AccountCenterPage), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 4));
+      harness.navigator.currentState!.pop();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 Future<
@@ -975,10 +1053,15 @@ _pumpShell(
   WidgetTester tester, {
   bool authenticated = false,
   String? initialInvite,
+  int userFetchFailures = 0,
+  Completer<SyncTvUser>? pendingUser,
 }) async {
   await tester.binding.setSurfaceSize(const Size(1200, 900));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  final home = _HomeGateway()..authenticated = authenticated;
+  final home = _HomeGateway()
+    ..authenticated = authenticated
+    ..userFetchFailures = userFetchFailures
+    ..pendingUser = pendingUser;
   final management = _RoomManagementGateway();
   final opaque = OpaqueAuthenticatorService(gateway: _OpaqueGateway());
   final navigator = GlobalKey<NavigatorState>();
@@ -1046,6 +1129,8 @@ class _HomeGateway implements HomeGateway {
 
   bool authenticated = false;
   String username = 'Old user';
+  int userFetchFailures = 0;
+  Completer<SyncTvUser>? pendingUser;
   final room = Completer<SyncTvRoom>();
   final roomLookups = <String>[];
   List<RoomLabelInfo> labels = const [];
@@ -1071,11 +1156,22 @@ class _HomeGateway implements HomeGateway {
       ? const AccountSessionIdentity()
       : const AnonymousSessionIdentity();
   @override
-  Future<SyncTvUser> getCurrentUser() async => SyncTvUser(
-    id: 'user-1',
-    username: username,
-    role: const AccountUserRole(common.UserRole.USER_ROLE_USER),
-  );
+  Future<SyncTvUser> getCurrentUser() {
+    final pending = pendingUser;
+    if (pending != null) return pending.future;
+    if (userFetchFailures > 0) {
+      userFetchFailures--;
+      return Future.error(StateError('transient profile failure'));
+    }
+    return Future.value(
+      SyncTvUser(
+        id: 'user-1',
+        username: username,
+        role: const AccountUserRole(common.UserRole.USER_ROLE_USER),
+      ),
+    );
+  }
+
   @override
   Future<RoomsPage> getJoinedRooms({
     required int page,
