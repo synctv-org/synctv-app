@@ -176,6 +176,21 @@ class _AppShellState extends State<AppShell> {
 
   Future<void> _fetchUserInfo() async {
     if (!_isAccountSession) return;
+    // A transient failure on the first fetch (server waking up, token
+    // still settling) must not leave the account menu without the
+    // profile for the rest of the session, so retry with backoff.
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (await _fetchUserOnce()) return;
+      if (!mounted || !_isAccountSession) return;
+      if (attempt < 2) {
+        await Future<void>.delayed(Duration(seconds: 1 << attempt));
+        if (!mounted || !_isAccountSession) return;
+      }
+    }
+  }
+
+  Future<bool> _fetchUserOnce() async {
+    if (!_isAccountSession) return false;
     final epoch = _homeStateEpoch.capture();
     try {
       final user = await _gateway.getCurrentUser();
@@ -183,9 +198,11 @@ class _AppShellState extends State<AppShell> {
         setState(() {
           _currentUser = user;
         });
+        return true;
       }
+      return false;
     } catch (e) {
-      // Ignore
+      return false;
     }
   }
 
@@ -611,9 +628,12 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
-  void _showAccountCenter() {
+  Future<void> _showAccountCenter() async {
+    // The profile may still be loading (or the boot fetch may have been
+    // retried); fetch it on demand instead of dropping the tap silently.
+    if (_currentUser == null) await _fetchUserOnce();
     final user = _currentUser;
-    if (user == null) return;
+    if (!mounted || user == null) return;
     final epoch = _homeStateEpoch.capture();
     Navigator.push<bool>(
       context,
