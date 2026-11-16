@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:synctv_app/features/voice/application/voice_chat_session.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_audio_session.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_microphone.dart';
@@ -48,7 +47,6 @@ class VoiceChatManager implements VoiceChatSession {
   Future<void>? _leaving;
   final Future<MediaStream> Function() _acquireMicrophone;
   final Future<void> Function(bool) _configureVoiceCallMode;
-  final Future<void> Function(bool) _configureSpeakerphone;
   final Future<void> Function(double, MediaStreamTrack) _applyRemoteTrackVolume;
   double _remoteVolume = VoiceChatVolumeRange.initial;
   Future<void> _audioRouting = Future<void>.value();
@@ -68,22 +66,13 @@ class VoiceChatManager implements VoiceChatSession {
     Future<MediaStream> Function()? acquireMicrophone,
     Future<RTCPeerConnection> Function(Map<String, dynamic>)? createConnection,
     Future<void> Function(bool)? configureVoiceCallMode,
-    Future<void> Function(bool)? configureSpeakerphone,
     Future<void> Function(double volume, MediaStreamTrack track)?
     applyRemoteTrackVolume,
   }) : _acquireMicrophone = acquireMicrophone ?? acquireVoiceMicrophone,
        _configureVoiceCallMode =
            configureVoiceCallMode ?? VoiceAudioSession.setVoiceCallMode,
-       _configureSpeakerphone =
-           configureSpeakerphone ?? _configurePlatformSpeakerphone,
        _applyRemoteTrackVolume = applyRemoteTrackVolume ?? Helper.setVolume,
        _createConnection = createConnection ?? createPeerConnection;
-
-  static Future<void> _configurePlatformSpeakerphone(bool enabled) async {
-    // The WebRTC helper uses native method channels, including on web.
-    if (kIsWeb) return;
-    await Helper.setSpeakerphoneOn(enabled);
-  }
 
   @override
   void handleSignalingMessage(String type, Map<String, dynamic> data) {
@@ -155,9 +144,6 @@ class VoiceChatManager implements VoiceChatSession {
         return;
       }
       _localStream = stream;
-
-      await _setSpeakerphoneOn(true);
-      if (!_isCurrentJoin(generation)) return;
 
       _joinOperationId = clientOperationId;
       onSignalingMessage('join', {'client_operation_id': clientOperationId});
@@ -241,7 +227,6 @@ class VoiceChatManager implements VoiceChatSession {
           tracks.add(event.track);
         }
         unawaited(_applyTrackVolume(event.track, _remoteVolume));
-        unawaited(_setSpeakerphoneOn(true));
       }
     };
 
@@ -473,7 +458,6 @@ class VoiceChatManager implements VoiceChatSession {
         ? Future<void>.value()
         : attempt(() => releaseVoiceMicrophone(stream));
 
-    await attempt(() => _setSpeakerphoneOn(false));
     await attempt(() => _setVoiceCallMode(false));
     if (announce) {
       await attempt(() => onSignalingMessage('leave', {}));
@@ -543,14 +527,4 @@ class VoiceChatManager implements VoiceChatSession {
 
   Future<void> _setVoiceCallMode(bool enabled) =>
       _routeAudio(() => _configureVoiceCallMode(enabled));
-
-  Future<void> _setSpeakerphoneOn(bool enabled) => _routeAudio(() async {
-    try {
-      await _configureSpeakerphone(enabled);
-    } on MissingPluginException catch (error) {
-      debugPrint('WebRTC speakerphone control is unavailable: $error');
-    } on PlatformException catch (error) {
-      debugPrint('WebRTC speakerphone control failed: $error');
-    }
-  });
 }
