@@ -69,7 +69,6 @@ void main() {
       loadIceServers: () async => _iceServers,
       acquireMicrophone: () async => _Stream(),
       configureVoiceCallMode: (_) async {},
-      configureSpeakerphone: (_) async {},
       createConnection: (_) async => peer,
       applyRemoteTrackVolume: (volume, track) async {
         applyCalls++;
@@ -102,7 +101,6 @@ void main() {
           throw failure;
         }
       },
-      configureSpeakerphone: (_) async {},
     );
     await expectLater(
       manager.join(clientOperationId: 'failed'),
@@ -115,56 +113,44 @@ void main() {
     expect(modes, [true, false, true, false]);
   });
 
-  for (final stage in ['voice mode', 'speakerphone']) {
-    test('leaving serializes pending $stage configuration', () async {
-      final started = Completer<void>();
-      final pending = Completer<void>();
-      final calls = <String>[];
-      var enabledState = false;
-      final stream = _Stream();
-      Future<void> configure(bool enabled) async {
-        calls.add('start:$enabled');
-        if (enabled) {
-          started.complete();
-          await pending.future;
-        }
-        enabledState = enabled;
-        calls.add('end:$enabled');
+  test('leaving serializes pending voice mode configuration', () async {
+    final started = Completer<void>();
+    final pending = Completer<void>();
+    final calls = <String>[];
+    var enabledState = false;
+    final stream = _Stream();
+    Future<void> configure(bool enabled) async {
+      calls.add('start:$enabled');
+      if (enabled) {
+        started.complete();
+        await pending.future;
       }
+      enabledState = enabled;
+      calls.add('end:$enabled');
+    }
 
-      final manager = VoiceChatManager(
-        onSignalingMessage: (_, _) {},
-        onStateChange: () {},
-        loadIceServers: () async => _iceServers,
-        acquireMicrophone: () async => stream,
-        configureVoiceCallMode: stage == 'voice mode'
-            ? configure
-            : (_) async {},
-        configureSpeakerphone: stage == 'speakerphone'
-            ? configure
-            : (_) async {},
-      );
-      final joining = manager.join(clientOperationId: 'pending');
-      await started.future;
-      final leaving = manager.leave();
-      await Future<void>.delayed(Duration.zero);
-      final callsWhilePending = List<String>.of(calls);
-      final stopsWhilePending = stream.track.stops;
-      pending.complete();
-      await Future.wait([joining, leaving]);
-      expect(callsWhilePending, ['start:true']);
-      expect(enabledState, isFalse);
-      expect(calls, ['start:true', 'end:true', 'start:false', 'end:false']);
-      expect(manager.isConnected, isFalse);
-      if (stage == 'speakerphone') {
-        expect(stopsWhilePending, 1);
-        expect(stream.disposals, 1);
-      }
-      await manager.dispose();
-    });
-  }
+    final manager = VoiceChatManager(
+      onSignalingMessage: (_, _) {},
+      onStateChange: () {},
+      loadIceServers: () async => _iceServers,
+      acquireMicrophone: () async => stream,
+      configureVoiceCallMode: configure,
+    );
+    final joining = manager.join(clientOperationId: 'pending');
+    await started.future;
+    final leaving = manager.leave();
+    await Future<void>.delayed(Duration.zero);
+    final callsWhilePending = List<String>.of(calls);
+    pending.complete();
+    await Future.wait([joining, leaving]);
+    expect(callsWhilePending, ['start:true']);
+    expect(enabledState, isFalse);
+    expect(calls, ['start:true', 'end:true', 'start:false', 'end:false']);
+    expect(manager.isConnected, isFalse);
+    await manager.dispose();
+  });
 
-  test('microphone stops while speakerphone shutdown is pending', () async {
+  test('microphone stops while voice mode shutdown is pending', () async {
     final pending = Completer<void>();
     final shutdown = Completer<void>();
     final stream = _Stream();
@@ -174,8 +160,7 @@ void main() {
       onStateChange: () {},
       loadIceServers: () async => _iceServers,
       acquireMicrophone: () async => stream,
-      configureVoiceCallMode: (_) async {},
-      configureSpeakerphone: (enabled) async {
+      configureVoiceCallMode: (enabled) async {
         if (!enabled && block) {
           shutdown.complete();
           await pending.future;
@@ -1066,7 +1051,6 @@ VoiceChatManager _volumeManager(
   loadIceServers: () async => _iceServers,
   acquireMicrophone: () async => _Stream(),
   configureVoiceCallMode: (_) async {},
-  configureSpeakerphone: (_) async {},
   createConnection: (_) async => peer,
   applyRemoteTrackVolume: (volume, track) async {
     volumeCalls.add((volume, track.id));
