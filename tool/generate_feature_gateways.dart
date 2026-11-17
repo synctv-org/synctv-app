@@ -243,12 +243,34 @@ bool _isWhitespace(int codeUnit) =>
     codeUnit == 0x0A ||
     codeUnit == 0x0D;
 
+/// Resolve the dart CLI for formatting: the running SDK's dart when this
+/// tool runs via `dart run`, else the `FLUTTER_ROOT` SDK when it runs inside
+/// `flutter test` (where the resolved executable is flutter_tester, not a
+/// dart CLI), else PATH dart. A PATH dart from another SDK can format
+/// differently (or fail on newer syntax).
+String _formatDartExecutable() {
+  final resolved = Platform.resolvedExecutable;
+  final name = Uri.file(resolved).pathSegments.last;
+  if (name.startsWith('dart')) return resolved;
+  final flutterRoot = Platform.environment['FLUTTER_ROOT'];
+  if (flutterRoot != null && flutterRoot.isNotEmpty) {
+    for (final candidate in ['dart', 'dart.exe']) {
+      final dart = File('$flutterRoot/bin/cache/dart-sdk/bin/$candidate');
+      if (dart.existsSync()) return dart.path;
+    }
+  }
+  return 'dart';
+}
+
 String _formatDart(String content) {
   final directory = Directory.systemTemp.createTempSync('synctv_gateway_');
   try {
     final file = File('${directory.path}/generated.dart')
       ..writeAsStringSync(content);
-    final result = Process.runSync('dart', ['format', file.path]);
+    final result = Process.runSync(_formatDartExecutable(), [
+      'format',
+      file.path,
+    ]);
     if (result.exitCode != 0) {
       throw StateError('dart format failed: ${result.stderr}');
     }

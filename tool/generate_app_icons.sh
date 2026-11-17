@@ -4,7 +4,10 @@ set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$project_root"
 
-for command_name in dart rsvg-convert ffmpeg grep; do
+# shellcheck source=tool/ci/dart_sdk.sh
+source "$project_root/tool/ci/dart_sdk.sh"
+
+for command_name in rsvg-convert ffmpeg grep; do
   if ! command -v "$command_name" >/dev/null 2>&1; then
     echo "missing icon generation dependency: $command_name" >&2
     exit 1
@@ -27,8 +30,8 @@ fi
 icon_work_directory="$(mktemp -d)"
 trap 'rm -rf "${icon_work_directory:-}"' EXIT
 
-dart run tool/generate_apple_icon_composer.dart
-dart run flutter_launcher_icons
+project_dart run tool/generate_apple_icon_composer.dart
+project_dart run flutter_launcher_icons
 
 windows_icon_directory="$icon_work_directory/windows"
 mkdir -p "$windows_icon_directory"
