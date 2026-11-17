@@ -4,7 +4,10 @@ set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$project_root"
 
-for command_name in dart jq grep; do
+# shellcheck source=tool/ci/dart_sdk.sh
+source "$project_root/tool/ci/dart_sdk.sh"
+
+for command_name in jq grep; do
   if ! command -v "$command_name" >/dev/null 2>&1; then
     echo "missing Icon Composer verification dependency: $command_name" >&2
     exit 1
@@ -29,7 +32,7 @@ jq empty "$icon_directory/icon.json"
 temporary_directory="$(mktemp -d)"
 trap 'rm -rf "${temporary_directory:-}"' EXIT
 generated_icon="$temporary_directory/AppIcon.icon"
-dart run tool/generate_apple_icon_composer.dart \
+project_dart run tool/generate_apple_icon_composer.dart \
   assets/icon/logo-notext.svg \
   "$generated_icon"
 diff -rq "$icon_directory" "$generated_icon"
