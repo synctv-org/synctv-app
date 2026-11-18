@@ -829,11 +829,15 @@ class WebVideoPlayerRuntime
                 .round(),
           )
         : Duration.zero;
+    // Audio-only media carries no video track, so videoWidth/Height stay
+    // zero once metadata is loaded. Swallowing the event there left the
+    // controller waiting for a video that never comes until the
+    // initialization timeout tore the player down; report a zero size
+    // instead, which is what the platform interface uses for audio.
     final size = Size(
       _video.videoWidth.toDouble(),
       _video.videoHeight.toDouble(),
     );
-    if (size.width <= 0 || size.height <= 0) return;
     _initializationTimeoutTimer?.cancel();
     _initializationTimeoutTimer = null;
     _initialized = true;
@@ -1115,7 +1119,14 @@ class WebVideoPlayerRuntime
     await _pictureInPictureEvents.close();
     await _adaptiveTracks.close();
     await _adaptiveAudioTracks.close();
-    await _events.close();
+    // A single-subscription controller nobody ever listened to never
+    // completes its done future, so awaiting close() would hang teardown
+    // forever; only the normal listened path gets the awaited close.
+    if (_events.hasListener) {
+      await _events.close();
+    } else {
+      _events.close();
+    }
   }
 }
 
