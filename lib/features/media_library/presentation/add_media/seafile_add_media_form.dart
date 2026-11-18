@@ -340,18 +340,21 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
   }
 
   String _details(SeafileFileItemInfo item, bool isLibrary) {
+    final l10n = context.l10n;
     if (isLibrary) {
       return [
-        if (item.repositoryEncrypted) 'Encrypted',
-        if (item.passwordRequired) 'Password required',
+        if (item.repositoryEncrypted) l10n.encrypted,
+        if (item.passwordRequired) l10n.passwordRequiredLabel,
         _formatBytes(item.size),
       ].join(' · ');
     }
-    if (item.isDir) return item.starred ? 'Folder · Starred' : 'Folder';
+    if (item.isDir) {
+      return item.starred ? '${l10n.folder} · ${l10n.starred}' : l10n.folder;
+    }
     return [
       _formatBytes(item.size),
       if (item.modifierName.isNotEmpty) item.modifierName,
-      if (item.starred) 'Starred',
+      if (item.starred) l10n.starred,
     ].join(' · ');
   }
 

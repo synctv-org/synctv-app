@@ -287,13 +287,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       ],
     );
 
+    final reason = reasonController.text.trim();
+    reasonController.dispose();
     if (confirm == true) {
       try {
-        await adminGateway.adminBanRoom(
-          room.roomId,
-          ban,
-          reason: reasonController.text.trim(),
-        );
+        await adminGateway.adminBanRoom(room.roomId, ban, reason: reason);
         if (!mounted) return;
         AppNotifications.showSuccess(context, context.l10n.operationSucceeded);
         _loadRooms(silent: true);
@@ -386,11 +384,13 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         ),
       ],
     );
+    final reason = reasonController.text.trim();
+    reasonController.dispose();
     if (confirmed != true) return;
     try {
       final result = await adminGateway.adminBatchBanRooms(
         _selectedRoomIds.toList(),
-        reason: reasonController.text.trim(),
+        reason: reason,
       );
       if (!mounted) return;
       _showBatchResult(context.l10n.batchBanCompleted, result);
@@ -1151,13 +1151,16 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         ],
       );
       closed = true;
-      if (confirmed != true) return;
-      if (!mounted) return;
+      if (confirmed != true || !mounted) {
+        maxMembers.dispose();
+        return;
+      }
       settings.requireApproval = requireApproval;
       settings.allowGuestJoin = allowGuestJoin;
       settings.chatEnabled = chatEnabled;
       settings.maxMembers =
           int.tryParse(maxMembers.text.trim()) ?? settings.maxMembers;
+      maxMembers.dispose();
       await adminGateway.adminUpdateRoomSettings(room.roomId, settings);
       if (!mounted) return;
       AppNotifications.showSuccess(context, context.l10n.roomSettingsSaved);

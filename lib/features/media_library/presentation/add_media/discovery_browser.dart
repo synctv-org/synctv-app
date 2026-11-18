@@ -15,7 +15,7 @@ class DiscoveryBrowserEntry {
     this.leading,
     this.selectable = true,
     this.openIcon = Icons.chevron_right_rounded,
-    this.openTooltip = 'Open folder',
+    this.openTooltip = '',
     this.actions = const [],
   });
 
@@ -569,7 +569,9 @@ class _DiscoveryBrowserState extends State<DiscoveryBrowser> {
                 if (item.isContainer)
                   AppIconButton(
                     key: ValueKey('discovery-open-${item.key}'),
-                    tooltip: item.openTooltip,
+                    tooltip: item.openTooltip.isEmpty
+                        ? context.l10n.openFolder
+                        : item.openTooltip,
                     onPressed: _busy || widget.onOpen == null
                         ? null
                         : () => _open(item),

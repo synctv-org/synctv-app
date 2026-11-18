@@ -2232,6 +2232,11 @@ class _RoomScreenState extends State<RoomScreen>
         },
       );
     } finally {
+      // Hold the sync flag a beat past completion so player events caused
+      // by this sync's own seek/play settle before listener-driven logic
+      // (danmaku fetch, status reporting) resumes; releasing immediately
+      // would let mid-seek positions echo back as drift. A newer sync
+      // supersedes this release via the generation check.
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted && syncGeneration == _playbackSyncGeneration) {
           _isSyncing = false;

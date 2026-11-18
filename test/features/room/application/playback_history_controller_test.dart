@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
@@ -20,7 +22,10 @@ void main() {
       );
     });
 
-    tearDown(() => controller.dispose());
+    var controllerDisposedInTest = false;
+    tearDown(() {
+      if (!controllerDisposedInTest) controller.dispose();
+    });
 
     test('loads additional cursor pages in the selected order', () async {
       gateway.pages.addAll([
@@ -120,6 +125,28 @@ void main() {
       expect(controller.state.entries, isEmpty);
       expect(gateway.clearCalls, 1);
     });
+
+    test(
+      'disposing mid-refresh stops notifications without throwing',
+      () async {
+        final gate = Completer<void>();
+        gateway.gate = gate;
+        gateway.pages.add(
+          client.ListPlaybackHistoryResponse(entries: [_entry('ph_late')]),
+        );
+        var notifications = 0;
+        controller.addListener(() => notifications++);
+        controllerDisposedInTest = true;
+
+        final refresh = controller.refresh();
+        await Future<void>.delayed(Duration.zero);
+        controller.dispose();
+        gate.complete();
+        await refresh;
+
+        expect(notifications, 1, reason: 'only the loading notification fired');
+      },
+    );
   });
 }
 
@@ -145,6 +172,9 @@ final class _ListCall {
 final class _FakeRoomPlaybackGateway implements RoomPlaybackGateway {
   final List<client.ListPlaybackHistoryResponse> pages = [];
   final List<_ListCall> listCalls = [];
+
+  /// When set, listHistory pauses on this gate before answering.
+  Completer<void>? gate;
   final List<String> deletedEntryIds = [];
   bool deleteResult = true;
   int clearResult = 0;
@@ -159,6 +189,8 @@ final class _FakeRoomPlaybackGateway implements RoomPlaybackGateway {
         client_enum.SortDirection.SORT_DIRECTION_DESC,
   }) async {
     listCalls.add(_ListCall(cursorEntryId, sortDirection));
+    final gate = this.gate;
+    if (gate != null) await gate.future;
     return pages.removeAt(0);
   }
 

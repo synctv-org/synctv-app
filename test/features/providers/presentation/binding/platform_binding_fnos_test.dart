@@ -72,7 +72,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text(l10n.login));
         await tester.pumpAndSettle();
-        final trust = find.text('Trust device');
+        final trust = find.text(l10n.trustDevice);
         await tester.ensureVisible(trust);
         await tester.pumpAndSettle();
         final paragraph = tester.renderObject<RenderParagraph>(trust);

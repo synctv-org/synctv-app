@@ -225,13 +225,11 @@ class _UserManagementTabState extends State<UserManagementTab> {
       ],
     );
 
+    final reason = reasonController.text.trim();
+    reasonController.dispose();
     if (confirm == true) {
       try {
-        await adminGateway.adminBanUser(
-          user.id,
-          ban,
-          reason: reasonController.text.trim(),
-        );
+        await adminGateway.adminBanUser(user.id, ban, reason: reason);
         if (!mounted) return;
         AppNotifications.showSuccess(context, l10n.operationSucceeded);
         _loadUsers(silent: true);
@@ -307,12 +305,14 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ),
       ],
     );
+    final reason = reasonController.text.trim();
+    reasonController.dispose();
     if (confirmed != true || !mounted) return;
     setState(() => _batchPending = true);
     try {
       final result = await adminGateway.adminBatchBanUsers(
         targetIds,
-        reason: reasonController.text.trim(),
+        reason: reason,
       );
       if (!mounted) return;
       _showBatchResult(l10n.batchBanCompleted, result);

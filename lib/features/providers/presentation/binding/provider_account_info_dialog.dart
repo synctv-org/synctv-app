@@ -210,14 +210,20 @@ Future<List<(String, String)>> _loadProviderAccountRows(
       return [
         (l10n.server, item.title),
         (l10n.username, item.subtitle),
-        ('Real-time transcoding', capabilities.supportRtt ? l10n.yes : l10n.no),
         (
-          'Hardware transcoding',
+          l10n.realtimeTranscoding,
+          capabilities.supportRtt ? l10n.yes : l10n.no,
+        ),
+        (
+          l10n.hardwareTranscoding,
           capabilities.hardwareTranscode ? l10n.yes : l10n.no,
         ),
-        ('QTranscode', capabilities.qtranscode ? l10n.yes : l10n.no),
-        ('Multimedia Codec', capabilities.multimediaCodec ? l10n.yes : l10n.no),
-        ('HD Station', capabilities.hdStationSupport ? l10n.yes : l10n.no),
+        (l10n.qtranscodeLabel, capabilities.qtranscode ? l10n.yes : l10n.no),
+        (
+          l10n.multimediaCodec,
+          capabilities.multimediaCodec ? l10n.yes : l10n.no,
+        ),
+        (l10n.hdStation, capabilities.hdStationSupport ? l10n.yes : l10n.no),
         (
           l10n.instance,
           _providerInstanceLabel(item.instanceName, l10n.localInstance),

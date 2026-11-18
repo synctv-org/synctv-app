@@ -3465,6 +3465,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openFolder => 'Open folder';
 
   @override
+  String get browserSession => 'Browser session';
+
+  @override
+  String get cookie => 'Cookie';
+
+  @override
+  String get cookieConfigured => 'Cookie configured';
+
+  @override
+  String get hardwareTranscoding => 'Hardware transcoding';
+
+  @override
+  String get hdStation => 'HD Station';
+
+  @override
+  String get multimediaCodec => 'Multimedia Codec';
+
+  @override
+  String get passwordRequiredLabel => 'Password required';
+
+  @override
+  String get qtranscodeLabel => 'QTranscode';
+
+  @override
+  String get realtimeTranscoding => 'Real-time transcoding';
+
+  @override
+  String get trustDevice => 'Trust device';
+
+  @override
   String get sharedFolders => 'Shared folders';
 
   @override

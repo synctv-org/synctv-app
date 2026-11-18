@@ -68,6 +68,7 @@ class PlaybackHistoryController extends ChangeNotifier {
   String _pendingCursorId = '';
   Future<void>? _refreshOperation;
   int _realtimeRevision = 0;
+  bool _disposed = false;
 
   PlaybackHistoryState get state => _state;
 
@@ -75,11 +76,10 @@ class PlaybackHistoryController extends ChangeNotifier {
       page.nextCursorEntryId;
 
   void observe(String version) {
-    if (version != _state.version) {
-      _realtimeRevision++;
-      _state = _state.copyWith(version: version);
-      notifyListeners();
-    }
+    if (_disposed || version == _state.version) return;
+    _realtimeRevision++;
+    _state = _state.copyWith(version: version);
+    notifyListeners();
   }
 
   Future<void> requestRefresh({String expectedCursorId = ''}) {
@@ -251,7 +251,14 @@ class PlaybackHistoryController extends ChangeNotifier {
   }
 
   void _setState(PlaybackHistoryState state) {
+    if (_disposed) return;
     _state = state;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }

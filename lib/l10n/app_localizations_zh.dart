@@ -3163,6 +3163,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get openFolder => '打开文件夹';
 
   @override
+  String get browserSession => '浏览器会话';
+
+  @override
+  String get cookie => 'Cookie';
+
+  @override
+  String get cookieConfigured => '已配置 Cookie';
+
+  @override
+  String get hardwareTranscoding => '硬件转码';
+
+  @override
+  String get hdStation => 'HD Station';
+
+  @override
+  String get multimediaCodec => '多媒体编解码';
+
+  @override
+  String get passwordRequiredLabel => '需要密码';
+
+  @override
+  String get qtranscodeLabel => 'QTranscode';
+
+  @override
+  String get realtimeTranscoding => '实时转码';
+
+  @override
+  String get trustDevice => '信任此设备';
+
+  @override
   String get sharedFolders => '共享文件夹';
 
   @override

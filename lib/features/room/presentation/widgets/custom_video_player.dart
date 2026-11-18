@@ -4021,6 +4021,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _showDanmakuInput() {
     final textController = TextEditingController();
+    // The sheet owns the field for its lifetime; dispose once it closes so
+    // repeated danmaku sends do not leak a controller each time.
     showAppBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -4085,7 +4087,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           ),
         ),
       ),
-    );
+    ).whenComplete(textController.dispose);
   }
 
   @override
