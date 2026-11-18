@@ -79,6 +79,8 @@ import 'package:synctv_app/features/room/domain/chat_reactions.dart';
 import 'package:synctv_app/features/room/presentation/playback_danmaku.dart';
 import 'package:synctv_app/features/room/presentation/playback_error_messages.dart';
 import 'package:synctv_app/core/identifiers/client_operation_id.dart';
+import 'package:synctv_app/features/room/presentation/models/p2p_metrics_snapshot.dart';
+import 'package:synctv_app/features/room/presentation/models/playback_control_intent.dart';
 import 'package:synctv_app/features/room/presentation/room_settings_page.dart';
 import 'package:synctv_app/features/media_library/presentation/add_media_dialog.dart';
 import 'package:synctv_app/features/media_library/presentation/rtmp_publish_key_dialog.dart';
@@ -133,63 +135,6 @@ class _VideoPlayerSyncPlayer implements SyncedPlaybackPlayer {
   Future<void> seekTo(Duration position) => _controller.seekTo(position);
   @override
   Future<void> play() => _autoplay.play(_controller);
-}
-
-enum _PlaybackControlIntentKind { playbackState, seek, speed }
-
-class _PlaybackControlIntent {
-  const _PlaybackControlIntent({
-    required this.kind,
-    required this.clientOperationId,
-    required this.clientTimeMillis,
-    this.isPlaying,
-    this.position,
-    this.speed,
-  });
-
-  final _PlaybackControlIntentKind kind;
-  final String clientOperationId;
-  final int clientTimeMillis;
-  final bool? isPlaying;
-  final Duration? position;
-  final double? speed;
-}
-
-class _P2pMetricsSnapshot {
-  const _P2pMetricsSnapshot({
-    this.httpBytes = 0,
-    this.p2pDownloadBytes = 0,
-    this.p2pUploadBytes = 0,
-    this.httpDownloadRate = 0,
-    this.p2pDownloadRate = 0,
-    this.p2pUploadRate = 0,
-    this.cacheBytes = 0,
-    this.cacheHits = 0,
-    this.cacheMisses = 0,
-    this.integrityChecks = 0,
-    this.integrityMismatches = 0,
-    this.integrityUnavailable = 0,
-  });
-
-  final int httpBytes;
-  final int p2pDownloadBytes;
-  final int p2pUploadBytes;
-  final double httpDownloadRate;
-  final double p2pDownloadRate;
-  final double p2pUploadRate;
-  final int cacheBytes;
-  final int cacheHits;
-  final int cacheMisses;
-  final int integrityChecks;
-  final int integrityMismatches;
-  final int integrityUnavailable;
-
-  int get totalDownloadBytes => httpBytes + p2pDownloadBytes;
-  double get totalDownloadRate => httpDownloadRate + p2pDownloadRate;
-  double get cacheHitRatio {
-    final total = cacheHits + cacheMisses;
-    return total == 0 ? 0 : cacheHits / total;
-  }
 }
 
 String videoPlayerSourceKey(String url, Map<String, String> headers) {
@@ -527,7 +472,7 @@ class _RoomScreenState extends State<RoomScreen>
   final Map<String, P2pResourceDelivery> _activeP2pResources = {};
   String get _activeP2pSwarmId =>
       _activeP2pResources[_p2pMediaRole]?.swarmId ?? '';
-  _P2pMetricsSnapshot _p2pMetrics = const _P2pMetricsSnapshot();
+  P2pMetricsSnapshot _p2pMetrics = const P2pMetricsSnapshot();
   DateTime _p2pMetricsSampledAt = DateTime.now();
   int _lastP2pHttpBytes = 0;
   int _lastP2pDownloadBytes = 0;
@@ -1069,7 +1014,7 @@ class _RoomScreenState extends State<RoomScreen>
     final httpBytes = _retainedP2pHttpBytes + stats.httpBytes;
     final p2pDownloadBytes = _retainedP2pDownloadBytes + stats.p2pBytes;
     final seconds = elapsed > 0 ? elapsed : 1;
-    _p2pMetrics = _P2pMetricsSnapshot(
+    _p2pMetrics = P2pMetricsSnapshot(
       httpBytes: httpBytes,
       p2pDownloadBytes: p2pDownloadBytes,
       p2pUploadBytes: uploadedBytes,
@@ -2747,7 +2692,7 @@ class _RoomScreenState extends State<RoomScreen>
   void _handleUserPlaybackStateChanged(bool isPlaying) {
     _dispatchPlaybackControlIntent(
       _newPlaybackControlIntent(
-        _PlaybackControlIntentKind.playbackState,
+        PlaybackControlIntentKind.playbackState,
         isPlaying: isPlaying,
       ),
     );
@@ -2757,7 +2702,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (_isCurrentPlaybackLive) return;
     _dispatchPlaybackControlIntent(
       _newPlaybackControlIntent(
-        _PlaybackControlIntentKind.seek,
+        PlaybackControlIntentKind.seek,
         position: position,
       ),
     );
@@ -2765,17 +2710,17 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _handleUserPlaybackSpeedChanged(double speed) {
     _dispatchPlaybackControlIntent(
-      _newPlaybackControlIntent(_PlaybackControlIntentKind.speed, speed: speed),
+      _newPlaybackControlIntent(PlaybackControlIntentKind.speed, speed: speed),
     );
   }
 
-  _PlaybackControlIntent _newPlaybackControlIntent(
-    _PlaybackControlIntentKind kind, {
+  PlaybackControlIntent _newPlaybackControlIntent(
+    PlaybackControlIntentKind kind, {
     bool? isPlaying,
     Duration? position,
     double? speed,
   }) {
-    return _PlaybackControlIntent(
+    return PlaybackControlIntent(
       kind: kind,
       clientOperationId: newClientOperationId(),
       clientTimeMillis: SyncedClock.nowMillis(),
@@ -2785,7 +2730,7 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  void _dispatchPlaybackControlIntent(_PlaybackControlIntent intent) {
+  void _dispatchPlaybackControlIntent(PlaybackControlIntent intent) {
     final message = _buildPlaybackControlMessage(intent);
     if (message == null) return;
     final previousStatus = _currentStatus;
@@ -2802,24 +2747,24 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  List<int>? _buildPlaybackControlMessage(_PlaybackControlIntent intent) {
+  List<int>? _buildPlaybackControlMessage(PlaybackControlIntent intent) {
     final value = _videoPlayerController?.value;
     if (value == null) return null;
     final reporter = _playbackControlReporter();
     return switch (intent.kind) {
-      _PlaybackControlIntentKind.playbackState => reporter.playbackStateChanged(
+      PlaybackControlIntentKind.playbackState => reporter.playbackStateChanged(
         value: value,
         isPlaying: intent.isPlaying!,
         clientOperationId: intent.clientOperationId,
         clientTimeMillis: intent.clientTimeMillis,
       ),
-      _PlaybackControlIntentKind.seek => reporter.seek(
+      PlaybackControlIntentKind.seek => reporter.seek(
         value: value,
         position: intent.position!,
         clientOperationId: intent.clientOperationId,
         clientTimeMillis: intent.clientTimeMillis,
       ),
-      _PlaybackControlIntentKind.speed => reporter.playbackSpeedChanged(
+      PlaybackControlIntentKind.speed => reporter.playbackSpeedChanged(
         value: value,
         speed: intent.speed!,
         clientOperationId: intent.clientOperationId,
@@ -2829,7 +2774,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   SyncTvPlaybackStatus? _optimisticPlaybackStatus(
-    _PlaybackControlIntent intent,
+    PlaybackControlIntent intent,
   ) {
     final status = _currentStatus;
     final value = _videoPlayerController?.value;

@@ -197,7 +197,7 @@ class _RuntimeSettingsSectionsTabState
     String key,
     dynamic value,
   ) => _runSettingIntent(section, key, () async {
-    final descriptor = _settingDescriptor(
+    final descriptor = settingDescriptor(
       context.l10n,
       section.name,
       key,
@@ -255,7 +255,7 @@ class _RuntimeSettingsSectionsTabState
     );
     if (!_canInteract || result == null) return;
 
-    final descriptor = _settingDescriptor(
+    final descriptor = settingDescriptor(
       l10n,
       'oauth2',
       'providers',
@@ -297,7 +297,7 @@ class _RuntimeSettingsSectionsTabState
   });
 
   Future<bool> _confirmRiskIfNeeded(
-    _SettingDescriptor descriptor, {
+    SettingDescriptor descriptor, {
     BuildContext? sourceContext,
   }) async {
     final warning = descriptor.warning;
@@ -489,7 +489,7 @@ class _RuntimeSettingsSectionsTabState
                 _AdminPanelCard(
                   isDark: isDark,
                   child: _SettingTile(
-                    descriptor: _settingDescriptor(
+                    descriptor: settingDescriptor(
                       context.l10n,
                       selected.name,
                       'allowedRedirectUrls',
@@ -544,7 +544,7 @@ class _RuntimeSettingsSectionsTabState
                 entry.key,
                 entry.value,
               );
-              final descriptor = _settingDescriptor(
+              final descriptor = settingDescriptor(
                 context.l10n,
                 selected.name,
                 entry.key,
@@ -601,23 +601,23 @@ class _RuntimeSettingsSectionsTabState
   }
 
   dynamic _normalizedSettingValue(String group, String key, dynamic value) {
-    final descriptor = _settingDescriptor(context.l10n, group, key, value);
+    final descriptor = settingDescriptor(context.l10n, group, key, value);
     if (value is String) {
       switch (descriptor.kind) {
-        case _SettingEditorKind.permissionList:
+        case SettingEditorKind.permissionList:
           // Protobuf uint64 strings must not pass through JSON's Web numbers.
           return value;
-        case _SettingEditorKind.oauth2Providers:
-        case _SettingEditorKind.iceServers:
-        case _SettingEditorKind.stringList:
-        case _SettingEditorKind.smtpCredentials:
-        case _SettingEditorKind.smtpProxy:
-        case _SettingEditorKind.map:
-        case _SettingEditorKind.list:
+        case SettingEditorKind.oauth2Providers:
+        case SettingEditorKind.iceServers:
+        case SettingEditorKind.stringList:
+        case SettingEditorKind.smtpCredentials:
+        case SettingEditorKind.smtpProxy:
+        case SettingEditorKind.map:
+        case SettingEditorKind.list:
           try {
             return jsonDecode(value);
           } catch (_) {
-            if (descriptor.kind == _SettingEditorKind.stringList) {
+            if (descriptor.kind == SettingEditorKind.stringList) {
               return value
                   .split(RegExp(r'[\n,]'))
                   .map((item) => item.trim())
@@ -626,11 +626,11 @@ class _RuntimeSettingsSectionsTabState
             }
           }
           break;
-        case _SettingEditorKind.boolean:
-        case _SettingEditorKind.enumChoice:
-        case _SettingEditorKind.number:
-        case _SettingEditorKind.text:
-        case _SettingEditorKind.optionalText:
+        case SettingEditorKind.boolean:
+        case SettingEditorKind.enumChoice:
+        case SettingEditorKind.number:
+        case SettingEditorKind.text:
+        case SettingEditorKind.optionalText:
           break;
       }
     }
@@ -638,584 +638,16 @@ class _RuntimeSettingsSectionsTabState
   }
 }
 
-enum _SettingEditorKind {
-  boolean,
-  number,
-  text,
-  optionalText,
-  enumChoice,
-  stringList,
-  permissionList,
-  oauth2Providers,
-  iceServers,
-  smtpCredentials,
-  smtpProxy,
-  map,
-  list,
-}
-
-class _SettingDescriptor {
-  final String group;
-  final String key;
-  final String title;
-  final String description;
-  final IconData icon;
-  final _SettingEditorKind kind;
-  final List<_SettingChoice> choices;
-  final List<String>? permissions;
-  final String? warning;
-  final bool secret;
-
-  const _SettingDescriptor({
-    required this.group,
-    required this.key,
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.kind,
-    this.choices = const [],
-    this.permissions,
-    this.warning,
-    this.secret = false,
-  });
-}
-
-class _SettingChoice {
-  final String value;
-  final String label;
-  final String description;
-
-  const _SettingChoice(this.value, this.label, this.description);
-}
-
-List<_SettingChoice> _roomPasswordChoices(AppLocalizations l10n) => [
-  _SettingChoice(
-    'ROOM_PASSWORD_POLICY_OPTIONAL',
-    l10n.optional,
-    l10n.roomPasswordOptionalDescription,
-  ),
-  _SettingChoice(
-    'ROOM_PASSWORD_POLICY_REQUIRED',
-    l10n.required,
-    l10n.roomPasswordRequiredDescription,
-  ),
-  _SettingChoice(
-    'ROOM_PASSWORD_POLICY_FORBIDDEN',
-    l10n.disabled,
-    l10n.roomPasswordDisabledDescription,
-  ),
-];
-
-const List<String> _oauth2ProviderTypes = [
-  'qq',
-  'github',
-  'google',
-  'microsoft',
-  'discord',
-  'casdoor',
-  'logto',
-  'oidc',
-  'feishu',
-  'gitee',
-  'apple',
-];
-
-const Map<String, String> _oauth2ProviderTypeLabels = {
-  'qq': 'QQ',
-  'github': 'GitHub',
-  'google': 'Google',
-  'microsoft': 'Microsoft',
-  'discord': 'Discord',
-  'casdoor': 'Casdoor',
-  'logto': 'Logto',
-  'oidc': 'OIDC',
-  'feishu': 'Feishu',
-  'gitee': 'Gitee',
-  'apple': 'Apple',
-};
-
-const List<String> _knownPermissions = [
-  'send_chat_messages',
-  'manage_own_media',
-  'browse_library',
-  'view_members',
-  'view_chat_history',
-  'use_voice_chat',
-  'use_p2p_media',
-  'delete_media',
-  'reorder_media',
-  'clear_media',
-  'manage_live_streams',
-  'control_playback_state',
-  'navigate_playback',
-  'review_join_requests',
-  'remove_members',
-  'manage_member_permissions',
-  'add_members',
-  'manage_room_settings',
-  'delete_chat_messages',
-  'delete_room',
-  'view_playback_history',
-];
-
-const List<String> _guestPermissions = [
-  'view_members',
-  'view_chat_history',
-  'use_voice_chat',
-  'use_p2p_media',
-];
-
-String _permissionLabel(AppLocalizations l10n, String permission) =>
-    switch (permission) {
-      'send_chat_messages' => l10n.sendChat,
-      'manage_own_media' => l10n.roomPermissionManageOwnMedia,
-      'browse_library' => l10n.browseLibrary,
-      'view_members' => l10n.viewMembers,
-      'view_chat_history' => l10n.viewChatHistory,
-      'use_voice_chat' => l10n.voiceChat,
-      'use_p2p_media' => l10n.p2pMedia,
-      'delete_media' => l10n.deleteMedia,
-      'reorder_media' => l10n.roomPermissionReorderMedia,
-      'clear_media' => l10n.roomPermissionClearMedia,
-      'manage_live_streams' => l10n.roomPermissionManageLiveStreams,
-      'control_playback_state' => l10n.playbackControl,
-      'navigate_playback' => l10n.roomPermissionNavigatePlayback,
-      'review_join_requests' => l10n.roomPermissionReviewJoinRequests,
-      'remove_members' => l10n.roomPermissionRemoveMembers,
-      'manage_member_permissions' => l10n.roomPermissionManageMemberPermissions,
-      'add_members' => l10n.roomPermissionAddMembers,
-      'manage_room_settings' => l10n.roomPermissionManageRoomSettings,
-      'delete_chat_messages' => l10n.roomPermissionDeleteChatMessages,
-      'delete_room' => l10n.deleteRoom,
-      'view_playback_history' => l10n.viewPlaybackHistory,
-      _ => permission,
-    };
-
-const Map<String, int> _runtimePermissionBits = {
-  'send_chat_messages': RoomEffectivePermissions.sendChatMessages,
-  'manage_own_media': RoomEffectivePermissions.manageOwnMedia,
-  'browse_library': RoomEffectivePermissions.browseLibrary,
-  'view_members': RoomEffectivePermissions.viewMembers,
-  'view_chat_history': RoomEffectivePermissions.viewChatHistory,
-  'use_voice_chat': RoomEffectivePermissions.useVoiceChat,
-  'use_p2p_media': RoomEffectivePermissions.useP2pMedia,
-  'delete_media': RoomEffectivePermissions.deleteMedia,
-  'reorder_media': RoomEffectivePermissions.reorderMedia,
-  'clear_media': RoomEffectivePermissions.clearMedia,
-  'manage_live_streams': RoomEffectivePermissions.manageLiveStreams,
-  'control_playback_state': RoomEffectivePermissions.controlPlaybackState,
-  'navigate_playback': RoomEffectivePermissions.navigatePlayback,
-  'review_join_requests': RoomEffectivePermissions.reviewJoinRequests,
-  'remove_members': RoomEffectivePermissions.removeMembers,
-  'manage_member_permissions': RoomEffectivePermissions.manageMemberPermissions,
-  'add_members': RoomEffectivePermissions.addMembers,
-  'manage_room_settings': RoomEffectivePermissions.manageRoomSettings,
-  'delete_chat_messages': RoomEffectivePermissions.deleteChatMessages,
-  'delete_room': RoomEffectivePermissions.deleteRoom,
-  'view_playback_history': RoomEffectivePermissions.viewPlaybackHistory,
-};
-
-_SettingDescriptor _settingDescriptor(
-  AppLocalizations l10n,
-  String section,
-  String key,
-  dynamic value,
-) {
-  final id = '$section.$key';
-  final known = <String, _SettingDescriptor>{
-    'server.name': _SettingDescriptor(
-      group: 'server',
-      key: 'name',
-      title: l10n.runtimeServerName,
-      description: l10n.runtimeServerNameDescription,
-      icon: Icons.dns_outlined,
-      kind: _SettingEditorKind.text,
-    ),
-    'roomDefaults.defaultMaxMembers': _SettingDescriptor(
-      group: 'roomDefaults',
-      key: 'defaultMaxMembers',
-      title: l10n.defaultRoomMemberLimit,
-      description: l10n.defaultRoomMemberLimitDescription,
-      icon: Icons.groups_2_outlined,
-      kind: _SettingEditorKind.number,
-    ),
-    'roomDefaults.defaultMaxChatMessages': _SettingDescriptor(
-      group: 'roomDefaults',
-      key: 'defaultMaxChatMessages',
-      title: l10n.roomChatSnapshotLimit,
-      description: l10n.roomChatSnapshotLimitDescription,
-      icon: Icons.forum_outlined,
-      kind: _SettingEditorKind.number,
-    ),
-    'roomCreation.enabled': _SettingDescriptor(
-      group: 'roomCreation',
-      key: 'enabled',
-      title: l10n.allowRoomCreation,
-      description: l10n.allowRoomCreationDescription,
-      icon: Icons.add_home_work_outlined,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'roomCreation.approvalRequired': _SettingDescriptor(
-      group: 'roomCreation',
-      key: 'approvalRequired',
-      title: l10n.roomCreationRequiresReview,
-      description: l10n.roomCreationRequiresReviewDescription,
-      icon: Icons.fact_check_outlined,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'roomCreation.passwordPolicy': _SettingDescriptor(
-      group: 'roomCreation',
-      key: 'passwordPolicy',
-      title: l10n.roomPasswordPolicy,
-      description: l10n.roomPasswordPolicyDescription,
-      icon: Icons.password_rounded,
-      kind: _SettingEditorKind.enumChoice,
-      choices: _roomPasswordChoices(l10n),
-    ),
-    'roomCreation.maxRoomsPerUser': _SettingDescriptor(
-      group: 'roomCreation',
-      key: 'maxRoomsPerUser',
-      title: l10n.maximumRoomsPerUser,
-      description: l10n.maximumRoomsPerUserDescription,
-      icon: Icons.meeting_room_outlined,
-      kind: _SettingEditorKind.number,
-    ),
-    'user.enablePasswordSignup': _SettingDescriptor(
-      group: 'user',
-      key: 'enablePasswordSignup',
-      title: l10n.allowPasswordSignup,
-      description: l10n.allowPasswordSignupDescription,
-      icon: Icons.person_add_alt_1_outlined,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'user.passwordSignupNeedReview': _SettingDescriptor(
-      group: 'user',
-      key: 'passwordSignupNeedReview',
-      title: l10n.passwordSignupRequiresReview,
-      description: l10n.passwordSignupRequiresReviewDescription,
-      icon: Icons.how_to_reg_outlined,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'user.enableEmailSignup': _SettingDescriptor(
-      group: 'user',
-      key: 'enableEmailSignup',
-      title: l10n.allowEmailSignup,
-      description: l10n.allowEmailSignupDescription,
-      icon: Icons.alternate_email_rounded,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'user.emailSignupNeedReview': _SettingDescriptor(
-      group: 'user',
-      key: 'emailSignupNeedReview',
-      title: l10n.emailSignupRequiresReview,
-      description: l10n.emailSignupRequiresReviewDescription,
-      icon: Icons.mark_email_read_outlined,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'user.enableWebauthnSignup': _SettingDescriptor(
-      group: 'user',
-      key: 'enableWebauthnSignup',
-      title: l10n.allowPasskeySignup,
-      description: l10n.allowPasskeySignupDescription,
-      icon: Icons.fingerprint_rounded,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'user.webauthnSignupNeedReview': _SettingDescriptor(
-      group: 'user',
-      key: 'webauthnSignupNeedReview',
-      title: l10n.passkeySignupRequiresReview,
-      description: l10n.passkeySignupRequiresReviewDescription,
-      icon: Icons.verified_user_outlined,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'user.enableGuest': _SettingDescriptor(
-      group: 'user',
-      key: 'enableGuest',
-      title: l10n.allowGuests,
-      description: l10n.allowGuestsDescription,
-      icon: Icons.person_outline_rounded,
-      kind: _SettingEditorKind.boolean,
-      warning: l10n.allowGuestsWarning,
-    ),
-    'oauth2.providers': _SettingDescriptor(
-      group: 'oauth2',
-      key: 'providers',
-      title: l10n.externalLogin,
-      description: l10n.externalLoginDescription,
-      icon: Icons.account_tree_outlined,
-      kind: _SettingEditorKind.oauth2Providers,
-      warning: l10n.externalLoginWarning,
-    ),
-    'oauth2.allowedRedirectUrls': _SettingDescriptor(
-      group: 'oauth2',
-      key: 'allowedRedirectUrls',
-      title: l10n.callbackUrl,
-      description: l10n.externalLoginDescription,
-      icon: Icons.link_rounded,
-      kind: _SettingEditorKind.stringList,
-    ),
-    'rtmp.advertiseAddress': _SettingDescriptor(
-      group: 'rtmp',
-      key: 'advertiseAddress',
-      title: l10n.rtmpAdvertiseAddress,
-      description: l10n.rtmpAdvertiseAddressDescription,
-      icon: Icons.podcasts_outlined,
-      kind: _SettingEditorKind.optionalText,
-    ),
-    'rtmp.tsDisguisedAsPng': _SettingDescriptor(
-      group: 'rtmp',
-      key: 'tsDisguisedAsPng',
-      title: l10n.tsSegmentsAsPng,
-      description: l10n.tsSegmentsAsPngDescription,
-      icon: Icons.image_outlined,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'email.enabled': _SettingDescriptor(
-      group: 'email',
-      key: 'enabled',
-      title: l10n.enableEmailService,
-      description: l10n.enableEmailServiceDescription,
-      icon: Icons.outgoing_mail,
-      kind: _SettingEditorKind.boolean,
-      warning: l10n.enableEmailServiceWarning,
-    ),
-    'email.smtpHost': _SettingDescriptor(
-      group: 'email',
-      key: 'smtpHost',
-      title: l10n.smtpHost,
-      description: l10n.smtpHostDescription,
-      icon: Icons.dns_outlined,
-      kind: _SettingEditorKind.optionalText,
-    ),
-    'email.smtpPort': _SettingDescriptor(
-      group: 'email',
-      key: 'smtpPort',
-      title: l10n.smtpPort,
-      description: l10n.smtpPortDescription,
-      icon: Icons.numbers_rounded,
-      kind: _SettingEditorKind.number,
-    ),
-    'email.smtpCredentials': _SettingDescriptor(
-      group: 'email',
-      key: 'smtpCredentials',
-      title: l10n.smtpAuthentication,
-      description: l10n.smtpAuthenticationDescription,
-      icon: Icons.password_rounded,
-      kind: _SettingEditorKind.smtpCredentials,
-      warning: l10n.smtpAuthenticationWarning,
-    ),
-    'email.smtpProxy': _SettingDescriptor(
-      group: 'email',
-      key: 'smtpProxy',
-      title: l10n.smtpProxy,
-      description: l10n.smtpProxyDescription,
-      icon: Icons.route_outlined,
-      kind: _SettingEditorKind.smtpProxy,
-      warning: l10n.smtpProxyWarning,
-    ),
-    'email.useTls': _SettingDescriptor(
-      group: 'email',
-      key: 'useTls',
-      title: l10n.useTls,
-      description: l10n.useTlsDescription,
-      icon: Icons.enhanced_encryption_outlined,
-      kind: _SettingEditorKind.boolean,
-      warning: l10n.useTlsWarning,
-    ),
-    'email.fromEmail': _SettingDescriptor(
-      group: 'email',
-      key: 'fromEmail',
-      title: l10n.senderEmail,
-      description: l10n.senderEmailDescription,
-      icon: Icons.alternate_email_rounded,
-      kind: _SettingEditorKind.optionalText,
-    ),
-    'email.fromName': _SettingDescriptor(
-      group: 'email',
-      key: 'fromName',
-      title: l10n.senderDisplayName,
-      description: l10n.senderDisplayNameDescription,
-      icon: Icons.badge_outlined,
-      kind: _SettingEditorKind.text,
-    ),
-    'email.whitelistEnabled': _SettingDescriptor(
-      group: 'email',
-      key: 'whitelistEnabled',
-      title: l10n.enableEmailWhitelist,
-      description: l10n.enableEmailWhitelistDescription,
-      icon: Icons.mark_email_unread_outlined,
-      kind: _SettingEditorKind.boolean,
-    ),
-    'email.whitelistDomains': _SettingDescriptor(
-      group: 'email',
-      key: 'whitelistDomains',
-      title: l10n.emailWhitelist,
-      description: l10n.emailWhitelistDescription,
-      icon: Icons.playlist_add_check_rounded,
-      kind: _SettingEditorKind.stringList,
-    ),
-    'webrtc.externalIceServers': _SettingDescriptor(
-      group: 'webrtc',
-      key: 'externalIceServers',
-      title: l10n.externalIceServers,
-      description: l10n.externalIceServersDescription,
-      icon: Icons.settings_input_antenna_rounded,
-      kind: _SettingEditorKind.iceServers,
-      warning: l10n.externalIceServersWarning,
-    ),
-    'webrtc.maxVoiceParticipantsPerRoom': _SettingDescriptor(
-      group: 'webrtc',
-      key: 'maxVoiceParticipantsPerRoom',
-      title: l10n.maxVoiceParticipantsPerRoom,
-      description: l10n.maxVoiceParticipantsPerRoomDescription,
-      icon: Icons.groups_2_outlined,
-      kind: _SettingEditorKind.number,
-    ),
-    'chat.maxMessagesPerRoom': _SettingDescriptor(
-      group: 'chat',
-      key: 'maxMessagesPerRoom',
-      title: l10n.chatMessagesPerRoom,
-      description: l10n.chatMessagesPerRoomDescription,
-      icon: Icons.chat_bubble_outline_rounded,
-      kind: _SettingEditorKind.number,
-    ),
-    'chat.maxPinnedMessagesPerRoom': _SettingDescriptor(
-      group: 'chat',
-      key: 'maxPinnedMessagesPerRoom',
-      title: l10n.maxPinnedMessagesPerRoom,
-      description: l10n.maxPinnedMessagesPerRoomDescription,
-      icon: Icons.push_pin_outlined,
-      kind: _SettingEditorKind.number,
-    ),
-    'chat.messageRetentionDays': _SettingDescriptor(
-      group: 'chat',
-      key: 'messageRetentionDays',
-      title: l10n.chatRetentionDays,
-      description: l10n.chatRetentionDaysDescription,
-      icon: Icons.history_toggle_off_rounded,
-      kind: _SettingEditorKind.number,
-    ),
-    'playbackHistory.retentionDays': _SettingDescriptor(
-      group: 'playbackHistory',
-      key: 'retentionDays',
-      title: l10n.playbackHistoryRetentionDays,
-      description: l10n.playbackHistoryRetentionDaysDescription,
-      icon: Icons.history_toggle_off_rounded,
-      kind: _SettingEditorKind.number,
-    ),
-    'playbackHistory.maxEntriesPerRoom': _SettingDescriptor(
-      group: 'playbackHistory',
-      key: 'maxEntriesPerRoom',
-      title: l10n.playbackHistoryMaxEntries,
-      description: l10n.playbackHistoryMaxEntriesDescription,
-      icon: Icons.format_list_numbered_rounded,
-      kind: _SettingEditorKind.number,
-    ),
-    'cors.allowedOrigins': _SettingDescriptor(
-      group: 'cors',
-      key: 'allowedOrigins',
-      title: l10n.allowedCorsOrigins,
-      description: l10n.allowedCorsOriginsDescription,
-      icon: Icons.public_rounded,
-      kind: _SettingEditorKind.stringList,
-      warning: l10n.allowedCorsOriginsWarning,
-    ),
-    'permissions.adminDefaultPermissions': _SettingDescriptor(
-      group: 'permissions',
-      key: 'adminDefaultPermissions',
-      title: l10n.adminDefaultPermissions,
-      description: l10n.adminDefaultPermissionsDescription,
-      icon: Icons.admin_panel_settings_outlined,
-      kind: _SettingEditorKind.permissionList,
-    ),
-    'permissions.memberDefaultPermissions': _SettingDescriptor(
-      group: 'permissions',
-      key: 'memberDefaultPermissions',
-      title: l10n.memberDefaultPermissions,
-      description: l10n.memberDefaultPermissionsDescription,
-      icon: Icons.group_outlined,
-      kind: _SettingEditorKind.permissionList,
-    ),
-    'permissions.guestDefaultPermissions': _SettingDescriptor(
-      group: 'permissions',
-      key: 'guestDefaultPermissions',
-      title: l10n.guestDefaultPermissions,
-      description: l10n.guestDefaultPermissionsDescription,
-      icon: Icons.person_pin_circle_outlined,
-      kind: _SettingEditorKind.permissionList,
-      permissions: _guestPermissions,
-      warning: l10n.guestDefaultPermissionsWarning,
-    ),
-  };
-  final descriptor = known[id];
-  if (descriptor != null) return descriptor;
-
-  final kind = switch (value) {
-    bool _ => _SettingEditorKind.boolean,
-    int _ || double _ || num _ => _SettingEditorKind.number,
-    Map _ => _SettingEditorKind.map,
-    List _ => _SettingEditorKind.list,
-    _ => _SettingEditorKind.text,
-  };
-  return _SettingDescriptor(
-    group: section,
-    key: key,
-    title: _humanizeSettingKey(key),
-    description: l10n.runtimeSectionDescription(
-      _settingsSectionLabel(l10n, section),
-    ),
-    icon: Icons.tune_rounded,
-    kind: kind,
-    secret: _isSecretKey(key),
-  );
-}
-
-String _settingsSectionLabel(AppLocalizations l10n, String section) =>
-    switch (section) {
-      'roomDefaults' => l10n.roomDefaults,
-      'roomCreation' => l10n.roomCreation,
-      'server' => l10n.server,
-      'room' => l10n.rooms,
-      'user' => l10n.users,
-      'oauth2' => 'OAuth2',
-      'rtmp' => l10n.streaming,
-      'email' => l10n.email,
-      'webrtc' => 'WebRTC',
-      'chat' => l10n.chat,
-      'playbackHistory' => l10n.playbackHistory,
-      'cors' => l10n.cors,
-      'permissions' => l10n.permissions,
-      _ => section,
-    };
-
-String _humanizeSettingKey(String key) {
-  return key
-      .replaceAll('_', ' ')
-      .split(' ')
-      .where((part) => part.isNotEmpty)
-      .map((part) => part[0].toUpperCase() + part.substring(1))
-      .join(' ');
-}
-
-bool _isSecretKey(String key) {
-  final lower = key.toLowerCase();
-  return lower.contains('secret') ||
-      lower.contains('password') ||
-      lower.contains('credential') ||
-      lower.contains('token') ||
-      lower.contains('key');
-}
-
 String _settingSummary(
   AppLocalizations l10n,
   dynamic value,
-  _SettingDescriptor descriptor,
+  SettingDescriptor descriptor,
 ) {
   if (value == null) return l10n.notConfigured;
   switch (descriptor.kind) {
-    case _SettingEditorKind.boolean:
+    case SettingEditorKind.boolean:
       return value == true ? l10n.enabled : l10n.disabled;
-    case _SettingEditorKind.oauth2Providers:
+    case SettingEditorKind.oauth2Providers:
       final map = value is Map
           ? Map<String, dynamic>.from(value)
           : const <String, dynamic>{};
@@ -1230,12 +662,12 @@ String _settingSummary(
         );
       }).length;
       return l10n.oauthProviderSummary(map.length, enabled);
-    case _SettingEditorKind.iceServers:
+    case SettingEditorKind.iceServers:
       final list = value is List ? value : const [];
       return list.isEmpty
           ? l10n.noIceServersConfigured
           : l10n.iceServerCount(list.length);
-    case _SettingEditorKind.smtpCredentials:
+    case SettingEditorKind.smtpCredentials:
       final credentials = value is Map
           ? Map<String, dynamic>.from(value)
           : const <String, dynamic>{};
@@ -1243,39 +675,38 @@ String _settingSummary(
       return username.isEmpty
           ? l10n.authenticationDisabled
           : l10n.configuredUser(username);
-    case _SettingEditorKind.smtpProxy:
+    case SettingEditorKind.smtpProxy:
       final proxy = value is Map
           ? Map<String, dynamic>.from(value)
           : const <String, dynamic>{};
       final url = (proxy['url'] ?? '').toString();
       return url.isEmpty ? l10n.directConnection : url;
-    case _SettingEditorKind.optionalText:
+    case SettingEditorKind.optionalText:
       return value.toString();
-    case _SettingEditorKind.stringList:
-    case _SettingEditorKind.list:
+    case SettingEditorKind.stringList:
+    case SettingEditorKind.list:
       final list = _valueAsStringList(value);
       return list.isEmpty ? l10n.emptyList : list.join(', ');
-    case _SettingEditorKind.permissionList:
+    case SettingEditorKind.permissionList:
       final permissions = _permissionsFromValue(value).toList()..sort();
       if (permissions.isEmpty) return l10n.noPermissions;
       return permissions
-          .map((permission) => _permissionLabel(l10n, permission))
+          .map((permission) => settingPermissionLabel(l10n, permission))
           .join(', ');
-    case _SettingEditorKind.enumChoice:
+    case SettingEditorKind.enumChoice:
       return descriptor.choices
           .firstWhere(
             (choice) => choice.value == value.toString(),
-            orElse: () =>
-                _SettingChoice(value.toString(), value.toString(), ''),
+            orElse: () => SettingChoice(value.toString(), value.toString(), ''),
           )
           .label;
-    case _SettingEditorKind.map:
+    case SettingEditorKind.map:
       final map = value is Map ? value : const {};
       return map.isEmpty
           ? l10n.emptyObject
           : l10n.configurationCount(map.length);
-    case _SettingEditorKind.number:
-    case _SettingEditorKind.text:
+    case SettingEditorKind.number:
+    case SettingEditorKind.text:
       if (descriptor.secret && value.toString().isNotEmpty) {
         return l10n.configured;
       }
@@ -1314,7 +745,7 @@ Set<String> _permissionsFromValue(dynamic value) {
   }
   final bits = _permissionBits(value);
   return {
-    for (final entry in _runtimePermissionBits.entries)
+    for (final entry in runtimePermissionBits.entries)
       if ((bits & BigInt.from(entry.value)) != BigInt.zero) entry.key,
   };
 }
@@ -1328,14 +759,14 @@ String _permissionsToBits(dynamic value, {required dynamic originalValue}) {
       : value is Iterable
       ? value.map((item) => item.toString()).toSet()
       : _permissionsFromValue(value);
-  final knownMask = _runtimePermissionBits.values.fold(
+  final knownMask = runtimePermissionBits.values.fold(
     BigInt.zero,
     (mask, bit) => mask | BigInt.from(bit),
   );
   // Retain permissions introduced by newer servers when editing known bits.
   var bits = _permissionBits(originalValue) & ~knownMask;
   for (final name in names) {
-    bits |= BigInt.from(_runtimePermissionBits[name] ?? 0);
+    bits |= BigInt.from(runtimePermissionBits[name] ?? 0);
   }
   return bits.toString();
 }
@@ -1361,7 +792,7 @@ class _SettingsSectionDropdown extends StatelessWidget {
       prefixIcon: Icons.folder_outlined,
       options: {
         for (final section in sections)
-          _settingsSectionLabel(context.l10n, section.name): section.name,
+          settingsSectionLabel(context.l10n, section.name): section.name,
       },
       enabled: enabled,
       onChanged: enabled ? onChanged : null,
@@ -1401,7 +832,7 @@ class _SettingsSectionButton extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              _settingsSectionLabel(context.l10n, sectionName),
+              settingsSectionLabel(context.l10n, sectionName),
               style: theme.textTheme.titleSmall?.copyWith(
                 color: color,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -1440,7 +871,7 @@ class _SettingsSectionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _settingsSectionLabel(context.l10n, sectionName),
+          settingsSectionLabel(context.l10n, sectionName),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
           ),
@@ -1494,7 +925,7 @@ class _SettingsSectionHeader extends StatelessWidget {
 }
 
 class _SettingTile extends StatelessWidget {
-  final _SettingDescriptor descriptor;
+  final SettingDescriptor descriptor;
   final dynamic value;
   final bool saving;
   final VoidCallback onEdit;
@@ -1510,7 +941,7 @@ class _SettingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isBool =
-        descriptor.kind == _SettingEditorKind.boolean && value is bool;
+        descriptor.kind == SettingEditorKind.boolean && value is bool;
     return _AdminRecordTile(
       contentPadding: const EdgeInsets.all(14),
       prefix: AppIconBadge(
@@ -1795,7 +1226,7 @@ class _SettingsEditorFrame extends StatelessWidget {
 }
 
 class _SettingEditorSheet extends StatefulWidget {
-  final _SettingDescriptor descriptor;
+  final SettingDescriptor descriptor;
   final String sectionName;
   final String settingKey;
   final dynamic value;
@@ -1827,10 +1258,10 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
     super.initState();
     _value = _deepCopySettingValue(widget.value);
     _optionalConfigEnabled =
-        widget.descriptor.kind == _SettingEditorKind.optionalText
+        widget.descriptor.kind == SettingEditorKind.optionalText
         ? _value != null
         : _value is Map;
-    if (widget.descriptor.kind == _SettingEditorKind.smtpProxy &&
+    if (widget.descriptor.kind == SettingEditorKind.smtpProxy &&
         _value is Map) {
       _nestedCredentialsEnabled = (_value as Map)['credentials'] is Map;
     }
@@ -1879,68 +1310,68 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
 
   Widget _buildEditor() {
     switch (widget.descriptor.kind) {
-      case _SettingEditorKind.number:
+      case SettingEditorKind.number:
         return _NumberSettingEditor(
           controller: _controller('number', _value?.toString() ?? ''),
           section: widget.sectionName,
           settingKey: widget.settingKey,
         );
-      case _SettingEditorKind.text:
+      case SettingEditorKind.text:
         return _TextSettingEditor(
           controller: _controller('text', _value?.toString() ?? ''),
           secret: widget.descriptor.secret,
         );
-      case _SettingEditorKind.optionalText:
+      case SettingEditorKind.optionalText:
         return _buildOptionalTextEditor();
-      case _SettingEditorKind.enumChoice:
+      case SettingEditorKind.enumChoice:
         return _EnumSettingEditor(
           choices: widget.descriptor.choices,
           value: _value?.toString() ?? '',
           onChanged: (value) => setState(() => _value = value),
         );
-      case _SettingEditorKind.stringList:
+      case SettingEditorKind.stringList:
         return _StringListSettingEditor(
           values: _valueAsStringList(_value),
           label: context.l10n.entry,
           hintText: _stringListHint(widget.sectionName, widget.settingKey),
           onChanged: (values) => setState(() => _value = values),
         );
-      case _SettingEditorKind.permissionList:
+      case SettingEditorKind.permissionList:
         return _PermissionListSettingEditor(
           values: _permissionsFromValue(_value),
-          permissions: widget.descriptor.permissions ?? _knownPermissions,
+          permissions: widget.descriptor.permissions ?? knownSettingPermissions,
           onChanged: (values) =>
               setState(() => _value = values.toList()..sort()),
         );
-      case _SettingEditorKind.oauth2Providers:
+      case SettingEditorKind.oauth2Providers:
         return _OAuth2ProvidersEditor(
           providers: _oauth2ProvidersFromValue(_value),
           onChanged: (providers) => setState(() => _value = providers),
         );
-      case _SettingEditorKind.iceServers:
+      case SettingEditorKind.iceServers:
         return _IceServersEditor(
           servers: _iceServersFromValue(_value),
           onChanged: (servers) => setState(() => _value = servers),
         );
-      case _SettingEditorKind.smtpCredentials:
+      case SettingEditorKind.smtpCredentials:
         return _buildSmtpCredentialsEditor();
-      case _SettingEditorKind.smtpProxy:
+      case SettingEditorKind.smtpProxy:
         return _buildSmtpProxyEditor();
-      case _SettingEditorKind.map:
+      case SettingEditorKind.map:
         return _StructuredValueEditor(
           value: _value is Map
               ? Map<String, dynamic>.from(_value)
               : <String, dynamic>{},
           onChanged: (value) => setState(() => _value = value),
         );
-      case _SettingEditorKind.list:
+      case SettingEditorKind.list:
         return _StringListSettingEditor(
           values: _valueAsStringList(_value),
           label: context.l10n.entry,
           hintText: context.l10n.enterEntry,
           onChanged: (values) => setState(() => _value = values),
         );
-      case _SettingEditorKind.boolean:
+      case SettingEditorKind.boolean:
         return AppSwitchTile(
           value: _value == true,
           onChanged: (value) => setState(() => _value = value),
@@ -1960,7 +1391,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     dynamic result = _value;
     switch (widget.descriptor.kind) {
-      case _SettingEditorKind.number:
+      case SettingEditorKind.number:
         final raw = _controller('number').text.trim();
         result = parseRuntimeSettingNumber(
           widget.sectionName,
@@ -1969,32 +1400,32 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
         );
         if (result == null) return;
         break;
-      case _SettingEditorKind.text:
+      case SettingEditorKind.text:
         result = _controller('text').text.trim();
         break;
-      case _SettingEditorKind.optionalText:
+      case SettingEditorKind.optionalText:
         result = _optionalTextUpdateValue();
         break;
-      case _SettingEditorKind.stringList:
+      case SettingEditorKind.stringList:
         result = _valueAsStringList(_value);
         break;
-      case _SettingEditorKind.oauth2Providers:
-      case _SettingEditorKind.iceServers:
+      case SettingEditorKind.oauth2Providers:
+      case SettingEditorKind.iceServers:
         result = _value;
         break;
-      case _SettingEditorKind.permissionList:
+      case SettingEditorKind.permissionList:
         result = _permissionsToBits(_value, originalValue: widget.value);
         break;
-      case _SettingEditorKind.smtpCredentials:
+      case SettingEditorKind.smtpCredentials:
         result = _smtpCredentialsUpdateValue();
         break;
-      case _SettingEditorKind.smtpProxy:
+      case SettingEditorKind.smtpProxy:
         result = _smtpProxyUpdateValue();
         break;
-      case _SettingEditorKind.map:
-      case _SettingEditorKind.list:
-      case _SettingEditorKind.enumChoice:
-      case _SettingEditorKind.boolean:
+      case SettingEditorKind.map:
+      case SettingEditorKind.list:
+      case SettingEditorKind.enumChoice:
+      case SettingEditorKind.boolean:
         result = _value;
         break;
     }
@@ -2288,7 +1719,7 @@ class _TextSettingEditorState extends State<_TextSettingEditor> {
 }
 
 class _EnumSettingEditor extends StatelessWidget {
-  final List<_SettingChoice> choices;
+  final List<SettingChoice> choices;
   final String value;
   final ValueChanged<String> onChanged;
 
@@ -2441,7 +1872,7 @@ class _PermissionListSettingEditor extends StatelessWidget {
       children: [
         for (final permission in permissions)
           AppChip(
-            label: Text(_permissionLabel(context.l10n, permission)),
+            label: Text(settingPermissionLabel(context.l10n, permission)),
             selected: values.contains(permission),
             onSelected: (selected) {
               final next = {...values};
@@ -2507,14 +1938,14 @@ bool _oauth2ProviderHasClientId(String type, Map<String, dynamic> config) {
 }
 
 String _oauth2ProviderType(Map<String, dynamic> value) {
-  for (final type in _oauth2ProviderTypes) {
+  for (final type in oauth2ProviderTypes) {
     if (value[type] is Map) return type;
   }
   return 'oidc';
 }
 
 String _oauth2ProviderConfigField(String type) {
-  return _oauth2ProviderTypes.contains(type) ? type : 'oidc';
+  return oauth2ProviderTypes.contains(type) ? type : 'oidc';
 }
 
 List<Map<String, dynamic>> _oauth2ProvidersToProtoList(
@@ -2709,7 +2140,7 @@ class _OAuth2ProviderCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     context.l10n.loginProviderSummary(
-                      _oauth2ProviderTypeLabels[providerType] ?? providerType,
+                      oauth2ProviderTypeLabels[providerType] ?? providerType,
                       hasClientId
                           ? context.l10n.clientConfigured
                           : context.l10n.clientIdMissing,
@@ -2850,7 +2281,7 @@ class _OAuth2ProviderEditorSheetState
     super.initState();
     final config = _oauth2ProviderConfig(widget.initialValue);
     _type = _oauth2ProviderType(widget.initialValue);
-    if (!_oauth2ProviderTypes.contains(_type)) _type = 'oidc';
+    if (!oauth2ProviderTypes.contains(_type)) _type = 'oidc';
     _initialType = _type;
     _initialClientId = (config['clientId'] ?? '').toString();
     _initialAppleWebClientId = (config['webClientId'] ?? '').toString();
@@ -2946,8 +2377,8 @@ class _OAuth2ProviderEditorSheetState
             label: context.l10n.providerType,
             prefixIcon: Icons.account_tree_outlined,
             options: {
-              for (final type in _oauth2ProviderTypes)
-                _oauth2ProviderTypeLabels[type] ?? type: type,
+              for (final type in oauth2ProviderTypes)
+                oauth2ProviderTypeLabels[type] ?? type: type,
             },
             onChanged: (value) {
               if (value == null) return;
@@ -2955,7 +2386,7 @@ class _OAuth2ProviderEditorSheetState
                 _type = value;
                 if (widget.initialName == null &&
                     (_name.text.trim().isEmpty ||
-                        _oauth2ProviderTypes.contains(_name.text.trim()))) {
+                        oauth2ProviderTypes.contains(_name.text.trim()))) {
                   _name.text = value;
                 }
               });
@@ -3518,13 +2949,13 @@ class _DynamicValueFieldState extends State<_DynamicValueField> {
       return AppSwitchTile(
         value: value,
         onChanged: widget.onChanged,
-        title: Text(_humanizeSettingKey(widget.name)),
+        title: Text(humanizeSettingKey(widget.name)),
       );
     }
     return AppTextField(
       controller: _controller,
-      label: _humanizeSettingKey(widget.name),
-      obscureText: _isSecretKey(widget.name),
+      label: humanizeSettingKey(widget.name),
+      obscureText: isSecretKey(widget.name),
       keyboardType: value is num ? TextInputType.number : TextInputType.text,
       onChanged: (raw) {
         if (value is int) {
