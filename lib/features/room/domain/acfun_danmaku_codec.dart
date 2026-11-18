@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 
-import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
+import 'package:synctv_app/features/room/domain/danmaku_model.dart';
 
 // Duration stores microseconds. Reserve eight seconds for the comment lifetime
 // while keeping the result within JavaScript's exact integer range.

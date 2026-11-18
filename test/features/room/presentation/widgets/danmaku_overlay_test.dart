@@ -2,7 +2,7 @@ import 'package:canvas_danmaku/scroll_danmaku_painter.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart' as canvas;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
+import 'package:synctv_app/features/room/domain/danmaku_model.dart';
 import 'package:synctv_app/features/room/presentation/widgets/danmaku_overlay.dart';
 import 'package:video_player/video_player.dart';
 

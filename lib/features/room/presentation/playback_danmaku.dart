@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
+import 'package:synctv_app/features/room/domain/danmaku_model.dart';
 import 'package:synctv_app/contracts/room_media_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/domain/chat_reactions.dart';

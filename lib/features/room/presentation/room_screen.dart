@@ -1,3 +1,4 @@
+import 'package:synctv_app/features/room/application/danmaku_stream_controller.dart';
 import 'package:synctv_app/core/format/formatters.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_scroll_controller.dart';
 import 'package:synctv_app/core/presentation/image/app_image_preview.dart';
@@ -98,7 +99,7 @@ import 'package:synctv_app/features/room/presentation/widgets/chat_message_hover
 import 'package:synctv_app/features/room/presentation/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/features/voice/application/voice_chat_session.dart';
-import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
+import 'package:synctv_app/features/room/domain/danmaku_model.dart';
 import 'package:synctv_app/theme/app_colors.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;

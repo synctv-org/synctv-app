@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
-import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart'
+import 'package:synctv_app/features/room/domain/danmaku_model.dart'
     as local;
 
 import 'dart:async';

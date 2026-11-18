@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/features/room/application/danmaku_stream_controller.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/features/room/presentation/widgets/custom_video_player.dart';
 import 'package:synctv_app/features/room/domain/media_document_parsing.dart';
@@ -21,7 +22,7 @@ import 'package:synctv_app/features/room/application/subtitle_selection_controll
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
 import 'package:synctv_app/features/room/infrastructure/picture_in_picture_service.dart';
-import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
+import 'package:synctv_app/features/room/domain/danmaku_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:synctv_app/features/room/presentation/widgets/danmaku_overlay.dart';
 
