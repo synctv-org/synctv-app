@@ -112,17 +112,21 @@ jobs:
           --dart-define=SYNCTV_OAUTH2_APP_LINK_ORIGIN=https://example.test
           test/features/auth/infrastructure/oauth2_android_timeout_test.dart
 
-      - name: Verify Web permission bit semantics
-        run: flutter test test/contracts/room_permission_bits_test.dart --platform chrome
-
-      - name: Verify Web P2P engine lifecycle
-        run: flutter test test/features/media_p2p/infrastructure/p2p_media_engine_web_test.dart --platform chrome
-
-      - name: Verify Web OAuth callback isolation
-        run: flutter test test/features/auth/infrastructure/oauth2_web_callback_session_test.dart --platform chrome
-
-      - name: Verify Web voice remote audio playback
-        run: flutter test test/features/voice/infrastructure/voice_remote_audio_playback_web_test.dart --platform chrome
+      - name: Run browser-platform test suites
+        run: >-
+          flutter test --platform chrome
+          test/contracts/room_permission_bits_test.dart
+          test/contracts/playback_client_profile_web_test.dart
+          test/features/auth/infrastructure/oauth2_web_callback_session_test.dart
+          test/features/media_p2p/infrastructure/p2p_media_engine_web_test.dart
+          test/features/media_playback/web_engine_loader_web_test.dart
+          test/features/media_playback/web_playback_runtime_web_test.dart
+          test/features/media_playback/web_video_mount_web_test.dart
+          test/features/media_playback/web_video_runtime_direct_test.dart
+          test/features/providers/infrastructure/desktop_web_verification_client_web_test.dart
+          test/features/voice/infrastructure/voice_cleanup_web_test.dart
+          test/features/voice/infrastructure/voice_remote_audio_playback_web_test.dart
+          test/packages/synctv_video_player_media_kit/web_video_player_runtime_test.dart
 
       - name: Run Darwin Passkey package tests
         working-directory: packages/passkeys_darwin
