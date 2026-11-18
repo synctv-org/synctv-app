@@ -31,7 +31,6 @@ import 'package:synctv_app/features/room/presentation/widgets/playback_diagnosti
 import 'package:synctv_app/features/room/presentation/widgets/player_control_popup_style.dart';
 import 'package:synctv_app/theme/app_colors.dart';
 
-
 class PlayerExtraControl {
   const PlayerExtraControl({
     required this.label,
