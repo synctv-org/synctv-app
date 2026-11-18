@@ -10,7 +10,14 @@ final _excludedPathSegments = <String>{
 };
 
 final _excludedFiles = <String>{
-  _normalize('lib/core/presentation/widgets/app_form_controls.dart'),
+  _normalize('lib/core/presentation/widgets/app_controls_shared.dart'),
+  _normalize('lib/core/presentation/widgets/app_buttons.dart'),
+  _normalize('lib/core/presentation/widgets/app_tabs.dart'),
+  _normalize('lib/core/presentation/widgets/app_surfaces.dart'),
+  _normalize('lib/core/presentation/widgets/app_dialogs.dart'),
+  _normalize('lib/core/presentation/widgets/app_form_fields.dart'),
+  _normalize('lib/core/presentation/widgets/app_select.dart'),
+  _normalize('lib/core/presentation/widgets/app_lists_misc.dart'),
   _normalize('lib/features/room/presentation/widgets/custom_video_player.dart'),
 };
 
