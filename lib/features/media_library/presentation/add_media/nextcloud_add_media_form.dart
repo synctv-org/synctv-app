@@ -439,7 +439,10 @@ class _NextcloudAddMediaFormState extends State<NextcloudAddMediaForm> {
       });
     } catch (error) {
       if (mounted && generation == _loadGeneration) {
-        AppNotifications.showError(context, '$error');
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
       }
     } finally {
       if (mounted && generation == _loadGeneration) {

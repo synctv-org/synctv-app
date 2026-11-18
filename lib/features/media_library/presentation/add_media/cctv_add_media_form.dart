@@ -282,7 +282,10 @@ class _CctvAddMediaFormState extends State<CctvAddMediaForm> {
       if (mounted &&
           _ownsOperation(epoch) &&
           (ModalRoute.of(context)?.isCurrent ?? true)) {
-        AppNotifications.showError(context, '$error');
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
       }
     } finally {
       if (_ownsOperation(epoch)) setState(() => _previewLoading = false);

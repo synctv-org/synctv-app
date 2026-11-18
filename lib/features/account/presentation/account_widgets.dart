@@ -213,7 +213,12 @@ class _LoadErrorBanner extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  moduleInfo == null ? title : '$title：${moduleInfo!.label}',
+                  moduleInfo == null
+                      ? title
+                      : context.l10n.accountModuleTitle(
+                          title,
+                          moduleInfo!.label,
+                        ),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),

@@ -1,3 +1,4 @@
+import 'package:synctv_app/core/format/formatters.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_scroll_controller.dart';
 import 'package:synctv_app/core/presentation/image/app_image_preview.dart';
 import 'package:synctv_app/core/platform/true_fullscreen.dart';
@@ -2467,22 +2468,11 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  String _formatBytes(num bytes) {
-    const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
-    var value = bytes.toDouble();
-    var unit = 0;
-    while (value >= 1024 && unit < units.length - 1) {
-      value /= 1024;
-      unit++;
-    }
-    return '${value.toStringAsFixed(unit == 0 || value >= 100 ? 0 : 1)} ${units[unit]}';
-  }
-
   String _formatByteRate(num bytesPerSecond) =>
-      '${_formatBytes(bytesPerSecond)}/s';
+      '${formatBytes(bytesPerSecond)}/s';
 
   String _formatTransferMetric(int bytes, double rate) =>
-      '${_formatByteRate(rate)} · ${_formatBytes(bytes)}';
+      '${_formatByteRate(rate)} · ${formatBytes(bytes)}';
 
   Future<void> _showP2pMetricsDialog() {
     final metrics = _p2pMetrics;
@@ -2515,7 +2505,7 @@ class _RoomScreenState extends State<RoomScreen>
         _formatTransferMetric(metrics.p2pUploadBytes, metrics.p2pUploadRate),
       ),
       (context.l10n.connectedPeers, peers.toString()),
-      (context.l10n.p2pCache, _formatBytes(metrics.cacheBytes)),
+      (context.l10n.p2pCache, formatBytes(metrics.cacheBytes)),
       (
         context.l10n.cacheHitRate,
         '${(metrics.cacheHitRatio * 100).toStringAsFixed(1)}%',

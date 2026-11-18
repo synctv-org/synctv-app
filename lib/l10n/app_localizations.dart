@@ -5928,6 +5928,12 @@ abstract class AppLocalizations {
   /// **'Real-time transcoding'**
   String get realtimeTranscoding;
 
+  /// No description provided for @accountModuleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{title}: {label}'**
+  String accountModuleTitle(Object title, Object label);
+
   /// No description provided for @trustDevice.
   ///
   /// In en, this message translates to:

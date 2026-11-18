@@ -814,7 +814,12 @@ class _TwitchAddMediaFormState extends State<TwitchAddMediaForm> {
     try {
       await action();
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

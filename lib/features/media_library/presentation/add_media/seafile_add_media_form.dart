@@ -528,7 +528,12 @@ class _SeafileAddMediaFormState extends State<SeafileAddMediaForm> {
       );
       await _loadAfterUnlock();
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
       if (mounted) setState(() => _loading = false);
     }
   }

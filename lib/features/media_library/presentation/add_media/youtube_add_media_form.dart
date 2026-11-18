@@ -512,7 +512,10 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
       }
     } catch (error) {
       if (mounted && isRelevant()) {
-        AppNotifications.showError(context, '$error');
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
       }
     } finally {
       if (isCurrent()) setState(() => _previewLoading = false);
@@ -613,7 +616,10 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
       if (mounted &&
           _ownsSubmission(identity) &&
           (ModalRoute.of(context)?.isCurrent ?? true)) {
-        AppNotifications.showError(context, '$error');
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
       }
     } finally {
       if (mounted) setState(() => _adding = false);
@@ -659,7 +665,10 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
       if (mounted &&
           _ownsSubmission(identity) &&
           (ModalRoute.of(context)?.isCurrent ?? true)) {
-        AppNotifications.showError(context, '$error');
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
       }
     } finally {
       if (mounted) setState(() => _adding = false);

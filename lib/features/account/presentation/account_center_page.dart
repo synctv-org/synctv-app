@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:synctv_app/core/format/formatters.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
 import 'package:synctv_app/theme/app_colors.dart';
@@ -1067,8 +1067,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       builder: (context) => _NotificationDetailSheet(
         notification: detail,
         typeLabel: _notificationType(detail.type),
-        createdAtLabel: _formatTimestamp(detail.createdAt),
-        updatedAtLabel: _formatTimestamp(detail.updatedAt),
+        createdAtLabel: formatTimestampSeconds(detail.createdAt),
+        updatedAtLabel: formatTimestampSeconds(detail.updatedAt),
       ),
     );
     if (!mounted || action == null) return;
@@ -1932,7 +1932,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           statusLabel: _userStatusLabel(_user.status),
           activeServerName:
               _gateway.activeServerName ?? context.l10n.noServerConnected,
-          createdAtLabel: _formatTimestamp(_user.createdAt),
+          createdAtLabel: formatTimestampSeconds(_user.createdAt),
         ),
         if (_loadErrors.isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -2139,11 +2139,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               ),
               _InfoEntry(
                 context.l10n.createdAt,
-                _formatTimestamp(_user.createdAt),
+                formatTimestampSeconds(_user.createdAt),
               ),
               _InfoEntry(
                 context.l10n.updatedAt,
-                _formatTimestamp(_user.updatedAt),
+                formatTimestampSeconds(_user.updatedAt),
               ),
               _InfoEntry(
                 context.l10n.onlineConnectionsLabel,
@@ -2451,7 +2451,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             room: room,
                             roleLabel: _roomRoleLabel(room.myRole),
                             relationLabel: _roomRelationLabel(room.myRelation),
-                            updatedAtLabel: _formatTimestamp(room.updatedAt),
+                            updatedAtLabel: formatTimestampSeconds(
+                              room.updatedAt,
+                            ),
                             isOwner: _isMyCreatedRoom(room),
                             canManage: _canManageRoomFromListEntry(room),
                             onOpen: () => _openRoom(room),
@@ -2599,7 +2601,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                               ),
                               subtitle: Text(
                                 context.l10n.blockedAt(
-                                  _formatTimestamp(blockedUser.blockedAt),
+                                  formatTimestampSeconds(blockedUser.blockedAt),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -2846,11 +2848,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         [
                           _shortCredentialId(credential.credentialId),
                           context.l10n.createdAtValue(
-                            _formatTimestamp(credential.createdAt),
+                            formatTimestampSeconds(credential.createdAt),
                           ),
                           if (credential.lastUsedAt > 0)
                             context.l10n.lastUsedAt(
-                              _formatTimestamp(credential.lastUsedAt),
+                              formatTimestampSeconds(credential.lastUsedAt),
                             ),
                         ].join(' · '),
                       ),
@@ -3239,7 +3241,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                                     Text(item.content),
                                   const SizedBox(height: 4),
                                   Text(
-                                    _formatTimestamp(item.createdAt),
+                                    formatTimestampSeconds(item.createdAt),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: theme.hintColor,
@@ -3494,7 +3496,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             account.providerUserId,
                           if (account.providerIssuer.isNotEmpty)
                             account.providerIssuer,
-                          _formatTimestamp(account.linkedAt),
+                          formatTimestampSeconds(account.linkedAt),
                         ].join(' · '),
                         onUnlink: _unlinkingOAuth2 || _bindProvider != null
                             ? null
@@ -3847,11 +3849,5 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   String _shortCredentialId(String credentialId) {
     if (credentialId.length <= 18) return credentialId;
     return '${credentialId.substring(0, 8)}...${credentialId.substring(credentialId.length - 6)}';
-  }
-
-  String _formatTimestamp(int seconds) {
-    if (seconds <= 0) return '-';
-    return DateFormat('yyyy-MM-dd HH:mm')
-        .format(DateTime.fromMillisecondsSinceEpoch(seconds * 1000));
   }
 }

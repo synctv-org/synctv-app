@@ -1009,7 +1009,14 @@
   "passwordRequiredLabel": "需要密码",
   "qtranscodeLabel": "QTranscode",
   "realtimeTranscoding": "实时转码",
-  "trustDevice": "信任此设备",
+    "accountModuleTitle": "{title}：{label}",
+  "@accountModuleTitle": {
+    "placeholders": {
+      "title": {},
+      "label": {}
+    }
+  },
+"trustDevice": "信任此设备",
 
   "sharedFolders": "共享文件夹",
   "shares": "共享目录",
