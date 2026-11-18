@@ -2962,4 +2962,299 @@ void main() {
       reason: 'paused playback keeps the controls visible',
     );
   });
+
+  group('desktop keyboard and center controls drive playback', () {
+    Widget mountPlayer(
+      _RecordingVideoPlayerController controller, {
+      PlayerVolumePreferencesController? volumePreferences,
+      bool canControlPlayback = true,
+      bool isLive = false,
+      void Function(bool isPlaying)? onPlaybackStateChanged,
+    }) {
+      return MaterialApp(
+        builder: buildThemedTestApp,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CustomVideoPlayer(
+            volumePreferences: volumePreferences ?? _volumePreferences(),
+            subtitleSource: const _EmptySubtitleSource(),
+            controller: controller,
+            title: 'Video',
+            interactionMode: VideoPlayerInteractionMode.desktop,
+            canControlPlayback: canControlPlayback,
+            isLive: isLive,
+            onUserPlaybackStateChanged: onPlaybackStateChanged,
+          ),
+        ),
+      );
+    }
+
+    /// Volume steps accumulate float noise (0.9 + 0.05); compare cents.
+    List<double> centsOf(List<double> volumes) =>
+        volumes.map((volume) => (volume * 100).roundToDouble() / 100).toList();
+
+    /// The player restores the persisted volume on mount, so tests that
+    /// assert volume changes must preset (and load) the store first.
+    Future<PlayerVolumePreferencesController> presetVolume(
+      WidgetTester tester, {
+      double volume = 1,
+      double lastAudibleVolume = 1,
+    }) async {
+      final store = _MemoryPlayerVolumeStore()
+        ..values = PlayerVolumePreferenceValues(
+          volume: volume,
+          lastAudibleVolume: lastAudibleVolume,
+        );
+      final preferences = PlayerVolumePreferencesController(store: store);
+      await preferences.load();
+      return preferences;
+    }
+
+    testWidgets('space and K toggle playback and report to the host', (
+      tester,
+    ) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 2),
+          position: Duration(seconds: 30),
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+      final reported = <bool>[];
+
+      await tester.pumpWidget(
+        mountPlayer(controller, onPlaybackStateChanged: reported.add),
+      );
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      expect(controller.playCalls, 1, reason: 'space resumes a paused player');
+      expect(reported, [true]);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
+      await tester.pumpAndSettle();
+      expect(controller.pauseCalls, 1, reason: 'K pauses a playing player');
+      expect(reported, [true, false]);
+    });
+
+    testWidgets('resuming from the end restarts the media from the start', (
+      tester,
+    ) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 2),
+          position: Duration(minutes: 2),
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(mountPlayer(controller));
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+
+      expect(controller.seekPositions, [Duration.zero]);
+      expect(controller.playCalls, 1);
+    });
+
+    testWidgets('arrow keys seek by five seconds and clamp to the media', (
+      tester,
+    ) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(seconds: 12),
+          position: Duration(seconds: 7),
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(mountPlayer(controller));
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pumpAndSettle();
+      expect(controller.seekPositions, [
+        const Duration(seconds: 12),
+        const Duration(seconds: 7),
+      ]);
+
+      // Two more left arrows run into the start and clamp there.
+      controller.value = controller.value.copyWith(
+        position: const Duration(seconds: 1),
+      );
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pumpAndSettle();
+      expect(controller.seekPositions, hasLength(4));
+      expect(controller.seekPositions.last, Duration.zero);
+    });
+
+    testWidgets('arrow keys adjust volume in steps and clamp to the range', (
+      tester,
+    ) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          position: Duration(seconds: 10),
+          volume: 0.9,
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+      final preferences = await presetVolume(tester, volume: 0.9);
+
+      await tester.pumpWidget(
+        mountPlayer(controller, volumePreferences: preferences),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pumpAndSettle();
+      expect(centsOf(controller.volumes), [0.9, 0.95, 1.0]);
+
+      for (var i = 0; i < 25; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pumpAndSettle();
+      }
+      expect(centsOf(controller.volumes).last, 0.0);
+    });
+
+    testWidgets('M cycles between muted and the last audible volume', (
+      tester,
+    ) async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          position: Duration(seconds: 10),
+          volume: 0.6,
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+      final preferences = await presetVolume(
+        tester,
+        volume: 0.6,
+        lastAudibleVolume: 0.6,
+      );
+
+      await tester.pumpWidget(
+        mountPlayer(controller, volumePreferences: preferences),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyM);
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyM);
+      await tester.pumpAndSettle();
+      expect(centsOf(controller.volumes), [0.6, 0.0, 0.6]);
+
+      // Pressing M from an externally silenced player restores the
+      // remembered audible volume rather than the raw 1.0 default.
+      controller.value = controller.value.copyWith(volume: 0.0);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyM);
+      await tester.pumpAndSettle();
+      expect(centsOf(controller.volumes).last, 0.6);
+    });
+
+    testWidgets(
+      'playback keys stay inert without control permission or on live',
+      (tester) async {
+        final muted = _RecordingVideoPlayerController(
+          const VideoPlayerValue(
+            duration: Duration(minutes: 1),
+            position: Duration(seconds: 10),
+            volume: 0.5,
+            isInitialized: true,
+            size: Size(1920, 1080),
+          ),
+        );
+        addTearDown(muted.dispose);
+        final preferences = await presetVolume(tester, volume: 0.5);
+
+        await tester.pumpWidget(
+          mountPlayer(
+            muted,
+            canControlPlayback: false,
+            volumePreferences: preferences,
+          ),
+        );
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pumpAndSettle();
+        expect(muted.playCalls, 0);
+        expect(muted.seekPositions, isEmpty);
+        // Volume control needs no playback permission and still works.
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+        await tester.pumpAndSettle();
+        expect(centsOf(muted.volumes), [0.5, 0.55]);
+
+        final live = _RecordingVideoPlayerController(
+          const VideoPlayerValue(
+            duration: Duration(minutes: 1),
+            position: Duration(seconds: 10),
+            isInitialized: true,
+            size: Size(1920, 1080),
+          ),
+        );
+        addTearDown(live.dispose);
+        await tester.pumpWidget(mountPlayer(live, isLive: true));
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyK);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+        await tester.pumpAndSettle();
+        expect(live.playCalls, 0);
+        expect(live.seekPositions, isEmpty);
+      },
+    );
+
+    testWidgets('the center play-pause control toggles playback', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(minutes: 1),
+          position: Duration(seconds: 10),
+          isInitialized: true,
+          size: Size(1920, 1080),
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(mountPlayer(controller));
+      await tester.pump();
+
+      final playButton = find.bySemanticsLabel('Play');
+      expect(playButton, findsOneWidget);
+      await tester.tap(playButton, warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(controller.playCalls, 1);
+
+      final pauseButton = find.bySemanticsLabel('Pause');
+      expect(pauseButton, findsOneWidget);
+      await tester.tap(pauseButton, warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(controller.pauseCalls, 1);
+      handle.dispose();
+    });
+  });
 }
