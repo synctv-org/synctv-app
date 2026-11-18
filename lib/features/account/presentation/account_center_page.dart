@@ -1794,6 +1794,7 @@ class _AccountCenterPageBase extends State<AccountCenterPage> {
       builder: (context, _) {
         return SizedBox(
           width: width,
+          height: double.infinity,
           child: AppInkSurface(
             color: theme.colorScheme.surface,
             clipBehavior: Clip.none,
