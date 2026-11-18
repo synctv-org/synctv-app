@@ -401,7 +401,12 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
               );
       }
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -440,7 +445,12 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
     try {
       await _loadUserPosts(loadMore: true);
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -479,7 +489,12 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
       AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -505,7 +520,12 @@ class _TikTokAddMediaFormState extends State<TikTokAddMediaForm> {
       AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

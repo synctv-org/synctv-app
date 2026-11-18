@@ -367,7 +367,12 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
               );
       }
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -405,7 +410,12 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
     try {
       await _loadUserPosts(loadMore: true);
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -445,7 +455,12 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
       AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -472,7 +487,12 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
       AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
       setState(() {});
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

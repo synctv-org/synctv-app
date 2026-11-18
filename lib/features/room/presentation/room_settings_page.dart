@@ -1,3 +1,4 @@
+import 'package:synctv_app/core/format/formatters.dart';
 import 'package:synctv_app/core/presentation/image/app_image_preview.dart';
 import 'package:synctv_app/features/room/presentation/widgets/chat_message_edit_form.dart';
 
@@ -7608,12 +7609,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final normalized = timestamp > 100000000000
         ? (timestamp / 1000).round()
         : timestamp;
-    final time = DateTime.fromMillisecondsSinceEpoch(normalized * 1000);
-    return '${time.year.toString().padLeft(4, '0')}-'
-        '${time.month.toString().padLeft(2, '0')}-'
-        '${time.day.toString().padLeft(2, '0')} '
-        '${time.hour.toString().padLeft(2, '0')}:'
-        '${time.minute.toString().padLeft(2, '0')}';
+    return formatTimestampSeconds(normalized);
   }
 
   String _formatDateTime(DateTime? value) {

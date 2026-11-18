@@ -1405,7 +1405,12 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
         _preview = null;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _areasLoading = false);
     }
@@ -1430,7 +1435,12 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
         _preview = null;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _favoritesLoading = false);
     }
@@ -1464,7 +1474,12 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
         _preview = null;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _followedPgcLoading = false);
     }
@@ -1495,7 +1510,12 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
         _preview = null;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _timelineLoading = false);
     }
@@ -1547,7 +1567,12 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
         _preview = null;
       });
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _pgcSeasonsLoading = false);
     }
@@ -1622,7 +1647,12 @@ class _BilibiliPlaylistFormState extends State<BilibiliPlaylistForm> {
       Navigator.pop(context);
       AppNotifications.showSuccess(context, context.l10n.addedSuccessfully);
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

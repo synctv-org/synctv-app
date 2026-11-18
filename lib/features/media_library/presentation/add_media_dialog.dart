@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:synctv_app/core/format/formatters.dart';
 import 'package:synctv_app/contracts/discovered_source.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:synctv_app/core/config/distribution_profile.dart';
@@ -3899,18 +3900,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
-  String _formatTimestamp(int timestamp) {
-    if (timestamp <= 0) return '-';
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
-    return '${date.year.toString().padLeft(4, '0')}-'
-        '${date.month.toString().padLeft(2, '0')}-'
-        '${date.day.toString().padLeft(2, '0')} '
-        '${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
-  }
-
   String _formatDateTime(DateTime value) =>
-      _formatTimestamp(value.millisecondsSinceEpoch ~/ 1000);
+      formatTimestampSeconds(value.millisecondsSinceEpoch ~/ 1000);
 
   Future<void> _selectRtmpPublishExpiration() async {
     final now = widget.now();

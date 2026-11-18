@@ -1131,7 +1131,14 @@
   "passwordRequiredLabel": "Password required",
   "qtranscodeLabel": "QTranscode",
   "realtimeTranscoding": "Real-time transcoding",
-  "trustDevice": "Trust device",
+    "accountModuleTitle": "{title}: {label}",
+  "@accountModuleTitle": {
+    "placeholders": {
+      "title": {},
+      "label": {}
+    }
+  },
+"trustDevice": "Trust device",
 
   "sharedFolders": "Shared folders",
   "shares": "Shares",

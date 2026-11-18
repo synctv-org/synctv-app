@@ -3190,6 +3190,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get realtimeTranscoding => '实时转码';
 
   @override
+  String accountModuleTitle(Object title, Object label) {
+    return '$title：$label';
+  }
+
+  @override
   String get trustDevice => '信任此设备';
 
   @override

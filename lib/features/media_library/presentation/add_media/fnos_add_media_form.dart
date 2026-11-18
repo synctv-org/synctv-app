@@ -473,7 +473,12 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
       );
       if (!success) throw StateError('FNOS rejected the favorite update');
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _mutatingItems.remove(item.guid));
     }
@@ -493,7 +498,12 @@ class _FnosAddMediaFormState extends State<FnosAddMediaForm> {
       );
       if (!success) throw StateError('FNOS rejected the watched update');
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _mutatingItems.remove(item.guid));
     }

@@ -180,7 +180,12 @@ class _YoutubeAccountBindingFormState extends State<YoutubeAccountBindingForm> {
       widget.onSuccess();
       Navigator.of(context).pop();
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -336,7 +341,12 @@ class _DouyinAccountBindingFormState extends State<DouyinAccountBindingForm> {
       widget.onSuccess();
       Navigator.of(context).pop();
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -492,7 +502,12 @@ class _TikTokAccountBindingFormState extends State<TikTokAccountBindingForm> {
       widget.onSuccess();
       Navigator.of(context).pop();
     } catch (error) {
-      if (mounted) AppNotifications.showError(context, '$error');
+      if (mounted) {
+        AppNotifications.showError(
+          context,
+          context.l10n.operationFailed('$error'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

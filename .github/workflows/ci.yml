@@ -35,8 +35,9 @@ jobs:
     runs-on: ubuntu-24.04
     # The full VM suite plus the browser-platform batch together can exceed
     # 35 minutes on a cold-cache runner; keep enough headroom that slow
-    # runners finish instead of being cancelled mid-suite.
-    timeout-minutes: 50
+    # runners finish instead of being cancelled mid-suite (a recent run
+    # needed 44m54s).
+    timeout-minutes: 60
 
     steps:
       - name: Check out source

@@ -3492,6 +3492,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get realtimeTranscoding => 'Real-time transcoding';
 
   @override
+  String accountModuleTitle(Object title, Object label) {
+    return '$title: $label';
+  }
+
+  @override
   String get trustDevice => 'Trust device';
 
   @override

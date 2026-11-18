@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:synctv_app/core/format/formatters.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/theme/app_colors.dart';
@@ -429,7 +430,7 @@ class _PlaybackStatisticsPanelState extends State<PlaybackStatisticsPanel> {
       (context.l10n.playerSynchronization, sync.isEmpty ? '-' : sync),
       (
         context.l10n.playerThroughput,
-        '${_formatByteRate(snapshot.totalDownloadRate)} · ${_formatBytes(snapshot.totalDownloadBytes)}',
+        '${_formatByteRate(snapshot.totalDownloadRate)} · ${formatBytes(snapshot.totalDownloadBytes)}',
       ),
       (
         context.l10n.playerP2pDelivery,
@@ -437,7 +438,7 @@ class _PlaybackStatisticsPanelState extends State<PlaybackStatisticsPanel> {
       ),
       (
         context.l10n.playerCache,
-        '${_formatBytes(details.cacheBytes)} · ${(snapshot.cacheHitRatio * 100).toStringAsFixed(1)}%',
+        '${formatBytes(details.cacheBytes)} · ${(snapshot.cacheHitRatio * 100).toStringAsFixed(1)}%',
       ),
     ];
     if (snapshot.errorDescription?.isNotEmpty == true) {
@@ -468,19 +469,8 @@ String _formatDuration(Duration value) {
   return '$minutes:${seconds.toString().padLeft(2, '0')}';
 }
 
-String _formatBytes(num bytes) {
-  const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
-  var value = bytes.toDouble();
-  var unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit++;
-  }
-  return '${value.toStringAsFixed(unit == 0 || value >= 100 ? 0 : 1)} ${units[unit]}';
-}
-
 String _formatByteRate(num bytesPerSecond) =>
-    '${_formatBytes(bytesPerSecond)}/s';
+    '${formatBytes(bytesPerSecond)}/s';
 
 String _formatBitrate(int bitrate) => bitrate >= 1000000
     ? '${(bitrate / 1000000).toStringAsFixed(1)} Mbps'

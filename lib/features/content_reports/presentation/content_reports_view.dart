@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:synctv_app/core/format/formatters.dart';
 import 'package:synctv_app/core/presentation/widgets/app_tab_activity.dart';
 import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 import 'package:synctv_app/core/presentation/dependency_scope.dart';
@@ -416,7 +417,7 @@ class _ContentReportsViewState extends State<ContentReportsView>
                     ),
                   _ReportDetailRow(
                     label: dialogContext.l10n.createdAt,
-                    value: _formatTimestamp(detail.createdAt),
+                    value: formatTimestampSeconds(detail.createdAt),
                   ),
                   if (detail.reviewedByUsername.isNotEmpty ||
                       detail.reviewedBy.isNotEmpty)
@@ -429,7 +430,7 @@ class _ContentReportsViewState extends State<ContentReportsView>
                   if (detail.reviewedAt > 0)
                     _ReportDetailRow(
                       label: dialogContext.l10n.reviewedAtLabel,
-                      value: _formatTimestamp(detail.reviewedAt),
+                      value: formatTimestampSeconds(detail.reviewedAt),
                     ),
                   if (detail.resolutionNote.isNotEmpty)
                     _ReportDetailRow(
@@ -827,7 +828,7 @@ class _ContentReportsViewState extends State<ContentReportsView>
                       context.l10n.reportListSummary(
                         _reportReasonText(report),
                         _reporterText(report),
-                        _formatTimestamp(report.createdAt),
+                        formatTimestampSeconds(report.createdAt),
                       ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
@@ -1163,14 +1164,4 @@ class _ContentReportPager extends StatelessWidget {
       onNext: onNext,
     );
   }
-}
-
-String _formatTimestamp(int timestamp) {
-  if (timestamp <= 0) return "-";
-  final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
-  return "${date.year.toString().padLeft(4, "0")}-"
-      "${date.month.toString().padLeft(2, "0")}-"
-      "${date.day.toString().padLeft(2, "0")} "
-      "${date.hour.toString().padLeft(2, "0")}:"
-      "${date.minute.toString().padLeft(2, "0")}";
 }
