@@ -3,6 +3,7 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:synctv_video_player_media_kit/src/web_video_player_runtime.dart';
@@ -174,4 +175,178 @@ void main() {
       await runtime.dispose();
     },
   );
+
+  test('open rejects custom headers the browser cannot attach', () async {
+    final (runtime, _) = _runtime(8021);
+
+    await expectLater(
+      runtime.open(
+        Media('https://example.test/v.mp4', httpHeaders: {'X-Custom': '1'}),
+      ),
+      throwsA(
+        isA<PlatformException>().having(
+          (error) => error.code,
+          'code',
+          'web_media_headers_unsupported',
+        ),
+      ),
+    );
+  });
+
+  test('open rejects file and content URIs', () async {
+    final (runtime, _) = _runtime(8022);
+
+    for (final uri in ['file:///tmp/movie.mp4', 'content://media/movie.mp4']) {
+      await expectLater(
+        runtime.open(Media(uri)),
+        throwsA(
+          isA<PlatformException>().having(
+            (error) => error.code,
+            'code',
+            'web_local_media_unsupported',
+          ),
+        ),
+        reason: uri,
+      );
+    }
+  });
+
+  test('a real element load failure maps to a media error code', () async {
+    final (runtime, log) = _runtime(8023);
+
+    // Bytes that claim to be MP4 but cannot decode: the element itself
+    // raises its error event and the runtime maps the MediaError code.
+    await runtime.open(Media('data:video/mp4;base64,AAAA'));
+
+    await _waitFor(() => log.errors.isNotEmpty);
+    expect(log.errors, hasLength(1));
+    final error = log.errors.single;
+    expect(error, isA<PlatformException>());
+    expect((error as PlatformException).code, startsWith('MEDIA_ERR_'));
+  });
+
+  test('muted playback reports state changes and completion', () async {
+    final (runtime, log) = _runtime(8024);
+
+    await runtime.open(Media(_silenceUri));
+    await _waitFor(
+      () => log.events.any(
+        (event) => event.eventType == VideoEventType.initialized,
+      ),
+    );
+
+    // Autoplay policy blocks unmuted audio in a headless browser; muted
+    // playback is the path production falls back to.
+    await runtime.setVolume(0);
+    await runtime.play();
+    await _waitFor(
+      () => log.events.any(
+        (event) =>
+            event.eventType == VideoEventType.isPlayingStateUpdate &&
+            event.isPlaying == true,
+      ),
+    );
+
+    await runtime.pause();
+    await _waitFor(
+      () => log.events.any(
+        (event) =>
+            event.eventType == VideoEventType.isPlayingStateUpdate &&
+            event.isPlaying == false,
+      ),
+    );
+
+    await runtime.play();
+    await _waitFor(
+      () => log.events.any(
+        (event) => event.eventType == VideoEventType.completed,
+      ),
+      timeout: const Duration(seconds: 15),
+    );
+  });
+
+  test('waiting and canplaythrough drive the buffering events', () async {
+    final (runtime, log) = _runtime(8025);
+
+    await runtime.open(Media(_silenceUri));
+    await _waitFor(
+      () => log.events.any(
+        (event) => event.eventType == VideoEventType.initialized,
+      ),
+    );
+
+    final video = web.document.querySelector(
+      '#synctv-video-element-8025',
+    ) as web.HTMLVideoElement;
+    video.dispatchEvent(web.Event('waiting'));
+    await _waitFor(
+      () => log.events.any(
+        (event) => event.eventType == VideoEventType.bufferingStart,
+      ),
+    );
+
+    video.dispatchEvent(web.Event('canplaythrough'));
+    await _waitFor(
+      () => log.events.any(
+        (event) => event.eventType == VideoEventType.bufferingEnd,
+      ),
+    );
+  });
+
+  test('web options map onto the media element', () async {
+    final (runtime, _) = _runtime(8026);
+
+    await runtime.open(Media(_silenceUri));
+    final video = web.document.querySelector(
+      '#synctv-video-element-8026',
+    ) as web.HTMLVideoElement;
+
+    await runtime.setWebOptions(
+      const VideoPlayerWebOptions(
+        controls: VideoPlayerWebOptionsControls.enabled(
+          allowDownload: false,
+          allowPictureInPicture: false,
+        ),
+        allowContextMenu: false,
+        allowRemotePlayback: false,
+        poster: null,
+      ),
+    );
+
+    expect(video.controls, isTrue);
+    expect(video.getAttribute('controlsList'), 'nodownload');
+    expect(video.disablePictureInPicture, isTrue);
+    expect(video.disableRemotePlayback, isTrue);
+
+    final menuEvent = web.Event(
+      'contextmenu',
+      web.EventInit(cancelable: true, bubbles: true),
+    );
+    final notPrevented = video.dispatchEvent(menuEvent);
+    expect(notPrevented, isFalse, reason: 'the context menu is suppressed');
+
+    // Poster still routes through when provided.
+    await runtime.setWebOptions(
+      VideoPlayerWebOptions(poster: Uri.parse('https://example.test/p.jpg')),
+    );
+    expect(video.poster, 'https://example.test/p.jpg');
+    expect(
+      video.controls,
+      isFalse,
+      reason: 're-applying options resets prior element state',
+    );
+  });
+}
+
+Future<void> _waitFor(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) {
+      fail('condition was not met within $timeout');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
 }
