@@ -8,17 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 import 'package:video_player/video_player.dart' hide VideoTrack;
 import 'package:video_player_platform_interface/video_player_platform_interface.dart'
     hide VideoTrack;
 
 import 'hls_master_playlist.dart';
+import 'media_kit_player_handle.dart';
 import 'platform_video_player_runtime.dart'
     if (dart.library.js_interop) 'web_video_player_runtime.dart'
     as platform_runtime;
 import 'video_player_runtime.dart';
 
+export 'media_kit_player_handle.dart';
 export 'video_player_runtime.dart';
 
 const syncTvVideoFormatHeader = 'x-synctv-internal-media-format';
@@ -75,7 +76,7 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
           runtimeFactory ??
           (platform_runtime.usesPlatformWebVideoPlayerRuntime
               ? platform_runtime.createPlatformWebVideoPlayerRuntime
-              : _MediaKitVideoPlayerRuntime.new);
+              : MediaKitVideoPlayerRuntime.new);
 
   final VideoPlayerRuntimeFactory _runtimeFactory;
   final Map<int, _VideoPlayerSession> _sessions = {};
@@ -302,26 +303,35 @@ class _VideoPlayerSession {
   }
 }
 
-class _MediaKitVideoPlayerRuntime
+/// The native runtime that adapts a media_kit player to the
+/// video_player platform interface, with cancellation-safe sessions and
+/// manifest-driven HLS variant selection. [handle] and [httpClient] exist
+/// so tests can drive the event translation and variant logic without a
+/// live playback pipeline.
+class MediaKitVideoPlayerRuntime
     implements
         VideoPlayerRuntime,
         AdaptiveVideoTrackRuntime,
         AdaptiveAudioTrackRuntime {
-  _MediaKitVideoPlayerRuntime(int textureId)
-    : _player = Player(),
-      _events = StreamController<VideoEvent>() {
-    _videoController = VideoController(_player);
+  MediaKitVideoPlayerRuntime(
+    int textureId, {
+    MediaKitPlayerHandle? handle,
+    http.Client? httpClient,
+  }) : this._(handle ?? RealMediaKitPlayerHandle(), httpClient);
+
+  MediaKitVideoPlayerRuntime._(this._handle, this._httpClient)
+    : _events = StreamController<VideoEvent>() {
     _subscribe();
   }
 
-  final Player _player;
+  final MediaKitPlayerHandle _handle;
+  final http.Client? _httpClient;
   final StreamController<VideoEvent> _events;
   final StreamController<AdaptiveVideoTrackSnapshot> _adaptiveTracks =
       StreamController<AdaptiveVideoTrackSnapshot>.broadcast();
   final StreamController<AdaptiveAudioTrackSnapshot> _adaptiveAudioTracks =
       StreamController<AdaptiveAudioTrackSnapshot>.broadcast();
   final List<StreamSubscription<Object?>> _subscriptions = [];
-  late final VideoController _videoController;
   bool _initialized = false;
   bool _disposed = false;
   Future<void>? _disposeFuture;
@@ -357,27 +367,27 @@ class _MediaKitVideoPlayerRuntime
     }
     final track = trackId == 'auto'
         ? VideoTrack.auto()
-        : _player.state.tracks.video
+        : _handle.tracks.video
               .where((track) => track.id == trackId)
               .firstOrNull;
-    if (track != null) await _player.setVideoTrack(track);
+    if (track != null) await _handle.setVideoTrack(track);
   }
 
   @override
   Future<void> selectAdaptiveAudioTrack(String trackId) async {
     final track = trackId == 'auto'
         ? AudioTrack.auto()
-        : _player.state.tracks.audio
+        : _handle.tracks.audio
               .where((track) => track.id == trackId)
               .firstOrNull;
-    if (track != null) await _player.setAudioTrack(track);
+    if (track != null) await _handle.setAudioTrack(track);
   }
 
   @override
   Stream<VideoEvent> get events => _events.stream;
 
   @override
-  Duration get position => _player.platform?.state.position ?? Duration.zero;
+  Duration get position => _handle.position;
 
   @override
   Future<void> open(Media media) async {
@@ -387,48 +397,39 @@ class _MediaKitVideoPlayerRuntime
     _manifestTrackBitrates.clear();
     _selectedAdaptiveTrackId = 'auto';
     final generation = ++_manifestLoadGeneration;
-    final platform = _player.platform;
-    if (_isHlsMedia(media) && platform is NativePlayer) {
-      await (platform as dynamic).setProperty('hls-bitrate', 'max');
+    if (_isHlsMedia(media) && _handle.isNativePlatform) {
+      await _handle.setProperty('hls-bitrate', 'max');
     }
-    await _player.open(media, play: false);
+    await _handle.open(media, play: false);
     unawaited(_loadHlsVariants(media, generation));
   }
 
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() => _handle.play();
 
   @override
-  Future<void> pause() => _player.pause();
+  Future<void> pause() => _handle.pause();
 
   @override
   Future<void> setLooping(bool looping) {
-    return _player.setPlaylistMode(
+    return _handle.setPlaylistMode(
       looping ? PlaylistMode.single : PlaylistMode.none,
     );
   }
 
   @override
-  Future<void> setVolume(double volume) => _player.setVolume(volume * 100);
+  Future<void> setVolume(double volume) => _handle.setVolume(volume * 100);
 
   @override
-  Future<void> seekTo(Duration position) => _player.seek(position);
+  Future<void> seekTo(Duration position) => _handle.seek(position);
 
   @override
-  Future<void> setPlaybackSpeed(double speed) => _player.setRate(speed);
+  Future<void> setPlaybackSpeed(double speed) => _handle.setRate(speed);
 
   @override
   Widget buildView() {
     if (_disposed) throw StateError('Video player has been disposed');
-    return Video(
-      key: ValueKey(_videoController),
-      controller: _videoController,
-      wakelock: true,
-      controls: NoVideoControls,
-      fill: const Color(0x00000000),
-      pauseUponEnteringBackgroundMode: false,
-      resumeUponEnteringForegroundMode: false,
-    );
+    return _handle.buildVideoWidget();
   }
 
   @override
@@ -452,19 +453,27 @@ class _MediaKitVideoPlayerRuntime
       _subscriptions.map((subscription) => subscription.cancel()),
     );
     _subscriptions.clear();
-    await _events.close();
+    // A single-subscription controller nobody ever listened to never
+    // completes its done future, so awaiting close() would hang teardown;
+    // only the normal listened path gets the awaited close.
+    if (_events.hasListener) {
+      await _events.close();
+    } else {
+      _events.close();
+    }
     await _adaptiveTracks.close();
     await _adaptiveAudioTracks.close();
+    _httpClient?.close();
     try {
-      await _player.stop();
+      await _handle.stop();
     } finally {
-      await _player.dispose();
+      await _handle.dispose();
     }
   }
 
   void _subscribe() {
     _subscriptions.add(
-      _player.stream.duration.listen((duration) {
+      _handle.durationStream.listen((duration) {
         if (duration > Duration.zero) {
           _duration = duration;
           _notifyInitialized();
@@ -472,7 +481,7 @@ class _MediaKitVideoPlayerRuntime
       }),
     );
     _subscriptions.add(
-      _player.stream.videoParams.listen((params) {
+      _handle.videoParamsStream.listen((params) {
         if (params.dw != null && params.dh != null) {
           _width = params.dw;
           _height = params.dh;
@@ -481,7 +490,7 @@ class _MediaKitVideoPlayerRuntime
       }),
     );
     _subscriptions.add(
-      _player.stream.tracks.listen((tracks) {
+      _handle.tracksStream.listen((tracks) {
         if (tracks.video.length == 2 && tracks.audio.length > 2) {
           _width = 0;
           _height = 0;
@@ -492,13 +501,13 @@ class _MediaKitVideoPlayerRuntime
       }),
     );
     _subscriptions.add(
-      _player.stream.track.listen((_) {
+      _handle.trackStream.listen((_) {
         _emitAdaptiveVideoTracks();
         _emitAdaptiveAudioTracks();
       }),
     );
     _subscriptions.add(
-      _player.stream.playing.listen((playing) {
+      _handle.playingStream.listen((playing) {
         if (_canEmitPlaybackEvent) {
           _events.add(
             VideoEvent(
@@ -510,14 +519,14 @@ class _MediaKitVideoPlayerRuntime
       }),
     );
     _subscriptions.add(
-      _player.stream.completed.listen((completed) {
+      _handle.completedStream.listen((completed) {
         if (_canEmitPlaybackEvent && completed) {
           _events.add(VideoEvent(eventType: VideoEventType.completed));
         }
       }),
     );
     _subscriptions.add(
-      _player.stream.buffering.listen((buffering) {
+      _handle.bufferingStream.listen((buffering) {
         if (_canEmitPlaybackEvent) {
           _events.add(
             VideoEvent(
@@ -530,7 +539,7 @@ class _MediaKitVideoPlayerRuntime
       }),
     );
     _subscriptions.add(
-      _player.stream.buffer.listen((buffer) {
+      _handle.bufferStream.listen((buffer) {
         if (_canEmitPlaybackEvent) {
           _events.add(
             VideoEvent(
@@ -542,7 +551,7 @@ class _MediaKitVideoPlayerRuntime
       }),
     );
     _subscriptions.add(
-      _player.stream.error.listen((error) {
+      _handle.errorStream.listen((error) {
         reportOpenError(
           PlatformException(code: 'media_error', message: error),
           StackTrace.current,
@@ -556,11 +565,11 @@ class _MediaKitVideoPlayerRuntime
       return AdaptiveVideoTrackSnapshot(
         tracks: _manifestTracks,
         selectedTrackId: _selectedAdaptiveTrackId,
-        automaticSelectionAvailable: _player.platform is! NativePlayer,
+        automaticSelectionAvailable: !_handle.isNativePlatform,
       );
     }
     return AdaptiveVideoTrackSnapshot(
-      tracks: _player.state.tracks.video
+      tracks: _handle.tracks.video
           .where((track) => track.id != 'auto' && track.id != 'no')
           .map(
             (track) => AdaptiveVideoTrackInfo(
@@ -574,7 +583,7 @@ class _MediaKitVideoPlayerRuntime
             ),
           )
           .toList(growable: false),
-      selectedTrackId: _player.state.track.video.id,
+      selectedTrackId: _handle.selectedTracks.video.id,
     );
   }
 
@@ -586,7 +595,7 @@ class _MediaKitVideoPlayerRuntime
 
   AdaptiveAudioTrackSnapshot _adaptiveAudioTrackSnapshot() {
     return AdaptiveAudioTrackSnapshot(
-      tracks: _player.state.tracks.audio
+      tracks: _handle.tracks.audio
           .where((track) => track.id != 'auto' && track.id != 'no')
           .map(
             (track) => AdaptiveAudioTrackInfo(
@@ -600,7 +609,7 @@ class _MediaKitVideoPlayerRuntime
             ),
           )
           .toList(growable: false),
-      selectedTrackId: _player.state.track.audio.id,
+      selectedTrackId: _handle.selectedTracks.audio.id,
     );
   }
 
@@ -613,9 +622,12 @@ class _MediaKitVideoPlayerRuntime
   Future<void> _loadHlsVariants(Media media, int generation) async {
     if (!_isHlsMedia(media)) return;
     try {
+      final client = _httpClient ?? http.Client();
       final request = http.Request('GET', Uri.parse(media.uri));
       request.headers.addAll(media.httpHeaders ?? const {});
-      final response = await request.send().timeout(const Duration(seconds: 8));
+      final response = await client
+          .send(request)
+          .timeout(const Duration(seconds: 8));
       if (response.statusCode < 200 || response.statusCode >= 300) return;
       if (response.contentLength case final length?
           when length > _maxAdaptiveManifestBytes) {
@@ -650,7 +662,7 @@ class _MediaKitVideoPlayerRuntime
         _manifestTrackBitrates[id] = variant.bandwidth;
       }
       _manifestTracks = List.unmodifiable(tracks);
-      if (_player.platform is NativePlayer &&
+      if (_handle.isNativePlatform &&
           _selectedAdaptiveTrackId == 'auto' &&
           tracks.isNotEmpty) {
         final highestBitrate = tracks.last.bitrate;
@@ -676,10 +688,9 @@ class _MediaKitVideoPlayerRuntime
   Future<void> _selectHlsVariant(String trackId) async {
     final source = _sourceMedia;
     if (source == null) return;
-    final wasPlaying = _player.state.playing;
+    final wasPlaying = _handle.isPlaying;
     final previousPosition = position;
-    final platform = _player.platform;
-    if (platform is NativePlayer) {
+    if (_handle.isNativePlatform) {
       final bitrate = _manifestTrackBitrates[trackId];
       final duplicateBitrate =
           bitrate != null &&
@@ -690,23 +701,23 @@ class _MediaKitVideoPlayerRuntime
       final variantUri = _manifestTrackUris[trackId];
       if (duplicateBitrate && variantUri != null) {
         _selectedAdaptiveTrackId = trackId;
-        await _player.open(
+        await _handle.open(
           Media(variantUri.toString(), httpHeaders: source.httpHeaders),
           play: false,
         );
       } else {
         final selectedBitrate = trackId == 'auto' ? 'max' : bitrate?.toString();
         if (selectedBitrate == null) return;
-        await (platform as dynamic).setProperty('hls-bitrate', selectedBitrate);
+        await _handle.setProperty('hls-bitrate', selectedBitrate);
         _selectedAdaptiveTrackId = trackId == 'auto'
             ? _manifestTracks.last.id
             : trackId;
-        await _player.open(source, play: false);
+        await _handle.open(source, play: false);
       }
     } else {
       final variantUri = _manifestTrackUris[trackId];
       _selectedAdaptiveTrackId = trackId;
-      await _player.open(
+      await _handle.open(
         trackId == 'auto' || variantUri == null
             ? source
             : Media(variantUri.toString(), httpHeaders: source.httpHeaders),
@@ -715,9 +726,9 @@ class _MediaKitVideoPlayerRuntime
     }
     if ((_duration ?? Duration.zero) > Duration.zero &&
         previousPosition > Duration.zero) {
-      await _player.seek(previousPosition);
+      await _handle.seek(previousPosition);
     }
-    if (wasPlaying) await _player.play();
+    if (wasPlaying) await _handle.play();
     _emitAdaptiveVideoTracks();
   }
 
