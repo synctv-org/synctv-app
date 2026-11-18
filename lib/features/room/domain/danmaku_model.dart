@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:synctv_app/features/room/domain/media_document_parsing.dart';
+
 import 'dart:ui';
 
 /// 弹幕数据模型
@@ -88,4 +91,21 @@ class DanmakuStyle {
     this.shadowOffset = 0.0,
     this.shadowColor = const Color(0xFF000000),
   });
+}
+
+List<DanmakuItem> danmakuItemsFromRecords(List<DanmakuRecord> records) {
+  return [
+    for (final record in records)
+      DanmakuItem(
+        text: record.text,
+        startTime: record.start,
+        endTime: record.end,
+        color: Color(0xFF000000 | record.colorRgb),
+        type: switch (record.placement) {
+          DanmakuPlacement.floating => DanmakuType.floating,
+          DanmakuPlacement.top => DanmakuType.top,
+          DanmakuPlacement.bottom => DanmakuType.bottom,
+        },
+      ),
+  ];
 }

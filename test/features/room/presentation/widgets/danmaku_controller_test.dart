@@ -5,12 +5,12 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:video_player/video_player.dart';
+import 'package:synctv_app/features/room/application/danmaku_stream_controller.dart';
 import 'package:synctv_app/features/room/application/danmaku_source.dart';
 import 'package:synctv_app/features/room/data/http_danmaku_source.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
-import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
-import 'package:synctv_app/features/room/presentation/widgets/custom_video_player.dart';
+import 'package:synctv_app/features/room/domain/danmaku_model.dart';
 
 final class _ControlledDanmakuSource implements DanmakuSource {
   final documents = <Uri, Completer<String?>>{};

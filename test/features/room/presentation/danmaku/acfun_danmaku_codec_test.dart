@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:synctv_app/features/room/presentation/danmaku/acfun_danmaku_codec.dart';
-import 'package:synctv_app/features/room/presentation/models/danmaku_model.dart';
+import 'package:synctv_app/features/room/domain/acfun_danmaku_codec.dart';
+import 'package:synctv_app/features/room/domain/danmaku_model.dart';
 
 void main() {
   group('decodeAcFunDanmakuDocument', () {
