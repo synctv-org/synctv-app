@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:synctv_app/features/voice/application/voice_chat_session.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_audio_session.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_microphone.dart';
+import 'package:synctv_app/features/voice/infrastructure/voice_remote_audio_playback.dart';
+import 'package:synctv_app/features/voice/infrastructure/voice_remote_audio_playback_factory.dart';
 import 'package:synctv_app/core/webrtc/webrtc_negotiation_state.dart';
 
 final class NativeVoiceChatSessionFactory implements VoiceChatSessionFactory {
@@ -48,6 +50,7 @@ class VoiceChatManager implements VoiceChatSession {
   final Future<MediaStream> Function() _acquireMicrophone;
   final Future<void> Function(bool) _configureVoiceCallMode;
   final Future<void> Function(double, MediaStreamTrack) _applyRemoteTrackVolume;
+  final VoiceRemoteAudioPlayback _remoteAudioPlayback;
   double _remoteVolume = VoiceChatVolumeRange.initial;
   Future<void> _audioRouting = Future<void>.value();
   @override
@@ -68,10 +71,13 @@ class VoiceChatManager implements VoiceChatSession {
     Future<void> Function(bool)? configureVoiceCallMode,
     Future<void> Function(double volume, MediaStreamTrack track)?
     applyRemoteTrackVolume,
+    VoiceRemoteAudioPlayback? remoteAudioPlayback,
   }) : _acquireMicrophone = acquireMicrophone ?? acquireVoiceMicrophone,
        _configureVoiceCallMode =
            configureVoiceCallMode ?? VoiceAudioSession.setVoiceCallMode,
        _applyRemoteTrackVolume = applyRemoteTrackVolume ?? Helper.setVolume,
+       _remoteAudioPlayback =
+           remoteAudioPlayback ?? createVoiceRemoteAudioPlayback(),
        _createConnection = createConnection ?? createPeerConnection;
 
   @override
@@ -223,8 +229,14 @@ class VoiceChatManager implements VoiceChatSession {
       if (event.track.kind == 'audio') {
         event.track.enabled = true;
         final tracks = _remoteAudioTracks.putIfAbsent(remoteId, () => []);
-        if (!tracks.any((track) => identical(track, event.track))) {
+        final newlyReceived = !tracks.any(
+          (track) => identical(track, event.track),
+        );
+        if (newlyReceived) {
           tracks.add(event.track);
+          // Browsers stay silent until the remote stream is attached to an
+          // audio element; native stacks play by themselves (no-op sink).
+          unawaited(_remoteAudioPlayback.attach(remoteId, event));
         }
         unawaited(_applyTrackVolume(event.track, _remoteVolume));
       }
@@ -389,6 +401,11 @@ class VoiceChatManager implements VoiceChatSession {
     _peerOperations.remove(remoteId);
     final pc = _peerConnections.remove(remoteId);
     _remoteAudioTracks.remove(remoteId);
+    // Peer replacement closes a (possibly absent) previous peer first, so
+    // only an actually-lived peer owns audio to release.
+    if (pc != null) {
+      unawaited(_remoteAudioPlayback.remove(remoteId));
+    }
     final changed = _connectedPeers.remove(remoteId);
     _negotiation.clearPeer(remoteId);
     Object? notificationError;
@@ -429,6 +446,7 @@ class VoiceChatManager implements VoiceChatSession {
     _peerConnections.clear();
     _peerOperations.clear();
     _remoteAudioTracks.clear();
+    unawaited(_remoteAudioPlayback.dispose());
     _connectedPeers.clear();
     _negotiation.clear();
     late final Future<void> operation;
@@ -485,6 +503,7 @@ class VoiceChatManager implements VoiceChatSession {
     for (final track in _remoteAudioTracks.values.expand((t) => t)) {
       unawaited(_applyTrackVolume(track, volume));
     }
+    unawaited(_remoteAudioPlayback.setVolume(volume));
   }
 
   Future<void> _applyTrackVolume(MediaStreamTrack track, double volume) async {

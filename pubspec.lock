@@ -202,7 +202,7 @@ packages:
     source: hosted
     version: "1.1.6"
   dart_webrtc:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: dart_webrtc
       sha256: "078e3c431500147e5cc52b3c6ea41ed538f30c7720cc2467d2186c9251e62716"

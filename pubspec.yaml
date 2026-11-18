@@ -54,6 +54,9 @@ dependencies:
   screen_brightness: ^2.1.11
   volume_controller: ^3.6.1
   flutter_webrtc: ^1.6.2+hotfix.1
+  # Web backend of flutter_webrtc; imported directly by the web voice
+  # remote-audio sink to reach the underlying JS MediaStream objects.
+  dart_webrtc: ^1.8.2
   audio_session: ^0.2.4
   path_provider: ^2.1.6
   canvas_danmaku: ^0.3.3  # 高性能弹幕库
