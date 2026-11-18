@@ -33,6 +33,7 @@ import 'package:synctv_app/features/room/presentation/models/room_ui_capabilitie
 import 'package:synctv_app/features/room/presentation/models/playlist_selection_policy.dart';
 import 'package:synctv_app/features/room/presentation/models/rtmp_publish_key_policy.dart';
 import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
+import 'package:synctv_app/features/room/domain/playback_sync_executor.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_target.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
 import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
@@ -102,6 +103,35 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+
+/// Adapts the platform video controller to the playback sync loop's player
+/// interface, routing playback starts through the autoplay-aware path.
+class _VideoPlayerSyncPlayer implements SyncedPlaybackPlayer {
+  const _VideoPlayerSyncPlayer(this._controller, this._autoplay);
+
+  final VideoPlayerController _controller;
+  final BrowserAutoplayController _autoplay;
+
+  @override
+  bool get isInitialized => _controller.value.isInitialized;
+  @override
+  double get playbackSpeed => _controller.value.playbackSpeed;
+  @override
+  bool get isPlaying => _controller.value.isPlaying;
+  @override
+  Duration get position => _controller.value.position;
+  @override
+  Duration get duration => _controller.value.duration;
+  @override
+  Future<void> setPlaybackSpeed(double speed) =>
+      _controller.setPlaybackSpeed(speed);
+  @override
+  Future<void> pause() => _controller.pause();
+  @override
+  Future<void> seekTo(Duration position) => _controller.seekTo(position);
+  @override
+  Future<void> play() => _autoplay.play(_controller);
+}
 
 enum _PlaybackControlIntentKind { playbackState, seek, speed }
 
@@ -2188,57 +2218,19 @@ class _RoomScreenState extends State<RoomScreen>
     _isSyncing = true;
 
     try {
-      if (controller.value.playbackSpeed != status.playbackRate) {
-        await controller.setPlaybackSpeed(status.playbackRate);
-        if (!isCurrentSync()) return;
-        _refreshPlaybackUi(controller);
-      }
-
-      final isLive = status.entry?.live == true;
-      final target = isLive ? null : _playbackSyncTarget(status, controller);
-      final targetIsPlaying = target?.isAtEnd == true
-          ? false
-          : status.isPlaying;
-      if (!targetIsPlaying && controller.value.isPlaying) {
-        await controller.pause();
-        if (!isCurrentSync()) return;
-        _refreshPlaybackUi(controller);
-      }
-      if (target != null) {
-        final currentPos = controller.value.position.inMilliseconds / 1000.0;
-        final positionDrift = (currentPos - target.positionSeconds).abs();
-        final shouldAutoSeek =
-            target.isAtEnd ||
-            shouldAutoSeekToPlaybackSyncTarget(
-              currentPositionSeconds: currentPos,
-              target: target,
-              driftThresholdSeconds:
-                  _playbackModeConfig.autoSeekDriftThresholdSeconds,
-              freeModeEnabled: _playbackModeConfig.freeModeEnabled,
-            );
-        final shouldManualSeek =
-            forceSeek &&
-            positionDrift >=
-                _playbackModeConfig.manualSeekDriftThresholdSeconds;
-        if (target.isAtEnd || shouldManualSeek || shouldAutoSeek) {
-          await controller.seekTo(
-            Duration(milliseconds: (target.positionSeconds * 1000).toInt()),
-          );
-          if (!isCurrentSync()) return;
-          _refreshPlaybackUi(controller);
-        }
-      }
-
-      if (targetIsPlaying && controller.value.isPlaying == false) {
-        await _browserAutoplay.play(controller);
-        if (!isCurrentSync()) return;
-        _refreshPlaybackUi(controller);
-      }
-      if (isCurrentSync()) _refreshPlaybackUi(controller);
-    } catch (e) {
-      if (!_isDisposedVideoControllerError(e)) {
-        debugPrint('Sync execution error: $e');
-      }
+      await runPlaybackSync(
+        player: _VideoPlayerSyncPlayer(controller, _browserAutoplay),
+        status: status,
+        config: _playbackModeConfig,
+        forceSeek: forceSeek,
+        isCurrentSync: isCurrentSync,
+        onPlayerMutated: () => _refreshPlaybackUi(controller),
+        onSyncError: (error) {
+          if (!_isDisposedVideoControllerError(error)) {
+            debugPrint('Sync execution error: $error');
+          }
+        },
+      );
     } finally {
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted && syncGeneration == _playbackSyncGeneration) {
