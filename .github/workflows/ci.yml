@@ -121,6 +121,9 @@ jobs:
       - name: Verify Web OAuth callback isolation
         run: flutter test test/features/auth/infrastructure/oauth2_web_callback_session_test.dart --platform chrome
 
+      - name: Verify Web voice remote audio playback
+        run: flutter test test/features/voice/infrastructure/voice_remote_audio_playback_web_test.dart --platform chrome
+
       - name: Run Darwin Passkey package tests
         working-directory: packages/passkeys_darwin
         run: flutter test

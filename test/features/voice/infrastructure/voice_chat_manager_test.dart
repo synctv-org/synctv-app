@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
 import 'package:synctv_app/features/voice/infrastructure/voice_chat_manager.dart';
+import 'package:synctv_app/features/voice/infrastructure/voice_remote_audio_playback.dart';
 
 void main() {
   test('remote voice volume applies to tracks arriving later', () async {
@@ -57,6 +58,90 @@ void main() {
     manager.setRemoteVolume(1.5);
     await Future<void>.delayed(Duration.zero);
     expect(volumeCalls, [(1.0, 'track-1')]);
+    await manager.dispose();
+  });
+
+  test('remote audio playback follows the peer lifecycle', () async {
+    final playback = _RecordingPlayback();
+    final peer = _Peer();
+    final manager = VoiceChatManager(
+      onSignalingMessage: (_, _) {},
+      onStateChange: () {},
+      loadIceServers: () async => _iceServers,
+      acquireMicrophone: () async => _Stream(),
+      configureVoiceCallMode: (_) async {},
+      createConnection: (_) async => peer,
+      remoteAudioPlayback: playback,
+    );
+    await manager.join(clientOperationId: 'joined');
+    await manager.handleJoin('peer1');
+    await Future<void>.delayed(Duration.zero);
+    expect(playback.attached, isEmpty);
+
+    final firstTrack = _RemoteTrack(id: 'track-1');
+    peer.fireTrack(firstTrack);
+    await Future<void>.delayed(Duration.zero);
+    expect(playback.attached, ['peer1']);
+
+    // A re-announced identical track must not rebind the element.
+    peer.fireTrack(firstTrack);
+    await Future<void>.delayed(Duration.zero);
+    expect(playback.attached, ['peer1']);
+
+    await manager.handleLeave('peer1');
+    expect(playback.removed, ['peer1']);
+
+    // A returning peer attaches again on its next track.
+    await manager.handleJoin('peer1');
+    await Future<void>.delayed(Duration.zero);
+    peer.fireTrack(_RemoteTrack(id: 'track-2'));
+    await Future<void>.delayed(Duration.zero);
+    expect(playback.attached, ['peer1', 'peer1']);
+
+    await manager.dispose();
+    expect(playback.disposals, 1);
+  });
+
+  test('leaving the session releases every remote audio binding', () async {
+    final playback = _RecordingPlayback();
+    final peer = _Peer();
+    final manager = VoiceChatManager(
+      onSignalingMessage: (_, _) {},
+      onStateChange: () {},
+      loadIceServers: () async => _iceServers,
+      acquireMicrophone: () async => _Stream(),
+      configureVoiceCallMode: (_) async {},
+      createConnection: (_) async => peer,
+      remoteAudioPlayback: playback,
+    );
+    await manager.join(clientOperationId: 'joined');
+    await manager.handleJoin('peer1');
+    await Future<void>.delayed(Duration.zero);
+    peer.fireTrack(_RemoteTrack(id: 'track-1'));
+    await Future<void>.delayed(Duration.zero);
+    expect(playback.attached, isNotEmpty);
+
+    await manager.leave();
+    expect(playback.disposals, 1);
+  });
+
+  test('remote volume reaches the audio playback sink', () async {
+    final playback = _RecordingPlayback();
+    final peer = _Peer();
+    final manager = VoiceChatManager(
+      onSignalingMessage: (_, _) {},
+      onStateChange: () {},
+      loadIceServers: () async => _iceServers,
+      acquireMicrophone: () async => _Stream(),
+      configureVoiceCallMode: (_) async {},
+      createConnection: (_) async => peer,
+      remoteAudioPlayback: playback,
+    );
+    await manager.join(clientOperationId: 'joined');
+    manager.setRemoteVolume(1.5);
+    expect(playback.volume, 1.5);
+    manager.setRemoteVolume(5);
+    expect(playback.volume, 2.0);
     await manager.dispose();
   });
 
@@ -966,6 +1051,33 @@ class _SignalingSpy extends VoiceChatManager {
   @override
   Future<void> handleLeave(String fromId) async {
     received.add('leave:$fromId');
+  }
+}
+
+class _RecordingPlayback implements VoiceRemoteAudioPlayback {
+  final attached = <String>[];
+  final removed = <String>[];
+  double? volume;
+  int disposals = 0;
+
+  @override
+  Future<void> attach(String remoteId, RTCTrackEvent event) async {
+    attached.add(remoteId);
+  }
+
+  @override
+  Future<void> setVolume(double value) async {
+    volume = value;
+  }
+
+  @override
+  Future<void> remove(String remoteId) async {
+    removed.add(remoteId);
+  }
+
+  @override
+  Future<void> dispose() async {
+    disposals++;
   }
 }
 
