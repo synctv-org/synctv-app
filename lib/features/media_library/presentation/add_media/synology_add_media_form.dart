@@ -274,7 +274,7 @@ class _SynologyAddMediaFormState extends State<SynologyAddMediaForm> {
         ),
         Expanded(
           child: Text(
-            _path.isEmpty ? 'Shared folders' : _path,
+            _path.isEmpty ? context.l10n.sharedFolders : _path,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelLarge

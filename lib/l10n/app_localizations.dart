@@ -5874,6 +5874,66 @@ abstract class AppLocalizations {
   /// **'Open folder'**
   String get openFolder;
 
+  /// No description provided for @browserSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser session'**
+  String get browserSession;
+
+  /// No description provided for @cookie.
+  ///
+  /// In en, this message translates to:
+  /// **'Cookie'**
+  String get cookie;
+
+  /// No description provided for @cookieConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Cookie configured'**
+  String get cookieConfigured;
+
+  /// No description provided for @hardwareTranscoding.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware transcoding'**
+  String get hardwareTranscoding;
+
+  /// No description provided for @hdStation.
+  ///
+  /// In en, this message translates to:
+  /// **'HD Station'**
+  String get hdStation;
+
+  /// No description provided for @multimediaCodec.
+  ///
+  /// In en, this message translates to:
+  /// **'Multimedia Codec'**
+  String get multimediaCodec;
+
+  /// No description provided for @passwordRequiredLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password required'**
+  String get passwordRequiredLabel;
+
+  /// No description provided for @qtranscodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'QTranscode'**
+  String get qtranscodeLabel;
+
+  /// No description provided for @realtimeTranscoding.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time transcoding'**
+  String get realtimeTranscoding;
+
+  /// No description provided for @trustDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust device'**
+  String get trustDevice;
+
   /// No description provided for @sharedFolders.
   ///
   /// In en, this message translates to:

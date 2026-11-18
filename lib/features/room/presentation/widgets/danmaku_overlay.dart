@@ -171,7 +171,6 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
       ..addAll(widget.danmakuList);
     _processedDanmaku.retainAll(currentItems);
 
-    int addedCount = 0;
     for (final danmaku in widget.danmakuList) {
       if (widget.origin != null && danmaku.origin != widget.origin) {
         continue;
@@ -184,17 +183,9 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
 
       // 检查是否到了显示时间
       if (danmaku.shouldShowAt(currentPosition)) {
-        debugPrint(
-          'DanmakuOverlay: showing [${danmaku.text}] at ${currentPosition.inSeconds}s (start: ${danmaku.startTime.inSeconds}s)',
-        );
         _addDanmakuToScreen(danmaku);
         _processedDanmaku.add(danmaku);
-        addedCount++;
       }
-    }
-
-    if (addedCount > 0) {
-      debugPrint('DanmakuOverlay: added $addedCount items during sync');
     }
   }
 

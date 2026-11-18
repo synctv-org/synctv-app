@@ -484,7 +484,9 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
                   serverId: bind.serverId,
                   instanceName: bind.providerInstanceName,
                   title: bind.label,
-                  subtitle: bind.hasCookie ? 'Cookie configured' : 'Cookie',
+                  subtitle: bind.hasCookie
+                      ? l10n.cookieConfigured
+                      : l10n.cookie,
                 ),
               )
               .toList(),
@@ -496,7 +498,9 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
                   serverId: bind.serverId,
                   instanceName: bind.providerInstanceName,
                   title: bind.label,
-                  subtitle: bind.hasCookie ? 'Cookie configured' : 'Cookie',
+                  subtitle: bind.hasCookie
+                      ? l10n.cookieConfigured
+                      : l10n.cookie,
                 ),
               )
               .toList(),

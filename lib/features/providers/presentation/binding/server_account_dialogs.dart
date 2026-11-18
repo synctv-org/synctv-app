@@ -638,7 +638,7 @@ class _FnosAccountDialogState extends State<_FnosAccountDialog> {
                             spacing: 12,
                             children: [
                               Text(
-                                'Trust device',
+                                context.l10n.trustDevice,
                                 style: Theme.of(context).textTheme.bodyLarge,
                               ),
                               AppSwitch(

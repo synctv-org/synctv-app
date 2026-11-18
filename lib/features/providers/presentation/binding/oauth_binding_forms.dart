@@ -25,7 +25,8 @@ class YoutubeAccountBindingForm extends StatefulWidget {
 }
 
 class _YoutubeAccountBindingFormState extends State<YoutubeAccountBindingForm> {
-  final _labelController = TextEditingController(text: 'Browser session');
+  late final TextEditingController _labelController;
+  bool _labelInitialized = false;
   final _visitorController = TextEditingController();
   final _poTokenController = TextEditingController();
   final _cookieController = TextEditingController();
@@ -39,6 +40,18 @@ class _YoutubeAccountBindingFormState extends State<YoutubeAccountBindingForm> {
     widget.instanceNamesLoader().then((values) {
       if (mounted) setState(() => _instances = _mergeInstanceNames(values));
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Localization is only dependable here, not in initState.
+    if (!_labelInitialized) {
+      _labelInitialized = true;
+      _labelController = TextEditingController(
+        text: context.l10n.browserSession,
+      );
+    }
   }
 
   @override
@@ -197,7 +210,8 @@ class DouyinAccountBindingForm extends StatefulWidget {
 }
 
 class _DouyinAccountBindingFormState extends State<DouyinAccountBindingForm> {
-  final _labelController = TextEditingController(text: 'Browser session');
+  late final TextEditingController _labelController;
+  bool _labelInitialized = false;
   final _cookieController = TextEditingController();
   List<String> _instances = const [''];
   String _instanceName = '';
@@ -209,6 +223,18 @@ class _DouyinAccountBindingFormState extends State<DouyinAccountBindingForm> {
     widget.instanceNamesLoader().then((values) {
       if (mounted) setState(() => _instances = _mergeInstanceNames(values));
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Localization is only dependable here, not in initState.
+    if (!_labelInitialized) {
+      _labelInitialized = true;
+      _labelController = TextEditingController(
+        text: context.l10n.browserSession,
+      );
+    }
   }
 
   @override
@@ -340,7 +366,8 @@ class TikTokAccountBindingForm extends StatefulWidget {
 }
 
 class _TikTokAccountBindingFormState extends State<TikTokAccountBindingForm> {
-  final _labelController = TextEditingController(text: 'Browser session');
+  late final TextEditingController _labelController;
+  bool _labelInitialized = false;
   final _cookieController = TextEditingController();
   List<String> _instances = const [''];
   String _instanceName = '';
@@ -352,6 +379,18 @@ class _TikTokAccountBindingFormState extends State<TikTokAccountBindingForm> {
     widget.instanceNamesLoader().then((values) {
       if (mounted) setState(() => _instances = _mergeInstanceNames(values));
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Localization is only dependable here, not in initState.
+    if (!_labelInitialized) {
+      _labelInitialized = true;
+      _labelController = TextEditingController(
+        text: context.l10n.browserSession,
+      );
+    }
   }
 
   @override
