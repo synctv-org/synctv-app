@@ -66,7 +66,7 @@ dependencies:
   media_kit_libs_ios_video: ^1.1.4
   media_kit_libs_windows_video: ^1.0.11
   # 6.0.0-alpha.8+ adopts AGP 9 Built-in Kotlin.
-  flutter_web_auth_2: ^6.0.0-alpha.9
+  flutter_web_auth_2: ^6.0.0-alpha.11
   url_launcher: ^6.3.2
   flutter_markdown_plus: ^1.0.12
   passkeys: ^2.22.3
@@ -78,6 +78,9 @@ dependencies:
   webview_flutter: ^4.14.1
   desktop_webview_window: ^0.4.0
   media_kit_libs_macos_video: ^1.1.4
+  # 0.7.0 / nativeapi 0.6 require Flutter 3.50 / Dart 3.14 and the
+  # material_ui widget stack — revisit together with flex_color_scheme 9
+  # after the toolchain moves past 3.47.
   window_manager: ^0.6.0
   nativeapi: ^0.5.8
   window_to_front: ^1.0.0
