@@ -81,8 +81,8 @@ dependencies:
   # 0.7.0 / nativeapi 0.6 require Flutter 3.50 / Dart 3.14 and the
   # material_ui widget stack — revisit together with flex_color_scheme 9
   # after the toolchain moves past 3.47.
-  window_manager: ^0.6.0
-  nativeapi: ^0.5.8
+  window_manager: ^0.7.0
+  nativeapi: ^0.6.1
   window_to_front: ^1.0.0
   # flex_color_scheme 9 requires the SDK-decoupled material_ui widget
   # stack (MaterialApp, ThemeData, all imports); stay on 8.x while the app
