@@ -676,7 +676,10 @@ jobs:
   ios:
     name: iOS
     needs: metadata
-    runs-on: macos-26
+    # macos-26 tops out at Xcode 26.6 (iOS 26.5 SDK); App Store Connect
+    # requires the iOS 27 SDK from April 2027 (ITMS-90725). The xcode-27
+    # image ships the current Xcode 27.x (27.2 / iphoneos27.2 as of 2026-11).
+    runs-on: xcode-27
     timeout-minutes: 60
 
     steps:

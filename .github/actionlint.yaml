@@ -1,0 +1,6 @@
+# Extra runner labels not yet known to the pinned actionlint (v1.7.12).
+# xcode-27 is a GitHub-hosted image (macOS 27 base, Xcode 27 default) documented in
+# actions/runner-images#14404; it ships the iOS 27 SDK required by ITMS-90725.
+self-hosted-runner:
+  labels:
+    - xcode-27
