@@ -40,6 +40,14 @@ abstract class MediaKitPlayerHandle {
   Future<void> setAudioTrack(AudioTrack track);
   Future<void> dispose();
 
+  /// Enables video decoding. Idempotent, and required before the first
+  /// [open]: media_kit starts libmpv with `vid=no` and only a [VideoController]
+  /// switches it to `vid=auto`. Commands issued once the controller exists
+  /// wait for that switch; commands issued earlier open the source with
+  /// decoding off, so no video size ever arrives and [open] never reports an
+  /// initialized player.
+  void attachVideoOutput();
+
   /// Builds the platform video surface for this handle's player.
   Widget buildVideoWidget();
 }
@@ -127,8 +135,14 @@ class RealMediaKitPlayerHandle implements MediaKitPlayerHandle {
   Future<void> dispose() => _player.dispose();
 
   @override
+  void attachVideoOutput() {
+    _videoController ??= VideoController(_player);
+  }
+
+  @override
   Widget buildVideoWidget() {
-    final controller = _videoController ??= VideoController(_player);
+    attachVideoOutput();
+    final controller = _videoController!;
     return Video(
       key: ValueKey(controller),
       controller: controller,

@@ -391,6 +391,9 @@ class MediaKitVideoPlayerRuntime
 
   @override
   Future<void> open(Media media) async {
+    // The view that attaches the output is only mounted once initialization
+    // reports a video size, which itself needs decoding: attach first.
+    _handle.attachVideoOutput();
     _sourceMedia = media;
     _manifestTracks = const [];
     _manifestTrackUris.clear();
