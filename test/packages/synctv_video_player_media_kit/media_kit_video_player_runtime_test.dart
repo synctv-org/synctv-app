@@ -48,6 +48,10 @@ class _FakeHandle implements MediaKitPlayerHandle {
   AudioTrack? audioTrack;
   int stopCalls = 0;
   int disposeCalls = 0;
+  int videoOutputAttachments = 0;
+
+  /// Commands in call order, so a test can compare two commands' positions.
+  final calls = <String>[];
 
   @override
   Stream<Duration> get durationStream => durationController.stream;
@@ -71,10 +75,18 @@ class _FakeHandle implements MediaKitPlayerHandle {
   @override
   Future<void> setProperty(String name, String value) async {
     properties.add((name, value));
+    calls.add('setProperty');
+  }
+
+  @override
+  void attachVideoOutput() {
+    videoOutputAttachments++;
+    calls.add('attachVideoOutput');
   }
 
   @override
   Future<void> open(Media media, {bool play = false}) async {
+    calls.add('open');
     opens.add((media: media, play: play));
   }
 
@@ -331,6 +343,31 @@ void main() {
     await runtime.selectAdaptiveAudioTrack('auto');
     expect(handle.audioTrack, AudioTrack.auto());
   });
+
+  test('opening a source attaches the video output first', () async {
+    await runtime.open(Media('https://media.test/movie.mp4'));
+
+    expect(handle.calls, ['attachVideoOutput', 'open']);
+  });
+
+  test(
+    'an HLS source attaches the video output before any mpv property',
+    () async {
+      final client = MockClient.streaming(
+        (request, bodyStream) async => _manifestResponse(_masterManifest),
+      );
+      final hlsRuntime = MediaKitVideoPlayerRuntime(
+        2,
+        handle: handle,
+        httpClient: client,
+      );
+      addTearDown(hlsRuntime.dispose);
+
+      await hlsRuntime.open(Media('https://media.test/master.m3u8'));
+
+      expect(handle.calls.take(2), ['attachVideoOutput', 'setProperty']);
+    },
+  );
 
   test(
     'opening an HLS source pins mpv to max bitrate and loads variants',
