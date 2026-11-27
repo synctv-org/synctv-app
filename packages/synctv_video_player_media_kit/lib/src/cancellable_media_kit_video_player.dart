@@ -70,6 +70,17 @@ extension BrowserPictureInPictureController on VideoPlayerController {
   }
 }
 
+extension UserMediaPlaybackActionController on VideoPlayerController {
+  /// Commands issued by the browser's own media UI (picture-in-picture
+  /// window controls, hardware media keys). Empty on platforms without a
+  /// browser media session.
+  Stream<UserMediaPlaybackAction> get userMediaPlaybackActions {
+    // The backend session uses the same identifier assigned by video_player.
+    // ignore: invalid_use_of_visible_for_testing_member
+    return CancellableMediaKitVideoPlayer.userMediaPlaybackActionsFor(playerId);
+  }
+}
+
 class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
   CancellableMediaKitVideoPlayer({VideoPlayerRuntimeFactory? runtimeFactory})
     : _runtimeFactory =
@@ -108,6 +119,14 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
     if (runtime is PictureInPictureRuntime) {
       await (runtime! as PictureInPictureRuntime).exitPictureInPicture();
     }
+  }
+
+  static Stream<UserMediaPlaybackAction> userMediaPlaybackActionsFor(
+    int playerId,
+  ) {
+    final runtime = _runtimeFor(playerId);
+    if (runtime is! UserMediaActionsRuntime) return const Stream.empty();
+    return (runtime! as UserMediaActionsRuntime).userMediaPlaybackActions;
   }
 
   static VideoPlayerRuntime? _runtimeFor(int playerId) {

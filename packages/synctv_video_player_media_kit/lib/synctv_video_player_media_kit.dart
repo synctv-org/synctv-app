@@ -10,6 +10,7 @@ export 'src/cancellable_media_kit_video_player.dart'
         BrowserPictureInPictureController,
         CancellableMediaKitVideoPlayer,
         MediaKitVideoPlayerRuntime,
+        UserMediaPlaybackActionController,
         syncTvVideoFormatHeader,
         syncTvVideoLiveHeader;
 export 'src/media_kit_player_handle.dart'
@@ -22,7 +23,11 @@ export 'src/video_player_runtime.dart'
         AdaptiveVideoTrackInfo,
         AdaptiveVideoTrackRuntime,
         AdaptiveVideoTrackSnapshot,
+        defaultUserMediaSeekOffset,
         PictureInPictureRuntime,
+        UserMediaActionsRuntime,
+        UserMediaPlaybackAction,
+        UserMediaPlaybackActionKind,
         VideoPlayerRuntime,
         VideoPlayerRuntimeFactory;
 
