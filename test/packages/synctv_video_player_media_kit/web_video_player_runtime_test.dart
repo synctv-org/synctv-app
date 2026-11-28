@@ -2,6 +2,8 @@
 library;
 
 import 'dart:async';
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
@@ -108,21 +110,36 @@ void main() {
   test(
     'opening an m3u8 hands the stream to a player without hanging',
     () async {
+      // MSE-capable browsers always route HLS through hls.js (Chrome 157+
+      // claims native HLS via canPlayType but cannot actually play these
+      // streams), so install a stub engine for the loader to find instead of
+      // fetching the bundle, which the test server does not serve.
+      final stub = web.HTMLScriptElement();
+      stub.text = '''
+window.Hls = function Hls(config) {
+  this.on = function () {};
+  this.loadSource = function () {};
+  this.attachMedia = function () {};
+  this.destroy = function () {};
+};
+window.Hls.isSupported = function () { return true; };
+window.Hls.Events = {
+  ERROR: 'hlsError',
+  MANIFEST_PARSED: 'hlsManifestParsed',
+  LEVEL_SWITCHED: 'hlsLevelSwitched',
+};
+''';
+      web.document.head!.append(stub);
+      addTearDown(() => globalContext.delete('Hls'.toJS));
+
       final (runtime, log) = _runtime(8012);
 
-      // Browsers split on native HLS support: the engine attaches through
-      // hls.js, or the manifest goes straight onto the element for native
-      // playback. Either way the URL must reach a player; silently doing
-      // nothing (or hanging) is the failure this guards against.
+      // Without a media source pipeline the manifest goes straight onto the
+      // element for native playback instead. Either way the URL must reach a
+      // player; silently doing nothing (or hanging) is the failure this
+      // guards against.
       await runtime.open(Media('https://localhost.invalid/live/stream.m3u8'));
-      final video = web.document.querySelector(
-        '#synctv-video-element-8012',
-      ) as web.HTMLVideoElement?;
-      final handedToPlayer =
-          runtime.hasActiveEngineForTesting ||
-          video!.getAttribute('src') ==
-              'https://localhost.invalid/live/stream.m3u8';
-      expect(handedToPlayer, isTrue);
+      expect(runtime.hasActiveEngineForTesting, isTrue);
       expect(log.errors, isEmpty, reason: 'selection itself must not error');
     },
   );
