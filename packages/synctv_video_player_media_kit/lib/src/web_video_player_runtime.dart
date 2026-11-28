@@ -193,6 +193,9 @@ class WebVideoPlayerRuntime
     final engine = selectWebPlaybackEngine(
       transport: transport,
       nativeHls: _video.canPlayType('application/vnd.apple.mpegurl').isNotEmpty,
+      hasMediaSource:
+          globalContext.has('MediaSource') ||
+          globalContext.has('ManagedMediaSource'),
     );
     _engineKind = engine;
 
