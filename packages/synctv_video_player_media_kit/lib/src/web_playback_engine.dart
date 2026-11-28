@@ -31,13 +31,26 @@ WebPlaybackTransport detectWebPlaybackTransport({
   return WebPlaybackTransport.progressive;
 }
 
+/// Picks the engine for a media transport. `nativeHls` reports that the
+/// browser claims native HLS support through `canPlayType`; `hasMediaSource`
+/// reports that an MSE or Managed MSE pipeline is available.
+///
+/// Native HLS is only trusted without a media source pipeline (classic iOS
+/// WebKit). Browsers with MSE always play HLS through hls.js: Chrome 157+
+/// advertises native HLS via `canPlayType` but fails every non-fMP4 HLS
+/// source with `MEDIA_ELEMENT_ERROR: Format error`, so trusting the claim
+/// would break transcoded playback there, and hls.js is the engine Jellyfin
+/// web uses on MSE-capable desktop browsers anyway.
 WebPlaybackEngine selectWebPlaybackEngine({
   required WebPlaybackTransport transport,
   required bool nativeHls,
+  required bool hasMediaSource,
 }) => switch (transport) {
   WebPlaybackTransport.progressive => WebPlaybackEngine.progressive,
   WebPlaybackTransport.hls =>
-    nativeHls ? WebPlaybackEngine.nativeHls : WebPlaybackEngine.hlsJs,
+    !hasMediaSource && nativeHls
+        ? WebPlaybackEngine.nativeHls
+        : WebPlaybackEngine.hlsJs,
   WebPlaybackTransport.dash => WebPlaybackEngine.dashJs,
   WebPlaybackTransport.flv ||
   WebPlaybackTransport.mpegTs => WebPlaybackEngine.mpegTsJs,
