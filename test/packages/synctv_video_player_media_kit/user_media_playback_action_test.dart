@@ -38,13 +38,7 @@ void main() {
     test(
       'falls back to the default seek offset when the browser omits one',
       () {
-        for (final offset in [
-          null,
-          0.0,
-          -5.0,
-          double.nan,
-          double.infinity,
-        ]) {
+        for (final offset in [null, 0.0, -5.0, double.nan, double.infinity]) {
           expect(
             UserMediaPlaybackAction.parse(
               'seekbackward',
