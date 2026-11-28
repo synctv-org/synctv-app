@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:synctv_video_player_media_kit/src/video_player_runtime.dart';
 import 'package:synctv_video_player_media_kit/src/web_video_player_runtime.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:web/web.dart' as web;
@@ -335,6 +336,145 @@ void main() {
       isFalse,
       reason: 're-applying options resets prior element state',
     );
+  });
+
+  group('media session actions', () {
+    test('emits browser media commands while in picture-in-picture', () async {
+      final runtime = WebVideoPlayerRuntime(8301);
+      addTearDown(runtime.dispose);
+      final actions = <UserMediaPlaybackAction>[];
+      final subscription = runtime.userMediaPlaybackActions.listen(actions.add);
+      addTearDown(subscription.cancel);
+
+      // Outside picture-in-picture the commands stay with the browser, so
+      // nothing reaches the app yet.
+      runtime.emitUserMediaActionForTesting(
+        const UserMediaPlaybackAction.play(),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(actions, isEmpty);
+
+      final video = web.document.querySelector(
+        '#synctv-video-element-8301',
+      ) as web.HTMLVideoElement;
+      video.dispatchEvent(web.Event('enterpictureinpicture'));
+      runtime.emitUserMediaActionForTesting(
+        const UserMediaPlaybackAction.play(),
+      );
+      runtime.emitUserMediaActionForTesting(
+        const UserMediaPlaybackAction.pause(),
+      );
+      runtime.emitUserMediaActionForTesting(
+        const UserMediaPlaybackAction.seekForward(15),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(actions.map((action) => action.kind), [
+        UserMediaPlaybackActionKind.play,
+        UserMediaPlaybackActionKind.pause,
+        UserMediaPlaybackActionKind.seekForward,
+      ]);
+      expect(actions[2].seconds, 15);
+    });
+
+    test('leaving picture-in-picture hands the commands back', () async {
+      final runtime = WebVideoPlayerRuntime(8302);
+      addTearDown(runtime.dispose);
+      final actions = <UserMediaPlaybackAction>[];
+      final subscription = runtime.userMediaPlaybackActions.listen(actions.add);
+      addTearDown(subscription.cancel);
+
+      final video = web.document.querySelector(
+        '#synctv-video-element-8302',
+      ) as web.HTMLVideoElement;
+      video.dispatchEvent(web.Event('enterpictureinpicture'));
+      video.dispatchEvent(web.Event('leavepictureinpicture'));
+
+      runtime.emitUserMediaActionForTesting(
+        const UserMediaPlaybackAction.pause(),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        actions,
+        isEmpty,
+        reason: 'commands after leaving the mini window stay with the browser',
+      );
+    });
+
+    test('a successor player takes over the document-wide handlers', () async {
+      final first = WebVideoPlayerRuntime(8303);
+      addTearDown(first.dispose);
+      final firstActions = <UserMediaPlaybackAction>[];
+      final firstSubscription = first.userMediaPlaybackActions.listen(
+        firstActions.add,
+      );
+      addTearDown(firstSubscription.cancel);
+
+      final second = WebVideoPlayerRuntime(8304);
+      addTearDown(second.dispose);
+      final secondActions = <UserMediaPlaybackAction>[];
+      final secondSubscription = second.userMediaPlaybackActions.listen(
+        secondActions.add,
+      );
+      addTearDown(secondSubscription.cancel);
+
+      final firstVideo = web.document.querySelector(
+        '#synctv-video-element-8303',
+      ) as web.HTMLVideoElement;
+      final secondVideo = web.document.querySelector(
+        '#synctv-video-element-8304',
+      ) as web.HTMLVideoElement;
+      firstVideo.dispatchEvent(web.Event('enterpictureinpicture'));
+      // A source change builds the successor player while the old one is
+      // still in the mini window; the successor must take the handlers over.
+      secondVideo.dispatchEvent(web.Event('enterpictureinpicture'));
+
+      first.emitUserMediaActionForTesting(const UserMediaPlaybackAction.play());
+      second.emitUserMediaActionForTesting(
+        const UserMediaPlaybackAction.pause(),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        firstActions,
+        isEmpty,
+        reason: 'the replaced player must not receive browser commands',
+      );
+      expect(secondActions.map((action) => action.kind), [
+        UserMediaPlaybackActionKind.pause,
+      ]);
+    });
+
+    test('disposing the owner stops emissions and closes the stream', () async {
+      final runtime = WebVideoPlayerRuntime(8305);
+      final actions = <UserMediaPlaybackAction>[];
+      var done = false;
+      final subscription = runtime.userMediaPlaybackActions.listen(
+        actions.add,
+        onDone: () => done = true,
+      );
+      addTearDown(subscription.cancel);
+
+      final video = web.document.querySelector(
+        '#synctv-video-element-8305',
+      ) as web.HTMLVideoElement;
+      video.dispatchEvent(web.Event('enterpictureinpicture'));
+
+      runtime.emitUserMediaActionForTesting(
+        const UserMediaPlaybackAction.play(),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(actions, hasLength(1));
+
+      await runtime.dispose();
+      expect(done, isTrue, reason: 'the action stream closes with the player');
+
+      runtime.emitUserMediaActionForTesting(
+        const UserMediaPlaybackAction.pause(),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(actions, hasLength(1));
+    });
   });
 }
 

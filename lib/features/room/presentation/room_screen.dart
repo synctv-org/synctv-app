@@ -37,6 +37,7 @@ import 'package:synctv_app/features/room/presentation/models/rtmp_publish_key_po
 import 'package:synctv_app/features/room/domain/playback_mode_config.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_executor.dart';
 import 'package:synctv_app/features/room/domain/playback_sync_target.dart';
+import 'package:synctv_app/features/room/domain/user_media_seek_target.dart';
 import 'package:synctv_app/features/room/domain/playback_resource_localizer.dart';
 import 'package:synctv_app/features/room/domain/realtime_event_log.dart';
 import 'package:synctv_app/contracts/room_management_models.dart';
@@ -339,6 +340,7 @@ class _RoomScreenBase extends State<RoomScreen> {
   _adaptiveAudioTracksSubscription;
   AdaptiveAudioTrackSnapshot _adaptiveAudioTracks =
       const AdaptiveAudioTrackSnapshot();
+  StreamSubscription<UserMediaPlaybackAction>? _userMediaActionSubscription;
   String? _videoPlayerSourceKey;
   int? _videoPlayerSourceExpireAt;
   DateTime? _erroredVideoControllerReloadAt;
@@ -3294,6 +3296,7 @@ class _RoomScreenBase extends State<RoomScreen> {
       _videoPlayerController!.addListener(_videoListener);
       _observeAdaptiveVideoTracks(newController);
       _observeAdaptiveAudioTracks(newController);
+      _observeUserMediaPlaybackActions(newController);
 
       if (mounted) {
         setState(() {
@@ -3403,6 +3406,77 @@ class _RoomScreenBase extends State<RoomScreen> {
       }
       setState(() => _adaptiveAudioTracks = snapshot);
     });
+  }
+
+  /// Feeds the commands the browser's own media UI issues (picture-in-picture
+  /// window controls, hardware media keys) through the same intent pipeline as
+  /// the app's control buttons; without this the sync loop reverts them within
+  /// seconds. Unavailable actions are a no-op on non-web runtimes.
+  void _observeUserMediaPlaybackActions(VideoPlayerController controller) {
+    unawaited(_userMediaActionSubscription?.cancel());
+    _userMediaActionSubscription = controller.userMediaPlaybackActions.listen((
+      action,
+    ) {
+      if (!mounted || !identical(_videoPlayerController, controller)) {
+        return;
+      }
+      _handleUserMediaPlaybackAction(action);
+    });
+  }
+
+  Future<void> _handleUserMediaPlaybackAction(
+    UserMediaPlaybackAction action,
+  ) async {
+    final controller = _videoPlayerController;
+    if (controller == null || !controller.value.isInitialized) return;
+    switch (action.kind) {
+      case UserMediaPlaybackActionKind.play:
+      case UserMediaPlaybackActionKind.pause:
+        if (!_canControlPlaybackState) return;
+        final isPlaying = action.kind == UserMediaPlaybackActionKind.play;
+        if (isPlaying) {
+          await resumeVideoPlayback(
+            controller,
+            isLive: _isCurrentPlaybackLive,
+            browserAutoplay: _browserAutoplay,
+          );
+        } else {
+          await controller.pause();
+        }
+        if (!mounted || !identical(_videoPlayerController, controller)) {
+          return;
+        }
+        _handleUserPlaybackStateChanged(isPlaying);
+      case UserMediaPlaybackActionKind.seekBackward:
+      case UserMediaPlaybackActionKind.seekForward:
+      case UserMediaPlaybackActionKind.seekTo:
+        if (!_canControlPlaybackState || _isCurrentPlaybackLive) return;
+        final target = _userMediaSeekTarget(controller, action);
+        if (target == null) return;
+        await seekVideoPlayback(
+          controller,
+          position: target,
+          expectedToBePlaying: _currentStatus?.isPlaying == true,
+          browserAutoplay: _browserAutoplay,
+        );
+        if (!mounted || !identical(_videoPlayerController, controller)) {
+          return;
+        }
+        _handleUserSeek(target);
+    }
+  }
+
+  Duration? _userMediaSeekTarget(
+    VideoPlayerController controller,
+    UserMediaPlaybackAction action,
+  ) {
+    // Keep the optimistic room update inside the media bounds; the reported
+    // position is bounded again by the control reporter.
+    return resolveUserMediaSeekTarget(
+      action: action,
+      position: controller.value.position,
+      duration: controller.value.duration,
+    );
   }
 
   Future<void> _selectAdaptiveVideoTrack(String trackId) async {
@@ -3607,6 +3681,8 @@ class _RoomScreenBase extends State<RoomScreen> {
     unawaited(_adaptiveAudioTracksSubscription?.cancel());
     _adaptiveAudioTracksSubscription = null;
     _adaptiveAudioTracks = const AdaptiveAudioTrackSnapshot();
+    unawaited(_userMediaActionSubscription?.cancel());
+    _userMediaActionSubscription = null;
     _videoPlayerController = null;
     _videoPresentationRevision.value++;
     _videoPlayerSourceKey = null;
@@ -3646,6 +3722,8 @@ class _RoomScreenBase extends State<RoomScreen> {
     await _adaptiveAudioTracksSubscription?.cancel();
     _adaptiveAudioTracksSubscription = null;
     _adaptiveAudioTracks = const AdaptiveAudioTrackSnapshot();
+    unawaited(_userMediaActionSubscription?.cancel());
+    _userMediaActionSubscription = null;
     _videoPlayerController = null;
     _videoPresentationRevision.value++;
     _videoPlayerSourceKey = null;

@@ -39,7 +39,8 @@ class WebVideoPlayerRuntime
         AdaptiveAudioTrackRuntime,
         AdaptiveVideoTrackRuntime,
         WebVideoPlayerOptionsRuntime,
-        PictureInPictureRuntime {
+        PictureInPictureRuntime,
+        UserMediaActionsRuntime {
   WebVideoPlayerRuntime(int textureId)
     : _viewType = 'synctv-video-player-$textureId',
       _video = web.HTMLVideoElement()
@@ -68,6 +69,12 @@ class WebVideoPlayerRuntime
     web.document.body?.append(_video);
     _subscribeToMediaEvents();
   }
+
+  /// The runtime that currently owns the document-wide `MediaSession` action
+  /// handlers, installed while this element is in picture-in-picture. A
+  /// replaced player's handlers must not keep feeding its already disposed
+  /// event stream.
+  static WebVideoPlayerRuntime? _mediaSessionActionOwner;
 
   static final _engineLoader = WebEngineLoader();
   static const _hlsBundle = WebEngineBundle(
@@ -99,6 +106,9 @@ class WebVideoPlayerRuntime
       StreamController<AdaptiveAudioTrackSnapshot>.broadcast();
   final StreamController<bool> _pictureInPictureEvents =
       StreamController<bool>.broadcast();
+  final StreamController<UserMediaPlaybackAction> _userMediaActions =
+      StreamController<UserMediaPlaybackAction>.broadcast();
+  final List<(String, JSFunction)> _mediaSessionActions = [];
   final List<StreamSubscription<Object?>> _subscriptions = [];
   final List<JSFunction> _engineCallbacks = [];
 
@@ -143,6 +153,10 @@ class WebVideoPlayerRuntime
     yield _isPictureInPictureActive;
     yield* _pictureInPictureEvents.stream;
   }
+
+  @override
+  Stream<UserMediaPlaybackAction> get userMediaPlaybackActions =>
+      _userMediaActions.stream;
 
   bool get _isPictureInPictureActive =>
       browserPictureInPictureAvailable &&
@@ -753,9 +767,15 @@ class WebVideoPlayerRuntime
   void _subscribeToMediaEvents() {
     _onEnterPictureInPicture = ((web.Event _) {
       _emitPictureInPictureState(true);
+      // The picture-in-picture window's controls are the only browser surface
+      // whose commands must reach the app; registering outside it would also
+      // capture commands meant for other media elements (voice chat audio)
+      // that the browser should keep handling itself.
+      _subscribeToMediaSessionActions();
     }).toJS;
     _onLeavePictureInPicture = ((web.Event _) {
       _emitPictureInPictureState(false);
+      _unsubscribeFromMediaSessionActions();
     }).toJS;
     _video.addEventListener('enterpictureinpicture', _onEnterPictureInPicture);
     _video.addEventListener('leavepictureinpicture', _onLeavePictureInPicture);
@@ -813,6 +833,84 @@ class WebVideoPlayerRuntime
         );
       }),
     ]);
+  }
+
+  /// Routes the picture-in-picture window's media commands into
+  /// [userMediaPlaybackActions] instead of letting them act on the element
+  /// directly. Without this the app never sees the user's intent, and the
+  /// playback sync loop reverts the element state to the room status within
+  /// seconds.
+  void _subscribeToMediaSessionActions() {
+    final navigator = web.window.navigator;
+    if (!navigator.has('mediaSession')) return;
+    final session = navigator.mediaSession;
+    void register(String action, void Function(JSAny? details) handler) {
+      final jsHandler = handler.toJS;
+      try {
+        session.setActionHandler(action, jsHandler);
+      } on Object {
+        // Browsers that lack a binding for this action throw; the remaining
+        // handlers still cover the controls they do expose.
+        return;
+      }
+      _mediaSessionActions.add((action, jsHandler));
+    }
+
+    // Handlers are document-global: the newest runtime owns them so a
+    // successor player replaces them wholesale on construction.
+    _mediaSessionActionOwner = this;
+    register('play', (_) {
+      _emitUserMediaAction(const UserMediaPlaybackAction.play());
+    });
+    register('pause', (_) {
+      _emitUserMediaAction(const UserMediaPlaybackAction.pause());
+    });
+    register('seekbackward', (details) {
+      _emitUserMediaAction(
+        UserMediaPlaybackAction.seekBackward(
+          _readDouble(details, 'seekOffset') ?? defaultUserMediaSeekOffset,
+        ),
+      );
+    });
+    register('seekforward', (details) {
+      _emitUserMediaAction(
+        UserMediaPlaybackAction.seekForward(
+          _readDouble(details, 'seekOffset') ?? defaultUserMediaSeekOffset,
+        ),
+      );
+    });
+    register('seekto', (details) {
+      final seekTime = _readDouble(details, 'seekTime');
+      if (seekTime == null) return;
+      _emitUserMediaAction(UserMediaPlaybackAction.seekTo(seekTime));
+    });
+  }
+
+  void _emitUserMediaAction(UserMediaPlaybackAction action) {
+    if (_disposed || !identical(_mediaSessionActionOwner, this)) return;
+    if (!_userMediaActions.isClosed) _userMediaActions.add(action);
+  }
+
+  /// Feeds a command through the same guarded pipeline the `MediaSession`
+  /// handlers use, so tests can exercise the emission and ownership rules
+  /// without the browser issuing a real user action.
+  @visibleForTesting
+  void emitUserMediaActionForTesting(UserMediaPlaybackAction action) {
+    _emitUserMediaAction(action);
+  }
+
+  void _unsubscribeFromMediaSessionActions() {
+    if (!identical(_mediaSessionActionOwner, this)) return;
+    _mediaSessionActionOwner = null;
+    final session = web.window.navigator.mediaSession;
+    for (final (action, _) in _mediaSessionActions) {
+      try {
+        session.setActionHandler(action, null);
+      } on Object {
+        // The session can vanish during teardown; nothing left to clear.
+      }
+    }
+    _mediaSessionActions.clear();
   }
 
   void _emitPictureInPictureState(bool active) {
@@ -1088,6 +1186,7 @@ class WebVideoPlayerRuntime
     _disposed = true;
     _playback.dispose();
     _mediaGeneration++;
+    _unsubscribeFromMediaSessionActions();
     if (shouldExitPictureInPicture) {
       try {
         await web.document.exitPictureInPicture().toDart;
@@ -1117,6 +1216,7 @@ class WebVideoPlayerRuntime
     _subscriptions.clear();
     _video.remove();
     await _pictureInPictureEvents.close();
+    await _userMediaActions.close();
     await _adaptiveTracks.close();
     await _adaptiveAudioTracks.close();
     // A single-subscription controller nobody ever listened to never
